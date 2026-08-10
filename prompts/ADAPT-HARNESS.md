@@ -89,6 +89,19 @@ For an upgrade, compare previous upstream → live project → candidate:
   file holds no unique project value and no references remain;
 - ownership genuinely ambiguous → record the conflict and ask.
 
+**Check for an ID-namespace collision.** This package's failure-mode ledger uses `FW-0xx`,
+and that prefix is not reserved — a mature repo often keeps its own ledger using the same
+shape. Grep the project's docs for `FW-0` and compare the IDs against
+`docs/governance/memory/recurring-failure-modes.md`. Where any ID appears in both with
+different meanings (one measured install collided on ten, including the payload's
+most-cited `FW-032`), the numbers alone are ambiguous and the project's entry doc probably
+routes all of them to one place.
+
+Resolve it **by location, not by renumbering** — the ledger is append-only: record in the
+project's entry doc that a citation resolves in the ledger belonging to the material that
+carries it, harness citations in the harness ledger and project citations in the project's.
+Report the collision and the rule in the receipt (FW-039).
+
 Produce a concise map — add, update, merge, preserve, remove, and the questions that truly
 block safe integration — before you edit.
 

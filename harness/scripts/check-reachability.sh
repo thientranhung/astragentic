@@ -81,12 +81,18 @@ def harness_owned():
         owned |= {os.path.basename(os.path.dirname(q)) for q in glob.glob(os.path.join(
             ROOT, ".astraler", "releases", applied or "*", "harness", sub, "skills",
             "*", "SKILL.md"))}
-    # No staged release to compare against: check only what this run can attribute.
-    return owned or set()
+    return owned
 
 HARNESS_OWNED = harness_owned()
+# Ownership is decided by the staged release. With no release to read, this run cannot tell
+# harness skills from the project's — say so, because falling back silently to "everything
+# is ours" is how the false findings this check was fixed for come back (FW-038).
+ATTRIBUTION = "release manifest"
+if not HARNESS_OWNED:
+    HARNESS_OWNED = set(all_skills)
+    ATTRIBUTION = "NONE — no staged release found, treating every skill as harness-owned"
 PROJECT_OWNED = set(all_skills) - HARNESS_OWNED
-skills = {n: v for n, v in all_skills.items() if n in HARNESS_OWNED} or all_skills
+skills = {n: v for n, v in all_skills.items() if n in HARNESS_OWNED}
 
 # Skills installed at user level are legitimate references a project skill may name.
 USER_SKILLS = {os.path.basename(os.path.dirname(q))
@@ -259,6 +265,8 @@ for src, text in sorted(sources.items()):
 print(f"Reachability check — {LAYOUT} layout, payload at {os.path.normpath(PAYLOAD)}")
 print(f"  {len(roles)} contracts · {len(skills)} harness skills · "
       f"{len(owned)} owned phases · {len(PLUGIN)} plugin skills known")
+if LAYOUT == "project":
+    print(f"  ownership from: {ATTRIBUTION}")
 if PROJECT_OWNED:
     print(f"  {len(PROJECT_OWNED)} project-owned skill(s) skipped: "
           f"{', '.join(sorted(PROJECT_OWNED))}")

@@ -1,3 +1,20 @@
+# Astraler Harness 1.0.2
+
+One defect, found by reading a diff rather than by any check.
+
+## Fixed
+
+- **`FW-*` is not a reserved namespace (FW-039).** The first upgrade into a mature repo
+  landed beside a project ledger already owning ten of the same IDs — including `FW-032`,
+  which this payload cites eleven times with an entirely different meaning. Every check
+  passed: the reference existed, the file existed, the number was well-formed. A checker
+  verifies that a reference RESOLVES, not that it resolves to what the author meant.
+  Citations now resolve by the location of the citing file, the ledger says so, and
+  adaptation detects the collision and records the rule in the project's entry doc.
+- **`check-reachability.sh` no longer degrades silently.** Its ownership answer comes from
+  the staged release; with no release to read it now says so instead of quietly treating
+  every project skill as harness-owned, which is the FW-038 defect returning.
+
 # Astraler Harness 1.0.1
 
 The first real installation, into an existing 1,991-commit repo. Eight defects surfaced that

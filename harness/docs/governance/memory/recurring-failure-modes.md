@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 38 entries (FW-001 … FW-038) · FW-001…034 carried into 1.0.0 unchanged
+Status: current · 39 entries (FW-001 … FW-039) · FW-001…034 carried into 1.0.0 unchanged
 
 Practical AI-agent failure modes measured while operating this harness. They are the
 evidence base: a rule kept in this package can point at an entry here, and a rule that
@@ -15,6 +15,14 @@ place rather than edited away. That is what lets an entry be cited as evidence y
 narratives live in git history (`git log -p` this file). `FW-*` = framework class,
 `FM-*` = product class. Status: `open → proposed → promoted → closed`, or `superseded` /
 `reverted`.
+
+**`FW-*` IDs in this file are the HARNESS's, and the prefix is not reserved.** A project may
+keep its own ledger using the same `FW-0xx` shape — one measured install had ten colliding
+IDs, including `FW-032`, which this payload cites eleven times with a different meaning. So
+**a citation inside harness-owned material always resolves HERE**, and a citation inside
+project-owned material resolves in the project's ledger. Resolution follows the location of
+the citing file, never the number alone. An ambiguous citation is worse than a missing one:
+the reader resolves it confidently, to the wrong lesson.
 
 **The `Bound:` pointers are historical.** They name the surface an entry was promoted into
 at the time, and many of those files were retired when 1.0.0 rebuilt the method around the
@@ -487,3 +495,20 @@ skipped — reported by name, so the skip is visible rather than silent.
 The general shape: **tooling that ships INTO other repos must be able to name its own
 files.** Location is not ownership.
 Bound: `harness/scripts/check-reachability.sh`.
+
+### FW-039 — An ID namespace shared with the host project resolves confidently to the wrong lesson · promoted 2026-08-10
+The first upgrade into a mature repo landed a payload citing `FW-036` and `FW-037` beside a
+project ledger that already owned `FW-034` and `FW-035` with unrelated meanings — ten IDs
+collided in total, and the payload's most-cited lesson, `FW-032`, was one of them. The
+project's entry doc routed every `FW-0xx` to its own ledger, so every citation this package
+ships would have resolved there.
+
+Nothing detected it. Every check passed: the reference existed, the file existed, the number
+was well-formed. It was found by a human-style reading of the diff, which is the honest
+lesson — **a checker verifies that a reference RESOLVES, not that it resolves to the thing
+the author meant.**
+
+Fix by location rather than by renumbering, which append-only forbids anyway: a citation
+resolves in the ledger belonging to the material that carries it. Adaptation now detects a
+colliding project ledger and records the rule in the project's own entry doc.
+Bound: this file's preamble, `prompts/ADAPT-HARNESS.md` §3.
