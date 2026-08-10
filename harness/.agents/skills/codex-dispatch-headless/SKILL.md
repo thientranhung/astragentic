@@ -9,12 +9,18 @@ Preconditions, all three: the request says `visibility=headless`, the task is bo
 an isolated worktree already exists. Any one of them absent routes back to `dispatch-ticket`,
 whose default is the visible Herdr pane.
 
-Spawn the `codex-headless-builder` agent with the worktree, branch, base, ticket,
-acceptance criteria, owner intent, validation commands and artifact contract. Print the
-resolved exception before spawning:
+Run the **Builder** role headless, from its own profile — the role and its contract are
+unchanged, and only the topology differs:
+
+```bash
+codex --profile builder --yolo
+```
+
+Brief it with the worktree, branch, base, ticket, acceptance criteria, owner intent,
+validation commands and artifact contract. Print the resolved exception first:
 
 ```text
-role=codex-headless-builder
+role=builder
 runtime=codex
 topology=headless
 ticket=<ticket id>

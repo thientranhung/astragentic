@@ -1,0 +1,17 @@
+# Codex profile for the rin role.
+#
+# Machine-local destination: ${CODEX_HOME:-$HOME/.codex}/rin.config.toml
+# Provisioned only with explicit owner confirmation; check-requirements.sh compares this
+# template against that destination and reports drift.
+#
+# model and model_reasoning_effort MIRROR the rin row in .agents/orchestrator.md, which is
+# the single owner of role -> runtime/model/effort. A profile disagreeing with its row is
+# drift to report rather than a second opinion.
+model = "gpt-5.1-codex"
+model_reasoning_effort = "high"
+
+# Rin has NO fallback row in orchestrator.md, and that absence is correct: the gate is a
+# Herdr pane on the root provider's runtime, which no Codex adapter can host. This template
+# exists so the doctor can compare something, and as the pane launcher for the day that
+# trade is revisited. Its write posture is UNVERIFIED and would need measuring before
+# anyone relies on it.

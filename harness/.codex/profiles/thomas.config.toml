@@ -1,0 +1,11 @@
+# Codex profile for the thomas role.
+#
+# Machine-local destination: ${CODEX_HOME:-$HOME/.codex}/thomas.config.toml
+# Provisioned only with explicit owner confirmation; check-requirements.sh compares this
+# template against that destination and reports drift.
+#
+# model and model_reasoning_effort MIRROR the thomas row in .agents/orchestrator.md, which is
+# the single owner of role -> runtime/model/effort. A profile disagreeing with its row is
+# drift to report rather than a second opinion.
+model = "gpt-5.1-codex"
+model_reasoning_effort = "high"
