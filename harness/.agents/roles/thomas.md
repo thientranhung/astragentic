@@ -53,15 +53,29 @@ each one is atomic on its own.
    any tracker with an assignee field, with no transaction support required.
 4. **Create the branch and worktree**, and only now:
    `git worktree add -b <ticket-branch> <worktree-path> <base>`. Branch creation is atomic in
-   git and **refuses a branch that already exists**. This is the second interlock, and it
-   catches a tracker whose readback lied — a cached read, an eventually-consistent API — by
-   failing at the filesystem instead of silently giving two Builders one branch.
-5. **Record** ticket → branch → worktree → workspace → tab → pane in the dispatch record.
+   git and **refuses a branch that already exists**. This is the second interlock, and it is
+   the one that actually decides a same-second race — step 3 can pass for *both* dispatchers
+   when the interleaving is `A writes → A reads A → B writes → B reads B`, because A's
+   readback completed before B's write existed. Both then believe they hold the claim, and
+   git is what separates them.
+5. **Branch creation failing means you lost the race.** Return to step 1 and take the next
+   ticket, and **leave the assignee exactly as you found it** — the ticket now belongs to the
+   dispatcher who won, and their Builder is already starting. Remove any worktree directory
+   your own attempt created, which is yours to clean because you made it.
+6. **Record** ticket → branch → worktree → workspace → tab → pane in the dispatch record.
    Cleanup needs the exact IDs, and a durable record is what lets a later session finish a
    dispatch this one started.
 
+## Releasing a claim
+
 A claim is released when you merge the ticket or the owner abandons it: clear the assignee as
 part of cleanup, after the worktree and branch are gone.
+
+**Clearing an assignee is correct only when a fresh readback shows your own.** Read it
+immediately before clearing, the same way you read it to take the claim. An assignee that is
+someone else's is a live claim with a Builder behind it, and clearing it hands a second
+Builder the same ticket — which is worse than the race it came from, because the tracker then
+says the ticket is free while the work is already underway.
 
 **A stale claim is an assignee with no branch.** You are the role that resolves one, because
 you are the role that can see both sides. Check for the worktree first — a Builder mid-ticket
