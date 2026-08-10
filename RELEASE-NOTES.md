@@ -1,3 +1,24 @@
+# Astraler Harness 1.0.3
+
+One defect, and it is the kind this package exists to catch: a check that could not fail.
+
+## Fixed
+
+- **The doctor compared Codex profiles against its own template, never against the table
+  that owns the answer.** `.agents/orchestrator.md` is the single owner of role →
+  runtime/model/effort, but a template shipped with placeholder model IDs agrees perfectly
+  with a profile copied from it while BOTH disagree with the owner's table. The doctor
+  reported green, and the first cross-vendor call would have failed looking like the
+  provider being down rather than a config error. It now reads the role's codex row and
+  fails when the profile disagrees. A named target's table wins over the package's copy.
+
+## Still not verified
+
+Three things, unchanged plus one: no ticket has gone spec → dispatch → gate → merge,
+concurrent Builders have never raced for a claim, and **no Codex model ID has ever been
+confirmed by an actual invoke** — the fallback rows are declared, not measured. The first
+cross-vendor arm is that test.
+
 # Astraler Harness 1.0.2
 
 One defect, found by reading a diff rather than by any check.

@@ -181,19 +181,62 @@ else
     "in an interactive claude session: /plugin → install 'codex' (marketplace: openai-codex)"
 fi
 
-# Codex role profiles for the 1.0.0 roles — machine-local, and provisioned only with
-# explicit owner confirmation, so drift and absence are reported rather than repaired.
+# Codex role profiles — machine-local, provisioned only with explicit owner confirmation, so
+# drift and absence are reported rather than repaired.
+#
+# The template is NOT the authority. `.agents/orchestrator.md` is the single owner of role →
+# runtime/model/effort, and a template shipped with placeholder values agrees with a profile
+# copied from it while BOTH disagree with the table — drift that is invisible to a
+# template-vs-profile comparison, and that surfaces as "Codex is down" at the first
+# cross-vendor call rather than as a config error. So compare against the table too.
+# A named target owns the answer: its table is the one its dispatches read. Only with no
+# target does the package's own copy stand in.
+ORCH=""
+for CAND in "${TARGET:+$TARGET/.agents/orchestrator.md}" \
+            ".agents/orchestrator.md" "harness/.agents/orchestrator.md"; do
+  [ -n "$CAND" ] && [ -f "$CAND" ] && { ORCH="$CAND"; break; }
+done
+
+# Read a role's codex row from either table; prints "<model>|<effort>".
+orchestrator_codex_row() {
+  [ -n "$ORCH" ] || return 1
+  awk -F'|' -v role="$1" '
+    $0 ~ /^\|/ {
+      gsub(/^[ \t]+|[ \t]+$/, "", $2); gsub(/^[ \t]+|[ \t]+$/, "", $3)
+      gsub(/^[ \t]+|[ \t]+$/, "", $4); gsub(/^[ \t]+|[ \t]+$/, "", $5)
+      gsub(/`/, "", $4)
+      if ($2 == role && $3 == "codex" && $4 != "") { print $4 "|" $5; exit }
+    }' "$ORCH"
+}
+
+profile_field() { grep -E "^$2 *=" "$1" 2>/dev/null | head -1 | cut -d'"' -f2; }
 for ROLE in thomas shaper builder rin; do
   # Three places the template can live: an adapted project (.codex/), this package
   # (harness/.codex/), or a target where the release is staged but not yet adapted.
   TEMPLATE=""
-  for CAND in ".codex/profiles/${ROLE}.config.toml" \
+  for CAND in "${TARGET:+$TARGET/.codex/profiles/${ROLE}.config.toml}" \
+              ".codex/profiles/${ROLE}.config.toml" \
               "harness/.codex/profiles/${ROLE}.config.toml" \
               $(ls -d .astraler/releases/*/harness/.codex/profiles/${ROLE}.config.toml 2>/dev/null | tail -1); do
-    [ -f "$CAND" ] && { TEMPLATE="$CAND"; break; }
+    [ -n "$CAND" ] && [ -f "$CAND" ] && { TEMPLATE="$CAND"; break; }
   done
   DEST="${CODEX_HOME:-$HOME/.codex}/${ROLE}.config.toml"
   if [ -n "$TEMPLATE" ]; then
+    # Authority check first: does the profile agree with the orchestrator row?
+    ROW="$(orchestrator_codex_row "$ROLE")"
+    if [ -n "$ROW" ]; then
+      ROW_MODEL="${ROW%%|*}"; ROW_EFFORT="${ROW##*|}"
+      PROF_SRC="$TEMPLATE"; [ -f "$DEST" ] && PROF_SRC="$DEST"
+      PROF_MODEL="$(profile_field "$PROF_SRC" model)"
+      PROF_EFFORT="$(profile_field "$PROF_SRC" model_reasoning_effort)"
+      if [ "$PROF_MODEL" != "$ROW_MODEL" ]; then
+        miss "Codex ${ROLE} profile model '$PROF_MODEL' disagrees with its orchestrator.md row '$ROW_MODEL'" \
+          "orchestrator.md owns role → model; a profile that disagrees fails at invoke time and looks like the provider being down. Fix $PROF_SRC"
+      elif [ -n "$ROW_EFFORT" ] && [ "$PROF_EFFORT" != "$ROW_EFFORT" ]; then
+        warn "Codex ${ROLE} profile effort '$PROF_EFFORT' disagrees with its row '$ROW_EFFORT'" \
+          "align $PROF_SRC with .agents/orchestrator.md"
+      fi
+    fi
     if [ -f "$DEST" ] && cmp -s "$TEMPLATE" "$DEST"; then
       ok "Codex ${ROLE} profile installed and matches the tracked template"
     elif [ -f "$DEST" ]; then
