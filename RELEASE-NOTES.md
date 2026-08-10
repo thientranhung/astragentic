@@ -1,3 +1,49 @@
+# Astraler Harness 1.0.1
+
+The first real installation, into an existing 1,991-commit repo. Eight defects surfaced that
+no amount of re-reading had found — five of them in the dispatch path the whole package
+exists to provide. Nothing here is a new feature.
+
+## Fixed
+
+- **The payload has to be COMMITTED, not merely present (FW-036).** A git worktree carries
+  tracked content only, so an untracked or gitignored payload leaves every Builder with no
+  contract — and no signal that one is missing. The target repo's `.gitignore` had `.agents/*`,
+  which would have produced contract-less Builders silently. `dispatch-ticket` now states the
+  rule with a worktree proof, `check-requirements.sh` fails when the payload is untracked, and
+  the adaptation prompt raises the commit with the owner instead of leaving it for later.
+- **A multi-line brief pastes without submitting, and the pane calls it `idle` (FW-037).**
+  Both submission commands work on one line and silently fail on a block — and every real
+  brief is multi-line. `dispatch-ticket` now sends an explicit Enter and requires observing
+  `working` before believing a turn began.
+- **The flow skills are `disable-model-invocation`, so no agent can invoke them.** The brief's
+  first line is now the slash command itself, which is what "an agent playing the human at
+  that step" means mechanically. The adaptation prompt no longer orders an agent to run
+  `setup-matt-pocock-skills`; it asks the owner and then verifies the artifacts.
+- **`check-reachability.sh` fired on every adopted repo (FW-038).** It treated everything in
+  `.claude/skills/` as harness-owned, so a project's own skills read as unreachable defects —
+  six findings, none real, on a correct install. Ownership now comes from the staged release
+  manifest, and skipped project skills are reported by name.
+- **The doctor's TARGET axis** described a post-adaptation state while telling the owner to
+  fix it before installing; those files are produced *during* adaptation. It also could not
+  find Codex templates from inside a staged target.
+
+## Upgrading from 1.0.0
+
+Re-stage and re-run the adaptation; it is a normal upgrade with no migration. After it lands,
+confirm the payload is visible where it has to be:
+
+```bash
+git worktree add --detach /tmp/harness-check HEAD
+test -f /tmp/harness-check/.agents/roles/builder.md && echo OK
+git worktree remove --force /tmp/harness-check
+```
+
+## Still not verified
+
+No ticket has gone spec → dispatch → gate → merge end to end. Concurrent Builders have never
+raced for a claim. Both remain the first things to test.
+
 # Astraler Harness 1.0.0
 
 A rebuild, not an upgrade. The method moves to Matt Pocock's `mattpocock-skills` plugin, the
