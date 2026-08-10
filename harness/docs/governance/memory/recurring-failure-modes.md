@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · carried into 1.0.0 unchanged · 34 entries (FW-001 … FW-034)
+Status: current · 35 entries (FW-001 … FW-035) · FW-001…034 carried into 1.0.0 unchanged
 
 Practical AI-agent failure modes measured while operating this harness. They are the
 evidence base: a rule kept in this package can point at an entry here, and a rule that
@@ -411,3 +411,30 @@ rather than inheriting it.
 Bound: `.claude/rules/build-loop-gates.md`, `.agents/roles/james-dev.md` §4b,
 `.agents/roles/dan-senior.md` §4a, `docs/governance/working-method.md` (PR checklist
 "Reuse/simplify"), `.agents/skills/dispatch-slice/SKILL.md`.
+
+### FW-035 — `set -euo pipefail` plus a no-match `grep` aborts before its own guard · promoted 2026-08-10
+Hit three times while building 1.0.0, in three separate scripts, each time wearing a
+different costume. `uninstall.sh` printed half a manifest and exited 1 before reaching the
+machine-local section, because `grep -rl … | wc -l` found no match: `grep` exits 1, and
+under `pipefail` that status is the pipeline's, so `set -e` killed the script mid-report.
+`check-requirements.sh` had the same shape. `gen-code-map.sh` exited 1 on a directory with
+no source files and printed NOTHING — the `|| { echo "error: …"; exit 1; }` guard written to
+explain exactly that case was three lines below the pipeline that aborted first.
+
+The costume is what makes it recur: `grep` returning 1 is not an error, it is an ANSWER —
+"none" — and it is the answer these pipelines are usually asking for. `wc -l` is downstream
+and exits 0, so without `pipefail` the bug is invisible and with `pipefail` the script dies
+somewhere the author never looks. **A guard placed after the pipeline it protects cannot
+run.**
+
+The fix is one shape, applied at the point of counting rather than to the whole script:
+wrap the fallible producer, never relax the shell options —
+`X=$( { grep … || true; } | wc -l )`. Relaxing `set -e` or dropping `pipefail` to make the
+symptom go away re-opens FW-032, since `pipefail` is what makes a mid-pipeline failure
+observable at all; these two entries pull in opposite directions and the wrap is what
+satisfies both.
+
+Cheapest detection: run every script's empty/zero-result path, not only its happy path. All
+three defects were found that way and none by reading.
+Bound: `harness/scripts/gen-code-map.sh`, `check-requirements.sh`,
+`harness/scripts/docs-staleness-audit.sh`.
