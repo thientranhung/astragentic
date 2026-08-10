@@ -57,10 +57,42 @@ def read(path):
 # --- inventory --------------------------------------------------------------------------
 roles = {os.path.basename(p)[:-3]: read(p)
          for p in sorted(glob.glob(os.path.join(ROLES_DIR, "*.md")))}
-skills = {}
+all_skills = {}
 for pattern in SKILL_GLOBS:
     for p in sorted(glob.glob(pattern)):
-        skills[os.path.basename(os.path.dirname(p))] = (p, read(p))
+        all_skills[os.path.basename(os.path.dirname(p))] = (p, read(p))
+
+# Which of those does THIS package own? In package layout, all of them. In an adapted
+# project the skill directories hold the project's own skills beside the harness's, and a
+# checker that cannot tell them apart reports every project skill as an unreachable defect.
+# The staged release is the authoritative manifest of what the harness shipped, so read it.
+def harness_owned():
+    if LAYOUT == "package":
+        return set(all_skills)
+    applied = ""
+    for candidate in (os.path.join(ROOT, ".astraler", "state", "applied-version"),
+                      os.path.join(ROOT, ".astraler", "CANDIDATE")):
+        if os.path.isfile(candidate):
+            applied = read(candidate).strip()
+            if applied:
+                break
+    owned = set()
+    for sub in (".claude", ".agents"):
+        owned |= {os.path.basename(os.path.dirname(q)) for q in glob.glob(os.path.join(
+            ROOT, ".astraler", "releases", applied or "*", "harness", sub, "skills",
+            "*", "SKILL.md"))}
+    # No staged release to compare against: check only what this run can attribute.
+    return owned or set()
+
+HARNESS_OWNED = harness_owned()
+PROJECT_OWNED = set(all_skills) - HARNESS_OWNED
+skills = {n: v for n, v in all_skills.items() if n in HARNESS_OWNED} or all_skills
+
+# Skills installed at user level are legitimate references a project skill may name.
+USER_SKILLS = {os.path.basename(os.path.dirname(q))
+               for pat in (os.path.expanduser("~/.claude/skills/*/SKILL.md"),
+                           os.path.expanduser("~/.agents/skills/*/SKILL.md"))
+               for q in glob.glob(pat)}
 
 if not roles:
     print(f"No role contracts under {ROLES_DIR} — nothing to check.", file=sys.stderr)
@@ -98,7 +130,8 @@ def plugin_skills():
     return set(PLUGIN_FALLBACK)
 
 PLUGIN = plugin_skills()
-KNOWN = set(skills) | PLUGIN
+# A name is resolvable when anything on this machine actually provides it.
+KNOWN = set(all_skills) | PLUGIN | USER_SKILLS
 
 # Kebab-case tokens that are vocabulary rather than skill references. Each is here because
 # it appears in backticks and looks like a skill name; the list stays short on purpose,
@@ -171,6 +204,12 @@ reachers.update({"skill " + n: t for n, (_, t) in skills.items()})
 prompt_text = read(PROMPT)
 if prompt_text:
     reachers["the adaptation prompt"] = prompt_text
+# A project routes its own skills from its entry docs, and the harness's from contracts.
+# Both are legitimate reachers, so read whichever exist.
+for entry in ("AGENTS.md", "CLAUDE.md"):
+    body = read(os.path.join(ROOT, entry))
+    if body:
+        reachers[entry] = body
 
 for name in sorted(skills):
     found = [src for src, text in reachers.items()
@@ -182,6 +221,7 @@ for name in sorted(skills):
 # --- 4. REFERENCE -> EXISTS -------------------------------------------------------------
 sources = {f"contract {r}": t for r, t in roles.items()}
 sources.update({f"skill {n}": t for n, (_, t) in skills.items()})
+# Project-owned skills are the project's to maintain; this checker verifies the harness.
 
 for src, text in sorted(sources.items()):
     # 4a. payload-relative paths
@@ -217,8 +257,11 @@ for src, text in sorted(sources.items()):
 
 # --- report -----------------------------------------------------------------------------
 print(f"Reachability check — {LAYOUT} layout, payload at {os.path.normpath(PAYLOAD)}")
-print(f"  {len(roles)} contracts · {len(skills)} shipped skills · "
+print(f"  {len(roles)} contracts · {len(skills)} harness skills · "
       f"{len(owned)} owned phases · {len(PLUGIN)} plugin skills known")
+if PROJECT_OWNED:
+    print(f"  {len(PROJECT_OWNED)} project-owned skill(s) skipped: "
+          f"{', '.join(sorted(PROJECT_OWNED))}")
 print()
 if not findings:
     print("  [OK] 1 every phase the method names is owned by the contract it names")
