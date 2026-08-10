@@ -40,7 +40,9 @@ version_ge() {
   [ -n "$1" ] && [ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | head -n1)" = "$2" ]
 }
 
-echo "Astraler harness 1.0.0 — requirements check"
+PKG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PKG_VERSION="$(cat "$PKG_DIR/VERSION" 2>/dev/null || echo "?")"
+echo "Astraler harness $PKG_VERSION — requirements check"
 echo
 echo "MACHINE (required):"
 
@@ -182,13 +184,16 @@ fi
 # Codex role profiles for the 1.0.0 roles — machine-local, and provisioned only with
 # explicit owner confirmation, so drift and absence are reported rather than repaired.
 for ROLE in thomas shaper builder rin; do
-  if [ -f ".codex/profiles/${ROLE}.config.toml" ]; then
-    TEMPLATE=".codex/profiles/${ROLE}.config.toml"
-  else
-    TEMPLATE="harness/.codex/profiles/${ROLE}.config.toml"
-  fi
+  # Three places the template can live: an adapted project (.codex/), this package
+  # (harness/.codex/), or a target where the release is staged but not yet adapted.
+  TEMPLATE=""
+  for CAND in ".codex/profiles/${ROLE}.config.toml" \
+              "harness/.codex/profiles/${ROLE}.config.toml" \
+              $(ls -d .astraler/releases/*/harness/.codex/profiles/${ROLE}.config.toml 2>/dev/null | tail -1); do
+    [ -f "$CAND" ] && { TEMPLATE="$CAND"; break; }
+  done
   DEST="${CODEX_HOME:-$HOME/.codex}/${ROLE}.config.toml"
-  if [ -f "$TEMPLATE" ]; then
+  if [ -n "$TEMPLATE" ]; then
     if [ -f "$DEST" ] && cmp -s "$TEMPLATE" "$DEST"; then
       ok "Codex ${ROLE} profile installed and matches the tracked template"
     elif [ -f "$DEST" ]; then
@@ -230,17 +235,39 @@ if [ -z "$TARGET" ]; then
   echo "         → ./check-requirements.sh <target-repo-path> also checks"
   echo "           docs/agents/issue-tracker.md, triage-labels.md and domain.md there"
 else
-  echo "TARGET $TARGET (required):"
+  # This axis describes a target that has finished adapting. Before adaptation these files
+  # do not exist yet, and that is the normal starting state rather than something to fix
+  # first — setup-matt-pocock-skills produces them DURING the adaptation run.
+  echo "TARGET $TARGET (post-adaptation state):"
+  TARGET_READY=1
   for DOC in issue-tracker triage-labels domain; do
     if [ -f "$TARGET/docs/agents/${DOC}.md" ]; then
       ok "docs/agents/${DOC}.md"
     else
-      miss "docs/agents/${DOC}.md missing in the target" \
-        "run /setup-matt-pocock-skills in that repo; it configures the tracker and writes these"
+      warn "docs/agents/${DOC}.md not present yet" \
+        "the OWNER types /setup-matt-pocock-skills in that repo (no model can invoke it) during adaptation; expected to be absent before then"
+      TARGET_READY=0
     fi
   done
-  if [ -d "$TARGET/.git" ] || git -C "$TARGET" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  if git -C "$TARGET" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     ok "target is a git work tree (worktree isolation available)"
+    # FW-036: a worktree carries TRACKED content only, so an uncommitted payload is
+    # invisible to every Builder. Ask git what it tracks rather than what exists on disk.
+    if [ "$TARGET_READY" = "1" ]; then
+      UNTRACKED_PAYLOAD=0
+      for PATHNAME in .agents/roles/builder.md .claude/agents/builder.md \
+                      .agents/orchestrator.md docs/agents/issue-tracker.md; do
+        [ -e "$TARGET/$PATHNAME" ] || continue
+        git -C "$TARGET" ls-files --error-unmatch "$PATHNAME" >/dev/null 2>&1 || {
+          printf '         · untracked: %s\n' "$PATHNAME"; UNTRACKED_PAYLOAD=1; }
+      done
+      if [ "$UNTRACKED_PAYLOAD" -eq 0 ]; then
+        ok "harness payload is committed (visible inside Builder worktrees)"
+      else
+        miss "harness payload is present but NOT tracked by git" \
+          "a worktree contains tracked content only, so a Builder dispatched now reads no contract at all (FW-036). Check .gitignore for .agents/ or .claude/ rules, then commit the payload"
+      fi
+    fi
   else
     miss "target is not a git work tree" \
       "run 'git init' in the target; concurrent Builders are isolated by worktree and branch"
