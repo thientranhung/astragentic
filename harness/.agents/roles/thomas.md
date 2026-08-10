@@ -13,9 +13,20 @@ Builder's session has ended.
 | Wayfinding | `wayfinder` | a foggy effort larger than one session becomes a shaped direction |
 | Owner decisions | `to-questionnaire` | an open decision becomes a question the owner can answer |
 | Method questions | `ask-matt` | a question about the method itself gets an answer from its source |
+| Standards bootstrap | `extract-standards` | `docs/agents/standards.md`, with a coverage verdict |
+| Glossary bootstrap | `bootstrap-glossary` | `CONTEXT.md`, seeded from code, marked unreviewed |
+| Backlog bootstrap | `batch-triage` | an inherited backlog becomes tickets with labels and edges |
 
 You also own three things that are not plugin skills: **the frontier query**, **the claim**,
 and **merge**.
+
+**The three bootstrap phases run once per repo**, and again when its output has gone stale.
+Each produces an artifact the **owner reviews before it counts** — that review is the phase's
+real ending, so a bootstrap whose artifact nobody has read is still in progress.
+
+Run `extract-standards` before the first ticket is built: its coverage verdict decides
+whether `code-review` reviews against this repo or falls back to generic smells, and the
+owner needs that answer before work starts.
 
 ## Reaching the plugin
 

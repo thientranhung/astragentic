@@ -70,33 +70,64 @@ answer with no source leaves the question open.
 
 Upstream's skills contain no occurrence of *legacy*, *brownfield*, *characterisation* or
 *untestable*; its brownfield notes live on its docs site for human readers. The projects this
-package installs into are not greenfield, so six gaps are ours: standards extraction,
-glossary bootstrap, a legacy-testing doctrine, a refactor path for repos too tangled for
-`improve-codebase-architecture`, batch triage of an inherited backlog, and boundary
-enforcement for the module design `codebase-design` describes.
+package installs into are not greenfield, so six gaps are ours. The rule for all six is
+**extract, never invent** — a standard the code does not follow, or a glossary term nobody
+confirmed, becomes confident-sounding lore that later sessions treat as truth.
 
-The rule for all six is **extract, never invent**. `code-scout`, the codemaps and the
-staleness audit are the reading layer. *(Shipping in a later increment — see
-RELEASE-NOTES.md.)*
+They split by how they are reached, and the split is deliberate:
+
+**Bootstrap — invoked by name, once per repo, each producing an artifact the owner reviews.**
+Thomas owns all three as phases in his contract, so they cannot become work that everyone
+assumes someone else ran.
+
+| Skill | Produces |
+|---|---|
+| `extract-standards` | `docs/agents/standards.md` + a SOLID/PARTIAL/THIN coverage verdict |
+| `bootstrap-glossary` | `CONTEXT.md`, seeded from code, every term citing its source file |
+| `batch-triage` | an inherited backlog as tickets with labels and blocking edges |
+
+**Craft — model-invoked, reached when the situation arises**, needing no wiring, exactly like
+`tdd` and `code-review`.
+
+| Skill | Reached when |
+|---|---|
+| `legacy-testing` | the code to change has no seam, so `tdd` cannot attach |
+| `untangle` | a refactor is too tangled for `improve-codebase-architecture` |
+| `module-boundaries` | an import crosses a boundary, or a refactor creates one |
+
+`code-scout`, `gen-code-map.sh` and the staleness audit are the reading layer all six extract
+from.
 
 ## Layout
 
 ```text
 harness/                          the payload staged into a target repo
+  .agents/
+    roles/                        thomas · shaper · builder · rin — the four contracts
+    orchestrator.md               role → runtime/model/effort; the owner's file
+    skills/
+      dispatch-ticket/            one ticket → one Builder → one worktree → one pane
+      codex-claude-arm/           cross-vendor arm, Codex root → Claude
+      codex-dispatch-headless/    explicit headless exception
   .claude/skills/
     review-with-rin/              Rin's milestone gate — dispatch, gate file, collection
     code-scout/                   read the current state before work is shaped
     codex-arm/                    cross-vendor arm, Claude root → Codex
-  .agents/skills/
-    dispatch-ticket/              one ticket → one Builder → one worktree → one pane
-    codex-claude-arm/             cross-vendor arm, Codex root → Claude
-    codex-dispatch-headless/      explicit headless exception
+    extract-standards/            ┐
+    bootstrap-glossary/           ├ brownfield bootstrap, invoked by name
+    batch-triage/                 ┘
+    legacy-testing/               ┐
+    untangle/                     ├ brownfield craft, model-invoked
+    module-boundaries/            ┘
   docs/governance/memory/
     recurring-failure-modes.md    34 measured failure modes; append-only, the evidence base
   scripts/
     herdr-watch-terminal.sh       turn watcher with a real start guard
     docs-staleness-audit.sh       age, fossils, dead links, always-on word budgets
+    gen-code-map.sh               code-map skeleton to stdout; a reader supplies meaning
 docs/adr/0001-…                   why the method was rebuilt around the plugin
+prompts/ADAPT-HARNESS.md          the semantic installer the agent executes
+install.sh                        mechanical staging, immutable releases
 check-requirements.sh             the doctor
 ```
 

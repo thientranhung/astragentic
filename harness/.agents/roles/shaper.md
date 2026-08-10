@@ -32,6 +32,11 @@ constantly:
 - **`domain-modeling`** when the effort introduces or sharpens domain terms.
 - **`research`** and **`prototype`** when an Align answer needs a source.
 
+This package adds two more, model-invoked the same way, for shaping work on existing code:
+**`untangle`** when the effort is a refactor of code too tangled for
+`improve-codebase-architecture` to have anything to work with, and **`module-boundaries`**
+when a seam you are deciding becomes a boundary worth recording.
+
 ## Align: the frontier and its sources
 
 `grill-with-docs` opens a frontier of questions. **You answer them** — that is what this

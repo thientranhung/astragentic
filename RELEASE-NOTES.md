@@ -36,14 +36,28 @@ cross-vendor arm, `code-scout`, the herdr watcher and the staleness audit. Each 
 the same test: it points at a measured failure mode, and it serves either brownfield work or
 concurrency.
 
+## The brownfield half
+
+The six gaps upstream leaves on an existing codebase, split by how they are reached.
+`extract-standards`, `bootstrap-glossary` and `batch-triage` are **invoked by name**, run once
+per repo, and each produces an artifact the owner reviews before it counts — Thomas owns all
+three as phases, so none can become work everyone assumes someone else ran.
+`legacy-testing`, `untangle` and `module-boundaries` are **model-invoked craft**, reached when
+the situation arises, needing no wiring.
+
+`extract-standards` carries the loudest requirement in this release: a `THIN` coverage verdict
+is reported to the owner in words, because it means `code-review`'s Standards axis will keep
+doing the generic review its own design exists to avoid.
+
+`.agents/orchestrator.md` ships as the owner's role → runtime/model/effort table. Row values
+survive upgrades; the structure follows the package.
+
 ## Held out of 1.0.0 deliberately
 
 - `docs/governance/distilled/` — 26,150 words of distilled BMAD, the approach upstream names
   as the one it rejects. Holding both is a separate decision.
-- The brownfield bootstrap (standards extraction, glossary bootstrap, legacy testing
-  doctrine, refactor path, batch triage, boundary enforcement) — specified, not yet built.
-- `install.sh` and the adaptation prompt.
-- The reachability check.
+- The reachability check, which is what would verify the phase-ownership invariant the role
+  contracts now rely on.
 
 ## Upgrading from 0.14.0
 

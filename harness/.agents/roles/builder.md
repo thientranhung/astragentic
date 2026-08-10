@@ -24,6 +24,11 @@ needs no wiring** — `tdd`, `code-review`, `codebase-design`, `domain-modeling`
 `wizard` are already available to you. `tdd` and `diagnosing-bugs` are the two this role
 lives in; reach for `resolving-merge-conflicts` when your branch has drifted from base.
 
+This package adds three more that are model-invoked the same way, for work on code that
+already exists: **`legacy-testing`** when the code you must change has no seam to test
+through, **`module-boundaries`** when an import reaches into another module, and
+**`untangle`** when a change's blast radius keeps growing the more you read.
+
 ## Build
 
 Work from the ticket, the spec it came from, and the owner intent in your brief. Where the
@@ -33,9 +38,10 @@ wrong assumption costs the ticket.
 **Stay inside your worktree.** Another Builder's checkout is live work, and your own worktree
 holds everything this ticket needs.
 
-`tdd` is the default shape on code that has a seam. On code that has none, say so to Thomas
-rather than forcing it: creating a seam is a design decision, and the legacy-testing doctrine
-that covers it is a separate piece of this package.
+`tdd` is the default shape on code that has a seam. On code that has none, `legacy-testing`
+carries the order that works there — characterise, then create a seam, then TDD. A **small**
+seam is yours to make. A seam that several modules will depend on shapes the module
+boundaries, so report that one to Thomas: it belongs where the whole picture is in context.
 
 ## Increment review
 
