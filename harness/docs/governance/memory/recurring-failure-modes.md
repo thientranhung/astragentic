@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 35 entries (FW-001 … FW-035) · FW-001…034 carried into 1.0.0 unchanged
+Status: current · 38 entries (FW-001 … FW-038) · FW-001…034 carried into 1.0.0 unchanged
 
 Practical AI-agent failure modes measured while operating this harness. They are the
 evidence base: a rule kept in this package can point at an entry here, and a rule that
@@ -438,3 +438,52 @@ Cheapest detection: run every script's empty/zero-result path, not only its happ
 three defects were found that way and none by reading.
 Bound: `harness/scripts/gen-code-map.sh`, `check-requirements.sh`,
 `harness/scripts/docs-staleness-audit.sh`.
+
+### FW-036 — A git worktree carries TRACKED content only · promoted 2026-08-10
+First real installation of 1.0.0 into an existing repo. The project's `.gitignore` carried
+`.agents/*`, so a Builder dispatched into its worktree would have found no
+`.agents/roles/builder.md` — the exact file its adapter tells it to read first. It would have
+started with no contract and no signal that anything was missing, which is worse than a
+Builder that fails: it improvises, plausibly.
+
+Allow-listing the paths was not enough. **Files must be COMMITTED**, because a worktree is
+built from the index, so allow-listed-but-untracked is still invisible. That second half is
+the part everyone believes is already done.
+
+The general shape: **any mechanism that materializes a fresh checkout sees only what git
+tracks.** Payload placed on disk by an installer is not payload the method can use.
+Cheapest proof, and the only one that answers the question:
+`git worktree add --detach /tmp/x HEAD && test -f /tmp/x/.agents/roles/builder.md`.
+Bound: `dispatch-ticket` (payload-must-be-committed section), `check-requirements.sh`
+(tracked-payload check), `prompts/ADAPT-HARNESS.md` §4.
+
+### FW-037 — A multi-line prompt pastes without submitting, and the pane calls it idle · promoted 2026-08-10
+`herdr pane run` and `agent prompt` both send text plus Enter, and both work on one line. A
+MULTI-LINE block is pasted as a unit and the Enter is consumed by the paste: the transcript
+shows `[Pasted text #1 +N lines]` sitting in an unsent composer. Every real dispatch brief is
+multi-line, so this is the default case rather than an edge case.
+
+It compounds with FW-032: the pane then reports **`idle`**, because an empty-looking composer
+matches Claude's `prompt_box_body` rule. A dispatcher that trusts that status concludes the
+agent finished instantly, and waits forever on work that never started.
+
+Two-part fix, and the second part is what makes it detectable: send Enter explicitly after a
+multi-line brief, then **require observing `working`** before believing the turn began.
+Reaching `idle`/`done` without ever seeing `working` means it never ran.
+Bound: `dispatch-ticket` (Submitting it).
+
+### FW-038 — A checker that cannot tell project content from package content fires on every adopted repo · promoted 2026-08-10
+`check-reachability.sh` globbed `.claude/skills/*/SKILL.md` and treated everything it found
+as harness-owned. In the package that is true. In an adopted repo the project's own skills
+sit in the same directory, so the checker reported four of them as unreachable defects and
+one as naming unknown skills — six findings, none real, on a correct installation.
+
+A gate that cries wolf on a correct install gets switched off, which costs more than the
+gate was worth. The fix is to establish ownership from evidence rather than from location:
+the staged release under `.astraler/releases/<applied>/harness/` is the authoritative
+manifest of what the package shipped, and anything outside it belongs to the project and is
+skipped — reported by name, so the skip is visible rather than silent.
+
+The general shape: **tooling that ships INTO other repos must be able to name its own
+files.** Location is not ownership.
+Bound: `harness/scripts/check-reachability.sh`.
