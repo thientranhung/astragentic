@@ -92,8 +92,8 @@ if [[ -d .claude/rules ]]; then
   budget_check ".claude/rules/ always-on total" 1100 "$RULES_TOTAL"
 fi
 for ROLE in thomas shaper builder rin; do
-  [[ -f ".claude/agents/$ROLE.md" ]] && \
-    budget_check "$ROLE.md" 1200 "$(wc -w < ".claude/agents/$ROLE.md" | tr -d ' ')"
+  [[ -f ".agents/roles/$ROLE.md" ]] && \
+    budget_check "roles/$ROLE.md" 1200 "$(wc -w < ".agents/roles/$ROLE.md" | tr -d ' ')"
 done
 
 echo
