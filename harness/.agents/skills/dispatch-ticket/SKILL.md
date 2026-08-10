@@ -102,6 +102,31 @@ Re-measured on herdr 0.8.0 and opencode 1.18.11:
 5. Reading an opencode TUI transcript via `herdr agent read` returns only the input box and
    footer. Tolerable under verify-by-artifact — review diffs, not pane narration.
 
+## The payload must be COMMITTED before the first dispatch
+
+**A git worktree contains tracked content and nothing else.** So a harness whose files are
+untracked — gitignored, or merely staged-but-uncommitted — is invisible inside every Builder
+worktree, including `.agents/roles/builder.md`, the file the Builder's adapter tells it to
+read first. The Builder starts with no contract and no sign that anything is missing.
+
+Two conditions, and both are needed (FW-036):
+
+1. **Nothing in the payload is gitignored.** A repo with a broad `.agents/*` or `.claude/*`
+   ignore rule needs allow-list entries for the harness paths.
+2. **The payload is committed.** Allow-listing alone leaves the files untracked, so the
+   worktree is still empty. This is the step that is easy to believe is done.
+
+Confirm it the only way that answers the question, before the first dispatch of a session:
+
+```bash
+git worktree add --detach /tmp/harness-check HEAD
+test -f /tmp/harness-check/.agents/roles/builder.md && echo OK || echo "PAYLOAD NOT VISIBLE"
+git worktree remove --force /tmp/harness-check
+```
+
+A `PAYLOAD NOT VISIBLE` result is a STOP: dispatching into it produces a Builder that
+improvises, which is harder to notice than a Builder that fails.
+
 ## Worktree and named tab
 
 `<worktree-path>` is the ABSOLUTE path
@@ -193,9 +218,56 @@ a visible pane.
 
 ## Brief, watch, and steer
 
+### The brief opens with the phase's slash command
+
+**The plugin's flow skills are `disable-model-invocation: true`** — `implement`, `triage`,
+`wayfinder`, `to-spec`, `to-tickets`, `grill-with-docs`, `setup-matt-pocock-skills`. A model
+cannot reach them at all, so an agent that is *told about* `implement` in prose will read the
+prose and start coding without the skill.
+
+What does reach them is **text arriving as a user turn**. So the brief's first line is the
+slash command itself, and the rest of the brief follows it:
+
+```text
+/implement TICKET-123
+
+Worktree: … · Branch: … · Base: …
+Acceptance criteria: …
+Owner intent: …
+Validation: …
+```
+
+This is what "an agent playing the human at that step" means mechanically. Verify by
+artifact that the skill actually ran — its own output in the transcript — rather than by the
+brief having been sent.
+
+### Submitting it
+
 ```bash
 herdr agent prompt <pane-id> "<brief>" --wait --until working --timeout 30000
 ```
+
+**A multi-line brief lands in the composer WITHOUT submitting.** Measured: `herdr pane run`
+and `agent prompt` both send text plus Enter, but a multi-line block is pasted as a unit and
+the Enter is consumed by the paste — the transcript shows `[Pasted text #1 +N lines]` sitting
+in an unsent composer. Every real dispatch brief is multi-line, so this is the default case,
+not the edge case.
+
+**And the pane reports `idle` while it sits there**, because an empty-looking composer
+matches Claude's idle rule — a signal incapable of failing (FW-032, FW-037). A dispatcher
+that trusts that `idle` concludes the Builder finished instantly.
+
+So a multi-line brief takes an explicit second step, then a positive confirmation:
+
+```bash
+herdr pane run <pane-id> "<multi-line brief>"
+herdr pane send-keys <pane-id> Enter        # the brief is pasted; THIS submits it
+herdr agent wait <pane-id> --until working --timeout 30000
+```
+
+**`working` is the confirmation that the turn started.** Reaching `idle` or `done` without
+having observed `working` means the brief never ran — re-read the pane before concluding
+anything about the work.
 
 **`--wait` collapses submit, start-guard and settle into one call, and it is trustworthy
 ONLY on a pane whose turn you just opened.** Herdr's own help says it "does not track turns:
