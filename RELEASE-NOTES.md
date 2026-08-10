@@ -52,12 +52,23 @@ doing the generic review its own design exists to avoid.
 `.agents/orchestrator.md` ships as the owner's role → runtime/model/effort table. Row values
 survive upgrades; the structure follows the package.
 
+## The reachability check
+
+`scripts/check-reachability.sh` enforces, in both directions, that the method the docs
+describe is the method that exists: every phase the README's role table names is owned by
+exactly one contract and by the role named; every shipped skill is reached by a contract,
+another skill or the adaptation prompt; and every path, `--agent` and `--profile` a contract
+or skill names resolves in the payload.
+
+It found five real defects on its first run, including two skills naming `.claude/agents/*.md`
+files the payload never shipped — meaning `claude --agent builder` would have failed at
+dispatch with "agent not found". The adapters and the Codex profile templates now ship.
+
 ## Held out of 1.0.0 deliberately
 
 - `docs/governance/distilled/` — 26,150 words of distilled BMAD, the approach upstream names
   as the one it rejects. Holding both is a separate decision.
-- The reachability check, which is what would verify the phase-ownership invariant the role
-  contracts now rely on.
+- `docs/agents/` content beyond what `setup-matt-pocock-skills` writes.
 
 ## Upgrading from 0.14.0
 

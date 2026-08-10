@@ -109,22 +109,26 @@ harness/                          the payload staged into a target repo
       dispatch-ticket/            one ticket → one Builder → one worktree → one pane
       codex-claude-arm/           cross-vendor arm, Codex root → Claude
       codex-dispatch-headless/    explicit headless exception
-  .claude/skills/
-    review-with-rin/              Rin's milestone gate — dispatch, gate file, collection
-    code-scout/                   read the current state before work is shaped
-    codex-arm/                    cross-vendor arm, Claude root → Codex
-    extract-standards/            ┐
-    bootstrap-glossary/           ├ brownfield bootstrap, invoked by name
-    batch-triage/                 ┘
-    legacy-testing/               ┐
-    untangle/                     ├ brownfield craft, model-invoked
-    module-boundaries/            ┘
+  .claude/
+    agents/                       Claude adapters so --agent <role> resolves
+    skills/
+      review-with-rin/              Rin's milestone gate — dispatch, gate file, collection
+      code-scout/                   read the current state before work is shaped
+      codex-arm/                    cross-vendor arm, Claude root → Codex
+      extract-standards/            ┐
+      bootstrap-glossary/           ├ brownfield bootstrap, invoked by name
+      batch-triage/                 ┘
+      legacy-testing/               ┐
+      untangle/                     ├ brownfield craft, model-invoked
+      module-boundaries/            ┘
+  .codex/profiles/                one per role, mirroring the orchestrator rows
   docs/governance/memory/
-    recurring-failure-modes.md    34 measured failure modes; append-only, the evidence base
+    recurring-failure-modes.md    35 measured failure modes; append-only, the evidence base
   scripts/
     herdr-watch-terminal.sh       turn watcher with a real start guard
     docs-staleness-audit.sh       age, fossils, dead links, always-on word budgets
     gen-code-map.sh               code-map skeleton to stdout; a reader supplies meaning
+    check-reachability.sh         does the method the docs describe actually exist?
 docs/adr/0001-…                   why the method was rebuilt around the plugin
 prompts/ADAPT-HARNESS.md          the semantic installer the agent executes
 install.sh                        mechanical staging, immutable releases

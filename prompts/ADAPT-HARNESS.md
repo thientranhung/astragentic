@@ -112,27 +112,31 @@ that runtime and leaves a Claude-only installation valid.
 a Herdr pane on the root provider's runtime, so a fallback would name a runtime that cannot
 host it. A project that has re-added the row has regressed; report it.
 
-## 5. Brownfield entry — not in this release
+## 5. Brownfield entry
 
-This package's brownfield half is **specified and not yet built**: standards extraction,
-glossary bootstrap, the legacy-testing doctrine, a refactor path for repos too tangled for
-`improve-codebase-architecture`, batch triage of an inherited backlog, and boundary
-enforcement. See `docs/adr/0001-*.md` for what each one is for.
+On a repo with existing code, three bootstrap skills run once and each produces an artifact
+the **owner reviews before it counts**. Thomas owns all three as phases; run them in this
+order, because each feeds the next:
 
-**Until that release lands, this is the hand-off point, and it is named rather than silent.**
-On a repo with existing code, tell the owner plainly in the receipt:
+1. **`extract-standards`** → `docs/agents/standards.md`. **Report its coverage verdict to the
+   owner in words, in this run's summary.** A `THIN` verdict means `code-review`'s Standards
+   axis will keep falling back to twelve generic smells — the generic review its own design
+   exists to avoid. Silent degradation is the failure class this harness exists to catch, so
+   a THIN verdict filed quietly in a header is that failure happening inside the tool built
+   to prevent it.
+2. **`bootstrap-glossary`** → `CONTEXT.md`, seeded from the terms the code already uses, every
+   term citing the file it was read from and marked `UNREVIEWED` until the owner confirms it.
+3. **`batch-triage`** — only where the repo arrives with an existing backlog. Its closures
+   wait for the owner; its live tickets carry labels and blocking edges, which is what makes
+   Thomas's frontier query meaningful on day one.
 
-- **`code-review`'s Standards axis reads whatever the repo documents**, and otherwise falls
-  back to twelve generic Fowler smells — becoming the generic review its own design exists to
-  avoid. Report what this repo documents today, and say which of the two the axis will do.
-  Silent degradation is the failure class this harness exists to catch, so make it audible.
-- **`tdd` requires a confirmed seam.** On code that has none, the Builder is instructed to
-  report that to Thomas rather than force it, and the doctrine that resolves it is not in
-  this release.
-- **`CONTEXT.md` is not bootstrapped here.** `domain.md` from step 2 is what exists.
+Three further skills are **model-invoked** and need no wiring: `legacy-testing` when code has
+no seam for `tdd` to attach to, `untangle` when a refactor is too tangled for
+`improve-codebase-architecture`, and `module-boundaries` when an import crosses a boundary.
+Confirm they are staged; reaching them is the agents' business, not this run's.
 
-Record these under a `## Brownfield gaps` heading in the receipt. `code-scout` and the
-staleness audit ship in this release and are the reading layer these will build on.
+Record the coverage verdict, the glossary counts and the triage counts under a
+**`## Brownfield bootstrap`** heading in the receipt.
 
 ## 6. Validate by artifact
 
@@ -141,8 +145,11 @@ Run checks proportional to what changed:
 - `git diff` — confirm unrelated project work is untouched;
 - `bash -n` on shell scripts, and parse any Codex TOML;
 - `./check-requirements.sh .` passes both axes;
-- every role contract named in `.agents/orchestrator.md` resolves to a file that exists, and
-  every phase in the method appears in exactly one contract;
+- **`scripts/check-reachability.sh` exits 0.** It enforces that every phase the method names
+  is owned by exactly one contract, that every shipped skill is reached by something, and
+  that every path, agent and profile a contract or skill names actually exists. A contract
+  naming a file that does not exist is how the prior package failed, so this is a hard
+  failure rather than a warning;
 - Codex profile templates compared with their machine-local destinations, each recorded
   provisioned, drifted, missing or declined, and agreeing with their `orchestrator.md` rows;
 - referenced files exist, and project-owned entry docs carry no leftover placeholders;
