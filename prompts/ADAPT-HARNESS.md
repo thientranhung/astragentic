@@ -34,11 +34,14 @@ integration work.
    owner to install it (`/plugin` → `mattpocock-skills`, marketplace `claude-plugins-official`).
    This is a genuine blocker: record `PENDING` and return rather than adapting around it.
 
-2. **Run `setup-matt-pocock-skills` in this repo.** It configures the issue tracker and
-   writes the files the whole chain reads. It is mandatory because the indirection depends on
-   it: Thomas's frontier query reads the tracker named in `docs/agents/issue-tracker.md`, his
-   triage reads the vocabulary in `triage-labels.md`, and the Shaper's domain work reads
-   `domain.md`.
+2. **Ask the OWNER to run `/setup-matt-pocock-skills` in this repo, and wait.** You cannot
+   run it yourself: it is `disable-model-invocation: true`, like every flow skill in the
+   plugin, so no model reaches it — only a person typing the command, or that text arriving
+   as a user turn in a pane. Stop here and say so plainly rather than working around it.
+
+   It is mandatory because the whole chain's indirection depends on it: Thomas's frontier
+   query reads the tracker named in `docs/agents/issue-tracker.md`, his triage reads the
+   vocabulary in `triage-labels.md`, and the Shaper's domain work reads `domain.md`.
 
 3. **Verify the three files exist, by reading them.** A skill that reported success and a
    skill that produced files are different claims, and only the second one is checkable:
@@ -99,8 +102,24 @@ Integrate the smallest coherent result.
    project-owned files only**. The reusable payload stays generic.
 3. Preserve runtime separation and the project's existing custom agents and skills. Merge
    upstream changes rather than multiplying near-duplicate files.
-4. This run installs the operating harness. Product behaviour stays as it is, and committing,
-   pushing, merging or changing external services waits for the owner to ask.
+4. This run installs the operating harness. Product behaviour stays as it is, and pushing,
+   merging or changing external services waits for the owner to ask.
+
+**The installation has to be COMMITTED before any Builder can be dispatched**, and this is
+the one commit to raise with the owner rather than leave for later. A git worktree contains
+only tracked content, so an uncommitted payload is invisible inside every Builder worktree —
+including the role contract its adapter tells it to read first (FW-036). Check the repo's
+ignore rules for `.agents/` or `.claude/` patterns that would exclude the payload, propose
+allow-list entries where needed, and prove the result:
+
+```bash
+git worktree add --detach /tmp/harness-check HEAD
+test -f /tmp/harness-check/.agents/roles/builder.md && echo OK || echo "PAYLOAD NOT VISIBLE"
+git worktree remove --force /tmp/harness-check
+```
+
+Report the outcome in the receipt. `PAYLOAD NOT VISIBLE` after the commit is a blocker, not a
+detail: it means dispatch will silently produce contract-less Builders.
 
 **Codex role profiles** (`thomas`, `shaper`, `builder`, `rin`) are machine-local at
 `${CODEX_HOME:-$HOME/.codex}/<role>.config.toml`. Compare each tracked template with its
