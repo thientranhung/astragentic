@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 47 entries (AST-001 … AST-047) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 49 entries (AST-001 … AST-049) · AST-001…034 carried into 1.0.0 unchanged
 
 Practical AI-agent failure modes measured while operating this harness. They are the
 evidence base: a rule kept in this package can point at an entry here, and a rule that
@@ -659,3 +659,48 @@ Generalises past this case: **a safety rule keyed to a proxy for the risk will b
 by the proxy.** Key it to the thing itself, and require the agent to establish it rather than
 infer it — here, what the data *is*, asked before a screen is judged safe to capture.
 Bound: `harness/.agents/roles/qa.md` §Safety(c).
+
+### AST-048 — A rule not present where it must be remembered does not exist · promoted 2026-08-11
+1.x carried this ledger forward and dropped every always-on rule file. Measured on 1.3.1:
+`git ls-files | grep -c 'claude/rules'` returns **0**. Two rules survived only here, in a file
+whose own header calls it advisory memory that nothing is told to read:
+
+- **One checkout, one driver** (AST-016, AST-027). A live incident: two root sessions shared a
+  main checkout, one ran `git switch` while the other was committing, three commits landed on
+  the wrong branch and vanished when it switched back. Nothing errored; both sessions were
+  correct in isolation. The owner hit this class again while 1.3.1 was installed.
+- **Role is decided by how a session was spawned**, never by prompt content (AST-024). The
+  risk grew rather than shrank: five roles now, against four.
+
+The line the deleted file ended on is the one worth keeping: **a rule that is not present
+where it must be remembered does not exist.** This package had already demonstrated it three
+times — a walker shipped across releases that nothing dispatched, a gate demanding evidence no
+contract produced, and now two invariants living only in memory.
+
+The corollary for this file: **the ledger is evidence, not law.** An entry here records what
+was measured; a rule only binds when it sits in the contract of the role that must obey it, or
+in the skill that role reaches for. Promoting a lesson means moving it to that surface, not
+appending here and considering it done.
+
+Retiring an always-on rule is therefore a **policy change**, not housekeeping, and belongs in
+an upgrade receipt as "re-homed to X" or "dropped because Y".
+Bound: `harness/.agents/skills/dispatch-ticket/SKILL.md` (one checkout),
+`harness/.claude/agents/*.md` (spawn-decides-role), `prompts/ADAPT-HARNESS.md` §3.
+
+### AST-049 — Checks 1–4 asked whether things were consistent, never whether a role could START · promoted 2026-08-11
+`check-reachability.sh` verified that every phase had an owner and every reference resolved,
+and passed on a package where **three of four dispatchable roles had no launcher written
+anywhere** and the shaper was never named by the dispatcher's contract. Dispatching Rin by the
+documentation was impossible: `review-with-rin` said "argv from the dispatch-ticket launcher
+matrix", and that matrix listed only the builder.
+
+The gap outlived two rewrites. The prior package's dispatch skill mentioned james 51 times,
+dan 52, rin 10, shaper 0 — and the align phase never had a dispatch path in any version, which
+is the finding ADR 0001 was written about. It survived the rewrite intact because nothing
+tested for it.
+
+A role needs **two** things to be startable: a written launcher, and a dispatcher whose
+contract names it. Check 5 requires both. The general shape: **a consistency check answers
+"does this agree with itself", which a completely inert system also passes.** At least one
+check has to ask whether the thing can run.
+Bound: `harness/scripts/check-reachability.sh` (check 5).

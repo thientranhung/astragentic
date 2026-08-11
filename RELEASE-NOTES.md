@@ -1,3 +1,51 @@
+# Astraler Harness 1.4.0
+
+Findings from the live project, and from the agent that built the package this replaces.
+The theme is one sentence, taken from a file 1.x deleted: **a rule that is not present where
+it must be remembered does not exist.**
+
+## Fixed
+
+- **Three of four dispatchable roles had no launcher written anywhere (AST-049).** Only the
+  builder did. `review-with-rin` said "argv from the dispatch-ticket launcher matrix" and that
+  matrix listed the builder alone, so dispatching Rin by the documentation was impossible. The
+  matrix is now the single home for all four, and **check 5** requires every role to have both
+  a launcher and a dispatcher that names it.
+
+  Checks 1–4 only asked whether things agreed with each other — a question a completely inert
+  system also passes. The shaper gap survived two rewrites because nothing tested for it: it
+  is the same align-phase hole ADR 0001 was written about.
+
+- **Thomas can dispatch the Shaper.** Previously his contract did not contain the word, so the
+  role that runs align → spec → tickets had no way to be started.
+
+- **Two always-on invariants came back (AST-048).** 1.x kept the ledger and dropped every
+  `.claude/rules/` file — measured on 1.3.1, that count was zero. *One checkout, one driver*
+  and *a role is decided by how it was spawned* survived only in advisory memory. They now sit
+  in `dispatch-ticket` and in every Claude adapter. The ledger records evidence; a rule binds
+  only from a contract.
+
+- **Four prevention lessons entered role contracts**: test from the other side of a contract,
+  fix the class not the instance, folding a finding is propagation, run every machine before
+  the reviewer. A one-round gate has no second round in which to catch what these prevent.
+
+- **The checker stops overclaiming.** It now prints its scope and states that the ledger's
+  historical `Bound:` provenance is deliberately not scanned.
+
+- **Adaptation treats removing an always-on rule as a policy change**, with a per-rule
+  "re-homed to X / dropped because Y" line in the receipt.
+
+- **A web-shape assumption came out of the QA role.** It called an unrunnable product a
+  finding; for a library, a CLI or a pipeline that is a fact about the product, not a defect.
+
+## Declined
+
+- **Putting the prevention lessons in the ledger**, as recommended. The ledger is advisory
+  memory nothing is told to read — that placement is the very failure being reported.
+- **Failing check 4 on the ledger's stale `Bound:` pointers.** They are documented provenance
+  in append-only entries; enforcing it would keep the checker permanently red or force
+  rewriting history.
+
 # Astraler Harness 1.3.1
 
 Two defects, both found by the repo running this, and both invisible to every check here.

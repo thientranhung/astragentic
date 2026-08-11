@@ -16,6 +16,10 @@ Four checks, in both directions:
   4 REFERENCE -> EXISTS  every payload path and skill name referenced by a contract or a
                          shipped skill resolves. HARD failure: a contract naming a file
                          that does not exist is how the prior package failed.
+  5 ROLE -> STARTABLE    every role has a launcher AND a dispatcher that names it. A role
+                         nobody can start is the failure that outlived two rewrites: an
+                         align phase described for weeks with no contract owning it, and a
+                         browser walker shipped across releases that never ran once.
 
 Runs against this package (payload under harness/) or an adapted project (payload at the
 repo root). Exit 0 = every check passed, 1 = at least one finding.
@@ -261,6 +265,28 @@ for src, text in sorted(sources.items()):
                       f"but .codex/profiles/{prof}.config.toml is absent from the payload",
                  "check-requirements.sh reports this template as missing rather than WARN-able")
 
+# --- 5. ROLE -> STARTABLE ---------------------------------------------------------------
+# Checks 1-4 verify that what exists is consistent. None of them asks the question that
+# actually killed two capabilities: can this role be STARTED? A role needs two things — a
+# written launcher, and a dispatcher whose contract names it. Missing either, it is correct,
+# valuable and unreachable.
+DISPATCHER = "thomas"      # the resident router is launched by the owner, not dispatched
+launcher_text = "\n".join(t for _, t in skills.values())
+dispatcher_text = roles.get(DISPATCHER, "")
+
+for role in sorted(roles):
+    if role == DISPATCHER:
+        continue
+    has_launcher = bool(re.search(rf"--(agent|profile)\s+{re.escape(role)}\b", launcher_text))
+    named_by_dispatcher = bool(re.search(rf"\b{re.escape(role)}\b", dispatcher_text, re.I))
+    if not has_launcher:
+        fail("5", f"role '{role}' has no launcher in any shipped skill",
+             f"nothing states how to start it; add it to dispatch-ticket's launcher matrix")
+    if not named_by_dispatcher:
+        fail("5", f"role '{role}' is never named by contract '{DISPATCHER}'",
+             "the dispatcher's contract decides what gets dispatched; a role it does not "
+             "name is a role that never runs, however correct its own contract is")
+
 # --- report -----------------------------------------------------------------------------
 print(f"Reachability check — {LAYOUT} layout, payload at {os.path.normpath(PAYLOAD)}")
 print(f"  {len(roles)} contracts · {len(skills)} harness skills · "
@@ -276,7 +302,10 @@ if not findings:
     print("  [OK] 2 every declared phase is declared exactly once")
     print("  [OK] 3 every shipped skill is reached")
     print("  [OK] 4 every referenced path and skill exists")
-    print("\nAll reachability checks passed.")
+    print("  [OK] 5 every role has a launcher and a dispatcher that names it")
+    print(f"\nAll reachability checks passed. Scope: {len(roles)} contracts, "
+          f"{len(skills)} skills, the adaptation prompt and the README role table.")
+    print("Not scanned: the failure-mode ledger's historical `Bound:` provenance.")
     sys.exit(0)
 
 for check, msg, detail in findings:

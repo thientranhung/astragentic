@@ -44,6 +44,20 @@ carries the order that works there — characterise, then create a seam, then TD
 seam is yours to make. A seam that several modules will depend on shapes the module
 boundaries, so report that one to Thomas: it belongs where the whole picture is in context.
 
+## Two rules about being wrong
+
+**A test written from the same side as the code proves only that the code does what it does.**
+Where your change meets something across a boundary — another service, a client, a stored
+format, a protocol — derive the expected value from **that** side's source or spec, never by
+copying it out of the code under test. An assertion built from the implementation is green by
+construction. Where you do not control the other side, write its contract down first; that
+written contract is what your test asserts against.
+
+**Fix the class, not the instance.** A finding usually names one occurrence of something you
+did in several places. Enumerate the class before writing the fix — grep for the shape, not
+the symptom — and report how many you found. One slice cost eight review rounds because
+eleven defects were one mistake, repaired one at a time.
+
 ## Increment review
 
 **Two different skills answer to `code-review`**: the plugin's
@@ -85,8 +99,8 @@ than a confident claim.
 
 Tickets that touch no user-visible surface skip this, and the skip is named in the handback.
 
-This is **your change rendering correctly** — a narrower question than whether the product
-still coheres, which is QA's walk before the PR. Both run; they find different things.
+This is **your change rendering correctly** — narrower than whether the product still
+coheres, which is QA's walk. Both run; they find different things.
 
 ## Simplify
 
@@ -121,6 +135,11 @@ carries the same requirement.
 cwd, branch, worktree, process or lifecycle cleanup.
 
 ## Handing back
+
+**Run every machine that can answer before you hand back** — typecheck, linters, tests,
+build. Reviewer attention spent on what a command would have caught is attention not spent on
+what only a person can see. A surface that stays green when it should not have is the more
+important half of that result.
 
 Push, then return to Thomas: the branch, the final SHA, which acceptance criteria pass, the
 exact validation commands and their output, the `simplify(increment):` marker, the browser

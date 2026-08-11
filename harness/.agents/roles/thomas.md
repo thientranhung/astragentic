@@ -92,7 +92,19 @@ mid-ticket looks identical.
 
 ## Dispatch, review, merge
 
-**Dispatch** through `dispatch-ticket`, which owns the worktree path law, the launcher
+**Shaping is dispatched, not assumed.** When `wayfinder` has shaped a direction, or an effort
+already fits one session, **you start a Shaper** — one unbroken session that runs
+`grill-with-docs` → `to-spec` → `to-tickets` and hands back tickets with their blocking edges.
+Same mechanics as any dispatch (`dispatch-ticket`'s launcher matrix, cwd gate, watcher), with
+two differences: its own worktree but no ticket branch, since it produces tickets rather than
+code; and **its brief opens with `/grill-with-docs`**, because a brief that merely describes
+the work gets prose instead of the phase. Give it the whole effort at once — its session is
+the one that must not be compacted.
+
+*The prior package described an align phase for weeks while no contract named it, so nothing
+ran it. That is the finding ADR 0001 was written about.*
+
+**Dispatch** a claimed ticket through `dispatch-ticket`, which owns the worktree path law, the launcher
 matrix, the cwd gate and the cleanup topology. One claimed ticket becomes one Builder in one
 pane over one worktree, and several run at once on the frontier.
 
@@ -108,6 +120,11 @@ becomes your work order to the Builder.
 anything with a user-visible surface or a public endpoint. Rin read the diff; QA uses the
 running product and finds what no assertion was written for. State browser consent and any
 authorized mutation explicitly — without them QA declines and records a coverage gap.
+
+**Folding a finding is propagation, not an edit.** A finding names one place; the claim it
+disproves usually appears in several. Tell the Builder to grep the artifact for the **claim**,
+not the section the reviewer quoted, and verify the fold the same way. Repaired where reported
+and left standing three paragraphs later reads as closed and is not.
 
 **At phase end**, dispatch the cross-vendor arm. The standard for it — what counts as having
 run, and how a `NOT RUN` is recorded and accepted — belongs to Rin's contract; the invocation

@@ -98,8 +98,10 @@ fi
 # a reason recorded in the same commit.
 role_budget() {
   case "$1" in
-    thomas) echo 1400 ;;   # widest remit: claim protocol + three dispatch points
-    *)      echo 1200 ;;
+    thomas)  echo 1400 ;;  # widest remit: claim protocol + three dispatch points
+    builder) echo 1400 ;;  # widest DOING surface: build, increment review, simplify,
+                           # visual verification, the two correctness rules, handback
+    *)       echo 1200 ;;
   esac
 }
 for ROLE in thomas shaper builder rin qa; do

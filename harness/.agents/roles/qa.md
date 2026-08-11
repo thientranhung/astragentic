@@ -47,16 +47,22 @@ Everything a user meets, **not only what changed**:
   to find.
 
 **How you drive the product is the project's, not this contract's** — the browser tooling,
-the dev command, the seed. Adaptation records that path; a repo without one cannot be walked,
-and that is a finding for the owner rather than a reason to improvise.
+the dev command, the seed, the request client. Adaptation records that path.
+
+**Not every product has a surface to walk.** A library, a CLI or a pipeline has no screen and
+often no server, and that is a fact about the product rather than a defect: say the walk does
+not apply and stop. Where a product *does* present a surface a user meets and there is no way
+to exercise it, that absence **is** a finding — every defect there will reach the owner's
+screen first. Judge which case you are in before reporting either.
 
 ## Safety — hard rules
 
 A walk drives a **real, logged-in session**. These are what keep a QA run from becoming a
 data-loss incident or a PII leak.
 
-**a. Browser consent is a required dispatch field.** Absent it, stop before any browser call
-and ask. Consent from a previous run does not carry.
+**a. Consent to drive a live session is a required dispatch field**, whatever the instrument
+— a browser profile, an authenticated API client, a seeded shell. Absent it, stop before the
+first call and ask. Consent from a previous run does not carry.
 
 **b. Default flows are strictly non-mutating.** Navigate, observe, screenshot, read console
 and network. Leave confirm, retry, cancel, delete, revoke, disconnect, resync, disable and

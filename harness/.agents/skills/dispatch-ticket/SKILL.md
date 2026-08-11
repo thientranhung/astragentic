@@ -52,13 +52,30 @@ missing or a row is ambiguous, Thomas asks the owner for the model and scaffolds
 before dispatching — inferring a runtime from installed binaries or from the task text
 produces a confident wrong answer.
 
-Launcher matrix — model and effort come from the role's row:
+## The launcher matrix — one home, every dispatched role
+
+**This table is the single home for how any role is started**, and the other dispatch skills
+point here rather than restating it. A role missing from it cannot be dispatched at all,
+which is how a correct role sits in a package for releases without ever running.
 
 ```text
-claude   → claude --dangerously-skip-permissions --agent builder --model <row: Model> --effort <row: Effort>
-codex    → codex --profile builder --yolo
-opencode → opencode --agent builder -m <row: Model> --auto        (TUI form)
+builder  claude   → claude --dangerously-skip-permissions --agent builder --model <row: Model> --effort <row: Effort>
+         codex    → codex --profile builder --yolo
+         opencode → opencode --agent builder -m <row: Model> --auto
+
+shaper   claude   → claude --dangerously-skip-permissions --agent shaper --model <row: Model> --effort <row: Effort>
+         codex    → codex --profile shaper --yolo
+         opencode → opencode --agent shaper -m <row: Model> --auto
+
+rin      claude   → claude --agent rin --model <row: Model> --effort <row: Effort>
+         (no --dangerously-skip-permissions: a gate runs under permissions, and rin has no
+          fallback row, so no other runtime is legal here)
+
+qa       claude   → claude --agent qa --model <row: Model> --effort <row: Effort>
+         codex    → codex --profile qa --yolo
 ```
+
+Model and effort come from the role's `orchestrator.md` row, never from memory.
 
 Add `--effort` on Claude only when the row sets it (`low|medium|high|xhigh|max`); blank
 means the runtime default. Codex effort lives in the machine profile TOML as
@@ -101,6 +118,22 @@ Re-measured on herdr 0.8.0 and opencode 1.18.11:
    Verify by artifact on every runtime; on opencode it is the only thing that works.
 5. Reading an opencode TUI transcript via `herdr agent read` returns only the input box and
    footer. Tolerable under verify-by-artifact — review diffs, not pane narration.
+
+## One checkout, one driver
+
+**At most ONE session treats the repository's main checkout as its workspace** — the resident
+router's. Every session you dispatch gets its own worktree, without exception, including
+read-only ones with a shell.
+
+The incident behind this is not hypothetical: two root sessions shared a main checkout, one
+ran `git switch` while the other was committing, and three commits landed on the wrong branch
+and then vanished when it switched back. Nothing errored. Both sessions were behaving
+correctly in isolation (AST-016, AST-027).
+
+**Every session verifies `git branch --show-current` before each commit**, and stops if it is
+not the branch it was dispatched onto. That check costs nothing and is the only thing that
+catches a checkout moving underneath you, because the symptom appears later and somewhere
+else.
 
 ## The payload must be COMMITTED before the first dispatch
 
