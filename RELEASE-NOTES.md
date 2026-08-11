@@ -1,3 +1,32 @@
+# Astraler Harness 1.2.0
+
+Rin gains a third mode. 1.1.1 fixed the smaller half of this and said so; this is the rest.
+
+## Added — `mode=walk`
+
+**Reading a diff cannot find a disagreement between two screens (AST-044).** 1.1.1 gave the
+Builder visual verification of its own change, which confirms a ticket renders. It does not
+confirm the product still coheres, and the author is the worst-placed party to judge that —
+the same reason a reviewer exists for code.
+
+One walk of the prior package's retired walker role found: a 500 from a stale seed *plus the
+production implication behind it*, a raw timestamp disagreeing with every other page, two
+screens printing 85 and 44 for one concept, tabs summing to 183 against a total of 190. None
+is in the diff that introduced it, because none is *in* a diff — each is a disagreement
+between the change and somewhere else.
+
+It is a **mode of the existing reviewer, not a fifth role**: same milestone, read-only, one
+report, same triage. It fires **before a PR, a merge or a release**. What it needs that the
+other modes do not is a running app at the reviewed SHA — never the Builder's checkout — and
+a **written plan**: persona and data state, surfaces in scope *including the unchanged ones
+showing the same concept*, what correct means, and the journeys.
+
+Two outputs make it compound: a **verified-clean list**, so coverage accumulates rather than
+resetting, and an honest statement of what could not be reached — a surface you could not
+open is not a clean surface.
+
+The plugin ships nothing for this: no QA, browser or e2e skill exists upstream.
+
 # Astraler Harness 1.1.1
 
 One defect, and it is the one this package was written to prevent — reproduced inside the

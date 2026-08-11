@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 43 entries (AST-001 … AST-043) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 44 entries (AST-001 … AST-044) · AST-001…034 carried into 1.0.0 unchanged
 
 Practical AI-agent failure modes measured while operating this harness. They are the
 evidence base: a rule kept in this package can point at an entry here, and a rule that
@@ -572,3 +572,28 @@ The fix is the boring one: the contract that owes the artifact says so, and the 
 an unexplained absence as a finding rather than as nothing.
 Bound: `harness/.agents/roles/builder.md`, `harness/.agents/roles/rin.md`,
 `prompts/ADAPT-HARNESS.md` §5.
+
+### AST-044 — Reading a diff cannot find a disagreement between two screens · promoted 2026-08-11
+1.1.1 closed a gate that demanded browser evidence no contract produced, by giving the
+Builder visual verification of its own change. That was the smaller half. A Builder confirms
+its ticket renders; it cannot confirm the product still coheres, and it is the worst-placed
+party to try — the same reason a reviewer exists for code.
+
+The retired walker role in the prior package is the evidence. One read-only walk as a user
+found: a 500 caused by a stale local seed **plus the production implication hiding behind
+it**; a raw ISO timestamp on one page against humanised ones everywhere else; two screens
+counting one concept and printing 85 versus 44; quick-tabs summing to 183 against a total of
+190. Not one is visible in the diff that introduced it, because not one is *in* that diff —
+each is a disagreement between the change and somewhere else.
+
+A repo running without this shipped a visually-subordinate control to `main`; a linter caught
+neither, because a linter finds a hard-coded colour and not a button nobody will press.
+
+Kept as a MODE of the existing reviewer rather than a fifth role: it fires at the same
+milestone, is read-only, writes one report, and its findings route through the same triage.
+What it needs that the other modes do not is a **running app** and a **written plan** —
+persona, data state, surfaces including the unchanged ones showing the same concept, and the
+journeys. Two outputs make it compound: a verified-clean list, and an honest statement of
+what could not be reached. Upstream ships nothing for this; the plugin has no QA, browser or
+e2e skill at all.
+Bound: `harness/.agents/roles/rin.md`, `harness/.claude/skills/review-with-rin/SKILL.md` §2b.
