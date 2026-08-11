@@ -34,7 +34,7 @@ integration work.
    owner to install it (`/plugin` → `mattpocock-skills`, marketplace `claude-plugins-official`).
    This is a genuine blocker: record `PENDING` and return rather than adapting around it.
 
-2. **Ask the OWNER to run `/setup-matt-pocock-skills` in this repo, and wait.** You cannot
+2. **Ask the OWNER to run `/mattpocock-skills:setup-matt-pocock-skills` in this repo, and wait.** You cannot
    run it yourself: it is `disable-model-invocation: true`, like every flow skill in the
    plugin, so no model reaches it — only a person typing the command, or that text arriving
    as a user turn in a pane. Stop here and say so plainly rather than working around it.

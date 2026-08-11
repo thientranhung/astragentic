@@ -97,7 +97,7 @@ already fits one session, **you start a Shaper** — one unbroken session that r
 `grill-with-docs` → `to-spec` → `to-tickets` and hands back tickets with their blocking edges.
 Same mechanics as any dispatch (`dispatch-ticket`'s launcher matrix, cwd gate, watcher), with
 two differences: its own worktree but no ticket branch, since it produces tickets rather than
-code; and **its brief opens with `/grill-with-docs`**, because a brief that merely describes
+code; and **its brief opens with `/mattpocock-skills:grill-with-docs`**, because a brief that merely describes
 the work gets prose instead of the phase. Give it the whole effort at once — its session is
 the one that must not be compacted.
 

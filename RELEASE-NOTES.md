@@ -1,3 +1,19 @@
+# Astraler Harness 1.4.1
+
+## Fixed
+
+- **Plugin commands are written in their qualified form everywhere (AST-050).** 1.3.0 fixed
+  the one name already known to collide and left the rest bare — including the **first line
+  of every dispatch brief**: `/implement` for a Builder, `/grill-with-docs` for a Shaper.
+  Those resolve today only because nothing else claims those words yet, and a collision is
+  invisible until it exists: a later built-in or a second plugin changes what they resolve to
+  with no diff here and no error at dispatch. The brief just gets prose instead of a phase.
+
+  Bare forms now appear only for Claude Code's own built-ins — `/compact`, `/clear`,
+  `/simplify` — where the bare name is the correct address.
+
+  Owner's suggestion, and it was right: write commands the way Claude Code addresses them.
+
 # Astraler Harness 1.4.0
 
 Findings from the live project, and from the agent that built the package this replaces.

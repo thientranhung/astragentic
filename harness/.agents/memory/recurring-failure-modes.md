@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 49 entries (AST-001 … AST-049) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 50 entries (AST-001 … AST-050) · AST-001…034 carried into 1.0.0 unchanged
 
 Practical AI-agent failure modes measured while operating this harness. They are the
 evidence base: a rule kept in this package can point at an entry here, and a rule that
@@ -704,3 +704,25 @@ contract names it. Check 5 requires both. The general shape: **a consistency che
 "does this agree with itself", which a completely inert system also passes.** At least one
 check has to ask whether the thing can run.
 Bound: `harness/scripts/check-reachability.sh` (check 5).
+
+### AST-050 — Qualify a plugin command always, not once it is known to collide · promoted 2026-08-11
+AST-042 fixed one name — `code-review`, where a plugin skill and a built-in already answered
+to the same word — and left every other flow command written bare. Two of those bare forms
+were the **first line of a dispatch brief**: `/implement` for a Builder, `/grill-with-docs`
+for a Shaper. They resolve today because nothing else claims those words yet.
+
+That is the whole problem: a name collision is **invisible until it exists**. A built-in
+added later, or a second plugin installed by the owner, changes what a bare command resolves
+to with no diff anywhere in this package and no error at dispatch — the brief simply gets
+prose instead of a phase, which reads as a weak agent rather than a broken command.
+
+So the rule is unconditional: **write `/mattpocock-skills:<name>` every time**, and reserve
+the bare form for Claude Code's own built-ins (`/compact`, `/clear`, `/simplify`), where the
+bare name IS the correct address. AST-042's "wherever ambiguous" was too weak — the author of
+a document cannot see the ambiguity that arrives next month.
+
+Written while making this change: a blanket regex for `/triage` also rewrote three
+`docs/agents/triage-labels.md` paths into nonsense, because `\b` matched mid-path. Caught by
+reading the diff rather than by any check. AST-046 reappearing in the act of applying it.
+Bound: `harness/.agents/roles/thomas.md`, `harness/.agents/skills/dispatch-ticket/SKILL.md`,
+`prompts/ADAPT-HARNESS.md`.

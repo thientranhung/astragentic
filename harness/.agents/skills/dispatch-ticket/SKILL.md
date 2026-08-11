@@ -262,7 +262,7 @@ What does reach them is **text arriving as a user turn**. So the brief's first l
 slash command itself, and the rest of the brief follows it:
 
 ```text
-/implement TICKET-123
+/mattpocock-skills:implement TICKET-123
 
 Worktree: … · Branch: … · Base: …
 Acceptance criteria: …
