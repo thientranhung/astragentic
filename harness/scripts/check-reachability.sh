@@ -5,7 +5,7 @@ The prior package lost two weeks to an Align phase that lived in a method docume
 no role's contract, so nothing ever ran it. Every check here exists to make that class of
 gap fail loudly instead of quietly.
 
-Four checks, in both directions:
+Six checks, in both directions:
 
   1 METHOD -> CONTRACT   every phase the README's role table names is the owning row of
                          exactly one contract, owned by the role the README names.
@@ -20,6 +20,12 @@ Four checks, in both directions:
                          nobody can start is the failure that outlived two rewrites: an
                          align phase described for weeks with no contract owning it, and a
                          browser walker shipped across releases that never ran once.
+  6 ADDRESS -> CALLABLE  every skill a contract tells an agent to invoke is written in the
+                         form that agent can actually use. Checks 1-5 ask whether a thing
+                         exists and is reached; none asks whether the address given for it
+                         works. A model-invocable skill written as `/name` is an address no
+                         agent has a keyboard for, and the Builder that meets one rolls its
+                         own substitute rather than reporting a failure (AST-051).
 
 Runs against this package (payload under harness/) or an adapted project (payload at the
 repo root). Exit 0 = every check passed, 1 = at least one finding.
@@ -166,6 +172,8 @@ NOT_A_SKILL = {
     "adversarial-review", "send-text", "send-keys", "gate-diff", "no-focus",
     "allowed-tools", "dangerously-skip-permissions", "project-name", "optional-too",
     "applied-version", "module-boundaries-md", "gen-code-map",
+    # Frontmatter keys quoted in prose about how skills are reached.
+    "disable-model-invocation",
 }
 
 # --- 1. METHOD -> CONTRACT --------------------------------------------------------------
@@ -299,12 +307,94 @@ for role in sorted(roles):
              "the dispatcher's contract decides what gets dispatched; a role it does not "
              "name is a role that never runs, however correct its own contract is")
 
+# --- 6. ADDRESS -> CALLABLE ---------------------------------------------------------------
+# Two ways to reach a skill, and they are not interchangeable. A skill carrying
+# `disable-model-invocation: true` is reachable ONLY as text arriving as a user turn, so a
+# contract writes `/name`. Every other skill is reachable by the model, so a contract writes
+# the Skill-tool form. Giving an agent the wrong one fails silently: it cannot invoke, and
+# it substitutes its own work rather than reporting the gap.
+#
+# Claude Code ships two kinds of built-in and only one is a skill. `/compact` and `/clear`
+# are CLI commands with no Skill-tool path at all, so their bare names ARE their addresses;
+# `simplify` and friends are bundled skills the model can invoke. Conflating them is what
+# produced AST-051, so they are separate sets here.
+CLI_LOCAL = {"compact", "clear", "resume", "cost", "doctor", "help", "login", "logout",
+             "status", "vim", "terminal-setup", "fast", "loop"}
+BUILTIN_SKILL = {"simplify", "code-review", "verify", "commit", "pr", "commit-push-pr", "go",
+                 "security-review", "init", "schedule", "update-config", "run"}
+
+# A plugin skill's own frontmatter is the authority on which kind it is. Read it where the
+# plugin is installed; fall back to the flow skills the method names, so a machine without
+# the plugin still runs this check rather than passing it vacuously.
+USERONLY_FALLBACK = {
+    "wayfinder", "grill-with-docs", "to-spec", "to-tickets", "implement", "triage",
+    "to-questionnaire", "ask-matt", "improve-codebase-architecture", "handoff", "teach",
+    "grill-me", "wait-what", "setup-matt-pocock-skills",
+}
+def plugin_invocability():
+    """({skill name: True if user-invoked only}, where that came from).
+
+    The plugin nests its skills under <version>/skills/<category>/<name>/, and both those
+    middle segments move between releases — so walk rather than spell the depth out.
+    """
+    out = {}
+    for skill_md in glob.iglob(os.path.expanduser(
+            "~/.claude/plugins/cache/*/mattpocock-skills/**/SKILL.md"), recursive=True):
+        out[os.path.basename(os.path.dirname(skill_md))] = (
+            "disable-model-invocation: true" in read(skill_md))
+    if out:
+        return out, f"plugin frontmatter ({len(out)} skills read)"
+    return ({n: True for n in USERONLY_FALLBACK},
+            "fallback list — plugin not installed, built-ins still checked")
+
+INVOCABILITY, ADDR_SOURCE = plugin_invocability()
+
+def user_only(name):
+    """True = only a typed user turn reaches it. None = not a skill we can classify."""
+    if name in CLI_LOCAL:
+        return True
+    if name in INVOCABILITY:
+        return INVOCABILITY[name]
+    if name in BUILTIN_SKILL:
+        return False
+    return None
+
+# A `/name` occurrence only counts where a slash follows a backtick or opens a line inside a
+# fenced block. Matching a bare slash anywhere hits every path in the payload — the sweep
+# that corrupted three references the last time it was tried (AST-047).
+SLASH = re.compile(r"(?:`|^)/((?:[a-z0-9-]+:)?[a-z][a-z0-9-]{2,})", re.M)
+SKILLCALL = re.compile(r"""Skill\(\s*skill\s*[:=]\s*["']([a-z][a-z0-9:-]{2,})["']""")
+ADDR_OK = "<!-- addr-ok"
+
+addr_sources = {os.path.join(ROLES_DIR, f"{n}.md"): t for n, t in roles.items()}
+addr_sources.update({p: t for p, t in skills.values()})
+
+for path, text in sorted(addr_sources.items()):
+    for lineno, line in enumerate(text.splitlines(), 1):
+        if ADDR_OK in line:
+            continue
+        for name in SLASH.findall(line):
+            bare = unqualify(name)
+            if user_only(bare) is False:
+                fail("6", f"{os.path.basename(path)}:{lineno} addresses `{bare}` as "
+                          f"`/{name}`, but the model can invoke it",
+                     f"an agent has no keyboard: write `Skill(skill: \"{bare}\")`, or mark "
+                     f"the line `{ADDR_OK}: ... -->` if it names the skill without invoking it")
+        for name in SKILLCALL.findall(line):
+            bare = unqualify(name)
+            if user_only(bare) is True:
+                fail("6", f"{os.path.basename(path)}:{lineno} calls `{bare}` through the "
+                          f"Skill tool, but it is user-invoked only",
+                     "the call fails and the agent substitutes its own work: write "
+                     f"`/{name}` and arrange for it to arrive as a user turn")
+
 # --- report -----------------------------------------------------------------------------
 print(f"Reachability check — {LAYOUT} layout, payload at {os.path.normpath(PAYLOAD)}")
 print(f"  {len(roles)} contracts · {len(skills)} harness skills · "
       f"{len(owned)} owned phases · {len(PLUGIN)} plugin skills known")
 if LAYOUT == "project":
     print(f"  ownership from: {ATTRIBUTION}")
+print(f"  invocability from: {ADDR_SOURCE}")
 if PROJECT_OWNED:
     print(f"  {len(PROJECT_OWNED)} project-owned skill(s) skipped: "
           f"{', '.join(sorted(PROJECT_OWNED))}")
@@ -315,6 +405,7 @@ if not findings:
     print("  [OK] 3 every shipped skill is reached")
     print("  [OK] 4 every referenced path and skill exists")
     print("  [OK] 5 every role has a launcher and a dispatcher that names it")
+    print("  [OK] 6 every skill is addressed in the form its caller can actually use")
     print(f"\nAll reachability checks passed. Scope: {len(roles)} contracts, "
           f"{len(skills)} skills, the adaptation prompt and the README role table.")
     print("Not scanned: the failure-mode ledger's historical `Bound:` provenance.")

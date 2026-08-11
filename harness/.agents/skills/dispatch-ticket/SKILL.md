@@ -268,8 +268,15 @@ What does reach them is **text arriving as a user turn**. So the brief's first l
 slash command itself, **written in its plugin-qualified form** — `/mattpocock-skills:<name>`
 — and the rest of the brief follows it. A bare `/implement` resolves today only because
 nothing else claims that word yet; the qualified form is correct whatever gets installed
-later (AST-050). Claude Code's own built-ins (`/compact`, `/clear`, `/simplify`) keep their
-bare names, which are their real addresses.
+later (AST-050). Claude Code's own `/compact` and `/clear` keep their bare names: they are CLI
+commands rather than skills, so no agent can reach them and a typed form is the only form.
+
+**A built-in that IS a skill is the opposite case.** `simplify` carries no
+`disable-model-invocation`, so an agent invokes it as `Skill(skill: "simplify")` and never
+needs a user turn. Writing it as `/simplify` <!-- addr-ok: cited as the wrong form --> hands
+an agent an address it cannot use, and a
+Builder given an unusable address rolls its own pass instead — measured on two tickets
+(AST-051). Slash form for what only a human can type; Skill form for what the model can.
 
 ```text
 /mattpocock-skills:implement TICKET-123

@@ -726,3 +726,36 @@ Written while making this change: a blanket regex for `/triage` also rewrote thr
 reading the diff rather than by any check. AST-046 reappearing in the act of applying it.
 Bound: `harness/.agents/roles/thomas.md`, `harness/.agents/skills/dispatch-ticket/SKILL.md`,
 `prompts/ADAPT-HARNESS.md`.
+
+### AST-051 — An address the caller cannot use produces a substitute, not an error · promoted 2026-08-11
+
+`builder.md` named the simplify pass as Claude Code's built-in `/simplify`. The name was
+right and the address was wrong: a slash command is the form a **human** types, and a Builder
+is an agent with no keyboard. It could not invoke what it was told to invoke.
+
+Nothing failed. Two Builders on two tickets in one day each performed a hand-rolled cleanup
+and neither produced the `simplify(increment):` marker. Both handbacks honestly described a
+pass that did happen. Measured afterwards, the real skill fired over the same diff found an
+extraction both had missed — so the substitute was not merely unmarked, it was **weaker**.
+
+The control experiment is in the same table: the rows naming `mattpocock-skills:implement`
+and `mattpocock-skills:code-review` were both invoked correctly in those same sessions. A
+usable address gets used.
+
+**This entry corrects AST-050.** That rule said built-ins "keep their bare names, which are
+the correct address", listing `/compact`, `/clear`, `/simplify` together. Two of those three
+are CLI commands with no Skill-tool path, so bare IS their address. `simplify` is a bundled
+**skill** carrying no `disable-model-invocation`, so the model can invoke it and its address
+for an agent is `Skill(skill: "simplify")`. One sentence, correct for two of three cases.
+
+The general rule: **an address is correct relative to who must use it.** User-invoked only
+(`disable-model-invocation: true`) → `/name`, and something must deliver it as a user turn.
+Everything else → the Skill form. Getting this backwards fails silently in both directions,
+because an agent handed an unusable address improvises rather than reporting.
+
+Also measured while fixing it: the first audit regex could not have found this. It tabulated
+plugin skills only, and `simplify` is a built-in — a check blind to a whole class of the
+thing it checks. Reachability check 6 reads both, and rejects an unknown name rather than
+passing it. Found by the project running the harness, not by the harness.
+Bound: `harness/.agents/roles/builder.md`, `harness/.agents/skills/dispatch-ticket/SKILL.md`,
+`harness/scripts/check-reachability.sh`.

@@ -14,7 +14,7 @@ visible surface over them — and it is what lets several Builders work the fron
 |---|---|---|
 | Build | `mattpocock-skills:implement` | the ticket's acceptance criteria pass and the build is green |
 | Increment review | `mattpocock-skills:code-review` | both axes have run once over the increment |
-| Simplify | — | a `simplify(increment):` commit exists on the branch |
+| Simplify | `simplify` (built-in, via the Skill tool) | a `simplify(increment):` commit exists on the branch |
 | Visual verification | — | UI-touching work has browser evidence, or the skip is named |
 
 ## Reaching the plugin
@@ -62,7 +62,8 @@ eleven defects were one mistake, repaired one at a time.
 
 **Two different skills answer to `code-review`**: the plugin's
 `mattpocock-skills:code-review`, which has the two axes below, and Claude Code's built-in
-`/code-review`, which takes `--fix` and effort levels and does something else. This phase is
+`/code-review` <!-- addr-ok: contrast only -->, which takes `--fix` and effort levels and
+does something else. This phase is
 the **plugin's**. Naming it in full is what keeps the model-invoked path from reaching the
 wrong one.
 
@@ -104,10 +105,11 @@ coheres, which is QA's walk. Both run; they find different things.
 
 ## Simplify
 
-**Each increment gets one simplify pass over its own diff, after the build is green.** The
-pass is Claude Code's **built-in `/simplify`** — the plugin ships no skill by that name, so
-an agent looking for one finds nothing and quietly skips the pass. The artifact is a commit
-on your branch:
+**Each increment gets one simplify pass over its own diff, after the build is green.**
+**Invoke `Skill(skill: "simplify")`** — a Claude Code built-in, model-invocable.
+`/simplify` <!-- addr-ok: wrong form, cited --> is the human's form; you have no keyboard,
+and a hand-rolled substitute is weaker and leaves no marker. The artifact is a commit on your
+branch:
 
 ```bash
 git commit -m "simplify(increment): <what was cleaned>"

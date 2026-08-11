@@ -1,3 +1,54 @@
+# Astraler Harness 1.5.0
+
+An address is only correct relative to whoever has to use it. This release fixes one that
+was not, and adds the check that would have caught it.
+
+## Fixed
+
+**The simplify pass was addressed as `/simplify` — a form no agent can type.** `builder.md`
+named Claude Code's built-in correctly and then handed the Builder a slash command. Measured
+in a live project: two Builders, two tickets, one day, both hand-rolled a cleanup and neither
+left the `simplify(increment):` marker. Nothing errored; both handbacks honestly described a
+pass that had happened. The rows in the same table naming `mattpocock-skills:implement` and
+`mattpocock-skills:code-review` were invoked correctly in those same sessions — a usable
+address gets used.
+
+Measured, not assumed: an agent invoked `Skill(skill: "simplify")` with no human typing
+anything, the tool accepted it, and the real instruction body loaded. The alternative fix
+under consideration — firing `/simplify` into the pane as a second user turn, costing a
+round-trip per increment — was ruled out by that measurement rather than by argument.
+
+**`dispatch-ticket` taught the rule that caused it.** AST-050 grouped `/compact`, `/clear`
+and `/simplify` as built-ins whose bare names are their addresses. True for the first two:
+they are CLI commands with no Skill-tool path. False for `simplify`, which is a bundled skill
+carrying no `disable-model-invocation`. The two kinds are now separate, with the general rule
+stated once: slash form for what only a human can type, Skill form for what the model can.
+
+## Added
+
+**Reachability check 6 — ADDRESS -> CALLABLE.** Checks 1–5 ask whether a thing exists and is
+reached. None asked whether the address given for it works. Check 6 reads every skill named
+in a contract, resolves how it can actually be invoked, and fails both directions: a
+model-invocable skill written as `/name`, and a user-invoked-only skill called through the
+Skill tool.
+
+Invocability comes from the plugin's own frontmatter — 35 skills read at runtime, not a list
+copied into this repo to drift. Built-ins are carried as two explicit sets, because the first
+version of this audit tabulated plugin skills only and therefore could not have found
+`simplify` at all. A line that names a skill without invoking it clears the check with
+`<!-- addr-ok: <reason> -->`, so every exception is one visible decision rather than a
+pattern quietly widened.
+
+Mutation-tested in three directions: a model-invocable skill in slash form FAILS, a
+user-only skill in Skill form FAILS, and `/compact` stays silent.
+
+## Scope note
+
+The defect was found by the project running the harness, not by the harness. Check 6 closes
+that specific blindness; it does not close the general one. Still not verified end to end: a
+ticket from spec to merge, concurrent Builders racing for a claim, a QA walk, and a real
+Codex invocation.
+
 # Astraler Harness 1.4.4
 
 Corrects 1.4.3, which fixed the right symptom from the wrong assumption.
