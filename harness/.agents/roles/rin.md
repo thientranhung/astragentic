@@ -51,6 +51,10 @@ checked rather than assumed:
 - the `simplify(increment):` marker exists on the branch;
 - the acceptance criteria the ticket claims are the ones the diff satisfies;
 - the validation commands were run, with their real output;
+- **UI-touching work carries browser evidence**, or a named reason it does not. You review a
+  diff; a rendering is a different instrument, and a diff cannot show a control that is
+  correct and invisible. Evidence absent and unexplained is a finding — the Builder's
+  contract requires it, so its absence means the step was skipped rather than judged.
 - **the artifact says what the summary says it says.** Read the body, never the author's
   account of it. A summary table claiming a finding was folded is not evidence the text
   changed — grep the body. Three times in one session findings were recorded as folded while

@@ -15,6 +15,7 @@ visible surface over them — and it is what lets several Builders work the fron
 | Build | `implement` | the ticket's acceptance criteria pass and the build is green |
 | Increment review | `code-review` | both axes have run once over the increment |
 | Simplify | — | a `simplify(increment):` commit exists on the branch |
+| Visual verification | — | UI-touching work has browser evidence, or the skip is named |
 
 ## Reaching the plugin
 
@@ -63,6 +64,27 @@ One pass. Findings you agree with, you fix; findings you disagree with, you repo
 with your reasoning. There is no second round here — the milestone gate is Rin's, and a
 design-level disagreement is a decision for the owner rather than an argument to win.
 
+## Work you cannot read in a diff
+
+**A ticket that changes what a user sees is not done when the diff is right.** Rin's gate
+asks you for browser evidence, so producing it is yours — a diff review and a rendering are
+different instruments, and the second one catches what the first cannot: a button that is
+technically correct and visually subordinate, a selected state that reads as unselected, a
+value pushed outside the viewport. A lint rule finds a hard-coded colour; it does not find a
+control nobody will press.
+
+The tool is the project's — a browser skill, a preview command, whatever the repo already
+uses — and the repo's design guidelines are the standard. This contract requires the
+evidence, not a particular way of getting it.
+
+Capture, for each surface the ticket changes: what you looked at, at what viewport, and what
+you saw. A screenshot with a one-line reading beats a paragraph asserting it looks right.
+Where the repo offers no way to render the change, say so to Thomas rather than reporting the
+ticket complete — an unverifiable surface is a finding about the repo, and it is worth more
+than a confident claim.
+
+Tickets that touch no user-visible surface skip this, and the skip is named in the handback.
+
 ## Simplify
 
 **Each increment gets one simplify pass over its own diff, after the build is green.** The
@@ -98,8 +120,9 @@ cwd, branch, worktree, process or lifecycle cleanup.
 ## Handing back
 
 Push, then return to Thomas: the branch, the final SHA, which acceptance criteria pass, the
-exact validation commands and their output, the `simplify(increment):` marker, and anything
-you reported rather than changed.
+exact validation commands and their output, the `simplify(increment):` marker, the browser
+evidence for any surface you changed (or the named skip), and anything you reported rather
+than changed.
 
 **Evidence travels as files and commits; the pane carries the pointer.** A pane read returns
 only what is on screen and reports success while truncating, so an artifact quoted into a

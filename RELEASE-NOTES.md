@@ -1,3 +1,29 @@
+# Astraler Harness 1.1.1
+
+One defect, and it is the one this package was written to prevent — reproduced inside the
+package itself.
+
+## Fixed
+
+- **A gate required an artifact no contract produced (AST-043).** `review-with-rin` asked the
+  brief to carry "the Builder's browser-verify evidence". `builder.md` did not contain the
+  word *browser* once. The gate named an artifact, named the role that owed it, and that
+  role's contract never mentioned producing it — exactly the failure ADR 0001 was written
+  about. A consuming repo shipped a visually-wrong control to `main` through this gap, caught
+  by a person noticing rather than by any gate.
+
+  The Builder's contract now owns visual verification for work that changes a user-visible
+  surface, Rin treats unexplained absence as a finding, and adaptation records the repo's
+  rendering path so a Builder does not rediscover it per ticket. The *tool* stays the
+  project's; the harness requires the evidence, not a way of getting it.
+
+## Known gap, stated rather than fixed
+
+`check-reachability.sh` does not catch this class. It verifies every phase has an owner and
+every reference resolves — **not that every artifact a gate demands has a producer.** That
+check is harder and is not written. Until it is, read a gate's input list against the
+contracts by hand whenever either changes.
+
 # Astraler Harness 1.1.0
 
 Five findings raised by the first repo to run this harness, written up as a report against

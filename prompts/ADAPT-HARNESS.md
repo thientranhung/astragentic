@@ -173,8 +173,15 @@ no seam for `tdd` to attach to, `untangle` when a refactor is too tangled for
 `improve-codebase-architecture`, and `module-boundaries` when an import crosses a boundary.
 Confirm they are staged; reaching them is the agents' business, not this run's.
 
-Record the coverage verdict, the glossary counts and the triage counts under a
-**`## Brownfield bootstrap`** heading in the receipt.
+**Name the repo's rendering path, or record that it has none.** The Builder's contract
+requires browser evidence for work that changes a user-visible surface, and Rin's gate checks
+for it, but the *tool* is the project's — a browser skill, a preview or dev command, a
+storybook. Find what this repo already uses and record it in the receipt so a Builder does
+not have to rediscover it per ticket. A repo with a UI and no way to render it is a finding
+worth stating plainly: every visual defect there will reach the owner's screen first.
+
+Record the coverage verdict, the glossary counts, the triage counts and the rendering path
+under a **`## Brownfield bootstrap`** heading in the receipt.
 
 ## 6. Validate by artifact
 

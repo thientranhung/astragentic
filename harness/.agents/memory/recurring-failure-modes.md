@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 42 entries (AST-001 … AST-042) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 43 entries (AST-001 … AST-043) · AST-001…034 carried into 1.0.0 unchanged
 
 Practical AI-agent failure modes measured while operating this harness. They are the
 evidence base: a rule kept in this package can point at an entry here, and a rule that
@@ -551,3 +551,24 @@ looking for a plugin skill that does not exist finds nothing and skips the pass 
 
 **Name the qualified skill wherever a bare name is ambiguous**, and say which tool a mandated
 pass actually is. Bound: `harness/.agents/roles/builder.md`.
+
+### AST-043 — A gate that requires an artifact no contract produces · promoted 2026-08-11
+`review-with-rin` §1(d) required the brief to carry "the Builder's browser-verify evidence".
+`builder.md` did not contain the words browser, visual or screenshot — not once. The gate
+asked for an artifact, named the role that owed it, and that role's contract never mentioned
+producing it.
+
+This is the failure ADR 0001 was written about, reproduced inside the package that exists to
+prevent it: a step described in one document, owned by nobody in the contract that would run
+it. A consuming repo shipped a visually-wrong control to main this way, and it was caught by
+a human noticing, not by any gate.
+
+`check-reachability.sh` does not catch this class. It verifies that every phase has an owner
+and every reference resolves — not that **every artifact a gate demands has a producer**.
+That is the harder check and it is not written. Until it is, a gate's input list is worth
+reading against the contracts by hand whenever either changes.
+
+The fix is the boring one: the contract that owes the artifact says so, and the gate treats
+an unexplained absence as a finding rather than as nothing.
+Bound: `harness/.agents/roles/builder.md`, `harness/.agents/roles/rin.md`,
+`prompts/ADAPT-HARNESS.md` §5.
