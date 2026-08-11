@@ -759,3 +759,26 @@ thing it checks. Reachability check 6 reads both, and rejects an unknown name ra
 passing it. Found by the project running the harness, not by the harness.
 Bound: `harness/.agents/roles/builder.md`, `harness/.agents/skills/dispatch-ticket/SKILL.md`,
 `harness/scripts/check-reachability.sh`.
+
+### AST-052 — The word-budget audit ran its loop zero times and reported all clean · promoted 2026-08-11
+
+`docs-staleness-audit.sh` measured `.agents/roles/<role>.md`. In this package the payload
+sits under `harness/`, so all five paths failed their `-f` test, the loop body never ran, the
+axis printed nothing, and the script closed with `RESULT: all clean`.
+
+It shipped that way from 1.0.0 and was quoted as evidence in this session more than once.
+The word counts reported alongside it were right — they were taken by hand with `wc -w` —
+which is exactly why nobody noticed: two sources agreed, and only one of them was working.
+
+**A loop over zero items is a pass.** That is the whole failure. Nothing errored, no path
+was reported missing, and the axis header still printed, so the run looked identical to a
+run that had measured five contracts and found them all within budget.
+
+The fix is two lines and neither is the path: detect the payload, and **count what was
+measured**, then fail when the count is zero. A check that cannot say how much it checked
+cannot be believed when it says everything passed — AST-039 and AST-049 are the same shape,
+and this is the third time it has appeared inside tooling written to catch it.
+
+Found while adding an unrelated axis, not by any check. The reachability script has known
+its own layout since 1.0.0; this one did not, and nothing compared them.
+Bound: `harness/scripts/docs-staleness-audit.sh`.

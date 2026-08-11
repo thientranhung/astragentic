@@ -21,6 +21,13 @@
 set -uo pipefail
 
 AGE_DAYS="${1:-21}"
+# The payload sits under harness/ in this package and at the repo root once adapted. Detect
+# it. Until 1.5.0 this script assumed the root, so in package layout AXIS 4 tested five
+# paths that did not exist, ran its loop zero times and printed "all clean" — a budget check
+# that could not fail, reporting success for sixteen releases (AST-051's class).
+ROOT="."
+PAYLOAD="harness"
+[[ -d "$PAYLOAD/.agents/roles" ]] || PAYLOAD="."
 # Scope = ONLY the surfaces that run the harness (owner 2026-07-17): the root entry docs,
 # docs/, .claude/, and shared .agents roles/skills. Product code folders
 # (apps/, packages/), prototypes, .scratch are
@@ -104,10 +111,51 @@ role_budget() {
     *)       echo 1200 ;;
   esac
 }
+BUDGETS_RUN=0
 for ROLE in thomas shaper builder rin qa; do
-  [[ -f ".agents/roles/$ROLE.md" ]] && \
-    budget_check "roles/$ROLE.md" "$(role_budget "$ROLE")" "$(wc -w < ".agents/roles/$ROLE.md" | tr -d ' ')"
+  RF="$PAYLOAD/.agents/roles/$ROLE.md"
+  if [[ -f "$RF" ]]; then
+    BUDGETS_RUN=$((BUDGETS_RUN + 1))
+    budget_check "roles/$ROLE.md" "$(role_budget "$ROLE")" "$(wc -w < "$RF" | tr -d ' ')"
+  fi
 done
+# Zero roles measured is the vacuous pass this axis shipped with. Say so rather than
+# printing nothing and letting the run read as a success.
+if [[ $BUDGETS_RUN -eq 0 ]]; then
+  echo "  NO ROLE CONTRACTS FOUND under $PAYLOAD/.agents/roles — this axis measured nothing"
+  FOUND=1
+else
+  echo "  ($BUDGETS_RUN contracts measured)"
+fi
+
+echo
+echo "=== AXIS 5: self-reported counts vs the thing counted ==="
+# A document that states a number states a fact nothing re-derives. README claimed "35
+# measured failure modes" through sixteen releases while the ledger grew to 51, and named
+# the ledger under .codex/profiles/ after it moved. Neither drifted loudly; both read fine.
+RM="$ROOT/README.md"
+VF="$ROOT/VERSION"
+LEDGER="$ROOT/harness/.agents/memory/recurring-failure-modes.md"
+[[ -f "$LEDGER" ]] || LEDGER="$ROOT/.agents/memory/recurring-failure-modes.md"
+
+if [[ -f "$RM" && -f "$VF" ]]; then
+  WANT="$(tr -d ' \n' < "$VF")"
+  GOT="$( { grep -m1 -o '^# Astraler Harness [0-9.]*' "$RM" || true; } | awk '{print $4}' )"
+  if [[ -n "$GOT" && "$GOT" != "$WANT" ]]; then
+    echo "  README heading says $GOT, VERSION says $WANT"
+    FOUND=1
+  fi
+fi
+
+if [[ -f "$RM" && -f "$LEDGER" ]]; then
+  REAL="$( { grep -c '^### AST-' "$LEDGER" || true; } | tr -d ' ' )"
+  CLAIM="$( { grep -m1 -o '[0-9]\{1,\} measured failure modes' "$RM" || true; } | awk '{print $1}' )"
+  if [[ -n "$CLAIM" && "$CLAIM" != "$REAL" ]]; then
+    echo "  README claims $CLAIM failure modes, the ledger holds $REAL"
+    FOUND=1
+  fi
+fi
+[[ $FOUND -eq 1 ]] || echo "(clean)"
 
 echo
 [[ $FOUND -eq 1 ]] && echo "RESULT: findings above — verify each against code/truth-model before editing." || echo "RESULT: all clean."

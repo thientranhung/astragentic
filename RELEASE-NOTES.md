@@ -24,6 +24,19 @@ they are CLI commands with no Skill-tool path. False for `simplify`, which is a 
 carrying no `disable-model-invocation`. The two kinds are now separate, with the general rule
 stated once: slash form for what only a human can type, Skill form for what the model can.
 
+**Thomas's contract never carried the marker check.** The rule lived only in
+`dispatch-ticket`, a skill read at dispatch; the check has to happen at handback. Thomas is
+resident, so his contract is loaded every session and a skill he invoked fifty turns ago is
+not. His merge step now verifies by artifact, with the command, and says plainly that a
+handback describing a pass that left no marker is describing a substitute — and will read as
+honest, because it is.
+
+**The word-budget audit was measuring nothing.** `docs-staleness-audit.sh` looked for role
+contracts at the repo root while this package keeps them under `harness/`. Five failed path
+tests, a loop that ran zero times, no output, and `RESULT: all clean` — since 1.0.0, quoted
+as evidence more than once in the session that found it. It now detects the payload, reports
+how many contracts it measured, and fails when that number is zero (AST-052).
+
 ## Added
 
 **Reachability check 6 — ADDRESS -> CALLABLE.** Checks 1–5 ask whether a thing exists and is
@@ -39,15 +52,43 @@ version of this audit tabulated plugin skills only and therefore could not have 
 `<!-- addr-ok: <reason> -->`, so every exception is one visible decision rather than a
 pattern quietly widened.
 
+It also keeps 1.4.1's prefix work honest mechanically: a plugin command written bare, like
+`/implement`, fails until it carries `/mattpocock-skills:`.
+
 Mutation-tested in three directions: a model-invocable skill in slash form FAILS, a
 user-only skill in Skill form FAILS, and `/compact` stays silent.
+
+**Reachability check 7 — ARTIFACT -> BOTH ENDS.** The gap AST-043 recorded as unfixed. Every
+artifact a gate reads must be named by the contract that produces it AND by the one that
+checks it, with the registry recording whether each half belongs in an always-on contract or
+in a skill read on invocation — a judgement, so it is written down rather than guessed. Its
+honest limit: it catches a half going missing, not an artifact nobody registered. Mutation
+tests include deleting the marker check from `thomas.md`, which is the real defect this
+release fixes; check 7 catches it.
+
+**The doctor now checks that bundled skills are reachable.** The Builder invokes `simplify`
+itself, and three switches take that away — the `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS`
+environment variable, `disableBundledSkills`, and a `skillOverrides` entry. All three fail
+the same silent way. A harness installed across many machines cannot rely on the one it was
+written on.
+
+**Staleness axis 5 — self-reported counts vs the thing counted.** README claimed 35 failure
+modes while the ledger held 51, said 1.0.0 at 1.4.4, and filed the ledger under a directory
+it left in 1.1.0. Three statements of fact, none re-derived by anything. Now the version and
+the count are checked against `VERSION` and the ledger itself.
 
 ## Scope note
 
 The defect was found by the project running the harness, not by the harness. Check 6 closes
-that specific blindness; it does not close the general one. Still not verified end to end: a
-ticket from spec to merge, concurrent Builders racing for a claim, a QA walk, and a real
-Codex invocation.
+that specific blindness; it does not close the general one. Check 6 closes that specific
+blindness; check 7 closes the class the marker fell through.
+
+Two of this release's four defects were found in the tooling written to catch defects: an
+audit axis that ran zero iterations and passed, and an audit regex that could not see
+built-ins. Both are the shape the ledger already held three times.
+
+Still not verified end to end: a ticket from spec to merge, concurrent Builders racing for a
+claim, a QA walk, and a real Codex invocation.
 
 # Astraler Harness 1.4.4
 

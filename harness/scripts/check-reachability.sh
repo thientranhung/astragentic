@@ -5,7 +5,7 @@ The prior package lost two weeks to an Align phase that lived in a method docume
 no role's contract, so nothing ever ran it. Every check here exists to make that class of
 gap fail loudly instead of quietly.
 
-Six checks, in both directions:
+Seven checks, in both directions:
 
   1 METHOD -> CONTRACT   every phase the README's role table names is the owning row of
                          exactly one contract, owned by the role the README names.
@@ -26,6 +26,11 @@ Six checks, in both directions:
                          works. A model-invocable skill written as `/name` is an address no
                          agent has a keyboard for, and the Builder that meets one rolls its
                          own substitute rather than reporting a failure (AST-051).
+
+  7 ARTIFACT -> BOTH ENDS every artifact a gate reads is named by the contract that makes
+                         it AND by the contract that checks it. A gate whose producer went
+                         quiet cannot fail; a rule living only in a skill is read when that
+                         skill runs, not when the deciding role decides (AST-051).
 
 Runs against this package (payload under harness/) or an adapted project (payload at the
 repo root). Exit 0 = every check passed, 1 = at least one finding.
@@ -375,6 +380,12 @@ for path, text in sorted(addr_sources.items()):
             continue
         for name in SLASH.findall(line):
             bare = unqualify(name)
+            # A plugin command typed bare resolves only while nothing else claims the word.
+            # 1.4.1 qualified every one of them by hand; this is what keeps them qualified.
+            if bare in INVOCABILITY and bare == name:
+                fail("6", f"{os.path.basename(path)}:{lineno} writes `/{name}` unqualified",
+                     f"a plugin command needs its plugin: `/mattpocock-skills:{name}`, since "
+                     f"a bare name resolves only until something else claims it (AST-050)")
             if user_only(bare) is False:
                 fail("6", f"{os.path.basename(path)}:{lineno} addresses `{bare}` as "
                           f"`/{name}`, but the model can invoke it",
@@ -387,6 +398,49 @@ for path, text in sorted(addr_sources.items()):
                           f"Skill tool, but it is user-invoked only",
                      "the call fails and the agent substitutes its own work: write "
                      f"`/{name}` and arrange for it to arrive as a user turn")
+
+# --- 7. ARTIFACT -> PRODUCED AND VERIFIED -------------------------------------------------
+# A gate is only as real as the artifact it reads. Two ways it goes quiet, and both have
+# happened here: the producer stops producing (AST-051 — a Builder handed an unusable
+# address rolled its own pass and left no marker), or the verifier never held the rule in
+# the first place (the marker check lived in `dispatch-ticket`, read at dispatch, while the
+# check must happen at handback — so Thomas's own contract never carried it).
+#
+# Each artifact needs BOTH halves named in the contracts that own them. Naming it in a
+# skill is not enough: a skill is read when invoked, a contract every time the role starts.
+#
+# The registry is explicit and that is this check's honest limit — it catches a half that
+# goes missing, not an artifact nobody ever registered. A new gate needs a line here, and
+# `simplify(increment):` is in the ledger precisely because it had no line.
+# Where each half must live is a judgement, so the registry records it rather than deriving
+# it. A contract is loaded every time its role starts; a skill is read only when invoked. So
+# a check that fires long after its dispatch belongs in the CONTRACT — that is exactly what
+# the marker got wrong. A check that fires inside the skill's own run may live in the SKILL.
+ARTIFACTS = [
+    # (artifact, regex, producer, verifiers — each a role contract or a shipped skill)
+    ("simplify(increment): marker", r"simplify\(increment\)", "builder", ["thomas", "rin"]),
+    ("browser evidence",            r"browser evidence",      "builder", ["rin"]),
+    ("gate file",                   r"GATE_FILE",             "rin",     ["review-with-rin"]),
+]
+def holder(name):
+    """Text of a role contract or a shipped skill, whichever owns this name."""
+    if name in roles:
+        return roles[name], "contract"
+    if name in skills:
+        return skills[name][1], "skill"
+    return None, None
+
+for label, pattern, producer, verifiers in ARTIFACTS:
+    rx = re.compile(pattern, re.I)
+    for who, part in [(producer, "producer")] + [(v, "verifier") for v in verifiers]:
+        text, kind = holder(who)
+        if text is None:
+            fail("7", f"'{label}' names {part} '{who}', which is neither a contract nor a "
+                      f"shipped skill", "the registry in this script has gone stale")
+        elif not rx.search(text):
+            fail("7", f"'{label}': {kind} '{who}' is its {part} and never names it",
+                 "a gate whose producer went quiet cannot fail, and a verifier that does "
+                 "not carry the rule will not apply it")
 
 # --- report -----------------------------------------------------------------------------
 print(f"Reachability check — {LAYOUT} layout, payload at {os.path.normpath(PAYLOAD)}")
@@ -406,6 +460,7 @@ if not findings:
     print("  [OK] 4 every referenced path and skill exists")
     print("  [OK] 5 every role has a launcher and a dispatcher that names it")
     print("  [OK] 6 every skill is addressed in the form its caller can actually use")
+    print("  [OK] 7 every gate artifact has both a producer and a verifier")
     print(f"\nAll reachability checks passed. Scope: {len(roles)} contracts, "
           f"{len(skills)} skills, the adaptation prompt and the README role table.")
     print("Not scanned: the failure-mode ledger's historical `Bound:` provenance.")

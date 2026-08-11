@@ -80,11 +80,10 @@ each one is atomic on its own.
 A claim is released when you merge the ticket or the owner abandons it: clear the assignee as
 part of cleanup, after the worktree and branch are gone.
 
-**Clearing an assignee is correct only when a fresh readback shows your own** — read it
-immediately before clearing, exactly as you read it to take the claim. Someone else's
-assignee is a live claim with a Builder behind it, and clearing it hands a second Builder the
-same ticket: worse than the race it came from, because the tracker then says free while the
-work is underway.
+**Clear an assignee only when a fresh readback shows your own** — read it immediately before
+clearing, exactly as when you took the claim. Someone else's assignee is a live claim with a
+Builder behind it; clearing it hands a second Builder the same ticket, and the tracker then
+says free while the work is underway.
 
 **A stale claim is an assignee with no branch**, and you resolve it because you are the only
 role seeing both sides. Check for the worktree first: from the tracker alone, a Builder
@@ -95,20 +94,19 @@ mid-ticket looks identical.
 **Shaping is dispatched, not assumed.** When `wayfinder` has shaped a direction, or an effort
 already fits one session, **you start a Shaper** — one unbroken session that runs
 `grill-with-docs` → `to-spec` → `to-tickets` and hands back tickets with their blocking edges.
-Same mechanics as any dispatch (`dispatch-ticket`'s launcher matrix, cwd gate, watcher), with
-two differences: its own worktree but no ticket branch, since it produces tickets rather than
-code; and **its brief opens with `/mattpocock-skills:grill-with-docs`**, because a brief that merely describes
+Same mechanics as any dispatch, with two differences: its own worktree but no ticket branch,
+since it produces tickets rather than code; and **its brief opens with `/mattpocock-skills:grill-with-docs`**, because a brief that merely describes
 the work gets prose instead of the phase. Give it the whole effort at once — its session is
 the one that must not be compacted.
 
 *The prior package described an align phase for weeks while no contract named it, so nothing
-ran it. That is the finding ADR 0001 was written about.*
+ran it — the finding ADR 0001 was written about.*
 
-**Dispatch** a claimed ticket through `dispatch-ticket`, which owns the worktree path law, the launcher
-matrix, the cwd gate and the cleanup topology. One claimed ticket becomes one Builder in one
+**Dispatch** a claimed ticket through `dispatch-ticket`, which owns the worktree path law,
+the launcher matrix, the cwd gate and cleanup. One claimed ticket becomes one Builder in one
 pane over one worktree, and several run at once on the frontier.
 
-**Steer** the Builder directly; there is no intermediate role. A pane's status is a bell — the
+**Steer** the Builder directly; there is no intermediate role. A pane's status is a bell; the
 verdict comes from the diff, the tests and the artifact.
 
 **At a milestone**, dispatch Rin's gate through `review-with-rin`. Rin advises and **you
@@ -126,12 +124,19 @@ disproves usually appears in several. Tell the Builder to grep the artifact for 
 not the section the reviewer quoted, and verify the fold the same way. Repaired where reported
 and left standing three paragraphs later reads as closed and is not.
 
-**At phase end**, dispatch the cross-vendor arm. The standard for it — what counts as having
-run, and how a `NOT RUN` is recorded and accepted — belongs to Rin's contract; the invocation
-belongs to `codex-arm` (Claude root) or `codex-claude-arm` (Codex root). You fire it, and you
-record which vendor actually ran.
+**At phase end**, dispatch the cross-vendor arm. Its standard belongs to Rin's contract, its
+invocation to `codex-arm` (Claude root) or `codex-claude-arm` (Codex root). You fire it, and
+you record which vendor actually ran.
 
-**Merge** is yours alone, on a clean final SHA with the evidence present.
+**Merge** is yours alone, on a clean final SHA, and you verify the evidence **by artifact
+rather than by the handback**:
+
+```bash
+git log --oneline <base>..<head> --grep '^simplify(increment):'
+```
+
+One marker per increment. A handback describing a pass that left no marker describes a
+substitute, and it reads as honest because it is (AST-051).
 
 ## Answers carry a source
 

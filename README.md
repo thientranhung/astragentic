@@ -1,4 +1,4 @@
-# Astraler Harness 1.0.0
+# Astraler Harness 1.5.0
 
 An operating framework that lets **several agents build software together on an existing
 codebase**.
@@ -124,12 +124,14 @@ harness/                          the payload staged into a target repo
       untangle/                     ├ brownfield craft, model-invoked
       module-boundaries/            ┘
   .codex/profiles/                one per role, mirroring the orchestrator rows
-    recurring-failure-modes.md    35 measured failure modes; append-only, the evidence base
+  .agents/memory/
+    recurring-failure-modes.md    52 measured failure modes; append-only, the evidence base
   scripts/
     herdr-watch-terminal.sh       turn watcher with a real start guard
     docs-staleness-audit.sh       age, fossils, dead links, always-on word budgets
     gen-code-map.sh               code-map skeleton to stdout; a reader supplies meaning
-    check-reachability.sh         does the method the docs describe actually exist?
+    check-reachability.sh         seven checks: does the method the docs describe
+                                  exist, is it reachable, and is it addressed correctly?
 docs/adr/0001-…                   why the method was rebuilt around the plugin
 prompts/ADAPT-HARNESS.md          the semantic installer the agent executes
 install.sh                        mechanical staging, immutable releases

@@ -103,6 +103,32 @@ else
     "update it: /plugin → update 'mattpocock-skills'"
 fi
 
+# 2b. Bundled skills reachable by the model. The Builder's simplify pass is a Claude Code
+# built-in skill it invokes itself. Three switches take that reach away, and all three fail
+# the same silent way: the Builder cannot invoke, so it rolls its own pass and reports a
+# success that is real but weaker, leaving no marker (AST-051). Nothing errors, which is why
+# this belongs in the doctor rather than being left to be discovered per project.
+SETTINGS="$HOME/.claude/settings.json"
+BUNDLED_OFF=""
+[ -n "${CLAUDE_CODE_DISABLE_BUNDLED_SKILLS:-}" ] && BUNDLED_OFF="env CLAUDE_CODE_DISABLE_BUNDLED_SKILLS"
+if [ -z "$BUNDLED_OFF" ] && [ -f "$SETTINGS" ]; then
+  grep -q '"disableBundledSkills"[[:space:]]*:[[:space:]]*true' "$SETTINGS" \
+    && BUNDLED_OFF="settings.json disableBundledSkills"
+fi
+SIMPLIFY_OVERRIDE=""
+if [ -f "$SETTINGS" ]; then
+  SIMPLIFY_OVERRIDE="$( { grep -o '"simplify"[[:space:]]*:[[:space:]]*"[a-z-]*"' "$SETTINGS" || true; } | head -1 )"
+fi
+if [ -n "$BUNDLED_OFF" ]; then
+  warn "bundled skills are disabled ($BUNDLED_OFF)" \
+    "the Builder's simplify pass cannot be invoked and will be silently hand-rolled; clear it, or accept that the simplify(increment): marker will be absent and Thomas's merge check will block"
+elif [ -n "$SIMPLIFY_OVERRIDE" ] && ! printf '%s' "$SIMPLIFY_OVERRIDE" | grep -q '"on"'; then
+  warn "skillOverrides restricts 'simplify' ($SIMPLIFY_OVERRIDE)" \
+    "the Builder invokes this skill itself; anything but \"on\" puts it out of reach"
+else
+  ok "bundled skills reachable by the model (simplify is the Builder's own pass)"
+fi
+
 # 3. git with worktree support (>= 2.5) — the isolation boundary for concurrent Builders.
 if command -v git >/dev/null 2>&1 && git worktree --help >/dev/null 2>&1; then
   ok "git with worktree support ($(git --version))"
