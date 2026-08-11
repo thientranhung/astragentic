@@ -210,7 +210,17 @@ orchestrator_codex_row() {
 }
 
 profile_field() { grep -E "^$2 *=" "$1" 2>/dev/null | head -1 | cut -d'"' -f2; }
+# A role with NO codex row never runs on Codex, so it needs no machine-local profile and
+# warning about one is noise the owner cannot act on. Absence is how this table already
+# says "not this runtime" — `rin` has said it since 1.0.0 — so read it the same way here.
+# `rin` stays in the loop because its template is the pane launcher for the day the trade
+# is revisited; every other role follows its row.
 for ROLE in thomas shaper builder rin qa; do
+  ROW_EXISTS="$(orchestrator_codex_row "$ROLE" 2>/dev/null)"
+  if [ "$ROLE" != "rin" ] && [ -n "$ORCH" ] && [ -z "$ROW_EXISTS" ]; then
+    ok "Codex ${ROLE}: no codex row — this role does not run on Codex"
+    continue
+  fi
   # Three places the template can live: an adapted project (.codex/), this package
   # (harness/.codex/), or a target where the release is staged but not yet adapted.
   TEMPLATE=""

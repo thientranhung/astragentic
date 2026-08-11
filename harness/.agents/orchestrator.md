@@ -38,6 +38,11 @@ never written back into this file.
 | builder | codex | <set-me> | medium |
 | qa | codex | <set-me> | medium |
 
+**Removing a role's codex row means that role does not run on Codex** — no fallback, no
+machine profile, and the doctor stops asking about one. That is how you decline a runtime
+deliberately, rather than leaving `<set-me>` in place and being warned about it every run.
+Re-add the row when you want it back.
+
 **`rin` has no fallback row, and its absence is the correct state.** The gate is a Herdr pane
 on the root provider's runtime, and no Codex or opencode adapter can host it, so any fallback
 would name a runtime that cannot gate. No available Claude root means STOP and ask the owner,

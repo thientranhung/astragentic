@@ -1,3 +1,17 @@
+# Astraler Harness 1.4.3
+
+## Fixed
+
+- **A role can decline a runtime, and the doctor stops asking.** `qa` shipped with a
+  `<set-me>` codex row, so every doctor run warned about it and every upgrade asked the owner
+  the same question again — with no way to answer "we are not using Codex for this role".
+  Deleting the row now means exactly that: no fallback, no machine profile, and the doctor
+  reports it as a decision rather than a gap.
+
+  This is the convention `rin` has carried since 1.0.0 — an absent row is the correct state,
+  read deliberately — applied to every role instead of just that one. A warning the owner
+  cannot act on is a warning they learn to skip, which costs the ones that matter.
+
 # Astraler Harness 1.4.2
 
 ## Fixed
