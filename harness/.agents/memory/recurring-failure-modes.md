@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 45 entries (AST-001 … AST-045) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 47 entries (AST-001 … AST-047) · AST-001…034 carried into 1.0.0 unchanged
 
 Practical AI-agent failure modes measured while operating this harness. They are the
 evidence base: a rule kept in this package can point at an entry here, and a rule that
@@ -628,3 +628,34 @@ shape smuggled into a generic payload — the same defect as a code-map generato
 `package.json` and `src/`. The method is the project's; adaptation records it.
 Bound: `harness/.agents/roles/qa.md`, `harness/.claude/skills/dispatch-qa-walk/SKILL.md`,
 `harness/.agents/roles/thomas.md` (dispatch).
+
+### AST-046 — A block moved between documents keeps the old document's referents · promoted 2026-08-11
+1.3.0 split the product walk out of the reviewer into its own role. The dispatch mechanics
+were **moved** from `review-with-rin` into a new skill — and moved verbatim. Three lines went
+on naming the walker "Rin" and calling the walk "a mode", which is 1.2.0's design surviving
+inside the release that reversed it. The dispatcher reads that skill to pack the brief, so
+one of those lines would have set the persona for the wrong agent.
+
+`check-reachability.sh` cannot see this: every path resolves, every name exists, nothing
+dangles. It is a **semantic** error, and the checker verifies references, not meaning.
+
+Moving text is not the same as re-homing it. **Re-read a moved block in its new context
+before the move counts as done** — the sentences that were correct in the old document are
+exactly the ones nobody looks at again.
+Bound: `harness/.claude/skills/dispatch-qa-walk/SKILL.md`.
+
+### AST-047 — "Local" is a deployment fact, not a data fact · promoted 2026-08-11
+The QA role shipped with "prefer a local or seeded environment for anything carrying customer
+data", which quietly assumes local means synthetic. The first repo to read it said otherwise:
+its local database is a **production snapshot with real buyer PII**, so a screenshot of an
+order list there captures the same names and addresses a production one would.
+
+The safety rule was written about the wrong noun. Where the data came from decides what may
+be captured, and prod-derived data is production data wherever it happens to be running. A
+rule phrased around environment lets a team satisfy it exactly and still write customer
+records to disk.
+
+Generalises past this case: **a safety rule keyed to a proxy for the risk will be satisfied
+by the proxy.** Key it to the thing itself, and require the agent to establish it rather than
+infer it — here, what the data *is*, asked before a screen is judged safe to capture.
+Bound: `harness/.agents/roles/qa.md` §Safety(c).

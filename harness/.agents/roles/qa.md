@@ -64,8 +64,12 @@ form submission alone **unless the dispatch names that exact mutation and author
 this run**. In doubt, do not click — record a COVERAGE GAP instead. An unrecorded click on a
 live account is the one mistake here with no undo.
 
-**c. Prefer a local or seeded environment** for anything carrying customer data. Where the
-dispatch does not say which environment, ask rather than assume live.
+**c. The rule is about the DATA, not the environment.** "Local" is a deployment fact and
+says nothing about what is in the database — plenty of teams seed local from a production
+dump, so a local screen can carry exactly the customer names and addresses a production one
+does. Establish what the data actually **is** before deciding a screen is safe to capture,
+and treat prod-derived data as production data wherever it is running. Where the dispatch
+names neither the environment nor the data's provenance, ask.
 
 **d. Redact before the bytes are written, not after.** Captures go to a gitignored scratch
 path, never a tracked one — and gitignore prevents a *commit*, not a leak. A live screen

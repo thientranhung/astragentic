@@ -23,7 +23,7 @@ reason to approximate one.
 
 The brief carries §1's contents plus four more:
 
-- **Persona and data state.** Who Rin acts as, and what the data looks like. A walk on empty
+- **Persona and data state.** Who QA acts as, and what the data looks like. A walk on empty
   data and a walk on realistic volume find different defects, so the verdict is only
   interpretable against the state that produced it. Where the repo has a seed command, name
   it — a stale seed once produced a 500 that read as a code bug and was an environment
@@ -32,10 +32,10 @@ The brief carries §1's contents plus four more:
   concept.** Naming only the changed ones guarantees the walk cannot find the class of defect
   it exists to find.
 - **The design guidelines**, by path. Without them a finding is an observation rather than a
-  violation, and Rin will say so.
+  violation, and QA will say so.
 - **The previous walk's verified-clean list**, so coverage accumulates instead of resetting.
 
-Findings route exactly like any other mode: Rin advises, **you classify**, the Builder fixes,
+Findings route as every gate's do: QA advises, **you classify**, the Builder fixes,
 and a design-level blocker goes to the owner through `to-questionnaire`. A walk finding that
 is a *product* decision — two labels that disagree because the concepts genuinely differ — is
 the owner's, not a bug to assign.

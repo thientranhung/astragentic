@@ -1,3 +1,27 @@
+# Astraler Harness 1.3.1
+
+Two defects, both found by the repo running this, and both invisible to every check here.
+
+## Fixed
+
+- **1.2.0's language survived the release that reversed it (AST-046).** Splitting the walk
+  out of the reviewer moved the dispatch mechanics into a new skill *verbatim*: three lines
+  went on naming the walker "Rin" and calling the walk "a mode". The dispatcher reads that
+  skill to pack the brief, so one line would have set the persona for the wrong agent.
+  `check-reachability.sh` cannot see it — every path resolves; the error is semantic.
+  **Re-read a moved block in its new context before the move counts as done.**
+
+- **"Local" is a deployment fact, not a data fact (AST-047).** The QA role said "prefer a
+  local or seeded environment for anything carrying customer data", assuming local means
+  synthetic. The first repo to read it has a local database that is a **production snapshot
+  with real buyer PII** — a screenshot of an order list there captures exactly what a
+  production one would. The rule now keys on the data's provenance, treats prod-derived data
+  as production data wherever it runs, and requires the agent to establish what the data *is*
+  rather than infer it from where it runs.
+
+  The general shape: a safety rule keyed to a proxy for the risk will be satisfied by the
+  proxy.
+
 # Astraler Harness 1.3.0
 
 A fifth role. 1.2.0 put the product walk inside Rin as a mode; that was wrong by this
