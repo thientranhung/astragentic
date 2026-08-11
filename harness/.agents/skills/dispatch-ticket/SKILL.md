@@ -46,6 +46,12 @@ together. Where no row targets the overridden runtime, stop and ask the owner.
 missing, auth failed, quota exhausted), the role's Fallback row, with the degradation
 REPORTED to the owner. Degradation is per-session and stays out of the file.
 
+**A row reading `<set-me>` is UNDECIDED, and undecided is a STOP at dispatch, not before.**
+The owner picks a runtime per project and per situation, so a table with a runtime left open
+is a normal resting state — the doctor says so and moves on. But resolving a role ONTO that
+runtime means using a model id nobody has chosen: stop, name the role and the row, and ask.
+Never substitute another role's model to keep the dispatch moving.
+
 **A missing row is an answer, not a gap to fill.** An absent fallback means that role has no
 fallback, so an unavailable active runtime is a STOP. Where `orchestrator.md` itself is
 missing or a row is ambiguous, Thomas asks the owner for the model and scaffolds the file

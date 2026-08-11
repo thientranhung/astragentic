@@ -1,3 +1,27 @@
+# Astraler Harness 1.4.4
+
+Corrects 1.4.3, which fixed the right symptom from the wrong assumption.
+
+## Fixed
+
+- **`<set-me>` means UNDECIDED, and undecided is a resting state.** 1.4.3 assumed a
+  `<set-me>` row meant the owner did not want that runtime, and offered deleting the row as
+  the way to say so. The owner's actual position is different and more common: *I use Claude
+  or Codex depending on the project and the situation, and I have not decided for this role
+  yet.* A table with a runtime left open is normal, not a defect, so the doctor now records
+  it and moves on.
+
+  The check that is actually worth having moved to **dispatch**: resolving a role onto a
+  runtime whose row still reads `<set-me>` means using a model id nobody chose, so that
+  STOPs and asks. Substituting another role's model to keep the dispatch moving is exactly
+  the failure this prevents.
+
+  Three states, each meaning one thing: a real model id is usable, `<set-me>` is undecided
+  and blocks only at use, an absent row is a deliberate no.
+
+  1.4.3's reasoning still holds — a warning the owner cannot act on is one they learn to
+  skip. It was aimed at the wrong state.
+
 # Astraler Harness 1.4.3
 
 ## Fixed

@@ -238,9 +238,13 @@ for ROLE in thomas shaper builder rin qa; do
     # `<set-me>` is the scaffold's way of saying "the owner has not chosen yet". It is not a
     # value to compare against — comparing it would report every real config as drift.
     if [ "$ROW_MODEL" = "<set-me>" ]; then
-      [ -n "$TARGET" ] && warn "orchestrator.md ${ROLE} codex row still reads <set-me>" \
-        "fill it with a model id for this account before dispatching ${ROLE} to codex; until then the fallback cannot run"
+      # UNDECIDED is a legitimate resting state, not a defect: the owner picks a runtime per
+      # project and per situation, and may genuinely not know yet. Warning here every run is
+      # a nag they cannot act on, and a nag they learn to skip costs the warnings that matter.
+      # The check that IS actionable happens at dispatch, where using it is the actual risk.
+      [ -n "$TARGET" ] && ok "Codex ${ROLE}: undecided (<set-me>) — dispatch to codex will STOP until it is set"
       ROW=""
+      SKIP_PROFILE=1
     fi
     if [ -n "$ROW" ]; then
       PROF_SRC="$TEMPLATE"; [ -f "$DEST" ] && PROF_SRC="$DEST"
@@ -261,7 +265,9 @@ for ROLE in thomas shaper builder rin qa; do
           "align $PROF_SRC with .agents/orchestrator.md"
       fi
     fi
-    if [ -f "$DEST" ] && cmp -s "$TEMPLATE" "$DEST"; then
+    if [ "${SKIP_PROFILE:-0}" = "1" ]; then
+      SKIP_PROFILE=0
+    elif [ -f "$DEST" ] && cmp -s "$TEMPLATE" "$DEST"; then
       ok "Codex ${ROLE} profile installed and matches the tracked template"
     elif [ -f "$DEST" ]; then
       warn "Codex ${ROLE} profile drift detected" \
