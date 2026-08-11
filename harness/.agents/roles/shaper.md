@@ -12,9 +12,9 @@ that must share one context are one session, and one session is one agent.
 
 | Phase | Skill | Ends when |
 |---|---|---|
-| Align | `grill-with-docs` | the question frontier is empty and every answer carries a source |
-| Spec | `to-spec` | the spec states what is being built and how it will be known to work |
-| Tickets | `to-tickets` | every ticket is independently buildable and its blocking edges are set |
+| Align | `mattpocock-skills:grill-with-docs` | the question frontier is empty and every answer carries a source |
+| Spec | `mattpocock-skills:to-spec` | the spec states what is being built and how it will be known to work |
+| Tickets | `mattpocock-skills:to-tickets` | every ticket is independently buildable and its blocking edges are set |
 
 They run in that order, and each one's output is the next one's input.
 

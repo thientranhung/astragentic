@@ -259,7 +259,11 @@ cannot reach them at all, so an agent that is *told about* `implement` in prose 
 prose and start coding without the skill.
 
 What does reach them is **text arriving as a user turn**. So the brief's first line is the
-slash command itself, and the rest of the brief follows it:
+slash command itself, **written in its plugin-qualified form** — `/mattpocock-skills:<name>`
+— and the rest of the brief follows it. A bare `/implement` resolves today only because
+nothing else claims that word yet; the qualified form is correct whatever gets installed
+later (AST-050). Claude Code's own built-ins (`/compact`, `/clear`, `/simplify`) keep their
+bare names, which are their real addresses.
 
 ```text
 /mattpocock-skills:implement TICKET-123

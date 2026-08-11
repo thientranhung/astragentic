@@ -47,6 +47,16 @@ SKILL_GLOBS = [
 README = os.path.join(ROOT, "README.md")
 PROMPT = os.path.join(ROOT, "prompts", "ADAPT-HARNESS.md")
 
+# A plugin skill is addressed as `<plugin>:<skill>` — that qualified form is what a typed
+# command must use, so contracts write it. Every comparison here is against the bare name,
+# so strip a known plugin prefix rather than teaching each check about it.
+PLUGIN_PREFIXES = ("mattpocock-skills:",)
+def unqualify(name):
+    for pre in PLUGIN_PREFIXES:
+        if name.startswith(pre):
+            return name[len(pre):]
+    return name
+
 findings = []
 def fail(check, msg, detail=""):
     findings.append((check, msg, detail))
@@ -174,7 +184,8 @@ if readme:
         if len(cells) < 3:
             continue
         role = re.sub(r"[*`]", "", cells[0]).split("—")[0].strip().lower()
-        named = [t for t in re.findall(r"`([a-z0-9-]+)`", cells[2]) if t in KNOWN]
+        named = [unqualify(x) for x in re.findall(r"`([a-z0-9:-]+)`", cells[2])]
+        named = [x for x in named if x in KNOWN]
         if named:
             method_rows[role] = named
 else:
@@ -189,9 +200,9 @@ for role, text in roles.items():
         cells = [c.strip() for c in line.strip("|").split("|")]
         if len(cells) < 2:
             continue
-        m = re.fullmatch(r"`([a-z0-9-]+)`", cells[1])
+        m = re.fullmatch(r"`([a-z0-9:-]+)`", cells[1])
         if m:
-            owned.setdefault(m.group(1), []).append(role)
+            owned.setdefault(unqualify(m.group(1)), []).append(role)
 
 for role, phases in sorted(method_rows.items()):
     for phase in phases:
@@ -243,7 +254,8 @@ for src, text in sorted(sources.items()):
         if not os.path.exists(os.path.join(PAYLOAD, ref)):
             fail("4", f"{src} references {ref}, which does not exist in the payload")
     # 4b. skill-shaped tokens
-    for tok in sorted(set(re.findall(r"`([a-z][a-z0-9]*(?:-[a-z0-9]+)+)`", text))):
+    for tok in sorted(set(re.findall(r"`([a-z][a-z0-9:]*(?:-[a-z0-9]+)+)`", text))):
+        tok = unqualify(tok)
         if tok in KNOWN or tok in NOT_A_SKILL:
             continue
         fail("4", f"{src} names '{tok}', which is neither a shipped skill nor a plugin skill",

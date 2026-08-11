@@ -9,10 +9,10 @@ Builder's session has ended.
 
 | Phase | Skill | What it produces |
 |---|---|---|
-| Triage | `triage` | an inbox item becomes a tracker ticket with a label |
-| Wayfinding | `wayfinder` | a foggy effort larger than one session becomes a shaped direction |
-| Owner decisions | `to-questionnaire` | an open decision becomes a question the owner can answer |
-| Method questions | `ask-matt` | a question about the method itself gets an answer from its source |
+| Triage | `mattpocock-skills:triage` | an inbox item becomes a tracker ticket with a label |
+| Wayfinding | `mattpocock-skills:wayfinder` | a foggy effort larger than one session becomes a shaped direction |
+| Owner decisions | `mattpocock-skills:to-questionnaire` | an open decision becomes a question the owner can answer |
+| Method questions | `mattpocock-skills:ask-matt` | a question about the method itself gets an answer from its source |
 | Standards bootstrap | `extract-standards` | `docs/agents/standards.md`, with a coverage verdict |
 | Glossary bootstrap | `bootstrap-glossary` | `CONTEXT.md`, seeded from code, marked unreviewed |
 | Backlog bootstrap | `batch-triage` | an inherited backlog becomes tickets with labels and edges |

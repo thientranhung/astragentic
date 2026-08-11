@@ -1,3 +1,21 @@
+# Astraler Harness 1.4.2
+
+## Fixed
+
+- **Plugin skills are qualified at every point a command is CALLED**, which 1.4.1 covered
+  only for the three literal slash commands. The phase tables in the role contracts are the
+  other call site: they are where a role reads which command it must drive, so
+  `mattpocock-skills:implement` there is what stops a bare `/implement` being constructed
+  from a bare table cell.
+
+  Scope is deliberately call sites only. A craft-layer list — "`tdd`, `research`,
+  `codebase-design` are available to you" — names skills the model reaches by registration
+  and nobody types, so a prefix there buys nothing and costs readability. This package's own
+  skills stay bare; they are not plugin skills.
+
+  `check-reachability.sh` now reads either form and compares on the bare name, so a
+  qualified table cell does not break phase parsing.
+
 # Astraler Harness 1.4.1
 
 ## Fixed

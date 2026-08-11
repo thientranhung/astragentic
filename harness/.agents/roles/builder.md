@@ -12,8 +12,8 @@ visible surface over them — and it is what lets several Builders work the fron
 
 | Phase | Skill | Ends when |
 |---|---|---|
-| Build | `implement` | the ticket's acceptance criteria pass and the build is green |
-| Increment review | `code-review` | both axes have run once over the increment |
+| Build | `mattpocock-skills:implement` | the ticket's acceptance criteria pass and the build is green |
+| Increment review | `mattpocock-skills:code-review` | both axes have run once over the increment |
 | Simplify | — | a `simplify(increment):` commit exists on the branch |
 | Visual verification | — | UI-touching work has browser evidence, or the skip is named |
 
