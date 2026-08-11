@@ -50,7 +50,7 @@ AGE_HITS=$(while read -r f; do
   d=$(git log -1 --format=%as -- "$f")
   [[ "$d" < "$CUTOFF" ]] && echo "$d  $f"
 done < <(scoped_md) | sort)
-if [[ -n "$AGE_HITS" ]]; then echo "$AGE_HITS"; FOUND=1; fi
+if [[ -n "$AGE_HITS" ]]; then echo "$AGE_HITS"; FOUND=1; else echo "(clean)"; fi
 
 echo
 echo "=== AXIS 2: fossils of retired names in LIVE docs ==="
@@ -133,6 +133,11 @@ echo "=== AXIS 5: self-reported counts vs the thing counted ==="
 # A document that states a number states a fact nothing re-derives. README claimed "35
 # measured failure modes" through sixteen releases while the ledger grew to 51, and named
 # the ledger under .codex/profiles/ after it moved. Neither drifted loudly; both read fine.
+# Each axis reports ITS OWN result. Reading the shared FOUND here made this axis silent
+# whenever an earlier one had fired — which in a real project is every run, since AXIS 1
+# always has aged docs. A check whose verdict cannot be read is AST-052 again, and this one
+# reproduced it inside the release that fixed it.
+A5=0
 RM="$ROOT/README.md"
 VF="$ROOT/VERSION"
 LEDGER="$ROOT/harness/.agents/memory/recurring-failure-modes.md"
@@ -143,7 +148,7 @@ if [[ -f "$RM" && -f "$VF" ]]; then
   GOT="$( { grep -m1 -o '^# Astraler Harness [0-9.]*' "$RM" || true; } | awk '{print $4}' )"
   if [[ -n "$GOT" && "$GOT" != "$WANT" ]]; then
     echo "  README heading says $GOT, VERSION says $WANT"
-    FOUND=1
+    A5=1; FOUND=1
   fi
 fi
 
@@ -152,10 +157,10 @@ if [[ -f "$RM" && -f "$LEDGER" ]]; then
   CLAIM="$( { grep -m1 -o '[0-9]\{1,\} measured failure modes' "$RM" || true; } | awk '{print $1}' )"
   if [[ -n "$CLAIM" && "$CLAIM" != "$REAL" ]]; then
     echo "  README claims $CLAIM failure modes, the ledger holds $REAL"
-    FOUND=1
+    A5=1; FOUND=1
   fi
 fi
-[[ $FOUND -eq 1 ]] || echo "(clean)"
+[[ $A5 -eq 1 ]] || echo "(clean)"
 
 echo
 [[ $FOUND -eq 1 ]] && echo "RESULT: findings above — verify each against code/truth-model before editing." || echo "RESULT: all clean."

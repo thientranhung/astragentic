@@ -1,3 +1,42 @@
+# Astraler Harness 1.5.1
+
+Two defects 1.5.0 introduced, both found by running it against a real project rather than
+against this package.
+
+## Fixed
+
+**Staleness AXIS 5 was mute on every run it would ever do.** It closed with
+`[[ $FOUND -eq 1 ]] || echo "(clean)"`, reading the whole run's flag rather than its own. Any
+earlier axis that fired left it set, so AXIS 5 printed its header and nothing — clean and
+found being indistinguishable.
+
+It passed here because AXIS 1–3 happen to be clean in this package. In a real project AXIS 1
+lists every doc older than three weeks and is never clean. The only environment it was tested
+in was the one where the bug could not appear.
+
+This is AST-052's shape — a check whose own result cannot be read — shipped in the release
+that fixed AST-052, in adjacent lines of the same file. Each axis now reports from its own
+flag; the shared one is for the exit code. AXIS 1 had the same silence and was fixed with it
+(AST-053).
+
+**`ADAPT-HARNESS.md` said to commit the installation and never said what.** The upgrading
+agent reached for `git add -A` and swept in two staged releases that had been superseded
+before anyone ran them — roughly 1000 files, permanently, in a history that cannot be trimmed
+without a rewrite.
+
+Staging is deliberately cheap, so an abandoned candidate is ordinary rather than exceptional.
+The prompt now names paths, derives the release to keep from `.astraler/CANDIDATE`, and
+prints what is still untracked so an abandoned candidate is visible rather than assumed.
+Untracked is its correct resting state: disk, not history (AST-054).
+
+## Scope note
+
+Both were found by running the shipped scripts against a project whose preconditions are
+messy, not by re-reading them here. That is now three releases running where the defects came
+from use rather than from review. The package-side checks are still worth having — they
+caught the 1.5.0 payload defects on the project in one pass — but a check verified only where
+its preconditions are tidy has not been verified.
+
 # Astraler Harness 1.5.0
 
 An address is only correct relative to whoever has to use it. This release fixes one that

@@ -782,3 +782,43 @@ and this is the third time it has appeared inside tooling written to catch it.
 Found while adding an unrelated axis, not by any check. The reachability script has known
 its own layout since 1.0.0; this one did not, and nothing compared them.
 Bound: `harness/scripts/docs-staleness-audit.sh`.
+
+### AST-053 — An axis read the run's verdict instead of its own, and went mute · promoted 2026-08-11
+
+The staleness audit's new AXIS 5 closed with `[[ $FOUND -eq 1 ]] || echo "(clean)"`. `FOUND`
+is the whole run's flag. Any earlier axis that fired left it set, so AXIS 5 printed its
+header and nothing else — indistinguishable from clean, and from a finding.
+
+It passed in the package because AXIS 1-3 happened to be clean there. In a real project
+AXIS 1 lists every doc older than three weeks, so it is **never** clean, so AXIS 5 was mute
+on every run it would ever actually do. The one environment it was tested in was the one
+environment where the bug could not appear.
+
+**Shipped in the same release that fixed AST-052**, which is the same failure: a check whose
+own result cannot be read. Writing the ledger entry did not prevent reproducing it forty
+minutes later, in adjacent lines of the same file.
+
+The rule is small and mechanical: **an axis reports its own verdict from its own flag.** The
+shared flag is for the exit code and nothing else. Two axes here already did it correctly
+(2 and 3); AXIS 1 had the same silence and was fixed alongside.
+
+Found by running the shipped script against a real project rather than against this package.
+Every check in this package should be run once somewhere its preconditions are messy.
+Bound: `harness/scripts/docs-staleness-audit.sh`.
+
+### AST-054 — `git add -A` committed two releases nobody ever applied · promoted 2026-08-11
+
+`ADAPT-HARNESS.md` said the installation has to be committed and did not say **what**. The
+upgrading agent used `git add -A`, which swept in `.astraler/releases/1.4.3/` and `1.4.4/` —
+both staged, both superseded before anyone ran them, both untracked until that moment. About
+1000 files, permanently in a history that cannot be trimmed without a rewrite.
+
+Staging is deliberately cheap, so abandoned candidates are normal rather than exceptional,
+and a project that upgrades often accrues them. Untracked is their correct resting state:
+disk, not history.
+
+The instruction now names paths and derives the release to keep from `.astraler/CANDIDATE`,
+then prints what is still untracked so an abandoned candidate is visible rather than assumed.
+**An instruction that says "commit" without saying what to commit will be read as `-A`** —
+this is the second time a gap in this prompt was filled by an agent's reasonable default.
+Bound: `prompts/ADAPT-HARNESS.md`.

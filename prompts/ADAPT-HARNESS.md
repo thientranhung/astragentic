@@ -148,6 +148,24 @@ git worktree remove --force /tmp/harness-check
 Report the outcome in the receipt. `PAYLOAD NOT VISIBLE` after the commit is a blocker, not a
 detail: it means dispatch will silently produce contract-less Builders.
 
+**Commit the applied release and the payload — not every release sitting under
+`.astraler/releases/`.** Staging is cheap and abandoning a candidate is normal: a release can
+be staged, superseded before anyone runs it, and never applied. `git add -A` sweeps those in,
+and a project that upgrades often accrues megabytes of releases nobody ever ran, permanently,
+in a history that cannot be trimmed without a rewrite. Measured once: two superseded
+candidates, ~1000 files, entered history in a single upgrade commit.
+
+So add paths, and know which release you are keeping:
+
+```bash
+git add .agents .claude .codex scripts .astraler/state .astraler/CANDIDATE
+git add ".astraler/releases/$(cat .astraler/CANDIDATE)"
+git status --short ".astraler/releases/"   # anything still listed was never applied
+```
+
+An unapplied release left untracked is the correct resting state — it costs disk, not
+history, and the next run either applies it or the owner deletes the directory.
+
 **Codex role profiles** (`thomas`, `shaper`, `builder`, `rin`) are machine-local at
 `${CODEX_HOME:-$HOME/.codex}/<role>.config.toml`. Compare each tracked template with its
 destination and report missing or drifted state. Provision only after explicit owner
