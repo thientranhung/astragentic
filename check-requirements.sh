@@ -57,7 +57,7 @@ if [ "$HAVE_CLAUDE" -eq 1 ]; then
   ok "claude CLI ($(command -v claude))"
 elif [ "$HAVE_CODEX" -eq 1 ]; then
   miss "claude CLI not on PATH — the milestone gate cannot run" \
-    "install Claude Code: https://claude.com/claude-code. Rin has no fallback row by design (FW-030): with no Claude the answer is STOP and ask the owner, and Codex stays the cross-vendor arm"
+    "install Claude Code: https://claude.com/claude-code. Rin has no fallback row by design (AST-030): with no Claude the answer is STOP and ask the owner, and Codex stays the cross-vendor arm"
 else
   miss "no runtime CLI on PATH (need claude or codex)" \
     "install Claude Code (https://claude.com/claude-code) and/or the OpenAI Codex CLI"
@@ -112,7 +112,7 @@ fi
 
 # 4. herdr floor 0.8.0. VERSION and command surface are separate checks on purpose: the
 # capability probe alone cannot establish the floor, because prompt/wait/read/start all
-# exist in 0.7.5 too, so a probe-only check silently passed an under-floor herdr (FW-032 —
+# exist in 0.7.5 too, so a probe-only check silently passed an under-floor herdr (AST-032 —
 # a check that cannot fail is not a check). The floor exists for the 0.8.0
 # prompt-submission fix, a BEHAVIOUR change no --help probe can observe.
 HERDR_FLOOR="0.8.0"
@@ -224,12 +224,26 @@ for ROLE in thomas shaper builder rin; do
   if [ -n "$TEMPLATE" ]; then
     # Authority check first: does the profile agree with the orchestrator row?
     ROW="$(orchestrator_codex_row "$ROLE")"
+    ROW_MODEL="${ROW%%|*}"; ROW_EFFORT="${ROW##*|}"
+    # `<set-me>` is the scaffold's way of saying "the owner has not chosen yet". It is not a
+    # value to compare against — comparing it would report every real config as drift.
+    if [ "$ROW_MODEL" = "<set-me>" ]; then
+      [ -n "$TARGET" ] && warn "orchestrator.md ${ROLE} codex row still reads <set-me>" \
+        "fill it with a model id for this account before dispatching ${ROLE} to codex; until then the fallback cannot run"
+      ROW=""
+    fi
     if [ -n "$ROW" ]; then
-      ROW_MODEL="${ROW%%|*}"; ROW_EFFORT="${ROW##*|}"
       PROF_SRC="$TEMPLATE"; [ -f "$DEST" ] && PROF_SRC="$DEST"
       PROF_MODEL="$(profile_field "$PROF_SRC" model)"
       PROF_EFFORT="$(profile_field "$PROF_SRC" model_reasoning_effort)"
-      if [ "$PROF_MODEL" != "$ROW_MODEL" ]; then
+      # A placeholder that LOOKS like a real id is the trap: it resolves nowhere and fails
+      # at the moment the cross-vendor arm runs — end of phase, when the work looks done —
+      # reading as "the provider is down" rather than as a config error. So the package
+      # ships an EMPTY model and the doctor refuses it (AST-040).
+      if [ -z "$PROF_MODEL" ]; then
+        miss "Codex ${ROLE} profile has no model set" \
+          "the package ships this empty on purpose. Copy the model from the ${ROLE} codex row in .agents/orchestrator.md into $PROF_SRC — a placeholder id would fail only at the first cross-vendor call"
+      elif [ "$PROF_MODEL" != "$ROW_MODEL" ]; then
         miss "Codex ${ROLE} profile model '$PROF_MODEL' disagrees with its orchestrator.md row '$ROW_MODEL'" \
           "orchestrator.md owns role → model; a profile that disagrees fails at invoke time and looks like the provider being down. Fix $PROF_SRC"
       elif [ -n "$ROW_EFFORT" ] && [ "$PROF_EFFORT" != "$ROW_EFFORT" ]; then
@@ -294,7 +308,7 @@ else
   done
   if git -C "$TARGET" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     ok "target is a git work tree (worktree isolation available)"
-    # FW-036: a worktree carries TRACKED content only, so an uncommitted payload is
+    # AST-036: a worktree carries TRACKED content only, so an uncommitted payload is
     # invisible to every Builder. Ask git what it tracks rather than what exists on disk.
     if [ "$TARGET_READY" = "1" ]; then
       UNTRACKED_PAYLOAD=0
@@ -308,7 +322,7 @@ else
         ok "harness payload is committed (visible inside Builder worktrees)"
       else
         miss "harness payload is present but NOT tracked by git" \
-          "a worktree contains tracked content only, so a Builder dispatched now reads no contract at all (FW-036). Check .gitignore for .agents/ or .claude/ rules, then commit the payload"
+          "a worktree contains tracked content only, so a Builder dispatched now reads no contract at all (AST-036). Check .gitignore for .agents/ or .claude/ rules, then commit the payload"
       fi
     fi
   else

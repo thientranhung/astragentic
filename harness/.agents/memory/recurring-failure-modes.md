@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 39 entries (FW-001 … FW-039) · FW-001…034 carried into 1.0.0 unchanged
+Status: current · 42 entries (AST-001 … AST-042) · AST-001…034 carried into 1.0.0 unchanged
 
 Practical AI-agent failure modes measured while operating this harness. They are the
 evidence base: a rule kept in this package can point at an entry here, and a rule that
@@ -12,17 +12,17 @@ never reused, and a lesson that later proved wrong is marked `superseded` or `re
 place rather than edited away. That is what lets an entry be cited as evidence years later.
 
 **Format:** each entry is the lesson plus its binding surface, a few lines. Fuller incident
-narratives live in git history (`git log -p` this file). `FW-*` = framework class,
-`FM-*` = product class. Status: `open → proposed → promoted → closed`, or `superseded` /
+narratives live in git history (`git log -p` this file). `AST-*` = a harness lesson; a project's
+own ledger keeps its own prefix. Status: `open → proposed → promoted → closed`, or `superseded` /
 `reverted`.
 
-**`FW-*` IDs in this file are the HARNESS's, and the prefix is not reserved.** A project may
-keep its own ledger using the same `FW-0xx` shape — one measured install had ten colliding
-IDs, including `FW-032`, which this payload cites eleven times with a different meaning. So
-**a citation inside harness-owned material always resolves HERE**, and a citation inside
-project-owned material resolves in the project's ledger. Resolution follows the location of
-the citing file, never the number alone. An ambiguous citation is worse than a missing one:
-the reader resolves it confidently, to the wrong lesson.
+**These IDs were `FW-0xx` until 1.1.0 and are now `AST-0xx`.** The number is unchanged —
+`AST-032` is the entry that was `FW-032` — so every citation still names the same lesson.
+The prefix moved because `FW-` was already in use by the projects this harness installs
+into: one measured repo carried six IDs meaning different things in the two ledgers across
+235 citations, and the only thing separating them was a paragraph a reader had to know
+existed. **A namespace has to be unambiguous where it is minted, not routed by prose at
+every read site.** Projects keep `FW-`; the harness owns `AST-`.
 
 **The `Bound:` pointers are historical.** They name the surface an entry was promoted into
 at the time, and many of those files were retired when 1.0.0 rebuilt the method around the
@@ -37,108 +37,108 @@ also why the staleness audit excludes this file from its fossil scan.
 
 ---
 
-## Framework failure modes (FW-*)
+## Framework failure modes (AST-*)
 
-### FW-001 — Gate wired to a fix tool, not a review tool · promoted 2026-06-28
+### AST-001 — Gate wired to a fix tool, not a review tool · promoted 2026-06-28
 Review ≠ rescue: the gate runs a real diff **review**, never `/codex:rescue`.
 Bound: working-method §4, rules §3.
 
-### FW-002 — A prose link does not guarantee load · promoted 2026-06-28
+### AST-002 — A prose link does not guarantee load · promoted 2026-06-28
 Always-required context must be a bare `@`-import in `CLAUDE.md` (loads by construction);
 task docs stay router-loaded (`docs/INDEX.md`). Bound: CLAUDE.md structure.
 
-### FW-003 — No lessons ledger existed · promoted 2026-06-28
+### AST-003 — No lessons ledger existed · promoted 2026-06-28
 This file + the framework-change loop (now rules §7). Bound: rules §7.
 
-### FW-004 — Process decisions routed to ADRs · promoted 2026-06-29
+### AST-004 — Process decisions routed to ADRs · promoted 2026-06-29
 Durable process/framework decisions live in the owning governance doc; ADRs stay
 product/architecture. Bound: rules §2.
 
-### FW-005 — Entry-doc rewrite silently dropped unique content · promoted 2026-06-29
+### AST-005 — Entry-doc rewrite silently dropped unique content · promoted 2026-06-29
 When rewriting an always-loaded entry-doc shorter, diff old vs new for unique lines and
 re-home anything not covered by the imported targets, BEFORE the gate. Bound:
 working-method §2 (navigation freshness).
 
-### FW-006 — `fork` delegation inherited Opus, ignored the model ladder · promoted 2026-06-29
+### AST-006 — `fork` delegation inherited Opus, ignored the model ladder · promoted 2026-06-29
 Implementation delegation = fresh subagent + explicit `model: sonnet` + self-contained
 brief; `fork` (parent model) only when context inheritance is the bottleneck. Bound:
 working-method §5.
 
-### FW-007 — Long-lived branch + oversized PR outran the gate · promoted 2026-07-01
+### AST-007 — Long-lived branch + oversized PR outran the gate · promoted 2026-07-01
 9 non-converging review passes over a 255-file diff. One slice → one short-lived branch →
 one PR sized to converge in one/few passes; a non-converging gate = too-big diff, split —
 not a backlog to grind. Bound: working-method §2, rules §3.
 
-### FW-008 — Docs cited a retired skill collection · promoted 2026-07-02
+### AST-008 — Docs cited a retired skill collection · promoted 2026-07-02
 Cite only routes that actually run; verify a path exists before citing. Bound: rules §2.
 
-### FW-009 — No UI-prototype phase before Build · promoted 2026-07-02
+### AST-009 — No UI-prototype phase before Build · promoted 2026-07-02
 Customer-facing surfaces get a cheap mockup + stakeholder review before build spend.
 Bound: working-method §3 (Prototype row).
 
-### FW-010 — Worktree delegation hygiene undocumented · promoted 2026-07-02
-Superseded in scope by FW-016 (isolation became unconditional). Committed base, one agent
+### AST-010 — Worktree delegation hygiene undocumented · promoted 2026-07-02
+Superseded in scope by AST-016 (isolation became unconditional). Committed base, one agent
 per worktree. Bound: `.claude/rules/agent-worktree-isolation.md`.
 
-### FW-011 — Gate was per-PR only, not per-step · promoted 2026-07-02 · **superseded 2026-07-16**
+### AST-011 — Gate was per-PR only, not per-step · promoted 2026-07-02 · **superseded 2026-07-16**
 Its fix ("gate every step") over-corrected into continuous Codex loops that stalled
 delivery. Superseded by the **Codex end-of-phase rule** (rules §3, owner 2026-07-16): ONE
 adversarial pass at plan END + ONE review at review END; Claude carries the in-loop review.
 The surviving core: no plan goes to build ungated.
 
-### FW-012 — Two review rounds not stated as both-mandatory · promoted 2026-07-02 · **superseded 2026-07-16**
+### AST-012 — Two review rounds not stated as both-mandatory · promoted 2026-07-02 · **superseded 2026-07-16**
 Its "re-gate both lenses to clean" loop is superseded by the Codex end-of-phase rule
 (rules §3). The surviving core: cross-vendor and same-vendor lenses catch DIFFERENT defect
-classes (proven by FW-015) — both still exist, once each, at the right points: Claude
+classes (proven by AST-015) — both still exist, once each, at the right points: Claude
 in-loop (Dan self-gate + Rin independent) + ONE Codex at review END.
 
-### FW-013 — Ad-hoc build delegation; false tooling-gap assumed · superseded by FW-019/FW-026
+### AST-013 — Ad-hoc build delegation; false tooling-gap assumed · superseded by AST-019/AST-026
 Surviving lesson: **verify tooling by inspecting the filesystem before claiming a
 capability gap** — never scope down a port on an assumption.
 
-### FW-014 — Multi-slice rebuild needs a gated integration branch · promoted 2026-07-11 · epic-specific
+### AST-014 — Multi-slice rebuild needs a gated integration branch · promoted 2026-07-11 · epic-specific
 Pre-launch rebuild whose slices individually break `main`: gated integration branch,
 per-slice gates + one holistic train gate (hub-v2 pattern). Historical; propose CLOSE.
 
-### FW-015 — Export step committed live secrets + buyer PII · promoted 2026-07-11
+### AST-015 — Export step committed live secrets + buyer PII · promoted 2026-07-11
 Same-vendor correctness review PASSED it; cross-vendor caught it (P1) — the two lenses
 catch different classes. A value that touched a tracked file is burned — rotate it.
 Bound: `.claude/rules/no-secrets-in-exports.md` (always-on). CI secret-scan still TODO.
 
-### FW-016 — Agents sharing one checkout moved HEAD under each other · promoted 2026-07-11
+### AST-016 — Agents sharing one checkout moved HEAD under each other · promoted 2026-07-11
 Includes a READ-ONLY reviewer that `git switch`ed the PM's HEAD. Worktree isolation is
 UNCONDITIONAL for every spawned agent that can run state-changing git; PM re-asserts its
 branch each turn + verifies reflog after each agent. Bound:
 `.claude/rules/agent-worktree-isolation.md` (always-on).
 
-### FW-017 — Per-package typecheck missed a cross-package break · promoted 2026-07-11
+### AST-017 — Per-package typecheck missed a cross-package break · promoted 2026-07-11
 Gate evidence = repo-root `pnpm -r typecheck` + `pnpm -r test`; per-package green is not
 whole-repo green. Bound (machine): `.github/workflows/ci.yml`.
 
-### FW-018 — Dispatch emitted as text, never executed; no liveness signal · promoted 2026-07-11
+### AST-018 — Dispatch emitted as text, never executed; no liveness signal · promoted 2026-07-11
 Dispatch-is-not-done-until-observed: verify every delegation by its observable effect
 (agent appears in `herdr agent list` / branch moves) in the same turn; narrating a tool
 call is not calling it. Bound: `.claude/agents/thomas-leader.md` (orchestration §) +
-`scripts/herdr-watch-terminal.sh` (FW-022 watcher).
+`scripts/herdr-watch-terminal.sh` (AST-022 watcher).
 
-### FW-019 — Implementer subagent retired; independence moved to the PR · promoted 2026-07-12 · dispatch superseded by FW-026
+### AST-019 — Implementer subagent retired; independence moved to the PR · promoted 2026-07-12 · dispatch superseded by AST-026
 The in-session build subagent cost more than it returned. Surviving core: branch → PR →
 review always; plan gate before build; `/simplify` before PR. Bound:
 `.claude/rules/build-loop-gates.md`.
 
-### FW-020 — Plugin review commands invisible → rescue used as review; raw exec hung · promoted 2026-07-12
+### AST-020 — Plugin review commands invisible → rescue used as review; raw exec hung · promoted 2026-07-12
 `disable-model-invocation` commands don't appear in the skill list — absence there is NOT
 evidence of absence; inspect the plugin cache. Gates run the plugin runtime
 (`codex-companion.mjs`); raw `codex exec` fallback-only; review ≠ rescue. Bound:
 working-method §4, build-loop-gates.
 
-### FW-021 — Gate workflows blocked on owner presence · promoted 2026-07-13
+### AST-021 — Gate workflows blocked on owner presence · promoted 2026-07-13
 grilling/to-spec/to-tickets/wayfinder are agent-operated (owner-proxy), escalate only
 genuine owner-scale decisions; a skill's own "this decision is mine" marker = escalate
 signal; decisions recorded in the issue/ADR for after-the-fact veto. Bound:
 working-method §3a.
 
-### FW-022 — A filesystem-only tool was invisible to agents · promoted 2026-07-13
+### AST-022 — A filesystem-only tool was invisible to agents · promoted 2026-07-13
 A shared operational tool needs a pointer in a doc an agent is GUARANTEED to load
 (`AGENTS.md` @-import or `.claude/rules/`), with full path/args/exit codes; tool + every
 doc pointer change in the same commit. Bound: `AGENTS.md` (watcher bullet) +
@@ -146,18 +146,18 @@ doc pointer change in the same commit. Bound: `AGENTS.md` (watcher bullet) +
 2026-07-16). Watcher semantics: bell not verdict — verify by artifact; `done` mis-fires
 when the worker spawns sub-agents; real end-signal = artifact progress.
 
-### FW-023 — "Main session builds directly" conflated two mechanisms · promoted 2026-07-15 · dispatch superseded by FW-026
+### AST-023 — "Main session builds directly" conflated two mechanisms · promoted 2026-07-15 · dispatch superseded by AST-026
 The orchestrator does NOT hand-write product slices; the build runs in an isolated
 dev-role session. Gate-independence guarantee UNCHANGED across supersessions. The
 "Worker" name survives only in this ledger — the dev role is `dan-implementor.md`.
 
-### FW-024 — Role rule auto-loads into every session → role-bleed (Worker acted as Thomas) · promoted 2026-07-16
+### AST-024 — Role rule auto-loads into every session → role-bleed (Worker acted as Thomas) · promoted 2026-07-16
 "Auto-loaded" ≠ "I am Thomas". Role adoption is gated by an explicit, exhaustive,
 ordered self-check keyed on **spawn designation** (system prompt / subagent_type), never
 prompt content, never `HERDR_ENV` (diagnostic only); fail-closed STOP on mislaunch.
 Bound: `.claude/rules/role-thomas.md`.
 
-### FW-025 — Gate-able conventions parked in the always-on rule tier tax every loop · proposed 2026-07-16 (PARKED debt)
+### AST-025 — Gate-able conventions parked in the always-on rule tier tax every loop · proposed 2026-07-16 (PARKED debt)
 The always-on `.claude/rules/` tier is for un-gate-able safety invariants; a convention a
 PR gate can catch lives in its SoT doc + the gate rubric. Retirement precondition: every
 invariant the rule carried must be live in the wired gate FIRST, same commit
@@ -165,13 +165,13 @@ invariant the rule carried must be live in the wired gate FIRST, same commit
 additionally waits for Phase-2 Extension coverage — it spans both surfaces). Owner PARKED
 the gate-wiring work — do not retire either rule until it lands. Target binding when
 promoted: rules §7 (promote ladder note).
-Counter-measurement added 2026-08-07 (FW-034, no text above changed): this entry's premise is
+Counter-measurement added 2026-08-07 (AST-034, no text above changed): this entry's premise is
 that a PR gate catches the convention, so the rule tier need not carry it. Measured otherwise
 — the simplify pass was gate-able, was in its SoT doc, and was still skipped through five
-consecutive gate rounds. FW-034 therefore places it in the always-on tier, knowingly taking
+consecutive gate rounds. AST-034 therefore places it in the always-on tier, knowingly taking
 on the loop tax parked here. Re-derive that placement when this entry's gate-wiring lands.
 
-### FW-026 — Named-persona harness: Thomas / Dan / Rin · promoted 2026-07-17 (merged to main)
+### AST-026 — Named-persona harness: Thomas / Dan / Rin · promoted 2026-07-17 (merged to main)
 Owner brief: way-of-working as named employees; a name routes work + loads the right
 contract without role-bleed. **Verified facts (do NOT re-verify):** `claude --agent <name>`
 = that agent file as system prompt, but CLAUDE.md/rules STILL load additively (NOT
@@ -188,11 +188,11 @@ actual-outcome: _pending — at next self-audit confirm: a Dan pane resolves to 
 re-dispatch), Rin resolves to Rin, Thomas verifies by artifact, no doc still mandates the
 old worker dispatch._
 
-### FW-027 — TWO ROOT sessions shared the main checkout; one switched branches under the other · promoted 2026-07-17
+### AST-027 — TWO ROOT sessions shared the main checkout; one switched branches under the other · promoted 2026-07-17
 Live incident: the product-Thomas session (epic 55) ran `git switch plan/…` in the shared
 main checkout while the harness-builder session was committing — three harness commits
 landed on the OTHER session's plan branch, then vanished from `main` when it switched back
-and pulled (also polluting that plan branch's gate diff). FW-016 only bound SPAWNED agents;
+and pulled (also polluting that plan branch's gate diff). AST-016 only bound SPAWNED agents;
 two ROOT sessions in one checkout were unregulated. Lesson: **one checkout, one driver —
 at any moment at most ONE root session treats the main checkout as its working copy; any
 concurrent second root session (e.g. harness maintenance beside a product Thomas) works in
@@ -204,7 +204,7 @@ same day: a detached-SHA checkout by the other session made `.claude/agents/*` f
 vanish mid-turn. Bound: `.claude/rules/agent-worktree-isolation.md` (owner delegated the
 promote decision to Thomas 2026-07-17).
 
-### FW-028 — Relative worktree path + unverified pane cwd → worktree born in the wrong place, hour-long misdiagnosis · promoted 2026-07-30
+### AST-028 — Relative worktree path + unverified pane cwd → worktree born in the wrong place, hour-long misdiagnosis · promoted 2026-07-30
 Live incident (in a deployed project, 2026-07-30): the dispatching session's shell was
 still standing in an app subdirectory (left over from an earlier export step), so a
 RELATIVE `git worktree add ../<name>-worktrees/…` resolved against that stale cwd and
@@ -223,7 +223,7 @@ means check `herdr --version` first.** Bound:
 `.claude/rules/agent-worktree-isolation.md` (Location & naming + verification floor),
 `.agents/skills/dispatch-dan/SKILL.md`.
 
-### FW-029 — Slice finished but Dan tabs survived; `/clear` blurred context and checkout lifecycle · promoted 2026-08-02
+### AST-029 — Slice finished but Dan tabs survived; `/clear` blurred context and checkout lifecycle · promoted 2026-08-02
 Observed harness friction: dispatch created a new workspace and then another tab even
 though the workspace already owned an initial tab/pane; after work completed, cleanup
 removed only the Git worktree/branch and never named Herdr tab/pane retirement. Repeated
@@ -244,7 +244,7 @@ Only then does Git cleanup run. Any survivor records owner, reason, and next act
 `.astraler/AGENTS.harness.md`, `.claude/rules/agent-worktree-isolation.md`,
 `.claude/agents/thomas-leader.md`, working-method §3/§5/§7, rules §3.
 
-### FW-030 — Orchestrator row named a runtime with no dispatch path for the role; Rin went undispatchable · promoted 2026-08-02
+### AST-030 — Orchestrator row named a runtime with no dispatch path for the role; Rin went undispatchable · promoted 2026-08-02
 (incident from the origin project) Rin's Active row was tuned from `claude/opus` to a
 codex model. On a Claude root Rin's ONLY dispatch path is the Agent tool
 (`subagent_type: "rin-reviewer"` + `isolation: "worktree"`), whose `model` parameter
@@ -264,14 +264,14 @@ or an explicit `runtime=` override; a fallback naming a runtime with no dispatch
 owner, never invent a model ID.** Bound: `.agents/orchestrator.md` (header),
 `.agents/skills/dispatch-slice/SKILL.md`, `.claude/skills/review-with-rin/SKILL.md`.
 
-### FW-031 — A prose instruction telling an agent to suppress its tool's own default is not a boundary · promoted 2026-08-03
+### AST-031 — A prose instruction telling an agent to suppress its tool's own default is not a boundary · promoted 2026-08-03
 Release 0.11.4 authorized Dan — the READ-ONLY slice lead — to invoke Claude Code's
 built-in `/simplify`, whose own contract is "review the changed code THEN APPLY THE
 FIXES", under the guard "invoke it WITH the instruction 'findings only, edit no files'".
 Three things defeat that guard: the tool's instructions enter the agent's context and
 compete with the role, the agent launches with permission prompts disabled so nothing
 can refuse the write, and the release text itself conceded the skill "will push against
-your role once loaded". The one-writer invariant (FW-026) was left resting on a model
+your role once loaded". The one-writer invariant (AST-026) was left resting on a model
 choosing to honour a sentence, and the formative reviewer would have become an author. A
 consuming project's cross-vendor adaptation gate caught it before any slice ran on the
 release. Lesson: **a natural-language instruction to suppress a tool's default behaviour
@@ -283,7 +283,7 @@ result.** Scope honestly: where the forbidden role legitimately needs broad capa
 tool's PURPOSE, not raw capability — do not sell a purpose boundary as a sandbox. Bound:
 `.agents/roles/dan-senior.md` (step 4), `.claude/agents/dan-senior.md`.
 
-### FW-032 — A signal that cannot fail is not evidence · promoted 2026-08-05
+### AST-032 — A signal that cannot fail is not evidence · promoted 2026-08-05
 A consuming project ran two real product slices through the framework and hit the same
 shape seven times in one session, each time in a different costume. The watcher script
 was invoked as `watch.sh <pane> | tail -3`, and a pipeline returns the LAST command's
@@ -342,7 +342,7 @@ items 1 and 4), `.claude/agents/dan-senior.md`, `.agents/roles/dan-senior.md` (d
 `.agents/skills/dispatch-slice/SKILL.md` (brief/watch/steer), `docs/governance/rules.md`
 §2, `templates/AGENTS.md.template`.
 
-### FW-033 — A lookup whose question has no referent at one of its call sites · promoted 2026-08-06
+### AST-033 — A lookup whose question has no referent at one of its call sites · promoted 2026-08-06
 Release 0.12.0 replaced a discretionary choice of Rin's dispatch form with a LOOKUP, on the
 correct instinct that a rule two dispatchers can evaluate identically beats a judgement
 call. The question it asked was *"is there a live `slice:<slice-key>` tab in this herdr
@@ -363,7 +363,7 @@ but "what does this test RETURN in each situation it governs". Bound:
 `.claude/skills/review-with-rin/SKILL.md` §2, `.agents/skills/dispatch-slice/SKILL.md`
 (rin-reviewer row), `.claude/agents/rin-reviewer.md`, `.claude/rules/build-loop-gates.md`.
 
-### FW-034 — A mandatory rule that lives only in load-on-demand docs is skipped, and only the owner notices · promoted 2026-08-07
+### AST-034 — A mandatory rule that lives only in load-on-demand docs is skipped, and only the owner notices · promoted 2026-08-07
 The simplify pass had been mandatory since the harness began — written into
 `working-method.md` and into both role contracts. In a consuming project it was **skipped
 through five consecutive gate rounds**, and the **OWNER** caught it: not the orchestrator,
@@ -409,18 +409,18 @@ Corollary, from this package's own 0.13.0 release: the release that fixed this s
 straight to `main` from a consuming-project session with no branch, no PR, and no
 cross-vendor pass — skipping the very review it was written to protect. Three defects
 survived that a second pair of eyes catches cheaply (a README stating the pre-0.13.0 form of
-the same law, this missing entry, and the FW-025 tension below). **The author of a rule is
+the same law, this missing entry, and the AST-025 tension below). **The author of a rule is
 the worst-placed person to notice they are exempting themselves from it.**
 Tension to hold, not resolve: this promotion puts a gate-able convention INTO the always-on
-rule tier, which is exactly the cost **FW-025** parks. Accepted deliberately — FW-025's
+rule tier, which is exactly the cost **AST-025** parks. Accepted deliberately — AST-025's
 premise is that a PR gate WILL catch the convention, and the five skipped rounds are the
-measurement that it did not. When FW-025's gate-wiring work lands, re-derive this placement
+measurement that it did not. When AST-025's gate-wiring work lands, re-derive this placement
 rather than inheriting it.
 Bound: `.claude/rules/build-loop-gates.md`, `.agents/roles/james-dev.md` §4b,
 `.agents/roles/dan-senior.md` §4a, `docs/governance/working-method.md` (PR checklist
 "Reuse/simplify"), `.agents/skills/dispatch-slice/SKILL.md`.
 
-### FW-035 — `set -euo pipefail` plus a no-match `grep` aborts before its own guard · promoted 2026-08-10
+### AST-035 — `set -euo pipefail` plus a no-match `grep` aborts before its own guard · promoted 2026-08-10
 Hit three times while building 1.0.0, in three separate scripts, each time wearing a
 different costume. `uninstall.sh` printed half a manifest and exited 1 before reaching the
 machine-local section, because `grep -rl … | wc -l` found no match: `grep` exits 1, and
@@ -438,7 +438,7 @@ run.**
 The fix is one shape, applied at the point of counting rather than to the whole script:
 wrap the fallible producer, never relax the shell options —
 `X=$( { grep … || true; } | wc -l )`. Relaxing `set -e` or dropping `pipefail` to make the
-symptom go away re-opens FW-032, since `pipefail` is what makes a mid-pipeline failure
+symptom go away re-opens AST-032, since `pipefail` is what makes a mid-pipeline failure
 observable at all; these two entries pull in opposite directions and the wrap is what
 satisfies both.
 
@@ -447,7 +447,7 @@ three defects were found that way and none by reading.
 Bound: `harness/scripts/gen-code-map.sh`, `check-requirements.sh`,
 `harness/scripts/docs-staleness-audit.sh`.
 
-### FW-036 — A git worktree carries TRACKED content only · promoted 2026-08-10
+### AST-036 — A git worktree carries TRACKED content only · promoted 2026-08-10
 First real installation of 1.0.0 into an existing repo. The project's `.gitignore` carried
 `.agents/*`, so a Builder dispatched into its worktree would have found no
 `.agents/roles/builder.md` — the exact file its adapter tells it to read first. It would have
@@ -465,13 +465,13 @@ Cheapest proof, and the only one that answers the question:
 Bound: `dispatch-ticket` (payload-must-be-committed section), `check-requirements.sh`
 (tracked-payload check), `prompts/ADAPT-HARNESS.md` §4.
 
-### FW-037 — A multi-line prompt pastes without submitting, and the pane calls it idle · promoted 2026-08-10
+### AST-037 — A multi-line prompt pastes without submitting, and the pane calls it idle · promoted 2026-08-10
 `herdr pane run` and `agent prompt` both send text plus Enter, and both work on one line. A
 MULTI-LINE block is pasted as a unit and the Enter is consumed by the paste: the transcript
 shows `[Pasted text #1 +N lines]` sitting in an unsent composer. Every real dispatch brief is
 multi-line, so this is the default case rather than an edge case.
 
-It compounds with FW-032: the pane then reports **`idle`**, because an empty-looking composer
+It compounds with AST-032: the pane then reports **`idle`**, because an empty-looking composer
 matches Claude's `prompt_box_body` rule. A dispatcher that trusts that status concludes the
 agent finished instantly, and waits forever on work that never started.
 
@@ -480,7 +480,7 @@ multi-line brief, then **require observing `working`** before believing the turn
 Reaching `idle`/`done` without ever seeing `working` means it never ran.
 Bound: `dispatch-ticket` (Submitting it).
 
-### FW-038 — A checker that cannot tell project content from package content fires on every adopted repo · promoted 2026-08-10
+### AST-038 — A checker that cannot tell project content from package content fires on every adopted repo · promoted 2026-08-10
 `check-reachability.sh` globbed `.claude/skills/*/SKILL.md` and treated everything it found
 as harness-owned. In the package that is true. In an adopted repo the project's own skills
 sit in the same directory, so the checker reported four of them as unreachable defects and
@@ -496,10 +496,10 @@ The general shape: **tooling that ships INTO other repos must be able to name it
 files.** Location is not ownership.
 Bound: `harness/scripts/check-reachability.sh`.
 
-### FW-039 — An ID namespace shared with the host project resolves confidently to the wrong lesson · promoted 2026-08-10
-The first upgrade into a mature repo landed a payload citing `FW-036` and `FW-037` beside a
-project ledger that already owned `FW-034` and `FW-035` with unrelated meanings — ten IDs
-collided in total, and the payload's most-cited lesson, `FW-032`, was one of them. The
+### AST-039 — An ID namespace shared with the host project resolves confidently to the wrong lesson · promoted 2026-08-10
+The first upgrade into a mature repo landed a payload citing `AST-036` and `AST-037` beside a
+project ledger that already owned `AST-034` and `AST-035` with unrelated meanings — ten IDs
+collided in total, and the payload's most-cited lesson, `AST-032`, was one of them. The
 project's entry doc routed every `FW-0xx` to its own ledger, so every citation this package
 ships would have resolved there.
 
@@ -512,3 +512,42 @@ Fix by location rather than by renumbering, which append-only forbids anyway: a 
 resolves in the ledger belonging to the material that carries it. Adaptation now detects a
 colliding project ledger and records the rule in the project's own entry doc.
 Bound: this file's preamble, `prompts/ADAPT-HARNESS.md` §3.
+
+### AST-040 — A placeholder that looks like a real id fails later than a missing one · promoted 2026-08-11
+The package shipped `model = "gpt-5.1-codex"` in all four Codex profiles. It resolves on no
+account. It does not fail at install, at adaptation, or at any doctor run — the template and
+the profile copied from it agreed perfectly. It fails at the first cross-vendor call, which
+is **end of phase, when the work looks finished**, and it fails looking like the provider
+being down rather than like a config error.
+
+An empty field a doctor refuses is louder than a plausible wrong value nothing questions. So
+ship no id: `model = ""` plus a comment naming where the real one comes from, and a doctor
+that MISSes on empty. The general shape: **a default that cannot be right should not look
+right.** Placeholders that pass validation are how a config error becomes an outage report.
+Bound: `harness/.codex/profiles/*.config.toml`, `check-requirements.sh`.
+
+### AST-041 — A file called "the owner's" that ships in the payload has two homes and the shipped one wins · promoted 2026-08-11
+`.agents/orchestrator.md` opens with "This file is the owner's" and was nevertheless part of
+the payload every release overwrites. A consuming repo had tuned it — three rows plus a
+documented `## Owner decisions` section — and the only thing preventing loss was the
+adaptation prompt telling an agent to preserve it, which is a habit rather than a mechanism.
+
+Declaring ownership in prose while shipping a competing copy is not ownership. Scaffold and
+payload are different categories: **a scaffold is written when absent and never overwritten**,
+and where its shape must change the release reports the difference for the owner to merge.
+The same applies to the Codex profiles, which carry the same owner-chosen values.
+Bound: `harness/.agents/orchestrator.md`, `prompts/ADAPT-HARNESS.md` §3.
+
+### AST-042 — Two skills answering to one name means the model-invoked path picks the wrong one · promoted 2026-08-11
+`builder.md` told the Builder to run `code-review` and listed it as model-invoked craft. Two
+skills answer to that name: the plugin's `mattpocock-skills:code-review`, which has the two
+axes the contract describes, and the built-in `/code-review`, which takes different flags and
+does something else. Slash invocation is unambiguous because the plugin namespaces its
+commands; the model-invoked path is not.
+
+The mirror case is worse: the contract mandated a `simplify` pass, the plugin ships no skill
+by that name, and the built-in `/simplify` is what actually runs — stated nowhere. An agent
+looking for a plugin skill that does not exist finds nothing and skips the pass silently.
+
+**Name the qualified skill wherever a bare name is ambiguous**, and say which tool a mandated
+pass actually is. Bound: `harness/.agents/roles/builder.md`.

@@ -1,3 +1,37 @@
+# Astraler Harness 1.1.0
+
+Five findings raised by the first repo to run this harness, written up as a report against
+the package rather than patched locally. Four are structural, which is why this is a minor
+bump: an ID namespace changes, a payload file moves, and two files stop being payload.
+
+## Fixed
+
+- **The ledger's IDs are now `AST-0xx`, not `FW-0xx` (AST-039).** `FW-` was already in use by
+  the projects this installs into — one repo carried six IDs meaning different things across
+  two ledgers and 235 citations, separated only by a prose routing rule a reader had to know
+  existed. Numbers are unchanged, so `AST-032` is the entry that was `FW-032`. Projects keep
+  `FW-`; the harness owns `AST-`.
+- **The ledger moves to `.agents/memory/recurring-failure-modes.md` (AST-039).** It was the
+  only payload file under `docs/`, which made it read as project material. Ownership is now
+  learnable: `.agents/`, `.claude/agents/`, `.codex/` are the harness; `docs/` is yours.
+- **Codex profiles ship no model id (AST-040).** The old placeholder resolved on no account
+  and failed at the first cross-vendor call — end of phase, looking like the provider being
+  down. The field is empty with a comment, and the doctor now MISSes on empty. A default that
+  cannot be right should not look right.
+- **`.agents/orchestrator.md` and the Codex profiles are SCAFFOLD, not payload (AST-041).**
+  The file said "This file is the owner's" while every release overwrote it; the only thing
+  preventing loss was an instruction to an agent. Written when absent, never overwritten;
+  shape changes get reported for the owner to merge.
+- **`code-review` and `simplify` are named unambiguously (AST-042).** Two skills answer to
+  `code-review`, and the mandated `simplify` pass is the built-in — the plugin ships no such
+  skill, so an agent looking for one skipped the pass silently.
+
+## Upgrading from 1.0.x
+
+Re-stage and re-apply. Your `.agents/orchestrator.md` and `.codex/profiles/*` are now
+protected. Citations of `FW-0xx` in **harness-owned** files become `AST-0xx`; citations in
+your own files are untouched and keep meaning what they meant.
+
 # Astraler Harness 1.0.3
 
 One defect, and it is the kind this package exists to catch: a check that could not fail.

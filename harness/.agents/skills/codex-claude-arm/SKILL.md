@@ -20,7 +20,7 @@ a Codex root contributes. The arm always calls the OTHER vendor.
 
 `claude -p` is a FULL agent with Edit and Bash, so it runs in its own detached worktree
 rather than the shared checkout — the rule explicitly binds read-only reviewers that have
-shell access (FW-016). Name it `gate-arm-<artifact-key>`, distinct from the reviewer's own
+shell access (AST-016). Name it `gate-arm-<artifact-key>`, distinct from the reviewer's own
 `gate-<artifact-key>`, so the two can never collide. Commit first.
 
 ```bash

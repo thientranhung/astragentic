@@ -38,7 +38,7 @@ turns an old pane into an empty pane, not an isolated ticket.
 - workspace label, ticket ID, branch, base, worktree path, the ticket body, owner intent,
   acceptance criteria, validation commands, expected artifact
 
-**An override re-resolves the WHOLE row, not just the Runtime cell (FW-030).** The role uses
+**An override re-resolves the WHOLE row, not just the Runtime cell (AST-030).** The role uses
 the `orchestrator.md` row that already targets that runtime — runtime, model and effort
 together. Where no row targets the overridden runtime, stop and ask the owner.
 
@@ -93,7 +93,7 @@ Re-measured on herdr 0.8.0 and opencode 1.18.11:
    returned rc=0 in 8 ms on a pane nobody had touched. Its manifest carries 3 rules
    (claude 12, codex 7), covering only `blocked` and `working`. So on opencode `working`
    and `blocked` are OBSERVED while idle is ASSUMED: the watcher's start guard still works,
-   terminal-state detection does not, and a verdict must come from an artifact (FW-032).
+   terminal-state detection does not, and a verdict must come from an artifact (AST-032).
 4. Runtime detection quality is a ladder. Codex's top rules are `osc_title` (1100, 1050) —
    the agent's own title, which beats scraping. Claude tops out at `osc_title` 1100 then
    falls to text regions, including `prompt_box_body` at 950 whose evidence is `"❯\n"`, so
@@ -109,7 +109,7 @@ untracked — gitignored, or merely staged-but-uncommitted — is invisible insi
 worktree, including `.agents/roles/builder.md`, the file the Builder's adapter tells it to
 read first. The Builder starts with no contract and no sign that anything is missing.
 
-Two conditions, and both are needed (FW-036):
+Two conditions, and both are needed (AST-036):
 
 1. **Nothing in the payload is gitignored.** A repo with a broad `.agents/*` or `.claude/*`
    ignore rule needs allow-list entries for the harness paths.
@@ -131,7 +131,7 @@ improvises, which is harder to notice than a Builder that fails.
 
 `<worktree-path>` is the ABSOLUTE path
 `<repo-parent>/<repo-dir-name>.worktrees/<branch-slug>` (branch `/` → `-`), outside the repo
-checkout and outside system tmp (FW-028). A relative path once resolved through a stale
+checkout and outside system tmp (AST-028). A relative path once resolved through a stale
 shell cwd to a location INSIDE the repo, which is why the absolute form is fixed here.
 
 ```bash
@@ -254,7 +254,7 @@ in an unsent composer. Every real dispatch brief is multi-line, so this is the d
 not the edge case.
 
 **And the pane reports `idle` while it sits there**, because an empty-looking composer
-matches Claude's idle rule — a signal incapable of failing (FW-032, FW-037). A dispatcher
+matches Claude's idle rule — a signal incapable of failing (AST-032, AST-037). A dispatcher
 that trusts that `idle` concludes the Builder finished instantly.
 
 So a multi-line brief takes an explicit second step, then a positive confirmation:
@@ -275,7 +275,7 @@ if the agent is already working, that active turn's completion may match". Under
 `--until idle` is satisfied by whatever the runtime's rules call idle — and measured on
 0.8.0, `agent prompt --wait --until idle` returned SUCCESS on a Claude pane whose prompt had
 not run, because an empty composer matches `prompt_box_body`. On opencode nothing
-establishes idle at all. Either way you get a signal incapable of failing (FW-032).
+establishes idle at all. Either way you get a signal incapable of failing (AST-032).
 
 **So for any pane you did not prompt in that same call** — watching another role's pane,
 resuming after a break, waiting on an artifact — the start guard
@@ -305,7 +305,7 @@ is the signal — compare the count rather than judging by eye.
 **Who writes the file follows the role.** An agent that may write (the Builder) writes into
 the worktree it owns and replies with the path. A READ-ONLY agent (Rin, `code-scout`)
 returns its report and the DISPATCHER persists it — which keeps an artifact out of a
-disposable gate worktree that cleanup is about to delete (FW-031, FW-032).
+disposable gate worktree that cleanup is about to delete (AST-031, AST-032).
 
 **herdr fails loudly, so its EXIT STATUS is trustworthy — it is the status FIELD that
 lies.** Measured on 0.8.0, each exits 1 with a JSON `error`: an over-viewport read on a
@@ -330,7 +330,7 @@ alone on its own line, and branch on `$?`. Measured, these shapes discard it:
 | `watch.sh … && rhs` | preserved on FAILURE; a success is overwritten by `rhs` |
 
 `||` is the one to watch for: it is the shape people reach for when they are being careful,
-and it converts precisely the failures you needed to hear about into silence (FW-032).
+and it converts precisely the failures you needed to hear about into silence (AST-032).
 
 **Stopping a watch takes the process GROUP.** On macOS the watcher re-execs under
 `caffeinate`, so `caffeinate` is the visible PID and killing it orphans the wrapped shell,
@@ -344,7 +344,7 @@ pgrep -g "$pgid" >/dev/null && echo SURVIVORS || echo clean
 
 Verify with `pgrep` rather than `ps | grep herdr-watch-terminal`: that grep matches its own
 command line, so it can never return empty — a check incapable of passing, the mirror of a
-signal incapable of failing (FW-032). (`grep '[h]erdr-watch-terminal'` works too; the
+signal incapable of failing (AST-032). (`grep '[h]erdr-watch-terminal'` works too; the
 brackets are what stop the pattern matching itself.) Read the PGID before signalling: a
 watch launched inline from your own shell may share that shell's group, so a watch you
 intend to group-kill belongs in its own.

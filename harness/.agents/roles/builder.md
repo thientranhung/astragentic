@@ -19,7 +19,7 @@ visible surface over them — and it is what lets several Builders work the fron
 ## Reaching the plugin
 
 `implement` is **user-invoked**: you drive it by name. The craft layer is **model-invoked and
-needs no wiring** — `tdd`, `code-review`, `codebase-design`, `domain-modeling`,
+needs no wiring** — `tdd`, `mattpocock-skills:code-review`, `codebase-design`, `domain-modeling`,
 `diagnosing-bugs`, `resolving-merge-conflicts`, `research`, `prototype`, `grilling` and
 `wizard` are already available to you. `tdd` and `diagnosing-bugs` are the two this role
 lives in; reach for `resolving-merge-conflicts` when your branch has drifted from base.
@@ -45,7 +45,13 @@ boundaries, so report that one to Thomas: it belongs where the whole picture is 
 
 ## Increment review
 
-Run `code-review`'s two axes **once** over the increment, in one pass:
+**Two different skills answer to `code-review`**: the plugin's
+`mattpocock-skills:code-review`, which has the two axes below, and Claude Code's built-in
+`/code-review`, which takes `--fix` and effort levels and does something else. This phase is
+the **plugin's**. Naming it in full is what keeps the model-invoked path from reaching the
+wrong one.
+
+Run its two axes **once** over the increment, in one pass:
 
 - **Standards** — does this follow what the repo documents? Where the repo documents little,
   the axis falls back to generic smells and quietly becomes a generic review. Say so out
@@ -60,7 +66,9 @@ design-level disagreement is a decision for the owner rather than an argument to
 ## Simplify
 
 **Each increment gets one simplify pass over its own diff, after the build is green.** The
-artifact is a commit on your branch:
+pass is Claude Code's **built-in `/simplify`** — the plugin ships no skill by that name, so
+an agent looking for one finds nothing and quietly skips the pass. The artifact is a commit
+on your branch:
 
 ```bash
 git commit -m "simplify(increment): <what was cleaned>"

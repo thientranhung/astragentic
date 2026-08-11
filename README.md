@@ -122,7 +122,6 @@ harness/                          the payload staged into a target repo
       untangle/                     ├ brownfield craft, model-invoked
       module-boundaries/            ┘
   .codex/profiles/                one per role, mirroring the orchestrator rows
-  docs/governance/memory/
     recurring-failure-modes.md    35 measured failure modes; append-only, the evidence base
   scripts/
     herdr-watch-terminal.sh       turn watcher with a real start guard

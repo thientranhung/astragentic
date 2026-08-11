@@ -74,6 +74,12 @@ Classify candidate material before editing anything:
   TOML profiles and skills stay Codex-native; opencode adapters (`.opencode/agents/*.md`)
   stay opencode-native. Translate mechanics by reading each runtime's contract, rather than
   by analogy from another.
+- **Scaffold — written once, never overwritten.** `.agents/orchestrator.md` and
+  `.codex/profiles/*.config.toml` carry the owner's runtime and model choices. Write them on
+  a FRESH install only. On an upgrade, leave the values alone and report any change in the
+  table's shape for the owner to merge. A release that overwrites them silently reverts
+  tuning the owner made deliberately, and the first sign is a dispatch failing on a model id
+  they never chose (AST-041).
 - **Role contracts and their adapters** — `harness/.agents/roles/{thomas,shaper,builder,rin}.md`
   are runtime-neutral and are the single home for each role's phases. Role →
   runtime/model/effort lives in the owner-editable `.agents/orchestrator.md`; contracts carry
@@ -92,15 +98,15 @@ For an upgrade, compare previous upstream → live project → candidate:
 **Check for an ID-namespace collision.** This package's failure-mode ledger uses `FW-0xx`,
 and that prefix is not reserved — a mature repo often keeps its own ledger using the same
 shape. Grep the project's docs for `FW-0` and compare the IDs against
-`docs/governance/memory/recurring-failure-modes.md`. Where any ID appears in both with
+`.agents/memory/recurring-failure-modes.md`. Where any ID appears in both with
 different meanings (one measured install collided on ten, including the payload's
-most-cited `FW-032`), the numbers alone are ambiguous and the project's entry doc probably
+most-cited `AST-032`), the numbers alone are ambiguous and the project's entry doc probably
 routes all of them to one place.
 
 Resolve it **by location, not by renumbering** — the ledger is append-only: record in the
 project's entry doc that a citation resolves in the ledger belonging to the material that
 carries it, harness citations in the harness ledger and project citations in the project's.
-Report the collision and the rule in the receipt (FW-039).
+Report the collision and the rule in the receipt (AST-039).
 
 Produce a concise map — add, update, merge, preserve, remove, and the questions that truly
 block safe integration — before you edit.
@@ -121,7 +127,7 @@ Integrate the smallest coherent result.
 **The installation has to be COMMITTED before any Builder can be dispatched**, and this is
 the one commit to raise with the owner rather than leave for later. A git worktree contains
 only tracked content, so an uncommitted payload is invisible inside every Builder worktree —
-including the role contract its adapter tells it to read first (FW-036). Check the repo's
+including the role contract its adapter tells it to read first (AST-036). Check the repo's
 ignore rules for `.agents/` or `.claude/` patterns that would exclude the payload, propose
 allow-list entries where needed, and prove the result:
 

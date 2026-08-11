@@ -48,7 +48,7 @@ The earlier lookup ("is there a live ticket tab?") is superseded: at a spec gate
 question has no referent, because a spec is gated BEFORE its tickets are dispatched. It
 therefore answered "no" every time and made every SPEC gate a subagent — invisible, at
 exactly the milestone where design decisions get made. Three consecutive spec gates ran
-unseen while owner-scale calls were made inside them (FW-033).
+unseen while owner-scale calls were made inside them (AST-033).
 
 **Do not probe the session with `herdr tab list`** — a daemon answering proves the daemon is
 up, not that you have a nameable workspace, and `HERDR_ENV` is absent for Thomas by design
@@ -57,7 +57,7 @@ belongs to*, and an ambiguous workspace is a STOP.
 
 **Consequence for the `rin` row.** The pane form requires Rin to write exactly one file
 outside every checkout (§3), so a runtime whose permissions deny all writes cannot serve a
-pane gate, and such a row is a misconfigured row to raise with the owner (FW-030). Rin's
+pane gate, and such a row is a misconfigured row to raise with the owner (AST-030). Rin's
 runtime matches the ROOT runtime, and the cross-vendor coverage is the arm, never this cell.
 Rin has **no fallback row** — an absent row is the correct state and adaptation preserves
 it: no root runtime that can host the gate means STOP, not a degraded gate. Sandboxes stay
@@ -85,11 +85,11 @@ GATE_FILE="$GATE_ROOT/<artifact-key>-<short-sha>-$GATE_TOKEN.md"
 
 git worktree add --detach \
   <repo-parent>/<repo-dir-name>.worktrees/gate-<artifact-key> <reviewed-sha>
-git worktree list          # verify the exact path before anything uses it (FW-028)
+git worktree list          # verify the exact path before anything uses it (AST-028)
 herdr tab create --workspace <workspace-id> --label "gate:<artifact-key>" \
   --cwd <gate-worktree> --no-focus
 herdr pane rename <returned-root-pane-id> "rin:<artifact-key>"
-herdr pane get <returned-root-pane-id>    # foreground_cwd gate — mismatch is STOP (FW-028)
+herdr pane get <returned-root-pane-id>    # foreground_cwd gate — mismatch is STOP (AST-028)
 herdr agent start "rin-<artifact-key>" --pane <returned-root-pane-id> --timeout 60000 \
   --kind <rin row: Runtime> -- <argv from the dispatch-ticket launcher matrix>
 ```
@@ -110,8 +110,8 @@ Every check in that block is fail-closed, and each earns its place:
   alone misses a failure in the MIDDLE of a pipeline: if `od` fails, `tr` still exits 0, the
   assignment succeeds, and `$GATE_TOKEN` is empty — collapsing the path back to the
   deterministic form the token exists to prevent, with nothing reporting a problem.
-  Verified: `set -e` yields `len=0` and survives; `set -euo pipefail` aborts. This is FW-032
-  inside the mechanism written to satisfy FW-032, so both guards stay.
+  Verified: `set -e` yields `len=0` and survives; `set -euo pipefail` aborts. This is AST-032
+  inside the mechanism written to satisfy AST-032, so both guards stay.
 - **The token is the whole freshness mechanism.** The path cannot pre-exist, so existence at
   it IS proof this dispatch produced it — no mtime comparison, and so no dependency on
   `stat -f` (BSD) versus `stat -c` (GNU). It also makes concurrent dispatchers safe: two
@@ -147,7 +147,7 @@ worktree because you delete that tree at cleanup. Outside every checkout violate
 that nor the ban on touching your own checkout. But it must be `${TMPDIR:-/tmp}`: on macOS
 `/tmp` is `1777` and a directory created under it is world-readable, while `$TMPDIR` is
 per-user `0700`. Gate reports quote production measurements and code, so
-`no-secrets-in-exports` (FW-015) binds them — which is why the `chmod 700` is explicit.
+`no-secrets-in-exports` (AST-015) binds them — which is why the `chmod 700` is explicit.
 
 ```bash
 # after the pane reports, BEFORE any cleanup — all fail-closed
@@ -165,7 +165,7 @@ rm -f "$GATE_FILE"                                            # only what THIS d
 **There is no freshness check because the token already is one.** With a deterministic
 filename, a re-dispatch reuses the same key and SHA, so a Rin that never got as far as
 writing would leave the previous file in place and `test -s` would pass on it happily — a
-check that cannot fail (FW-032), blessing a stale verdict as this round's.
+check that cannot fail (AST-032), blessing a stale verdict as this round's.
 
 **The destination is deliberately NOT tokenized, so it refuses to overwrite.** The gate
 history is durable and human-readable — it answers "why did we merge this SHA" months later

@@ -34,7 +34,7 @@ START_MAX="${4:-120}"
 # header says. HERDR_WATCH_NO_CAFFEINATE=1 opts out. Linux equivalent, if this harness ever
 # moves: systemd-inhibit --what=idle.
 #
-# STOPPING A WATCH — killing the `caffeinate` PID is NOT enough (FW-032, and this script is
+# STOPPING A WATCH — killing the `caffeinate` PID is NOT enough (AST-032, and this script is
 # the harness's own example of it). Verified 2026-08-05: with the wrapper live, `kill <pid
 # of caffeinate>` left the wrapped shell running and orphaned, still polling herdr. The
 # whole watch shares ONE process group, so signal the GROUP and then CHECK:

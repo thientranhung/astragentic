@@ -86,7 +86,7 @@ def harness_owned():
 HARNESS_OWNED = harness_owned()
 # Ownership is decided by the staged release. With no release to read, this run cannot tell
 # harness skills from the project's — say so, because falling back silently to "everything
-# is ours" is how the false findings this check was fixed for come back (FW-038).
+# is ours" is how the false findings this check was fixed for come back (AST-038).
 ATTRIBUTION = "release manifest"
 if not HARNESS_OWNED:
     HARNESS_OWNED = set(all_skills)

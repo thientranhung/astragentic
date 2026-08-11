@@ -1,11 +1,19 @@
 # Orchestrator — role → runtime, model, effort
 
+> **Scaffold, not payload.** An install writes this file only when it is absent. An upgrade
+> leaves it alone: the values here are the owner's, and no release may overwrite them. Where
+> the table's *shape* changes, a release reports the difference and the owner merges it
+> (AST-041). A harness that ships a competing copy of a file it calls the owner's has two
+> homes for one fact, and the shipped one wins by accident.
+
 **This file is the owner's.** It is the single home for which runtime each role runs on and
 with what model. Role contracts describe what a role does and carry no model IDs; dispatch
 reads its answers from here. Thomas reads it at session start, and an edit takes effect at
 the next dispatch.
 
-Fill the Model column with real IDs for your account. The values below are a starting shape.
+**Fill every `<set-me>` with a real id for your account before dispatching to that runtime.**
+The package deliberately ships no model id: a placeholder that looks real resolves nowhere
+and fails at the first cross-vendor call, looking like the provider being down.
 
 ## Active assignments
 
@@ -24,9 +32,9 @@ never written back into this file.
 
 | Role | Runtime | Model | Effort |
 |---|---|---|---|
-| thomas | codex | gpt-5.1-codex | high |
-| shaper | codex | gpt-5.1-codex | high |
-| builder | codex | gpt-5.1-codex | medium |
+| thomas | codex | <set-me> | high |
+| shaper | codex | <set-me> | high |
+| builder | codex | <set-me> | medium |
 
 **`rin` has no fallback row, and its absence is the correct state.** The gate is a Herdr pane
 on the root provider's runtime, and no Codex or opencode adapter can host it, so any fallback
