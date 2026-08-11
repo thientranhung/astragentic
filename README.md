@@ -38,6 +38,7 @@ and tickets run in one unbroken context, and each `implement` runs in a fresh on
 | **Shaper** | one unbroken session | `grill-with-docs` → `to-spec` → `to-tickets`; decides seams while the whole picture is in context |
 | **Builder** | one per ticket | `implement`, in its own worktree, sole writer there |
 | **Rin** — reviewer | per milestone | second opinion, artifact verification, cross-vendor arm |
+| **QA** | per walk | exercises the RUNNING product — interface, journeys, API contracts, data as experienced |
 
 Every agent reaches the craft layer directly, since those skills are model-invoked:
 `grilling`, `tdd`, `code-review`, `codebase-design`, `domain-modeling`, `research`,
@@ -103,7 +104,7 @@ from.
 ```text
 harness/                          the payload staged into a target repo
   .agents/
-    roles/                        thomas · shaper · builder · rin — the four contracts
+    roles/                        thomas · shaper · builder · rin · qa — the five contracts
     orchestrator.md               role → runtime/model/effort; the owner's file
     skills/
       dispatch-ticket/            one ticket → one Builder → one worktree → one pane
@@ -113,6 +114,7 @@ harness/                          the payload staged into a target repo
     agents/                       Claude adapters so --agent <role> resolves
     skills/
       review-with-rin/              Rin's milestone gate — dispatch, gate file, collection
+      dispatch-qa-walk/             QA's walk — the one gate needing a running app
       code-scout/                   read the current state before work is shaped
       codex-arm/                    cross-vendor arm, Claude root → Codex
       extract-standards/            ┐

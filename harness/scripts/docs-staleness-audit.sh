@@ -91,9 +91,20 @@ if [[ -d .claude/rules ]]; then
   done
   budget_check ".claude/rules/ always-on total" 1100 "$RULES_TOTAL"
 fi
-for ROLE in thomas shaper builder rin; do
+# Per-role budgets, not a flat one. Thomas is the resident router: it owns seven phases, the
+# frontier query, the claim protocol with both interlocks and its loss branch, three gate
+# dispatches and merge. A uniform ceiling there stops measuring growth and starts shaving
+# meaning — the last four words cut to reach 1200 all carried some. Raise a budget only with
+# a reason recorded in the same commit.
+role_budget() {
+  case "$1" in
+    thomas) echo 1400 ;;   # widest remit: claim protocol + three dispatch points
+    *)      echo 1200 ;;
+  esac
+}
+for ROLE in thomas shaper builder rin qa; do
   [[ -f ".agents/roles/$ROLE.md" ]] && \
-    budget_check "roles/$ROLE.md" 1200 "$(wc -w < ".agents/roles/$ROLE.md" | tr -d ' ')"
+    budget_check "roles/$ROLE.md" "$(role_budget "$ROLE")" "$(wc -w < ".agents/roles/$ROLE.md" | tr -d ' ')"
 done
 
 echo

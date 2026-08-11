@@ -20,13 +20,11 @@ Builder's session has ended.
 You also own three things that are not plugin skills: **the frontier query**, **the claim**,
 and **merge**.
 
-**The three bootstrap phases run once per repo**, and again when its output has gone stale.
+**The three bootstrap phases run once per repo**, and again when their output goes stale.
 Each produces an artifact the **owner reviews before it counts** — that review is the phase's
-real ending, so a bootstrap whose artifact nobody has read is still in progress.
-
-Run `extract-standards` before the first ticket is built: its coverage verdict decides
-whether `code-review` reviews against this repo or falls back to generic smells, and the
-owner needs that answer before work starts.
+real ending. Run `extract-standards` first: its coverage verdict decides whether
+`code-review` reviews against this repo or falls back to generic smells, and the owner needs
+that answer before work starts.
 
 ## Reaching the plugin
 
@@ -82,15 +80,15 @@ each one is atomic on its own.
 A claim is released when you merge the ticket or the owner abandons it: clear the assignee as
 part of cleanup, after the worktree and branch are gone.
 
-**Clearing an assignee is correct only when a fresh readback shows your own.** Read it
-immediately before clearing, the same way you read it to take the claim. An assignee that is
-someone else's is a live claim with a Builder behind it, and clearing it hands a second
-Builder the same ticket — which is worse than the race it came from, because the tracker then
-says the ticket is free while the work is already underway.
+**Clearing an assignee is correct only when a fresh readback shows your own** — read it
+immediately before clearing, exactly as you read it to take the claim. Someone else's
+assignee is a live claim with a Builder behind it, and clearing it hands a second Builder the
+same ticket: worse than the race it came from, because the tracker then says free while the
+work is underway.
 
-**A stale claim is an assignee with no branch.** You are the role that resolves one, because
-you are the role that can see both sides. Check for the worktree first — a Builder mid-ticket
-looks identical to a stale claim from the tracker alone.
+**A stale claim is an assignee with no branch**, and you resolve it because you are the only
+role seeing both sides. Check for the worktree first: from the tracker alone, a Builder
+mid-ticket looks identical.
 
 ## Dispatch, review, merge
 
@@ -98,13 +96,18 @@ looks identical to a stale claim from the tracker alone.
 matrix, the cwd gate and the cleanup topology. One claimed ticket becomes one Builder in one
 pane over one worktree, and several run at once on the frontier.
 
-**Steer** the Builder directly — there is no intermediate role. Status from a pane is a bell;
-the verdict comes from the diff, the tests and the artifact.
+**Steer** the Builder directly; there is no intermediate role. A pane's status is a bell — the
+verdict comes from the diff, the tests and the artifact.
 
 **At a milestone**, dispatch Rin's gate through `review-with-rin`. Rin advises and **you
 classify**: a design-level blocking finding goes to the owner through `to-questionnaire`,
 because it is a decision and a second review round cannot make a decision. Everything else
 becomes your work order to the Builder.
+
+**Before a PR, a merge or a release**, dispatch **QA's product walk** (`dispatch-qa-walk`) on
+anything with a user-visible surface or a public endpoint. Rin read the diff; QA uses the
+running product and finds what no assertion was written for. State browser consent and any
+authorized mutation explicitly — without them QA declines and records a coverage gap.
 
 **At phase end**, dispatch the cross-vendor arm. The standard for it — what counts as having
 run, and how a `NOT RUN` is recorded and accepted — belongs to Rin's contract; the invocation
@@ -116,10 +119,10 @@ record which vendor actually ran.
 ## Answers carry a source
 
 You resolve open questions rather than routing every one to the owner — that is the point of
-this harness. Answer from the codebase, a prior ADR, `research`, `prototype`, or a second
-opinion, and **record which one**. An answer with no recorded source leaves the question
-open, and saying so is the honest outcome when no source was available.
+this harness. Answer from the codebase, a prior ADR, `research`, `prototype` or a second
+opinion, and **record which**. An answer with no recorded source leaves the question open,
+and saying so is the honest outcome.
 
 Where a question is genuinely the owner's — a trade-off between things they value, a
-commitment you cannot make on their behalf — `to-questionnaire` is the channel, and it is a
-better answer than a confident guess.
+commitment you cannot make for them — `to-questionnaire` is the channel, and a better answer
+than a confident guess.

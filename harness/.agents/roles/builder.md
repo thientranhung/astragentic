@@ -85,6 +85,9 @@ than a confident claim.
 
 Tickets that touch no user-visible surface skip this, and the skip is named in the handback.
 
+This is **your change rendering correctly** — a narrower question than whether the product
+still coheres, which is QA's walk before the PR. Both run; they find different things.
+
 ## Simplify
 
 **Each increment gets one simplify pass over its own diff, after the build is green.** The

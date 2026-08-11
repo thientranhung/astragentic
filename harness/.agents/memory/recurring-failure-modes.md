@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 44 entries (AST-001 … AST-044) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 45 entries (AST-001 … AST-045) · AST-001…034 carried into 1.0.0 unchanged
 
 Practical AI-agent failure modes measured while operating this harness. They are the
 evidence base: a rule kept in this package can point at an entry here, and a rule that
@@ -597,3 +597,34 @@ journeys. Two outputs make it compound: a verified-clean list, and an honest sta
 what could not be reached. Upstream ships nothing for this; the plugin has no QA, browser or
 e2e skill at all.
 Bound: `harness/.agents/roles/rin.md`, `harness/.claude/skills/review-with-rin/SKILL.md` §2b.
+
+### AST-045 — A green test suite and a coherent product are different claims · promoted 2026-08-11
+The prior package shipped a browser-walking agent for several releases and it **never ran
+once**. A grep of the whole payload found no file naming it outside its own two definition
+files: no role contract, no dispatch path. It was correct, it was valuable, and it was
+unreachable — the exact class `check-reachability.sh` exists to catch, sitting in the package
+that later wrote that checker.
+
+So the work of adopting it was never the file. It was the wiring: a contract that owns it, a
+dispatcher that names it, and a check that fails when either goes missing.
+
+What it earns its place with, on a web product: **a test asserts what somebody thought to
+assert**, and that is mostly backend logic. Missing, misordered, unreadable or unreachable on
+the screen is where a user lives and is precisely what no one wrote an assertion for. One
+walk found a stale-seed 500 carrying a production implication, a timestamp format disagreeing
+with every other page, two screens printing 85 and 44 for one concept, and tabs summing to
+183 against a total of 190.
+
+Three of its design decisions were right and are kept. **Scope and browser permission are
+dispatch parameters**, so one role covers every screen present and future instead of spawning
+one agent per surface. **The judging persona is fixed, not a parameter** — a caller cannot
+lower the bar by rewording the dispatch, only narrow the scope. And **the default is strictly
+non-mutating**, because it drives a real logged-in session: the click that deletes has no
+undo, so an unauthorized one is declined and recorded as a coverage gap.
+
+One was wrong and is not kept: the walk METHOD was marked fixed while containing one
+project's browser tooling. In a package that installs anywhere, "fixed" there is a project
+shape smuggled into a generic payload — the same defect as a code-map generator assuming
+`package.json` and `src/`. The method is the project's; adaptation records it.
+Bound: `harness/.agents/roles/qa.md`, `harness/.claude/skills/dispatch-qa-walk/SKILL.md`,
+`harness/.agents/roles/thomas.md` (dispatch).

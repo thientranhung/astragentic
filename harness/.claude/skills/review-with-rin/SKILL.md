@@ -129,40 +129,6 @@ stays clean and the remove succeeds. **A refusal is a signal**: git refuses only
 worktree holds modified or untracked files, so a correctly-behaving Rin never triggers one —
 inspect what was written before doing anything else. Rin never removes its own worktree.
 
-## 2b. `mode=walk` — the one dispatch that needs a running app
-
-The other two modes read a detached worktree. A walk needs the product **running** at the
-reviewed SHA, which makes it the only gate with an environment to arrange.
-
-**Not the Builder's checkout.** Independence is the same rule as always, and a running app
-writes caches, logs and local state — sharing the author's tree would corrupt what is being
-judged. Create `gate-walk-<artifact-key>` at the reviewed SHA and start the app there with
-the project's own command. The adaptation receipt records that command under the rendering
-path; where a repo has none, a walk cannot run and that is a finding for the owner, not a
-reason to approximate one.
-
-The brief carries §1's contents plus four more:
-
-- **Persona and data state.** Who Rin acts as, and what the data looks like. A walk on empty
-  data and a walk on realistic volume find different defects, so the verdict is only
-  interpretable against the state that produced it. Where the repo has a seed command, name
-  it — a stale seed once produced a 500 that read as a code bug and was an environment
-  artifact, with a real production implication hiding behind it.
-- **Surfaces in scope.** What this work changed, **plus every surface showing the same
-  concept.** Naming only the changed ones guarantees the walk cannot find the class of defect
-  it exists to find.
-- **The design guidelines**, by path. Without them a finding is an observation rather than a
-  violation, and Rin will say so.
-- **The previous walk's verified-clean list**, so coverage accumulates instead of resetting.
-
-Findings route exactly like any other mode: Rin advises, **you classify**, the Builder fixes,
-and a design-level blocker goes to the owner through `to-questionnaire`. A walk finding that
-is a *product* decision — two labels that disagree because the concepts genuinely differ — is
-the owner's, not a bug to assign.
-
-Cleanup adds one step before the worktree removal: stop the app you started, and confirm the
-port is free. A surviving dev server binds a port the next walk needs.
-
 ## 3. Collect the report
 
 **The pane cannot carry the report, so it does not have to.** A pane read returns only the

@@ -1,3 +1,43 @@
+# Astraler Harness 1.3.0
+
+A fifth role. 1.2.0 put the product walk inside Rin as a mode; that was wrong by this
+package's own rule.
+
+## Added — the QA role
+
+**Roles follow session boundaries.** A walk is a different session: its own worktree with the
+product *running*, a different instrument, a different lifecycle. By ADR 0001's own criterion
+that is a role, not a mode — and `rin.md` hitting its word budget was the measurement saying
+so. Rin reads the diff; QA uses the running system.
+
+Scope is wider than UI: interface, journeys, **API and contract behaviour including error
+paths**, and data as experienced across the screens that show it.
+
+**Why it earns a role (AST-045).** A test asserts what somebody thought to assert, which on a
+web product is mostly backend logic. What is missing, misordered, unreadable or unreachable
+on screen is where a user lives, and is exactly what no assertion covers. A green suite and a
+coherent product are different claims.
+
+**Carried from the prior package's retired walker**, whose three right decisions are kept:
+scope and browser permission are **dispatch parameters**, so one role covers every screen
+present and future; the judging **persona is fixed**, so a caller can narrow scope but not
+lower the bar; and the default is **strictly non-mutating**, because a walk drives a real
+logged-in session and the click that deletes has no undo. Unauthorized mutations and
+unreadable data become **COVERAGE GAPS**, a first-class report section.
+
+**Its safety rules are the load-bearing part.** Browser consent is a required dispatch field
+and does not carry between runs. Prefer a local or seeded environment for anything carrying
+customer data. Redact before the bytes are written, not after — gitignore prevents a commit,
+not a leak. On a data-bearing screen ask a structural question rather than dumping the DOM.
+
+**What was NOT carried:** the walk *method*. The original marked it fixed while containing one
+project's browser tooling — a project shape smuggled into a generic payload. The method is the
+project's, and adaptation records it.
+
+**What actually killed the original: nothing referenced it.** It shipped across releases and
+never ran, because no contract owned it and no dispatcher named it. Thomas's contract now
+dispatches it before a PR, a merge or a release, and the reachability check covers it.
+
 # Astraler Harness 1.2.0
 
 Rin gains a third mode. 1.1.1 fixed the smaller half of this and said so; this is the rest.

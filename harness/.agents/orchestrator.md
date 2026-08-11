@@ -23,6 +23,7 @@ and fails at the first cross-vendor call, looking like the provider being down.
 | shaper | claude | claude-opus-5 | high |
 | builder | claude | claude-sonnet-5 | medium |
 | rin | claude | claude-opus-5 | high |
+| qa | claude | claude-sonnet-5 | medium |
 
 ## Fallback providers
 
@@ -35,6 +36,7 @@ never written back into this file.
 | thomas | codex | <set-me> | high |
 | shaper | codex | <set-me> | high |
 | builder | codex | <set-me> | medium |
+| qa | codex | <set-me> | medium |
 
 **`rin` has no fallback row, and its absence is the correct state.** The gate is a Herdr pane
 on the root provider's runtime, and no Codex or opencode adapter can host it, so any fallback

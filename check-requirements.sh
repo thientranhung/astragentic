@@ -210,7 +210,7 @@ orchestrator_codex_row() {
 }
 
 profile_field() { grep -E "^$2 *=" "$1" 2>/dev/null | head -1 | cut -d'"' -f2; }
-for ROLE in thomas shaper builder rin; do
+for ROLE in thomas shaper builder rin qa; do
   # Three places the template can live: an adapted project (.codex/), this package
   # (harness/.codex/), or a target where the release is staged but not yet adapted.
   TEMPLATE=""

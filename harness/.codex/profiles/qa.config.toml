@@ -1,0 +1,10 @@
+# Codex profile for the qa role.
+#
+# Machine-local destination: ${CODEX_HOME:-$HOME/.codex}/qa.config.toml
+# Provisioned only with explicit owner confirmation; check-requirements.sh compares this
+# template against that destination and against the qa row in .agents/orchestrator.md.
+#
+# Ships with NO model id on purpose: a placeholder that looks real resolves nowhere and
+# fails at dispatch (AST-040). Fill it from the qa codex row.
+model = ""   # REQUIRED: set from this role's codex row in .agents/orchestrator.md
+model_reasoning_effort = "medium"

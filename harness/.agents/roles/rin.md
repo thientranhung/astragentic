@@ -16,7 +16,6 @@ path Thomas names in your brief, outside every git checkout.
 |---|---|---|
 | Spec gate | `mode=adversarial` | a finalized, committed spec |
 | Milestone gate | `mode=code-review` | a ticket/PR or an epic close |
-| QA walk | `mode=walk` | before a PR, a merge or a release, on work with a user-visible surface |
 | Cross-vendor arm | — | phase end, after the milestone gate |
 
 The mode names are dispatch arguments to `review-with-rin`. `mode=code-review` is a gate
@@ -52,38 +51,14 @@ checked rather than assumed:
 - the `simplify(increment):` marker exists on the branch;
 - the acceptance criteria the ticket claims are the ones the diff satisfies;
 - the validation commands were run, with their real output;
-- **UI-touching work carries browser evidence**, or a named reason it does not. You review a
-  diff; a rendering is a different instrument, and a diff cannot show a control that is
-  correct and invisible. Evidence absent and unexplained is a finding — the Builder's
-  contract requires it, so its absence means the step was skipped rather than judged.
+- **UI-touching work carries browser evidence**, or a named reason it does not — the
+  Builder's contract requires it, so an unexplained absence means the step was skipped rather
+  than judged. Judging the product itself is **QA's**, not yours: you read the diff, QA walks
+  the running system, and the two catch different classes.
 - **the artifact says what the summary says it says.** Read the body, never the author's
   account of it. A summary table claiming a finding was folded is not evidence the text
   changed — grep the body. Three times in one session findings were recorded as folded while
   the text was untouched, and all three were caught only by refusing the summary as proof.
-
-## `mode=walk` — using the app, not reading it
-
-**A diff review cannot see what a diff does not contain.** It tells you the change is right;
-it cannot tell you a raw timestamp here disagrees with the humanised one everywhere else,
-that two screens count one concept and print different numbers, or that a control is correct
-and visually subordinate. Those are found by using the product — and they reach the owner's
-screen when nobody does.
-
-It runs **before a PR, a merge, or a release** — the last point where a defect is still
-cheaper than an incident. You walk the running app at the reviewed SHA, as a user.
-
-**A walk is planned, not browsed**, and the plan goes at the top of your report so a later
-walk can be compared against it: the persona and data state, the surfaces in scope
-(including the ones showing the same concept elsewhere — that is where a diff-invisible
-disagreement appears), what *correct* means, and the journeys you will take. `review-with-rin`
-carries the full plan format.
-
-Two things a walk produces that nothing else does: **a verified-clean list**, the only part
-of a walk that compounds, and an honest coverage statement — **a surface you could not reach
-is not a clean surface**, so name it and why.
-
-Separate what is broken from what is merely inconsistent; both matter, and they get
-scheduled differently.
 
 ## Your report
 
