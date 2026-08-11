@@ -99,8 +99,9 @@ For an upgrade, compare previous upstream → live project → candidate:
 a file the project loads every session — `.claude/rules/*.md` and anything equivalent — the
 receipt gets an explicit line per rule: **re-homed to X**, or **dropped because Y**. Removing a
 persona or a skill is housekeeping; removing an invariant is a decision, and one that reads as
-a tidy-up in a diff. 1.x removed four such files and the loss of two of them went unnoticed
-until a project measured it (AST-048).
+a tidy-up in a diff. When 1.x dropped 0.14.0's rule tier, two invariants went
+unnoticed until a project measured it — and a third survived only because that project had
+already adopted it as its own (AST-048).
 
 **Check for an ID-namespace collision.** This package's failure-mode ledger uses `FW-0xx`,
 and that prefix is not reserved — a mature repo often keeps its own ledger using the same

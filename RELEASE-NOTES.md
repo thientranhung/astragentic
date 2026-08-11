@@ -35,6 +35,12 @@ it must be remembered does not exist.**
 - **Adaptation treats removing an always-on rule as a policy change**, with a per-rule
   "re-homed to X / dropped because Y" line in the receipt.
 
+  *Correction to an earlier draft of this note:* the package carries none of 0.14.0's four
+  rule files, but the first repo to migrate lost **three**, not four —
+  `no-secrets-in-exports.md` survived there because it had already become project-owned,
+  citing an incident in that repo. Package scope and installed-project scope are different
+  measurements and this note previously ran them together.
+
 - **A web-shape assumption came out of the QA role.** It called an unrunnable product a
   finding; for a library, a CLI or a pipeline that is a fact about the product, not a defect.
 
