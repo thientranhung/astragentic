@@ -70,6 +70,12 @@ cp "$ADAPT_PROMPT"                    "$STAGING_DIR/ADAPT-HARNESS.md"
 cp "$HARNESS_ROOT/README.md"          "$STAGING_DIR/README.md"
 cp "$RELEASE_NOTES"                   "$STAGING_DIR/RELEASE-NOTES.md"
 cp "$HARNESS_ROOT/check-requirements.sh" "$STAGING_DIR/check-requirements.sh"
+# ...and into the PAYLOAD, so adaptation lands it in the project's scripts/ beside
+# check-reachability.sh. Staged-only was asymmetric: one self-check survived in the repo and
+# the other lived solely inside .astraler/releases/, which a project may legitimately ignore —
+# so deleting that directory took the repo's own doctor with it (AST-059). One source file
+# here, copied to two destinations; the package keeps a single home for it.
+cp "$HARNESS_ROOT/check-requirements.sh" "$STAGING_DIR/harness/scripts/check-requirements.sh"
 cp "$HARNESS_ROOT/VERSION"            "$STAGING_DIR/VERSION"
 # Templates are optional: 1.0.0 ships none, because the adaptation agent derives project
 # docs from the repo itself rather than scaffolding them. Staged when a later version adds

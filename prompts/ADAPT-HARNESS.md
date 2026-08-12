@@ -158,13 +158,30 @@ candidates, ~1000 files, entered history in a single upgrade commit.
 So add paths, and know which release you are keeping:
 
 ```bash
+CAND="$(cat .astraler/CANDIDATE)"
 git add .agents .claude .codex scripts .astraler/state .astraler/CANDIDATE
-git add ".astraler/releases/$(cat .astraler/CANDIDATE)"
-git status --short ".astraler/releases/"   # anything still listed was never applied
+git add ".astraler/releases/$CAND" || true          # may be refused; the next line decides
+git diff --cached --name-only -- ".astraler/releases/$CAND" | wc -l
 ```
 
+**That count is the check, and it must be non-zero.** The obvious version of this step —
+`git status --short ".astraler/releases/"`, reading "anything still listed was never
+applied" — cannot fail: where a project's `.gitignore` excludes `.astraler/`, `git add`
+refuses the path and `git status` then prints **nothing**, which reads as *everything
+applied and committed* while not one file was staged. Measured on a real upgrade. A check
+whose output is identical when the step worked and when it was impossible is AST-032, and
+this file has now carried two of them.
+
+**A zero is a finding, not a failure to route around.** Do not reach for `git add -f`: the
+ignore rule is the project's, and forcing past it overrides a decision this package did not
+make and does not ship. Record the outcome in the receipt instead — *applied release is on
+disk only, excluded by the project's ignore rules* — so the owner can decide whether to
+carve an exception. What must not happen is the receipt implying it was committed.
+
 An unapplied release left untracked is the correct resting state — it costs disk, not
-history, and the next run either applies it or the owner deletes the directory.
+history, and the next run either applies it or the owner deletes the directory. **An
+applied one left untracked is a different thing**: the notes and the prompt describing what
+this upgrade meant to do exist on one disk and nowhere else.
 
 **Codex role profiles** (`thomas`, `shaper`, `builder`, `rin`) are machine-local at
 `${CODEX_HOME:-$HOME/.codex}/<role>.config.toml`. Compare each tracked template with its

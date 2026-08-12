@@ -945,3 +945,72 @@ shipped across releases that never ran once.* A new skill needs a moment, not on
 Bound: `harness/.agents/roles/thomas.md`,
 `harness/.claude/skills/tracker-frontier-audit/SKILL.md`,
 `harness/scripts/check-reachability.sh`.
+
+### AST-058 — The check after the step reported clean when the step was impossible · promoted 2026-08-12
+
+`ADAPT-HARNESS.md` §4 told the installer to commit the applied release and then verify:
+
+```bash
+git add ".astraler/releases/$(cat .astraler/CANDIDATE)"
+git status --short ".astraler/releases/"   # anything still listed was never applied
+```
+
+In a project whose `.gitignore` excludes `.astraler/`, `git add` refuses the path — and
+`git status` on an ignored directory then prints **nothing**, which the prompt's own reading
+turns into *everything applied and committed*. Not one file was staged. Measured on a real
+upgrade, and found by the project's Thomas comparing the instruction against the tree rather
+than against the receipt.
+
+**The verification was the defect, not the `git add`.** The add is loud: it errors and returns
+1. The line after it is what converted a loud failure into a clean report, because its output
+is identical when the step worked and when it could not run. That is AST-032, in the file that
+already carries AST-054 for a different failure of the same step.
+
+The check is now a count of what is actually staged, which cannot be satisfied by absence.
+
+**`git add -f` was considered and rejected.** The ignore rule belongs to the project — this
+package ships no `.astraler` stanza, verified by grep — so forcing past it would override a
+decision made elsewhere and never surfaced. A zero is recorded in the receipt as *applied
+release is on disk only*, and the owner decides whether to carve an exception. The distinction
+worth keeping: an UNAPPLIED release left untracked is correct and cheap (AST-054), while an
+APPLIED one left untracked means the notes describing what this upgrade intended exist on one
+disk and nowhere else.
+Bound: `prompts/ADAPT-HARNESS.md`.
+
+### AST-059 — The repo kept one self-check and lost the other to a directory it may ignore · promoted 2026-08-12
+
+`install.sh` staged `check-requirements.sh` into `.astraler/releases/<version>/` only, while
+`check-reachability.sh` travelled inside the payload and therefore landed in the project's
+`scripts/` and was tracked. Same class of tool, two fates. A project that deletes or ignores
+its releases directory — which AST-054 says is a legitimate resting state — silently loses its
+own doctor while keeping the other one, and nothing reports the asymmetry.
+
+Found in the same pass as AST-058, by the same question: does the instruction match the tree?
+
+The installer now copies the one source file to both destinations — the release directory, for
+the adaptation agent to read, and the payload's `scripts/`, so the project keeps it. The
+package still has a single home for it; only the copy count changed.
+
+The vendored copy also needed to survive being moved: it read its version from a sibling
+`VERSION` file that exists only at the package root, and would have printed `?` in every
+project. It now falls back to `.astraler/state/applied-version`. **A tool that cannot name the
+version it is checking invites the wrong answer** — the same reason `docs-staleness-audit.sh`
+had to learn it was measuring nothing in AST-052.
+Bound: `install.sh`, `check-requirements.sh`.
+
+### AST-060 — Check 3 printed green about the skills it had not opened · promoted 2026-08-12
+
+In project layout, reachability splits skills into harness-owned and project-owned and examines
+only the first set — correctly, since checking the second produced a wave of false findings
+(AST-038). But it then printed `[OK] 3 every shipped skill is reached`, with the count of
+skipped skills on a line ABOVE the verdict, where the pass line buries it.
+
+The failure is timed to hurt: a project skill is skipped on the very run after it is written,
+which is exactly when its author runs the checker looking for reassurance. Reported by the
+project that had just written one — the checker went green and said nothing about it.
+
+Check 3 now names its own scope in its own line, and the skipped set moved into the verdict
+beside check 4's exclusion. Third instance of one shape: **a green line that speaks for more
+than the check looked at** — after check 4's referenced-path claim, and the staleness audit's
+`RESULT: all clean` over a loop that ran zero times.
+Bound: `harness/scripts/check-reachability.sh`.

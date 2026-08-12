@@ -41,7 +41,13 @@ version_ge() {
 }
 
 PKG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PKG_VERSION="$(cat "$PKG_DIR/VERSION" 2>/dev/null || echo "?")"
+# Two homes, on purpose: this file sits at the package root next to VERSION, and is also
+# vendored into an adapted project's scripts/, where the version to report is the one the
+# project actually applied. Look for both rather than printing "?" in the vendored copy —
+# a doctor that cannot name the version it is checking invites the wrong answer.
+PKG_VERSION="$(cat "$PKG_DIR/VERSION" 2>/dev/null \
+            || cat "$PKG_DIR/../.astraler/state/applied-version" 2>/dev/null \
+            || echo "?")"
 echo "Astraler harness $PKG_VERSION — requirements check"
 echo
 echo "MACHINE (required):"

@@ -467,20 +467,25 @@ print(f"  {len(roles)} contracts · {len(skills)} harness skills · "
 if LAYOUT == "project":
     print(f"  ownership from: {ATTRIBUTION}")
 print(f"  invocability from: {ADDR_SOURCE}")
-if PROJECT_OWNED:
-    print(f"  {len(PROJECT_OWNED)} project-owned skill(s) skipped: "
-          f"{', '.join(sorted(PROJECT_OWNED))}")
 print()
 if not findings:
     print("  [OK] 1 every phase the method names is owned by the contract it names")
     print("  [OK] 2 every declared phase is declared exactly once")
-    print("  [OK] 3 every shipped skill is reached")
+    print("  [OK] 3 every HARNESS skill is reached" +
+          (f" ({len(PROJECT_OWNED)} project-owned skill(s) not examined)" if PROJECT_OWNED else ""))
     print("  [OK] 4 every path and skill referenced BY THE SCANNED FILES exists")
     print("  [OK] 5 every role has a launcher and a dispatcher that names it")
     print("  [OK] 6 every skill is addressed in the form its caller can actually use")
     print("  [OK] 7 every gate artifact has both a producer and a verifier")
     print(f"\nAll reachability checks passed. Scope: {len(roles)} contracts, "
           f"{len(skills)} skills, the adaptation prompt and the README role table.")
+    if PROJECT_OWNED:
+        # Named inside the verdict, not above it. A project skill this run never opened is
+        # exactly what a reader takes the green to cover, and a new skill lands here on the
+        # run right after it is written — which is when someone is looking for reassurance.
+        print(f"Not examined, and no check above speaks for them: "
+              f"{len(PROJECT_OWNED)} project-owned skill(s) — "
+              f"{', '.join(sorted(PROJECT_OWNED))}.")
     print("Not scanned, and check 4 does not speak for it: the failure-mode ledger's "
           "historical `Bound:` provenance. A live project measured five citations there to "
           "a file that had been deleted, while check 4 reported clean — the scope line is "

@@ -1,3 +1,53 @@
+# Astraler Harness 1.5.4
+
+Three checks that could not fail, found in one pass by a project's Thomas asking one question
+of the 1.5.3 upgrade it had just received: does the instruction match the tree?
+
+## Fixed
+
+**The verification after the release commit reported clean when the commit was impossible.**
+`ADAPT-HARNESS.md` §4 said to `git add` the applied release, then read
+`git status --short ".astraler/releases/"` as *anything still listed was never applied*. In a
+project whose `.gitignore` excludes `.astraler/`, the add is refused and that status prints
+**nothing** — which the prompt's own reading turns into *everything applied and committed*,
+with not one file staged.
+
+The `git add` was never the defect: it errors and returns 1, loudly. The line after it is what
+converted a loud failure into a clean report, because its output is identical when the step
+worked and when it could not run. The check is now a count of what is actually staged, which
+absence cannot satisfy (AST-058).
+
+`git add -f` was considered and rejected. The ignore rule is the project's — this package ships
+no `.astraler` stanza — so forcing past it would override a decision made elsewhere and never
+surfaced. A zero is a finding for the receipt: *applied release is on disk only*.
+
+**The repo kept one self-check and lost the other.** `install.sh` staged
+`check-requirements.sh` into `.astraler/releases/<version>/` only, while `check-reachability.sh`
+travelled inside the payload and landed tracked in the project's `scripts/`. A project that
+deletes or ignores its releases directory — a legitimate resting state under AST-054 — silently
+lost its own doctor and kept the other one. The installer now copies the one source file to both
+destinations, and the vendored copy resolves its version from `.astraler/state/applied-version`
+instead of printing `?` in every project (AST-059).
+
+**Check 3 printed green about the skills it had not opened.** In project layout, reachability
+examines harness-owned skills only — correctly, since checking the project's produced a wave of
+false findings in AST-038 — and then said `every shipped skill is reached`, with the skipped
+count on a line above the verdict where the pass buries it. The timing is what makes it bite: a
+project skill is skipped on the run right after it is written, which is when its author is
+looking for reassurance. Check 3 now names its scope inline, and the skipped set moved into the
+verdict beside check 4's exclusion (AST-060).
+
+## The shape, since this is the third release running
+
+All three are one thing: **a green line that speaks for more than the check looked at.** 1.5.2
+fixed check 4's referenced-path claim, 1.5.0 fixed a staleness audit reporting `all clean` over a
+loop that ran zero times, and these are the next three. Worth stating because the cure is always
+the same and always cheap — make the claim name its own scope — while the disease is only ever
+found by running the thing somewhere its preconditions are messy.
+
+None of these came from reading this package. All three came from one project agent comparing an
+instruction against the tree it had produced.
+
 # Astraler Harness 1.5.3
 
 One finding from a live project, and it is about the one participant the harness had never
