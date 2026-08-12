@@ -1,3 +1,73 @@
+# Astraler Harness 1.5.3
+
+One finding from a live project, and it is about the one participant the harness had never
+modelled: the owner, who cannot re-run a query.
+
+## Fixed
+
+**A frontier that is only computed is invisible to the person who cannot compute it.**
+`thomas.md` defined the frontier as a query and never said to write the answer back. An agent
+re-runs that query on demand, so it is never wrong for long and never notices anything missing.
+The owner opens the board and looks. Measured on a live project: zero issues had ever entered
+the unstarted state across the project's whole life, and one ticket sat looking blocked for
+hours after both its blockers merged. The owner found it by comparing two boards by eye — no
+check this harness runs had ever looked.
+
+The contract now carries it as a **merge step that must be reported**: merge is not complete
+until Thomas re-runs the query, moves every ticket that merge unblocked, and names which ones
+moved — `none` is a valid report, silence is not. Plus one clause that costs nothing: never read
+a readiness label as a blocker (AST-057).
+
+The first draft of this release was weaker, and the owner caught it. It said "move it in the same
+breath as closing the ticket" and stopped — a rule with nothing to fail when a busy dispatcher
+skips it. Reporting is what makes a skipped step visible, which is the same reasoning that made
+the write-set a required field in 1.5.2 rather than advice.
+
+**Naming the upstream cause correctly is what decided where the fix went.**
+`mattpocock-skills:to-tickets` draws the blocking edges and writes `Status: ready-for-agent` in
+the same breath — a label, applied once at creation, never revisited when a blocker is later
+added or cleared. It sets no workflow state at all, so two representations of readiness sit side
+by side and neither answers what a dispatcher asks. Verified in the installed plugin, not only
+in an old vendored copy: the line is live in 1.2.3.
+
+**That skill is the plugin's, so this package does not patch it.** 1.0.0 exists to stop
+vendoring Matt's skills, and a patched copy here would be the second-home failure ADR 0001 was
+written about. The contract compensates instead.
+
+## Added
+
+**`tracker-frontier-audit`** — reports the three ways a tracker answers READY with confidence
+about things it cannot represent: a frontier computed but never materialised, preconditions
+that are no issue at all, and parent blocking a tracker does not inherit. One law, three
+instances; each fails because no entity contradicts it, so an absent edge beats a wrong edge.
+It reports and proposes exact writes, and never mass-edits — a bulk state change on someone's
+board is hard to walk back.
+
+Ported from the project that found it, keeping its name: `frontier` is already this package's
+word, and one thing deserves one name across both repos.
+
+**Bound to a moment rather than to someone noticing.** It runs at phase end beside the
+cross-vendor arm, because the trigger it shipped with — "when a board looks wrong" — depends on
+the very noticing that took a whole project lifetime here. And check 7 now registers
+`frontier write-back` as an artifact whose producer is Thomas's contract and whose verifier is
+this skill, so neither half can go quiet without a red check.
+
+Worth stating plainly, because it is a fact about this package and not about trackers: **naming a
+skill in a contract clears reachability check 3 and makes nothing run.** Check 3 asks whether a
+skill can be reached, never whether anything reaches it. The checker's own docstring records the
+proof — *a browser walker shipped across releases that never ran once.*
+
+## Scope note
+
+The contract names no workflow state. `to-tickets` targets GitHub as well as Linear, and GitHub
+Issues has no such state — naming one would hardcode a tracker into the single file written not
+to know which tracker it is on. The mapping belongs in each project's
+`docs/agents/issue-tracker.md`.
+
+One choice was never available: reachability check 3 requires every shipped skill to be named by
+a contract, so shipping the audit forced the contract edit. The package settled the
+skill-versus-contract question before anyone could argue it.
+
 # Astraler Harness 1.5.2
 
 Two defects a live project measured while running 1.5.1, and one honesty fix on a check that

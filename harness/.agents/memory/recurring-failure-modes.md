@@ -885,3 +885,63 @@ prose, the way browser consent is required of a QA dispatch. A rule a careful op
 within the hour needs a slot that blocks the launch, not a reminder. The dispatch record grew
 the column it was missing: what this ticket writes.
 Bound: `harness/.agents/roles/thomas.md`, `harness/.agents/skills/dispatch-ticket/SKILL.md`.
+
+### AST-057 — A frontier that is only computed is invisible to the one person who cannot compute · promoted 2026-08-12
+
+Thomas's contract defined the frontier as a QUERY — open, no unfinished blockers, no assignee —
+and nothing said to write the answer back. An agent re-runs the query on demand, so it is never
+wrong for long and never notices anything missing. **The owner cannot re-run anything: he opens
+the board and looks.** So the board can be useless to the human while serving every agent
+perfectly, and no role is positioned to notice.
+
+Measured on a live project, 2026-08-12: **zero issues had ever entered the unstarted state**
+across the project's whole life, and one ticket sat looking blocked for hours after both its
+blockers merged. Found by the owner comparing two boards by eye. No check the harness runs had
+ever looked.
+
+**The upstream cause is in the plugin, and naming it correctly is what decides the fix.**
+`mattpocock-skills:to-tickets` draws the blocking edges and writes `Status: ready-for-agent` at
+the same moment — a **label**, applied once at creation, never revisited when a blocker is
+later added or cleared. It sets no workflow state at all. Two representations of readiness end
+up side by side and neither answers the dispatcher's question: the label means *shaped well
+enough to hand over*, and the state that would mean *unblocked and unclaimed* is never written.
+On the measured board, four tickets wore the label while blocked.
+
+**That skill is the plugin's, so this package cannot fix it.** 1.0.0 exists to stop vendoring
+Matt's skills, and a patched copy here would be a second home for one fact — the failure ADR
+0001 was written about. What the package owns is the contract, so the contract carries both
+halves: write the computed answer back as state, and never read a readiness label as a blocker.
+`tracker-frontier-audit` is the compensating control.
+
+**The tracker vocabulary stayed out of the contract deliberately.** `thomas.md` names no state,
+because `to-tickets` targets GitHub as well as Linear and GitHub Issues has no such state.
+Naming one would hardcode a tracker into the one file written not to know which tracker it is
+on; the mapping belongs in each project's `docs/agents/issue-tracker.md`.
+
+Note the choice that was never available: check 3 requires every shipped skill to be named by a
+contract, so shipping the audit *forced* the contract edit. The package decided where this went
+before anyone argued about it.
+
+**A rule with nothing to fail is not yet a fix, and the first draft of this entry was one.** It
+said "move it in the same breath as closing the ticket" and stopped there — a line in a contract,
+with nothing that goes red when a busy dispatcher skips it. The owner asked what it actually
+solved, which was the right question. Two changes followed:
+
+- **The write-back is a merge step that must be REPORTED.** Merge is not complete until Thomas
+  names which tickets moved, and `none` is a valid report while silence is not. A step nothing
+  reports is a step nobody can tell was skipped — the same reasoning that made the write-set a
+  required field in AST-056 rather than advice.
+- **The audit is bound to a moment that arrives on its own**, at phase end beside the
+  cross-vendor arm, instead of to the owner noticing a board looks wrong. Noticing is exactly
+  what took a whole project lifetime here. And check 7 now registers `frontier write-back` as an
+  artifact whose producer is this contract and whose verifier is the audit skill, so neither half
+  can go quiet without a red check.
+
+That second point is worth keeping separate from this failure, because it is a fact about the
+package rather than about trackers: **naming a skill in a contract clears check 3 and makes
+nothing run.** Check 3 asks whether a skill is reachable, never whether anything reaches it. The
+package's own history has the proof, recorded in the checker's docstring — *a browser walker
+shipped across releases that never ran once.* A new skill needs a moment, not only a mention.
+Bound: `harness/.agents/roles/thomas.md`,
+`harness/.claude/skills/tracker-frontier-audit/SKILL.md`,
+`harness/scripts/check-reachability.sh`.

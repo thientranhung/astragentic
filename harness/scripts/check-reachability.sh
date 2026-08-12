@@ -179,6 +179,9 @@ NOT_A_SKILL = {
     "applied-version", "module-boundaries-md", "gen-code-map",
     # Frontmatter keys quoted in prose about how skills are reached.
     "disable-model-invocation",
+    # A triage LABEL that to-tickets writes at creation. Named in the frontier audit precisely
+    # because a dispatcher must not read it as a blocker (AST-057).
+    "ready-for-agent",
     # An AGENT, not a skill — named in builder.md as the substitute a Builder must NOT
     # reach for when the simplify invocation errors (AST-055). Naming it is the point.
     "code-simplifier",
@@ -430,6 +433,12 @@ ARTIFACTS = [
     ("simplify pass provenance", r"`Pass:`|Pass: Skill\(", "builder", ["thomas", "rin"]),
     ("browser evidence",            r"browser evidence",      "builder", ["rin"]),
     ("gate file",                   r"GATE_FILE",             "rin",     ["review-with-rin"]),
+    # The frontier write-back has no commit to grep — its artifact is tracker state, which
+    # this script cannot see. So the registry binds the two halves that ARE readable: the
+    # role that must do it at merge, and the audit that finds the merges where it did not
+    # happen. Naming a skill in a contract clears check 3 and makes nothing run; this is
+    # what keeps the backstop attached to a moment instead of to someone noticing (AST-057).
+    ("frontier write-back",         r"frontier write-back",   "thomas",  ["tracker-frontier-audit"]),
 ]
 def holder(name):
     """Text of a role contract or a shipped skill, whichever owns this name."""
