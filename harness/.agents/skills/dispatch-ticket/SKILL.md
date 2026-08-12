@@ -37,6 +37,10 @@ turns an old pane into an empty pane, not an isolated ticket.
 - `visibility=herdr|headless` (default `herdr`)
 - workspace label, ticket ID, branch, base, worktree path, the ticket body, owner intent,
   acceptance criteria, validation commands, expected artifact
+- **write-set** — the files this ticket will write, and the files each other live ticket
+  already owns. **Required whenever another dispatch is live**, the way browser consent is
+  required of a QA dispatch: a field the dispatcher must fill before the pane launches cannot
+  be skipped by being busy.
 
 **An override re-resolves the WHOLE row, not just the Runtime cell (AST-030).** The role uses
 the `orchestrator.md` row that already targets that runtime — runtime, model and effort
@@ -286,7 +290,23 @@ Worktree: … · Branch: … · Base: …
 Acceptance criteria: …
 Owner intent: …
 Validation: …
+Owned elsewhere: TRA-38 owns docs/…/WIRE-CONTRACT.md — do not edit it; report what you
+would have changed.
 ```
+
+**The `Owned elsewhere:` line is what converts a merge conflict into a handback note**, and it
+costs one sentence. Omit it only when no other dispatch is live.
+
+Derive this ticket's own write-set from its body plus whatever the repo's docs-sync rule drags
+in, record it against the ticket, and read the other live tickets' write-sets back out to find
+the overlap. **A Builder that edits a file another ticket owns is obeying a correct rule** —
+usually the docs-sync one — so nothing in the ticket itself can carry the boundary; it has to
+arrive with the brief.
+
+Measured twice in one day: once on a shared document, once on `routes.go` and its test an hour
+later, dispatched by the operator who had just diagnosed the first occurrence and did not
+generalise it. That is why this is a field rather than a rule in prose — a boundary a careful
+dispatcher forgets that fast needs a slot that blocks the launch (AST-056).
 
 This is what "an agent playing the human at that step" means mechanically. Verify by
 artifact that the skill actually ran — its own output in the transcript — rather than by the
@@ -420,10 +440,14 @@ cwd, branch, worktree, process or lifecycle cleanup.
 ## The simplify pass
 
 **Each increment runs one simplify pass over its own diff, after the build is green.** The
-artifact is a `simplify(increment):` commit on the ticket branch — real cleanup, or
-`git commit --allow-empty -m "simplify(increment): no findings on <base>..<head>"` where the
-pass finds nothing. An empty pass is legitimate; an ABSENT marker and an empty one are
-otherwise indistinguishable in the tree, which is why the marker is the artifact.
+artifact is a `simplify(increment):` commit on the ticket branch — real cleanup, or an
+`--allow-empty` one reading `no findings on <base>..<head>` where the pass finds nothing. An
+empty pass is legitimate; an ABSENT marker and an empty one are otherwise indistinguishable
+in the tree, which is why the marker is the artifact.
+
+**The commit body carries a `Pass:` line naming what ran**, because the subject cannot
+distinguish the sanctioned pass from a substitute that produced the same string. The Builder
+contract owns the exact form.
 
 Behaviour-preserving only: dead code and orphans, duplication that appeared because two
 changes touched one seam, wrong-altitude fixes, comments that no longer describe the code.
@@ -431,8 +455,8 @@ Anything that would change behaviour is a finding for Thomas rather than a chang
 cleanup that would touch a floor item's construction line is reported instead.
 
 Thomas verifies by artifact before the milestone gate —
-`git log --oneline <base>..<head> --grep '^simplify(increment):'` — rather than by asking
-whether the pass ran.
+`git log <base>..<head> --grep '^simplify(increment):' --format='%h %s%n%b'` — rather than by
+asking whether the pass ran, and reads the `Pass:` line rather than only the subject.
 
 ## Review and cleanup
 

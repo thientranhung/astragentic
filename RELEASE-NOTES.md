@@ -1,3 +1,56 @@
+# Astraler Harness 1.5.2
+
+Two defects a live project measured while running 1.5.1, and one honesty fix on a check that
+was overclaiming its own scope. Same pattern as the last three releases: found by use, not by
+review.
+
+## Fixed
+
+**A marker any tool can write is a check that cannot fail.** 1.5.0 fixed the simplify pass's
+address and the fix held — a Builder invoked `Skill(skill: "simplify")` and said so. The next
+one called `Skill(mattpocock-skills:simplify)`, which does not exist, because it had just
+invoked `mattpocock-skills:implement` from the row above and generalised the namespace one row
+down. It then fell back to the `code-simplifier` agent and committed
+`simplify(increment):` anyway. Thomas's merge grep, Rin's gate and reachability check 7 all
+read as satisfied. The substitution was visible only because a human was watching the pane.
+
+The commit body now carries a `Pass:` line naming what actually ran, registered in check 7 as
+its own artifact with its own producer and verifiers — the marker and its provenance are two
+things, not one thing with a detail. The Builder contract states the negative in the table cell
+(**not** `mattpocock-skills:`) and says plainly that a failed invocation is a finding to report,
+not a step to route around (AST-055).
+
+Worth recording what did NOT work: 1.5.1's table already annotated that row `(built-in, via the
+Skill tool)`. The signal was there and was read past. More qualifying prose in the place that
+was skimmed is not a fix, which is why this release changes what the gate READS rather than
+what the contract says.
+
+**The frontier could hand two Builders the same file.** The query asks which tickets have no
+open blocker and no assignee; it never asked what each ticket will write. Two correctly
+dispatched tickets edited the same three rows of one document — the second because the repo's
+docs-sync rule required it, so it was obeying a correct rule. Two conflict blocks, and a naive
+merge in the wrong direction would have reverted reviewed work with no signal.
+
+Measured twice in one day, the second time by the operator who had just diagnosed the first. So
+the write-set is now a **required field** of a concurrent dispatch rather than a rule in prose,
+the way browser consent is required of a QA dispatch, and the dispatch record grew the column it
+was missing: what this ticket writes. The brief carries an `Owned elsewhere:` line, which
+converts a merge conflict into a handback note for one sentence (AST-056).
+
+**Reachability check 4 spoke for more than it scanned.** It printed *"every referenced path and
+skill exists"* and then, three lines later, a separate note that the failure-mode ledger's
+`Bound:` provenance is not scanned. A live project measured five citations there to a deleted
+file while check 4 reported clean. The claim now names its own scope, and the exclusion reads as
+part of the verdict rather than a footnote to it.
+
+## Not taken
+
+**A per-dispatch `model=` override**, to A/B two models on one ticket. The same project that
+asked for it measured 40-50% of Builder wall-clock going to rework rounds — a rebase from a
+write-set collision, a re-run aimed at the wrong binary, two marker fixes — which dwarfs any
+plausible model delta and is fixed by orchestration rather than procurement. AST-041 keeps
+`orchestrator.md` the owner's; nothing here needs to change that.
+
 # Astraler Harness 1.5.1
 
 Two defects 1.5.0 introduced, both found by running it against a real project rather than

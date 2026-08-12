@@ -48,7 +48,10 @@ than a confident verdict.
 **Verification that the process left its traces.** The gate is the point where evidence gets
 checked rather than assumed:
 
-- the `simplify(increment):` marker exists on the branch;
+- the `simplify(increment):` marker exists on the branch, **and its body names the pass that
+  ran** — a marker whose `Pass:` line is absent, or names something other than
+  `Skill(skill: "simplify")`, records a substitute that every subject-only check reads as
+  satisfied (AST-055);
 - the acceptance criteria the ticket claims are the ones the diff satisfies;
 - the validation commands were run, with their real output;
 - **UI-touching work carries browser evidence**, or a named reason it does not — the

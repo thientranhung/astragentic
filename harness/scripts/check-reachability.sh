@@ -179,6 +179,9 @@ NOT_A_SKILL = {
     "applied-version", "module-boundaries-md", "gen-code-map",
     # Frontmatter keys quoted in prose about how skills are reached.
     "disable-model-invocation",
+    # An AGENT, not a skill — named in builder.md as the substitute a Builder must NOT
+    # reach for when the simplify invocation errors (AST-055). Naming it is the point.
+    "code-simplifier",
 }
 
 # --- 1. METHOD -> CONTRACT --------------------------------------------------------------
@@ -419,6 +422,12 @@ for path, text in sorted(addr_sources.items()):
 ARTIFACTS = [
     # (artifact, regex, producer, verifiers — each a role contract or a shipped skill)
     ("simplify(increment): marker", r"simplify\(increment\)", "builder", ["thomas", "rin"]),
+    # The marker's subject proves a commit happened, never which pass wrote it. A Builder
+    # whose invocation errored substituted another tool, committed the same subject, and
+    # every check downstream read as satisfied (AST-055). The `Pass:` line in the body is
+    # the half that can disagree with a substitute, so it needs its own producer/verifier
+    # row — a second artifact, not a detail of the first.
+    ("simplify pass provenance", r"`Pass:`|Pass: Skill\(", "builder", ["thomas", "rin"]),
     ("browser evidence",            r"browser evidence",      "builder", ["rin"]),
     ("gate file",                   r"GATE_FILE",             "rin",     ["review-with-rin"]),
 ]
@@ -457,13 +466,16 @@ if not findings:
     print("  [OK] 1 every phase the method names is owned by the contract it names")
     print("  [OK] 2 every declared phase is declared exactly once")
     print("  [OK] 3 every shipped skill is reached")
-    print("  [OK] 4 every referenced path and skill exists")
+    print("  [OK] 4 every path and skill referenced BY THE SCANNED FILES exists")
     print("  [OK] 5 every role has a launcher and a dispatcher that names it")
     print("  [OK] 6 every skill is addressed in the form its caller can actually use")
     print("  [OK] 7 every gate artifact has both a producer and a verifier")
     print(f"\nAll reachability checks passed. Scope: {len(roles)} contracts, "
           f"{len(skills)} skills, the adaptation prompt and the README role table.")
-    print("Not scanned: the failure-mode ledger's historical `Bound:` provenance.")
+    print("Not scanned, and check 4 does not speak for it: the failure-mode ledger's "
+          "historical `Bound:` provenance. A live project measured five citations there to "
+          "a file that had been deleted, while check 4 reported clean — the scope line is "
+          "part of the verdict, not a footnote to it.")
     sys.exit(0)
 
 for check, msg, detail in findings:

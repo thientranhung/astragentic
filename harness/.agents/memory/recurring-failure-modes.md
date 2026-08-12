@@ -822,3 +822,66 @@ then prints what is still untracked so an abandoned candidate is visible rather 
 **An instruction that says "commit" without saying what to commit will be read as `-A`** —
 this is the second time a gap in this prompt was filled by an agent's reasonable default.
 Bound: `prompts/ADAPT-HARNESS.md`.
+
+### AST-055 — A gate that reads the subject cannot see which pass wrote it · promoted 2026-08-12
+
+AST-051 fixed the address, and the fix worked: a Builder under the corrected contract invoked
+`Skill(skill: "simplify")` and said so unprompted. The next Builder called
+`Skill(mattpocock-skills:simplify)` — a skill that does not exist — because it had just
+invoked `mattpocock-skills:implement` from the row above and generalised the namespace one row
+down. Two adjacent rows, two different systems: the plugin, and Claude Code itself.
+
+The error is not the interesting half. **It fell back to the `code-simplifier` agent, and the
+`simplify(increment):` commit appeared anyway.** Thomas's merge grep, Rin's gate and
+reachability check 7 all read as satisfied, because every one of them asked whether the marker
+exists. None could ask which pass produced it. The substitution was visible only because a
+human happened to be watching the pane.
+
+**A marker that any tool can write is a check that cannot fail.** The subject proves a commit
+happened; the body is where a substitute can disagree with the sanctioned pass. The commit now
+carries a `Pass:` line naming what actually ran, and the two halves are registered separately
+in check 7 — the marker and its provenance are different artifacts, not one artifact with a
+detail.
+
+The exploitable fact is that agents here were **honest and imprecise, never dishonest**. Every
+measured failure of this step ended with a handback that accurately described a pass and an
+artifact that recorded nothing. So the fix is to put the honesty where the gate reads, rather
+than to ask for more of it.
+
+Note what did NOT work: 1.5.1's table already annotated the row `(built-in, via the Skill
+tool)`. The signal was present and was read past, so the repair is a stated negative in the
+cell — **not** `mattpocock-skills:` — plus a rule that a failed invocation is a finding to
+report rather than a step to route around. More qualifying prose in the same place that was
+skimmed is not a fix.
+
+Bound: `harness/.agents/roles/builder.md`, `harness/.agents/roles/thomas.md`,
+`harness/.agents/roles/rin.md`, `harness/.agents/skills/dispatch-ticket/SKILL.md`,
+`harness/scripts/check-reachability.sh`.
+
+### AST-056 — A blocking edge expresses order, not exclusion · promoted 2026-08-12
+
+The frontier asks which tickets have no open blocker and no assignee. It never asks what each
+ticket will WRITE, and nothing else did either. Two tickets went out together, correct by every
+rule the package stated. One existed to correct `WIRE-CONTRACT.md`; the other was a Go ticket
+whose brief never mentioned that document — and whose Builder edited the same three rows of
+it, because the repo's docs-sync rule requires the touched document to move in the same slice.
+It was obeying a correct rule. The first merged, the second was based on the commit before that
+merge, and the same three corrections were re-derived blind: two conflict blocks, and a naive
+merge in the wrong direction would have reverted reviewed work with no signal.
+
+One worktree per Builder solves the checkout collision and nothing else. It relocates the
+collision to the merge, where it is found late and by hand. **Two tickets can be genuinely
+unordered and still unsafe to run at once, and a tracker with only blocking edges has no way
+to say so.** Any repo with a docs-sync rule guarantees this class exists, because shared
+documents are exactly what several tickets in one slice touch.
+
+Measured twice in one day. The second time — on `routes.go` and its test, an hour later — was
+dispatched by the operator who had just diagnosed the first occurrence and written it up. With
+the diagnosis in front of them they did not generalise it: the harness's own *fix the class,
+not the instance* failing in the hands of the role that owns it.
+
+That is why the write-set is a required FIELD of a concurrent dispatch rather than a rule in
+prose, the way browser consent is required of a QA dispatch. A rule a careful operator forgets
+within the hour needs a slot that blocks the launch, not a reminder. The dispatch record grew
+the column it was missing: what this ticket writes.
+Bound: `harness/.agents/roles/thomas.md`, `harness/.agents/skills/dispatch-ticket/SKILL.md`.
