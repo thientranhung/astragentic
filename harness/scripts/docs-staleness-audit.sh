@@ -122,7 +122,7 @@ fi
 # a reason recorded in the same commit.
 role_budget() {
   case "$1" in
-    thomas)  echo 1600 ;;  # widest remit: claim protocol + three dispatch points + the arm
+    thomas)  echo 1700 ;;  # widest remit: claim protocol + three dispatch points + the arm
                            # cadence at three scopes. Raised from 1400 by owner decision
                            # 2026-08-13, porting a project ruling: the arm fires per ticket
                            # before its merge, so Thomas owns three fire points instead of
@@ -132,6 +132,12 @@ role_budget() {
                            # 1557; the extra 50 is headroom rather than another trim, since
                            # the words being shaved to reach a round number still carried
                            # meaning — the failure this comment block already warns about.
+                           # 1600 -> 1700, owner decision 2026-08-13, the THIRD raise in one
+                           # day and worth saying so: Thomas gained two responsibilities that
+                           # day, the arm at three scopes and the ledger write anchored to
+                           # merge. The budget exists to make growth visible and deliberate,
+                           # not to forbid it — but a fourth raise without a role gaining a
+                           # phase is the signal that something belongs in a skill instead.
     builder) echo 1400 ;;  # widest DOING surface: build, increment review, simplify,
                            # visual verification, the two correctness rules, handback
     *)       echo 1200 ;;
@@ -198,6 +204,37 @@ if [[ -f "$RM" && -f "$LEDGER" ]]; then
   CLAIM="$( { grep -m1 -o '[0-9]\{1,\} measured failure modes' "$RM" || true; } | awk '{print $1}' )"
   if [[ -n "$CLAIM" && "$CLAIM" != "$REAL" ]]; then
     echo "  README claims $CLAIM failure modes, the ledger holds $REAL"
+    A5=1; FOUND=1
+  fi
+fi
+
+# The ledger's claim ABOUT ITSELF went unread until 2026-08-13: this axis compared README to
+# the ledger and stopped there, so the header sat at "50 entries (AST-001 … AST-050)" while
+# the file held 66 — sixteen entries of drift, in the one file every rule here cites as
+# evidence. Read the header the same way README's line is read, and read the RANGE too: a
+# count can match while the highest id has moved past it.
+if [[ -f "$LEDGER" ]]; then
+  REAL="$( { grep -c '^### AST-' "$LEDGER" || true; } | tr -d ' ' )"
+  # Read the Status LINE first, then parse inside it. Scanning the whole file for the range
+  # matched the first `(AST-0NN)` citation in some entry's prose instead — a check reading
+  # the wrong line reports a number it never meant to compare, which is this axis's own
+  # failure class landing on the axis itself, an hour after it was written.
+  HEAD_LINE="$( { grep -m1 '^Status:' "$LEDGER" || true; } )"
+  HEAD_CLAIM="$( echo "$HEAD_LINE" | grep -oE '[0-9]+ entries' | awk '{print $1}' )"
+  # The range is the parenthesised group, and only that: the Status line also carries a
+  # "AST-001…034 carried into 1.0.0" note, so reading the last id ON THE LINE picked that up
+  # instead. Second wrong-substring bug in this one check — the lesson is that a check parsing
+  # prose needs its boundary stated, not narrowed until the current file happens to pass.
+  HEAD_LAST="$( echo "$HEAD_LINE" | sed -n 's/.*(\([^)]*\)).*/\1/p' \
+                | grep -oE 'AST-[0-9]+' | tail -1 | grep -oE '[0-9]+' )"
+  REAL_LAST="$( { grep -oE '^### AST-[0-9]+' "$LEDGER" || true; } | grep -oE '[0-9]+' \
+                | sort -n | tail -1 )"
+  if [[ -n "$HEAD_CLAIM" && "$HEAD_CLAIM" != "$REAL" ]]; then
+    echo "  the ledger's own header claims $HEAD_CLAIM entries, the file holds $REAL"
+    A5=1; FOUND=1
+  fi
+  if [[ -n "$HEAD_LAST" && -n "$REAL_LAST" && "$HEAD_LAST" != "$REAL_LAST" ]]; then
+    echo "  the ledger's header range ends at AST-$HEAD_LAST, the last entry is AST-$REAL_LAST"
     A5=1; FOUND=1
   fi
 fi

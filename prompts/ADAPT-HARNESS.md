@@ -116,6 +116,19 @@ project's entry doc that a citation resolves in the ledger belonging to the mate
 carries it, harness citations in the harness ledger and project citations in the project's.
 Report the collision and the rule in the receipt (AST-039).
 
+**The project keeps its own ledger, and this is where it gets established.** Two ledgers is
+the design, not drift: `.agents/memory/recurring-failure-modes.md` is PAYLOAD and a release
+overwrites it whole, so a project entry written there is deleted by the next upgrade, in
+silence. Confirm the project has a ledger of its own outside the payload — a mature repo
+usually does — and if it does not, create one and name its path in the project's entry doc
+beside the tracker and standards pointers.
+
+**Then say which one is written to, in a file the agent loads at session start**, not in a
+document it opens on demand. Read resolves in either; **writing is always the project's.** An
+instruction that lives only in a load-on-demand doc is skipped, and only the owner notices
+(AST-069) — a measured project ran a whole harness generation with the rule in place, in the
+wrong file, and added zero entries.
+
 Produce a concise map — add, update, merge, preserve, remove, and the questions that truly
 block safe integration — before you edit.
 

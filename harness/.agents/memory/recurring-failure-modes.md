@@ -1,6 +1,12 @@
 # Recurring Failure Modes
 
-Status: current · 50 entries (AST-001 … AST-050) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 68 entries (AST-001 … AST-069, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+
+Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
+file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
+because the axis compared README's count to the ledger and never read the ledger's claim about
+itself. A file that is the evidence base for every rule here is the last place a self-reported
+number should go unchecked.
 
 Practical AI-agent failure modes measured while operating this harness. They are the
 evidence base: a rule kept in this package can point at an entry here, and a rule that
@@ -1136,3 +1142,55 @@ The recipe now resolves the head, reviews from a detached checkout at that SHA, 
 `git rev-list --count <base>..<head>` before trusting a verdict. **Zero commits is a STOP, not
 a pass.** Found by `arm: slice` on its first run, in the release that introduced the cadence.
 Bound: `harness/.claude/skills/codex-arm/SKILL.md`.
+
+### AST-068 — A lesson closed at instance level reopens at class level · promoted 2026-08-13
+
+A project recorded that **a git worktree carries only TRACKED files**, so an agent dispatched
+into a fresh one arrives without anything untracked that it must load. The entry named the
+mechanism correctly and in the general form: *"anything an agent must LOAD at dispatch."* The
+repair tracked `.claude/` and `.agents/`, the two directories the symptom had named. It carried
+a prediction — *"a fresh worktree will now resolve every skill"* — and that prediction came
+true, verified at exit 0.
+
+Nine days later the same mechanism returned wearing different clothes: `node_modules` is not
+tracked either, so a review gate ran **with no test runner present and returned a green
+verdict**. The agent wrote it up as a new discovery. It was not new. It was the same entry,
+one instance over.
+
+The failure is in how the repair was scoped, not in the finding or in the fix. **Nobody asked
+the class question** — *what else must an agent load at dispatch that git does not carry?* — so
+the entry closed on the two directories that had hurt, and everything else in that class stayed
+open while reading as solved. A prediction that comes true is the most convincing way to close
+a wound too narrowly: the fix worked, the check passed, and the class was never swept.
+
+The cheap discipline: when a repair lands, re-read the entry's own words for the widest noun it
+used, and ask what else that noun covers. Here the word was *anything*, and the repair covered
+two directories.
+Bound: `harness/.agents/roles/thomas.md`, `harness/.agents/skills/dispatch-ticket/SKILL.md`.
+
+### AST-069 — An instruction with no moment attached measures zero · promoted 2026-08-13
+
+A project kept a ledger and a written rule to *"capture every real friction"*. Across a whole
+harness generation it added **zero entries** — while its own ledger, in the same window,
+contained the entries that described the bugs it was hitting. Reading ran: 74 citations across
+30 live docs. Only writing stopped.
+
+Nobody forgot. The rule had no MOMENT. It sat in §7 of a load-on-demand document, so it was
+read when someone opened that document, which is never the instant a friction happens. And the
+project's own ledger already held the diagnosis: *"a mandatory rule that lives only in
+load-on-demand docs is skipped, and only the owner notices."* The ledger contained the reason
+it was not being written to.
+
+Two properties make an instruction actually run, and both are needed:
+
+- **A moment** — an event that already happens and already must report. Merge is the natural
+  one here: it is mandatory, it is frequent, and the friction is still warm.
+- **A trace** — something grep-able whose absence is visible. A `Ledger:` line in the merge
+  commit, where `none` is a valid answer and silence is not (AST-057's shape).
+
+The same shape had already been measured on a skill whose trigger was *"when the board looks
+wrong to the owner"* — a feeling, not a step; it ran zero times across six merges while every
+reachability check certified it. **Naming a thing in a document makes nothing run.** That
+entry was withdrawn with the skill it described, which is why AST-067 is a gap; the mechanism
+outlived it and is recorded here on its own evidence.
+Bound: `harness/.agents/roles/thomas.md`, `prompts/ADAPT-HARNESS.md`.

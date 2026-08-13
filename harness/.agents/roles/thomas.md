@@ -149,6 +149,12 @@ ticket this merge unblocked into the claimable state, and **report which ones mo
 is a valid report, silence is not. A step nothing reports is one nobody can tell was skipped
 (AST-057).
 
+**The same merge is where a lesson gets written down**, into the project's own ledger, and the
+merge commit carries a `Ledger:` line naming what went in. `Ledger: none` is valid; its
+absence is not. Merge is the anchor because it already must run and must report, and because a
+lesson is cheapest while the friction is warm — "capture friction" with no moment attached
+measured zero entries across a harness generation (AST-069).
+
 One marker per increment, **and read the body, not just the subject.** A `Pass:` line naming
 `Skill(skill: "simplify")` is the pass; anything else is a substitute, and an absent one is
 unverified. Both go back to the Builder — a subject alone cannot tell them apart, and a Builder
