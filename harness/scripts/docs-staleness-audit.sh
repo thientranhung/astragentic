@@ -229,13 +229,26 @@ if [[ -f "$LEDGER" ]]; then
                 | grep -oE 'AST-[0-9]+' | tail -1 | grep -oE '[0-9]+' )"
   REAL_LAST="$( { grep -oE '^### AST-[0-9]+' "$LEDGER" || true; } | grep -oE '[0-9]+' \
                 | sort -n | tail -1 )"
-  if [[ -n "$HEAD_CLAIM" && "$HEAD_CLAIM" != "$REAL" ]]; then
-    echo "  the ledger's own header claims $HEAD_CLAIM entries, the file holds $REAL"
+  # ABSENCE IS A FINDING, not a pass. Both comparisons were guarded on the parsed values
+  # being non-empty, so deleting the Status line — or rewording it past the parser — made
+  # this axis print clean having read no claim at all. That is the vacuous pass this axis
+  # exists to catch, rebuilt inside the check written to catch it, within the hour.
+  if [[ -z "$HEAD_CLAIM" || -z "$HEAD_LAST" ]]; then
+    echo "  the ledger has no parsable 'Status: … N entries (AST-001 … AST-NNN)' header —"
+    echo "  this axis cannot verify what it cannot read, so it fails rather than passing"
     A5=1; FOUND=1
-  fi
-  if [[ -n "$HEAD_LAST" && -n "$REAL_LAST" && "$HEAD_LAST" != "$REAL_LAST" ]]; then
-    echo "  the ledger's header range ends at AST-$HEAD_LAST, the last entry is AST-$REAL_LAST"
-    A5=1; FOUND=1
+  else
+    if [[ "$HEAD_CLAIM" != "$REAL" ]]; then
+      echo "  the ledger's own header claims $HEAD_CLAIM entries, the file holds $REAL"
+      A5=1; FOUND=1
+    fi
+    if [[ -z "$REAL_LAST" ]]; then
+      echo "  the ledger holds no '### AST-NNN' entry to compare its header range against"
+      A5=1; FOUND=1
+    elif [[ "$HEAD_LAST" != "$REAL_LAST" ]]; then
+      echo "  the ledger's header range ends at AST-$HEAD_LAST, the last entry is AST-$REAL_LAST"
+      A5=1; FOUND=1
+    fi
   fi
 fi
 [[ $A5 -eq 1 ]] || echo "(clean)"

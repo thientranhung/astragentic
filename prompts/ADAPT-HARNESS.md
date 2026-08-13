@@ -208,20 +208,32 @@ host it. A project that has re-added the row has regressed; report it.
 
 ## 5. Brownfield entry
 
-On a repo with existing code, three bootstrap skills run once and each produces an artifact
-the **owner reviews before it counts**. Thomas owns all three as phases; run them in this
-order, because each feeds the next:
+On a repo with existing code, **two bootstrap skills** run once and each produces an artifact
+the **owner reviews before it counts**. Thomas owns both as phases; run them in this order,
+because the first feeds the second:
 
 1. **`bootstrap-glossary`** → `CONTEXT.md`, seeded from the terms the code already uses, every
    term citing the file it was read from and marked `UNREVIEWED` until the owner confirms it.
-3. **`batch-triage`** — only where the repo arrives with an existing backlog. Its closures
+   The plugin reads this file from thirteen places, which is why it is the one bootstrap
+   artifact that survived the 1.6.1 cull: everything else this package wrote had a producer
+   and no reader.
+2. **`batch-triage`** — only where the repo arrives with an existing backlog. Its closures
    wait for the owner; its live tickets carry labels and blocking edges, which is what makes
    Thomas's frontier query meaningful on day one.
 
-Two further skills are **model-invoked** and need no wiring: `legacy-testing` when code has
-no seam for `tdd` to attach to, `untangle` when a refactor is too tangled for
-and `improve-codebase-architecture` when a refactor is too tangled.
-Confirm they are staged; reaching them is the agents' business, not this run's.
+**Coding standards are the project's own, and they belong in a skill the project invokes** —
+its implement playbook, or a sibling per language — not in a document. This package used to
+write `docs/agents/standards.md` and shipped `extract-standards` to produce it. Both are gone
+(AST-069's class): the plugin's Standards axis is told to find *"anything in the repo that
+documents how code should be written"*, with no path and no directory, so a file written to
+this package's own convention had no instruction pointing at it. **Where the repo has
+standards, make sure something the reviewer loads points at them** — that pointer is the
+mechanism, not the filename.
+
+Two further skills are **model-invoked** and need no wiring: `legacy-testing` when code has no
+seam for `tdd` to attach to, and `untangle` when a refactor is too tangled for
+`improve-codebase-architecture` to have anything to work with. Confirm they are staged;
+reaching them is the agents' business, not this run's.
 
 **Name the repo's rendering path, or record that it has none.** The Builder's contract
 requires browser evidence for work that changes a user-visible surface, and Rin's gate checks
@@ -230,7 +242,7 @@ storybook. Find what this repo already uses and record it in the receipt so a Bu
 not have to rediscover it per ticket. A repo with a UI and no way to render it is a finding
 worth stating plainly: every visual defect there will reach the owner's screen first.
 
-Record the coverage verdict, the glossary counts, the triage counts and the rendering path
+Record the glossary counts, the triage counts, the standards pointer and the rendering path
 under a **`## Brownfield bootstrap`** heading in the receipt.
 
 ## 6. Validate by artifact

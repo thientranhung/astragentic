@@ -1,3 +1,80 @@
+# Astraler Harness 1.6.1
+
+Five skills removed. Every one of them wrote a document, and nothing in this package or in the
+plugin was ever told to read what they wrote.
+
+## Removed
+
+`extract-standards` · `module-boundaries` · `code-scout` (with `scripts/gen-code-map.sh` and
+its agent adapter) · `tracker-frontier-audit` · `codex-dispatch-headless`.
+
+Measured per artifact, on both sides — this package's five contracts and the plugin's 34
+skills:
+
+| skill | writes | contract reads | plugin reads |
+|---|---|---|---|
+| `extract-standards` | `docs/agents/standards.md` | 0 | 0 |
+| `module-boundaries` | `docs/agents/module-boundaries.md` | 0 | 0 |
+| `code-scout` | `CODE-MAP.md` — never named in any file | 0 | 0 |
+| `bootstrap-glossary` | `CONTEXT.md` | 0 | **13** — kept |
+
+`extract-standards` took reading rather than grepping. Its consumer was meant to be the
+plugin's Standards axis, and that step is one sentence: *"anything in the repo that documents
+how code should be written, such as CODING_STANDARDS.md or CONTRIBUTING.md."* No path, no
+directory — against the neighbouring step for spec sources, which is a numbered four-way
+lookup naming `docs/agents/issue-tracker.md` outright. **This package wrote a file to an
+address its reader has no instruction to visit, under a name that reader never mentions.**
+
+`tracker-frontier-audit` went six merges without one call, its trigger being *"when the board
+looks wrong to the owner"* — a feeling, not a step. `codex-dispatch-headless` offered a Builder
+with no observable pane and went three weeks across two active projects without a single
+request; headless is now unsupported outright, because a topology the owner cannot watch
+contradicts what every gate here argues (AST-070).
+
+**Every orphan was ours.** Nothing the plugin ships was orphaned, because its skills read the
+files its skills write. We diagnosed a real gap and answered it by writing documents beside
+its own, in our convention, without reading where the consumer was told to look.
+
+## Changed
+
+**The plugin's `code-review` is named in full.** Three things answered to the bare name: the
+plugin skill, a Claude Code built-in, and `mode=code-review`, a dispatch argument. `builder.md`
+already stated the rule and two references out of nineteen followed it. Fourteen now carry
+`mattpocock-skills:`; the three that stay bare are the sentence naming the ambiguity and the
+two literal mode values.
+
+**The ledger is anchored to merge.** A merge carries a `Ledger:` line naming what went in, with
+`none` valid and silence not. Before this the package had no rule anywhere telling anyone to
+write to a ledger, and never established that a project keeps its own — which `ADAPT-HARNESS`
+now does, including that the harness ledger is payload and a project entry written there is
+deleted by the next upgrade in silence (AST-069).
+
+**Brownfield entry is two bootstrap skills, not three**, and coding standards are stated to
+belong in a skill the project invokes rather than in a document. The pointer is the mechanism,
+not the filename.
+
+## Fixed
+
+**AXIS 5 read every count except the ledger's own.** The header said "50 entries (AST-001 …
+AST-050)" while the file held 66 — sixteen entries adrift in the one file every rule cites as
+evidence. It now checks the count and the range, **and fails when the header cannot be parsed
+at all**: the first version guarded both comparisons on non-empty values, so deleting the
+Status line made the axis print clean having read nothing. That is the vacuous pass this axis
+exists to catch, rebuilt inside the check written to catch it, and caught by the arm within
+the hour.
+
+## Upgrading
+
+Payload only; scaffold is untouched as always. Projects on 1.6.0 must take 1.6.1 to receive
+this batch — `install.sh` refuses changed content at an unchanged VERSION, by design, because
+a staged release directory is the manifest of what shipped.
+
+Five skills and their artifacts disappear from your tree. **If your project wrote real
+standards into `docs/agents/standards.md`, that content is worth keeping** — move it into the
+implement skill your project actually invokes, keep its evidence counts, and point at it from
+a surface loaded at session start. One measured project had 25 verified rules there; the
+document was good and only its address was wrong.
+
 # Astraler Harness 1.6.0
 
 A ruling made in a project on 2026-08-12, marked twice in its own commits as *"this must flow

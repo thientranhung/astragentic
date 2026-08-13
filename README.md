@@ -1,4 +1,4 @@
-# Astraler Harness 1.6.0
+# Astraler Harness 1.6.1
 
 An operating framework that lets **several agents build software together on an existing
 codebase**.
