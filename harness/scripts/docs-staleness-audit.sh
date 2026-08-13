@@ -1,103 +1,33 @@
 #!/usr/bin/env bash
-# docs-staleness-audit.sh — one-command staleness sweep of every tracked markdown.
-# The reading layer's measure step: it says which docs are old enough to distrust, which
-# still name something retired, and which links have died. Run from the repo root.
+# docs-staleness-audit.sh — two measurements of the surfaces that bill every session.
 #
-#   scripts/docs-staleness-audit.sh [age_days]   # default 21
+#   scripts/docs-staleness-audit.sh
 #
-# Three axes:
-#   1. AGE       — harness-surface *.md not committed in >age_days (old = suspect).
-#                  Scope = root entry docs + docs/ + .claude/ + shared .agents role/skill
-#                  surfaces (owner 2026-07-17);
-#                  history classes excluded (archive, *.vi.md, references, stakeholder,
-#                  distilled).
-#   2. FOSSILS   — live docs mentioning RETIRED names. Maintain the marker list below:
-#                  every time something is retired/renamed, ADD its old name here in
-#                  the same commit (that is what makes this audit total).
-#   3. DEAD LINKS— md links in the routers (INDEX/AGENTS/SYSTEM) pointing at missing files.
+#   1. BUDGETS  — always-on files against their ceilings. The prior package reached 100k
+#                 words by accretion nobody measured; this is what stops that returning.
+#   2. CLAIMS   — numbers a document states about itself, re-derived from the thing counted.
 #
-# Output is a report; exit code 1 if any axis found something. Judgment stays human:
-# an old file is a candidate, not a verdict — verify before editing (truth-model §5).
+# Output is a report; exit 1 if either found something.
+#
+# THREE AXES WERE REMOVED IN 1.6.3, on the same test this package applied to five skills the
+# same day — what has it caught, measured, not imagined:
+#   AGE (>21 days = suspect) caught nothing here, and "old" is a candidate, not a defect.
+#   FOSSILS (retired names in live docs) cost a hand-maintained marker list on every rename
+#     and an exemption per false positive that outlives its reason; in three weeks its one
+#     real catch was a marker of its own that had never matched anything.
+#   DEAD LINKS scanned three router files, of which this package has ZERO and one project
+#     has one. It printed "(skip)" three times and then "(clean)" — a green line over
+#     nothing looked at, the exact class this file exists to catch (AST-051).
+# Nothing replaces them: the plugin measures method, not document drift. That is the trade,
+# stated rather than discovered later.
 set -uo pipefail
 
-AGE_DAYS="${1:-21}"
-# The payload sits under harness/ in this package and at the repo root once adapted. Detect
-# it. Until 1.5.0 this script assumed the root, so in package layout AXIS 4 tested five
-# paths that did not exist, ran its loop zero times and printed "all clean" — a budget check
-# that could not fail, reporting success for sixteen releases (AST-051's class).
 ROOT="."
 PAYLOAD="harness"
 [[ -d "$PAYLOAD/.agents/roles" ]] || PAYLOAD="."
-# Scope = ONLY the surfaces that run the harness (owner 2026-07-17): the root entry docs,
-# docs/, .claude/, and shared .agents roles/skills. Product code folders
-# (apps/, packages/), prototypes, .scratch are
-# out of scope. Within scope, history classes are excluded.
-# AXES 1-3 carried the blindness AXIS 4 was fixed for in 1.5.0: these globs are relative to
-# the repo root, so in package layout — payload under harness/ — they matched ONE file, and
-# three axes reported clean over docs they never opened. The payload surfaces now carry
-# $PAYLOAD.
-# `SPEC-<version>.md` stays OUT of scope, and that is a decision rather than an oversight: a
-# shipped version's build spec names files in the repo it copied FROM, so its retired names
-# are accurate history. Rewriting them would falsify the record.
-scoped_md() {
-  local P="$PAYLOAD"
-  [[ "$P" == "." ]] && P="" || P="$P/"
-  git ls-files 'CLAUDE.md' 'AGENTS.md' 'CONTEXT.md' 'README.md' \
-               'docs/**/*.md' 'docs/*.md' \
-               "${P}.claude/**/*.md" "${P}.claude/*.md" "${P}.agents/roles/*.md" \
-               "${P}.agents/skills/*/SKILL.md" \
-  | grep -v -e 'archive' -e '\.vi\.md$' -e '^docs/references/' -e '^docs/stakeholder/' \
-            -e '^docs/governance/distilled/' -e 'worktrees'
-}
 FOUND=0
 
-echo "=== AXIS 1: tracked *.md older than ${AGE_DAYS} days (candidates, not verdicts) ==="
-CUTOFF=$(date -v-"${AGE_DAYS}"d +%Y-%m-%d 2>/dev/null || date -d "-${AGE_DAYS} days" +%Y-%m-%d)
-# Collect-then-test: piping the while-loop into sort ran it in a subshell, so FOUND=1
-# died there and stale files printed WITHOUT failing the exit code (bug found by the
-# inception port's end gate, 2026-07-17).
-AGE_HITS=$(while read -r f; do
-  d=$(git log -1 --format=%as -- "$f")
-  [[ "$d" < "$CUTOFF" ]] && echo "$d  $f"
-done < <(scoped_md) | sort)
-if [[ -n "$AGE_HITS" ]]; then echo "$AGE_HITS"; FOUND=1; else echo "(clean)"; fi
-
-echo
-echo "=== AXIS 2: fossils of retired names in LIVE docs ==="
-# Marker list — APPEND the old name whenever something is retired/renamed, and append only a
-# name this repo's history can be shown to have carried. `agents/dan\.md|agents/rin\.md` rode
-# this list from v0.1.0 of the prior package: `agents/dan.md` has no referent in either
-# repo's history, and the ONLY match `agents/rin.md` has ever had is the live
-# `.claude/agents/rin.md` adapter. The real old names — dan-senior, rin-reviewer,
-# dan-implementor, rin-pr-reviewer — are already here on their own. While the scope bug
-# above hid every payload file, a pattern that fires on a live file cost nothing; the moment
-# the audit could see, it was the first thing it reported.
-FOSSILS='worker\.md|subagent_type:? ?"worker"|Worker Herdr|THOMAS\.md|evolution-loop|governance-maturity|4-lens|/agent-skills:|both PR lenses|implementer\.md|--agent dan[^-]|docs/superpowers|memory/README|herdr agent send|codex-dispatch-dan|\.codex/agents/dan-implementor\.toml|dan-implementor|dispatch-dan|rin-pr-reviewer|subagent_type:? ?"rin-reviewer"|live slice tab|plan-challenger'
-# Retired by 1.0.0 (ADR 0001) — the roles Dan and James left the build loop, the review
-# loop became one bounded round, and the method moved to the mattpocock-skills plugin:
-FOSSILS="$FOSSILS"'|dan-senior|james-dev|rin-reviewer|thomas-leader|dispatch-slice|codex-plan-gate|codex-review-with-rin|codex-gate|slice:<|slice tab|simplify\(slice\)|working-method|gate loop|re-gate|findings exhausted'
-# Lines that legitimately mention a retired name (tombstones) are filtered:
-TOMBSTONES='retired|Retire|folded|superseded|relic|history|archive|migration|demolished|Replaces the'
-# Same scope as axis 1 (harness surfaces only), minus the ledger (history may name names).
-if scoped_md | grep -v 'recurring-failure-modes' \
-   | xargs grep -n -E "$FOSSILS" 2>/dev/null \
-   | grep -v -E "$TOMBSTONES"; then FOUND=1; else echo "(clean)"; fi
-
-echo
-echo "=== AXIS 3: dead md links in the routers ==="
-DEAD=0
-for router in docs/INDEX.md docs/SYSTEM.md AGENTS.md; do
-  # A router a project has not created yet is absent, not dead — say so and move on.
-  [[ -f "$router" ]] || { echo "(skip: $router not present)"; continue; }
-  while read -r target; do
-    base_dir=$(dirname "$router")
-    [[ -f "$base_dir/$target" || -f "$target" ]] || { echo "DEAD: $router -> $target"; DEAD=1; }
-  done < <(grep -oE '\]\((\./)?[A-Za-z0-9_./-]+\.md' "$router" | sed 's/](//;s/^\.\///')
-done
-[[ $DEAD -eq 0 ]] && echo "(clean)" || FOUND=1
-
-echo
-echo "=== AXIS 4: always-on word budgets (these surfaces bill every session) ==="
+echo "=== 1. always-on word budgets (these surfaces bill every session) ==="
 # Budgets guard the always-on surfaces against regrowth — the accretion that took the
 # prior package past 100k words. Raise one only with an owner decision in the same commit.
 budget_check() { # <label> <limit> <count>
@@ -176,13 +106,12 @@ else
 fi
 
 echo
-echo "=== AXIS 5: self-reported counts vs the thing counted ==="
+echo "=== 2. self-reported counts vs the thing counted ==="
 # A document that states a number states a fact nothing re-derives. README claimed "35
 # measured failure modes" through sixteen releases while the ledger grew to 51, and named
 # the ledger under .codex/profiles/ after it moved. Neither drifted loudly; both read fine.
 # Each axis reports ITS OWN result. Reading the shared FOUND here made this axis silent
-# whenever an earlier one had fired — which in a real project is every run, since AXIS 1
-# always has aged docs. A check whose verdict cannot be read is AST-052 again, and this one
+# whenever an earlier one had fired. A check whose verdict cannot be read is AST-052 again, and this one
 # reproduced it inside the release that fixed it.
 A5=0
 RM="$ROOT/README.md"

@@ -1,3 +1,50 @@
+# Astraler Harness 1.6.3
+
+Three of the staleness audit's five axes removed, on the same test that removed five skills
+in 1.6.1: what has it caught, measured rather than imagined.
+
+## Removed
+
+**AGE** — flagged any tracked doc not committed in 21 days. It has caught nothing here, and
+"old" is a candidate rather than a defect. Its own header said so: *"an old file is a
+candidate, not a verdict."* A check whose output always needs a human to re-judge it is a
+prompt, not a gate.
+
+**FOSSILS** — grep for retired names in live docs. The cost is a hand-maintained marker list
+that must be appended on every rename, plus an exemption per false positive, and an exemption
+outlives the reason for it: one project de-scoped a marker because a doc of that name was
+live, deleted that doc a day later, and the exemption survived. In three weeks its one real
+catch was a marker of its own that had never matched anything in either repo's history.
+
+**DEAD LINKS** — scanned `docs/INDEX.md`, `docs/SYSTEM.md`, `AGENTS.md`. This package has
+**zero** of the three and one measured project has one. It printed `(skip)` three times and
+then `(clean)`, and the RESULT line rolled that up to `all clean`. **A green line over
+nothing it looked at** — the class this file exists to catch (AST-051), sitting inside the
+file, through four repairs on the same day.
+
+## Kept, because both fire
+
+**Word budgets.** The one axis that fired constantly: it caught `orchestrator.md` at 1,477
+words against 800 in a project, forced three deliberate budget decisions in a day rather than
+silent growth, and stopped `thomas.md` four times. The prior package reached 100k words by
+accretion nobody measured; this is what stops that returning.
+
+**Self-reported counts.** Caught the ledger's own header claiming 50 entries over a file
+holding 66, and before that a README claiming 35 failure modes over a ledger of 51.
+
+## The trade, stated
+
+`mattpocock-skills` has no equivalent. Its 34 skills measure the METHOD — triage, spec,
+tickets, implement, review — not document drift. Nothing replaces the three axes; they were
+carrying less than they cost. Said here rather than discovered in six months.
+
+Script: 266 lines to 196.
+
+## Upgrading
+
+Payload only. A project that relied on the fossil list keeps its own copy until it takes this
+release; a project that wants that check back has it in git history.
+
 # Astraler Harness 1.6.2
 
 One check, for the question none of the other seven asked.

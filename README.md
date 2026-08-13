@@ -1,4 +1,4 @@
-# Astraler Harness 1.6.2
+# Astraler Harness 1.6.3
 
 An operating framework that lets **several agents build software together on an existing
 codebase**.
@@ -140,7 +140,7 @@ harness/                          the payload staged into a target repo
     recurring-failure-modes.md    70 measured failure modes; append-only, the evidence base
   scripts/
     herdr-watch-terminal.sh       turn watcher with a real start guard
-    docs-staleness-audit.sh       age, fossils, dead links, always-on word budgets
+    docs-staleness-audit.sh       always-on word budgets, and numbers docs state about themselves
     check-reachability.sh         eight checks: does the method the docs describe
                                   exist, is it reachable, and is it addressed correctly?
 docs/adr/0001-…                   why the method was rebuilt around the plugin
