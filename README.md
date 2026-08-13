@@ -125,7 +125,6 @@ harness/                          the payload staged into a target repo
     skills/
       dispatch-ticket/            one ticket → one Builder → one worktree → one pane
       codex-claude-arm/           cross-vendor arm, Codex root → Claude
-      codex-dispatch-headless/    explicit headless exception
   .claude/
     agents/                       Claude adapters so --agent <role> resolves
     skills/
@@ -138,7 +137,7 @@ harness/                          the payload staged into a target repo
       untangle/                     ┘
   .codex/profiles/                one per role, mirroring the orchestrator rows
   .agents/memory/
-    recurring-failure-modes.md    68 measured failure modes; append-only, the evidence base
+    recurring-failure-modes.md    69 measured failure modes; append-only, the evidence base
   scripts/
     herdr-watch-terminal.sh       turn watcher with a real start guard
     docs-staleness-audit.sh       age, fossils, dead links, always-on word budgets

@@ -93,8 +93,12 @@ means the runtime default. Codex effort lives in the machine profile TOML as
 it is unreachable there (fact 2 below), so a non-blank opencode Effort cell is a
 misconfigured row: stop and ask the owner.
 
-`visibility=headless` is legal only when explicitly requested with a resolved runtime of
-codex; route to `codex-dispatch-headless`. Claude headless implementation is unsupported.
+**Headless implementation is not supported, on any runtime.** Every Builder runs in a visible
+Herdr pane, because the owner seeing work in flight is what this package sells — a topology
+nobody can observe is trusted on the dispatcher's word, which is the thing panes exist to
+remove. A `visibility=headless` request is a STOP: say it is unsupported and dispatch
+normally, or take it to the owner. The bounded exception this package used to ship went three
+weeks across two active projects without one request (AST-070).
 
 For a codex-resolved role, verify `${CODEX_HOME:-$HOME/.codex}/builder.config.toml` exists,
 matches the tracked template `.codex/profiles/builder.config.toml`, and agrees with the

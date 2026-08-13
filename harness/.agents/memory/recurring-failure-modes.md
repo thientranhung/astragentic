@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 68 entries (AST-001 … AST-069, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 69 entries (AST-001 … AST-070, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1194,3 +1194,30 @@ reachability check certified it. **Naming a thing in a document makes nothing ru
 entry was withdrawn with the skill it described, which is why AST-067 is a gap; the mechanism
 outlived it and is recorded here on its own evidence.
 Bound: `harness/.agents/roles/thomas.md`, `prompts/ADAPT-HARNESS.md`.
+
+### AST-070 — A bounded exception nobody asked for is a contradiction carried on speculation · promoted 2026-08-13
+
+`codex-dispatch-headless` was the written, narrowed form of one exception: run a Builder on
+Codex with no Herdr pane. It was built well — three preconditions, any one absent routing back
+to the visible default, and the invariant kept explicit that a headless author cannot approve
+its own work. It made headless HARDER to reach, not easier.
+
+It ran zero times. Two active projects carried it for three weeks and one for ten days, and
+`visibility=headless` never appears outside the two files that define it. The four commits
+that mention "headless" are about browser automation, and one of them bans it.
+
+Two arguments for keeping it fell to measurement rather than to opinion. **It is not too young
+to judge** — three weeks with two projects dispatching daily is opportunity. And **it is not
+where the dangerous flag lives**: `--yolo` is already on the mainline codex path in
+`dispatch-ticket` for builder, shaper and qa, so removing this changed no permission posture.
+What remained was only the topology.
+
+The decision turned on what the package sells. Every gate and every dispatch here argues the
+same thing — **work the owner cannot observe is trusted on the dispatcher's word**, and the
+pane is the answer to that. Shipping an invisible topology *in case* someone wants it means
+carrying the contradiction permanently to serve a request that has never arrived. Headless is
+now unsupported outright, and the routing line says so instead of pointing at a skill.
+
+**Adding it back is cheap; guessing its shape in advance was not.** A real request would have
+shaped it against a real constraint. This one was shaped against a hypothesis.
+Bound: `harness/.agents/skills/dispatch-ticket/SKILL.md`.
