@@ -1137,3 +1137,32 @@ The recipe now resolves the head, reviews from a detached checkout at that SHA, 
 `git rev-list --count <base>..<head>` before trusting a verdict. **Zero commits is a STOP, not
 a pass.** Found by `arm: slice` on its first run, in the release that introduced the cadence.
 Bound: `harness/.claude/skills/codex-arm/SKILL.md`.
+
+### AST-067 — A skill whose trigger is a feeling is a skill that never runs · promoted 2026-08-13
+
+`tracker-frontier-audit` shipped with three triggers: *"when a board looks wrong to the owner,
+when onboarding a repo, or after a run of merges."* A project then ran **six merges without
+calling it once**, and created four tickets by hand in the same window — the exact drift the
+skill exists to catch. Nobody skipped it. "Looks wrong" requires the owner to already suspect
+what the audit is for finding, and "a run of merges" names no number and no owner.
+
+Its first run, when the owner finally asked directly, found a ticket that had been reported
+**to stakeholders** as blocked on staging and which had never carried a blocking edge at all —
+the relationship was `relatedTo`. Three more sat unblocked in Backlog. So the skill was never
+weak; only its trigger was.
+
+Two mechanisms replace it, and neither is a reminder. It is now **how the mandatory
+frontier write-back after a merge is performed**, so it inherits a step that already must run
+and must report `none` rather than stay silent (AST-057). And the owner gets `/audit-tracker`,
+because the owner is the one who looks at the board, and a human with a command in the menu
+does not need an agent to remember on their behalf.
+
+The check that should have caught this said `[OK] 3 every HARNESS skill is reached` while the
+skill sat at zero calls. It searches for a STRING IN A DOCUMENT, and "reached" invited the
+reading that something had reached for it. Its verdict now says NAMED, and says out loud that
+naming is not running. **Same shape as AST-051, 052 and 060: a green line speaking for more
+than the check looked at** — the fourth instance, and the first where the overclaim was in the
+verb rather than the scope.
+Bound: `harness/.claude/skills/tracker-frontier-audit/SKILL.md`,
+`harness/.claude/commands/audit-tracker.md`, `harness/scripts/check-reachability.sh`,
+`harness/.agents/roles/thomas.md`.

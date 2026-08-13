@@ -138,19 +138,17 @@ paragraph there and a slice once it reaches code, and it vanishes when the Shape
 into tickets unbroken — which is why that contract stops at Spec. Releasing it to cut tickets
 is your call, after you classify the findings.
 
-Run `tracker-frontier-audit` with the slice arm: it catches merges that skipped the
-write-back.
-
 **Merge** is yours alone, on a clean final SHA, verified **by artifact rather than handback**:
 
 ```bash
 git log <base>..<head> --grep '^simplify(increment):' --format='%h %s%n%b'
 ```
 
-**Merge is not complete until the frontier write-back is done.** Re-run the query, move every
-ticket this merge unblocked into the claimable state, and **report which ones moved** — `none`
-is a valid report, silence is not. A step nothing reports is one nobody can tell was skipped
-(AST-057).
+**Merge is not complete until the frontier write-back is done, and `tracker-frontier-audit`
+is HOW you do it** — not a skill waiting to be remembered, which measured zero runs across six
+merges (AST-067). Run it, move every ticket this merge unblocked into the claimable state, and
+**report which ones moved** — `none` is a valid report, silence is not (AST-057). The owner
+has `/audit-tracker` on demand.
 
 One marker per increment, **and read the body, not just the subject.** A `Pass:` line naming
 `Skill(skill: "simplify")` is the pass; anything else is a substitute, and an absent one is

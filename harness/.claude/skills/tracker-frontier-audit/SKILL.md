@@ -1,6 +1,6 @@
 ---
 name: tracker-frontier-audit
-description: Audit a tracker for the ways it answers READY with confidence about things it cannot represent — an unmaterialised frontier, preconditions that are not issues, and parent blocking a tracker does not inherit. Reports and proposes exact writes; never mass-edits. Use when a board "looks wrong" to the owner, when onboarding a repo onto the harness, or after a run of merges.
+description: Audit a tracker for the ways it answers READY with confidence about things it cannot represent — an unmaterialised frontier, preconditions that are not issues, and parent blocking a tracker does not inherit. Reports and proposes exact writes; never mass-edits. This IS how the frontier write-back after a merge is performed, so it runs on every merge rather than when someone remembers it; the owner can also run it directly with /audit-tracker, and an adaptation runs it once when onboarding a repo.
 ---
 
 # Audit a tracker's frontier

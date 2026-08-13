@@ -10,9 +10,15 @@ Seven checks, in both directions:
   1 METHOD -> CONTRACT   every phase the README's role table names is the owning row of
                          exactly one contract, owned by the role the README names.
   2 CONTRACT -> UNIQUE   every phase any contract declares is declared by exactly one.
-  3 SKILL -> REACHED     every shipped skill is named by a contract, another skill, or
-                         the adaptation prompt. A skill nothing reaches is dead weight or
-                         a phase that will never run.
+  3 SKILL -> NAMED       every shipped skill is named by a contract, another skill, or the
+                         adaptation prompt. Read the verb literally: this finds a STRING in
+                         a document. It cannot tell a skill that runs on every merge from
+                         one nobody has ever invoked, and it went green over both. A project
+                         measured `tracker-frontier-audit` at zero calls across six merges
+                         while this check certified it — its trigger was "when the board
+                         looks wrong", which is a feeling, not a step. The fix is never a
+                         better checker here: it is giving the skill a step that fails
+                         without it, or an owner-facing command (AST-067).
   4 REFERENCE -> EXISTS  every payload path and skill name referenced by a contract or a
                          shipped skill resolves. HARD failure: a contract naming a file
                          that does not exist is how the prior package failed.
@@ -471,7 +477,8 @@ print()
 if not findings:
     print("  [OK] 1 every phase the method names is owned by the contract it names")
     print("  [OK] 2 every declared phase is declared exactly once")
-    print("  [OK] 3 every HARNESS skill is reached" +
+    print("  [OK] 3 every HARNESS skill is NAMED by something — which is not evidence any of"
+          " them has ever run" +
           (f" ({len(PROJECT_OWNED)} project-owned skill(s) not examined)" if PROJECT_OWNED else ""))
     print("  [OK] 4 every path and skill referenced BY THE SCANNED FILES exists")
     print("  [OK] 5 every role has a launcher and a dispatcher that names it")
