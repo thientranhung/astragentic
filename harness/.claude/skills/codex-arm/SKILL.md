@@ -42,6 +42,30 @@ node "$CLAUDE_PLUGIN_ROOT/scripts/codex-companion.mjs" review --wait --base <ref
 Plugin root: `~/.claude/plugins/cache/openai-codex/codex/<version>`. Run it in the
 background; the completion notification is your bell.
 
+### Bind it to the reviewed head, and fail closed
+
+**The companion resolves `HEAD` from the checkout it runs in, and `--base` alone does not
+say which head.** At the ticket fire point you are resident in the base checkout while the
+reviewed commits are still in the Builder's worktree, unmerged — so the run compares the base
+branch to itself, reads nothing, and returns **clean**. The mandatory arm becomes a check that
+cannot fail, at the one moment the ticket is about to merge on its verdict.
+
+It is only the ticket scope that exposes this. At slice scope the commits are already on the
+base branch, which is why the old phase-end invocation never met it.
+
+So resolve the head yourself, review from a detached checkout at that SHA, and **verify the
+range before you trust the verdict**:
+
+```bash
+git worktree add --detach <repo-parent>/<repo-dir-name>.worktrees/gate-arm-<key> <head-sha>
+cd <that worktree>
+git rev-list --count <base>..<head-sha>   # zero commits means you are reviewing nothing
+```
+
+A count of zero, or a changed-file set that is not the artifact you meant to review, is a
+STOP — not a pass. Remove the worktree when the pass is recorded; the arm never removes the
+Builder's.
+
 Gotchas, each of which has cost us a run:
 
 - Flags and focus are **separate argv tokens** — one quoted blob fails.

@@ -1113,3 +1113,27 @@ neither review stands in for the other. The first version of that repair was its
 of agreeing rather than thinking: an agent renamed a gate purely because the owner had used a
 different word in a question.
 Bound: `harness/.agents/roles/thomas.md`, `harness/.agents/roles/shaper.md`.
+
+### AST-066 — A review bound to the wrong checkout returns clean without reading anything · promoted 2026-08-13
+
+The Claude-root arm invoked the companion with `--base <ref>` and nothing else. The companion
+resolves `HEAD` from the checkout it runs in, so the flag names one end of the range and the
+cwd silently names the other. That was harmless while the arm fired at phase end, because by
+then the commits were already on the base branch and Thomas's own checkout was the right place
+to stand.
+
+Moving the arm to per-ticket, before the merge, changed the ground under it: the reviewed
+commits now live in the **Builder's** worktree, unmerged, while Thomas is resident in base.
+Run from there, the pass compares the base branch to itself, reads nothing, and returns
+**clean** — at the exact moment a ticket is about to merge on that verdict. A mandatory gate
+had become a check that could not fail, and its output was indistinguishable from a real pass.
+
+Two things are worth separating. The invocation did not change; the **cadence** did, and it
+invalidated an assumption the invocation had never written down. And the Codex-root mirror had
+carried the answer the whole time — an explicit detached worktree at the head SHA — so the
+package already knew, in one file, what the other file omitted.
+
+The recipe now resolves the head, reviews from a detached checkout at that SHA, and verifies
+`git rev-list --count <base>..<head>` before trusting a verdict. **Zero commits is a STOP, not
+a pass.** Found by `arm: slice` on its first run, in the release that introduced the cadence.
+Bound: `harness/.claude/skills/codex-arm/SKILL.md`.

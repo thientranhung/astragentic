@@ -84,6 +84,23 @@ tickets could still be cut from a spec that never took its mandatory second pass
 
 That is the whole argument for AST-062 arriving as evidence in the same release that wrote it.
 
+Then `arm: slice` ran for the first time, over the release as one artifact, and found four more
+that both ticket-scope passes had missed — because they read the diff as a ticket, and these
+were defects in how the scopes fit together. The release **declared** three scopes and had
+written every execution path for a ticket: findings routed to "the Builder" where at spec scope
+no Builder exists yet, an ending that merged where at slice scope the commits are already
+merged, and an unavailable-vendor exception that authorized "merging" in one file and "closing
+the phase" in another.
+
+Its pass 2 found the one that matters most. **The Claude-root invocation was never bound to the
+reviewed head** — `--base <ref>` names one end of the range and the current directory silently
+names the other. That was harmless at phase end, when the commits were already on the base
+branch. Moved to per-ticket, run from Thomas's resident checkout while the ticket head sits
+unmerged in the Builder's worktree, it compares the base branch to itself and returns clean
+having read nothing — at the exact moment a ticket merges on that verdict. The Codex-root
+mirror had carried the answer all along. **A cadence change can invalidate an assumption the
+mechanics never wrote down** (AST-066).
+
 ## Upgrading
 
 Payload only. Your `.agents/orchestrator.md` and `.codex/profiles/*` are untouched, as always —

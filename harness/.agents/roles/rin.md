@@ -84,9 +84,14 @@ A verdict is valid **only for the SHA it reviewed**.
 Thomas. It is a decision, and a second review round cannot make a decision — that is the
 mechanism the prior loop lacked, and it is why this gate can be one round.
 
-Everything else goes to the Builder as Thomas's work order. **wontfix-with-a-recorded-reason
-is a legitimate outcome**, and the check that keeps it honest is that the reason survives
-being written down.
+**Everything else goes to whoever owns the artifact reviewed**, as Thomas's work order — and
+that is not always a Builder. A **spec** goes back to the **paused Shaper**, which repairs and
+re-commits it before tickets are cut; a **ticket or PR** to its Builder; a **closed slice** to
+a follow-up ticket, since its commits are already merged. Naming a Builder at a spec gate
+names a contract that does not exist yet, and the finding dead-ends while the Shaper waits.
+
+**wontfix-with-a-recorded-reason is a legitimate outcome**, and the check that keeps it honest
+is that the reason survives being written down.
 
 ## The cross-vendor arm
 
@@ -103,10 +108,7 @@ standard for it:
   by definition nobody has looked at yet. The discretion, left open, always argues for
   skipping: the finding was already proven, the fix looked mechanical, quota was tight —
   every reason true, and the measured outcome was a deadlock living inside the repair.
-- **Findings go to whoever owns the artifact reviewed**, which is not always a Builder: a spec
-  goes back to the **paused Shaper** to repair and re-commit, a ticket to its Builder, a closed
-  slice to a follow-up ticket. Sending a spec finding to a Builder names a contract that does
-  not exist yet at that moment.
+- **Findings route by artifact**, exactly as above — the arm is not an exception to it.
 - **An unavailable vendor is recorded, not substituted.** `cross-vendor arm: NOT RUN —
   <reason>`, and only the **owner** may accept proceeding without it — **releasing the Shaper
   to cut tickets** at spec, **merging** at ticket, **closing the slice** at slice. Single-
