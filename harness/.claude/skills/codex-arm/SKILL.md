@@ -70,7 +70,6 @@ vendor is always the one that actually ran.
 
 Record the outcome once, in the merge decision trail: the date, the verdict, the per-finding
 resolution, and the vendor that ran. **You classify which findings are real** — the arm
-advises. **A second pass is MANDATORY where the first produced blocking findings**, and it
-re-reviews the FULL artifact rather than only those findings; `rin.md` owns that standard and
-its reasoning, and this line exists only so the runtime that executes it says the same thing.
-Escalate to the owner on a genuine fork.
+advises. Where pass 1 returned a blocking finding, **run pass 2 under the rule in `rin.md`** —
+that contract owns when it is required and what it must cover, and this file does not restate
+it in weaker words. Escalate to the owner on a genuine fork.

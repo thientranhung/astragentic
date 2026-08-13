@@ -29,6 +29,13 @@ same-vendor `mode=adversarial` round (`rin.md`), this one is the OTHER vendor. W
 runs both, both must return and be classified before he releases you. One review reported as
 "the spec was gated" satisfies nothing on its own.
 
+**A blocking finding is repaired in the SPEC, here, before any ticket is cut.** Thomas sends
+it back as a work order, you repair and re-commit the spec, and the mandatory second pass
+runs over the whole revised spec before he releases you — deferring it to the tickets is the
+one thing this pause exists to prevent, since a ticket cut from a wrong seam is the cost the
+gate is buying its way out of. Only the **owner** may accept cutting tickets on a blocking
+finding, and that acceptance is recorded.
+
 The reason for the pause is a measured mechanism rather than a preference. This contract used
 to close "when `to-tickets` has produced the tickets", everything running unbroken. That
 leaves **no moment where the spec exists and the tickets do not**, so the pass has nowhere to

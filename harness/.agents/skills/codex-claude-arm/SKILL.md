@@ -57,8 +57,9 @@ The arm never removes its own worktree.
 2. Confirm the artifact is COMMITTED, resolve the exact base ref and the FINAL head SHA,
    then run the pass above. A verdict for an older SHA cannot authorize a merge.
 3. **You classify which findings are real**; the arm advises. Findings route through you to
-   the Builder. A second pass is **mandatory** where the first produced blocking findings,
-   and it re-reviews the FULL artifact. Any fix means a new SHA.
+   the Builder. Where pass 1 returned a blocking finding, **run pass 2 under the rule in
+   `rin.md`** — that contract owns when it is required and what it covers. Any fix means a
+   new SHA.
 4. **Record the arm once** in the merge decision trail — the vendor that ran, or
    `cross-vendor arm: NOT RUN — <reason>`, which only the OWNER may accept. Claude
    unavailable or out of quota means the arm did not run; the native lens is advisory.

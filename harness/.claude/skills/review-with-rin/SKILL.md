@@ -212,7 +212,18 @@ noticed. Count your own overrules; a run of zero is a prompt to re-read the find
 judge.
 
 Fixes produce a new SHA. Verify the fold by artifact — the diff, not the summary. **Then the
-cross-vendor arm, which is yours to fire and which precedes the merge**: run it over that
-final SHA, resolve its findings including the mandatory second pass, and merge only on a SHA
-the arm has actually seen. Cadence lives in `thomas.md`, mechanics in `codex-arm`. Merging
-straight out of this gate is how a ticket reaches the base branch with no arm on it.
+cross-vendor arm, which is yours to fire**: run it over that final SHA and resolve what it
+returns, pass 2 included under `rin.md`'s rule. Cadence lives in `thomas.md`, mechanics in
+`codex-arm`.
+
+**How the gate exits depends on which artifact it gated**, and only one of the three ends in
+a merge:
+
+| Gated | Exit |
+|---|---|
+| a spec (`mode=adversarial`) | release the **paused Shaper** to cut tickets — there is nothing to merge |
+| a ticket or PR | **merge**, and only on a SHA the arm has actually seen |
+| an epic close | report to the owner; the merges it covers already happened |
+
+Merging straight out of this gate is how a ticket reaches the base branch with no arm on it,
+and closing a spec gate without releasing the Shaper leaves a live session waiting forever.
