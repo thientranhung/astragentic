@@ -435,6 +435,7 @@ ARTIFACTS = [
     ("simplify pass provenance", r"`Pass:`|Pass: Skill\(", "builder", ["thomas", "rin"]),
     ("browser evidence",            r"browser evidence",      "builder", ["rin"]),
     ("gate file",                   r"GATE_FILE",             "rin",     ["review-with-rin"]),
+    ("ledger line",                 r"`Ledger:`",             "thomas",  ["rin"]),
     # The frontier write-back has no commit to grep — its artifact is tracker state, which
     # this script cannot see. So the registry binds the two halves that ARE readable: the
     # role that must do it at merge, and the audit that finds the merges where it did not

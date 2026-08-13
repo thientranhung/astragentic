@@ -213,7 +213,15 @@ fi
 # the file held 66 — sixteen entries of drift, in the one file every rule here cites as
 # evidence. Read the header the same way README's line is read, and read the RANGE too: a
 # count can match while the highest id has moved past it.
-if [[ -f "$LEDGER" ]]; then
+# No ledger at either supported path is itself the finding. The header repair sat inside this
+# guard, so an incomplete install — or someone deleting the evidence base — got the same green
+# line as a valid one. Three depths of one vacuous pass in a single check: the comparison, the
+# parse, and the file existing at all. Each was found by the pass after the one that fixed it.
+if [[ ! -f "$LEDGER" ]]; then
+  echo "  no failure-mode ledger under .agents/memory/ in either layout —"
+  echo "  every rule in this package cites it as evidence, so its absence is a finding"
+  A5=1; FOUND=1
+else
   REAL="$( { grep -c '^### AST-' "$LEDGER" || true; } | tr -d ' ' )"
   # Read the Status LINE first, then parse inside it. Scanning the whole file for the range
   # matched the first `(AST-0NN)` citation in some entry's prose instead — a check reading

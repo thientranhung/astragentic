@@ -15,7 +15,7 @@ skills:
 |---|---|---|---|
 | `extract-standards` | `docs/agents/standards.md` | 0 | 0 |
 | `module-boundaries` | `docs/agents/module-boundaries.md` | 0 | 0 |
-| `code-scout` | `CODE-MAP.md` — never named in any file | 0 | 0 |
+| `code-scout` | `CODE-MAP.md` — never named by filename anywhere | 0 | 0 |
 | `bootstrap-glossary` | `CONTEXT.md` | 0 | **13** — kept |
 
 `extract-standards` took reading rather than grepping. Its consumer was meant to be the
@@ -30,6 +30,12 @@ looks wrong to the owner"* — a feeling, not a step. `codex-dispatch-headless` 
 with no observable pane and went three weeks across two active projects without a single
 request; headless is now unsupported outright, because a topology the owner cannot watch
 contradicts what every gate here argues (AST-070).
+
+One correction the arm forced, and it is the same mistake in miniature: the filename
+`CODE-MAP.md` appeared nowhere, but `batch-triage` asked for *"the code map"* in words. A grep
+for the literal name said orphan; the artifact had a consumer that named it semantically.
+`batch-triage` now reads the current tree with `rg` and `git log` instead — which is what it
+should have said, since a map is stale exactly where triage needs it, on code that moved.
 
 **Every orphan was ours.** Nothing the plugin ships was orphaned, because its skills read the
 files its skills write. We diagnosed a real gap and answered it by writing documents beside

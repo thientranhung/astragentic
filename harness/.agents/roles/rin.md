@@ -52,6 +52,10 @@ checked rather than assumed:
   ran** — a marker whose `Pass:` line is absent, or names something other than
   `Skill(skill: "simplify")`, records a substitute that every subject-only check reads as
   satisfied (AST-055);
+- **the merge commit carries a `Ledger:` line.** `Ledger: none` is an answer; an absent line
+  is not, and it is the one trace that a friction was written down while it was still warm.
+  You are the only reader positioned to catch its absence, because the step that produces it
+  is the same step that closes the work;
 - the acceptance criteria the ticket claims are the ones the diff satisfies;
 - the validation commands were run, with their real output;
 - **UI-touching work carries browser evidence**, or a named reason it does not — the
