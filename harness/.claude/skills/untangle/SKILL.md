@@ -23,8 +23,8 @@ Guessing here is expensive, so measure. Extract the real import graph, then find
 - **the crossings** — where a call reaches deep inside another area rather than through its
   front door.
 
-`code-scout` and the code map are the reading layer for this. A graph you extracted beats a
-graph you remember, and the surprise is usually which module is the real hub.
+Extract the graph rather than recall it — a graph you extracted beats a graph you remember,
+and the surprise is usually which module is the real hub.
 
 ## 2. Cut where the graph is thinnest, not where the mess is worst
 
@@ -75,5 +75,5 @@ path, the graph shows the intended architecture and the code disagrees with it (
 decision, not a refactor), or two cuts in a row grew rather than shrank the blast radius.
 The last one means the graph you extracted is stale — re-read before continuing.
 
-Record the boundaries as they land, so `module-boundaries` can hold them and the next session
-does not re-derive them from scratch.
+Record the boundaries as they land, where this project keeps its architecture notes, so the
+next session does not re-derive them from scratch.

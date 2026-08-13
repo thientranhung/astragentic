@@ -25,9 +25,8 @@ needs no wiring** — `tdd`, `mattpocock-skills:code-review`, `codebase-design`,
 are already available. `tdd` and `diagnosing-bugs` are where this role lives; reach for
 `resolving-merge-conflicts` when your branch has drifted.
 
-Three more, for code that already exists: **`legacy-testing`** when what you must change has no
-seam to test through, **`module-boundaries`** when an import reaches into another module, and
-**`untangle`** when a change's blast radius keeps growing as you read.
+Two more, for code that already exists: **`legacy-testing`** when what you must change has no
+seam to test through, and **`untangle`** when a change's blast radius keeps growing as you read.
 
 ## Build
 

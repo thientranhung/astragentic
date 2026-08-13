@@ -374,7 +374,7 @@ and `agent get` expose `scroll.viewport_rows`, and a read returning exactly that
 is the signal — compare the count rather than judging by eye.
 
 **Who writes the file follows the role.** An agent that may write (the Builder) writes into
-the worktree it owns and replies with the path. A READ-ONLY agent (Rin, `code-scout`)
+the worktree it owns and replies with the path. A READ-ONLY agent (Rin)
 returns its report and the DISPATCHER persists it — which keeps an artifact out of a
 disposable gate worktree that cleanup is about to delete (AST-031, AST-032).
 

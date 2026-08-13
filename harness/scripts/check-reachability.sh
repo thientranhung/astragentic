@@ -178,7 +178,7 @@ NOT_A_SKILL = {
     # CLI subcommands and flags that happen to be kebab-case.
     "adversarial-review", "send-text", "send-keys", "gate-diff", "no-focus",
     "allowed-tools", "dangerously-skip-permissions", "project-name", "optional-too",
-    "applied-version", "module-boundaries-md", "gen-code-map",
+    "applied-version",
     # Frontmatter keys quoted in prose about how skills are reached.
     "disable-model-invocation",
     # A triage LABEL that to-tickets writes at creation. Named in the frontier audit precisely

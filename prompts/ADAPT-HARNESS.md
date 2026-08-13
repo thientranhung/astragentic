@@ -212,21 +212,15 @@ On a repo with existing code, three bootstrap skills run once and each produces 
 the **owner reviews before it counts**. Thomas owns all three as phases; run them in this
 order, because each feeds the next:
 
-1. **`extract-standards`** → `docs/agents/standards.md`. **Report its coverage verdict to the
-   owner in words, in this run's summary.** A `THIN` verdict means `code-review`'s Standards
-   axis will keep falling back to twelve generic smells — the generic review its own design
-   exists to avoid. Silent degradation is the failure class this harness exists to catch, so
-   a THIN verdict filed quietly in a header is that failure happening inside the tool built
-   to prevent it.
-2. **`bootstrap-glossary`** → `CONTEXT.md`, seeded from the terms the code already uses, every
+1. **`bootstrap-glossary`** → `CONTEXT.md`, seeded from the terms the code already uses, every
    term citing the file it was read from and marked `UNREVIEWED` until the owner confirms it.
 3. **`batch-triage`** — only where the repo arrives with an existing backlog. Its closures
    wait for the owner; its live tickets carry labels and blocking edges, which is what makes
    Thomas's frontier query meaningful on day one.
 
-Three further skills are **model-invoked** and need no wiring: `legacy-testing` when code has
+Two further skills are **model-invoked** and need no wiring: `legacy-testing` when code has
 no seam for `tdd` to attach to, `untangle` when a refactor is too tangled for
-`improve-codebase-architecture`, and `module-boundaries` when an import crosses a boundary.
+and `improve-codebase-architecture` when a refactor is too tangled.
 Confirm they are staged; reaching them is the agents' business, not this run's.
 
 **Name the repo's rendering path, or record that it has none.** The Builder's contract

@@ -72,7 +72,7 @@ answer with no source leaves the question open.
 
 Upstream's skills contain no occurrence of *legacy*, *brownfield*, *characterisation* or
 *untestable*; its brownfield notes live on its docs site for human readers. The projects this
-package installs into are not greenfield, so six gaps are ours. The rule for all six is
+package installs into are not greenfield, so four gaps are ours. The rule for all six is
 **extract, never invent** — a standard the code does not follow, or a glossary term nobody
 confirmed, becomes confident-sounding lore that later sessions treat as truth.
 
@@ -84,7 +84,6 @@ assumes someone else ran.
 
 | Skill | Produces |
 |---|---|
-| `extract-standards` | `docs/agents/standards.md` + a SOLID/PARTIAL/THIN coverage verdict |
 | `bootstrap-glossary` | `CONTEXT.md`, seeded from code, every term citing its source file |
 | `batch-triage` | an inherited backlog as tickets with labels and blocking edges |
 
@@ -95,10 +94,6 @@ assumes someone else ran.
 |---|---|
 | `legacy-testing` | the code to change has no seam, so `tdd` cannot attach |
 | `untangle` | a refactor is too tangled for `improve-codebase-architecture` |
-| `module-boundaries` | an import crosses a boundary, or a refactor creates one |
-
-`code-scout`, `gen-code-map.sh` and the staleness audit are the reading layer all six extract
-from.
 
 ## Vocabulary
 
@@ -136,21 +131,17 @@ harness/                          the payload staged into a target repo
     skills/
       review-with-rin/              Rin's milestone gate — dispatch, gate file, collection
       dispatch-qa-walk/             QA's walk — the one gate needing a running app
-      code-scout/                   read the current state before work is shaped
       codex-arm/                    cross-vendor arm, Claude root → Codex
-      extract-standards/            ┐
-      bootstrap-glossary/           ├ brownfield bootstrap, invoked by name
+      bootstrap-glossary/           ┐ brownfield bootstrap, invoked by name
       batch-triage/                 ┘
-      legacy-testing/               ┐
-      untangle/                     ├ brownfield craft, model-invoked
-      module-boundaries/            ┘
+      legacy-testing/               ┐ brownfield craft, model-invoked
+      untangle/                     ┘
   .codex/profiles/                one per role, mirroring the orchestrator rows
   .agents/memory/
     recurring-failure-modes.md    68 measured failure modes; append-only, the evidence base
   scripts/
     herdr-watch-terminal.sh       turn watcher with a real start guard
     docs-staleness-audit.sh       age, fossils, dead links, always-on word budgets
-    gen-code-map.sh               code-map skeleton to stdout; a reader supplies meaning
     check-reachability.sh         seven checks: does the method the docs describe
                                   exist, is it reachable, and is it addressed correctly?
 docs/adr/0001-…                   why the method was rebuilt around the plugin

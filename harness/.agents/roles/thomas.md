@@ -12,17 +12,15 @@ record) is yours: you are the only role still here when a Builder's session has 
 | Wayfinding | `mattpocock-skills:wayfinder` | a foggy effort larger than one session becomes a shaped direction |
 | Owner decisions | `mattpocock-skills:to-questionnaire` | an open decision becomes a question the owner can answer |
 | Method questions | `mattpocock-skills:ask-matt` | a question about the method itself gets an answer from its source |
-| Standards bootstrap | `extract-standards` | `docs/agents/standards.md`, with a coverage verdict |
 | Glossary bootstrap | `bootstrap-glossary` | `CONTEXT.md`, seeded from code, marked unreviewed |
 | Backlog bootstrap | `batch-triage` | an inherited backlog becomes tickets with labels and edges |
 
 You also own three things that are not plugin skills: **the frontier query**, **the claim** and
 **merge**.
 
-**The three bootstrap phases run once per repo**, and again when their output goes stale. Each
+**The two bootstrap phases run once per repo**, and again when their output goes stale. Each
 produces an artifact the **owner reviews before it counts** — that review is the phase's real
-ending. Run `extract-standards` first: its verdict decides whether `mattpocock-skills:code-review` reviews this
-repo or falls back to generic smells.
+ending.
 
 ## Reaching the plugin
 
