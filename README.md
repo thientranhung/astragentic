@@ -1,4 +1,4 @@
-# Astraler Harness 1.5.4
+# Astraler Harness 1.6.0
 
 An operating framework that lets **several agents build software together on an existing
 codebase**.
@@ -147,7 +147,7 @@ harness/                          the payload staged into a target repo
       module-boundaries/            ┘
   .codex/profiles/                one per role, mirroring the orchestrator rows
   .agents/memory/
-    recurring-failure-modes.md    60 measured failure modes; append-only, the evidence base
+    recurring-failure-modes.md    65 measured failure modes; append-only, the evidence base
   scripts/
     herdr-watch-terminal.sh       turn watcher with a real start guard
     docs-staleness-audit.sh       age, fossils, dead links, always-on word budgets

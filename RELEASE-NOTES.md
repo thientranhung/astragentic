@@ -1,3 +1,95 @@
+# Astraler Harness 1.6.0
+
+A ruling made in a project on 2026-08-12, marked twice in its own commits as *"this must flow
+upstream to harness-matt-pocock rather than living only here"*, and which had not. This release
+carries it up, and the arm it describes then found six defects in the carrying.
+
+## Changed — the cross-vendor arm fires per ticket, not once at a phase end
+
+**Three scopes, named by the artifact each one reads**: `arm: spec` before tickets are cut,
+`arm: ticket` at every handback before that merge, `arm: slice` once when the slice closes. **No
+ticket merges without one.**
+
+The measurement that forced it: batched to slice scope, one review ran to **6,904 added lines
+across 31 files** against **1,238 for a single ticket**. Nobody skips a review that size — they
+skim it, and skimming is how a hollow test survives. Three survived a single day on that
+project, every one of them plainly visible at ticket scope, all three caught by hand at the
+merge rather than by any gate (AST-061).
+
+**The second pass is now MANDATORY after a blocking first**, a step rather than a judgement
+call. On one ticket the dispatcher talked himself out of it in a paragraph where every reason
+was true, and was still wrong: what pass 2 catches is the defect the FIX introduced, which by
+definition nobody has looked at. The neighbouring ticket proves the cost — pass 1 found
+authorization outside a write transaction, and pass 2 found a real 40P01 deadlock cycle living
+inside the code written to repair it (AST-062).
+
+**The Shaper now STOPS at Spec and hands back twice.** Its session used to close *"when
+`to-tickets` has produced the tickets"*, everything running unbroken, which left no moment where
+the spec existed and the tickets did not — so the plan gate had nowhere to fire and silently did
+not, for two consecutive slices, the second a 44k spec with ten tickets. Nobody forgot it. The
+sequence gave it no window (AST-063).
+
+**"Milestone gate" and "spec gate" are the reviewer's names and are reserved.** A cross-vendor
+pass wearing either one tells a reader of that reviewer's contract that the reviewer fires
+Codex, and lets a dispatcher who ran only one of the two report that the spec was gated
+(AST-065).
+
+`thomas.md`'s budget rises 1400 → 1600 for the cadence. Only the rule landed in the contract;
+the measurements went to `codex-arm`, which loads when the arm runs rather than every session.
+
+## Added — a budget on the one always-on file no release can repair
+
+`orchestrator.md` is read at every session start, and nothing measured it. It is also scaffold:
+written once, never overwritten, so a release cannot take back what collects there. Measured
+across three trees in one day — **package 653 words, one project 941, another 1,477** — the last
+carrying 505 words of argument about which model a row should hold, including a decision, its
+reversal the same day, and an instruction not to undo the reversal.
+
+The guard went into `docs-staleness-audit.sh`, which is payload. **A check for scaffold drift has
+to live in payload, because payload is the only thing an upgrade can carry into a project that
+already has the drift.** Budget 800. Verified in both layouts before shipping (AST-064).
+
+## Fixed — the staleness audit was reading one file
+
+`scoped_md()` globbed from the repo root while the payload sits under `harness/`, so in package
+layout AXES 1 through 3 matched **one** tracked file and reported clean over everything they
+never opened. This is the defect 1.5.0 fixed for AXIS 4 and left in its siblings. Scope is now
+27 files. Run widened, it found four hits immediately.
+
+Three of those four were in `SPEC-1.0.0.md` and were not defects: a shipped version's build spec
+names files in the repo it copied FROM, so its retired names are accurate history. `SPEC-*.md`
+stays out of scope, recorded as a decision rather than an oversight.
+
+The fourth was the marker `agents/rin\.md`, whose only match in either repo's entire history is
+the live `.claude/agents/rin.md` adapter — and `agents/dan\.md`, which has never matched
+anything, anywhere. Both are removed rather than narrowed: narrowing keeps a rule that still
+cannot point at anything. Verified by planting a real fossil and watching the axis report it.
+
+## What the arm found in this release
+
+Two passes over the diff, and **six findings, every one of them introduced by this release**.
+
+Pass 1: the Claude-root skill still called pass 2 *legal* while its Codex-root mirror called it
+mandatory, so the rule depended on which vendor was root. The Shaper's new section called the
+spec arm "the plan gate", a name the reviewer already owned. And `review-with-rin` told its
+executor to verify the fold *"and merge"*, then said the arm precedes that merge — the exact
+ordering defect this release had repaired in `thomas.md` hours earlier, reintroduced in the file
+Thomas actually executes.
+
+Pass 2, over the full artifact: **two of the three pass-1 repairs had broken something.** The
+merge-after-arm repair gave a gate that handles three different artifacts one ending — but a
+spec gate has nothing to merge, and its real exit is releasing the Shaper sitting paused waiting
+for it. And the spec-stop repair had left a blocking spec finding with no repair window, so
+tickets could still be cut from a spec that never took its mandatory second pass.
+
+That is the whole argument for AST-062 arriving as evidence in the same release that wrote it.
+
+## Upgrading
+
+Payload only. Your `.agents/orchestrator.md` and `.codex/profiles/*` are untouched, as always —
+and the new budget will now tell you if the first of those has been collecting prose. A report
+over 800 words is a finding for the owner, not for a release to repair.
+
 # Astraler Harness 1.5.4
 
 Three checks that could not fail, found in one pass by a project's Thomas asking one question

@@ -1014,3 +1014,102 @@ beside check 4's exclusion. Third instance of one shape: **a green line that spe
 than the check looked at** — after check 4's referenced-path claim, and the staleness audit's
 `RESULT: all clean` over a loop that ran zero times.
 Bound: `harness/scripts/check-reachability.sh`.
+
+### AST-061 — The arm batched to phase end built a payload only skimming could finish · promoted 2026-08-13
+
+One arm per phase looks cheaper than one per ticket and is the same total work spread over a
+worse shape. A project measured both: at slice scope one review ran to **6,904 added lines
+across 31 files**, against **1,238 for a single ticket** — about six times. Nobody skips a
+review that size. They skim it, which is not the same instrument.
+
+What skimming misses is specific rather than random: **the hollow test**. Three survived a
+single day on that project — a test comparing a constant to itself, a fixture of two isolated
+tenants that could not deadlock whatever the lock order, and a fixture where row-level security
+refused the row before the fence under test was ever reached. All three were plainly visible at
+single-ticket scope. All three were caught by hand at the merge rather than by any gate.
+
+The first per-ticket arm returned a HIGH the author's own mutation pass had missed: a
+destructive reset authorizing outside its write transaction, while an established fence in the
+same codebase rechecks inside. **That is the class a cross-vendor pass wins at — internal
+inconsistency against the project's own standard** — because the author reads the ticket and
+the arm reads the repository. It only wins it at a scope where reading is possible.
+Bound: `harness/.agents/roles/thomas.md`, `harness/.claude/skills/codex-arm/SKILL.md`.
+
+### AST-062 — A second pass left to judgement is a second pass that does not run · promoted 2026-08-13
+
+The rule was "a second pass where the first produced blocking findings", and the word *where*
+left the decision open. Measured on one ticket: the dispatcher talked himself out of it in a
+single paragraph, and **every reason he gave was true** — the finding was already
+mutation-proven, the fixes looked mechanical, quota was tight. The call was still wrong.
+
+The mechanism is that the discretion is exercised at the exact moment it is least reliable:
+after the fix, when the work reads as finished. And what pass 2 catches is **the defect the FIX
+introduced**, which by definition nobody has looked at, so no amount of confidence about pass 1
+speaks to it. Proof from the neighbouring ticket: pass 1 found authorization outside a write
+transaction, the repair added transaction and locking code, and **pass 2 found a real 40P01
+deadlock cycle inside that new code**. Skipping there would have shipped a seller-facing 500 on
+the only unstick path the product had.
+
+The rule is now a step rather than a judgement, and it lives in exactly one contract — the
+first repair of this made four files normative about it at once, which is the drift the
+one-home rule exists to stop.
+Bound: `harness/.agents/roles/rin.md`.
+
+### AST-063 — A gate with no window in the sequence never fires, and nobody forgets it · promoted 2026-08-13
+
+The plan gate did not run for two consecutive slices, the second a 44k spec with 44 acceptance
+criteria and ten tickets. No one skipped it. The Shaper contract closed its session *"when
+`to-tickets` has produced the tickets"*, with align, spec and tickets running unbroken — so
+there was **never a moment where the spec existed and the tickets did not**. The gate had
+nowhere to fire.
+
+Adding a reminder would have been the third attempt at the same thing. The repair is
+structural: the contract that runs the sequence now STOPS at Spec and hands back, and hands
+back twice, the second time reporting how each finding was resolved in the tickets. A finding
+cannot be waved through by cutting tickets that ignore it.
+
+**Test a rule by asking where in the sequence it could execute**, not by whether the document
+says it. A rule with no window reads as followed forever, because nothing it governs ever
+reaches it. The first repair of this one reintroduced the shape one layer down: it left a
+blocking spec finding with no repair window before the mandatory second pass, so tickets could
+still be cut from a spec that never took it.
+Bound: `harness/.agents/roles/shaper.md`, `harness/.agents/roles/thomas.md`.
+
+### AST-064 — The one always-on file no release can repair had no budget · promoted 2026-08-13
+
+`orchestrator.md` is read at every session start and nothing measured it. It is also SCAFFOLD —
+written once on a fresh install, never overwritten, so a release cannot take back what
+accumulates there. Those two properties together make it the worst place in the harness for
+prose to collect, and it was the only always-on surface with no ceiling.
+
+Measured across three trees on one day: **package 653 words, one project 941, another 1,477**.
+The 1,477 carried 505 words arguing which model a row should hold — including a decision, its
+reversal the same day, and an instruction to future agents not to undo the reversal. All of it
+billed on every session, to answer a question almost no session asks. The table is the file's
+job; the argument for a row belongs in the project's decision record.
+
+The guard went into `docs-staleness-audit.sh`, which is PAYLOAD. **A check for scaffold drift
+has to live in payload, because payload is the only thing an upgrade can carry into a project
+that already has the drift.** Verified in both layouts before shipping: the package reports
+653/800 ok, the project reports 1,477 OVER.
+Bound: `harness/scripts/docs-staleness-audit.sh`.
+
+### AST-065 — Two reviewers sharing one name, each in the other's contract · promoted 2026-08-13
+
+A cross-vendor pass was documented as "the milestone gate", and later as "the plan gate". Both
+names already belonged to the same-vendor reviewer, in that reviewer's own contract. The
+collision is not cosmetic: a reader of the reviewer's contract who meets its name on a Codex
+pass concludes **that reviewer fires Codex**, and a dispatcher who has run either one can report
+"the spec was gated" and be believed. Two independent checks collapse into one, and the report
+reads as compliant.
+
+It happened twice, the second time in this package, by porting a project's wording without
+checking whether the name already had an owner here — the project's own reviewer contract had
+not been updated, so nothing collided there.
+
+Names are now assigned on one axis, **the artifact each pass reads**: `arm: spec`,
+`arm: ticket`, `arm: slice`. The reviewer's names are reserved, and both contracts state that
+neither review stands in for the other. The first version of that repair was itself an instance
+of agreeing rather than thinking: an agent renamed a gate purely because the owner had used a
+different word in a question.
+Bound: `harness/.agents/roles/thomas.md`, `harness/.agents/roles/shaper.md`.
