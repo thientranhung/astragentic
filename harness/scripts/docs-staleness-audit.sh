@@ -64,8 +64,15 @@ if [[ -n "$AGE_HITS" ]]; then echo "$AGE_HITS"; FOUND=1; else echo "(clean)"; fi
 
 echo
 echo "=== AXIS 2: fossils of retired names in LIVE docs ==="
-# Marker list — APPEND the old name whenever something is retired/renamed:
-FOSSILS='worker\.md|subagent_type:? ?"worker"|Worker Herdr|THOMAS\.md|evolution-loop|governance-maturity|4-lens|/agent-skills:|both PR lenses|implementer\.md|\.agents/dan\.md|\.agents/rin\.md|--agent dan[^-]|docs/superpowers|memory/README|herdr agent send|codex-dispatch-dan|\.codex/agents/dan-implementor\.toml|dan-implementor|dispatch-dan|rin-pr-reviewer|subagent_type:? ?"rin-reviewer"|live slice tab|plan-challenger'
+# Marker list — APPEND the old name whenever something is retired/renamed, and append only a
+# name this repo's history can be shown to have carried. `agents/dan\.md|agents/rin\.md` rode
+# this list from v0.1.0 of the prior package: `agents/dan.md` has no referent in either
+# repo's history, and the ONLY match `agents/rin.md` has ever had is the live
+# `.claude/agents/rin.md` adapter. The real old names — dan-senior, rin-reviewer,
+# dan-implementor, rin-pr-reviewer — are already here on their own. While the scope bug
+# above hid every payload file, a pattern that fires on a live file cost nothing; the moment
+# the audit could see, it was the first thing it reported.
+FOSSILS='worker\.md|subagent_type:? ?"worker"|Worker Herdr|THOMAS\.md|evolution-loop|governance-maturity|4-lens|/agent-skills:|both PR lenses|implementer\.md|--agent dan[^-]|docs/superpowers|memory/README|herdr agent send|codex-dispatch-dan|\.codex/agents/dan-implementor\.toml|dan-implementor|dispatch-dan|rin-pr-reviewer|subagent_type:? ?"rin-reviewer"|live slice tab|plan-challenger'
 # Retired by 1.0.0 (ADR 0001) — the roles Dan and James left the build loop, the review
 # loop became one bounded round, and the method moved to the mattpocock-skills plugin:
 FOSSILS="$FOSSILS"'|dan-senior|james-dev|rin-reviewer|thomas-leader|dispatch-slice|codex-plan-gate|codex-review-with-rin|codex-gate|slice:<|slice tab|simplify\(slice\)|working-method|gate loop|re-gate|findings exhausted'
