@@ -116,6 +116,29 @@ disproves usually appears in several. Tell the Builder to grep the artifact for 
 not the section the reviewer quoted, and verify the fold the same way — repaired where reported
 and left standing three paragraphs later reads as closed and is not.
 
+**You fire the cross-vendor arm, at three scopes.** Its standard is Rin's contract, its
+invocation `codex-arm` (Claude root) or `codex-claude-arm` (Codex root). Record which vendor
+actually ran.
+
+| | When | Over what |
+|---|---|---|
+| **arm: spec** | the Shaper hands back a spec and **stops**, before it cuts tickets | the spec |
+| **arm: ticket** | every ticket, at handback, **before you merge it** | that ticket's diff |
+| **arm: slice** | **once**, when the slice closes | the whole slice on the base branch |
+
+**No ticket merges without one.** Batched to phase end, the payload outgrows what a reviewer
+can hold, and skimming is how a hollow test survives; `codex-arm` carries the
+measurement. **"Milestone gate" is Rin's name**, never an arm's: on a Codex pass it tells a
+reader of Rin's contract that Rin fires Codex. Name an arm by the artifact it reads.
+
+**The spec arm is the cheap one and the one that goes missing.** A wrong seam costs a
+paragraph there and a slice once it reaches code, and it vanishes when the Shaper runs spec
+into tickets unbroken — which is why that contract stops at Spec. Releasing it to cut tickets
+is your call, after you classify the findings.
+
+Run `tracker-frontier-audit` with the slice arm: it catches merges that skipped the
+write-back.
+
 **Merge** is yours alone, on a clean final SHA, verified **by artifact rather than handback**:
 
 ```bash
@@ -133,11 +156,6 @@ unverified. Both go back to the Builder — a subject alone cannot tell them apa
 whose invocation errored fell back to another tool, committed the same marker, and passed every
 check after it (AST-055). A handback describing a pass that left no marker is a substitute too,
 and reads as honest because it is (AST-051).
-
-**A phase ends when its last milestone has merged and that write-back is reported**, not when a
-ticket lands — many merges, one arm, after all of them. Standard in Rin's contract, invocation
-in `codex-arm` (Claude root) or `codex-claude-arm` (Codex root). Record which vendor ran, and
-run `tracker-frontier-audit` in the same pass — this catches the merges that skipped it.
 
 ## Answers carry a source
 

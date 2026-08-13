@@ -212,5 +212,5 @@ noticed. Count your own overrules; a run of zero is a prompt to re-read the find
 judge.
 
 Fixes produce a new SHA. Verify the fold by artifact — the diff, not the summary — and
-merge. **The cross-vendor arm is yours to fire, at phase end**, after this gate: `codex-arm`
-carries the mechanics.
+merge. **The cross-vendor arm is yours to fire**, on its own cadence in `thomas.md` — per
+ticket before its merge, not once at phase end: `codex-arm` carries the mechanics.

@@ -58,10 +58,11 @@ carried over from the prior package. That is the throughput mechanism, and
 `dispatch-ticket` is where it lives.
 
 **Review keeps its weight and drops the loop.** Per ticket: `code-review`'s two axes in one
-pass, plus a per-increment simplify pass leaving a `simplify(increment):` marker commit. At a
-milestone: one Rin round, verifying the artifact and that the process left its traces. At
-phase end: the cross-vendor arm. A design-level blocking finding escalates to the owner
-through `to-questionnaire` rather than to another round.
+pass, a per-increment simplify pass leaving a `simplify(increment):` marker commit, and the
+cross-vendor arm before the merge — no ticket merges without one. At a milestone: one Rin
+round, verifying the artifact and that the process left its traces. Once more at the spec,
+before tickets are cut, and once over the slice when it closes. A design-level blocking
+finding escalates to the owner through `to-questionnaire` rather than to another round.
 
 **Answers carry a source.** Agents resolve the Align frontier themselves, answering from the
 codebase, a prior ADR, `research`, `prototype`, or a second opinion — and recording which. An

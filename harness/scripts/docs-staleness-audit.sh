@@ -122,7 +122,16 @@ fi
 # a reason recorded in the same commit.
 role_budget() {
   case "$1" in
-    thomas)  echo 1400 ;;  # widest remit: claim protocol + three dispatch points
+    thomas)  echo 1600 ;;  # widest remit: claim protocol + three dispatch points + the arm
+                           # cadence at three scopes. Raised from 1400 by owner decision
+                           # 2026-08-13, porting a project ruling: the arm fires per ticket
+                           # before its merge, so Thomas owns three fire points instead of
+                           # one. Only the RULE landed here; the measurements that justify
+                           # it went to codex-arm, which loads when the arm runs rather than
+                           # every session. 1550 was the estimate and the port landed at
+                           # 1557; the extra 50 is headroom rather than another trim, since
+                           # the words being shaved to reach a round number still carried
+                           # meaning — the failure this comment block already warns about.
     builder) echo 1400 ;;  # widest DOING surface: build, increment review, simplify,
                            # visual verification, the two correctness rules, handback
     *)       echo 1200 ;;

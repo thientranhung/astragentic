@@ -1,13 +1,13 @@
 ---
 name: codex-claude-arm
-description: ARM ONLY — the Claude pass a Codex root fires at phase end, after the milestone gate has closed elsewhere. Covers the isolated worktree, the read-only allowlist, cleanup order, and recording. This skill never dispatches a reviewer and never hosts a gate; a Codex root cannot host the gate (see review-with-rin). Use at phase end on a Codex root.
+description: ARM ONLY — the Claude pass a Codex root fires over a completed artifact, per ticket before its merge, plus one at spec and one at slice close. Covers the isolated worktree, the read-only allowlist, cleanup order, and recording. This skill never dispatches a reviewer and never hosts a gate; a Codex root cannot host the gate (see review-with-rin). Use on a Codex root when an artifact is committed and ready for its arm.
 ---
 
 # The cross-vendor arm on a Codex root
 
-**Scope: one thing — the `claude -p` pass a Codex root fires at phase end.** When it fires,
-and the two-pass cap, belong to the method document. The gate itself, its form and its
-report mechanics belong to `review-with-rin`, and none of it is restated here.
+**Scope: one thing — the `claude -p` pass a Codex root fires over a finished artifact.** When
+it fires, and the two-pass rule, belong to `thomas.md` and `rin.md`. The gate itself, its
+form and its report mechanics belong to `review-with-rin`, and none of it is restated here.
 
 **A Codex root cannot host the gate at all**: the gate is a Herdr pane on the root
 provider's runtime, and no Codex adapter can host it, so a `rin` row naming Codex is a
@@ -52,13 +52,13 @@ The arm never removes its own worktree.
 
 ## Sequence
 
-1. **Precondition — the milestone gate has already closed** on the Claude root that hosts
-   it. Firing early spends one of the two permitted passes on an artifact still in motion.
+1. **Precondition — the artifact is finished and handed back.** Firing early spends one of
+   the two permitted passes on something still in motion.
 2. Confirm the artifact is COMMITTED, resolve the exact base ref and the FINAL head SHA,
    then run the pass above. A verdict for an older SHA cannot authorize a merge.
 3. **You classify which findings are real**; the arm advises. Findings route through you to
-   the Builder. A second pass is legal only where the first produced blocking findings, and
-   it re-reviews the FULL artifact. Any fix means a new SHA.
+   the Builder. A second pass is **mandatory** where the first produced blocking findings,
+   and it re-reviews the FULL artifact. Any fix means a new SHA.
 4. **Record the arm once** in the merge decision trail — the vendor that ran, or
    `cross-vendor arm: NOT RUN — <reason>`, which only the OWNER may accept. Claude
    unavailable or out of quota means the arm did not run; the native lens is advisory.

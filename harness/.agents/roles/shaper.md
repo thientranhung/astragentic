@@ -18,6 +18,21 @@ that must share one context are one session, and one session is one agent.
 
 They run in that order, and each one's output is the next one's input.
 
+### STOP after Spec. The plan gate fires between Spec and Tickets.
+
+**When `to-spec` closes, hand the spec back to Thomas and wait.** Do not run `to-tickets` in
+the same breath. Thomas fires the cross-vendor arm on the spec, classifies what it returns,
+and only then tells you to cut the tickets — in this same session, context intact.
+
+The reason is a measured mechanism rather than a preference. This contract used to close
+"when `to-tickets` has produced the tickets", everything running unbroken. That leaves **no
+moment where the spec exists and the tickets do not**, so the plan gate has nowhere to fire —
+and on one project it silently did not fire for two consecutive slices, the second a 44k spec
+with 44 acceptance criteria and ten tickets. Nobody forgot it. The sequence gave it no window.
+
+The one-unbroken-context rule is unchanged and still absolute: **no `/compact`, no `/clear`
+while you wait.** The pause is a handback, not a session boundary.
+
 ## Reaching the plugin
 
 Those three are **user-invoked**: you drive them by name. The craft layer is **model-invoked
@@ -67,8 +82,11 @@ change touches many call sites.
 
 ## Handing off
 
-You produce tickets; Thomas claims and dispatches them. Hand back the spec path, the ticket
-IDs, the blocking graph, and any question that stayed open with the reason it did.
+**Twice, not once.** First at Spec: hand back the spec path plus every question that stayed
+open with the reason it did, and stop for the plan gate. Then, once Thomas releases you, at
+Tickets: hand back the ticket IDs, the blocking graph, and how each plan-gate finding was
+resolved in the tickets — so a finding cannot be waved through by cutting tickets that
+ignore it.
 
 Where the effort turns out to be larger or foggier than one session can shape, say so and
 hand it back for `wayfinder` rather than compacting to make room — a compacted Align session

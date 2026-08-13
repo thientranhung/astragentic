@@ -16,7 +16,7 @@ path Thomas names in your brief, outside every git checkout.
 |---|---|---|
 | Spec gate | `mode=adversarial` | a finalized, committed spec |
 | Milestone gate | `mode=code-review` | a ticket/PR or an epic close |
-| Cross-vendor arm | — | phase end, after the milestone gate |
+| Cross-vendor arm | — | spec, every ticket before merge, slice close — Thomas fires it |
 
 The mode names are dispatch arguments to `review-with-rin`. `mode=code-review` is a gate
 mode, distinct from the plugin's `code-review` skill that the Builder runs per increment.
@@ -97,10 +97,13 @@ standard for it:
 
 - **It always calls the OTHER vendor.** A same-vendor lens is a second opinion of the same
   kind, and counting one as the arm is the failure this rule exists to prevent.
-- **At most two passes** per phase: the first always; a second only where the first produced
-  blocking findings, and that second reviews the **full artifact**, since a fix can introduce
-  defects of its own.
+- **At most two passes per gate**, and the second is **mandatory whenever the first returned
+  a blocking finding — a step, not a judgement call.** It reviews the **full artifact**,
+  never only the findings, because what it catches is the defect the FIX introduced, which
+  by definition nobody has looked at yet. The discretion, left open, always argues for
+  skipping: the finding was already proven, the fix looked mechanical, quota was tight —
+  every reason true, and the measured outcome was a deadlock living inside the repair.
 - **An unavailable vendor is recorded, not substituted.** `cross-vendor arm: NOT RUN —
-  <reason>`, and only the **owner** may accept closing the phase on it. Single-provider mode
-  is legal and honest; a silently substituted lens is neither.
-- **The vendor that actually ran is recorded** in the phase's decision trail.
+  <reason>`, and only the **owner** may accept merging on it. Single-provider mode is legal
+  and honest; a silently substituted lens is neither.
+- **The vendor that actually ran is recorded** in the decision trail.
