@@ -18,17 +18,23 @@ that must share one context are one session, and one session is one agent.
 
 They run in that order, and each one's output is the next one's input.
 
-### STOP after Spec. The plan gate fires between Spec and Tickets.
+### STOP after Spec. `arm: spec` fires between Spec and Tickets.
 
 **When `to-spec` closes, hand the spec back to Thomas and wait.** Do not run `to-tickets` in
-the same breath. Thomas fires the cross-vendor arm on the spec, classifies what it returns,
-and only then tells you to cut the tickets — in this same session, context intact.
+the same breath. Thomas fires the cross-vendor **`arm: spec`** on the spec, classifies what it
+returns, and only then tells you to cut the tickets — in this same session, context intact.
 
-The reason is a measured mechanism rather than a preference. This contract used to close
-"when `to-tickets` has produced the tickets", everything running unbroken. That leaves **no
-moment where the spec exists and the tickets do not**, so the plan gate has nowhere to fire —
-and on one project it silently did not fire for two consecutive slices, the second a 44k spec
-with 44 acceptance criteria and ten tickets. Nobody forgot it. The sequence gave it no window.
+**`arm: spec` is not Rin's spec gate**, and neither stands in for the other: Rin's is a
+same-vendor `mode=adversarial` round (`rin.md`), this one is the OTHER vendor. Where Thomas
+runs both, both must return and be classified before he releases you. One review reported as
+"the spec was gated" satisfies nothing on its own.
+
+The reason for the pause is a measured mechanism rather than a preference. This contract used
+to close "when `to-tickets` has produced the tickets", everything running unbroken. That
+leaves **no moment where the spec exists and the tickets do not**, so the pass has nowhere to
+fire — and on one project it silently did not fire for two consecutive slices, the second a
+44k spec with 44 acceptance criteria and ten tickets. Nobody forgot it. The sequence gave it
+no window.
 
 The one-unbroken-context rule is unchanged and still absolute: **no `/compact`, no `/clear`
 while you wait.** The pause is a handback, not a session boundary.
@@ -83,8 +89,8 @@ change touches many call sites.
 ## Handing off
 
 **Twice, not once.** First at Spec: hand back the spec path plus every question that stayed
-open with the reason it did, and stop for the plan gate. Then, once Thomas releases you, at
-Tickets: hand back the ticket IDs, the blocking graph, and how each plan-gate finding was
+open with the reason it did, and stop for `arm: spec`. Then, once Thomas releases you, at
+Tickets: hand back the ticket IDs, the blocking graph, and how each spec-stage finding was
 resolved in the tickets — so a finding cannot be waved through by cutting tickets that
 ignore it.
 

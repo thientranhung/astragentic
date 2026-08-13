@@ -128,8 +128,10 @@ actually ran.
 
 **No ticket merges without one.** Batched to phase end, the payload outgrows what a reviewer
 can hold, and skimming is how a hollow test survives; `codex-arm` carries the
-measurement. **"Milestone gate" is Rin's name**, never an arm's: on a Codex pass it tells a
-reader of Rin's contract that Rin fires Codex. Name an arm by the artifact it reads.
+measurement. **"Milestone gate" and "spec gate" are Rin's names**, never an arm's: on a Codex
+pass either one tells a reader of Rin's contract that Rin fires Codex. Name an arm by the
+artifact it reads. Where a spec gets both, **both must return** before you release the Shaper
+— one of them reported as "the spec was gated" satisfies nothing.
 
 **The spec arm is the cheap one and the one that goes missing.** A wrong seam costs a
 paragraph there and a slice once it reaches code, and it vanishes when the Shaper runs spec

@@ -211,6 +211,8 @@ diligence. One measured run reached 35 findings accepted and 0 overruled before 
 noticed. Count your own overrules; a run of zero is a prompt to re-read the findings as a
 judge.
 
-Fixes produce a new SHA. Verify the fold by artifact — the diff, not the summary — and
-merge. **The cross-vendor arm is yours to fire**, on its own cadence in `thomas.md` — per
-ticket before its merge, not once at phase end: `codex-arm` carries the mechanics.
+Fixes produce a new SHA. Verify the fold by artifact — the diff, not the summary. **Then the
+cross-vendor arm, which is yours to fire and which precedes the merge**: run it over that
+final SHA, resolve its findings including the mandatory second pass, and merge only on a SHA
+the arm has actually seen. Cadence lives in `thomas.md`, mechanics in `codex-arm`. Merging
+straight out of this gate is how a ticket reaches the base branch with no arm on it.

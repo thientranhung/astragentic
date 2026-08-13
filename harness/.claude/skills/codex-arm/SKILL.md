@@ -68,8 +68,9 @@ OWNER may accept closing the phase without it. Single-provider mode is legal. A 
 lens silently counted as the arm is the thing this rule exists to prevent, so the recorded
 vendor is always the one that actually ran.
 
-Record the outcome once, in the phase's decision trail: the date, the verdict, the
-per-finding resolution, and the vendor that ran. **You classify which findings are real** —
-the arm advises. A second pass is legal only where the first produced blocking findings, and
-it re-reviews the FULL artifact rather than only those findings, since a fix can introduce
-defects of its own. Escalate to the owner on a genuine fork.
+Record the outcome once, in the merge decision trail: the date, the verdict, the per-finding
+resolution, and the vendor that ran. **You classify which findings are real** — the arm
+advises. **A second pass is MANDATORY where the first produced blocking findings**, and it
+re-reviews the FULL artifact rather than only those findings; `rin.md` owns that standard and
+its reasoning, and this line exists only so the runtime that executes it says the same thing.
+Escalate to the owner on a genuine fork.
