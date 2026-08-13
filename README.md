@@ -100,6 +100,26 @@ assumes someone else ran.
 `code-scout`, `gen-code-map.sh` and the staleness audit are the reading layer all six extract
 from.
 
+## Vocabulary
+
+Four words do most of the work, and two of them are easy to swap by accident.
+
+| Word | Means |
+|---|---|
+| **package** | this repo — the thing that produces a harness. Payload sits under `harness/` |
+| **adapted project** | a repo the harness was installed into. Payload sits at the repo root |
+| **payload** | what a release stages into a project and may overwrite freely |
+| **scaffold** | the owner's values, written once and never overwritten: `.agents/orchestrator.md` and `.codex/profiles/*` |
+
+Both scripts detect which of the two layouts they are running in and say so, so the layout is
+the machine test for package versus adapted project. **`scaffold` is a property of a few files
+inside the payload, not a name for the package** — a release can repair payload in every
+project it reaches and can never repair scaffold in any of them, which is why a guard against
+scaffold drift has to live in payload.
+
+`CONTEXT.md` is not in this list on purpose: the harness already owns that name for a
+project's domain glossary, seeded by `bootstrap-glossary`.
+
 ## Layout
 
 ```text

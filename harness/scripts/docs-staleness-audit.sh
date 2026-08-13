@@ -145,6 +145,21 @@ for ROLE in thomas shaper builder rin qa; do
     budget_check "roles/$ROLE.md" "$(role_budget "$ROLE")" "$(wc -w < "$RF" | tr -d ' ')"
   fi
 done
+# `orchestrator.md` is always-on too — Thomas reads it at session start — and until now
+# nothing measured it, so it was the one billed surface that could grow without a verdict.
+# It also cannot be repaired by a release: it is SCAFFOLD, written once and never
+# overwritten, so a project that lets it accrete keeps that weight through every upgrade.
+# THIS SCRIPT is payload, which is the whole reason the guard belongs here — an upgrade
+# carries the check into a project even though it may not touch the file the check reads.
+# Measured 2026-08-13: package 653 words, one project 941, another 1,477 — the last with 505
+# words arguing which model a row should carry, including a decision, its reversal the same
+# day, and an instruction not to undo the reversal. The table is the file's job; the argument
+# for a row belongs in that project's decision record, which loads when someone re-opens the
+# decision instead of on every session. 800 leaves real room over the shipped 653.
+ORCH_F="$PAYLOAD/.agents/orchestrator.md"
+if [[ -f "$ORCH_F" ]]; then
+  budget_check ".agents/orchestrator.md" 800 "$(wc -w < "$ORCH_F" | tr -d ' ')"
+fi
 # Zero roles measured is the vacuous pass this axis shipped with. Say so rather than
 # printing nothing and letting the run read as a success.
 if [[ $BUDGETS_RUN -eq 0 ]]; then
