@@ -32,10 +32,20 @@ PAYLOAD="harness"
 # docs/, .claude/, and shared .agents roles/skills. Product code folders
 # (apps/, packages/), prototypes, .scratch are
 # out of scope. Within scope, history classes are excluded.
+# AXES 1-3 carried the blindness AXIS 4 was fixed for in 1.5.0: these globs are relative to
+# the repo root, so in package layout — payload under harness/ — they matched ONE file, and
+# three axes reported clean over docs they never opened. The payload surfaces now carry
+# $PAYLOAD.
+# `SPEC-<version>.md` stays OUT of scope, and that is a decision rather than an oversight: a
+# shipped version's build spec names files in the repo it copied FROM, so its retired names
+# are accurate history. Rewriting them would falsify the record.
 scoped_md() {
-  git ls-files 'CLAUDE.md' 'AGENTS.md' 'CONTEXT.md' 'docs/**/*.md' 'docs/*.md' \
-               '.claude/**/*.md' '.claude/*.md' '.agents/roles/*.md' \
-               '.agents/skills/*/SKILL.md' \
+  local P="$PAYLOAD"
+  [[ "$P" == "." ]] && P="" || P="$P/"
+  git ls-files 'CLAUDE.md' 'AGENTS.md' 'CONTEXT.md' 'README.md' \
+               'docs/**/*.md' 'docs/*.md' \
+               "${P}.claude/**/*.md" "${P}.claude/*.md" "${P}.agents/roles/*.md" \
+               "${P}.agents/skills/*/SKILL.md" \
   | grep -v -e 'archive' -e '\.vi\.md$' -e '^docs/references/' -e '^docs/stakeholder/' \
             -e '^docs/governance/distilled/' -e 'worktrees'
 }
@@ -55,7 +65,7 @@ if [[ -n "$AGE_HITS" ]]; then echo "$AGE_HITS"; FOUND=1; else echo "(clean)"; fi
 echo
 echo "=== AXIS 2: fossils of retired names in LIVE docs ==="
 # Marker list — APPEND the old name whenever something is retired/renamed:
-FOSSILS='worker\.md|subagent_type:? ?"worker"|Worker Herdr|THOMAS\.md|evolution-loop|governance-maturity|4-lens|/agent-skills:|both PR lenses|implementer\.md|agents/dan\.md|agents/rin\.md|--agent dan[^-]|docs/superpowers|memory/README|herdr agent send|codex-dispatch-dan|\.codex/agents/dan-implementor\.toml|dan-implementor|dispatch-dan|rin-pr-reviewer|subagent_type:? ?"rin-reviewer"|live slice tab|plan-challenger'
+FOSSILS='worker\.md|subagent_type:? ?"worker"|Worker Herdr|THOMAS\.md|evolution-loop|governance-maturity|4-lens|/agent-skills:|both PR lenses|implementer\.md|\.agents/dan\.md|\.agents/rin\.md|--agent dan[^-]|docs/superpowers|memory/README|herdr agent send|codex-dispatch-dan|\.codex/agents/dan-implementor\.toml|dan-implementor|dispatch-dan|rin-pr-reviewer|subagent_type:? ?"rin-reviewer"|live slice tab|plan-challenger'
 # Retired by 1.0.0 (ADR 0001) — the roles Dan and James left the build loop, the review
 # loop became one bounded round, and the method moved to the mattpocock-skills plugin:
 FOSSILS="$FOSSILS"'|dan-senior|james-dev|rin-reviewer|thomas-leader|dispatch-slice|codex-plan-gate|codex-review-with-rin|codex-gate|slice:<|slice tab|simplify\(slice\)|working-method|gate loop|re-gate|findings exhausted'
