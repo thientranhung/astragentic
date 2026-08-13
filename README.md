@@ -34,10 +34,10 @@ and tickets run in one unbroken context, and each `implement` runs in a fresh on
 
 | Role | Session | Drives |
 |---|---|---|
-| **Thomas** — router | resident | `triage`, `wayfinder`, `to-questionnaire`, `ask-matt`; owns the tracker and the frontier |
+| **Thomas** — router | resident | `triage`, `wayfinder`, `to-questionnaire`, `ask-matt`; owns the tracker, the frontier and merge; fires the arm |
 | **Shaper** | one unbroken session | `grill-with-docs` → `to-spec` → `to-tickets`; decides seams while the whole picture is in context |
 | **Builder** | one per ticket | `implement`, in its own worktree, sole writer there |
-| **Rin** — reviewer | per milestone | second opinion, artifact verification, cross-vendor arm |
+| **Rin** — reviewer | per milestone | second opinion, artifact verification; owns the arm's standard |
 | **QA** | per walk | exercises the RUNNING product — interface, journeys, API contracts, data as experienced |
 
 Every agent reaches the craft layer directly, since those skills are model-invoked:
@@ -117,6 +117,7 @@ harness/                          the payload staged into a target repo
       dispatch-qa-walk/             QA's walk — the one gate needing a running app
       code-scout/                   read the current state before work is shaped
       codex-arm/                    cross-vendor arm, Claude root → Codex
+      tracker-frontier-audit/       the frontier a tracker cannot represent
       extract-standards/            ┐
       bootstrap-glossary/           ├ brownfield bootstrap, invoked by name
       batch-triage/                 ┘

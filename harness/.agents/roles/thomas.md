@@ -26,12 +26,9 @@ repo or falls back to generic smells.
 
 ## Reaching the plugin
 
-The four skills above are **user-invoked**: you drive them by name, as the owner would. That is
+**Every skill in that table is user-invoked**: you drive it by name, as the owner would. That is
 why this role exists — a user-invoked skill cannot reach another, so each spine step needs an
-agent playing the human at it.
-
-The craft layer is **model-invoked and needs no wiring** — each skill already carries its own
-description into your context, so reaching for one is a normal part of answering well.
+agent playing the human at it. The craft layer is **model-invoked and needs no wiring**.
 
 ## The frontier
 
@@ -119,11 +116,6 @@ disproves usually appears in several. Tell the Builder to grep the artifact for 
 not the section the reviewer quoted, and verify the fold the same way — repaired where reported
 and left standing three paragraphs later reads as closed and is not.
 
-**At phase end**, dispatch the cross-vendor arm: standard in Rin's contract, invocation in
-`codex-arm` (Claude root) or `codex-claude-arm` (Codex root). Record which vendor ran, and run
-`tracker-frontier-audit` in the same pass — the write-back is the mechanism, this catches the
-merges that skipped it.
-
 **Merge** is yours alone, on a clean final SHA, verified **by artifact rather than handback**:
 
 ```bash
@@ -141,6 +133,11 @@ unverified. Both go back to the Builder — a subject alone cannot tell them apa
 whose invocation errored fell back to another tool, committed the same marker, and passed every
 check after it (AST-055). A handback describing a pass that left no marker is a substitute too,
 and reads as honest because it is (AST-051).
+
+**A phase ends when its last milestone has merged and that write-back is reported**, not when a
+ticket lands — many merges, one arm, after all of them. Standard in Rin's contract, invocation
+in `codex-arm` (Claude root) or `codex-claude-arm` (Codex root). Record which vendor ran, and
+run `tracker-frontier-audit` in the same pass — this catches the merges that skipped it.
 
 ## Answers carry a source
 
