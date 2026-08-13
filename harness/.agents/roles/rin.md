@@ -103,7 +103,12 @@ standard for it:
   by definition nobody has looked at yet. The discretion, left open, always argues for
   skipping: the finding was already proven, the fix looked mechanical, quota was tight —
   every reason true, and the measured outcome was a deadlock living inside the repair.
+- **Findings go to whoever owns the artifact reviewed**, which is not always a Builder: a spec
+  goes back to the **paused Shaper** to repair and re-commit, a ticket to its Builder, a closed
+  slice to a follow-up ticket. Sending a spec finding to a Builder names a contract that does
+  not exist yet at that moment.
 - **An unavailable vendor is recorded, not substituted.** `cross-vendor arm: NOT RUN —
-  <reason>`, and only the **owner** may accept merging on it. Single-provider mode is legal
-  and honest; a silently substituted lens is neither.
+  <reason>`, and only the **owner** may accept proceeding without it — **releasing the Shaper
+  to cut tickets** at spec, **merging** at ticket, **closing the slice** at slice. Single-
+  provider mode is legal and honest; a silently substituted lens is neither.
 - **The vendor that actually ran is recorded** in the decision trail.

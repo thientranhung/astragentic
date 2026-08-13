@@ -64,7 +64,9 @@ instruction to attack the diff AGAINST THAT INTENT.
 
 Codex unavailable or out of quota → **the arm DID NOT RUN.** Rin's own fresh-context lens is
 advisory and never completes it: record `cross-vendor arm: NOT RUN — <reason>`, and only the
-OWNER may accept closing the phase without it. Single-provider mode is legal. A same-vendor
+OWNER may accept proceeding without it, on the terms `rin.md` sets for the artifact under
+review — they are not the same at spec, ticket and slice. Single-provider mode is legal. A
+same-vendor
 lens silently counted as the arm is the thing this rule exists to prevent, so the recorded
 vendor is always the one that actually ran.
 

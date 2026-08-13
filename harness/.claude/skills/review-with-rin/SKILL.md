@@ -194,14 +194,16 @@ because the reviewer refused the summary as proof.
 
 ## 4. Act on the findings
 
-**Rin advises, YOU classify, the Builder fixes.** Rin labels each finding blocking or
+**Rin advises, YOU classify, the artifact's owner fixes.** Rin labels each finding blocking or
 non-blocking; that label is advice, and treating one as real is your decision.
 
 - **Design-level blockers → the owner, via `to-questionnaire`.** These are decisions, and a
   second review round cannot make a decision. Record the question and the artifact it blocks.
-- **Everything else → your work order to the Builder**, in its own pane, with the finding
-  and what you want done. The middle link is a JUDGEMENT, not a relay: a raw findings list
-  is not a work order.
+- **Everything else → your work order to whoever owns what was gated.** At a spec gate that is
+  the **paused Shaper**, which repairs and re-commits the spec — no Builder exists yet, and
+  naming one here is how a spec finding dead-ends. At a ticket or PR gate it is that ticket's
+  **Builder**, in its own pane. Either way the middle link is a JUDGEMENT, not a relay: a raw
+  findings list is not a work order.
 - **wontfix-with-a-recorded-reason is a legitimate outcome**, and the check that keeps it
   honest is that the reason survives being written down. Write it in the gate record.
 

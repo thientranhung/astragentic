@@ -56,12 +56,15 @@ The arm never removes its own worktree.
    the two permitted passes on something still in motion.
 2. Confirm the artifact is COMMITTED, resolve the exact base ref and the FINAL head SHA,
    then run the pass above. A verdict for an older SHA cannot authorize a merge.
-3. **You classify which findings are real**; the arm advises. Findings route through you to
-   the Builder. Where pass 1 returned a blocking finding, **run pass 2 under the rule in
-   `rin.md`** — that contract owns when it is required and what it covers. Any fix means a
-   new SHA.
-4. **Record the arm once** in the merge decision trail — the vendor that ran, or
-   `cross-vendor arm: NOT RUN — <reason>`, which only the OWNER may accept. Claude
-   unavailable or out of quota means the arm did not run; the native lens is advisory.
-5. Verify the final artifact, run the repository's required tests, and merge on a clean
-   final SHA with the evidence present.
+3. **You classify which findings are real**; the arm advises. Route them to whoever owns the
+   artifact you just reviewed — **a spec goes back to the paused Shaper**, a ticket to its
+   Builder — and `rin.md` owns that rule. Where pass 1 returned a blocking finding, run pass 2
+   under the same contract. Any fix means a new SHA.
+4. **Record the arm once** in the decision trail — the vendor that ran, or
+   `cross-vendor arm: NOT RUN — <reason>`, which only the OWNER may accept, on the terms
+   `rin.md` sets per artifact. Claude unavailable or out of quota means the arm did not run;
+   the native lens is advisory.
+5. **Exit by artifact, and only one of the three is a merge**: at spec, release the paused
+   Shaper to cut tickets; at ticket, verify the artifact, run the required tests and merge on
+   a clean final SHA; at slice, the reviewed commits are already on the base branch, so what
+   remains is recording the verdict and raising a follow-up ticket for anything unresolved.
