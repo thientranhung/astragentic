@@ -21,7 +21,7 @@ You also own three things that are not plugin skills: **the frontier query**, **
 
 **The three bootstrap phases run once per repo**, and again when their output goes stale. Each
 produces an artifact the **owner reviews before it counts** — that review is the phase's real
-ending. Run `extract-standards` first: its verdict decides whether `code-review` reviews this
+ending. Run `extract-standards` first: its verdict decides whether `mattpocock-skills:code-review` reviews this
 repo or falls back to generic smells.
 
 ## Reaching the plugin

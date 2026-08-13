@@ -27,7 +27,7 @@ what is missing and how to produce it.
 
 **The spine comes from the plugin.** A foggy effort larger than one session enters at
 `wayfinder`; anything that fits one session enters at `grill-with-docs`. Both hand off to
-`to-spec` → `to-tickets` → one `implement` per ticket → `code-review`.
+`to-spec` → `to-tickets` → one `implement` per ticket → `mattpocock-skills:code-review`.
 
 **Roles follow session boundaries**, because the plugin fixes those boundaries: align, spec
 and tickets run in one unbroken context, and each `implement` runs in a fresh one.
@@ -41,7 +41,7 @@ and tickets run in one unbroken context, and each `implement` runs in a fresh on
 | **QA** | per walk | exercises the RUNNING product — interface, journeys, API contracts, data as experienced |
 
 Every agent reaches the craft layer directly, since those skills are model-invoked:
-`grilling`, `tdd`, `code-review`, `codebase-design`, `domain-modeling`, `research`,
+`grilling`, `tdd`, `mattpocock-skills:code-review`, `codebase-design`, `domain-modeling`, `research`,
 `prototype`, `diagnosing-bugs`, `wizard`, `resolving-merge-conflicts`. Installing the plugin
 once equips the whole team.
 
@@ -57,7 +57,7 @@ worktree and pane, so several Builders work the frontier at once under the isola
 carried over from the prior package. That is the throughput mechanism, and
 `dispatch-ticket` is where it lives.
 
-**Review keeps its weight and drops the loop.** Per ticket: `code-review`'s two axes in one
+**Review keeps its weight and drops the loop.** Per ticket: `mattpocock-skills:code-review`'s two axes in one
 pass, a per-increment simplify pass leaving a `simplify(increment):` marker commit, and the
 cross-vendor arm before the merge — no ticket merges without one. At a milestone: one Rin
 round, verifying the artifact and that the process left its traces. Once more at the spec,
@@ -89,7 +89,7 @@ assumes someone else ran.
 | `batch-triage` | an inherited backlog as tickets with labels and blocking edges |
 
 **Craft — model-invoked, reached when the situation arises**, needing no wiring, exactly like
-`tdd` and `code-review`.
+`tdd` and `mattpocock-skills:code-review`.
 
 | Skill | Reached when |
 |---|---|

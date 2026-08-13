@@ -9,7 +9,7 @@ Preconditions: you are **Thomas**. Rin's contract: `.claude/agents/rin.md`.
 
 Rin is the second opinion at a milestone, and fires there only: a finalized spec
 (`mode=adversarial`), a ticket/PR or epic close (`mode=code-review`). Per-ticket review is
-`code-review`'s two axes plus the increment simplify pass, and it is complete on its own.
+`mattpocock-skills:code-review`'s two axes plus the increment simplify pass, and it is complete on its own.
 
 **One round per milestone.** Rin verifies the artifact and that the process left its traces.
 A design-level blocking finding goes to the OWNER through `to-questionnaire` — the question

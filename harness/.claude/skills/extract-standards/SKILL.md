@@ -5,7 +5,7 @@ description: Read an existing codebase and write docs/agents/standards.md — th
 
 # Extract standards from the code that exists
 
-`code-review` has two axes, and the Standards axis reads whatever the repo documents. Where a
+`mattpocock-skills:code-review` has two axes, and the Standards axis reads whatever the repo documents. Where a
 repo documents nothing, it falls back to twelve generic smells and **becomes the generic
 review its own design exists to avoid** — quietly, with no signal that it happened. This
 skill gives that axis something real to read, and makes the degradation audible when it
@@ -36,7 +36,7 @@ A candidate rule needs three things before it is written down:
 
 Search for contradictions deliberately rather than waiting to meet one. A rule holding in 18
 files and broken in 11 is not a standard; it is an unresolved disagreement, and recording it
-as a standard would make `code-review` produce findings against half the repo.
+as a standard would make `mattpocock-skills:code-review` produce findings against half the repo.
 
 Classify each candidate:
 
@@ -74,7 +74,7 @@ talked up:
 
 **Report THIN loudly to the owner, in the run's summary and not only in the file.** THIN
 means the Standards axis will keep doing a generic review, and the owner needs that in words:
-*"this repo has no extractable standards, so `code-review`'s Standards axis will fall back to
+*"this repo has no extractable standards, so `mattpocock-skills:code-review`'s Standards axis will fall back to
 generic smells until standards are written by hand."* Silent degradation is the failure class
 this package exists to catch, and a THIN verdict quietly filed is that failure happening
 inside the tool built to prevent it.

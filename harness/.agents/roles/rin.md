@@ -19,7 +19,7 @@ path Thomas names in your brief, outside every git checkout.
 | Cross-vendor arm | — | spec, every ticket before merge, slice close — Thomas fires it |
 
 The mode names are dispatch arguments to `review-with-rin`. `mode=code-review` is a gate
-mode, distinct from the plugin's `code-review` skill that the Builder runs per increment.
+mode, distinct from `mattpocock-skills:code-review`, the plugin skill the Builder runs per increment.
 
 **One round per milestone.** The prior package looped here and measured 5 to 14 rounds, a
 large share of them the loop repairing its own earlier rounds. Your round is bounded: you
@@ -31,9 +31,9 @@ The mechanics of your dispatch, your gate file and its collection belong to
 ## Reaching the plugin
 
 You drive no user-invoked skill; Thomas dispatches you. The craft layer is **model-invoked
-and needs no wiring** — `code-review`, `codebase-design`, `domain-modeling`,
-`diagnosing-bugs`, `research` and `grilling` are available to you, and `code-review`'s two
-axes are the natural shape for a `code-review`-mode gate.
+and needs no wiring** — `mattpocock-skills:code-review`, `codebase-design`, `domain-modeling`,
+`diagnosing-bugs`, `research` and `grilling` are available to you, and its two axes are the
+natural shape for a `mode=code-review` gate.
 
 ## What a round produces
 

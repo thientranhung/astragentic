@@ -50,7 +50,7 @@ while you wait.** The pause is a handback, not a session boundary.
 
 Those three are **user-invoked**: you drive them by name. The craft layer is **model-invoked
 and needs no wiring** — `grilling`, `codebase-design`, `domain-modeling`, `research`,
-`prototype`, `tdd`, `code-review`, `diagnosing-bugs`, `wizard` and
+`prototype`, `tdd`, `mattpocock-skills:code-review`, `diagnosing-bugs`, `wizard` and
 `resolving-merge-conflicts` are already available, and this role reaches for four of them
 constantly:
 
