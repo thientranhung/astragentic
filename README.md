@@ -133,13 +133,11 @@ harness/                          the payload staged into a target repo
       codex-dispatch-headless/    explicit headless exception
   .claude/
     agents/                       Claude adapters so --agent <role> resolves
-    commands/                     owner-facing: /audit-tracker
     skills/
       review-with-rin/              Rin's milestone gate — dispatch, gate file, collection
       dispatch-qa-walk/             QA's walk — the one gate needing a running app
       code-scout/                   read the current state before work is shaped
       codex-arm/                    cross-vendor arm, Claude root → Codex
-      tracker-frontier-audit/       the frontier a tracker cannot represent
       extract-standards/            ┐
       bootstrap-glossary/           ├ brownfield bootstrap, invoked by name
       batch-triage/                 ┘
@@ -148,7 +146,7 @@ harness/                          the payload staged into a target repo
       module-boundaries/            ┘
   .codex/profiles/                one per role, mirroring the orchestrator rows
   .agents/memory/
-    recurring-failure-modes.md    67 measured failure modes; append-only, the evidence base
+    recurring-failure-modes.md    66 measured failure modes; append-only, the evidence base
   scripts/
     herdr-watch-terminal.sh       turn watcher with a real start guard
     docs-staleness-audit.sh       age, fossils, dead links, always-on word budgets

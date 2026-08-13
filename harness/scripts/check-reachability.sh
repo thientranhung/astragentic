@@ -12,13 +12,9 @@ Seven checks, in both directions:
   2 CONTRACT -> UNIQUE   every phase any contract declares is declared by exactly one.
   3 SKILL -> NAMED       every shipped skill is named by a contract, another skill, or the
                          adaptation prompt. Read the verb literally: this finds a STRING in
-                         a document. It cannot tell a skill that runs on every merge from
-                         one nobody has ever invoked, and it went green over both. A project
-                         measured `tracker-frontier-audit` at zero calls across six merges
-                         while this check certified it — its trigger was "when the board
-                         looks wrong", which is a feeling, not a step. The fix is never a
-                         better checker here: it is giving the skill a step that fails
-                         without it, or an owner-facing command (AST-067).
+                         a document. It cannot tell a skill that runs every session from one
+                         nobody has ever invoked, and it goes green over both. A skill whose
+                         trigger is a feeling rather than a step passes here and never runs.
   4 REFERENCE -> EXISTS  every payload path and skill name referenced by a contract or a
                          shipped skill resolves. HARD failure: a contract naming a file
                          that does not exist is how the prior package failed.
@@ -444,7 +440,6 @@ ARTIFACTS = [
     # role that must do it at merge, and the audit that finds the merges where it did not
     # happen. Naming a skill in a contract clears check 3 and makes nothing run; this is
     # what keeps the backstop attached to a moment instead of to someone noticing (AST-057).
-    ("frontier write-back",         r"frontier write-back",   "thomas",  ["tracker-frontier-audit"]),
 ]
 def holder(name):
     """Text of a role contract or a shipped skill, whichever owns this name."""
