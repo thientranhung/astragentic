@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 69 entries (AST-001 … AST-070, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 70 entries (AST-001 … AST-071, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1221,3 +1221,31 @@ now unsupported outright, and the routing line says so instead of pointing at a 
 **Adding it back is cheap; guessing its shape in advance was not.** A real request would have
 shaped it against a real constraint. This one was shaped against a hypothesis.
 Bound: `harness/.agents/skills/dispatch-ticket/SKILL.md`.
+
+### AST-071 — Every check asked whether a thing was NAMED, none asked whether anything READ it · promoted 2026-08-13
+
+Seven reachability checks, five contracts, a staleness audit on five axes, and three skills
+shipped for weeks writing documents that no contract and no plugin skill was ever told to
+open. Every check was green the whole time. The owner found all three by hand, on the third
+occasion of noticing the same shape in one day.
+
+The blind spot was structural rather than careless. Check 3 asks whether a skill is NAMED.
+Check 4 asks whether a referenced path EXISTS. Check 6 asks whether an address is CALLABLE.
+Check 7 asks producer-and-verifier, but only for the gate artifacts a human had listed. Not
+one asked the question that mattered: **does anything read what we produce?** A file with a
+writer and no reader satisfies every one of them.
+
+`extract-standards` is the sharpest instance because it was well built. Its consumer was
+supposed to be the plugin's Standards axis, whose instruction is one sentence — *"anything in
+the repo that documents how code should be written"* — with no path and no directory, against
+a neighbouring step that names `docs/agents/issue-tracker.md` outright. So the package wrote a
+file to an address its reader has no instruction to visit, under a name that reader never
+mentions. **Diagnosis right, address wrong, and nothing could see the difference.**
+
+Check 8 closes it at the only point that is mechanical: a skill declaring `## N. Write <path>`
+must have a row in the artifact registry, where a human names the reader. It deliberately does
+not try to infer readers — `batch-triage` asked for "the code map" in prose for weeks, and a
+filename grep called that artifact an orphan while a shipped skill wanted it every run. **A
+grep for a name is not a search for a consumer**, so the registry is written by hand and the
+check only enforces that nothing escapes it.
+Bound: `harness/scripts/check-reachability.sh`.

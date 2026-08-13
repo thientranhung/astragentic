@@ -1,3 +1,33 @@
+# Astraler Harness 1.6.2
+
+One check, for the question none of the other seven asked.
+
+## Added — check 8: WRITES → REGISTERED
+
+Seven reachability checks and a five-axis staleness audit were all green while three skills
+shipped for weeks writing documents nobody was told to read. The blind spot was structural:
+**check 3 asks whether a skill is named, check 4 whether a path exists, check 6 whether an
+address is callable, check 7 producer-and-verifier for the gate artifacts a human listed.**
+A file with a writer and no reader satisfies every one of them.
+
+Check 8 asks the missing one. A skill declaring `## N. Write <path>` must have a row in the
+artifact registry, where a human states who reads it. Adding a writing skill without
+registering a reader now fails.
+
+**It deliberately does not infer readers.** `batch-triage` asked for *"the code map"* in prose
+for weeks, and a filename grep called that artifact an orphan while a shipped skill wanted it
+every run — a grep for a name is not a search for a consumer (AST-071). So the registry stays
+hand-written and check 8 only enforces that nothing escapes it. The scope line says so.
+
+The registry also learned to hold verifiers **outside this payload**: `CONTEXT.md` is read by
+the plugin rather than by us, so its row names `plugin:domain-modeling` and is checked against
+the installed copy. Where the plugin is absent the verdict **names what it could not read**
+instead of passing quietly.
+
+## Upgrading
+
+Payload only. Projects on 1.6.1 take this to receive the check; nothing else changes.
+
 # Astraler Harness 1.6.1
 
 Five skills removed. Every one of them wrote a document, and nothing in this package or in the

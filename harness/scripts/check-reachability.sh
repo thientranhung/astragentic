@@ -5,7 +5,7 @@ The prior package lost two weeks to an Align phase that lived in a method docume
 no role's contract, so nothing ever ran it. Every check here exists to make that class of
 gap fail loudly instead of quietly.
 
-Seven checks, in both directions:
+Eight checks, in both directions:
 
   1 METHOD -> CONTRACT   every phase the README's role table names is the owning row of
                          exactly one contract, owned by the role the README names.
@@ -33,6 +33,11 @@ Seven checks, in both directions:
                          it AND by the contract that checks it. A gate whose producer went
                          quiet cannot fail; a rule living only in a skill is read when that
                          skill runs, not when the deciding role decides (AST-051).
+  8 WRITES -> REGISTERED  every document a skill declares it WRITES has a registry row, where
+                         a human names who reads it. Checks 1-7 all ask whether a thing is
+                         named; none asked whether anything reads what we produce, and three
+                         skills shipped for weeks writing files nobody was told to open. The
+                         owner found them by hand while every check was green (1.6.1).
 
 Runs against this package (payload under harness/) or an adapted project (payload at the
 repo root). Exit 0 = every check passed, 1 = at least one finding.
@@ -436,18 +441,38 @@ ARTIFACTS = [
     ("browser evidence",            r"browser evidence",      "builder", ["rin"]),
     ("gate file",                   r"GATE_FILE",             "rin",     ["review-with-rin"]),
     ("ledger line",                 r"`Ledger:`",             "thomas",  ["rin"]),
+    # A produced DOCUMENT is an artifact too, and this row is the one that survived the
+    # 1.6.1 cull: three sibling skills wrote files that no contract and no plugin skill was
+    # told to read, and every check here went green because each was NAMED. `CONTEXT.md`
+    # differs by being read — by the plugin, not by us — so its verifier is a plugin skill
+    # and is checked against the installed copy when there is one.
+    ("CONTEXT.md",                  r"CONTEXT\.md",           "bootstrap-glossary",
+                                                              ["plugin:domain-modeling"]),
     # The frontier write-back has no commit to grep — its artifact is tracker state, which
     # this script cannot see. So the registry binds the two halves that ARE readable: the
     # role that must do it at merge, and the audit that finds the merges where it did not
     # happen. Naming a skill in a contract clears check 3 and makes nothing run; this is
     # what keeps the backstop attached to a moment instead of to someone noticing (AST-057).
 ]
+PLUGIN_UNREAD = []
 def holder(name):
-    """Text of a role contract or a shipped skill, whichever owns this name."""
+    """Text of a role contract, a shipped skill, or an installed plugin skill."""
     if name in roles:
         return roles[name], "contract"
     if name in skills:
         return skills[name][1], "skill"
+    if name.startswith("plugin:"):
+        # A verifier outside this payload. Read the installed copy when present; when it is
+        # absent say so in the verdict rather than passing — an unreadable verifier is an
+        # unverified one, and this axis exists because green lines outran their evidence.
+        bare = name.split(":", 1)[1]
+        for pat in (f"~/.claude/plugins/cache/*/*/*/skills/*/{bare}/SKILL.md",
+                    f"~/.claude/plugins/cache/*/*/skills/*/{bare}/SKILL.md"):
+            hits = glob.glob(os.path.expanduser(pat))
+            if hits:
+                return read(hits[0]), "plugin skill"
+        PLUGIN_UNREAD.append(bare)
+        return "", "plugin skill (not installed)"
     return None, None
 
 for label, pattern, producer, verifiers in ARTIFACTS:
@@ -457,10 +482,38 @@ for label, pattern, producer, verifiers in ARTIFACTS:
         if text is None:
             fail("7", f"'{label}' names {part} '{who}', which is neither a contract nor a "
                       f"shipped skill", "the registry in this script has gone stale")
+        elif kind == "plugin skill (not installed)":
+            pass   # named in the verdict's scope line instead of silently passing
         elif not rx.search(text):
             fail("7", f"'{label}': {kind} '{who}' is its {part} and never names it",
                  "a gate whose producer went quiet cannot fail, and a verifier that does "
                  "not carry the rule will not apply it")
+
+# --- 8. WRITES -> REGISTERED --------------------------------------------------------------
+# Checks 1-7 all ask whether a thing is NAMED. None asked the question that cost this package
+# three skills: a skill wrote a document, and nobody was ever told to read it. 1.6.1 removed
+# `extract-standards`, `module-boundaries` and `code-scout` for exactly that, and the owner
+# found all three by hand because every check was green.
+#
+# So: a skill that declares it WRITES a path must appear in the ARTIFACTS registry above,
+# where a human states who reads it. This does not verify the reader — check 7 does that for
+# rows whose readers are readable. It verifies that no writer escapes the registry unnoticed.
+#
+# SCOPE, stated because this axis is about overclaiming: it reads `## N. Write \`path\``
+# headings only. A skill that writes without that heading, or one whose consumer names the
+# artifact in prose rather than by path, is invisible here — `batch-triage` asked for "the
+# code map" in words for weeks and a filename grep called it an orphan (AST-069's shape).
+WRITE_RX = re.compile(r"^#{2,3} *[0-9]*\.? *Write +`([^`]+)`", re.M)
+REGISTERED = " ".join(f"{a[0]} {a[1]}" for a in ARTIFACTS)
+writes_seen = 0
+for sname in sorted(skills):
+    for m in WRITE_RX.finditer(skills[sname][1]):
+        art = m.group(1)
+        writes_seen += 1
+        if art.replace(".", "\\.") not in REGISTERED and art not in REGISTERED:
+            fail("8", f"skill '{sname}' writes '{art}', which no ARTIFACTS row covers",
+                 "a document with a producer and no named reader is the defect 1.6.1 "
+                 "removed three skills for; add a row naming who reads it, or stop writing it")
 
 # --- report -----------------------------------------------------------------------------
 print(f"Reachability check — {LAYOUT} layout, payload at {os.path.normpath(PAYLOAD)}")
@@ -480,6 +533,12 @@ if not findings:
     print("  [OK] 5 every role has a launcher and a dispatcher that names it")
     print("  [OK] 6 every skill is addressed in the form its caller can actually use")
     print("  [OK] 7 every gate artifact has both a producer and a verifier")
+    print(f"  [OK] 8 every document a skill declares it writes is in the artifact registry"
+          f" ({writes_seen} write heading(s) read)")
+    if PLUGIN_UNREAD:
+        print("  verifier(s) outside this payload and NOT read this run: "
+              + ", ".join(sorted(set(PLUGIN_UNREAD)))
+              + " — install the plugin to check them")
     print(f"\nAll reachability checks passed. Scope: {len(roles)} contracts, "
           f"{len(skills)} skills, the adaptation prompt and the README role table.")
     if PROJECT_OWNED:
