@@ -21,7 +21,7 @@ and fails at the first cross-vendor call, looking like the provider being down.
 |---|---|---|---|
 | thomas | claude | claude-opus-5 | high |
 | shaper | claude | claude-opus-5 | high |
-| builder | claude | claude-sonnet-5 | medium |
+| builder | claude | claude-sonnet-4-6 | high |
 | rin | claude | claude-opus-5 | high |
 | qa | claude | claude-sonnet-5 | medium |
 
