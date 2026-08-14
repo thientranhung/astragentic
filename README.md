@@ -1,4 +1,4 @@
-# Astraler Harness 1.6.3
+# Astraler Harness 2.0.0
 
 An operating framework that lets **several agents build software together on an existing
 codebase**.
@@ -20,8 +20,9 @@ clean repo belongs upstream, and stays there.
 
 The machine needs the Claude Code CLI, git with worktree support, herdr ≥ 0.8.0, and the
 `mattpocock-skills` plugin. Codex is the cross-vendor arm and degrades to a warning when
-absent. The target repo needs its tracker and triage labels configured — the doctor names
-what is missing and how to produce it.
+absent. OpenCode is an optional third provider — roles can be dispatched to it when
+`orchestrator.md` assigns them there. The target repo needs its tracker and triage labels
+configured — the doctor names what is missing and how to produce it.
 
 ## The method
 
@@ -120,21 +121,33 @@ project's domain glossary, seeded by `bootstrap-glossary`.
 ```text
 harness/                          the payload staged into a target repo
   .agents/
-    roles/                        thomas · shaper · builder · rin · qa — the five contracts
+    roles/                        five contracts + per-runtime supplements
+      builder.md                    base contract
+      builder-claude.md             simplify phase (Skill tool), /compact, /clear
+      builder-codex.md              simplify SKIPPED protocol
+      builder-opencode.md           simplify SKIPPED protocol
+      thomas.md · thomas-{claude,codex,opencode}.md
+      rin.md · rin-{claude,codex,opencode}.md
+      shaper.md · qa.md             runtime-neutral, no supplements
     orchestrator.md               role → runtime/model/effort; the owner's file
     skills/
-      dispatch-ticket/            one ticket → one Builder → one worktree → one pane
+      dispatch-ticket/            shared protocol — binding, worktree, brief, review
+      dispatch-ticket-claude/     Claude launcher + verification
+      dispatch-ticket-codex/      Codex launcher + verification
+      dispatch-ticket-opencode/   OpenCode launcher + verification
       codex-claude-arm/           cross-vendor arm, Codex root → Claude
+      review-with-rin/            ┐
+      dispatch-qa-walk/           │ copies for Codex/OpenCode discovery
+      codex-arm/                  │ (Claude originals in .claude/skills/ untouched)
+      batch-triage/               │
+      bootstrap-glossary/         │
+      legacy-testing/             │
+      untangle/                   ┘
   .claude/
     agents/                       Claude adapters so --agent <role> resolves
-    skills/
-      review-with-rin/              Rin's milestone gate — dispatch, gate file, collection
-      dispatch-qa-walk/             QA's walk — the one gate needing a running app
-      codex-arm/                    cross-vendor arm, Claude root → Codex
-      bootstrap-glossary/           ┐ brownfield bootstrap, invoked by name
-      batch-triage/                 ┘
-      legacy-testing/               ┐ brownfield craft, model-invoked
-      untangle/                     ┘
+    skills/                       Claude-discovered skills (7 skills, unchanged)
+  .opencode/
+    agents/                       OpenCode adapters so --agent <role> resolves
   .codex/profiles/                one per role, mirroring the orchestrator rows
   .agents/memory/
     recurring-failure-modes.md    70 measured failure modes; append-only, the evidence base

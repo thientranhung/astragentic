@@ -172,7 +172,7 @@ So add paths, and know which release you are keeping:
 
 ```bash
 CAND="$(cat .astraler/CANDIDATE)"
-git add .agents .claude .codex scripts .astraler/state .astraler/CANDIDATE
+git add .agents .claude .codex .opencode scripts .astraler/state .astraler/CANDIDATE
 git add ".astraler/releases/$CAND" || true          # may be refused; the next line decides
 git diff --cached --name-only -- ".astraler/releases/$CAND" | wc -l
 ```

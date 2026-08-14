@@ -87,12 +87,26 @@ def read(path):
         return ""
 
 # --- inventory --------------------------------------------------------------------------
-roles = {os.path.basename(p)[:-3]: read(p)
-         for p in sorted(glob.glob(os.path.join(ROLES_DIR, "*.md")))}
+# Runtime supplements (builder-claude.md, thomas-codex.md, etc.) are role extensions, not
+# independent roles. They have no launcher, no dispatcher mention, and no phase table, so
+# they must not enter the checks that verify those things (checks 1, 2, 5). Include their
+# text in the reference-scanning checks (3, 4, 6, 7) through a separate dict.
+_all_role_files = {os.path.basename(p)[:-3]: read(p)
+                   for p in sorted(glob.glob(os.path.join(ROLES_DIR, "*.md")))}
+RUNTIME_SUFFIXES = ("-claude", "-codex", "-opencode")
+roles = {n: t for n, t in _all_role_files.items()
+         if not any(n.endswith(s) for s in RUNTIME_SUFFIXES)}
+role_supplements = {n: t for n, t in _all_role_files.items()
+                    if any(n.endswith(s) for s in RUNTIME_SUFFIXES)}
 all_skills = {}
 for pattern in SKILL_GLOBS:
     for p in sorted(glob.glob(pattern)):
-        all_skills[os.path.basename(os.path.dirname(p))] = (p, read(p))
+        base = os.path.basename(os.path.dirname(p))
+        if base in all_skills:
+            prev_path, prev_text = all_skills[base]
+            all_skills[base] = (prev_path, prev_text + "\n" + read(p))
+        else:
+            all_skills[base] = (p, read(p))
 
 # Which of those does THIS package own? In package layout, all of them. In an adapted
 # project the skill directories hold the project's own skills beside the harness's, and a
@@ -267,12 +281,13 @@ for name in sorted(skills):
 
 # --- 4. REFERENCE -> EXISTS -------------------------------------------------------------
 sources = {f"contract {r}": t for r, t in roles.items()}
+sources.update({f"supplement {r}": t for r, t in role_supplements.items()})
 sources.update({f"skill {n}": t for n, (_, t) in skills.items()})
 # Project-owned skills are the project's to maintain; this checker verifies the harness.
 
 for src, text in sorted(sources.items()):
     # 4a. payload-relative paths
-    for ref in sorted(set(re.findall(r"`((?:\.agents|\.claude|scripts)/[A-Za-z0-9_./-]+)`", text))):
+    for ref in sorted(set(re.findall(r"`((?:\.agents|\.claude|\.opencode|\.codex|scripts)/[A-Za-z0-9_./-]+)`", text))):
         if ref.endswith("/"):
             continue
         if "<" in ref or ref.count("*"):
@@ -286,16 +301,33 @@ for src, text in sorted(sources.items()):
             continue
         fail("4", f"{src} names '{tok}', which is neither a shipped skill nor a plugin skill",
              "a retired name, a typo, or vocabulary to add to NOT_A_SKILL in this script")
-    # 4c. launcher argv. `claude --agent X` resolves X from .claude/agents/ RELATIVE TO THE
-    # CWD, so a named agent with no definition fails at dispatch with "agent not found" —
-    # the same dangling-reference class as 4a, just written as argv instead of a path.
+    # 4c. launcher argv. `claude --agent X` resolves from .claude/agents/, and
+    # `opencode --agent X` resolves from .opencode/agents/. Each runtime resolves from its
+    # own directory ONLY, so a claude launcher naming an agent that exists only under
+    # .opencode/ (or vice versa) will fail at dispatch with "agent not found".
+    for m_agent in re.finditer(r"(claude|opencode)\s+--agent\s+([a-z][a-z0-9-]*)", text):
+        runtime, agent = m_agent.group(1), m_agent.group(2)
+        if agent.startswith("<"):
+            continue
+        adapter_dir = ".claude" if runtime == "claude" else ".opencode"
+        if not os.path.exists(os.path.join(PAYLOAD, adapter_dir, "agents", f"{agent}.md")):
+            fail("4", f"{src} launches `{runtime} --agent {agent}`, "
+                      f"but {adapter_dir}/agents/{agent}.md does not exist in the payload",
+                 f"{runtime} resolves the agent definition from {adapter_dir}/agents/; "
+                 "an adapter in another runtime's directory does not help")
     for agent in sorted(set(re.findall(r"--agent ([a-z][a-z0-9-]*)", text))):
         if agent.startswith("<"):
             continue
-        if not os.path.exists(os.path.join(PAYLOAD, ".claude", "agents", f"{agent}.md")):
+        if re.search(rf"(claude|opencode)\s+--agent\s+{re.escape(agent)}", text):
+            continue
+        has_claude = os.path.exists(os.path.join(PAYLOAD, ".claude", "agents", f"{agent}.md"))
+        has_opencode = os.path.exists(os.path.join(PAYLOAD, ".opencode", "agents", f"{agent}.md"))
+        if not has_claude and not has_opencode:
             fail("4", f"{src} launches `--agent {agent}`, "
-                      f"but .claude/agents/{agent}.md is absent from the payload",
-                 "claude resolves the agent definition from the cwd; this dispatch cannot start")
+                      f"but neither .claude/agents/{agent}.md nor "
+                      f".opencode/agents/{agent}.md exists in the payload",
+                 "claude and opencode resolve the agent definition from the cwd; "
+                 "this dispatch cannot start on either runtime")
     for prof in sorted(set(re.findall(r"--profile ([a-z][a-z0-9-]*)", text))):
         if not os.path.exists(os.path.join(PAYLOAD, ".codex", "profiles",
                                            f"{prof}.config.toml")):
@@ -385,6 +417,7 @@ SKILLCALL = re.compile(r"""Skill\(\s*skill\s*[:=]\s*["']([a-z][a-z0-9:-]{2,})["'
 ADDR_OK = "<!-- addr-ok"
 
 addr_sources = {os.path.join(ROLES_DIR, f"{n}.md"): t for n, t in roles.items()}
+addr_sources.update({os.path.join(ROLES_DIR, f"{n}.md"): t for n, t in role_supplements.items()})
 addr_sources.update({p: t for p, t in skills.values()})
 
 for path, text in sorted(addr_sources.items()):
@@ -456,9 +489,15 @@ ARTIFACTS = [
 ]
 PLUGIN_UNREAD = []
 def holder(name):
-    """Text of a role contract, a shipped skill, or an installed plugin skill."""
+    """Text of a role contract (including supplements), a shipped skill, or an installed plugin skill."""
     if name in roles:
-        return roles[name], "contract"
+        # Merge the base contract with all its runtime supplements so artifact checks
+        # see the full text across base + supplements.
+        merged = roles[name]
+        for sn, st in role_supplements.items():
+            if sn.startswith(name + "-"):
+                merged += "\n" + st
+        return merged, "contract"
     if name in skills:
         return skills[name][1], "skill"
     if name.startswith("plugin:"):

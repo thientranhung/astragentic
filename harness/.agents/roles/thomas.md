@@ -93,8 +93,9 @@ with `/mattpocock-skills:grill-with-docs`**, because a brief that merely describ
 prose. Give it the whole effort at once — its session must not be compacted. *A phase no
 contract dispatches does not run: ADR 0001.*
 
-**Dispatch** a claimed ticket through `dispatch-ticket`, which owns the worktree path law, the
-launcher matrix, the cwd gate and cleanup. One ticket becomes one Builder in one pane over one
+**Dispatch** a claimed ticket through `dispatch-ticket` (shared protocol) and
+`dispatch-ticket-<runtime>` (runtime-specific launcher), where `<runtime>` is the builder's
+runtime from `orchestrator.md`. One ticket becomes one Builder in one pane over one
 worktree; several run at once on the frontier.
 
 **Steer** the Builder directly; there is no intermediate role. A pane's status is a bell; the
@@ -142,6 +143,12 @@ is your call, after you classify the findings.
 git log <base>..<head> --grep '^simplify(increment):' --format='%h %s%n%b'
 ```
 
+One marker per increment, **and read the body, not just the subject.** See your runtime
+supplement for the `Pass:` line validation rules that apply to the builder's runtime.
+
+**Your runtime supplement** (`.agents/roles/thomas-<runtime>.md`) carries the simplify artifact
+verification rules and dispatch routing for the builder's runtime. Read it after this file.
+
 **Merge is not complete until the frontier write-back is done.** Re-run the query, move every
 ticket this merge unblocked into the claimable state, and **report which ones moved** — `none`
 is a valid report, silence is not. A step nothing reports is one nobody can tell was skipped
@@ -152,13 +159,6 @@ merge commit carries a `Ledger:` line naming what went in. `Ledger: none` is val
 absence is not. Merge is the anchor because it already must run and must report, and because a
 lesson is cheapest while the friction is warm — "capture friction" with no moment attached
 measured zero entries across a harness generation (AST-069).
-
-One marker per increment, **and read the body, not just the subject.** A `Pass:` line naming
-`Skill(skill: "simplify")` is the pass; anything else is a substitute, and an absent one is
-unverified. Both go back to the Builder — a subject alone cannot tell them apart, and a Builder
-whose invocation errored fell back to another tool, committed the same marker, and passed every
-check after it (AST-055). A handback describing a pass that left no marker is a substitute too,
-and reads as honest because it is (AST-051).
 
 ## Answers carry a source
 

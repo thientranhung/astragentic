@@ -1,3 +1,93 @@
+# Astraler Harness 2.0.0
+
+Cross-runtime compatibility. The harness now dispatches builders on Claude Code, Codex and
+OpenCode, where previously only Claude Code was wired end to end. Three structural changes
+make that work, and all three are breaking for projects that adapted 1.6.x contracts.
+
+## Breaking — role contracts split per runtime
+
+Each role contract that carried runtime-specific logic (builder, thomas, rin) is now a base
+file plus per-runtime supplements:
+
+```
+builder.md              shared phases, build, increment review, handing back
+builder-claude.md       simplify via Skill(skill: "simplify"), /compact, /clear
+builder-codex.md        simplify SKIPPED protocol
+builder-opencode.md     simplify SKIPPED protocol
+```
+
+Same pattern for `thomas-{claude,codex,opencode}.md` and `rin-{claude,codex,opencode}.md`.
+`shaper.md` and `qa.md` are runtime-neutral and have no supplements.
+
+**Adapters load base + supplement.** A Claude builder reads `builder.md` then
+`builder-claude.md`. A Codex builder reads `builder.md` then `builder-codex.md`.
+
+**Thomas and Rin read ALL supplements**, because they dispatch and verify builders on every
+runtime. When verifying a simplify artifact, they apply the rules matching the **builder's**
+runtime from `orchestrator.md`, not their own.
+
+## Breaking — dispatch-ticket split per runtime
+
+`dispatch-ticket` is now a shared protocol (binding, worktree, brief format, review). Three
+companion skills carry the launcher mechanics:
+
+| Skill | Launches |
+|---|---|
+| `dispatch-ticket-claude` | `claude --dangerously-skip-permissions --agent builder` |
+| `dispatch-ticket-codex` | `codex --profile builder --dangerously-bypass-approvals-and-sandbox` |
+| `dispatch-ticket-opencode` | `opencode --agent builder --auto` |
+
+Each carries its runtime's measured facts (idle detection, transcript access, effort
+parameter location) and its launcher template. `dispatch-ticket-claude` separates write
+roles (`--dangerously-skip-permissions`) from review roles (without it).
+
+## Added — skills for Codex/OpenCode discovery
+
+Seven skills that lived only in `.claude/skills/` — invisible to Codex and OpenCode — now
+have adapted copies in `.agents/skills/`:
+
+`batch-triage` · `bootstrap-glossary` · `codex-arm` · `dispatch-qa-walk` ·
+`legacy-testing` · `review-with-rin` · `untangle`
+
+Claude originals are untouched. Claude Code scans `.claude/skills/` only; Codex and OpenCode
+scan `.agents/skills/` only. The copies are adapted where needed (e.g., `review-with-rin`
+references `.agents/roles/rin.md` instead of `.claude/agents/rin.md`).
+
+## Added — OpenCode adapters
+
+`.opencode/agents/` now ships adapters for builder, thomas, rin, shaper and qa, so
+`opencode --agent <role>` resolves.
+
+## Added — simplify skip protocol
+
+When a builder runs on a runtime that has no `simplify` built-in (Codex, OpenCode), it
+commits an empty marker:
+
+```
+simplify(increment): SKIPPED — runtime <runtime> has no simplify built-in
+
+Pass: SKIPPED (runtime does not provide Skill(skill: "simplify"))
+```
+
+Thomas and Rin accept this marker when the builder's runtime in `orchestrator.md` is not
+Claude. A Claude builder must still produce `Pass: Skill(skill: "simplify")`.
+
+## Changed — check-reachability.sh
+
+Added `.opencode/agents/` to check 4 scan paths. Runtime supplement files are now included
+in reachability validation.
+
+## Upgrading from 1.6.x
+
+**This is a breaking upgrade.** Projects that adapted role contracts must re-adapt: the base
+contracts have changed shape (runtime-specific sections moved to supplements), and adapters
+now reference supplement files. Re-stage and re-run adaptation.
+
+Projects using `dispatch-ticket` directly must update references to include the
+runtime-specific companion skill for their runtime.
+
+Scaffold files (`.agents/orchestrator.md`, `.codex/profiles/*`) are untouched as always.
+
 # Astraler Harness 1.6.3
 
 Three of the staleness audit's five axes removed, on the same test that removed five skills

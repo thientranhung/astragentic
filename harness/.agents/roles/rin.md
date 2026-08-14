@@ -49,9 +49,8 @@ than a confident verdict.
 checked rather than assumed:
 
 - the `simplify(increment):` marker exists on the branch, **and its body names the pass that
-  ran** — a marker whose `Pass:` line is absent, or names something other than
-  `Skill(skill: "simplify")`, records a substitute that every subject-only check reads as
-  satisfied (AST-055);
+  ran** — see your runtime supplement (`.agents/roles/rin-<runtime>.md`) for what constitutes
+  a valid `Pass:` line on the builder's runtime (AST-055);
 - **the merge commit carries a `Ledger:` line.** `Ledger: none` is an answer; an absent line
   is not, and it is the one trace that a friction was written down while it was still warm.
   You are the only reader positioned to catch its absence, because the step that produces it

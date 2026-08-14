@@ -1,14 +1,18 @@
 ---
 name: dispatch-ticket
-description: Dispatch one claimed ticket as a visible Herdr pane on any supported runtime (Claude Code, Codex, opencode) — one Builder, one worktree, one branch, one pane. Runtime/model/effort resolve from .agents/orchestrator.md; runtime=claude|codex|opencode is an explicit per-dispatch override. Use when Thomas has a ticket on the frontier, assigned, and ready to build.
+description: "Shared protocol for dispatching one claimed ticket as a visible Herdr pane — one Builder, one worktree, one branch, one pane. Covers the binding identity, inputs/resolution, worktree law, brief format, submission, watching, simplify artifact contract, and cleanup. Runtime-specific launcher and verification live in dispatch-ticket-claude, dispatch-ticket-codex or dispatch-ticket-opencode."
 ---
 
-# Dispatch a ticket — one Builder, one worktree, one pane
+# Dispatch a ticket — shared protocol
 
 Role contract: `.agents/roles/builder.md`. Runtime, model and effort per role:
 `.agents/orchestrator.md` (owner-editable; Thomas reads it at session start; edits take
 effect at the next dispatch). Runtime changes the executables. The roles, the worktree, the
 Herdr topology and the artifact contract stay identical across all three.
+
+**The runtime-specific launcher, pre-dispatch verification and measured runtime facts live in
+the companion skill**: `dispatch-ticket-claude`, `dispatch-ticket-codex` or
+`dispatch-ticket-opencode`. Read both this skill and the runtime-specific one.
 
 ## The binding identity
 
@@ -62,76 +66,12 @@ missing or a row is ambiguous, Thomas asks the owner for the model and scaffolds
 before dispatching — inferring a runtime from installed binaries or from the task text
 produces a confident wrong answer.
 
-## The launcher matrix — one home, every dispatched role
-
-**This table is the single home for how any role is started**, and the other dispatch skills
-point here rather than restating it. A role missing from it cannot be dispatched at all,
-which is how a correct role sits in a package for releases without ever running.
-
-```text
-builder  claude   → claude --dangerously-skip-permissions --agent builder --model <row: Model> --effort <row: Effort>
-         codex    → codex --profile builder --yolo
-         opencode → opencode --agent builder -m <row: Model> --auto
-
-shaper   claude   → claude --dangerously-skip-permissions --agent shaper --model <row: Model> --effort <row: Effort>
-         codex    → codex --profile shaper --yolo
-         opencode → opencode --agent shaper -m <row: Model> --auto
-
-rin      claude   → claude --agent rin --model <row: Model> --effort <row: Effort>
-         (no --dangerously-skip-permissions: a gate runs under permissions, and rin has no
-          fallback row, so no other runtime is legal here)
-
-qa       claude   → claude --agent qa --model <row: Model> --effort <row: Effort>
-         codex    → codex --profile qa --yolo
-```
-
-Model and effort come from the role's `orchestrator.md` row, never from memory.
-
-Add `--effort` on Claude only when the row sets it (`low|medium|high|xhigh|max`); blank
-means the runtime default. Codex effort lives in the machine profile TOML as
-`model_reasoning_effort`, not on the command line. **opencode rows leave Effort blank** —
-it is unreachable there (fact 2 below), so a non-blank opencode Effort cell is a
-misconfigured row: stop and ask the owner.
-
 **Headless implementation is not supported, on any runtime.** Every Builder runs in a visible
 Herdr pane, because the owner seeing work in flight is what this package sells — a topology
 nobody can observe is trusted on the dispatcher's word, which is the thing panes exist to
 remove. A `visibility=headless` request is a STOP: say it is unsupported and dispatch
 normally, or take it to the owner. The bounded exception this package used to ship went three
 weeks across two active projects without one request (AST-070).
-
-For a codex-resolved role, verify `${CODEX_HOME:-$HOME/.codex}/builder.config.toml` exists,
-matches the tracked template `.codex/profiles/builder.config.toml`, and agrees with the
-row's Model/Effort. Where it is absent or drifted, give the owner the exact copy and diff
-commands and get explicit confirmation. opencode roles need no machine profile — the model
-travels on the command line, and the adapters are project-tracked `.opencode/agents/*.md`;
-confirm they list via `opencode agent list --pure` from the worktree (`--pure` skips
-external plugins, which otherwise filter project agents out of the listing).
-
-## Measured runtime facts that decide what a signal is worth
-
-Re-measured on herdr 0.8.0 and opencode 1.18.11:
-
-1. `herdr agent start --kind opencode` works on 0.8.0 — exit 0, agent detected, process
-   confirmed alive with `pgrep` rather than by trusting `interactive_ready`. `agent start`
-   is the launch for all three runtimes.
-2. `opencode run` requires a positional message, so it cannot start a message-less
-   persistent executor; the TUI form is the persistent one and has no `--variant`. The
-   `--variant` form is invisible to herdr. Effort and orchestration visibility are mutually
-   exclusive on opencode, and visibility wins — which is why opencode Effort stays blank.
-3. **opencode's `idle` is FABRICATED.** `herdr agent explain` reports
-   `fallback_reason: default_known_agent_idle_fallback`, and `agent wait --until idle`
-   returned rc=0 in 8 ms on a pane nobody had touched. Its manifest carries 3 rules
-   (claude 12, codex 7), covering only `blocked` and `working`. So on opencode `working`
-   and `blocked` are OBSERVED while idle is ASSUMED: the watcher's start guard still works,
-   terminal-state detection does not, and a verdict must come from an artifact (AST-032).
-4. Runtime detection quality is a ladder. Codex's top rules are `osc_title` (1100, 1050) —
-   the agent's own title, which beats scraping. Claude tops out at `osc_title` 1100 then
-   falls to text regions, including `prompt_box_body` at 950 whose evidence is `"❯\n"`, so
-   **an empty Claude composer reads as idle**. opencode establishes idle not at all.
-   Verify by artifact on every runtime; on opencode it is the only thing that works.
-5. Reading an opencode TUI transcript via `herdr agent read` returns only the input box and
-   footer. Tolerable under verify-by-artifact — review diffs, not pane narration.
 
 ## One checkout, one driver
 
@@ -222,10 +162,10 @@ herdr pane rename <returned-root-pane-id> "builder:<ticket-id>"
 ```
 
 **Mandatory cwd gate before launch.** `--cwd` on create is not guaranteed to stick, and
-`claude --agent <name>` resolves the agent definition FROM the cwd — launched from `$HOME`
-it errors "agent not found" or runs an unintended default. Confirm the pane's
-`foreground_cwd` equals `<worktree-path>` via `herdr pane get <pane-id>`; a mismatch is a
-STOP (fix with `herdr pane run <pane-id> "cd <worktree-path>"`, then re-verify).
+agent resolution depends on cwd — launched from `$HOME` it errors "agent not found" or runs
+an unintended default. Confirm the pane's `foreground_cwd` equals `<worktree-path>` via
+`herdr pane get <pane-id>`; a mismatch is a STOP (fix with
+`herdr pane run <pane-id> "cd <worktree-path>"`, then re-verify).
 
 **Agent names and pane labels are different strings.** `herdr agent start` accepts lowercase
 letters, digits, `-` and `_` — no `:` — while pane labels take `:`. So the agent is
@@ -238,25 +178,15 @@ Print the resolved dispatch before launching:
 role=builder
 runtime=<claude|codex|opencode from orchestrator.md (or explicit override)>
 topology=herdr
-executable=<exact launcher command>
+executable=<exact launcher command from the runtime-specific dispatch skill>
 ticket=<ticket id>            worktree=<absolute path>
 branch=<ticket branch>        workspace=<returned workspace id>
 workspace_managed_by_root=<true|false inherited from the durable record>
 tab=<returned tab id>         pane=<returned pane id>
 ```
 
-Then launch:
-
-```bash
-herdr agent start "builder-<ticket-id>" --kind claude --pane <pane-id> --timeout 60000 \
-  -- --dangerously-skip-permissions --agent builder --model <row: Model> --effort <row: Effort>
-
-herdr agent start "builder-<ticket-id>" --kind codex --pane <pane-id> --timeout 60000 \
-  -- --profile builder --yolo
-
-herdr agent start "builder-<ticket-id>" --kind opencode --pane <pane-id> --timeout 60000 \
-  -- --agent builder -m <row: Model> --auto
-```
+Then launch using the `herdr agent start` command from the runtime-specific dispatch skill
+(`dispatch-ticket-claude`, `dispatch-ticket-codex` or `dispatch-ticket-opencode`).
 
 Where `agent start` fails readiness, inspect with `herdr agent read`, then fall back to
 `herdr pane run <pane-id> "<exact launcher command>"`. Launch into the pane this dispatch
