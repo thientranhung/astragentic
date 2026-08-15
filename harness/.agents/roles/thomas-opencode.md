@@ -7,6 +7,23 @@ differs when dispatching to opencode builders.
 
 Use `dispatch-ticket` (shared protocol) then `dispatch-ticket-opencode` (opencode launcher).
 
+## Handback verification — opencode idle is fabricated
+
+opencode's `idle` status is FABRICATED by herdr (fact 3 in `dispatch-ticket-opencode`).
+`herdr agent wait` returns immediately on opencode, so a pane that stopped mid-work
+looks identical to one that finished. **Never accept a handback from an opencode builder
+without checking the artifact:**
+
+```bash
+cd <worktree-path>
+git log --oneline <base>..HEAD   # zero commits = not done
+git diff --stat                  # uncommitted work = still in progress or crashed
+```
+
+Zero commits and zero diff means the builder read code and stopped — re-dispatch or
+investigate. Zero commits with uncommitted diff means it crashed mid-work — the diff is
+the starting point for a re-dispatch, not a handback.
+
 ## Simplify artifact verification
 
 On opencode, `Skill(skill: "simplify")` does not exist, so the builder records a documented
