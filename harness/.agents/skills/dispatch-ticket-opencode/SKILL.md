@@ -16,9 +16,14 @@ builder  → opencode --agent builder -m <row: Model> --auto
 shaper   → opencode --agent shaper -m <row: Model> --auto
 ```
 
-Model comes from the role's `orchestrator.md` row, never from memory. **No `--effort`
-flag** — effort is unreachable on opencode (fact 2 below), so an opencode Effort cell must
-be blank. A non-blank one is a misconfigured row: stop and ask the owner.
+Model comes from the role's `orchestrator.md` row, never from memory. **The Model value
+must include the provider prefix** — opencode requires `<provider>/<model>` format (e.g.,
+`opencode-go/deepseek-v4-flash`). Passing the bare model name without prefix throws
+`ProviderModelNotFoundError`. If the model is already the opencode default, `-m` can be
+omitted entirely.
+
+**No `--effort` flag** — effort is unreachable on opencode (fact 2 below), so an opencode
+Effort cell must be blank. A non-blank one is a misconfigured row: stop and ask the owner.
 
 `--auto` auto-approves permissions that are not explicitly denied. With the agent's
 `permission: { "*": allow }` frontmatter, `--auto` effectively means unrestricted.
@@ -70,3 +75,7 @@ Re-measured on herdr 0.8.0 and opencode 1.18.11:
 5. **Transcript reads return only the input box and footer.** Reading an opencode TUI
    transcript via `herdr agent read` returns only the input box and footer. Tolerable under
    verify-by-artifact — review diffs, not pane narration.
+6. **Model requires provider prefix.** `-m deepseek-v4-flash` fails with
+   `ProviderModelNotFoundError`. The correct form is `-m opencode-go/deepseek-v4-flash`.
+   The `orchestrator.md` Model column for opencode rows must carry the full
+   `<provider>/<model>` string. Measured on opencode 1.18.18.
