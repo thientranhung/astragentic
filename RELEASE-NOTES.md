@@ -1,3 +1,23 @@
+# Astraler Harness 2.0.2
+
+Patch: 5 skills missing from `.claude/skills/`.
+
+Claude Code only scans `.claude/skills/` for skill discovery. Five skills existed in
+`.agents/skills/` (for Codex/OpenCode) but had no copy in `.claude/skills/`, making them
+invisible to Claude Code agents — including Thomas, who needs `dispatch-ticket` and its
+runtime companions to dispatch correctly.
+
+Added to `.claude/skills/`:
+- `codex-claude-arm`
+- `dispatch-ticket`
+- `dispatch-ticket-claude`
+- `dispatch-ticket-codex`
+- `dispatch-ticket-opencode`
+
+## Upgrade from 2.0.1
+
+Copy the five new `.claude/skills/` directories from the release. No other changes.
+
 # Astraler Harness 2.0.1
 
 Patch: dispatch reliability and watcher path.
