@@ -1,3 +1,24 @@
+# Astraler Harness 2.0.1
+
+Patch: dispatch reliability and watcher path.
+
+- **Thomas dispatch routing requires `Skill()` invocation.** All three thomas supplements
+  (`thomas-claude.md`, `thomas-codex.md`, `thomas-opencode.md`) now instruct Thomas to
+  invoke `Skill(skill: "dispatch-ticket")` + `Skill(skill: "dispatch-ticket-<runtime>")`
+  before every dispatch. Previously the contract named the skills in prose, which let Thomas
+  skip loading them and dispatch from reasoning alone — producing incorrect mechanisms.
+- **Watcher path changed to global.** `dispatch-ticket` now references
+  `~/.claude/scripts/herdr-watch-terminal.sh` instead of repo-local
+  `scripts/herdr-watch-terminal.sh`. The script is shared across projects.
+- **orchestrator.md documents opencode provider/model format.** The Model column explanation
+  now notes that opencode requires `provider/model` format and that a bare model name
+  produces `ProviderModelNotFoundError`.
+
+## Upgrade from 2.0.0
+
+Copy the three thomas supplements and `dispatch-ticket/SKILL.md` from the release. No
+structural changes — the adaptation agent can diff and apply.
+
 # Astraler Harness 2.0.0
 
 Cross-runtime compatibility. The harness now dispatches builders on Claude Code, Codex and
