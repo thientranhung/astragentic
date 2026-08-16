@@ -274,6 +274,25 @@ herdr agent wait <pane-id> --until working --timeout 30000
 having observed `working` means the brief never ran — re-read the pane before concluding
 anything about the work.
 
+### Start the watcher — mandatory, immediately after submit
+
+**Every dispatched pane gets a watcher. No exceptions, no hand-rolled loops.**
+
+```bash
+~/.claude/scripts/herdr-watch-terminal.sh <pane-id> 3 3600 120
+```
+
+Run this immediately after confirming `working`. It is the ONLY sanctioned way to monitor a
+dispatched builder. Do NOT write your own polling loop, do NOT use `herdr agent wait --until
+idle` as a substitute, do NOT use `sleep` + `herdr agent get` in a loop. The script has
+caffeinate (machine cannot sleep and kill the watch), a start guard, debounce, and a
+3600-second cap — hand-rolled alternatives lack all four.
+
+Branch on `$?` when it returns:
+- `0` + `TERMINAL:<state>` → builder finished or blocked, proceed to artifact verification
+- `1` + `TIMEOUT` → builder exceeded cap, inspect pane
+- `2` + `NO_START` → builder never started working, re-read pane
+
 **`--wait` collapses submit, start-guard and settle into one call, and it is trustworthy
 ONLY on a pane whose turn you just opened.** Herdr's own help says it "does not track turns:
 if the agent is already working, that active turn's completion may match". Underneath that,
