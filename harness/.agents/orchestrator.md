@@ -19,11 +19,11 @@ and fails at the first cross-vendor call, looking like the provider being down.
 
 | Role | Runtime | Model | Effort |
 |---|---|---|---|
-| thomas | claude | claude-opus-5 | high |
+| thomas | claude | claude-opus-5 | medium |
 | shaper | claude | claude-opus-5 | high |
-| builder | claude | claude-sonnet-4-6 | high |
-| rin | claude | claude-opus-5 | high |
-| qa | claude | claude-sonnet-5 | medium |
+| builder | claude | claude-sonnet-5 | medium |
+| rin | claude | claude-opus-4-8 | medium |
+| qa | claude | claude-sonnet-5 | low |
 
 ## Fallback providers
 
