@@ -57,7 +57,10 @@ dispatch path and an adapter — not a row tune.
 
 **Model** travels on the command line for Claude and opencode. For Codex it lives in the
 machine-local profile at `${CODEX_HOME:-$HOME/.codex}/<role>.config.toml`, which mirrors this
-table; a profile that disagrees with its row is drift to report.
+table; a profile that disagrees with its row is drift to report. **opencode requires
+`provider/model` format** (e.g. `opencode-go/deepseek-v4-flash`, not bare `deepseek-v4-flash`)
+— a bare model name produces `ProviderModelNotFoundError` at launch with no suggestion,
+looking like a missing model rather than a format problem.
 
 **Effort** is `low|medium|high|xhigh|max` on Claude. Codex carries it as
 `model_reasoning_effort` in the same profile TOML. **opencode leaves it blank** — the

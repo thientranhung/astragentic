@@ -5,7 +5,14 @@ differs when dispatching to opencode builders.
 
 ## Dispatch routing
 
-Use `dispatch-ticket` (shared protocol) then `dispatch-ticket-opencode` (opencode launcher).
+Before every dispatch, invoke both skills to load the protocol:
+
+```
+Skill(skill: "dispatch-ticket")
+Skill(skill: "dispatch-ticket-opencode")
+```
+
+Follow the loaded instructions. Do not dispatch from memory or reasoning alone.
 
 ## Handback verification — opencode idle is fabricated
 

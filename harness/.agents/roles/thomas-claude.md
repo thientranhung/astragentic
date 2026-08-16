@@ -5,7 +5,14 @@ differs when dispatching to Claude Code builders.
 
 ## Dispatch routing
 
-Use `dispatch-ticket` (shared protocol) then `dispatch-ticket-claude` (Claude launcher).
+Before every dispatch, invoke both skills to load the protocol:
+
+```
+Skill(skill: "dispatch-ticket")
+Skill(skill: "dispatch-ticket-claude")
+```
+
+Follow the loaded instructions. Do not dispatch from memory or reasoning alone.
 
 ## Simplify artifact verification
 

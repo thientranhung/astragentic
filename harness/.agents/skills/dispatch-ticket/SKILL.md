@@ -284,7 +284,7 @@ establishes idle at all. Either way you get a signal incapable of failing (AST-0
 
 **So for any pane you did not prompt in that same call** — watching another role's pane,
 resuming after a break, waiting on an artifact — the start guard
-`scripts/herdr-watch-terminal.sh` stays MANDATORY. It observes `working` for THIS turn
+`~/.claude/scripts/herdr-watch-terminal.sh` stays MANDATORY. It observes `working` for THIS turn
 before it blesses anything, and `working` is rule-backed on all three runtimes.
 
 On `agent_prompt_stalled` or a blocking modal, inspect first, resolve the modal, then use
@@ -318,7 +318,7 @@ working pane gives `agent_not_idle` with the fix named, a bad target `agent_not_
 `--wait` with no state change `timeout`. Treat a non-zero herdr exit as a real failure worth
 reading, and keep the scepticism for the `agent_status` it returns on success.
 
-**Watching.** `scripts/herdr-watch-terminal.sh` watches a NEWLY SUBMITTED turn: it waits to
+**Watching.** `~/.claude/scripts/herdr-watch-terminal.sh` watches a NEWLY SUBMITTED turn: it waits to
 observe `working` first, so pointing it at an already-idle pane returns `NO_START` —
 truthful output rather than a fault. Point it at the pane whose turn you just opened. Any
 role may read or watch any pane, and concurrent watchers are fine (three simultaneous waits
