@@ -1,3 +1,38 @@
+# Astragentic 2.2.26
+
+Four findings from workspace-app-inception Thomas's nightly run, all measured on real arm
+dispatches. Two new failure modes (AST-095, AST-096), fixes across three skills.
+
+**Item 1: arm sandbox read-only, zero tests executed.** Codex's review sandbox cannot create
+temp directories, so Vitest dies on tmpdir creation. The arm still finds real defects by code
+reading alone, but a Thomas who does not check the report will merge believing tests ran.
+Fix: outcome recording now requires a structural `Tests:` line — `RAN` or `NOT RUN — <reason>`
+— so it cannot be skimmed past.
+
+**Item 2: companion exits 0 on configuration failure (AST-095).** `failed to load
+configuration` prints and the process ends clean. Two consecutive arm passes were nearly
+recorded as passing. Trigger: recreating a gate worktree at the same path inherits stale
+workspace-root state from the deleted predecessor. Fix: never trust companion exit code
+(output file is the only signal), never reuse a gate worktree path across dispatches.
+
+**Item 3: rm-rf on a worktree leaves git registration behind (AST-096).** Next add at that
+path refuses silently when output is suppressed; subsequent commands fall through to main
+checkout and report master's SHA as the artifact — reads as a Builder that shipped nothing.
+Fix: `git worktree prune` before add, HEAD assertion after cd, in both codex-arm and
+review-with-rin gate recipes.
+
+**Item 4: Pass: line template not reaching builders uniformly.** One builder wrote
+`Pass: /simplify` instead of `Pass: Skill(skill: "simplify")`. Template already explicit in
+builder-claude.md with "Copy it; do not rephrase it" — AST-090 recurring. Thomas's
+verification caught it. No new fix needed.
+
+Ledger: 95 entries (AST-001–096, 067 withdrawn).
+
+## Upgrade from 2.2.25
+
+Copy `.agents/skills/codex-arm/SKILL.md`, `.agents/skills/review-with-rin/SKILL.md`, and
+their `.claude` counterparts. Copy `.agents/memory/recurring-failure-modes.md`.
+
 # Astragentic 2.2.25
 
 Restore the rationale for why the Thomas-side simplify guard (Check 2 in dispatch-ticket

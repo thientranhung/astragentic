@@ -57,10 +57,18 @@ So resolve the head yourself, review from a detached checkout at that SHA, and *
 range before you trust the verdict**:
 
 ```bash
+git worktree prune                         # clear stale registrations BEFORE add (AST-096)
 git worktree add --detach <repo-parent>/<repo-dir-name>.worktrees/gate-arm-<key> <head-sha>
 cd <that worktree>
+[ "$(git rev-parse HEAD)" = "<head-sha>" ] || { echo "STOP: HEAD mismatch"; exit 1; }
 git rev-list --count <base>..<head-sha>   # zero commits means you are reviewing nothing
 ```
+
+**Never reuse a gate worktree path across dispatches.** The companion caches state keyed to
+the workspace root; deleting and recreating the directory at the same path inherits stale
+configuration that causes a silent failure — exit 0, no review started (AST-095). Append a
+disambiguator (`-p2`, a counter, a short token) when a previous gate used that path in this
+session.
 
 A count of zero, or a changed-file set that is not the artifact you meant to review, is a
 STOP — not a pass. Remove the worktree when the pass is recorded; the arm never removes the
@@ -82,6 +90,9 @@ Gotchas, each of which has cost us a run:
   node starts: no crash surfaces where you are watching, no file is written, and the ONLY way
   to catch it is to have checked that a file exists at all. This is the exact silent-non-run
   failure mode the rest of this section exists to prevent, from a cause outside Codex itself.
+- **The companion exits 0 on configuration failure** (AST-095). `failed to load
+  configuration` prints and the process ends clean. Never branch on the companion's exit
+  code; the output file is the ONLY trustworthy signal.
 - **Focus goes to `adversarial-review` only.** Plain `review` takes no focus, so pack the
   intent into the adversarial pass.
 - Commit first and scope with `--base <ref>`. Focus text steers the prompt; it is advisory,
@@ -106,7 +117,11 @@ lens silently counted as the arm is the thing this rule exists to prevent, so th
 vendor is always the one that actually ran.
 
 Record the outcome once, in the merge decision trail: the date, the verdict, the per-finding
-resolution, and the vendor that ran. **You classify which findings are real** — the arm
-advises. Where pass 1 returned a blocking finding, **run pass 2 under the rule in `rin.md`** —
+resolution, the vendor that ran, and a **`Tests:` line** — `RAN` when the arm executed the
+project's test suite, `NOT RUN — <reason>` when it could not (read-only sandbox, missing
+dependencies, test runner failure). A code-reading-only verdict is still valuable — measured
+arm passes have found real defects by reading alone — but a Thomas who does not check this
+line will merge believing tests ran on the other vendor's side. **You classify which findings
+are real** — the arm advises. Where pass 1 returned a blocking finding, **run pass 2 under the rule in `rin.md`** —
 that contract owns when it is required and what it must cover, and this file does not restate
 it in weaker words. Escalate to the owner on a genuine fork.

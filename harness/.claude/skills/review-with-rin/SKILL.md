@@ -83,9 +83,11 @@ GATE_TOKEN="$(od -An -tx1 -N8 /dev/urandom | tr -d ' \n')"   # unique per dispat
 [ ${#GATE_TOKEN} -eq 16 ] || { echo "STOP: bad gate token"; exit 1; }
 GATE_FILE="$GATE_ROOT/<artifact-key>-<short-sha>-$GATE_TOKEN.md"
 
+git worktree prune                         # clear stale registrations (AST-096)
 git worktree add --detach \
   <repo-parent>/<repo-dir-name>.worktrees/gate-<artifact-key> <reviewed-sha>
 git worktree list          # verify the exact path before anything uses it (AST-028)
+git -C <gate-worktree> rev-parse HEAD      # must equal <reviewed-sha> — mismatch is STOP
 herdr tab create --workspace <workspace-id> --label "rin:<artifact-key>" \
   --cwd <gate-worktree> --no-focus
 herdr pane rename <returned-root-pane-id> "rin:<artifact-key>"

@@ -2044,3 +2044,69 @@ the skip (the ticket checklist displacing the contract) also displaces the self-
 live in the same contract the Builder stopped consulting. The Thomas-side guard (2.2.23) is
 independent of that mechanism.
 Bound: builder.md, dispatch-ticket/SKILL.md.
+
+### AST-095 — The cross-vendor companion exits 0 on configuration failure and caches state that survives a directory's deletion · promoted 2026-08-18
+
+Found by workspace-app-inception Thomas on a real arm run, reproduced twice in one session.
+`codex-companion.mjs` prints `failed to load configuration: No such file or directory (os
+error 2)` and exits 0. If the dispatcher branches on exit code, or pipes the output anywhere
+that discards it, a passing arm pass is recorded while no review ever started.
+
+The trigger is specific and reproducible: delete a gate worktree directory (`rm -rf`), prune
+the git registration (`git worktree prune`), recreate a new worktree at the SAME path (`git
+worktree add --detach`), then run the companion from it. The Codex CLI itself works fine from
+that directory (`codex exec --profile thomas` succeeds), so it is not the CLI and not
+`~/.codex/config.toml`. The companion's own `getConfig(workspaceRoot)` caches state keyed to
+the workspace root path; recreating the directory does not invalidate that cache, so the new
+worktree inherits configuration from a directory that no longer exists in the sense the cache
+means.
+
+**Workaround that fixed it immediately:** create the new gate worktree at a DIFFERENT path
+(Thomas appended `-p2`). If the diagnosis is right, every second arm pass on the same ticket
+hits this, because the first pass creates and removes the gate worktree at the canonical path,
+and the second pass recreates it there.
+
+Two fixes, both in the skill rather than the companion (which is the plugin's):
+1. Never trust the companion's exit code — the output file is the only trustworthy signal.
+   The skill already said a missing file is NOT RUN; this strengthens it to say the exit code
+   actively fights that check.
+2. Never reuse a gate worktree path across dispatches in the same session. Append a
+   disambiguator.
+
+**A process that exits 0 on a configuration failure is not merely unhelpful — it actively
+defeats the fail-closed check the caller was relying on.** The existing rule (check the output
+file, not the exit code) was already right; what was missing was a warning that the exit code
+is not merely uninformative but wrong.
+Bound: codex-arm/SKILL.md.
+
+### AST-096 — rm -rf on a worktree directory leaves git's registration behind; the next add at that path refuses silently when output is suppressed · promoted 2026-08-18
+
+Found by workspace-app-inception Thomas on a real gate dispatch in the same session as
+AST-095, different symptom, same root cause family. `rm -rf <worktree-path>` removes the
+directory but not git's worktree registration (`.git/worktrees/<name>/`). The next
+`git worktree add` at that path refuses — correctly, git's own safety — but the dispatcher
+had redirected its output, so the refusal was never seen.
+
+What followed: `cd <that worktree>` failed (the directory does not exist), so `git rev-parse`
+and `git diff` ran in the MAIN checkout instead. The result — master's SHA and an empty diff —
+reads exactly like a Builder that committed nothing. Thomas nearly accused a Builder of
+shipping an empty artifact on that evidence, and only caught it by noticing the SHA was
+master's, not the ticket branch's.
+
+Three gaps, each independently sufficient to prevent this:
+1. `git worktree prune` before `git worktree add` — clears registrations whose directories
+   no longer exist, so the add succeeds.
+2. Never suppress `git worktree add` output — a refusal that nobody reads is a refusal that
+   nobody acts on.
+3. After `cd`, assert `git rev-parse HEAD` equals the expected SHA — a HEAD that does not
+   match the branch you asked for means the cd landed in the wrong checkout.
+
+All three added to both `codex-arm/SKILL.md` and `review-with-rin/SKILL.md` gate worktree
+recipes. The third check catches not only this failure but any future cause that puts
+commands in the wrong checkout — the general shape is worth defending against, not just this
+one trigger.
+
+**`rm -rf` is not `git worktree remove`.** The first removes a directory; the second removes
+a directory AND its registration. Using the first where the second is meant leaves a ghost
+registration that blocks the path forever, silently when output is redirected.
+Bound: codex-arm/SKILL.md, review-with-rin/SKILL.md.
