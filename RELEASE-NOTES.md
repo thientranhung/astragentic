@@ -1,3 +1,34 @@
+# Astragentic 2.2.27
+
+Three more findings from workspace-app-inception Thomas, same night, all the same defect
+shape: signals that cannot fail.
+
+**AST-097: TERMINAL:done means the turn ended, not that the work finished.** A builder that
+launches background work and parks while waiting for a notification reads as `done`. Thomas
+followed dispatch-ticket's branch table, nearly reported a ticket as abandoned while the
+builder was mid-test-run producing an excellent artifact. Second instance: builder parked on
+a notification that never arrives, work uncommitted — worktree removal would have destroyed
+a deterministic deadlock witness. Fix: branch table updated — `done` no longer equates to
+"finished"; background-process check required before concluding.
+
+**AST-098: Fork sub-agents return the coordinator's narration instead of doing their assigned
+task.** A builder honestly caught and reported this in its simplify marker body (per AST-089
+fallback rule). Concern: a builder that silently swallowed it would produce a valid commit
+with every verification marker passing and no actual review behind it. No fix in this package
+— the fork mechanism belongs to the runtime. Entry exists to name the blind spot.
+
+**Thomas's self-report:** four dispatches ran as in-process subagents (headless) instead of
+herdr panes. dispatch-ticket names this a STOP. No check caught it — not check-requirements,
+not check-reachability, not the watchdog. Recorded in the report, not as an AST entry, because
+the rule already exists; what's missing is a mechanical check, not a stated rule.
+
+Ledger: 97 entries (AST-001–098, 067 withdrawn).
+
+## Upgrade from 2.2.26
+
+Copy `.agents/skills/dispatch-ticket/SKILL.md` and its `.claude` copy.
+Copy `.agents/memory/recurring-failure-modes.md`.
+
 # Astragentic 2.2.26
 
 Four findings from workspace-app-inception Thomas's nightly run, all measured on real arm

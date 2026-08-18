@@ -2110,3 +2110,69 @@ one trigger.
 a directory AND its registration. Using the first where the second is meant leaves a ghost
 registration that blocks the path forever, silently when output is redirected.
 Bound: codex-arm/SKILL.md, review-with-rin/SKILL.md.
+
+### AST-097 — TERMINAL:done means the turn ended, not that the work finished · promoted 2026-08-18
+
+Found by workspace-app-inception Thomas, measured three times on one pane in one session. A
+builder launches a long background process (a test suite, a build), ends its TURN while
+waiting for the completion notification, and the pane reads `done`. The watcher faithfully
+reports `TERMINAL:done`. dispatch-ticket's branch table said "builder finished, proceed to
+artifact verification" — and Thomas, following that table, was about to report the ticket as
+abandoned (zero commits, three dirty files) while the builder was actually mid-`make gate`,
+twenty minutes into honest work that went on to produce an excellent artifact.
+
+What saved it was not the protocol. It was the artifact contradicting itself: the modified
+file contained ONLY an added comment cross-referencing a test that already existed, which is
+not what an abandoning builder leaves behind. A dispatcher who trusts the documented branch
+table without that sanity check gets the wrong answer confidently.
+
+A second instance on the same pane: all background processes had exited, yet the builder sat
+waiting for a monitor notification that never arrived, turn ended, indefinitely. Its work was
+real and uncommitted — a worktree removal at that moment would have silently destroyed a
+deterministic Postgres deadlock witness that took twenty minutes to build. AST-092's Check 1
+catches this at REMOVAL time, which is correct but late — by then the dispatcher has usually
+already concluded the ticket is finished.
+
+Fixed by updating dispatch-ticket's branch table: `done` no longer equates to "finished".
+Before concluding finished, check for active background processes in the worktree (`pgrep`
+for test runners, build tools, the builder's own monitors). Processes still running → PARKED,
+wait for exit. All exited AND no commits → STUCK, nudge to commit (AST-092). All exited AND
+commits present → proceed to artifact verification.
+
+**The general shape, stated by the reporter: this package keeps shipping signals that cannot
+fail.** `done` cannot distinguish "finished" from "parked". Pane status cannot see a headless
+subagent. A fork's output cannot distinguish a real review from echoed narration. All three
+are checks that pass on the input they exist to catch — the same class as the companion's
+exit 0 (AST-095), the tracker's self-consistency (AST-074), and `ls-files` answering
+"tracked" when the question was "current" (AST-080).
+Bound: dispatch-ticket/SKILL.md.
+
+### AST-098 — Fork sub-agents return the coordinator's own narration instead of doing their assigned task · promoted 2026-08-18
+
+Reported by workspace-app-inception Thomas, surfaced by a builder who caught it honestly and
+named it in its simplify marker body — exactly the behaviour AST-089 establishes as correct.
+The builder's words: each fork's final answer "was itself status chatter about waiting for the
+other review agents — echoing the coordinator's own turn-by-turn narration instead of doing
+the assigned grep/diff review." One redo per axis reproduced it. Only the efficiency fork
+returned a genuine verdict.
+
+The builder ran the four corners directly as AST-089 permits, wrote the correct `Pass:` line
+with the fallback named, and said so. The mechanism worked as designed.
+
+**Why this matters more than it looks:** a builder that silently swallowed this would produce
+a valid-looking `simplify(increment):` commit with a correct `Pass: Skill(skill: "simplify")`
+line and no actual review behind it. The marker would verify clean. Every mechanism this
+package has for checking the pass ran — the subject grep, the `Pass:` line, the commit body —
+would pass. Only the builder's honesty exposed it, and honesty is not a mechanism.
+
+No fix in this package — the fork mechanism belongs to the runtime. The entry exists because
+the failure class is worth naming: **a verification system built entirely on markers and
+provenance lines has a blind spot for the quality of what ran behind them.** The simplify
+skill's own output (findings applied, findings skipped, diffs examined) is the only artifact
+that would distinguish a real review from an echo, and nothing in this package's verification
+reads it. AST-055's `Pass:` line was the answer to "which tool ran"; the open question is
+"did the tool do its job."
+
+The builder's self-report is the current defence, and it worked here. That is worth recording
+as a fact, not as a guarantee.
+Bound: builder-claude.md (AST-089 fallback rule).

@@ -322,16 +322,24 @@ caffeinate (machine cannot sleep and kill the watch), a start guard, debounce, a
 
 Branch on `$?` **and the payload** when it returns:
 
-- `0` + `TERMINAL:done` → builder finished, proceed to artifact verification
+- `0` + `TERMINAL:done` → builder's turn ended, **not necessarily finished** — check for background processes before concluding (see below)
 - `0` + `TERMINAL:idle` → builder idle, check git log — may be finished or may have stopped early
 - `0` + `TERMINAL:blocked` → builder is asking a question, **read pane immediately and answer** — do NOT proceed to artifact verification, the builder is waiting for you
 - `1` + `TIMEOUT` → builder exceeded cap, inspect pane
 - `2` + `NO_START` → builder never started working, re-read pane
 
-**Read the payload, not just the exit code.** Exit 0 has three meanings. `blocked` means
+**Read the payload, not just the exit code.** Exit 0 has four meanings now. `blocked` means
 the builder hit a decision it cannot make alone — read the pane, answer the question, then
 restart the watcher. Jumping straight to artifact verification on `blocked` leaves the
 builder waiting indefinitely.
+
+**`done` means the turn ended, not that the work finished** (AST-097). A builder that
+launches background work and parks while waiting for a notification reads as `done` while its
+artifact is still being built — measured three times on one pane in one session. Before
+concluding finished: check for active background processes in the worktree (`pgrep` for test
+runners, build tools, the builder's own monitors). Processes still running → PARKED, wait
+for exit, then re-check. All exited AND no commits since dispatch → STUCK, nudge to commit
+(AST-092). All exited AND commits present → proceed to artifact verification.
 
 **`--wait` collapses submit, start-guard and settle into one call, and it is trustworthy
 ONLY on a pane whose turn you just opened.** Herdr's own help says it "does not track turns:

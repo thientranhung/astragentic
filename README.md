@@ -1,10 +1,10 @@
-# Astragentic 2.2.26
+# Astragentic 2.2.27
 
 **Agent orchestration framework and operating harness** for multi-agent software development.
 
 Astragentic coordinates several AI agents building software together on an existing
 codebase. The orchestration decides *who works on what, where, and on which runtime*. The
-harness holds the contracts, the review gates, and the 95 measured failure modes that shaped
+harness holds the contracts, the review gates, and the 97 measured failure modes that shaped
 every rule in this system.
 
 ---
@@ -93,7 +93,7 @@ Every answer carries a source — codebase, ADR, research, prototype, or second 
 reports are written outside every checkout with token-unique paths. Merge commits carry a
 `Ledger:` line. A summary without evidence is not accepted as proof.
 
-### 5. 95 measured failure modes
+### 5. 97 measured failure modes
 
 Every rule in this system can point at an entry in `recurring-failure-modes.md`. A rule that
 cannot point at one is a rule to re-examine. The ledger is append-only — a lesson that later
