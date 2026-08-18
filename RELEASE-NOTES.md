@@ -1,3 +1,23 @@
+# Astragentic 2.2.29
+
+AST-097 update: the reference point for "no new commits" is the last instruction, not the
+initial dispatch. The original wording only exposed its gap from the second instruction
+onward — every fold-finding steer, every nudge — where commits from the first instruction
+make "commits present" true while zero new work has landed.
+
+Measured on nizzy-ecom: Builder crashed on 529 Overloaded before doing anything, pane read
+`done`, branch carried two commits from the first instruction. The original rule said
+proceed to artifact verification. Only comparing against the last instruction's SHA caught
+that the fold had never run.
+
+Four meanings of `done`: finished, PARKED (background), STUCK (no commits), CRASHED (turn
+died, error on screen).
+
+## Upgrade from 2.2.28
+
+Copy `.agents/skills/dispatch-ticket/SKILL.md` and its `.claude` copy.
+Copy `.agents/memory/recurring-failure-modes.md`.
+
 # Astragentic 2.2.28
 
 Ledger header auto-update: `install.sh` now computes the entry count, first/last AST

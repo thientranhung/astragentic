@@ -338,8 +338,10 @@ launches background work and parks while waiting for a notification reads as `do
 artifact is still being built — measured three times on one pane in one session. Before
 concluding finished: check for active background processes in the worktree (`pgrep` for test
 runners, build tools, the builder's own monitors). Processes still running → PARKED, wait
-for exit, then re-check. All exited AND no commits since dispatch → STUCK, nudge to commit
-(AST-092). All exited AND commits present → proceed to artifact verification.
+for exit, then re-check. All exited AND no new commits since the last instruction → read
+the pane before concluding — the turn may have crashed (529, OOM, context limit) with the
+error visible on screen (AST-097). All exited AND new commits since the last instruction →
+proceed to artifact verification.
 
 **`--wait` collapses submit, start-guard and settle into one call, and it is trustworthy
 ONLY on a pane whose turn you just opened.** Herdr's own help says it "does not track turns:

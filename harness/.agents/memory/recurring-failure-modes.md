@@ -2136,8 +2136,21 @@ already concluded the ticket is finished.
 Fixed by updating dispatch-ticket's branch table: `done` no longer equates to "finished".
 Before concluding finished, check for active background processes in the worktree (`pgrep`
 for test runners, build tools, the builder's own monitors). Processes still running → PARKED,
-wait for exit. All exited AND no commits → STUCK, nudge to commit (AST-092). All exited AND
-commits present → proceed to artifact verification.
+wait for exit. All exited AND no new commits since the last instruction → read the pane
+before concluding. All exited AND new commits since the last instruction → proceed to
+artifact verification.
+
+**The reference point is the last instruction, not the initial dispatch.** The difference
+matters only from the second instruction onward — every fold-finding steer, every nudge —
+which is exactly when it is most expensive: pass 1 has already blocked, someone is waiting
+for the fix, and "done + commits present" reads as finished. Measured on nizzy-ecom: a
+Builder received a fold instruction, crashed on `529 Overloaded` before doing anything,
+pane read `done`, and the branch carried two commits from the FIRST instruction. The
+original "no commits since dispatch" rule said proceed. Only comparing against the last
+instruction's SHA caught that zero new work had landed.
+
+Four meanings of `done`: finished, PARKED (background work running), STUCK (no commits),
+CRASHED (turn died mid-flight, error visible on screen).
 
 **The general shape, stated by the reporter: this package keeps shipping signals that cannot
 fail.** `done` cannot distinguish "finished" from "parked". Pane status cannot see a headless
