@@ -1,3 +1,33 @@
+# Astraler Harness 2.2.8
+
+Fix: the 2.2.7 flock-plus-holder rewrite only watched in one direction. A fresh arm pass fired
+against the redesign itself (not the mkdir lock it replaced, which the two earlier passes had
+already spent) found the holder monitors the watchdog, but nothing monitored the holder — if
+the holder alone dies (OOM, a `kill -9` that targets it directly rather than the watchdog), the
+kernel releases the `flock` while the watchdog keeps running unaware. A second `start` then
+acquires the freed lock, and `stop` only ever reaches that second instance — reopening the
+exact orphan scenario 2.2.7 exists to close, from the other side.
+
+- The watchdog now also watches its holder, every second, and exits the moment it is gone
+  instead of continuing to run unlocked. Verified: killing the holder alone makes the watchdog
+  self-exit within about a second, rather than persisting untracked.
+- The holder's own liveness check on the watchdog was `os.kill(pid, 0)`, which reports a zombie
+  (dead but unreaped) process as alive, and can be fooled by PID reuse. Replaced with
+  `os.getppid()` polling — reparenting to the OS's subreaper happens the instant a parent
+  process exits, not when it is reaped, so this is immune to both.
+- `LOCK_FILE` and the status file were opened with a plain `open(path, "w")`, which follows a
+  symlink — a predictable `/tmp` path plus that gap let a local attacker pre-plant a symlink and
+  have the watchdog's own write silently truncate an arbitrary file it can write. Both opens now
+  use `O_NOFOLLOW`.
+- Re-verified the full battery against the redesign: normal start/stop/heartbeat, second-start
+  refusal, `tail -f` identity bypass still rejected, crash self-heal, and the orphan scenario
+  itself (two labels, `stop` one, confirm the other survives named and reachable) — all clean,
+  no leaked processes.
+
+## Upgrade from 2.2.7
+
+Copy `herdr-watchdog.sh`.
+
 # Astraler Harness 2.2.7
 
 Reversed 2.2.4's lock simplification, on a corrected cost estimate.

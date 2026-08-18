@@ -169,32 +169,64 @@ fi
 # Single-instance lock, held by a DEDICATED holder process — never by a
 # file descriptor open in this bash process itself (see the header note on
 # why a bare fd here leaks the lock to this script's own children).
+#
+# The watch is BIDIRECTIONAL. The holder watches this process (via getppid()
+# reparenting, not a PID-liveness poll — a dead-but-unreaped parent is still
+# a zombie that os.kill(pid, 0) reports as alive, and a recycled PID would
+# fool a poll that only remembers a number; reparenting to the OS's subreaper
+# happens the instant the parent exits, immune to both). But a first arm pass
+# on this rewrite (2026-08-18) found the other direction was missing: if the
+# HOLDER dies independently (OOM, kill -9 targeting it directly), the flock
+# releases while this watchdog keeps running unaware, a second `start` then
+# acquires the lock, and `stop` only ever reaches that second instance —
+# reopening the exact orphan this rewrite exists to close, from the other
+# side. So this process also watches the holder, every second, and exits the
+# moment it is gone rather than continuing to run unlocked.
+#
+# Both LOCK_FILE and LOCK_STATUS_FILE are opened with O_NOFOLLOW: a
+# predictable /tmp path plus a plain `open(path, "w")` lets a local attacker
+# pre-plant a symlink in the gap between `rm -f` and the holder's write, and
+# have that write silently truncate an arbitrary file the watchdog's owner
+# can write. O_NOFOLLOW turns that into a failed open instead of a followed
+# link. It does not close every race on the status file's guessable name — a
+# forged "ok" written in the split-second before the holder's own write can
+# still be read by an unlucky poll — but that residual only lets an attacker
+# force a false "already running" (denial of the watchdog to itself), not
+# corrupt a file or forge a live lock.
 # ---------------------------------------------------------------------------
 LOCK_STATUS_FILE="/tmp/.herdr-watchdog-lock-status.$$"
 rm -f "$LOCK_STATUS_FILE"
 python3 -c '
 import fcntl, os, sys, time
-pid, lockfile, statusfile = int(sys.argv[1]), sys.argv[2], sys.argv[3]
-f = open(lockfile, "a+")
+
+lockfile, statusfile = sys.argv[1], sys.argv[2]
+parent_pid = os.getppid()
+
+def write_status(path, msg):
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(fd, "w") as sf:
+        sf.write(msg)
+
+try:
+    fd = os.open(lockfile, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+except OSError:
+    write_status(statusfile, "busy")
+    sys.exit(0)
+f = os.fdopen(fd, "r+")
 try:
     fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
 except OSError:
-    open(statusfile, "w").write("busy")
+    write_status(statusfile, "busy")
     sys.exit(0)
 f.seek(0)
 f.truncate()
-f.write(str(pid))
+f.write(str(parent_pid))
 f.flush()
-open(statusfile, "w").write("ok")
-while True:
-    try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
-        sys.exit(0)
-    except PermissionError:
-        pass
+write_status(statusfile, "ok")
+while os.getppid() == parent_pid:
     time.sleep(1)
-' "$$" "$LOCK_FILE" "$LOCK_STATUS_FILE" &
+' "$LOCK_FILE" "$LOCK_STATUS_FILE" &
+HOLDER_PID=$!
 
 lock_status=""
 for _ in $(seq 1 40); do
@@ -207,6 +239,25 @@ if [ "$lock_status" != "ok" ]; then
   echo "STOP: watchdog already running for workspace $WORKSPACE_LABEL (pid ${existing_pid:-unknown})" >&2
   exit 3
 fi
+
+holder_gone_die() {
+  if ! kill -0 "$HOLDER_PID" 2>/dev/null; then
+    log "lock holder (pid $HOLDER_PID) is gone — exiting so a fresh start can safely take the lock"
+    exit 0
+  fi
+}
+
+# Sleeps in 1s steps, checking the holder each step, instead of one long
+# sleep — so a dead holder is noticed within about a second, not up to a
+# whole poll interval later.
+sleep_or_die() {
+  local remaining="$1"
+  while (( remaining > 0 )); do
+    holder_gone_die
+    sleep 1
+    remaining=$(( remaining - 1 ))
+  done
+}
 
 # caffeinate as a background helper we launch, never a wrapper we exec into.
 # `-w $$` makes it wait on and track our own PID and exit on its own once
@@ -409,13 +460,13 @@ log "started — workspace=$WORKSPACE_LABEL project=$PROJECT_ROOT interval=${INT
 while true; do
   raw=$(herdr agent list 2>/dev/null) || {
     log "herdr agent list failed"
-    sleep "$INTERVAL"
+    sleep_or_die "$INTERVAL"
     continue
   }
 
   output=$(echo "$raw" | analyze) || {
     log "analyze failed"
-    sleep "$INTERVAL"
+    sleep_or_die "$INTERVAL"
     continue
   }
 
@@ -455,5 +506,5 @@ while true; do
       > "$HEARTBEAT_FILE"
   fi
 
-  sleep "$INTERVAL"
+  sleep_or_die "$INTERVAL"
 done

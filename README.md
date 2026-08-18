@@ -1,4 +1,4 @@
-# Astraler Harness 2.2.7
+# Astraler Harness 2.2.8
 
 An operating framework that lets **several agents build software together on an existing
 codebase**.
@@ -223,7 +223,7 @@ harness/                          the payload staged into a target repo
     agents/                       OpenCode adapters so --agent <role> resolves
   .codex/profiles/                one per role, mirroring the orchestrator rows
   .agents/memory/
-    recurring-failure-modes.md    76 measured failure modes; append-only, the evidence base
+    recurring-failure-modes.md    77 measured failure modes; append-only, the evidence base
   scripts/
     herdr-watch-terminal.sh       turn watcher with a real start guard
     herdr-watchdog.sh             background poll of `herdr agent list`; wakes Thomas on a

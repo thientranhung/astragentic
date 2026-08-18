@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 76 entries (AST-001 … AST-077, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 77 entries (AST-001 … AST-078, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1542,3 +1542,41 @@ NAMED this exact hazard and did not apply it to the reads — writing down a ris
 same act as closing it. Fixed by binding one `BASE_REF="refs/heads/$BASE"` right after
 verification and reading through it everywhere, not just checking through it once.
 Bound: `harness/scripts/herdr-watchdog.sh`, `harness/scripts/ticket-git-facts.sh`.
+
+### AST-078 — `flock`-plus-holder watched only one direction · promoted 2026-08-18
+
+The 2.2.7 rewrite of `herdr-watchdog.sh`'s lock (AST-076's fourth revision) closed the orphan
+scenario from one side: a dedicated holder process watches the watchdog and releases the
+`flock` the moment the watchdog is gone. It never watched back. A fresh arm pass — fired
+deliberately because the two spent passes on this file had only ever reviewed the mkdir lock
+this rewrite replaced, never the rewrite itself — found that if the HOLDER dies alone (an OOM
+kill, or a `kill -9` that targets it specifically instead of the watchdog), the kernel releases
+the `flock` while the watchdog keeps running unaware. A second `start` then acquires the freed
+lock, and `stop` only ever reaches that second instance — the exact orphan this design exists
+to close, reopened from the direction nobody had checked. Reproduced directly: killing the
+holder alone left the watchdog running under a lock it no longer held.
+
+Fixed by making the watch bidirectional: the watchdog now checks the holder's liveness every
+second and exits the moment it is gone, rather than continuing to run unlocked. The same pass
+also caught two smaller gaps in the same rewrite: the holder's own liveness check on the
+watchdog, `os.kill(pid, 0)`, reports a zombie (dead but unreaped) process as alive and can be
+fooled by PID reuse — replaced with `os.getppid()` polling, since reparenting to the OS's
+subreaper happens the instant a parent exits, not when it is reaped, immune to both. And both
+`LOCK_FILE` and the status file were opened with a plain `open(path, "w")`, which follows a
+symlink — a predictable `/tmp` path plus that gap let a local attacker pre-plant a symlink and
+have the watchdog's own write silently truncate an arbitrary file it can write; both opens now
+use `O_NOFOLLOW`.
+
+**A design that closes a bug from one direction has not closed the bug** — a lock two processes
+each partly enforce is only as safe as the direction nobody thought to check, and the fix here
+is the same shape as the bug: watch back, not just watch.
+
+**Firing a fresh gate against a rewrite, not just against the artifact the rewrite replaced, is
+what caught it.** The two arm passes already spent on this file (AST-076, AST-077) reviewed the
+mkdir lock. The flock-plus-holder design that replaced it — 224 lines changed — had never had a
+cross-vendor pass of its own; an adapted project's own Thomas, asked to re-verify the rewrite by
+hand, named this directly: "pass 1 of a new gate, because the artifact changed underneath it,"
+not a third pass of the one already spent. Trusting a design's own reproductions to stand in for
+a gate that was never actually run against it is the same mistake AST-076's "the judgement
+itself was wrong" closing note already named once.
+Bound: `harness/scripts/herdr-watchdog.sh`.
