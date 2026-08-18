@@ -69,8 +69,19 @@ Builder's.
 Gotchas, each of which has cost us a run:
 
 - Flags and focus are **separate argv tokens** — one quoted blob fails.
-- Focus text takes **no apostrophes and no semicolons** (zsh reads them as `unmatched '` or
-  as a command split), and no literal `--flag` (the parser consumes it).
+- Focus text is unquoted, word by word, so **avoid every shell/glob-special character**, not
+  a specific list of them — apostrophes and semicolons split or unterminate the command;
+  parentheses, brackets, `*` and `?` are zsh glob syntax and fail with `no matches found`
+  before the command even runs (measured: a focus word `option (a)` never reached node —
+  no process started, no output file created, nothing to read). Naturally-written focus text
+  reaches for `(a)`, `(inert)` and similar constantly, so this is not a rare edge case. No
+  literal `--flag` either (the parser consumes it).
+- **A missing output file is NOT RUN, the same as an output file with zero `Verdict:`
+  lines** — check for the file's existence before trusting its content, not only the content
+  once it exists. A shell parse error from the gotcha above kills the whole command before
+  node starts: no crash surfaces where you are watching, no file is written, and the ONLY way
+  to catch it is to have checked that a file exists at all. This is the exact silent-non-run
+  failure mode the rest of this section exists to prevent, from a cause outside Codex itself.
 - **Focus goes to `adversarial-review` only.** Plain `review` takes no focus, so pack the
   intent into the adversarial pass.
 - Commit first and scope with `--base <ref>`. Focus text steers the prompt; it is advisory,

@@ -1,3 +1,31 @@
+# Astraler Harness 2.2.13
+
+Fix: `codex-arm/SKILL.md`'s forbidden-character list was incomplete, and missed the failure
+mode it exists to prevent. Found by etsy-fulfillment-thanh's Thomas mid-arm-run, one class
+below AST-081/082 in the same integration.
+
+Focus text is passed unquoted, word by word, so the doc listed apostrophes, semicolons and a
+literal `--flag` as forbidden — but not parentheses, brackets, or the rest of zsh's glob
+syntax. Reproduced directly: a focus word `option (a)` never reaches `node` at all — zsh's own
+glob expansion kills the command at parse time, before the process starts, so no output file
+is ever created, not even the redirect target. Naturally-written focus text reaches for
+`(a)`, `(inert)` and similar constantly, so this was never a rare edge case, and the failure
+mode is exactly the one this skill exists to prevent: the arm silently not running while the
+dispatcher believes it did. The doc's own required check (`grep -c '^Verdict:'` on the output)
+only covers a file that EXISTS with the wrong content — a file that never gets created at all
+passes that check by having nothing to grep, and the gap was closed only because the ticket's
+own gate required checking for the file's existence first.
+
+- The gotcha is now stated as a principle (avoid every shell/glob-special character) instead
+  of an enumerable list that will keep missing the next one, with the measured reproduction
+  kept as evidence.
+- Added an explicit line: a missing output file is NOT RUN, the same class as a file with
+  zero `Verdict:` lines — check existence before content, not only content once it exists.
+
+## Upgrade from 2.2.12
+
+Copy `codex-arm/SKILL.md` (both `.claude` and `.agents` copies).
+
 # Astraler Harness 2.2.12
 
 Fix: `ticket-git-facts.sh` was case-sensitive where the rest of it already wasn't, and one

@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 81 entries (AST-001 … AST-082, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 82 entries (AST-001 … AST-083, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1697,3 +1697,34 @@ down and trusting it gets read first.
 copies what is executable, not what is explained, so the same substitution reminder belongs
 next to every copy-pasteable instance of the thing that needs substituting, not once nearby.
 Bound: `harness/.claude/skills/dispatch-ticket/SKILL.md`, `harness/.agents/skills/dispatch-ticket/SKILL.md`.
+
+### AST-083 — the arm's own forbidden-character list was incomplete, and missed exactly the failure it exists to prevent · promoted 2026-08-18
+
+Found by an adapted project's own Thomas mid-arm-run, one class below AST-081/082 in the same
+integration. `codex-arm/SKILL.md` documents that focus text is passed unquoted, word by word,
+to `node`, and lists apostrophes, semicolons and a literal `--flag` as forbidden — but not
+parentheses, brackets, or the rest of zsh's glob syntax. Reproduced directly: a focus word
+`option (a)` never reaches `node` at all; zsh's own glob expansion kills the whole command at
+PARSE TIME, before any process starts, so no output file is ever created — not even the
+redirect target the command's own stdout was pointed at. Naturally-written focus text reaches
+for `(a)`, `(inert)` and similar constantly, so this was never a rare edge case, and this is
+exactly the failure mode this skill exists to prevent: the arm silently not running while the
+dispatcher believes it did, from a cause entirely outside Codex itself. The doc's own required
+check (grep the output for a `Verdict:` line) only covers a file that EXISTS with the wrong
+content — a file that was never created passes that check by having nothing to grep, and the
+gap here was closed only because the run happened to also check the file's existence first.
+
+Fixed two ways: the gotcha is now stated as a principle — avoid every shell/glob-special
+character — instead of an enumerable list, since an enumerable list only ever grows by one
+character at a time, always one step behind whatever the next natural sentence contains. And a
+new explicit line: a MISSING output file is NOT RUN, the same class as a file with zero
+`Verdict:` lines, so existence is checked before content is trusted, not only content once a
+file happens to exist.
+
+**A safety check that verifies the wrong precondition passes on exactly the input it was
+written to catch.** The doc already told the reader to check for a `Verdict:` line; it never
+told them to check the file existed first, because the author who wrote that check was
+imagining a run that COMPLETED with a bad answer, not one that never started at all — the same
+class of gap AST-076's "closes a bug from one direction" and AST-080's "tracked is not current"
+already named, applied here to a verification instruction instead of a lock or a doctor check.
+Bound: `harness/.claude/skills/codex-arm/SKILL.md`, `harness/.agents/skills/codex-arm/SKILL.md`.
