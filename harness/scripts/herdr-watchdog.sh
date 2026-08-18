@@ -136,38 +136,73 @@ fi
 
 # ---------------------------------------------------------------------------
 # Single-instance lock. mkdir is atomic on every filesystem herdr runs on,
-# so it doubles as the lock primitive — no flock binary required on macOS.
-# PID_FILE is written IMMEDIATELY after mkdir succeeds, in this same PID,
-# with no exec, fork or other hop between them (AST-076).
+# and it is the ONLY primitive exclusivity depends on — including during
+# reclaim, which two earlier passes at this got wrong, both under the same
+# 15-way concurrent-start test that finally forced the bug to show up:
 #
-# That still leaves ONE unavoidable gap: the instant between `mkdir`
-# succeeding and `echo $$ > "$PID_FILE"` landing, where LOCK_DIR exists with
-# no PID recorded yet — indistinguishable, from a single snapshot, from a
-# crashed instance that never got that far. Closing it outright would need
-# the directory's own creation to carry the PID atomically, which mkdir
-# cannot do. So a PID-less lock is NOT reclaimed on sight: retry for up to a
-# second, in case it is a real instance still inside that one-line gap,
-# before treating it as a genuine crash (AST-076 follow-up, same review).
+# 1. PID_FILE is written IMMEDIATELY after `mkdir` succeeds, no exec/fork
+#    hop between them (AST-076) — but a PID-less lock is still retried for
+#    up to a second before it is treated as a crash, since a real instance
+#    writes its PID in microseconds and reclaiming on first sight evicted
+#    live starters.
+# 2. Reclaiming was `mv` (to make the destructive part atomic) — but the
+#    DECISION to reclaim was made once, up to a second earlier, and by the
+#    time a slow starter finally ran its `mv`, a different starter could
+#    already have legitimately reclaimed and be running — and the late
+#    `mv` doesn't know that, so it evicts a LIVE lock, not a stale one.
+#    Measured directly: 15-way contention against a pre-planted stale lock
+#    produced 2 and 3 survivors across five reps with the `mv`-only fix.
+#
+# The actual defect was letting more than one process independently DECIDE
+# a lock is stale. A reclaim-mutex — itself just another `mkdir`, held only
+# across the handful of syscalls a reclaim takes, never across a sleep —
+# makes that decision exclusive to one process at a time, so nobody acts on
+# a snapshot that is already out of date by the time they act on it.
 # ---------------------------------------------------------------------------
-if ! mkdir "$LOCK_DIR" 2>/dev/null; then
-  existing_pid=""
-  for _ in 1 2 3 4 5 6 7 8 9 10; do
+acquire_lock() {
+  mkdir "$LOCK_DIR" 2>/dev/null && { echo $$ > "$PID_FILE"; return 0; }
+
+  local mutex="${LOCK_DIR}.reclaiming" got_mutex=1
+  for _ in $(seq 1 20); do
+    mkdir "$mutex" 2>/dev/null && { got_mutex=0; break; }
+    sleep 0.1
+  done
+  # Could not become the sole arbiter within two seconds — someone else is
+  # deciding. Do not guess; the caller retries acquire_lock from the top,
+  # by which point the arbiter has left the lock in a definite state.
+  [ "$got_mutex" -eq 0 ] || return 1
+
+  local existing_pid=""
+  for _ in $(seq 1 10); do
     existing_pid=$(cat "$PID_FILE" 2>/dev/null || true)
     [ -n "$existing_pid" ] && break
     sleep 0.1
   done
   if is_watchdog_process "$existing_pid"; then
+    rmdir "$mutex" 2>/dev/null
     echo "STOP: watchdog already running for workspace $WORKSPACE_LABEL (pid $existing_pid)" >&2
     exit 3
   fi
-  # Either a PID was recorded but no longer names this script (a crashed
-  # instance), or a full second passed with no PID ever appearing (a crash
-  # before the write, since a live instance writes it in well under that) —
-  # both are a genuine stale lock. Reclaim.
+
+  # Genuinely stale, and — because we hold the mutex — no other process can
+  # be mid-reclaim right now, so plain rm+mkdir is safe here even though it
+  # was not safe outside this section.
   rm -rf "$LOCK_DIR"
-  mkdir "$LOCK_DIR" 2>/dev/null || { echo "STOP: could not acquire lock" >&2; exit 3; }
-fi
-echo $$ > "$PID_FILE"
+  local rc=1
+  if mkdir "$LOCK_DIR" 2>/dev/null; then
+    echo $$ > "$PID_FILE"
+    rc=0
+  fi
+  rmdir "$mutex" 2>/dev/null
+  return "$rc"
+}
+
+acquired=0
+for _ in $(seq 1 5); do
+  acquire_lock && { acquired=1; break; }
+  sleep 0.1
+done
+[ "$acquired" -eq 1 ] || { echo "STOP: could not acquire lock for workspace $WORKSPACE_LABEL" >&2; exit 3; }
 
 # caffeinate as a background helper we launch, never a wrapper we exec into.
 # `-w $$` makes it wait on and track our own PID and exit on its own once we

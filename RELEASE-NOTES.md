@@ -1,3 +1,26 @@
+# Astraler Harness 2.2.3
+
+Fix: 2.2.2's `mv`-based reclaim still let two contenders independently decide a lock was
+stale, and act on that decision after it was already out of date.
+
+- Measured directly: a pre-planted, permanently PID-less lock plus 15 concurrent `start`
+  calls produced 2–3 survivors across five reps, where exactly 1 was correct. The `mv` made
+  eviction atomic, but the DECISION to evict was still made independently by every contender
+  up to a second before any of them acted on it, so a slow contender could evict a lock a
+  faster one had already legitimately reclaimed and started.
+- Fixed with a reclaim-mutex (one more `mkdir`, held only across the handful of syscalls a
+  reclaim takes, never across a sleep) so exactly one process is ever the arbiter deciding
+  staleness — every other contender either finds a live lock the arbiter just created, or
+  waits for the arbiter to finish before looking itself.
+- Re-measured with a wait margin wider than the code's own worst-case retry budget (a first
+  re-measurement with too short a wait read as clean when it was not — processes still
+  mid-retry were miscounted as resolved survivors): six reps of the same 15-way attack, one
+  surviving process every time.
+
+## Upgrade from 2.2.2
+
+Copy `herdr-watchdog.sh`.
+
 # Astraler Harness 2.2.2
 
 Fix: 2.2.1's own race fix still narrowed the window rather than closing it, plus a PGID

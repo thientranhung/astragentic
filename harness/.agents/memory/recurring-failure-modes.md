@@ -1420,4 +1420,28 @@ padding, silently downgrading every group-kill to a single-PID kill. `read -r pg
 **A fix for one AST entry is not exempt from becoming the subject of the next one** — this
 review found real defects in code written specifically to close a review finding, twice in
 the same file in one day.
+
+**A third pass, on the `mv`-based fix above, found it still narrowing rather than closing.**
+The `mv` made the destructive act atomic, but the DECISION to act on it was still made
+independently by every contender, up to a second before any of them acted on it — so a slow
+contender's `mv` could fire after a different contender had already legitimately reclaimed and
+started, evicting a LIVE lock, not a stale one. This was not caught by reasoning about the
+diff; it took forcing the worst case (a pre-planted, permanently PID-less lock, 15 concurrent
+`start` calls, five repetitions) to show 2–3 survivors where exactly 1 was correct, and a first
+attempt to re-measure with too short a wait window read as clean when it was not — the
+processes still mid-retry were miscounted as resolved.
+
+The actual defect, finally: letting more than one process independently decide staleness at
+all. Fixed with a reclaim-mutex — one more `mkdir`, held only across the handful of syscalls a
+reclaim takes and never across a sleep — so exactly one process is ever the arbiter, and every
+other contender either finds a live lock the arbiter just created or waits for the arbiter to
+finish before looking. Re-measured with a wait long enough for every bounded retry to actually
+resolve (worst case ~1.5s of mutex contention plus 1s of PID-liveness retry, so 20s of margin):
+six repetitions of the same 15-way, pre-planted-stale-lock attack, one `started` log line and
+one surviving process every time.
+
+**Reasoning about a diff and measuring it are different activities, and this entry needed
+three rounds of the second one before the first one's conclusion held.** A test that finishes
+early reads as a passing test; only a wait margin wider than the code's own worst-case retry
+budget tells the two apart.
 Bound: `harness/scripts/herdr-watchdog.sh`.
