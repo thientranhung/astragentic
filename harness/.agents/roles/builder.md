@@ -97,7 +97,19 @@ Reviewer attention spent on what a command would have caught is not spent on wha
 can see, and a surface that stays green when it should not have is the more important half of
 that result.
 
-Push, then return to Thomas: the branch, the final SHA, which acceptance criteria pass, the
+**Commit, push, then return to Thomas.** These are three actions you perform in your last turn
+— not a description of the desired end state. Work that is written but not committed does not
+exist in git, and Thomas's cleanup removes the worktree. Five measured instances of a Builder
+stopping after writing but before committing: pane reads `done`, worktree carries the work,
+cleanup deletes it (AST-092).
+
+```bash
+git add <your-files>
+git commit -m '<ticket-id>: <what this does>'
+git push origin <ticket-branch>
+```
+
+Then return to Thomas: the branch, the final SHA, which acceptance criteria pass, the
 exact validation commands and their output, the `simplify(increment):` marker, the browser
 evidence for any surface you changed (or the named skip), and anything you reported rather than
 changed.

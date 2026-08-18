@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 90 entries (AST-001 … AST-091, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 91 entries (AST-001 … AST-092, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1941,3 +1941,37 @@ Fixed by reading the existing file value as the default when `.astraler/PROJECT_
 already present and no `--project-name` flag was given. `--project-name` still wins when
 explicitly provided.
 Bound: install.sh.
+
+### AST-092 — Builder stops after writing code but before committing — pane reads done, cleanup deletes the work · promoted 2026-08-18
+
+Measured by nizzy-ecom Thomas: 5 instances, 3 different Builder sessions, runtime claude,
+dispatched via herdr pane. Each time the Builder wrote substantial work (93-433 lines),
+pane status settled to `done` or `idle`, watcher returned `TERMINAL:done`, but `git status`
+on the worktree showed uncommitted changes.
+
+The danger: Thomas's cleanup in dispatch-ticket runs `git worktree remove`, which silently
+deletes all uncommitted files. A Builder that stops before committing produces an artifact
+that exists only on disk, invisible to git, and cleanup destroys it without warning. Pane
+status is not a proxy for commit status — a pane can be `done` with uncommitted work.
+
+Worst measured case: a fix for a HIGH cross-vendor arm finding sat uncommitted. Thomas ran
+mutation testing against the committed state (which lacked the fix), saw the suite pass, and
+nearly concluded the fix did not work — when in fact the fix did not yet exist in git.
+
+Two gaps in the contracts:
+1. builder.md's "Handing back" section said "Push, then return to Thomas" — describing the
+   desired end state, not an imperative action sequence. No commit template, no artifact
+   check. A Builder that stops after writing code has done the work but not the delivery,
+   and the contract did not distinguish the two.
+2. dispatch-ticket's cleanup checked pane absence before worktree removal but not worktree
+   cleanliness. A clean pane with a dirty worktree passed the check.
+
+Fixed in both places:
+- builder.md: "Commit, push, then return to Thomas" as three explicit actions with a
+  template, plus a warning naming this failure mode.
+- dispatch-ticket: cleanup runs `git status --short` on the worktree before removal.
+  Non-empty output is STOP — report to owner, do not remove.
+
+Thomas's self-added habit of running `git status` before trusting pane status was the only
+thing that caught this five times. That habit is now in the contract.
+Bound: builder.md, dispatch-ticket/SKILL.md.

@@ -1,3 +1,30 @@
+# Astragentic 2.2.20
+
+Fix: Builder stops after writing code but before committing — pane reads `done`, Thomas's
+cleanup removes the worktree, work is silently lost. Measured 5 times across 3 Builders on
+nizzy-ecom by Thomas, who caught every instance only by a self-added `git status` habit that
+was not in any contract (AST-092).
+
+Two gaps closed:
+
+**builder.md** — "Push, then return to Thomas" described the desired end state, not an
+imperative action sequence. A Builder that wrote 400 lines and stopped had done the work but
+not the delivery, and the contract did not distinguish the two. Now: "Commit, push, then
+return to Thomas" as three explicit actions with a template.
+
+**dispatch-ticket** — cleanup checked pane absence before worktree removal but not worktree
+cleanliness. Now: `git status --short` on the worktree before removal. Non-empty output is
+STOP — report to the owner, do not remove.
+
+- builder.md: handing-back section rewritten with commit/push/return as imperative steps
+- dispatch-ticket/SKILL.md: cleanup section adds dirty-worktree guard
+- recurring-failure-modes.md: AST-092 added (91 entries)
+
+## Upgrade from 2.2.19
+
+Copy `.agents/roles/builder.md` and `.agents/skills/dispatch-ticket/SKILL.md`. The ledger
+carries AST-092.
+
 # Astragentic 2.2.19
 
 Fix: the AST-090 rewrite of builder-claude.md dropped the `<!-- addr-ok: wrong form, cited -->`
