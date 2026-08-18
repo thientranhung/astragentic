@@ -1471,6 +1471,18 @@ concurrency fix, not the end of the fourth one.** Correctness work has no natura
 point of its own — every fix admits a smaller, rarer race than the last — so the thing that
 ends it has to be an explicit judgement about the failure's real cost, made once, and cheaper
 to make before three rounds of building than after.
+
+**The judgement itself was wrong, caught by a second reviewer measuring the same failure more
+precisely than the first.** "Two watchdogs alert twice" was the assumed worst case for the
+simple lock; the actual worst case, worked through by a second adapted project's own Thomas
+during its own review of the same code: `stop` kills whichever of two live instances currently
+holds the lock and deletes it — leaving the OTHER instance alive, unnamed, with no lock file
+pointing at it and nothing left able to `stop` it. An orphan, not a duplicate alert. Re-adopted
+the flock-plus-dedicated-holder design (the fd-inheritance-safe version, not the reclaim-mutex
+that could deadlock forever) once that cost was named correctly. **A simplification is only as
+good as the cost estimate it was traded against**, and that estimate is exactly the kind of
+claim worth a second, independent pass rather than trusting the first pass's own conclusion
+about its own risk.
 Bound: `harness/scripts/herdr-watchdog.sh`.
 
 ### AST-077 — Identity by substring match let `stop` sign a kill order for an unrelated process · promoted 2026-08-18

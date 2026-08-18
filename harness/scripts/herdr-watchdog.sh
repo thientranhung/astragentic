@@ -8,18 +8,28 @@
 # resolves the workspace, and only monitors agents whose pane belongs to it.
 # Multiple projects never interfere.
 #
-# One instance per workspace-label, on a best-effort lock: a second `start`
-# landing at the exact same instant as the first can in rare cases both
-# proceed, producing duplicate alerts until one of them exits — a nuisance,
-# never a safety problem, because `stop` independently re-verifies the
-# recorded PID is still this script before ever signaling it (AST-072). A
-# fully race-proof lock was built and measured working (AST-076), and
-# traded back for this simpler one deliberately: the failure mode a perfect
-# lock guards against here is "wasted duplicate alerts", not "the wrong
-# process gets killed", and that risk did not earn the added code.
+# One instance per workspace-label, enforced by a kernel-managed `flock`
+# held by a dedicated holder process (AST-076, fourth and final revision).
+# Three earlier designs (bare mkdir, mkdir plus mv-based eviction, mkdir
+# plus a reclaim-mutex) each closed one race and left another; a fourth
+# attempt traded all of it for the simplest possible mkdir lock, accepting
+# "two watchdogs alert twice" as the worst case — until a review measured
+# what that worst case actually is: `stop` kills whichever instance holds
+# the CURRENT lock and deletes it, leaving the OTHER instance alive with no
+# lock, no name, and nothing left able to stop it. Not a nuisance — an
+# orphan. `flock` closes it without needing any of the reclaim logic every
+# earlier design got wrong, because there is no "stale lock" state to
+# reclaim: the kernel releases the lock the instant the holding descriptor
+# closes, for any reason, including SIGKILL. The one thing that took a
+# dedicated holder process to get right: bash spawns children constantly
+# (`sleep`, `herdr`, the analyze() python call) that inherit open file
+# descriptors by default, so a bare fd held in this script's own process
+# leaks the lock to whichever child is still alive when this process dies.
+# A holder that spawns nothing itself cannot leak it to anything.
 #
-# Lock dir:      /tmp/herdr-watchdog-<workspace-label>.lock      (PID inside)
+# Lock file:     /tmp/herdr-watchdog-<workspace-label>.lock      (flock + PID)
 # Log file:      /tmp/herdr-watchdog-<workspace-label>.log       (alerts only)
+# State dir:     /tmp/herdr-watchdog-<workspace-label>.state     (heartbeat, counters)
 #
 # THE PROCESS TABLE, THE PID FILE AND CPU TIME ALL FAIL TO PROVE THIS SCRIPT IS
 # ALIVE. A live project measured all three failing on the same instance: it was
@@ -58,13 +68,13 @@ except Exception:
   echo "STOP: no workspace-label set in .agents/orchestrator.md" >&2; exit 2
 }
 
-LOCK_DIR="/tmp/herdr-watchdog-${WORKSPACE_LABEL}.lock"
-PID_FILE="$LOCK_DIR/pid"
+LOCK_FILE="/tmp/herdr-watchdog-${WORKSPACE_LABEL}.lock"
 LOG="/tmp/herdr-watchdog-${WORKSPACE_LABEL}.log"
+STATE_DIR="/tmp/herdr-watchdog-${WORKSPACE_LABEL}.state"
 # Rewritten in place every HEARTBEAT_EVERY-th poll, so its own mtime is the
 # check — a stale timestamp is what a wedged loop looks like, and separate
 # from LOG so a heartbeat on every poll never buries the alert history.
-HEARTBEAT_FILE="$LOCK_DIR/alive"
+HEARTBEAT_FILE="$STATE_DIR/alive"
 
 # A recorded PID counts as "us" only if it is alive AND its command line
 # still names this script — never trust the PID number alone, since PIDs are
@@ -100,10 +110,9 @@ is_watchdog_process() {
 # stop subcommand
 # ---------------------------------------------------------------------------
 if [ "${1:-}" = "stop" ]; then
-  pid=$(cat "$PID_FILE" 2>/dev/null || true)
+  pid=$(cat "$LOCK_FILE" 2>/dev/null || true)
   if ! is_watchdog_process "$pid"; then
     echo "no live watchdog for workspace $WORKSPACE_LABEL" >&2
-    rm -rf "$LOCK_DIR"
     exit 0
   fi
   if [ -n "$WATCHDOG_PGID" ]; then
@@ -111,7 +120,11 @@ if [ "${1:-}" = "stop" ]; then
   else
     kill -TERM "$pid" 2>/dev/null
   fi
-  rm -rf "$LOCK_DIR"
+  # No lock to remove: `flock` releases itself the instant the signaled
+  # process's fd closes, whether it exits cleanly or is killed. LOCK_FILE's
+  # PID content is left in place — informational only, overwritten by
+  # whoever next acquires the lock, never read as a claim of ownership by
+  # anything other than that acquisition.
   exit 0
 fi
 
@@ -153,21 +166,47 @@ os.execvp(sys.argv[1], sys.argv[1:])
 fi
 
 # ---------------------------------------------------------------------------
-# Single-instance lock. `mkdir` is atomic, so it is the exclusivity check;
-# a lock whose recorded PID is not a live watchdog is a crashed prior
-# instance and gets reclaimed. See the header note on why this stays
-# simple rather than fully race-proof.
+# Single-instance lock, held by a DEDICATED holder process — never by a
+# file descriptor open in this bash process itself (see the header note on
+# why a bare fd here leaks the lock to this script's own children).
 # ---------------------------------------------------------------------------
-if ! mkdir "$LOCK_DIR" 2>/dev/null; then
-  existing_pid=$(cat "$PID_FILE" 2>/dev/null || true)
-  if is_watchdog_process "$existing_pid"; then
-    echo "STOP: watchdog already running for workspace $WORKSPACE_LABEL (pid $existing_pid)" >&2
-    exit 3
-  fi
-  rm -rf "$LOCK_DIR"
-  mkdir "$LOCK_DIR" 2>/dev/null || { echo "STOP: could not acquire lock" >&2; exit 3; }
+LOCK_STATUS_FILE="/tmp/.herdr-watchdog-lock-status.$$"
+rm -f "$LOCK_STATUS_FILE"
+python3 -c '
+import fcntl, os, sys, time
+pid, lockfile, statusfile = int(sys.argv[1]), sys.argv[2], sys.argv[3]
+f = open(lockfile, "a+")
+try:
+    fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+except OSError:
+    open(statusfile, "w").write("busy")
+    sys.exit(0)
+f.seek(0)
+f.truncate()
+f.write(str(pid))
+f.flush()
+open(statusfile, "w").write("ok")
+while True:
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        sys.exit(0)
+    except PermissionError:
+        pass
+    time.sleep(1)
+' "$$" "$LOCK_FILE" "$LOCK_STATUS_FILE" &
+
+lock_status=""
+for _ in $(seq 1 40); do
+  [ -s "$LOCK_STATUS_FILE" ] && { lock_status=$(cat "$LOCK_STATUS_FILE" 2>/dev/null); break; }
+  sleep 0.05
+done
+rm -f "$LOCK_STATUS_FILE"
+if [ "$lock_status" != "ok" ]; then
+  existing_pid=$(cat "$LOCK_FILE" 2>/dev/null || true)
+  echo "STOP: watchdog already running for workspace $WORKSPACE_LABEL (pid ${existing_pid:-unknown})" >&2
+  exit 3
 fi
-echo $$ > "$PID_FILE"
 
 # caffeinate as a background helper we launch, never a wrapper we exec into.
 # `-w $$` makes it wait on and track our own PID and exit on its own once
@@ -180,18 +219,12 @@ fi
 # ---------------------------------------------------------------------------
 # State
 # ---------------------------------------------------------------------------
-STATE_DIR="$LOCK_DIR/state"
+[ -L "$STATE_DIR" ] && rm -f "$STATE_DIR"   # refuse a pre-planted symlink
 mkdir -p "$STATE_DIR"
 echo 0  > "$STATE_DIR/alert_count"
 date +%s > "$STATE_DIR/alert_reset"
 HEARTBEAT_EVERY="${HEARTBEAT_EVERY:-5}"
 
-# Remove the lock on every exit path, but only if it is still ours — a
-# `stop` racing us may already have reclaimed it for a fresh instance.
-cleanup() {
-  [ "$(cat "$PID_FILE" 2>/dev/null)" = "$$" ] && rm -rf "$LOCK_DIR"
-}
-trap cleanup EXIT
 trap 'exit 0' INT TERM
 
 log() { printf '[%s] %s\n' "$(date '+%H:%M:%S')" "$*" >> "$LOG"; }

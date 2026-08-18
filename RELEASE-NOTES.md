@@ -1,3 +1,27 @@
+# Astraler Harness 2.2.7
+
+Reversed 2.2.4's lock simplification, on a corrected cost estimate.
+
+2.2.4 traded the race-proof lock (2.2.3) for a plain `mkdir` lock, reasoning that its worst
+case — two watchdogs alerting twice — was too cheap a risk to justify the extra code. A second
+adapted project's own Thomas, reviewing the same code independently, measured the actual worst
+case: `stop` kills whichever of two live instances currently holds the lock and deletes it,
+leaving the other alive, unnamed, with nothing left able to `stop` it. An orphan, not a
+duplicate alert — the cost estimate the simplification was traded against was wrong.
+
+- `herdr-watchdog.sh`'s single-instance lock is a kernel-managed `flock` again, held by a
+  dedicated holder process (the fd-inheritance-safe design from AST-076's fourth revision, not
+  the reclaim-mutex that could deadlock forever if killed mid-critical-section). Re-verified:
+  15-way concurrent starts still land exactly one survivor; a `kill -9` on the holder alone
+  self-heals within about a second, no manual intervention; `stop` still only ever signals a
+  process it has independently verified is this script (unchanged from 2.2.5/2.2.6).
+- `thomas.md`'s Watchdog section updated: the PID path is the lock file itself again, not a
+  path inside a lock directory; the heartbeat lives in a sibling `.state/` directory.
+
+## Upgrade from 2.2.6
+
+Copy `herdr-watchdog.sh` and the Watchdog section of `thomas.md`.
+
 # Astraler Harness 2.2.6
 
 Fix: 2.2.5's own base-branch fix was incomplete, caught by a second arm pass fired against it.

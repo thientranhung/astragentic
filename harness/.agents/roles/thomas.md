@@ -180,8 +180,8 @@ scripts/herdr-watchdog.sh stop
 ```
 
 Reads `workspace-label` from `.agents/orchestrator.md`; `stop` verifies the PID first, to
-avoid signaling an unrelated process. PID: `/tmp/herdr-watchdog-<workspace-label>.lock/pid`.
-If you suspect it has wedged, check `…lock/alive`'s **mtime, not its presence** — the process
+avoid signaling an unrelated process. PID: `/tmp/herdr-watchdog-<workspace-label>.lock`.
+If you suspect it has wedged, check `…state/alive`'s **mtime, not its presence** — the process
 table and the PID file can both say alive while the loop itself is not.
 
 `WATCHDOG ALERT` messages come from the script, not the owner:
