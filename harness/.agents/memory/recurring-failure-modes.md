@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 82 entries (AST-001 … AST-083, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 84 entries (AST-001 … AST-085, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1728,3 +1728,58 @@ imagining a run that COMPLETED with a bad answer, not one that never started at 
 class of gap AST-076's "closes a bug from one direction" and AST-080's "tracked is not current"
 already named, applied here to a verification instruction instead of a lock or a doctor check.
 Bound: `harness/.claude/skills/codex-arm/SKILL.md`, `harness/.agents/skills/codex-arm/SKILL.md`.
+
+### AST-084 — the watchdog trusted a pane title a runtime overwrites after launch · promoted 2026-08-18
+
+Found by an adapted project's own Thomas from live operation, on a real dispatch, not the
+arm. `herdr-watchdog.sh` classified a dispatched pane by matching its terminal title against
+`DISPATCH_PREFIXES` — set once by `herdr pane rename "<role>:<id>"` at dispatch time. The
+Claude runtime overwrites its own pane's terminal title after launch and does not honor a
+rename that predates it. Measured live, on this exact machine, on the real pane the finding
+named: a genuine Builder dispatch, `herdr agent start "builder-tra-180"`, its title correctly
+set to `builder:TRA-180` at rename time — then rewritten by the runtime to a bare `builder`,
+no colon, no ticket id. `is_dispatched()` never matched it. The pane never entered
+`dispatched`; the watchdog polled, heartbeat and all, and could never fire `BLOCKED`, `STUCK`
+or `WATCHER_LOST` for it — running normally while structurally unable to detect the one thing
+it exists to detect. The same live check, on a second project, found a Shaper in the
+identical state (title `shaper`, not `spec:<id>`).
+
+Fixed by checking a second, independent signal first: the herdr AGENT NAME, set once at
+`herdr agent start "<role>-<id>"` (dispatch-ticket-<runtime>, review-with-rin) and never
+touched again by anything the harness controls, unlike the pane title a runtime is free to
+rewrite. Title-prefix matching is kept as a fallback for panes with no name field. Re-verified
+directly against the real live `herdr agent list` output that exposed this: both the Builder
+and the Shaper pane now classify correctly.
+
+**A coordination primitive trusted at the moment it was set and never re-checked for whether
+the runtime it targets still lets it be seen** is the AST-072 class one level up — that
+finding closed the naming COLLISION; this one closes the naming being silently DISCARDED by
+the very runtime the harness dispatches onto. A watchdog that heartbeats normally while blind
+to the one pane it exists to watch reports nothing wrong, which is the most dangerous shape a
+monitoring guard can fail in.
+Bound: `harness/scripts/herdr-watchdog.sh`.
+
+### AST-085 — a word budget calibrated against a retired file size passed nothing · promoted 2026-08-18
+
+Also found by the same project's live operation, restated a third time in its own receipts
+before reaching the package. `docs-staleness-audit.sh`'s `orchestrator.md` budget was set to
+800 on 2026-08-13, calibrated to leave headroom over a 653-word shipped file. The Workspace
+identity section added across the 2.2.x line grew the shipped file itself to 800 words without
+the budget being revisited — measured across every release directory an adapted project had
+staged: 653 words at 1.6.2, 684 at 2.0.1, 800 at 2.2.4 and every release since. A budget equal
+to the file it bounds passes zero projects, including one that only fills in the
+workspace-label the same release requires — the calibrating comment still claimed "leaves real
+room over the shipped 653" while the shipped file had long since become the number in the
+check itself.
+
+Fixed by raising the budget to 950, restoring roughly the margin the original calibration
+intended, measured against the current 800-word baseline rather than the retired 653-word one
+the old comment still cited. The project that measured this had already raised its own local
+copy to the identical 950 as a stopgap, independently, before this fix landed.
+
+**A calibration comment is a claim about a fact at the moment it was written, and nothing
+re-checks that claim as the fact it describes moves** — the same shape as AST-080's tracked-vs-
+current gap, applied to a number in a comment instead of a file in git: both pass fine on the
+day they are written and both silently stop meaning what they say the moment what they
+describe changes under them.
+Bound: `harness/scripts/docs-staleness-audit.sh`.

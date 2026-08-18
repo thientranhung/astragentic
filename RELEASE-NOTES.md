@@ -1,3 +1,40 @@
+# Astraler Harness 2.2.14
+
+Fix: the watchdog was blind to any Builder or Shaper on a runtime that overwrites its own
+pane title, and the orchestrator.md budget had quietly become impossible to pass. Both found
+by workspace-app-inception's own Thomas from live operation, on a real dispatch, not the arm.
+
+**`herdr-watchdog.sh` classified a dispatched pane by title alone**, and the Claude runtime
+overwrites its own pane's terminal title after launch — measured live, right now, on a real
+Builder: `herdr agent start "builder-tra-180"` set the pane title correctly, then the Claude
+runtime rewrote it to a bare `builder`, no colon, no ticket id, discarding the rename
+entirely. `is_dispatched()` never matched it, so the pane never entered `dispatched` — the
+watchdog ran, heartbeat and all, and could never fire `BLOCKED`, `STUCK` or `WATCHER_LOST` for
+that pane. A guard that heartbeats normally while unable to fail. The same live check found a
+Shaper in the same state (title `shaper`, not `spec:<id>`) in a second project's workspace.
+
+- `is_dispatched()` now checks the herdr AGENT NAME first — set once at `herdr agent start
+  "<role>-<id>"` and never touched again by anything the harness controls — and falls back to
+  the title-prefix check only when no name is present. Re-verified against the exact live
+  pane that exposed this: correctly classified as dispatched now, on both real cases measured.
+
+**`docs-staleness-audit.sh`'s `orchestrator.md` budget had become equal to the shipped file**,
+so no compliant project — not even one that only fills in the required workspace-label — could
+pass it. The 800-word budget was calibrated in 2026-08-13 against a 653-word shipped file, to
+leave real headroom; the Workspace identity section added in the 2.2.x line grew the shipped
+file to 800 without anyone revisiting the budget that was calibrated against its old size.
+Measured across every release directory: 653 words at 1.6.2, 684 at 2.0.1, 800 at 2.2.4 and
+every release since.
+
+- Raised to 950, restoring roughly the same margin the original calibration intended, over
+  the current 800-word baseline instead of the retired 653-word one. The project that measured
+  this had already raised its own local copy to the identical 950 as a stopgap, independently
+  — the package number and the field number now agree.
+
+## Upgrade from 2.2.13
+
+Copy `herdr-watchdog.sh` and `docs-staleness-audit.sh`.
+
 # Astraler Harness 2.2.13
 
 Fix: `codex-arm/SKILL.md`'s forbidden-character list was incomplete, and missed the failure

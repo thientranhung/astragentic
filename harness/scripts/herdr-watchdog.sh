@@ -399,17 +399,35 @@ except (json.JSONDecodeError, KeyError):
 ws_label = "'"$WORKSPACE_LABEL"'"
 project_root = "'"$PROJECT_ROOT"'"
 
-# Only these pane-title prefixes are harness-owned dispatches. "builder:"
-# and "rin:" are what dispatch-ticket and review-with-rin actually rename
-# the pane to today (AST-072); "ticket:", "spec:" and "qa:" are the tab
-# label convention in orchestrator.md, kept here so a future QA/Shaper
-# dispatch that renames its pane to match is recognized without a further
+# Two independent signals can name a dispatched pane, checked in order.
+#
+# The herdr AGENT NAME, set once at `herdr agent start "<role>-<id>"`
+# (dispatch-ticket-<runtime>, review-with-rin) and never touched again by
+# anything the harness controls, is the primary signal. `terminal_title` /
+# `terminal_title_stripped`, set by `herdr pane rename "<role>:<id>"`, is a
+# fallback only — measured directly on a real, running dispatch: a
+# Claude-runtime Builder had its `name` still reading `builder-tra-180` unchanged
+# while its `terminal_title_stripped` had been overwritten by the runtime
+# itself to a bare `builder` (no colon, no ticket id), because the Claude
+# runtime writes its own terminal title after launch and does not honor a
+# rename that predates it. Title-only matching is blind to every such
+# pane: it never enters `dispatched`, so the watchdog never fires BLOCKED,
+# STUCK or WATCHER_LOST for it — heartbeats normally, reports nothing, a
+# guard that cannot fail (the AST-072 class, one level up: a coordination
+# primitive trusted at launch time and never re-checked for whether the
+# runtime it targets still lets it be seen).
+AGENT_NAME_PREFIXES = ("builder-", "shaper-", "qa-", "rin-")
+# "ticket:", "spec:" and "qa:" are the TAB label convention in
+# orchestrator.md, kept in the title fallback so a pane a dispatcher
+# renamed to match a tab label is still recognized without a further
 # change here. Anything else — including an owner tab created by hand —
 # is never treated as a dispatched pane.
-DISPATCH_PREFIXES = ("builder:", "ticket:", "spec:", "qa:", "rin:")
+TITLE_PREFIXES = ("builder:", "ticket:", "spec:", "qa:", "rin:")
 
-def is_dispatched(name):
-    return any(name.startswith(p) for p in DISPATCH_PREFIXES)
+def is_dispatched(agent_name, title):
+    if agent_name and any(agent_name.startswith(p) for p in AGENT_NAME_PREFIXES):
+        return True
+    return any(title.startswith(p) for p in TITLE_PREFIXES)
 
 # Resolve workspace ID by label
 try:
@@ -475,7 +493,7 @@ if tstatus == "working":
 # Thomas idle/done — check dispatched panes in this workspace
 dispatched = [a for a in ws_agents
               if a["pane_id"] != tpane
-              and is_dispatched(a.get("terminal_title_stripped") or "")]
+              and is_dispatched(a.get("name") or "", a.get("terminal_title_stripped") or "")]
 if not dispatched:
     sys.exit(0)
 

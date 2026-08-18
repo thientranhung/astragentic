@@ -98,10 +98,22 @@ done
 # words arguing which model a row should carry, including a decision, its reversal the same
 # day, and an instruction not to undo the reversal. The table is the file's job; the argument
 # for a row belongs in that project's decision record, which loads when someone re-opens the
-# decision instead of on every session. 800 leaves real room over the shipped 653.
+# decision instead of on every session.
+#
+# 800 was calibrated to leave real room over that 653 — headroom the shipped file itself has
+# since spent. An adapted project's own Thomas measured the package copy across releases:
+# 653 words at 1.6.2, 684 at 2.0.1, 800 at 2.2.4 and every release since (the Workspace
+# identity section added in the 2.2.x line consumed the entire margin). A budget equal to the
+# file it bounds passes zero projects, including one that only fills in the required
+# workspace-label blank — a compliant adaptation cannot pass a gate calibrated to a version of
+# itself that no longer ships. Re-measured 2026-08-18 and raised to 950, restoring
+# approximately the same ~150-word margin the original calibration intended, over the current
+# 800-word baseline rather than the retired 653-word one. The adapted project that measured
+# this had already raised its own local copy to the same 950 as a stopgap, independently,
+# before this fix landed — the package number and the field number agree.
 ORCH_F="$PAYLOAD/.agents/orchestrator.md"
 if [[ -f "$ORCH_F" ]]; then
-  budget_check ".agents/orchestrator.md" 800 "$(wc -w < "$ORCH_F" | tr -d ' ')"
+  budget_check ".agents/orchestrator.md" 950 "$(wc -w < "$ORCH_F" | tr -d ' ')"
 fi
 # Zero roles measured is the vacuous pass this axis shipped with. Say so rather than
 # printing nothing and letting the run read as a success.
