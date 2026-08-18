@@ -1,3 +1,23 @@
+# Astragentic 2.2.24
+
+Fix: the AST-094 simplify guard was inserted between the AST-092 git-status check and its
+conclusion, orphaning "if the output is empty, the worktree is clean and removal is safe"
+so that it read as the conclusion of the simplify grep — where empty output is precisely the
+STOP case. Reported independently by both adapted-project Thomas instances on 2.2.23.
+
+The section now names both checks explicitly as a numbered pair (Check 1: uncommitted work,
+Check 2: simplify markers), each with its own STOP condition, followed by a combined guard:
+"Only when both checks pass — git status empty AND at least one simplify marker — is
+removal safe."
+
+Third instance of an insertion that is correct in isolation but wrong at its insertion point
+(after addr-ok drop in 2.2.18 and single-root fix in 2.2.20). All three are invisible to
+byte-equality gates because both copies are equally wrong.
+
+## Upgrade from 2.2.23
+
+Copy `.agents/skills/dispatch-ticket/SKILL.md` and its `.claude` copy.
+
 # Astragentic 2.2.23
 
 AST-094 update: the initial hypothesis (strong handback template displaces simplify) was

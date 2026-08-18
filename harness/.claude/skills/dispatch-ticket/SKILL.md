@@ -474,35 +474,33 @@ herdr pane list --workspace <returned-workspace-id>
 
 Re-list the workspace and confirm the pane is absent before removing the checkout.
 
-**Check the worktree for uncommitted work before removing it.** A Builder that stops before
-committing leaves work that exists only on disk — `git worktree remove` deletes it silently.
-Five measured instances, three Builders, all with pane status `done` (AST-092).
+**Two checks before removing a worktree.** Both must pass — failing either is STOP.
+
+**Check 1: uncommitted work** (AST-092). A Builder that stops before committing leaves work
+that exists only on disk — `git worktree remove` deletes it silently.
 
 ```bash
 cd <worktree-path>
 git status --short
 ```
 
-If the output is non-empty — staged, modified, or untracked files — **STOP**. The worktree
-has work that was not committed. Do not remove it. Report to the owner with the file list and
-the ticket id, and wait for a decision: commit and continue, or discard explicitly.
+Non-empty output (staged, modified, or untracked files) — **STOP**. The worktree has work
+that was not committed. Report to the owner with the file list and ticket id, and wait for a
+decision: commit and continue, or discard explicitly.
 
-**Check the worktree for simplify markers before accepting the handback.** A Builder that
-commits and pushes correctly can still skip the simplify pass — two measured instances on
-well-specified tickets where the ticket's own acceptance criteria substituted for the role
-contract's definition of done (AST-094). The Builder's self-check may catch this, but the
-mechanism that causes the skip (the ticket checklist displacing the contract) also displaces
-the self-check, so Thomas verifies independently:
+**Check 2: simplify markers** (AST-094). A Builder that commits and pushes correctly can
+still skip the simplify pass — measured on well-specified tickets where the ticket's own
+acceptance criteria substituted for the role contract's definition of done.
 
 ```bash
-cd <worktree-path>
 git log <base>..HEAD --grep '^simplify(increment):' --oneline
 ```
 
-If the count is zero, the simplify pass was skipped. **STOP** — send the Builder back to run
-it. Do not merge a branch with zero simplify markers.
+Zero markers — **STOP**. Send the Builder back to run simplify. Do not merge a branch with
+zero simplify markers.
 
-If the output is empty, the worktree is clean and removal is safe:
+**Only when both checks pass** — `git status` empty AND at least one simplify marker — is
+removal safe:
 
 ```bash
 git worktree remove <worktree-path>
