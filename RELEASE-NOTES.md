@@ -1,3 +1,26 @@
+# Astragentic 2.2.19
+
+Fix: the AST-090 rewrite of builder-claude.md dropped the `<!-- addr-ok: wrong form, cited -->`
+annotation on the `/simplify` citation at line 63, causing check-reachability check 6 to fail
+on every adapted project. The citation is correct — it names the human form as the thing NOT to
+write — and the annotation existed in 2.2.17. The 2.2.18 rewrite lost it.
+
+Found by nizzy-ecom Thomas during 2.2.18 adaptation. The pattern: a patch that fixes agents
+writing the wrong address form ships with an address-form error of its own.
+
+- builder-claude.md: restored `<!-- addr-ok: wrong form, cited -->` on the `/simplify` citation
+- Verified: check-reachability passes on package source before staging
+
+## Upgrade from 2.2.18
+
+Copy `.agents/roles/builder-claude.md`. One annotation restored.
+
+**Note on the rename:** Release 2.2.18 changed the RELEASE-NOTES heading format from
+`# Astraler Harness <version>` to `# Astragentic <version>`. If your project's
+`docs-staleness-audit.sh` predates 2.2.18, the version-heading check reads empty and reports
+a false mismatch. The fix is in the 2.2.18 payload's `scripts/docs-staleness-audit.sh` — copy
+it if adaptation did not land it.
+
 # Astragentic 2.2.18
 
 Two fixes from workspace-app-inception Thomas field report 5.

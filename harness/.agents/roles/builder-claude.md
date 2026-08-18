@@ -60,7 +60,7 @@ git commit --allow-empty -m 'simplify(increment): no findings on <base>..<head>
 Pass: Skill(skill: "simplify")'
 ```
 
-The `Pass:` line is what the gate reads. Not `/simplify` (the human's form), not `DEGRADED`
+The `Pass:` line is what the gate reads. Not `/simplify` <!-- addr-ok: wrong form, cited --> (the human's form), not `DEGRADED`
 (a description of the situation), not prose about what you did — the literal tool-call
 spelling above. Two out of three Builders who ran the pass correctly wrote it a different way
 and were bounced on typography (AST-090). Copy it; do not rephrase it.
