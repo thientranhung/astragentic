@@ -45,6 +45,13 @@ BASE="${BASE_BRANCH:-main}"
 # exactly this mistake. Guessing a prefix produces a confident wrong answer;
 # an unset value is a STOP.
 PREFIX="${TICKET_PREFIX:?TICKET_PREFIX must be set to the tracker prefix this project uses, e.g. TRA}"
+# A literal prefix only — no regex metacharacters, since PREFIX is interpolated
+# straight into grep -E patterns below. Rejects the unset-but-truthy footgun too
+# (a prefix of "." or "*" would match everything).
+case "$PREFIX" in
+  [A-Z]*) [[ "$PREFIX" =~ ^[A-Z][A-Z0-9]*$ ]] || { echo "ticket-git-facts: TICKET_PREFIX must be letters/digits only, got '$PREFIX'" >&2; exit 1; } ;;
+  *) echo "ticket-git-facts: TICKET_PREFIX must start with an uppercase letter, got '$PREFIX'" >&2; exit 1 ;;
+esac
 cd "$(git rev-parse --show-toplevel)" || exit 1
 
 if ! git rev-parse --verify --quiet "$BASE" >/dev/null; then
@@ -60,6 +67,15 @@ fi
 # not the cause. `while read` is portable to both.
 tickets=""
 if [ "$#" -gt 0 ]; then
+  # Explicit ids still get validated against PREFIX — a caller passing an id
+  # from another namespace (an ADR id, a typo) must not be silently treated
+  # as a tracker ticket and joined against git as if it were one.
+  for arg in "$@"; do
+    [[ "$arg" =~ ^${PREFIX}-[0-9]+$ ]] || {
+      echo "ticket-git-facts: '$arg' does not match ${PREFIX}-<number>, refusing to guess" >&2
+      exit 1
+    }
+  done
   tickets="$*"
 else
   tickets=$(

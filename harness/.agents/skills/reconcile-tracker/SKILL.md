@@ -132,9 +132,15 @@ see structure — like the parent/child sequencing above — that a row-by-row c
 
 ## Reporting
 
-Report every class, and report `none` explicitly where a class is empty — an unreported class
-is indistinguishable from an unchecked one, which is the failure this whole skill exists to
-catch. Name what you changed on the tracker, in the same breath.
+**This skill ends at the report — it writes nothing, ever, under any finding.** Report every
+class, and report `none` explicitly where a class is empty; an unreported class is
+indistinguishable from an unchecked one, which is the failure this whole skill exists to
+catch.
+
+Any fix is a **separate, later action**, outside this skill's own run, using the normal
+tracker-write capability Thomas already has — never something this skill or its invocation
+performs. If that later action changes the tracker, report what changed at that time, not
+here.
 
 ## A tool that has never run is not evidence
 
