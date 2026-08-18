@@ -1,3 +1,33 @@
+# Astraler Harness 2.2.4
+
+Simplified: the watchdog's single-instance lock, deliberately, after three rounds closed it
+almost perfectly and a fourth made it airtight at a cost not worth paying.
+
+Rounds 2–4 (2.2.1–2.2.3) chased the lock's race window down to a kernel-managed `flock` —
+correct, verified, and still wrong in practice, because bash spawns children (`sleep`,
+`herdr`, the analyze() call) that inherit open file descriptors by default; a `sleep`
+mid-interval inherited the lock and outlived a `kill -9` on the parent. A dedicated
+lock-holder process fixed that too, and worked.
+
+It shipped anyway as a revert, on a question worth asking earlier: what does this lock
+actually protect against? Not a wrong process getting killed — `stop`'s own identity
+verification (AST-072) already owns that, independent of the lock. Only duplicate alerts if
+two starts land at the exact same instant, a nuisance. The original ~20-line `mkdir`-based
+lock — reclaim a PID-less directory on first sight, accept the rare race — costs a quarter of
+what the airtight version did, for a risk whose worst case was never more than double alerts.
+
+- `herdr-watchdog.sh` is back to a plain `mkdir` lock. No reclaim-mutex, no `flock`, no
+  dedicated holder process. `stop` still verifies the recorded PID names this script before
+  ever signaling it, unchanged from AST-072.
+- The full four-round story — including the two real bugs found in the intermediate fixes,
+  and the fd-inheritance defect specific to the abandoned `flock` design — stays in AST-076
+  as evidence, since the failure classes are real even though the final answer was simpler
+  than all of them.
+
+## Upgrade from 2.2.3
+
+Copy `herdr-watchdog.sh`.
+
 # Astraler Harness 2.2.3
 
 Fix: 2.2.2's `mv`-based reclaim still let two contenders independently decide a lock was

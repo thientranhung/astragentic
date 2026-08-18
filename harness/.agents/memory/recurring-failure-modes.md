@@ -1444,4 +1444,31 @@ one surviving process every time.
 three rounds of the second one before the first one's conclusion held.** A test that finishes
 early reads as a passing test; only a wait margin wider than the code's own worst-case retry
 budget tells the two apart.
+
+**A fourth round chased the mutex's own failure mode — a crash while holding it stranding
+every future `start` — into a kernel-managed `flock`, and that round is the one worth
+remembering the shape of, not the mechanism.** `flock` genuinely has no stale-lock state: it
+releases the instant its file descriptor closes, for any reason, including `kill -9`. Verified
+in isolation, correct. Wired into this script, wrong anyway — because bash spawns children
+constantly (`sleep`, `herdr`, the analyze() python call), and every one of them inherits open
+file descriptors by default. A `sleep` mid-interval inherited the lock descriptor, and killing
+the parent alone — a single-process kill, an OOM kill or crash, not `stop`'s process-group
+signal — left `sleep` holding it for the rest of its interval. The fix for that (a dedicated
+process holding the lock, spawning nothing itself) worked, and measured correct.
+
+**It was retired anyway, on a question the first three rounds never asked: what does the
+lock actually protect against?** Not a wrong process getting killed — `stop`'s own identity
+check (AST-072) already owns that, independent of whether the lock is perfect. Only "two
+watchdogs alert twice instead of once", a nuisance. A `mkdir`-based lock that reclaims a
+PID-less directory on first sight — the ORIGINAL, simplest version, before any of these four
+rounds — costs about twenty lines and admits a race whose worst case is that nuisance. The
+kernel-managed replacement cost roughly four times that in code to close a risk that was never
+worth closing at that price. Shipped: the twenty-line version, deliberately, with the tradeoff
+recorded here rather than rediscovered by the next reader wondering where the complexity went.
+
+**The question "what is this actually protecting against" belongs at the START of a
+concurrency fix, not the end of the fourth one.** Correctness work has no natural stopping
+point of its own — every fix admits a smaller, rarer race than the last — so the thing that
+ends it has to be an explicit judgement about the failure's real cost, made once, and cheaper
+to make before three rounds of building than after.
 Bound: `harness/scripts/herdr-watchdog.sh`.

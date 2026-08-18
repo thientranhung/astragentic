@@ -8,16 +8,18 @@
 # resolves the workspace, and only monitors agents whose pane belongs to it.
 # Multiple projects never interfere.
 #
-# One instance per workspace-label: a second `start` refuses to run while a
-# live instance holds the lock. `stop` re-verifies the recorded PID is still
-# this script (or its caffeinate wrapper) before signaling — a stale or
-# reused PID is never signaled, so shutdown can never kill an unrelated
-# process group.
+# One instance per workspace-label, on a best-effort lock: a second `start`
+# landing at the exact same instant as the first can in rare cases both
+# proceed, producing duplicate alerts until one of them exits — a nuisance,
+# never a safety problem, because `stop` independently re-verifies the
+# recorded PID is still this script before ever signaling it (AST-072). A
+# fully race-proof lock was built and measured working (AST-076), and
+# traded back for this simpler one deliberately: the failure mode a perfect
+# lock guards against here is "wasted duplicate alerts", not "the wrong
+# process gets killed", and that risk did not earn the added code.
 #
-# Lock dir:      /tmp/herdr-watchdog-<workspace-label>.lock
-# PID file:      /tmp/herdr-watchdog-<workspace-label>.lock/pid
+# Lock dir:      /tmp/herdr-watchdog-<workspace-label>.lock      (PID inside)
 # Log file:      /tmp/herdr-watchdog-<workspace-label>.log       (alerts only)
-# Heartbeat:     /tmp/herdr-watchdog-<workspace-label>.lock/alive (liveness — see below)
 #
 # THE PROCESS TABLE, THE PID FILE AND CPU TIME ALL FAIL TO PROVE THIS SCRIPT IS
 # ALIVE. A live project measured all three failing on the same instance: it was
@@ -59,13 +61,9 @@ except Exception:
 LOCK_DIR="/tmp/herdr-watchdog-${WORKSPACE_LABEL}.lock"
 PID_FILE="$LOCK_DIR/pid"
 LOG="/tmp/herdr-watchdog-${WORKSPACE_LABEL}.log"
-# Inside LOCK_DIR, not a sibling predictable /tmp path: `stop` already owns
-# removing LOCK_DIR wholesale (so a stale heartbeat can never outlive a clean
-# stop), and a path only reachable by mkdir'ing LOCK_DIR first cannot be
-# pre-planted as a symlink the way a flat /tmp/*.alive name could. Separate
-# from LOG, not appended to it: a heartbeat on every poll would bury the
-# alert history. Rewritten in place, so its own mtime is the check — a stale
-# timestamp is what a wedged loop looks like.
+# Rewritten in place every HEARTBEAT_EVERY-th poll, so its own mtime is the
+# check — a stale timestamp is what a wedged loop looks like, and separate
+# from LOG so a heartbeat on every poll never buries the alert history.
 HEARTBEAT_FILE="$LOCK_DIR/alive"
 
 # A recorded PID counts as "us" only if it is alive AND its command line
@@ -112,13 +110,10 @@ COOLDOWN="${2:-900}"
 MAX_ALERTS_HOUR="${3:-6}"
 
 # ---------------------------------------------------------------------------
-# Isolate into our own process group FIRST, before the lock exists at all.
-# setsid(2) replaces the process image in place (same PID throughout), so
-# this is the only re-exec in the whole startup path — from here on, $$ is
-# the PID that will run the main loop, and it never changes again. Doing
-# this before acquiring the lock is what makes the lock's own PID_FILE write
-# race-free: there is no second hop left that could still be in flight when
-# a concurrent `start` checks it.
+# Isolate into our own process group, so `stop` can signal the whole group
+# without ever touching the caller's shell/pane. setsid(2) replaces the
+# process image in place (same PID throughout), so this is the only
+# re-exec in the whole startup path.
 # ---------------------------------------------------------------------------
 if [ -z "${HERDR_WATCHDOG_ISOLATED:-}" ]; then
   export HERDR_WATCHDOG_ISOLATED=1
@@ -135,79 +130,26 @@ os.execvp(sys.argv[1], sys.argv[1:])
 fi
 
 # ---------------------------------------------------------------------------
-# Single-instance lock. mkdir is atomic on every filesystem herdr runs on,
-# and it is the ONLY primitive exclusivity depends on — including during
-# reclaim, which two earlier passes at this got wrong, both under the same
-# 15-way concurrent-start test that finally forced the bug to show up:
-#
-# 1. PID_FILE is written IMMEDIATELY after `mkdir` succeeds, no exec/fork
-#    hop between them (AST-076) — but a PID-less lock is still retried for
-#    up to a second before it is treated as a crash, since a real instance
-#    writes its PID in microseconds and reclaiming on first sight evicted
-#    live starters.
-# 2. Reclaiming was `mv` (to make the destructive part atomic) — but the
-#    DECISION to reclaim was made once, up to a second earlier, and by the
-#    time a slow starter finally ran its `mv`, a different starter could
-#    already have legitimately reclaimed and be running — and the late
-#    `mv` doesn't know that, so it evicts a LIVE lock, not a stale one.
-#    Measured directly: 15-way contention against a pre-planted stale lock
-#    produced 2 and 3 survivors across five reps with the `mv`-only fix.
-#
-# The actual defect was letting more than one process independently DECIDE
-# a lock is stale. A reclaim-mutex — itself just another `mkdir`, held only
-# across the handful of syscalls a reclaim takes, never across a sleep —
-# makes that decision exclusive to one process at a time, so nobody acts on
-# a snapshot that is already out of date by the time they act on it.
+# Single-instance lock. `mkdir` is atomic, so it is the exclusivity check;
+# a lock whose recorded PID is not a live watchdog is a crashed prior
+# instance and gets reclaimed. See the header note on why this stays
+# simple rather than fully race-proof.
 # ---------------------------------------------------------------------------
-acquire_lock() {
-  mkdir "$LOCK_DIR" 2>/dev/null && { echo $$ > "$PID_FILE"; return 0; }
-
-  local mutex="${LOCK_DIR}.reclaiming" got_mutex=1
-  for _ in $(seq 1 20); do
-    mkdir "$mutex" 2>/dev/null && { got_mutex=0; break; }
-    sleep 0.1
-  done
-  # Could not become the sole arbiter within two seconds — someone else is
-  # deciding. Do not guess; the caller retries acquire_lock from the top,
-  # by which point the arbiter has left the lock in a definite state.
-  [ "$got_mutex" -eq 0 ] || return 1
-
-  local existing_pid=""
-  for _ in $(seq 1 10); do
-    existing_pid=$(cat "$PID_FILE" 2>/dev/null || true)
-    [ -n "$existing_pid" ] && break
-    sleep 0.1
-  done
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+  existing_pid=$(cat "$PID_FILE" 2>/dev/null || true)
   if is_watchdog_process "$existing_pid"; then
-    rmdir "$mutex" 2>/dev/null
     echo "STOP: watchdog already running for workspace $WORKSPACE_LABEL (pid $existing_pid)" >&2
     exit 3
   fi
-
-  # Genuinely stale, and — because we hold the mutex — no other process can
-  # be mid-reclaim right now, so plain rm+mkdir is safe here even though it
-  # was not safe outside this section.
   rm -rf "$LOCK_DIR"
-  local rc=1
-  if mkdir "$LOCK_DIR" 2>/dev/null; then
-    echo $$ > "$PID_FILE"
-    rc=0
-  fi
-  rmdir "$mutex" 2>/dev/null
-  return "$rc"
-}
-
-acquired=0
-for _ in $(seq 1 5); do
-  acquire_lock && { acquired=1; break; }
-  sleep 0.1
-done
-[ "$acquired" -eq 1 ] || { echo "STOP: could not acquire lock for workspace $WORKSPACE_LABEL" >&2; exit 3; }
+  mkdir "$LOCK_DIR" 2>/dev/null || { echo "STOP: could not acquire lock" >&2; exit 3; }
+fi
+echo $$ > "$PID_FILE"
 
 # caffeinate as a background helper we launch, never a wrapper we exec into.
-# `-w $$` makes it wait on and track our own PID and exit on its own once we
-# do — no child of it ever becomes the process this script's identity
-# depends on, so there is no second PID for PID_FILE to race against.
+# `-w $$` makes it wait on and track our own PID and exit on its own once
+# we do — no child of it ever becomes the process this script's identity
+# depends on.
 if [ -z "${HERDR_WATCHDOG_NO_CAFFEINATE:-}" ] && command -v caffeinate >/dev/null 2>&1; then
   caffeinate -i -w $$ &
 fi
@@ -221,14 +163,8 @@ echo 0  > "$STATE_DIR/alert_count"
 date +%s > "$STATE_DIR/alert_reset"
 HEARTBEAT_EVERY="${HEARTBEAT_EVERY:-5}"
 
-# Remove the lock on every exit path — signal, workspace-gone, or a bug
-# below — but only if it is still ours (a `stop` racing us may have already
-# reclaimed it for a fresh instance). This takes the heartbeat file with it
-# (it lives inside LOCK_DIR): its ABSENCE means stopped-or-never-started,
-# while a PRESENT but stale one is what a wedged instance looks like —
-# removing it on every clean exit path is what keeps that distinction
-# meaningful, including the `stop` subcommand below, which removes the same
-# directory directly rather than waiting on this trap to fire.
+# Remove the lock on every exit path, but only if it is still ours — a
+# `stop` racing us may already have reclaimed it for a fresh instance.
 cleanup() {
   [ "$(cat "$PID_FILE" 2>/dev/null)" = "$$" ] && rm -rf "$LOCK_DIR"
 }
