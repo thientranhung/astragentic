@@ -1,4 +1,4 @@
-# Astraler Harness 2.2.8
+# Astraler Harness 2.2.9
 
 Fix: the 2.2.7 flock-plus-holder rewrite only watched in one direction. A fresh arm pass fired
 against the redesign itself (not the mkdir lock it replaced, which the two earlier passes had
@@ -23,6 +23,26 @@ exact orphan scenario 2.2.7 exists to close, from the other side.
   refusal, `tail -f` identity bypass still rejected, crash self-heal, and the orphan scenario
   itself (two labels, `stop` one, confirm the other survives named and reachable) — all clean,
   no leaked processes.
+
+**A pass-2 arm fired against that fix, per the same mandatory-second-pass rule, found four more
+findings in it** — all fixed and re-verified before this version shipped:
+
+- The holder recorded `getppid()` only after being forked; a crash in that gap reparents it
+  first, so it would arm against the wrong process and hold the `flock` **forever** — a
+  permanent orphan lock, worse than what this whole rewrite exists to close. Fixed by handing
+  the holder the PID it is meant to watch and requiring its first `getppid()` to match before
+  it arms at all. Reproduced with an injected delay and a kill timed into the window: the
+  holder now refuses to arm, and nothing is left running.
+- The reverse check, `kill -0 "$HOLDER_PID"`, had the same zombie problem the `getppid()`
+  redesign exists to avoid, aimed the other way. Reads process state now, not mere existence.
+- The reverse watch only ran between iterations of the main loop, so a hung `herdr` call (none
+  of them carry a timeout) could widen holder-death detection without bound. A separate reaper
+  process now watches the holder independently and signals the watchdog the moment it is gone.
+- The status file's predictable path was only symlink-protected; a plain forged regular file at
+  that path, or a failed `rm -f` against a file another user already owns in a sticky `/tmp`,
+  both still worked — the prior release wrongly called this cosmetic. The status file now lives
+  in a directory `mktemp -d` creates fresh, unique and owner-only per attempt, so there is
+  nothing to pre-plant into.
 
 ## Upgrade from 2.2.7
 

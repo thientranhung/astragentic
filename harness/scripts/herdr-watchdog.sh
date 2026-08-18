@@ -170,42 +170,59 @@ fi
 # file descriptor open in this bash process itself (see the header note on
 # why a bare fd here leaks the lock to this script's own children).
 #
-# The watch is BIDIRECTIONAL. The holder watches this process (via getppid()
-# reparenting, not a PID-liveness poll — a dead-but-unreaped parent is still
-# a zombie that os.kill(pid, 0) reports as alive, and a recycled PID would
-# fool a poll that only remembers a number; reparenting to the OS's subreaper
-# happens the instant the parent exits, immune to both). But a first arm pass
-# on this rewrite (2026-08-18) found the other direction was missing: if the
-# HOLDER dies independently (OOM, kill -9 targeting it directly), the flock
-# releases while this watchdog keeps running unaware, a second `start` then
-# acquires the lock, and `stop` only ever reaches that second instance —
-# reopening the exact orphan this rewrite exists to close, from the other
-# side. So this process also watches the holder, every second, and exits the
-# moment it is gone rather than continuing to run unlocked.
+# The watch is BIDIRECTIONAL, and each direction is armed BEFORE it is
+# trusted:
 #
-# Both LOCK_FILE and LOCK_STATUS_FILE are opened with O_NOFOLLOW: a
-# predictable /tmp path plus a plain `open(path, "w")` lets a local attacker
-# pre-plant a symlink in the gap between `rm -f` and the holder's write, and
-# have that write silently truncate an arbitrary file the watchdog's owner
-# can write. O_NOFOLLOW turns that into a failed open instead of a followed
-# link. It does not close every race on the status file's guessable name — a
-# forged "ok" written in the split-second before the holder's own write can
-# still be read by an unlucky poll — but that residual only lets an attacker
-# force a false "already running" (denial of the watchdog to itself), not
-# corrupt a file or forge a live lock.
+# - The holder watches this process via getppid() reparenting, not a
+#   PID-liveness poll — a dead-but-unreaped parent is still a zombie that
+#   os.kill(pid, 0) reports as alive, and a recycled PID would fool a poll
+#   that only remembers a number; reparenting to the OS's subreaper happens
+#   the instant the parent exits, immune to both. But reparenting can ALSO
+#   happen before the holder ever checks — a crash between the fork and the
+#   holder's first getppid() call reparents it before it looks, and it would
+#   then arm against the subreaper and hold the flock forever. So the holder
+#   is handed the PID it is meant to watch and refuses to arm unless its
+#   OWN first getppid() still matches it.
+# - This process watches the holder the same way in reverse: `kill -0`
+#   alone repeats the zombie problem (a dead holder we have not reaped
+#   still answers as alive), so the check reads process STATE and treats a
+#   zombie as gone. And it does not only run between iterations of the main
+#   loop — a `herdr` call hanging mid-iteration would otherwise widen the
+#   detection window unboundedly — a separate reaper process watches the
+#   holder independently of whatever the main loop is doing and signals
+#   this process the moment it is gone.
+#
+# LOCK_FILE and the status file are both opened with O_NOFOLLOW, so a
+# symlink pre-planted at either predictable path is refused rather than
+# followed. The status file's PATH is no longer predictable at all — it
+# lives inside a directory `mktemp -d` creates fresh, unique and
+# owner-only (mode 0700) for this one acquisition attempt, so there is
+# nothing for a local attacker to pre-plant into ahead of time, and no
+# `rm -f` race against a file someone else may already own.
 # ---------------------------------------------------------------------------
-LOCK_STATUS_FILE="/tmp/.herdr-watchdog-lock-status.$$"
-rm -f "$LOCK_STATUS_FILE"
+LOCK_STATUS_DIR=$(mktemp -d "${TMPDIR:-/tmp}/herdr-watchdog-status.XXXXXXXX") || {
+  echo "STOP: could not create a private status directory" >&2
+  exit 2
+}
+LOCK_STATUS_FILE="$LOCK_STATUS_DIR/status"
 python3 -c '
 import fcntl, os, sys, time
 
-lockfile, statusfile = sys.argv[1], sys.argv[2]
-parent_pid = os.getppid()
+expected_pid, lockfile, statusfile = int(sys.argv[1]), sys.argv[2], sys.argv[3]
 
 def write_status(path, msg):
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600)
     with os.fdopen(fd, "w") as sf:
         sf.write(msg)
+
+# Arm only if we are, right now, still a direct child of the process we were
+# told to watch. A crash between the fork that made us and this line
+# reparents us to the subreaper before we ever check — proceeding anyway
+# would mean watching the wrong process forever and holding the flock past
+# the watchdog it was acquired for.
+if os.getppid() != expected_pid:
+    write_status(statusfile, "busy")
+    sys.exit(0)
 
 try:
     fd = os.open(lockfile, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
@@ -220,12 +237,12 @@ except OSError:
     sys.exit(0)
 f.seek(0)
 f.truncate()
-f.write(str(parent_pid))
+f.write(str(expected_pid))
 f.flush()
 write_status(statusfile, "ok")
-while os.getppid() == parent_pid:
+while os.getppid() == expected_pid:
     time.sleep(1)
-' "$LOCK_FILE" "$LOCK_STATUS_FILE" &
+' "$$" "$LOCK_FILE" "$LOCK_STATUS_FILE" &
 HOLDER_PID=$!
 
 lock_status=""
@@ -233,15 +250,30 @@ for _ in $(seq 1 40); do
   [ -s "$LOCK_STATUS_FILE" ] && { lock_status=$(cat "$LOCK_STATUS_FILE" 2>/dev/null); break; }
   sleep 0.05
 done
-rm -f "$LOCK_STATUS_FILE"
+rm -rf "$LOCK_STATUS_DIR"
 if [ "$lock_status" != "ok" ]; then
   existing_pid=$(cat "$LOCK_FILE" 2>/dev/null || true)
   echo "STOP: watchdog already running for workspace $WORKSPACE_LABEL (pid ${existing_pid:-unknown})" >&2
   exit 3
 fi
 
+trap 'exit 0' INT TERM
+
+log() { printf '[%s] %s\n' "$(date '+%H:%M:%S')" "$*" >> "$LOG"; }
+
+# A zombie still answers `kill -0` as alive — it is a dead process not yet
+# reaped, not a live one — so the state column is what actually says
+# whether the holder is gone. PID reuse after that state finally clears
+# stays an accepted, documented gap: the same shape and the same call as
+# the setsid/EPERM gap above, on a check re-run every second.
+holder_alive() {
+  local state
+  state=$(ps -o state= -p "$HOLDER_PID" 2>/dev/null) || return 1
+  [[ "$state" != Z* ]]
+}
+
 holder_gone_die() {
-  if ! kill -0 "$HOLDER_PID" 2>/dev/null; then
+  if ! holder_alive; then
     log "lock holder (pid $HOLDER_PID) is gone — exiting so a fresh start can safely take the lock"
     exit 0
   fi
@@ -259,6 +291,13 @@ sleep_or_die() {
   done
 }
 
+# Runs independently of the main loop, so a dead holder is still caught
+# within about a second even while that loop is stuck inside a slow or
+# hung `herdr` call — sleep_or_die alone only checks between iterations.
+( while holder_alive; do sleep 1; done
+  kill -TERM "$$" 2>/dev/null ) &
+REAPER_PID=$!
+
 # caffeinate as a background helper we launch, never a wrapper we exec into.
 # `-w $$` makes it wait on and track our own PID and exit on its own once
 # we do — no child of it ever becomes the process this script's identity
@@ -275,10 +314,6 @@ mkdir -p "$STATE_DIR"
 echo 0  > "$STATE_DIR/alert_count"
 date +%s > "$STATE_DIR/alert_reset"
 HEARTBEAT_EVERY="${HEARTBEAT_EVERY:-5}"
-
-trap 'exit 0' INT TERM
-
-log() { printf '[%s] %s\n' "$(date '+%H:%M:%S')" "$*" >> "$LOG"; }
 
 # ---------------------------------------------------------------------------
 # Rate-limit & cooldown helpers

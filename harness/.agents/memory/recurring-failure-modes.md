@@ -1571,6 +1571,32 @@ use `O_NOFOLLOW`.
 each partly enforce is only as safe as the direction nobody thought to check, and the fix here
 is the same shape as the bug: watch back, not just watch.
 
+**That fix shipped incomplete too, caught by its own pass 2** — fired deliberately once pass 1
+returned a blocking finding, per the same rule this ledger already applies to `codex-arm`
+itself. Four more findings, all in the fix just written: (1) the holder recorded its watched
+PID by calling `getppid()` only after being forked — a crash in the gap between the fork and
+that call reparents the holder first, so it arms against the wrong process and holds the flock
+forever, a *permanent* orphan lock, worse than the bug this pass exists to close. Fixed by
+handing the holder the PID to watch and requiring its first `getppid()` to match it before
+arming at all; reproduced directly with an injected delay before the check and a kill timed
+into the window — the holder now refuses to arm and leaves nothing running. (2) The reverse
+check, `kill -0 "$HOLDER_PID"`, has the exact zombie problem the getppid() redesign exists to
+avoid, just aimed the other way — a dead-but-unreaped holder still answers as alive. Fixed by
+reading process STATE instead of mere existence. (3) The reverse watch only ran between
+iterations of the main loop, so a hung `herdr` call (no timeout on those calls) could widen
+holder-death detection unboundedly. Fixed with an independent reaper process that watches the
+holder and signals this process the moment it is gone, regardless of what the main loop is
+doing. (4) The status file's path was predictable and merely `O_NOFOLLOW`-protected against
+symlinks — a plain forged regular file at that path, or a failed `rm -f` against a file another
+user already owns in a sticky `/tmp`, both still worked, and the earlier pass had wrongly
+classed this as cosmetic. Fixed by moving the status file into a directory `mktemp -d` creates
+fresh, unique and owner-only per attempt, so there is nothing to pre-plant into and nothing to
+race against `rm -f` at all.
+
+**Two arm passes finding real, blocking findings on the SAME fix, back to back, is not friction
+to route around — it is the gate working exactly as specified.** The fix that closes the gate
+is the one that survives a pass finding nothing, not the one a reviewer's patience runs out on.
+
 **Firing a fresh gate against a rewrite, not just against the artifact the rewrite replaced, is
 what caught it.** The two arm passes already spent on this file (AST-076, AST-077) reviewed the
 mkdir lock. The flock-plus-holder design that replaced it — 224 lines changed — had never had a
