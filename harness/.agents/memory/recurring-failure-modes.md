@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 88 entries (AST-001 … AST-089, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 90 entries (AST-001 … AST-091, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1901,3 +1901,43 @@ sentence for two different true events (clean fan-out vs. forced fallback) gave 
 Builder a coin-flip chance of writing the one that reads as a substitute. Not fixed by loosening
 the check; fixed by giving the second true story its own sentence.
 Bound: builder-claude.md.
+
+### AST-090 — The Pass: literal had a two-in-three miss rate among Builders who ran the pass correctly · promoted 2026-08-18
+
+Found by workspace-app-inception Thomas on the same session that verified AST-089. Two out of
+three Builders who genuinely ran `Skill(skill: "simplify")` wrote a `Pass:` line that failed
+verification:
+
+- `Pass: DEGRADED (AST-089 form) — dispatched 4 parallel review forks ...` — the Builder
+  reached for the AST-089 concept (degraded completion) as the leading token, because that is
+  what the situation was.
+- `Pass: /simplify (4 parallel review agents: reuse, simplification, efficiency, altitude)` —
+  the Builder wrote what it typed (`/simplify` is the human-invocation form visible in its
+  own transcript), not the tool-call spelling.
+
+Both were correctly bounced — the literal is the only thing that distinguishes a real pass
+from a substitute (AST-055), and widening the verifier reopens that hole. But a guard that
+honest Builders fail two times in three is generating round trips that teach nothing.
+
+**A rule stated from the verifier's side teaches what is checked, not what to write.** The
+Builder's contract described what a valid line looks like; the Builder wrote what it
+experienced doing. Fixed by placing the literal as a copy-this instruction at the point where
+the Builder is about to write the commit — three templates (clean, degraded, empty), each
+with the exact `Pass:` line, plus an explicit warning naming the two measured wrong forms.
+The verifier stays exactly as strict.
+Bound: builder-claude.md.
+
+### AST-091 — install.sh overwrites PROJECT_NAME on re-staging without --project-name · promoted 2026-08-18
+
+Third occurrence on workspace-app-inception. When `install.sh` runs without `--project-name`,
+it defaults to `basename "$TARGET"`, overwriting `.astraler/PROJECT_NAME` even when the file
+already carries a different value set by a previous install or the owner. The directory name
+`workspace-app-inception` then disagrees with the `workspace-label` every other file reads.
+
+Not damaging because nothing in the payload reads PROJECT_NAME, but it dirties the tree on a
+project that gates on a clean working directory, and a merge nearly landed with it uncommitted.
+
+Fixed by reading the existing file value as the default when `.astraler/PROJECT_NAME` is
+already present and no `--project-name` flag was given. `--project-name` still wins when
+explicitly provided.
+Bound: install.sh.

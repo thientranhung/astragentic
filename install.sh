@@ -30,8 +30,8 @@ done
 # The release notes own this version's semantic intent, and the adaptation agent is told to
 # read them first. A heading that does not match VERSION means one of the two was bumped
 # without the other, and the agent would read the wrong release's intent.
-if ! grep -Fqx "# Astraler Harness $VERSION" "$RELEASE_NOTES"; then
-  echo "ERROR: RELEASE-NOTES.md needs a heading '# Astraler Harness $VERSION'." >&2
+if ! grep -qx "# \(Astragentic\|Astraler Harness\) $VERSION" "$RELEASE_NOTES"; then
+  echo "ERROR: RELEASE-NOTES.md needs a heading '# Astragentic $VERSION' (or '# Astraler Harness $VERSION')." >&2
   exit 1
 fi
 
@@ -52,7 +52,14 @@ done
 
 [ -d "$TARGET" ] || { echo "Target does not exist: $TARGET" >&2; exit 2; }
 TARGET="$(cd "$TARGET" && pwd)"
-[ -n "$PROJECT_NAME" ] || PROJECT_NAME="$(basename "$TARGET")"
+if [ -z "$PROJECT_NAME" ]; then
+  EXISTING="$TARGET/.astraler/PROJECT_NAME"
+  if [ -f "$EXISTING" ]; then
+    PROJECT_NAME="$(cat "$EXISTING")"
+  else
+    PROJECT_NAME="$(basename "$TARGET")"
+  fi
+fi
 
 STATE_ROOT="$TARGET/.astraler"
 RELEASES_DIR="$STATE_ROOT/releases"

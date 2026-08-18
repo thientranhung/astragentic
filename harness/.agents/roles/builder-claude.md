@@ -32,7 +32,11 @@ Pass: Skill(skill: "simplify") — fork unavailable, ran four corners directly
 Only a total invocation failure — the skill never starts, or errors before any review runs —
 triggers the stop-and-report rule above (AST-089).
 
-The artifact is a commit on your branch, and its body names what ran:
+The artifact is a commit on your branch. **Copy the `Pass:` line below exactly** — Thomas
+verifies it mechanically, and anything that does not start with `Skill(skill: "simplify")`
+fails verification and comes back to you (AST-055).
+
+**Clean run** (fan-out worked, or no fan-out needed):
 
 ```bash
 git commit -m 'simplify(increment): <what was cleaned>
@@ -40,15 +44,26 @@ git commit -m 'simplify(increment): <what was cleaned>
 Pass: Skill(skill: "simplify")'
 ```
 
-A pass that finds nothing takes the same body with `--allow-empty`, subject
-`simplify(increment): no findings on <base>..<head>`. An empty pass is legitimate; the marker is
-the artifact because an empty and an absent pass are otherwise indistinguishable in the tree.
-Thomas verifies by artifact —
-`git log <base>..<head> --grep '^simplify(increment):' --format='%h %s%n%b'`.
+**Degraded run** (fork unavailable — append the reason after a ` — `):
 
-**Write in `Pass:` what actually ran, not what was supposed to.** Every measured failure here
-ended with an honest handback and a silent artifact, and this line is where that honesty has to
-land: prose is not what the gate reads.
+```bash
+git commit -m 'simplify(increment): <what was cleaned>
+
+Pass: Skill(skill: "simplify") — fork unavailable, ran four corners directly'
+```
+
+**Empty run** (no findings):
+
+```bash
+git commit --allow-empty -m 'simplify(increment): no findings on <base>..<head>
+
+Pass: Skill(skill: "simplify")'
+```
+
+The `Pass:` line is what the gate reads. Not `/simplify` (the human's form), not `DEGRADED`
+(a description of the situation), not prose about what you did — the literal tool-call
+spelling above. Two out of three Builders who ran the pass correctly wrote it a different way
+and were bounced on typography (AST-090). Copy it; do not rephrase it.
 
 The skill carries what counts as a cleanup; two limits are this contract's. Anything that would
 change behaviour is a **finding for Thomas**, and a cleanup touching a floor item's construction

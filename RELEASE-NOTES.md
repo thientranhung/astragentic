@@ -1,3 +1,29 @@
+# Astragentic 2.2.18
+
+Two fixes from workspace-app-inception Thomas field report 5.
+
+**AST-090 — Builder Pass: line miss rate.** Two out of three Builders who genuinely ran
+`Skill(skill: "simplify")` wrote the `Pass:` line wrong — one wrote `DEGRADED`, one wrote
+`/simplify` — because the rule described what the verifier checks, not what to write. The
+verifier correctly bounced both, but the round trips taught nothing.
+
+Fixed by placing the literal as a copy-this instruction in builder-claude.md, with three
+templates (clean, degraded, empty) each showing the exact `Pass:` line. The verifier
+(thomas-claude.md) stays exactly as strict.
+
+**AST-091 — install.sh overwrites PROJECT_NAME.** Running `install.sh` without
+`--project-name` defaulted to `basename`, overwriting the existing `.astraler/PROJECT_NAME`
+with the directory name. Third occurrence on inception. Fixed by reading the existing file
+value as the default when present.
+
+- builder-claude.md: simplify section rewritten as copy-this templates with explicit warning
+- install.sh: reads existing PROJECT_NAME before falling back to basename
+- recurring-failure-modes.md: AST-090, AST-091 added (90 entries)
+
+## Upgrade from 2.2.17
+
+Copy `.agents/roles/builder-claude.md` and `install.sh`. The ledger carries two new entries.
+
 # Astraler Harness 2.2.17
 
 Fix: thomas-claude.md's simplify verification rejected a legitimate fork-fallback pass because

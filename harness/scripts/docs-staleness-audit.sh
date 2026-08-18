@@ -163,7 +163,7 @@ LEDGER="$ROOT/harness/.agents/memory/recurring-failure-modes.md"
 
 if [[ -f "$RM" && -f "$VF" ]]; then
   WANT="$(tr -d ' \n' < "$VF")"
-  GOT="$( { grep -m1 -o '^# Astraler Harness [0-9.]*' "$RM" || true; } | awk '{print $4}' )"
+  GOT="$( { grep -m1 -oE '^# (Astragentic|Astraler Harness) [0-9.]+' "$RM" || true; } | awk '{print $NF}' )"
   if [[ -n "$GOT" && "$GOT" != "$WANT" ]]; then
     echo "  README heading says $GOT, VERSION says $WANT"
     A5=1; FOUND=1
