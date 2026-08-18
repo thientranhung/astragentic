@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 79 entries (AST-001 … AST-080, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 81 entries (AST-001 … AST-082, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1651,3 +1651,49 @@ on exactly the input it exists to catch** — mid-upgrade, with the new fix sitt
 on disk, which is the one moment this gate's answer actually matters to a Builder about to
 start.
 Bound: `check-requirements.sh`.
+
+### AST-081 — `ticket-git-facts.sh`'s oracle was case-sensitive where the rest of it wasn't · promoted 2026-08-18
+
+Found by an adapted project's own Thomas during a real integration run, not the arm.
+`ticket-git-facts.sh`'s commit-subject match (`grep -cE`/`grep -E`) ran case-sensitive, while
+the branch-slug match a few lines below it already lowercases the ticket id before comparing
+— an asymmetry between two searches for the same fact inside the same script. A commit
+subject written `fix(tra-42): ...` was invisible to the case-sensitive search — not
+undercounted, zero matches — while the branch search saw it fine. Worse than the subject
+count alone: the ticket-DISCOVERY pass (run when no ticket ids are given explicitly) used the
+same case-sensitive pattern, so a ticket referenced only in lowercase commits never entered
+the list to be counted at all. Reproduced against a real slice: three tickets, all with real
+commits, all reporting zero case-sensitive matches against four-to-five case-insensitive —
+every one of them then reads as PHANTOM-DONE downstream in `linear-reconcile`, the exact
+failure mode that skill's own docs name as the dangerous direction (a missed fact manufactures
+a phantom, and a phantom either sends someone chasing an incident that never happened, or
+teaches them to distrust the tool and miss a real one later).
+
+Fixed: all three matches now run case-insensitive, matching the branch search's existing
+behavior; discovered ticket ids are normalized to uppercase before dedup so the same ticket
+referenced in mixed case across commits collapses to one row, not two.
+
+**Two searches for the same fact, written at different times, drift apart in exactly the
+dimension neither author thought to make explicit** — case sensitivity here, ref resolution in
+AST-077's `ticket-git-facts.sh` finding, the same script, a different asymmetry, found the same
+way: by someone running it for real rather than reading it.
+Bound: `harness/scripts/ticket-git-facts.sh`.
+
+### AST-082 — a copy-pasteable dispatch example taught the wrong pane name for one role · promoted 2026-08-18
+
+Also found by the same integration run. `dispatch-ticket/SKILL.md`'s two rename commands
+hardcode `builder:<ticket-id>` literally, with the note that a Shaper's pane and tab are both
+`spec:<id>` instead sitting one paragraph below in prose — present, correct, and easy to miss
+when the instinct is to copy the command block rather than read past it. Reproduced directly:
+a Shaper pane renamed `shaper:<id>` by reflex was invisible to `herdr-watchdog.sh`'s
+`DISPATCH_PREFIXES` end to end, and stayed unmonitored until the mismatch was caught by hand
+— a silent gap in exactly the mechanism whose whole job is to catch a stalled dispatch.
+
+Fixed by adding an explicit note directly above both command blocks, stating this is a
+measured failure rather than a hypothetical, rather than only adding the correct value further
+down and trusting it gets read first.
+
+**A convention stated once in prose loses to a command shown twice in code** — the reader
+copies what is executable, not what is explained, so the same substitution reminder belongs
+next to every copy-pasteable instance of the thing that needs substituting, not once nearby.
+Bound: `harness/.claude/skills/dispatch-ticket/SKILL.md`, `harness/.agents/skills/dispatch-ticket/SKILL.md`.

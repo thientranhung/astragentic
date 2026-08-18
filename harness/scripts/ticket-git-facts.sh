@@ -105,9 +105,15 @@ fi
 BASE_REF="refs/heads/$BASE"
 
 if [ -z "$tickets" ]; then
+  # Case-insensitive: a commit subject written as "fix(tra-42): ..." is a
+  # real reference, and the branch match below already treats case as
+  # irrelevant. A case-sensitive discovery pass here would drop such a
+  # ticket before it ever reaches the per-ticket count below — not merely
+  # undercount it, but never see it at all.
   tickets=$(
     git log "$BASE_REF" --format='%s' \
-      | grep -oE "${PREFIX}-[0-9]+" \
+      | grep -oiE "${PREFIX}-[0-9]+" \
+      | tr '[:lower:]' '[:upper:]' \
       | sort -u -t- -k2 -n
   )
 fi
@@ -120,11 +126,16 @@ fi
 printf 'ticket\tsubject_commits\tnewest_subject\tlocal_branch\tunmerged_commits\tworktree\n'
 
 for t in $tickets; do
-  # \b so a shorter id never matches inside a longer one.
-  n=$(git log "$BASE_REF" --format='%s' | grep -cE "${t}\b" || true)
+  # \b so a shorter id never matches inside a longer one. Case-insensitive
+  # to match the branch-slug search below, which already lowercases before
+  # matching — a case-sensitive search here was blind to any commit written
+  # as "fix(tra-42): ..." and reported it PHANTOM-DONE downstream (measured:
+  # a whole slice of lowercase-subject commits, zero case-sensitive matches,
+  # all four-or-five case-insensitive).
+  n=$(git log "$BASE_REF" --format='%s' | grep -ciE "${t}\b" || true)
 
   if [ "$n" -gt 0 ]; then
-    newest=$(git log "$BASE_REF" --format='%s' | grep -E "${t}\b" | head -1)
+    newest=$(git log "$BASE_REF" --format='%s' | grep -iE "${t}\b" | head -1)
   else
     newest="-"
   fi

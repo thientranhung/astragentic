@@ -44,6 +44,18 @@
 #   0  — stopped by signal, by `stop`, or workspace gone
 #   2  — config error (no orchestrator.md, no workspace-label, not in git repo)
 #   3  — another instance already holds the lock for this workspace
+#
+# LAUNCH IT AS A PLAIN BACKGROUND JOB YOU DO NOT WRAP — `nohup ... &`, nothing
+# else in the pipeline. Isolating into its own process group (below) protects
+# it from a signal sent to the CALLER's group; it does nothing against a
+# signal a launcher sends to this script's PID directly, which is exactly
+# what a wrapper with its own timeout does once that timeout fires. Measured:
+# a watchdog started from inside a tool call that itself later timed out and
+# was killed exited within the same second — cleanly, via `trap 'exit 0' INT
+# TERM` below, with nothing in the log to say why, because a clean exit trap
+# and a real one look identical from the log alone. After launching, confirm
+# with `ps -o ppid= -p <pid>` reading `1` — a live PID with no error printed
+# is not the same claim as "actually detached and still running."
 set -u
 
 # ---------------------------------------------------------------------------

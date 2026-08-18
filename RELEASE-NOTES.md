@@ -1,3 +1,46 @@
+# Astraler Harness 2.2.12
+
+Fix: `ticket-git-facts.sh` was case-sensitive where the rest of it already wasn't, and one
+`dispatch-ticket` example invited a Shaper pane the watchdog never sees. Both found by
+etsy-fulfillment-thanh's Thomas during a real integration run, not by the arm.
+
+**`ticket-git-facts.sh`'s commit-subject oracle only matched exact case**, while the
+branch-slug match a few lines below it already lowercases before comparing. A commit subject
+written as `fix(tra-42): ...` was invisible to the case-sensitive search — not undercounted,
+literally zero matches — while the case-insensitive branch search saw it fine. Worse: the
+ticket-discovery pass (when no ticket ids are given explicitly) used the same case-sensitive
+pattern, so a ticket referenced only in lowercase commits never entered the list at all.
+Reproduced directly against a real slice: three tickets, all with commits, all reporting
+`subject_commits=0` case-sensitive against 4-5 case-insensitive — every one of them then
+reads as PHANTOM-DONE downstream in `linear-reconcile`, exactly the failure mode that skill's
+own docs warn against.
+
+- All three matches (`grep`, discovery `grep`, subject `grep`) are now case-insensitive,
+  matching the branch-slug search's existing behavior. Discovered ticket ids are normalized to
+  uppercase before dedup, so `TRA-42` and `tra-42` in different commits collapse to one row
+  instead of two.
+
+**`dispatch-ticket`'s two copy-pasteable rename commands hardcode `builder:`/`ticket:`**, and
+the note that a Shaper's pane and tab are both `spec:<id>` instead sat one paragraph below them
+in prose, easy to miss when copying the literal command. Reproduced: a Shaper pane renamed
+`shaper:<id>` by reflex was invisible to the watchdog's `DISPATCH_PREFIXES` end to end, and
+stayed unmonitored until the mismatch was caught by hand.
+
+- Both command blocks now carry an explicit note above them that they show a Builder dispatch
+  and must be substituted per role, stated as a measured failure rather than a hypothetical.
+
+**`herdr-watchdog.sh`'s launch note now warns against wrapping the launch command.** Isolating
+into its own process group protects it from a signal sent to the CALLER's group; it does
+nothing against a signal sent to the watchdog's own PID directly, which is exactly what a
+wrapper with its own timeout does once that timeout fires. Reproduced: a watchdog started
+inside a tool call that itself later timed out exited within the same second, cleanly, via its
+own exit trap — with nothing in the log to say why, since a clean exit and a killed one look
+identical from the log alone.
+
+## Upgrade from 2.2.11
+
+Copy `ticket-git-facts.sh`, `dispatch-ticket/SKILL.md` (both copies) and `herdr-watchdog.sh`.
+
 # Astraler Harness 2.2.11
 
 Fix: `check-requirements.sh`'s payload-committed check was a false green.

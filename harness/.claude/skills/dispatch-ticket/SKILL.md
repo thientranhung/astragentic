@@ -157,6 +157,16 @@ The workspace is project-scoped and outlives any one ticket, while a ticket's wo
 removed at cleanup — so the workspace cwd stays at repo-root rather than binding to the
 first worktree.
 
+**The commands below show a Builder dispatch. Substitute the tab/pane prefix for the role
+actually being dispatched** — tab `ticket:<id>`/pane `builder:<id>` for a Builder, but tab
+AND pane both `spec:<id>` for a Shaper, `qa:<id>` for QA, `rin:<id>` for Rin — per the table
+right after them. This same skill
+dispatches a Shaper too (`thomas.md`: "same mechanics as any dispatch"), and copying the
+literal `builder:`/`ticket:` shown here for a Shaper renames its pane to something the
+watchdog's `DISPATCH_PREFIXES` does not recognize, so it dispatches unmonitored — measured
+directly: a Shaper pane renamed `shaper:<id>` by reflex was invisible to the watchdog end to
+end, silently, until the mismatch was noticed by hand.
+
 A new workspace already owns an initial tab and root pane. Read the create response, then
 `herdr tab list` / `herdr pane list`, and rename that initial tab and pane for the first
 ticket rather than creating a redundant shell:
@@ -178,8 +188,10 @@ herdr tab create --workspace <workspace-id> --label "ticket:<ticket-id>" \
 herdr pane rename <returned-root-pane-id> "builder:<ticket-id>"
 ```
 
-Tab label follows the convention in `orchestrator.md` § Workspace identity:
-`ticket:<id>` for builders, `spec:<id>` for shapers, `qa:<id>` for QA, `rin:<id>` for Rin.
+Tab AND pane label follow the convention in `orchestrator.md` § Workspace identity —
+`ticket:<id>` for builders, `spec:<id>` for shapers, `qa:<id>` for QA, `rin:<id>` for Rin —
+for BOTH commands above, not the tab alone: a Shaper's pane is `spec:<id>`, never
+`shaper:<id>` or `builder:<id>`.
 
 **Mandatory cwd gate before launch.** `--cwd` on create is not guaranteed to stick, and
 agent resolution depends on cwd — launched from `$HOME` it errors "agent not found" or runs
