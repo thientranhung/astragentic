@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 72 entries (AST-001 … AST-073, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 74 entries (AST-001 … AST-075, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1298,3 +1298,76 @@ call `<repo-root>/scripts/herdr-watch-terminal.sh` — absolute, not relative, p
 lesson in AST-028 — and the doctor's check 9 verifies that path instead of the home directory
 one.
 Bound: `harness/.agents/skills/dispatch-ticket/SKILL.md`, `check-requirements.sh`.
+
+### AST-074 — A tracker measured only against itself cannot detect its own drift · promoted 2026-08-18
+
+Reported upstream from an adapted project's own Thomas, via a handoff, rather than found in
+this package directly — the first entry with that provenance, recorded because the class it
+names is general and the reachability checks have no way to see a tracker's *content* going
+stale, only a document's.
+
+Four tickets in that project sat claimed and in-progress with a live assignee **after their
+code had merged to the base branch**, the oldest by a full day. Nothing errored: the merge ran,
+the frontier write-back after it did not, and no artifact recorded the omission — the exact
+shape of AST-057, arriving in a place check-reachability cannot reach, because the drift is in
+the tracker's *content*, not in whether a phase is named or wired.
+
+**The reason no tracker-only check catches this: a wrong state is perfectly consistent with
+itself.** In-progress with an assignee is exactly what a real in-flight ticket looks like from
+inside the tracker; the two are indistinguishable without a second, independent source. Git is
+that source for a ticket the same way an independently-enumerated key set is that source for a
+coverage or parity check — the general law is **an oracle must be independent of what it
+measures**, and a check that reads only the thing it is verifying has already failed before it
+runs.
+
+The fix that shipped, `reconcile-tracker` plus `scripts/ticket-git-facts.sh`, is **read-only by
+a recorded ruling, not by omission.** The join key — a ticket id in a commit subject — is not
+exact: a partial fix, a revert, or a forward-citation all produce a hit, and the reporting
+project's own first real run flagged a phase as "merged" on commits that only named it. Auto-
+closing on that signal would have marked unfinished work done, and a tracker that is wrong and
+*tidy* is worse than one that is wrong and messy — it is believed by the one reader who cannot
+re-run the query.
+
+The same handoff carried a second, related finding: **frontier promotion computed from
+blocking edges alone is over-inclusive.** The raw rule returned claimable tickets that included
+epics, a phase whose parent had not started, and a ticket marked deferred — parent/child
+sequencing carries sequencing information a blocking-edge query cannot see. `thomas.md`'s
+frontier section now says so directly; promotion stays a judgement.
+
+**And the tool that carried both lessons was not trusted until it was run.** Built, committed,
+then exercised against real data, it failed three separate ways on the first real run — a
+shell builtin the design assumed portable was not, on the platform actually in use; an
+unscoped id pattern swept up unrelated ids; and deriving the ticket list from the wrong side
+of history made every unmerged ticket invisible, silently. None of the three was visible from
+reading the script. That rule is now written into the skill itself, not just this entry.
+Bound: `harness/.claude/skills/reconcile-tracker/SKILL.md`,
+`harness/.agents/skills/reconcile-tracker/SKILL.md`, `harness/scripts/ticket-git-facts.sh`,
+`harness/.agents/roles/thomas.md`.
+
+### AST-075 — Neither the process table nor the PID file nor CPU time proves a loop is alive · promoted 2026-08-18
+
+Also reported via the same handoff. The watchdog built for AST-072 monitors dispatched panes
+so the owner does not have to — and on the reporting project's own machine, it was itself the
+thing silently broken: an instance survived with its `caffeinate` wrapper gone and its own PID
+file deleted, alerted nothing across a real STUCK window for two hours, and every liveness
+check tried against it said healthy the whole time.
+
+**Three signals were tried, in order, and each failed the same way — each one can be true of a
+process that is running but not doing its job.** The process table listed the wedged instance
+normally. The PID file question was moot: that instance's had already been deleted while it
+kept running. CPU time and "has a child process" both read true permanently, because the
+`caffeinate` child is a fixture of the design (AST-072), not a signal — it samples the same
+whether the poll loop is turning or hung.
+
+**A timestamp that only advances when the loop *completes* is the one signal the other three
+cannot fake**, so `herdr-watchdog.sh` now writes one to its own file every few polls, in place
+rather than appended, so the heartbeat never buries the alert log it sits beside. Checking it
+means reading its mtime, not its existence — a stale heartbeat and a missing one mean different
+things, and only the file's own age tells them apart. Two more measured facts folded in with
+it: `grep -c` prints its count and still exits 1 on zero, so a naive `|| echo` fallback fires
+alongside it and corrupts a one-line file into two; and killing a watchdog needs the process
+GROUP, because on macOS the script re-execs under `caffeinate`, so signalling only the PID a
+process listing shows leaves the working half alive — independent confirmation, from a second
+project, of the exact class AST-072 already fixed by isolating into a dedicated group before
+that PID is ever written down.
+Bound: `harness/scripts/herdr-watchdog.sh`.

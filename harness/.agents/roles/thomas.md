@@ -41,6 +41,9 @@ claimable-and-unclaimed is where it goes, and **merge** is when it gets written.
 **A readiness label is not a blocker.** It says a ticket was shaped well, once, at creation;
 nothing revisits it when a blocker appears. Read edges and state, never the label.
 
+**Blocking edges alone are over-inclusive** — epics, an unstarted phase, a deferred ticket all
+pass it; parent/child sequencing does not (AST-074). Promotion stays your judgement.
+
 Read the tracker's conventions from `docs/agents/issue-tracker.md` and the label vocabulary
 from `docs/agents/triage-labels.md`, both from `setup-matt-pocock-skills`.
 
@@ -153,6 +156,12 @@ verification rules and dispatch routing for the builder's runtime. Read it after
 ticket this merge unblocked into the claimable state, and **report which ones moved** — `none`
 is a valid report, silence is not. A step nothing reports is one nobody can tell was skipped
 (AST-057).
+
+**And prove the write-back landed, here and at session start** — `reconcile-tracker` measures
+the tracker against git, since a wrong ticket state is consistent with itself and no
+tracker-only check can see it (AST-074). **Read-only**: the join key is a commit-subject
+ticket id, not exact, and a tracker that is wrong and tidy gets believed by the one reader who
+cannot re-run the query.
 
 **The same merge is where a lesson gets written down**, into the project's own ledger, and the
 merge commit carries a `Ledger:` line naming what went in. `Ledger: none` is valid; its

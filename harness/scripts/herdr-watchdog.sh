@@ -14,9 +14,19 @@
 # reused PID is never signaled, so shutdown can never kill an unrelated
 # process group.
 #
-# Lock dir:  /tmp/herdr-watchdog-<workspace-label>.lock
-# PID file:  /tmp/herdr-watchdog-<workspace-label>.pid  (inside the lock dir)
-# Log file:  /tmp/herdr-watchdog-<workspace-label>.log
+# Lock dir:      /tmp/herdr-watchdog-<workspace-label>.lock
+# PID file:      /tmp/herdr-watchdog-<workspace-label>.lock/pid
+# Log file:      /tmp/herdr-watchdog-<workspace-label>.log       (alerts only)
+# Heartbeat:     /tmp/herdr-watchdog-<workspace-label>.alive     (liveness — see below)
+#
+# THE PROCESS TABLE, THE PID FILE AND CPU TIME ALL FAIL TO PROVE THIS SCRIPT IS
+# ALIVE. A live project measured all three failing on the same instance: it was
+# in `ps`, its own pid file had been deleted while it kept running, and its
+# permanent `caffeinate` child made "has a child process" true whether the loop
+# was working or wedged. None of the three can go false when the loop hangs. A
+# timestamp that only advances when the loop COMPLETES can — that is what the
+# heartbeat file is, rewritten in place every HEARTBEAT_EVERY-th poll so it
+# never buries the alert log it sits beside. Check its mtime, not its presence.
 #
 # Exit:
 #   0  — stopped by signal, by `stop`, or workspace gone
@@ -49,6 +59,10 @@ except Exception:
 LOCK_DIR="/tmp/herdr-watchdog-${WORKSPACE_LABEL}.lock"
 PID_FILE="$LOCK_DIR/pid"
 LOG="/tmp/herdr-watchdog-${WORKSPACE_LABEL}.log"
+# Separate from LOG, not appended to it: a heartbeat on every poll would bury
+# the alert history at one line per poll. Rewritten in place, so its own
+# mtime is the check — a stale timestamp is what a wedged loop looks like.
+HEARTBEAT_FILE="/tmp/herdr-watchdog-${WORKSPACE_LABEL}.alive"
 
 # A recorded PID counts as "us" only if it is alive AND its command line
 # still names this script or its caffeinate wrapper — never trust the PID
@@ -129,12 +143,16 @@ mkdir -p "$STATE_DIR"
 echo $$ > "$PID_FILE"
 echo 0  > "$STATE_DIR/alert_count"
 date +%s > "$STATE_DIR/alert_reset"
+HEARTBEAT_EVERY="${HEARTBEAT_EVERY:-5}"
 
 # Remove the lock on every exit path — signal, workspace-gone, or a bug
 # below — but only if it is still ours (a `stop` racing us may have already
-# reclaimed it for a fresh instance).
+# reclaimed it for a fresh instance). The heartbeat file is removed too: its
+# ABSENCE means stopped-or-never-started, while a PRESENT but stale one is
+# what a wedged instance looks like — deleting it on a clean exit is what
+# keeps that distinction meaningful.
 cleanup() {
-  [ "$(cat "$PID_FILE" 2>/dev/null)" = "$$" ] && rm -rf "$LOCK_DIR"
+  [ "$(cat "$PID_FILE" 2>/dev/null)" = "$$" ] && rm -rf "$LOCK_DIR" && rm -f "$HEARTBEAT_FILE"
 }
 trap cleanup EXIT
 trap 'exit 0' INT TERM
@@ -294,6 +312,9 @@ for d in dispatched:
     dstatus = d["agent_status"]
     dname   = d.get("name", d.get("terminal_title_stripped", "unknown"))
 
+    # For the heartbeat pane count below — a marker line, not an alert.
+    print(f"__seen|{dpane}")
+
     try:
         has_w = subprocess.run(
             ["pgrep", "-f", f"herdr-watch-terminal.sh {dpane}"],
@@ -349,6 +370,20 @@ while true; do
       set_cooldown "$key"
     fi
   done <<< "$output"
+
+  # Heartbeat — see the header comment for why nothing else here proves the
+  # loop is alive. Written every HEARTBEAT_EVERY-th poll, in place rather
+  # than appended.
+  beat=$(( ${beat:-0} + 1 ))
+  if (( beat % HEARTBEAT_EVERY == 0 )); then
+    # `grep -c` PRINTS the count and STILL exits 1 when the count is zero, so
+    # a naive `|| echo` fallback fires alongside it and emits two lines.
+    # `|| true` keeps the count and the exit code both harmless.
+    seen=$(echo "$output" | grep -c '^__seen' || true)
+    printf '[%s] alive — poll #%s, %s dispatched pane(s)\n' \
+      "$(date '+%H:%M:%S')" "$beat" "${seen:-0}" \
+      > "$HEARTBEAT_FILE"
+  fi
 
   sleep "$INTERVAL"
 done

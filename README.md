@@ -1,4 +1,4 @@
-# Astraler Harness 2.1.1
+# Astraler Harness 2.2.0
 
 An operating framework that lets **several agents build software together on an existing
 codebase**.
@@ -214,19 +214,21 @@ harness/                          the payload staged into a target repo
       batch-triage/               │
       bootstrap-glossary/         │
       legacy-testing/             │
-      untangle/                   ┘
+      untangle/                   │
+      reconcile-tracker/          ┘ tracker ↔ git drift check, bound at merge + session start
   .claude/
     agents/                       Claude adapters so --agent <role> resolves
-    skills/                       Claude-discovered skills (7 skills, unchanged)
+    skills/                       Claude-discovered skills (13 skills)
   .opencode/
     agents/                       OpenCode adapters so --agent <role> resolves
   .codex/profiles/                one per role, mirroring the orchestrator rows
   .agents/memory/
-    recurring-failure-modes.md    72 measured failure modes; append-only, the evidence base
+    recurring-failure-modes.md    74 measured failure modes; append-only, the evidence base
   scripts/
     herdr-watch-terminal.sh       turn watcher with a real start guard
     herdr-watchdog.sh             background poll of `herdr agent list`; wakes Thomas on a
                                   blocked/stuck pane during autonomous dispatch
+    ticket-git-facts.sh           git half of reconcile-tracker; no network, decides nothing
     docs-staleness-audit.sh       always-on word budgets, and numbers docs state about themselves
     check-reachability.sh         eight checks: does the method the docs describe
                                   exist, is it reachable, and is it addressed correctly?

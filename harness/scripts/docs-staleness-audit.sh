@@ -52,7 +52,7 @@ fi
 # a reason recorded in the same commit.
 role_budget() {
   case "$1" in
-    thomas)  echo 1700 ;;  # widest remit: claim protocol + three dispatch points + the arm
+    thomas)  echo 1850 ;;  # widest remit: claim protocol + three dispatch points + the arm
                            # cadence at three scopes. Raised from 1400 by owner decision
                            # 2026-08-13, porting a project ruling: the arm fires per ticket
                            # before its merge, so Thomas owns three fire points instead of
@@ -68,6 +68,13 @@ role_budget() {
                            # merge. The budget exists to make growth visible and deliberate,
                            # not to forbid it — but a fourth raise without a role gaining a
                            # phase is the signal that something belongs in a skill instead.
+                           # 1700 -> 1850, owner decision 2026-08-18, the FOURTH raise and it
+                           # clears the bar the comment above set for itself: Thomas gained a
+                           # fourth anchored duty, `reconcile-tracker` at merge and at session
+                           # start, alongside the arm and the ledger write. Only the wiring and
+                           # the read-only ruling landed here; the drift classes, the join rule
+                           # and the exercise-it lesson live in the skill, which loads only
+                           # when the check runs.
     builder) echo 1400 ;;  # widest DOING surface: build, increment review, simplify,
                            # visual verification, the two correctness rules, handback
     *)       echo 1200 ;;

@@ -1,3 +1,66 @@
+# Astraler Harness 2.2.0
+
+Feature: reconcile the tracker against git, and a watchdog you can check.
+
+Folded in from a handoff written by an adapted project's own Thomas session, which built,
+committed and **exercised** both changes in live use before reporting them upstream —
+generalized here for a tracker-agnostic package, on this package's own evidence where the
+handoff's numbers were project-specific.
+
+## Tracker ↔ git reconciliation
+
+**A wrong ticket state is perfectly consistent with itself.** In-progress with an assignee is
+exactly what a real in-flight ticket looks like, so a check that reads only the tracker can
+detect nothing — the same law that already requires an independent key set for a parity or
+coverage denominator. Git is that independent oracle for ticket state.
+
+- **`reconcile-tracker`** (new skill, both `.agents/skills/` and `.claude/skills/` copies) —
+  owns the join between git facts and tracker state, the three drift classes (lagging,
+  phantom-done, stale claim), and why the check stays read-only.
+- **`scripts/ticket-git-facts.sh`** (new) — git's half. No network, no tracker call, decides
+  nothing. Matches a ticket id in the commit SUBJECT only, never the body; `TICKET_PREFIX` has
+  no default and is a required STOP, since a bare id pattern also matches ADR ids and other
+  kebab-tagged history.
+- **`thomas.md`** — wired at merge and at session start, alongside the frontier write-back it
+  verifies. Also gains a direct caution that frontier promotion computed from blocking edges
+  alone is over-inclusive (epics, an unstarted phase's children, deferred tickets all pass it);
+  promotion stays a judgement, not a mechanical pass.
+
+**Read-only is a ruling, not timidity.** The join key — a ticket id in a commit subject — is
+not exact: a partial fix, a revert, or a forward-citation all produce a hit. Auto-closing on
+that signal would eventually mark unfinished work done, and a tracker that is wrong and *tidy*
+is worse than one that is wrong and messy — it is believed by the one reader who cannot re-run
+the query. `reconcile-tracker` reports; Thomas applies each fix by hand. Recorded as
+**AST-074**, alongside the frontier-promotion finding.
+
+## Watchdog heartbeat
+
+**AST-072's watchdog was itself the thing that failed silently on a live project's machine:**
+an instance survived with its `caffeinate` wrapper gone and its own PID file deleted, alerted
+nothing across a real STUCK window for two hours, and every liveness signal tried against it —
+the process table, the PID file, CPU time — read healthy the whole time, because each one can
+be true of a process that is running but not doing its job.
+
+- `herdr-watchdog.sh` now writes a timestamp to its own `.alive` file every few polls, in
+  place rather than appended, so it never buries the alert log beside it — a timestamp that
+  only advances when the loop *completes* is the one signal the other three cannot fake.
+  Removed on a clean stop, so its absence and its staleness stay distinguishable.
+- Same handoff, independent confirmation of AST-072's core finding: `pkill -f` left a wedged
+  watchdog alive, because macOS re-execs the script under `caffeinate` and the visible PID is
+  not the one that needs signaling — exactly the class AST-072 already fixed by isolating into
+  a dedicated process group before any PID is written down.
+
+Recorded as **AST-075**.
+
+## Upgrade from 2.1.1
+
+Copy `scripts/ticket-git-facts.sh`, both `reconcile-tracker/SKILL.md` copies, and
+`harness/scripts/herdr-watchdog.sh`. Merge the two new paragraphs into your project's
+`thomas.md` (the frontier caution and the merge/session-start wiring) — this is scaffold-
+adjacent content inside a payload file, so diff rather than overwrite if you have local
+changes there. `docs-staleness-audit.sh`'s Thomas budget moved 1700 → 1850 to carry this; the
+reasoning is recorded in the script itself.
+
 # Astraler Harness 2.1.1
 
 Fix: the watcher is called by project-local path again, reversing 2.0.1.
