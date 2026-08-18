@@ -18,6 +18,20 @@ exist and the call errors — measured, on a Builder that had just invoked
 stop; do not reach for the `code-simplifier` agent, another skill, or your own pass — a
 substitute leaves the same marker, so every check after it reads as satisfied (AST-055).
 
+**A fan-out failure inside a started invocation is not an invocation failure.** If
+`Skill(skill: "simplify")` runs but its internal parallel review cannot fork — measured as
+`Fork is not available inside a forked worker`, from a Builder dispatched into a Herdr pane —
+running the four review corners directly, inside that same invocation, is the skill completing
+degraded, not you substituting for it. The `Pass:` line still names the skill, with the
+fallback named:
+
+```
+Pass: Skill(skill: "simplify") — fork unavailable, ran four corners directly
+```
+
+Only a total invocation failure — the skill never starts, or errors before any review runs —
+triggers the stop-and-report rule above (AST-089).
+
 The artifact is a commit on your branch, and its body names what ran:
 
 ```bash

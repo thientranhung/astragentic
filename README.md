@@ -1,45 +1,33 @@
-# Astraler Harness 2.2.16
+# Astraler Harness 2.2.17
 
-An operating framework that lets **several agents build software together on an existing
-codebase**.
+An operating framework that lets **several AI agents build software together on an existing
+codebase** — without colliding, without drifting, and without losing the thread.
 
-[Matt Pocock's `mattpocock-skills` plugin](https://github.com/mattpocock/skills) supplies the
-method one engineer follows. This package supplies the two things that method leaves open:
-**working on code that already exists**, and **many agents working at once without
-colliding**.
+## Why this exists
 
-Everything here earns its place against that sentence. A rule that serves one engineer on a
-clean repo belongs upstream, and stays there.
+[Matt Pocock's `mattpocock-skills` plugin](https://github.com/mattpocock/skills) gives one
+agent a complete engineering method: spec, tickets, implement, review. But two gaps remain
+when you move from a solo greenfield session to a team working on a real codebase:
 
-## Requirements
+1. **Brownfield.** The plugin's skills assume a clean starting point. Real projects have
+   legacy code, missing tests, tangled modules, and inherited backlogs.
+2. **Concurrency.** One agent, one session, one repo. Scale that to several agents working
+   the same frontier and they overwrite each other.
 
-```bash
-./check-requirements.sh                 # machine readiness
-./check-requirements.sh <target-repo>   # machine + that repo's readiness
-```
+This package closes both gaps. Everything here earns its place against that sentence — a rule
+that serves one engineer on a clean repo belongs upstream, and stays there.
 
-The machine needs the Claude Code CLI, git with worktree support, herdr ≥ 0.8.0, and the
-`mattpocock-skills` plugin. Codex is the cross-vendor arm and degrades to a warning when
-absent. OpenCode is an optional third provider — roles can be dispatched to it when
-`orchestrator.md` assigns them there. The target repo needs its tracker and triage labels
-configured — the doctor names what is missing and how to produce it.
+## How it works
 
-## The method
+### The spine
 
-**The spine comes from the plugin.** A foggy effort larger than one session enters at
-`wayfinder`; anything that fits one session enters at `grill-with-docs`. Both hand off to
-`to-spec` → `to-tickets` → one `implement` per ticket → `mattpocock-skills:code-review`.
+The engineering method comes from the plugin. Work enters through one of two doors:
 
-**Roles follow session boundaries**, because the plugin fixes those boundaries: align, spec
-and tickets run in one unbroken context, and each `implement` runs in a fresh one.
+- **`wayfinder`** — for foggy efforts larger than one session
+- **`grill-with-docs`** — for anything that fits one session
 
-| Role | Session | Drives |
-|---|---|---|
-| **Thomas** — router | resident | `triage`, `wayfinder`, `to-questionnaire`, `ask-matt`; owns the tracker, the frontier and merge; fires the arm |
-| **Shaper** | one unbroken session | `grill-with-docs` → `to-spec` → `to-tickets`; decides seams while the whole picture is in context |
-| **Builder** | one per ticket | `implement`, in its own worktree, sole writer there |
-| **Rin** — reviewer | per milestone | second opinion, artifact verification; owns the arm's standard |
-| **QA** | per walk | exercises the RUNNING product — interface, journeys, API contracts, data as experienced |
+Both converge into: **`to-spec`** → **`to-tickets`** → one **`implement`** per ticket →
+**`code-review`**.
 
 ```mermaid
 flowchart LR
@@ -56,29 +44,33 @@ flowchart LR
     style F fill:#e6f4ea,stroke:#34a853
 ```
 
-Every agent reaches the craft layer directly, since those skills are model-invoked:
-`grilling`, `tdd`, `mattpocock-skills:code-review`, `codebase-design`, `domain-modeling`, `research`,
+Every agent also reaches the craft layer directly — `grilling`, `tdd`,
+`mattpocock-skills:code-review`, `codebase-design`, `domain-modeling`, `research`,
 `prototype`, `diagnosing-bugs`, `wizard`, `resolving-merge-conflicts`. Installing the plugin
 once equips the whole team.
 
+### Five roles, each with a clear boundary
+
+Roles follow session boundaries, because the plugin fixes those boundaries.
+
+| Role | Session | What it does |
+|---|---|---|
+| **Thomas** — router | resident | Triage, wayfinder, questionnaire routing; owns the tracker, the frontier, merge, and fires the cross-vendor arm |
+| **Shaper** | one unbroken session | `grill-with-docs` → `to-spec` → `to-tickets`; decides seams while the whole picture is in context |
+| **Builder** | one per ticket | `implement`, in its own worktree — sole writer there |
+| **Rin** — reviewer | per milestone | Second opinion, artifact verification; owns the review standard |
+| **QA** | per walk | Exercises the RUNNING product — interface, journeys, API contracts, data as experienced |
+
+### Coordination: tracker + worktree isolation
+
 **The tracker is the coordination substrate.** Work state lives on the tracker configured by
-`setup-matt-pocock-skills` behind `docs/agents/issue-tracker.md`. Blocking edges give the
-dependency graph; the frontier query — every ticket whose blockers are done — answers what
-is ready; and assigning a ticket before starting it is the claim that keeps concurrent
-sessions apart.
+the plugin's `setup-matt-pocock-skills`. Blocking edges give the dependency graph; the
+frontier query — every ticket whose blockers are done — answers what is ready. Assigning a
+ticket before starting it is the claim that keeps concurrent sessions apart.
 
-**This package extends the claim to build tickets.** Upstream applies assignee-as-lock to
-decision tickets and builds one ticket per session. Here a claimed build ticket gets its own
-worktree and pane, so several Builders work the frontier at once under the isolation rules
-carried over from the prior package. That is the throughput mechanism, and
-`dispatch-ticket` is where it lives.
-
-**Each project resolves to exactly one herdr workspace.** `orchestrator.md` carries the
-`workspace-label`; Thomas matches or creates that workspace before any dispatch, and every
-dispatched pane lands in a tab named by role — `ticket:<id>`, `spec:<id>`, `qa:<id>`,
-`rin:<id>` — so owner-created tabs are never split into, renamed or closed. A background
-watchdog, `herdr-watchdog.sh`, can poll that workspace during autonomous dispatch and wake
-Thomas on a blocked or stalled pane.
+**This package extends that claim to build tickets.** A claimed build ticket gets its own
+git worktree and its own terminal pane, so several Builders work the frontier at once. That
+is the throughput mechanism, and `dispatch-ticket` is where it lives.
 
 ```mermaid
 flowchart TB
@@ -111,12 +103,13 @@ flowchart TB
 Several Builders sit in the same workspace but never the same worktree — that is what lets
 them work the frontier concurrently without colliding.
 
-**Review keeps its weight and drops the loop.** Per ticket: `mattpocock-skills:code-review`'s two axes in one
-pass, a per-increment simplify pass leaving a `simplify(increment):` marker commit, and the
-cross-vendor arm before the merge — no ticket merges without one. At a milestone: one Rin
-round, verifying the artifact and that the process left its traces. Once more at the spec,
-before tickets are cut, and once over the slice when it closes. A design-level blocking
-finding escalates to the owner through `to-questionnaire` rather than to another round.
+### Review: weight without the loop
+
+Every ticket passes three review layers before it can merge — no exceptions:
+
+1. **`mattpocock-skills:code-review`** — Standards + Spec axes in one pass
+2. **Simplify pass** — per-increment, leaving a `simplify(increment):` marker commit
+3. **Cross-vendor arm** — Codex reviews Claude's work (or vice versa)
 
 ```mermaid
 flowchart LR
@@ -136,36 +129,109 @@ flowchart LR
     style Rin fill:#fce8e6,stroke:#ea4335
 ```
 
-**Answers carry a source.** Agents resolve the Align frontier themselves, answering from the
-codebase, a prior ADR, `research`, `prototype`, or a second opinion — and recording which. An
-answer with no source leaves the question open.
+At milestones, spec finalization, and slice close: Rin runs a gate — verifying the artifact
+and that the process left its traces. A design-level blocking finding escalates to the owner
+through `to-questionnaire` rather than spawning another review round.
 
-## Brownfield is this package's half
+**Answers carry a source.** Agents resolve the Align frontier themselves — from the codebase,
+a prior ADR, `research`, `prototype`, or a second opinion — and record which. An answer with
+no source leaves the question open.
 
-Upstream's skills contain no occurrence of *legacy*, *brownfield*, *characterisation* or
-*untestable*; its brownfield notes live on its docs site for human readers. The projects this
-package installs into are not greenfield, so four gaps are ours. The rule for all six is
-**extract, never invent** — a standard the code does not follow, or a glossary term nobody
-confirmed, becomes confident-sounding lore that later sessions treat as truth.
+### Brownfield: this package's half
 
-They split by how they are reached, and the split is deliberate:
+The plugin contains no mention of *legacy*, *brownfield*, *characterisation* or *untestable*.
+The projects this harness installs into are not greenfield, so four skills close the gap:
 
-**Bootstrap — invoked by name, once per repo, each producing an artifact the owner reviews.**
-Thomas owns all three as phases in his contract, so they cannot become work that everyone
-assumes someone else ran.
+**Bootstrap skills** — invoked by name, once per repo, each producing an artifact the owner
+reviews. Thomas owns these.
 
 | Skill | Produces |
 |---|---|
 | `bootstrap-glossary` | `CONTEXT.md`, seeded from code, every term citing its source file |
 | `batch-triage` | an inherited backlog as tickets with labels and blocking edges |
 
-**Craft — model-invoked, reached when the situation arises**, needing no wiring, exactly like
-`tdd` and `mattpocock-skills:code-review`.
+**Craft skills** — model-invoked, reached when the situation arises, like `tdd` and
+`mattpocock-skills:code-review`.
 
 | Skill | Reached when |
 |---|---|
 | `legacy-testing` | the code to change has no seam, so `tdd` cannot attach |
 | `untangle` | a refactor is too tangled for `improve-codebase-architecture` |
+
+The rule for all of them: **extract, never invent** — a standard the code does not follow,
+or a glossary term nobody confirmed, becomes confident-sounding lore that later sessions
+treat as truth.
+
+## Requirements
+
+Run the doctor to check machine and repo readiness:
+
+```bash
+./check-requirements.sh                 # machine readiness only
+./check-requirements.sh <target-repo>   # machine + that repo's readiness
+```
+
+### Machine requirements
+
+| Requirement | Required | Notes |
+|---|---|---|
+| Claude Code CLI | yes | The root runtime; Rin's gate cannot run without it |
+| Git with worktree support | yes | Each Builder works in its own worktree |
+| [herdr](https://github.com/AstralEr/herdr) ≥ 0.8.0 | yes | Terminal multiplexer for agent panes |
+| `mattpocock-skills` plugin | yes | The engineering method — the spine |
+| Codex CLI | optional | Cross-vendor arm; degrades to a warning when absent |
+| OpenCode | optional | Third provider; roles dispatch to it when `orchestrator.md` assigns them |
+
+### Target repo requirements
+
+The target repo needs its tracker and triage labels configured. The doctor names what is
+missing and how to fix it.
+
+## Installation
+
+Installation is a two-phase process: a mechanical staging step (safe, repeatable) followed
+by a semantic adaptation step (agent-driven, project-aware).
+
+### Phase 1: Stage the release
+
+```bash
+./install.sh <target-repo-path>
+# optionally: ./install.sh <target-repo-path> --project-name "My Project"
+```
+
+This copies the harness payload into `<target>/.astraler/releases/<version>/` and nothing
+else. No project files are changed. The staging is **idempotent** (rerunning does nothing)
+and **immutable** (a staged release is a fixed record of what was shipped).
+
+### Phase 2: Adapt into the project
+
+Open a Claude Code (or Codex) session in the target repo and give it this instruction:
+
+```
+Read .astraler/releases/<version>/ADAPT-HARNESS.md completely and execute it.
+```
+
+The adaptation agent will:
+1. Inspect the project — structure, dependencies, existing configuration
+2. Compare against any previously applied release (for upgrades)
+3. Integrate the harness into the project's agent and skill configuration
+4. Ensure the `mattpocock-skills` plugin is installed and its setup step has run
+5. Verify the result **by artifact** and record the applied version
+
+### Phase 3: Configure the orchestrator
+
+After adaptation, edit `.agents/orchestrator.md` in your project. This is **your file** — no
+upgrade will ever overwrite it. Set:
+
+1. **`workspace-label`** — your project's herdr workspace name
+2. **Model IDs** — which model each role uses on each runtime
+3. **Fallback providers** — optional Codex/OpenCode rows for degraded dispatch
+
+Then start Thomas:
+
+```bash
+claude --agent thomas
+```
 
 ## Vocabulary
 
@@ -173,19 +239,14 @@ Four words do most of the work, and two of them are easy to swap by accident.
 
 | Word | Means |
 |---|---|
-| **package** | this repo — the thing that produces a harness. Payload sits under `harness/` |
-| **adapted project** | a repo the harness was installed into. Payload sits at the repo root |
+| **package** | this repo — the thing that produces a harness |
+| **adapted project** | a repo the harness was installed into |
 | **payload** | what a release stages into a project and may overwrite freely |
 | **scaffold** | the owner's values, written once and never overwritten: `.agents/orchestrator.md` and `.codex/profiles/*` |
 
-Both scripts detect which of the two layouts they are running in and say so, so the layout is
-the machine test for package versus adapted project. **`scaffold` is a property of a few files
-inside the payload, not a name for the package** — a release can repair payload in every
-project it reaches and can never repair scaffold in any of them, which is why a guard against
-scaffold drift has to live in payload.
-
-`CONTEXT.md` is not in this list on purpose: the harness already owns that name for a
-project's domain glossary, seeded by `bootstrap-glossary`.
+`scaffold` is a property of a few files inside the payload, not a name for the package — a
+release can repair payload in every project it reaches and can never repair scaffold in any
+of them.
 
 ## Layout
 
@@ -223,15 +284,16 @@ harness/                          the payload staged into a target repo
     agents/                       OpenCode adapters so --agent <role> resolves
   .codex/profiles/                one per role, mirroring the orchestrator rows
   .agents/memory/
-    recurring-failure-modes.md    87 measured failure modes; append-only, the evidence base
+    recurring-failure-modes.md    88 measured failure modes; append-only, the evidence base
   scripts/
     herdr-watch-terminal.sh       turn watcher with a real start guard
-    herdr-watchdog.sh             background poll of `herdr agent list`; wakes Thomas on a
-                                  blocked/stuck pane during autonomous dispatch
+    herdr-watchdog.sh             background poll of herdr agent list; wakes Thomas on
+                                  a blocked/stuck pane during autonomous dispatch
     ticket-git-facts.sh           git half of reconcile-tracker; no network, decides nothing
     docs-staleness-audit.sh       always-on word budgets, and numbers docs state about themselves
     check-reachability.sh         eight checks: does the method the docs describe
                                   exist, is it reachable, and is it addressed correctly?
+    check-requirements.sh         the doctor, vendored into the adapted project
 docs/adr/0001-…                   why the method was rebuilt around the plugin
 prompts/ADAPT-HARNESS.md          the semantic installer the agent executes
 install.sh                        mechanical staging, immutable releases
@@ -240,10 +302,10 @@ check-requirements.sh             the doctor
 
 ## Why the failure-mode ledger is here
 
-It is the evidence base. A rule kept in this package can point at an entry in
-`recurring-failure-modes.md`; a rule that cannot point at one is a rule to re-examine. That
-is the test 1.0.0 applied to everything it carried over, and it is why this package is
-smaller than the one it replaces.
+`recurring-failure-modes.md` carries 88 measured failure modes. It is the evidence base: a
+rule kept in this package can point at an entry there; a rule that cannot point at one is a
+rule to re-examine. That is the test 1.0.0 applied to everything it carried over, and it is
+why this package is smaller than the one it replaces.
 
 ## Writing rules
 

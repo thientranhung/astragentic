@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 87 entries (AST-001 … AST-088, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 88 entries (AST-001 … AST-089, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1869,3 +1869,35 @@ now inside the fix for the third instance rather than in a fresh one: verifying 
 against the context that exposed the original bug is not the same claim as verifying it
 against every context the fix will actually run in.
 Bound: `check-requirements.sh`.
+
+### AST-089 — A fork-fallback inside `simplify` read as a substitute because only the `Pass:` line's wording changed · promoted 2026-08-18
+
+Found by an adapted project's Thomas verifying a `simplify(increment):` commit on TRA-189 (a
+guard blocking role-string comparison in a dashboard), dispatched through a real Herdr pane.
+`Skill(skill: "simplify")` tried to fan out into four parallel review corners and failed inside
+its own execution — `Fork is not available inside a forked worker`, on every nested fork
+attempted from that pane, plus two of the four review forks hanging over 5 minutes with no
+notification before the Builder gave up on the fan-out (that hang is a separate, still-open
+failure — not closed by this entry).
+
+First pass: the Builder hit the fork error, ran the four corners directly, and reported
+honestly — `Pass: 1 (fork tooling was unavailable ... run directly rather than via 4 parallel
+forks)`. That line never named `Skill(skill: "simplify")`, so thomas-claude.md's literal check
+read it as a substitute and sent it back — correct under the letter of AST-055. Second pass: the
+Builder called the skill again, hit the identical fork failure, fell back the identical way, but
+this time wrote `Pass: Skill(skill: "simplify")` — and it passed. The work done was the same
+both times; only the `Pass:` line's wording changed the verdict.
+
+Fixed by naming the fallback explicitly in builder-claude.md: a fan-out failure *inside* a
+started invocation (the skill ran; its internal fork could not) is not the same event as an
+invocation that never started, and the former is not covered by the stop-and-report rule. The
+`Pass:` line for that path still names `Skill(skill: "simplify")`, with the fallback reason
+appended, so an honest description of what ran is never indistinguishable from a substitute.
+
+**A rule that checks a literal string is only as trustworthy as the set of true stories that
+string is allowed to represent.** AST-055 was right to make `Skill(skill: "simplify")` the
+pass — a subject alone can't tell a real run from a substitute — but leaving only one legal
+sentence for two different true events (clean fan-out vs. forced fallback) gave an honest
+Builder a coin-flip chance of writing the one that reads as a substitute. Not fixed by loosening
+the check; fixed by giving the second true story its own sentence.
+Bound: builder-claude.md.

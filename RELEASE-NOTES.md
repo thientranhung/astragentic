@@ -1,3 +1,29 @@
+# Astraler Harness 2.2.17
+
+Fix: thomas-claude.md's simplify verification rejected a legitimate fork-fallback pass because
+it checked for an exact literal rather than a prefix. A Builder dispatched into a Herdr pane
+is a forked worker — nested forks are unavailable there — so the simplify skill's fan-out
+always falls back to running the four review corners directly. That fallback wrote
+`Pass: Skill(skill: "simplify") — fork unavailable, ran four corners directly`, which the old
+rule rejected as a substitute because it did not match the exact string
+`Skill(skill: "simplify")`. The work done was identical; only the wording changed the verdict.
+
+Found by nizzy-ecom Thomas on TRA-189, reported as AST-089.
+
+- thomas-claude.md: verification now accepts any `Pass:` line that starts with
+  `Skill(skill: "simplify")`, with or without a fallback suffix. Both the clean fan-out and
+  the forced-fallback forms are valid. A line that does not start with the skill name is still
+  a substitute (AST-055 intact).
+- builder-claude.md: documents that a fan-out failure inside a started invocation is degraded
+  completion, not a substitute. The `Pass:` line format for the fallback path is specified.
+- recurring-failure-modes.md: AST-089 entry added.
+- README.md: restructured for readers — philosophy, method, installation steps.
+
+## Upgrade from 2.2.16
+
+Copy `.agents/roles/thomas-claude.md` and `.agents/roles/builder-claude.md`. The ledger
+(`recurring-failure-modes.md`) carries AST-089; copy it if your project's copy is behind.
+
 # Astraler Harness 2.2.16
 
 Fix: 2.2.15's own fix for the payload checker's stale scope list introduced a duplicate.
