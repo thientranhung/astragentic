@@ -497,7 +497,9 @@ git log <base>..HEAD --grep '^simplify(increment):' --oneline
 ```
 
 Zero markers — **STOP**. Send the Builder back to run simplify. Do not merge a branch with
-zero simplify markers.
+zero simplify markers. The Builder carries its own self-check (`builder.md`), but the
+mechanism that causes the skip — the ticket checklist displacing the contract — also
+displaces the self-check, so Thomas verifies independently.
 
 **Only when both checks pass** — `git status` empty AND at least one simplify marker — is
 removal safe:

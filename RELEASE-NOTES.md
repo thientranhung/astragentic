@@ -1,3 +1,20 @@
+# Astragentic 2.2.25
+
+Restore the rationale for why the Thomas-side simplify guard (Check 2 in dispatch-ticket
+cleanup) exists independently of the Builder's self-check in `builder.md`. The 2.2.24
+rewrite dropped the sentence explaining that the mechanism causing the skip — the ticket
+checklist displacing the contract — also displaces the Builder's self-check, so Thomas
+must verify independently.
+
+Without the rationale at the point of action, the two guards read as the same check run
+twice. A future editor seeing "duplication" would remove the Thomas-side guard — the only
+one independent of the mechanism that caused the failure. Same shape as AST-069 (rationale
+distant from action point). Reported by Thomas nizzy-ecom on 2.2.24.
+
+## Upgrade from 2.2.24
+
+Copy `.agents/skills/dispatch-ticket/SKILL.md` and its `.claude` copy.
+
 # Astragentic 2.2.24
 
 Fix: the AST-094 simplify guard was inserted between the AST-092 git-status check and its
