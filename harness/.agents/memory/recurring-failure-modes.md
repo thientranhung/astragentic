@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 71 entries (AST-001 … AST-072, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 72 entries (AST-001 … AST-073, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1278,3 +1278,23 @@ list before *and after* create, an explicit ownership record instead of an inher
 and none of the three fixes changed what the feature does, only what it is allowed to do by
 accident.
 Bound: `harness/scripts/herdr-watchdog.sh`, `harness/.agents/skills/dispatch-ticket/SKILL.md`.
+
+### AST-073 — A global script is only shared if something keeps it updated · promoted 2026-08-18
+
+2.0.1 moved the mandatory watcher off a repo-local path onto `~/.claude/scripts/herdr-watch-
+terminal.sh`, reasoned as "shared across projects" — one file instead of a copy per repo. In
+practice nothing ships to that path after the first install: every later release still stages
+`scripts/herdr-watch-terminal.sh` into each project (nothing removed that step), so the copy
+actually invoked is the one no release touches, while the copy every release updates sits
+unused. On this machine the two had already drifted — a stale citation label in the global
+copy — and a second, unrelated global file at the same path prefix
+(`~/.claude/scripts/herdr-watchdog.sh`) turned out to be an early prototype three drafts
+behind the shipped script, invoked by nothing, silently stale for over a week.
+
+**"Shared" is not the same property as "kept in sync."** A path a release writes to is kept in
+sync by construction; a path nothing writes to just has one fewer reason to notice it fell
+behind. The fix reverses the 2.0.1 call: `dispatch-ticket` and the `thomas-*` supplements now
+call `<repo-root>/scripts/herdr-watch-terminal.sh` — absolute, not relative, per the cwd
+lesson in AST-028 — and the doctor's check 9 verifies that path instead of the home directory
+one.
+Bound: `harness/.agents/skills/dispatch-ticket/SKILL.md`, `check-requirements.sh`.

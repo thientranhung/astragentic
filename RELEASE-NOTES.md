@@ -1,3 +1,28 @@
+# Astraler Harness 2.1.1
+
+Fix: the watcher is called by project-local path again, reversing 2.0.1.
+
+2.0.1 moved the mandatory watcher call to `~/.claude/scripts/herdr-watch-terminal.sh`,
+reasoned as one shared copy instead of one per project. In practice every release still
+stages `scripts/herdr-watch-terminal.sh` into each project regardless, so the global copy —
+the one actually invoked — was the one no release ever touched. On this machine it had
+already drifted from the shipped script, and an unrelated file at the same path prefix
+(`~/.claude/scripts/herdr-watchdog.sh`) turned out to be a three-drafts-old prototype nothing
+referenced, stale for over a week without anyone noticing (**AST-073**).
+
+- `dispatch-ticket` and the `thomas-claude` / `thomas-codex` / `thomas-opencode`
+  supplements now call `<repo-root>/scripts/herdr-watch-terminal.sh` — absolute, not
+  relative, per the cwd lesson in AST-028.
+- `check-requirements.sh` check 9 now verifies the project-local (or package-local) path
+  instead of the home-directory one.
+
+## Upgrade from 2.1.0
+
+Copy the three `thomas-*.md` supplements and `dispatch-ticket/SKILL.md` (both `.agents/` and
+`.claude/` copies). If a global `~/.claude/scripts/herdr-watch-terminal.sh` or
+`~/.claude/scripts/herdr-watchdog.sh` exists on your machine from an earlier draft, it is no
+longer referenced by anything shipped — safe to leave in place or delete.
+
 # Astraler Harness 2.1.0
 
 Feature: one herdr workspace per project, and a self-monitoring watchdog for Thomas.

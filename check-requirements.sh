@@ -314,12 +314,18 @@ for ROLE in thomas shaper builder rin qa; do
   fi
 done
 
-# 9. Canonical watcher location used by the dispatch recipes.
-if [ -f "$HOME/.claude/scripts/herdr-watch-terminal.sh" ]; then
-  ok "~/.claude/scripts/herdr-watch-terminal.sh present"
+# 9. Watcher script — project-local, since install already stages it and a global copy is
+# never touched by a release (measured: it drifted out of sync with the shipped version).
+WATCHER=""
+for CAND in "${TARGET:+$TARGET/scripts/herdr-watch-terminal.sh}" \
+            "scripts/herdr-watch-terminal.sh" "harness/scripts/herdr-watch-terminal.sh"; do
+  [ -n "$CAND" ] && [ -f "$CAND" ] && { WATCHER="$CAND"; break; }
+done
+if [ -n "$WATCHER" ]; then
+  ok "$WATCHER present"
 else
-  warn "~/.claude/scripts/herdr-watch-terminal.sh missing" \
-    "the adaptation agent syncs harness/scripts/herdr-watch-terminal.sh after inspecting local drift"
+  warn "scripts/herdr-watch-terminal.sh missing" \
+    "run install.sh; dispatch-ticket calls this file at <repo-root>/scripts/herdr-watch-terminal.sh"
 fi
 
 # opencode — optional third provider; it never gates the required flow.

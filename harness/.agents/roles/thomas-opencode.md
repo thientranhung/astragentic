@@ -17,7 +17,7 @@ Follow the loaded instructions. Do not dispatch from memory or reasoning alone.
 After submitting the brief and confirming `working`, start the watcher immediately:
 
 ```bash
-~/.claude/scripts/herdr-watch-terminal.sh <pane-id> 3 3600 120
+<repo-root>/scripts/herdr-watch-terminal.sh <pane-id> 3 3600 120
 ```
 
 This is the ONLY way to monitor a dispatched pane. Do not write your own loop.
