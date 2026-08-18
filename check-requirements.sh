@@ -362,21 +362,48 @@ else
   done
   if git -C "$TARGET" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     ok "target is a git work tree (worktree isolation available)"
-    # AST-036: a worktree carries TRACKED content only, so an uncommitted payload is
-    # invisible to every Builder. Ask git what it tracks rather than what exists on disk.
+    # AST-036: a worktree carries CONTENT AT HEAD only, so an uncommitted payload is
+    # invisible to every Builder. A fixed four-path sample checked only with
+    # `ls-files` passed this even when tracked-but-modified — a file this repo HAS
+    # committed before, since edited on disk, still shows as "tracked" while a fresh
+    # worktree checkout still gets the OLD content (measured directly: this check
+    # reported OK for a payload with three new files and one edited file, none of
+    # them yet committed). Walk every payload file actually on disk instead of a
+    # sample, and check content against HEAD, not just presence in the index.
     if [ "$TARGET_READY" = "1" ]; then
-      UNTRACKED_PAYLOAD=0
-      for PATHNAME in .agents/roles/builder.md .claude/agents/builder.md \
-                      .agents/orchestrator.md docs/agents/issue-tracker.md; do
-        [ -e "$TARGET/$PATHNAME" ] || continue
-        git -C "$TARGET" ls-files --error-unmatch "$PATHNAME" >/dev/null 2>&1 || {
-          printf '         · untracked: %s\n' "$PATHNAME"; UNTRACKED_PAYLOAD=1; }
-      done
-      if [ "$UNTRACKED_PAYLOAD" -eq 0 ]; then
-        ok "harness payload is committed (visible inside Builder worktrees)"
+      if ! git -C "$TARGET" rev-parse --verify --quiet HEAD >/dev/null; then
+        miss "target repo has no commits yet" \
+          "every payload file is uncommitted by definition; commit at least once before dispatching a Builder"
       else
-        miss "harness payload is present but NOT tracked by git" \
-          "a worktree contains tracked content only, so a Builder dispatched now reads no contract at all (AST-036). Check .gitignore for .agents/ or .claude/ rules, then commit the payload"
+        UNTRACKED_PAYLOAD=0
+        STALE_PAYLOAD=0
+        PAYLOAD_PATHS=()
+        for D in .agents .claude .codex; do
+          [ -d "$TARGET/$D" ] || continue
+          while IFS= read -r -d '' F; do
+            PAYLOAD_PATHS+=("${F#"$TARGET"/}")
+          done < <(find "$TARGET/$D" -type f -print0)
+        done
+        for S in herdr-watchdog.sh herdr-watch-terminal.sh ticket-git-facts.sh; do
+          [ -f "$TARGET/scripts/$S" ] && PAYLOAD_PATHS+=("scripts/$S")
+        done
+        for PATHNAME in "${PAYLOAD_PATHS[@]}"; do
+          # A deliberately gitignored file under .claude/ or .codex/ (settings.local.json,
+          # a machine-local codex config) is not payload going stale — it was never meant
+          # to be committed at all, so flagging it here is a MISS nothing can resolve.
+          git -C "$TARGET" check-ignore -q -- "$PATHNAME" 2>/dev/null && continue
+          if ! git -C "$TARGET" ls-files --error-unmatch -- "$PATHNAME" >/dev/null 2>&1; then
+            printf '         · untracked: %s\n' "$PATHNAME"; UNTRACKED_PAYLOAD=$((UNTRACKED_PAYLOAD + 1))
+          elif ! git -C "$TARGET" diff --quiet HEAD -- "$PATHNAME" 2>/dev/null; then
+            printf '         · uncommitted change: %s\n' "$PATHNAME"; STALE_PAYLOAD=$((STALE_PAYLOAD + 1))
+          fi
+        done
+        if [ "$UNTRACKED_PAYLOAD" -eq 0 ] && [ "$STALE_PAYLOAD" -eq 0 ]; then
+          ok "harness payload is committed and matches HEAD (visible inside Builder worktrees)"
+        else
+          miss "harness payload has $UNTRACKED_PAYLOAD untracked and $STALE_PAYLOAD uncommitted-but-tracked file(s)" \
+            "a worktree checks out HEAD only, so a Builder dispatched now reads stale or missing contract content (AST-036). Commit the payload before dispatching"
+        fi
       fi
     fi
   else

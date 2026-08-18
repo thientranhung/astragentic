@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 78 entries (AST-001 … AST-079, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 79 entries (AST-001 … AST-080, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1627,3 +1627,27 @@ own logic, and `rm -rf`s it, deleting a live 2.2.9 instance's lock out from unde
 defect in the new lock; a hazard specific to any lock scheme changing type at a fixed path
 during the window before every copy referencing that path has been upgraded together.
 Bound: `harness/scripts/herdr-watchdog.sh`.
+
+### AST-080 — `check-requirements.sh`'s payload check was tracked-not-current · promoted 2026-08-18
+
+Both adapted projects' own Thomas hit this independently while finishing the same evening's
+watchdog upgrade (AST-078/079): `check-requirements.sh`'s TARGET axis checked a fixed
+four-path sample against `git ls-files --error-unmatch` and called it done. That proves a
+path is TRACKED — known to git's index from some earlier commit — not that its CONTENT
+matches HEAD. A file this repo has committed before, since edited on disk, still passes
+`ls-files` while a Builder's fresh worktree checkout still gets the OLD content at HEAD. Both
+projects were in exactly that state at the moment the check ran: reproduced directly against
+one project's own working tree, reported clean with three brand-new files (invisible to the
+four-path sample entirely) and ten edited-but-uncommitted files sitting right there.
+
+Fixed by walking every file actually on disk under the harness-owned top-level directories
+(`.agents`, `.claude`, `.codex`) plus the named harness scripts outside them — not a sample —
+and checking each one with `git diff --quiet HEAD`, not just `ls-files`. A deliberately
+gitignored file (`.claude/settings.local.json`, a machine-local Codex config) is skipped: it
+was never meant to be committed, so flagging it is a MISS nothing can resolve.
+
+**A check that asks "is this tracked" when the real question is "does this match HEAD" passes
+on exactly the input it exists to catch** — mid-upgrade, with the new fix sitting uncommitted
+on disk, which is the one moment this gate's answer actually matters to a Builder about to
+start.
+Bound: `check-requirements.sh`.

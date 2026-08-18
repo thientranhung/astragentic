@@ -1,3 +1,30 @@
+# Astraler Harness 2.2.11
+
+Fix: `check-requirements.sh`'s payload-committed check was a false green.
+
+Both adapted projects' own Thomas hit this independently while finishing tonight's watchdog
+upgrade: the check verified a fixed four-path sample was present in `git ls-files` and stopped
+there. That proves a path is TRACKED, not that its content matches HEAD — a file this repo has
+committed before, since edited on disk (exactly the state both projects were in, mid-upgrade),
+still passes `ls-files` while a Builder's fresh worktree checkout still gets the OLD content at
+HEAD. And the sample was four hardcoded paths, so a brand-new payload file the check had never
+heard of (this session added `reconcile-tracker`, for one) was invisible to it entirely.
+Reproduced directly against one project's own working tree: reported clean with three new files
+and ten edited-but-uncommitted files sitting right there (AST-036 restated, the false-green
+half of it).
+
+- The check now walks every file actually on disk under the harness-owned top-level directories
+  (`.agents`, `.claude`, `.codex`) plus the named harness scripts outside them, and checks each
+  one against `git diff --quiet HEAD`, not just `ls-files`. Untracked and uncommitted-but-tracked
+  are now reported and counted separately.
+- Files a project's own `.gitignore` deliberately excludes (`.claude/settings.local.json`, a
+  machine-local Codex config) are skipped — they were never meant to be committed, so flagging
+  them is a MISS nothing can resolve.
+
+## Upgrade from 2.2.10
+
+Copy `check-requirements.sh`.
+
 # Astraler Harness 2.2.10
 
 Fix: the reaper added in 2.2.9 exits the watchdog silently.
