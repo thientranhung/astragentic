@@ -21,27 +21,23 @@ and fails at the first cross-vendor call, looking like the provider being down.
 |---|---|
 | workspace-label | `<set-me>` |
 
-The workspace label is the single name for this project in herdr. Thomas reads it before
-any dispatch and uses it to find or create the project workspace.
+This project's herdr name, read before dispatch.
 
-**One project, one workspace.** `herdr workspace list` → match by label → reuse. No match
-→ `herdr workspace create --label <workspace-label>`. Never invent a nickname, never derive
-from the folder name, never create a second workspace for the same project.
+**One project, one workspace.** `herdr workspace list` → match label → reuse; no match →
+`herdr workspace create --label <workspace-label>`. Never a nickname, never a duplicate.
 
-**Tabs inside the workspace follow a fixed convention:**
+**Tabs:**
 
-| Creator | Label pattern | Example |
+| Creator | Pattern | Example |
 |---|---|---|
-| Thomas (own session) | `thomas` | `thomas` |
-| Dispatch builder | `ticket:<ticket-id>` | `ticket:TRA-139` |
-| Dispatch shaper | `spec:<effort-id>` | `spec:TRA-87` |
-| Dispatch QA | `qa:<ticket-id>` | `qa:TRA-125` |
-| Dispatch Rin | `rin:<ticket-id>` | `rin:TRA-125` |
-| Owner (manual) | anything | `deploy`, `ssh` |
+| Thomas | `thomas` | `thomas` |
+| Builder | `ticket:<id>` | `ticket:TRA-139` |
+| Shaper | `spec:<id>` | `spec:TRA-87` |
+| QA | `qa:<id>` | `qa:TRA-125` |
+| Rin | `rin:<id>` | `rin:TRA-125` |
+| Owner (manual) | anything | `deploy` |
 
-**Owner-created tabs are not yours.** Do not split into them, rename them, or close them.
-Always `herdr tab create` a new tab for a dispatch — never reuse an existing tab whose
-label does not match the pattern above.
+**Owner tabs are not yours** — never split, rename or close one; always create a fresh tab.
 
 ## Active assignments
 

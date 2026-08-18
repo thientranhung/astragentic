@@ -129,12 +129,26 @@ herdr workspace list
 ```
 
 Resolve the project workspace from `herdr workspace list` by matching the `workspace-label`
-field in `orchestrator.md`. Reuse an exact label match. No match → create one rooted at the
-repo:
+field in `orchestrator.md`.
+
+**A label of `<set-me>` or empty is a STOP, not a dispatch.** The owner has not named this
+project yet; ask rather than inventing or falling back to the folder name.
+
+**Exactly one match → reuse it. Two or more matches → STOP and ask the owner** which is the
+real one — silently picking the first hides a workspace a prior session already left running.
+No match → create one rooted at the repo:
 
 ```bash
 herdr workspace create --label "<workspace-label from orchestrator.md>" --cwd <repo-root> --no-focus
 ```
+
+Immediately after create, `herdr workspace list` again and confirm exactly one workspace now
+carries this label — a second session racing the same create can otherwise leave two. Record
+`workspace_managed_by_root=true` at workspace level right away: it is this dispatch's only
+durable statement that it owns the workspace, and cleanup below has no other source for it.
+Where the label already matched an existing workspace, read that workspace's own
+`workspace_managed_by_root` from its prior record — never assume it, and never overwrite an
+existing `false` with `true`.
 
 **One project, one workspace.** Never create a second workspace for the same project. Never
 invent a label — always read it from `orchestrator.md`.

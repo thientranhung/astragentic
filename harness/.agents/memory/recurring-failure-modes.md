@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 70 entries (AST-001 … AST-071, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 71 entries (AST-001 … AST-072, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1249,3 +1249,32 @@ filename grep called that artifact an orphan while a shipped skill wanted it eve
 grep for a name is not a search for a consumer**, so the registry is written by hand and the
 check only enforces that nothing escapes it.
 Bound: `harness/scripts/check-reachability.sh`.
+
+### AST-072 — Self-monitoring shipped without proof it cannot harm what it monitors · promoted 2026-08-18
+
+Two new mechanisms — a workspace-identity convention and a background watchdog — landed with
+their own reachability and word-budget checks green, and their own author read the shutdown
+logic as safe. A Codex adversarial-review pass, fired against the same commit before it was
+called done, returned `needs-attention` with three HIGH findings, none of them about whether
+the feature worked: whether it could hurt something it was never meant to touch.
+
+The sharpest one: the documented shutdown sent `kill -TERM` to a process group resolved from a
+bare PID, with no check that the PID still belonged to the watchdog and no guarantee the
+watchdog ever ran in its own process group to begin with. Launched as a plain background job
+from a non-interactive shell — exactly how a dispatched agent starts one — the watchdog shares
+its process group with the shell that launched it. Stop that watchdog and the signal lands on
+every process in that group, including the caller. A live test confirmed the mechanism: an
+unisolated background process, killed by group, took the launching shell down with it. The
+second and third findings were the same class from two other angles — a workspace resolved by
+list-then-create with no lock could be duplicated by two concurrent sessions, and an ownership
+field the cleanup path reads had no step left that ever wrote it.
+
+**The common shape: a coordination primitive is trusted the moment it starts, and audited only
+for whether it does its job — never for what it can do to the session running it.** Nothing in
+the existing reachability or staleness checks asks that question; they check that a thing is
+named, reachable and within budget, not that its failure mode is bounded. The fix in each case
+was the same move — verify identity before acting (process args before signaling, workspace
+list before *and after* create, an explicit ownership record instead of an inherited one) —
+and none of the three fixes changed what the feature does, only what it is allowed to do by
+accident.
+Bound: `harness/scripts/herdr-watchdog.sh`, `harness/.agents/skills/dispatch-ticket/SKILL.md`.

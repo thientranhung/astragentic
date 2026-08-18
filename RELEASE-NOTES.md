@@ -1,3 +1,47 @@
+# Astraler Harness 2.1.0
+
+Feature: one herdr workspace per project, and a self-monitoring watchdog for Thomas.
+
+`orchestrator.md` gains a `workspace-label` field and a fixed tab/pane-rename convention
+(`ticket:`, `spec:`, `qa:`, `rin:`), so Thomas resolves the same herdr workspace every session
+instead of matching loosely on project/epic. `dispatch-ticket` now STOPs on a placeholder or
+duplicate label instead of guessing, re-verifies uniqueness after create, and records
+`workspace_managed_by_root` explicitly rather than assuming cleanup can infer it.
+
+A new `harness/scripts/herdr-watchdog.sh` polls `herdr agent list` for the project's
+workspace and wakes Thomas — via the pane or, failing that, a desktop notification — on a
+blocked, stuck, watcher-lost or crashed dispatch during autonomous work.
+
+A cross-vendor arm pass fired against the first cut of this feature returned
+`needs-attention` before it shipped, with three HIGH findings — all of the same shape,
+captured as **AST-072**: a coordination primitive was trusted the moment it started, and
+never checked for what it could do to the session running it, only whether it worked.
+Fixed before release:
+
+- **Watchdog shutdown could kill an unrelated process group.** `stop` now verifies the
+  recorded PID's command line still names the watchdog before signaling it, and `start`
+  isolates into its own session (via `os.setsid()`, no `setsid` binary required) so its
+  process group is never shared with the shell that launched it. A live test confirmed the
+  before-state: an unisolated background watchdog, killed by group, took the launching shell
+  down with it.
+- **Workspace resolution had no lock and no duplicate check.** Two concurrent Thomas sessions
+  could each create a workspace for the same label. Creation now re-lists and confirms
+  exactly one match; two or more matches is a STOP, not a silent pick of the first.
+- **`workspace_managed_by_root` was read by cleanup but never written by resolution.** The
+  create path now records it immediately; the reuse path reads the existing record rather
+  than assuming a value.
+- The watchdog also gained a single-instance lock per workspace-label (a second `start`
+  refuses rather than racing the first), and stopped hard-coding Thomas's crash-detection to
+  the `claude` process name — it now reads the active runtime from `orchestrator.md`, so a
+  Codex- or opencode-dispatched Thomas is not falsely reported crashed.
+
+## Upgrade from 2.0.2
+
+Copy `orchestrator.md`'s new `## Workspace identity` section into your project's copy (it is
+scaffold — an install never overwrites your row values, but a new section needs a manual
+merge), fill in `workspace-label`, and copy `dispatch-ticket/SKILL.md` (both `.agents/` and
+`.claude/` copies) and the new `harness/scripts/herdr-watchdog.sh`.
+
 # Astraler Harness 2.0.2
 
 Patch: 5 skills missing from `.claude/skills/`.

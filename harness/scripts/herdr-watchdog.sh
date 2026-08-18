@@ -2,17 +2,26 @@
 # herdr-watchdog.sh — monitors harness agents in this project's workspace
 #
 # Usage: herdr-watchdog.sh [interval=120] [cooldown=900] [max-alerts/hr=6]
+#        herdr-watchdog.sh stop
 #
 # Run from project root. Reads workspace-label from .agents/orchestrator.md,
 # resolves the workspace, and only monitors agents whose pane belongs to it.
 # Multiple projects never interfere.
 #
-# PID file: /tmp/herdr-watchdog-<workspace-label>.pid
+# One instance per workspace-label: a second `start` refuses to run while a
+# live instance holds the lock. `stop` re-verifies the recorded PID is still
+# this script (or its caffeinate wrapper) before signaling — a stale or
+# reused PID is never signaled, so shutdown can never kill an unrelated
+# process group.
+#
+# Lock dir:  /tmp/herdr-watchdog-<workspace-label>.lock
+# PID file:  /tmp/herdr-watchdog-<workspace-label>.pid  (inside the lock dir)
+# Log file:  /tmp/herdr-watchdog-<workspace-label>.log
 #
 # Exit:
-#   0  — stopped by signal (TERM/INT)
-#   1  — workspace gone
+#   0  — stopped by signal, by `stop`, or workspace gone
 #   2  — config error (no orchestrator.md, no workspace-label, not in git repo)
+#   3  — another instance already holds the lock for this workspace
 set -u
 
 # ---------------------------------------------------------------------------
@@ -21,27 +30,91 @@ set -u
 PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || {
   echo "STOP: not in a git repo" >&2; exit 2
 }
+ORCH_FILE="$PROJECT_ROOT/.agents/orchestrator.md"
 
 WORKSPACE_LABEL=$(python3 -c "
-import re, sys
+import re
 try:
-    text = open('$PROJECT_ROOT/.agents/orchestrator.md').read()
+    text = open('$ORCH_FILE').read()
     m = re.search(r'workspace-label\s*\|\s*\x60([^\x60]+)\x60', text)
-    print(m.group(1) if m else '')
+    label = m.group(1) if m else ''
+    print('' if label == '<set-me>' else label)
 except Exception:
     print('')
 ")
 [ -z "$WORKSPACE_LABEL" ] && {
-  echo "STOP: no workspace-label in .agents/orchestrator.md" >&2; exit 2
+  echo "STOP: no workspace-label set in .agents/orchestrator.md" >&2; exit 2
 }
+
+LOCK_DIR="/tmp/herdr-watchdog-${WORKSPACE_LABEL}.lock"
+PID_FILE="$LOCK_DIR/pid"
+LOG="/tmp/herdr-watchdog-${WORKSPACE_LABEL}.log"
+
+# A recorded PID counts as "us" only if it is alive AND its command line
+# still names this script or its caffeinate wrapper — never trust the PID
+# number alone, since PIDs are reused.
+is_watchdog_process() {
+  local pid="$1" args
+  [ -n "$pid" ] || return 1
+  args=$(ps -o args= -p "$pid" 2>/dev/null) || return 1
+  [[ "$args" == *herdr-watchdog.sh* ]]
+}
+
+# ---------------------------------------------------------------------------
+# stop subcommand
+# ---------------------------------------------------------------------------
+if [ "${1:-}" = "stop" ]; then
+  pid=$(cat "$PID_FILE" 2>/dev/null || true)
+  if ! is_watchdog_process "$pid"; then
+    echo "no live watchdog for workspace $WORKSPACE_LABEL" >&2
+    rm -rf "$LOCK_DIR"
+    exit 0
+  fi
+  pgid=$(ps -o pgid= -p "$pid" 2>/dev/null | tr -d ' ')
+  if [ -n "$pgid" ]; then
+    kill -TERM -"$pgid" 2>/dev/null
+  else
+    kill -TERM "$pid" 2>/dev/null
+  fi
+  rm -rf "$LOCK_DIR"
+  exit 0
+fi
 
 INTERVAL="${1:-120}"
 COOLDOWN="${2:-900}"
 MAX_ALERTS_HOUR="${3:-6}"
 
 # ---------------------------------------------------------------------------
-# Self-caffeinate (same pattern as herdr-watch-terminal.sh)
+# Single-instance lock + isolated process group, before anything else runs.
+# mkdir is atomic on every filesystem herdr runs on, so it doubles as the
+# lock primitive — no flock/setsid binary required on macOS.
 # ---------------------------------------------------------------------------
+if [ -z "${HERDR_WATCHDOG_ISOLATED:-}" ]; then
+  if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+    existing_pid=$(cat "$PID_FILE" 2>/dev/null || true)
+    if is_watchdog_process "$existing_pid"; then
+      echo "STOP: watchdog already running for workspace $WORKSPACE_LABEL (pid $existing_pid)" >&2
+      exit 3
+    fi
+    # Stale lock from a crashed or killed-9 instance — reclaim it.
+    rm -rf "$LOCK_DIR"
+    mkdir "$LOCK_DIR" 2>/dev/null || { echo "STOP: could not acquire lock" >&2; exit 3; }
+  fi
+  export HERDR_WATCHDOG_ISOLATED=1
+  # Move into our own session (pgid = our own pid) so a later `stop` can
+  # signal the whole group without ever touching the caller's shell/pane.
+  # setsid(2) raises EPERM only when we are already a process-group leader
+  # — i.e. already isolated — so that failure is safe to ignore.
+  exec python3 -c '
+import os, sys
+try:
+    os.setsid()
+except OSError:
+    pass
+os.execvp(sys.argv[1], sys.argv[1:])
+' "$0" "$@"
+fi
+
 if [ -z "${HERDR_WATCHDOG_CAFFEINATED:-}" ] && [ -z "${HERDR_WATCHDOG_NO_CAFFEINATE:-}" ] \
    && command -v caffeinate >/dev/null 2>&1; then
   export HERDR_WATCHDOG_CAFFEINATED=1
@@ -51,15 +124,20 @@ fi
 # ---------------------------------------------------------------------------
 # State
 # ---------------------------------------------------------------------------
-PID_FILE="/tmp/herdr-watchdog-${WORKSPACE_LABEL}.pid"
-STATE_DIR="/tmp/herdr-watchdog-${WORKSPACE_LABEL}-$$"
+STATE_DIR="$LOCK_DIR/state"
 mkdir -p "$STATE_DIR"
-trap 'rm -rf "$STATE_DIR"; rm -f "$PID_FILE"; exit 0' INT TERM
-
 echo $$ > "$PID_FILE"
 echo 0  > "$STATE_DIR/alert_count"
 date +%s > "$STATE_DIR/alert_reset"
-LOG="/tmp/herdr-watchdog-${WORKSPACE_LABEL}.log"
+
+# Remove the lock on every exit path — signal, workspace-gone, or a bug
+# below — but only if it is still ours (a `stop` racing us may have already
+# reclaimed it for a fresh instance).
+cleanup() {
+  [ "$(cat "$PID_FILE" 2>/dev/null)" = "$$" ] && rm -rf "$LOCK_DIR"
+}
+trap cleanup EXIT
+trap 'exit 0' INT TERM
 
 log() { printf '[%s] %s\n' "$(date '+%H:%M:%S')" "$*" >> "$LOG"; }
 
@@ -118,7 +196,7 @@ send_alert() {
 # ---------------------------------------------------------------------------
 analyze() {
   python3 -c '
-import json, sys, subprocess, os
+import json, sys, subprocess, os, re
 
 raw = sys.stdin.read()
 try:
@@ -128,6 +206,18 @@ except (json.JSONDecodeError, KeyError):
 
 ws_label = "'"$WORKSPACE_LABEL"'"
 project_root = "'"$PROJECT_ROOT"'"
+
+# Only these pane-title prefixes are harness-owned dispatches. "builder:"
+# and "rin:" are what dispatch-ticket and review-with-rin actually rename
+# the pane to today (AST-072); "ticket:", "spec:" and "qa:" are the tab
+# label convention in orchestrator.md, kept here so a future QA/Shaper
+# dispatch that renames its pane to match is recognized without a further
+# change here. Anything else — including an owner tab created by hand —
+# is never treated as a dispatched pane.
+DISPATCH_PREFIXES = ("builder:", "ticket:", "spec:", "qa:", "rin:")
+
+def is_dispatched(name):
+    return any(name.startswith(p) for p in DISPATCH_PREFIXES)
 
 # Resolve workspace ID by label
 try:
@@ -168,15 +258,20 @@ tstatus = thomas["agent_status"]
 # Emit Thomas pane for alerting
 print(f"__THOMAS__|{tpane}")
 
-# THOMAS_CRASHED — agent entry exists but no claude process
+# THOMAS_CRASHED — agent entry exists but its runtime process is gone. The
+# expected process name is read from orchestrator.md, not hard-coded, since
+# Thomas may be dispatched on claude, codex or opencode (AST-072).
 if tstatus == "idle":
     try:
+        orch_text = open(os.path.join(project_root, ".agents", "orchestrator.md")).read()
+        m = re.search(r"^\|\s*thomas\s*\|\s*([a-zA-Z]+)\s*\|", orch_text, re.MULTILINE)
+        runtime = m.group(1) if m else "claude"
         pi = json.loads(subprocess.check_output(
             ["herdr", "pane", "process-info", "--pane", tpane],
             stderr=subprocess.DEVNULL, timeout=5))
         procs = pi["result"]["process_info"]["foreground_processes"]
-        if not any(p.get("name") == "claude" for p in procs):
-            print(f"THOMAS_CRASHED|{tpane}_crashed|workspace={ws_label} thomas={tpane} — no claude process")
+        if not any(p.get("name") == runtime for p in procs):
+            print(f"THOMAS_CRASHED|{tpane}_crashed|workspace={ws_label} thomas={tpane} — no {runtime} process")
             sys.exit(0)
     except Exception:
         pass
@@ -188,8 +283,7 @@ if tstatus == "working":
 # Thomas idle/done — check dispatched panes in this workspace
 dispatched = [a for a in ws_agents
               if a["pane_id"] != tpane
-              and not (a.get("terminal_title_stripped") or "").endswith("thomas")
-              and not (a.get("terminal_title_stripped") or "").endswith("watchdog")]
+              and is_dispatched(a.get("terminal_title_stripped") or "")]
 if not dispatched:
     sys.exit(0)
 
@@ -240,7 +334,7 @@ while true; do
     log "exiting — $msg"
     herdr notification show "WATCHDOG [$WORKSPACE_LABEL] stopped" \
       --body "$msg" --sound request 2>/dev/null
-    exit 1
+    exit 0
   fi
 
   # Extract Thomas pane for alerting

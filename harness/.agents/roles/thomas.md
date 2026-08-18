@@ -162,61 +162,25 @@ measured zero entries across a harness generation (AST-069).
 
 ## Watchdog — self-monitoring
 
-A background script that polls `herdr agent list` and wakes you when the dispatch system
-stalls. You start it when entering autonomous work and stop it when done or when the owner
-takes over for a direct conversation.
-
-### Starting the watchdog
+Polls `herdr agent list`; wakes you when dispatch stalls. Start on autonomous work; stop on
+owner takeover or shutdown.
 
 ```bash
-nohup scripts/herdr-watchdog.sh 120 900 6 &
+nohup scripts/herdr-watchdog.sh 120 900 6 &   # interval, cooldown, max-alerts/hr
+scripts/herdr-watchdog.sh stop
 ```
 
-The script reads `workspace-label` from `.agents/orchestrator.md`, resolves the workspace,
-and monitors only agents in it. PID file: `/tmp/herdr-watchdog-<workspace-label>.pid`.
-Log file: `/tmp/herdr-watchdog-<workspace-label>.log`.
+Reads `workspace-label` from `.agents/orchestrator.md`; `stop` verifies the PID first, to
+avoid signaling an unrelated process. PID file: `/tmp/herdr-watchdog-<workspace-label>.pid`.
 
-Arguments: `[interval=120] [cooldown=900] [max-alerts/hr=6]`.
+`WATCHDOG ALERT` messages come from the script, not the owner:
 
-### Stopping the watchdog
-
-```bash
-WS_LABEL=$(python3 -c "
-import re
-text = open('.agents/orchestrator.md').read()
-m = re.search(r'workspace-label\s*\|\s*\x60([^\x60]+)\x60', text)
-print(m.group(1) if m else '')
-")
-PID_FILE="/tmp/herdr-watchdog-${WS_LABEL}.pid"
-pid=$(cat "$PID_FILE" 2>/dev/null)
-if [ -n "$pid" ]; then
-  pgid=$(ps -o pgid= -p "$pid" 2>/dev/null | tr -d ' ')
-  [ -n "$pgid" ] && kill -TERM -"$pgid" 2>/dev/null
-  rm -f "$PID_FILE"
-fi
-```
-
-### When to start
-
-- The owner tells you to enable the watchdog.
-- You begin a long autonomous sequence (multiple dispatches without owner interaction).
-
-### When to stop
-
-- The owner tells you to disable it or wants a direct conversation.
-- All frontier tickets are done and no dispatched panes remain.
-- You are shutting down your session.
-
-### Responding to watchdog alerts
-
-Messages starting with `WATCHDOG ALERT` come from the script, not the owner.
-
-| Alert | Meaning | Action |
-|---|---|---|
-| `BLOCKED` | A dispatched pane is asking a question (status=blocked) | Read the pane, answer the question, restart watcher |
-| `STUCK` | All dispatched panes idle/done, no watcher, nothing working | Check the pane — process handback or re-dispatch |
-| `WATCHER_LOST` | A dispatched pane is working but its watcher died | Restart the watcher for that pane |
-| `THOMAS_CRASHED` | Your own pane lost its claude process | You will not see this — the script falls back to a desktop notification |
+| Alert | Action |
+|---|---|
+| `BLOCKED` | Pane asking a question — read, answer, restart watcher |
+| `STUCK` | No pane working, no watcher — inspect, handback or re-dispatch |
+| `WATCHER_LOST` | Pane working, watcher died — restart it |
+| `THOMAS_CRASHED` | Your runtime process is gone — desktop notification substitutes |
 
 ## Answers carry a source
 

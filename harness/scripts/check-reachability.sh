@@ -206,6 +206,9 @@ NOT_A_SKILL = {
     # An AGENT, not a skill — named in builder.md as the substitute a Builder must NOT
     # reach for when the simplify invocation errors (AST-055). Naming it is the point.
     "code-simplifier",
+    # A field in orchestrator.md's Workspace identity table, not a skill — the herdr
+    # workspace name Thomas resolves before any dispatch.
+    "workspace-label",
 }
 
 # --- 1. METHOD -> CONTRACT --------------------------------------------------------------
