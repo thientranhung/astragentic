@@ -35,6 +35,34 @@ if ! grep -qx "# \(Astragentic\|Astraler Harness\) $VERSION" "$RELEASE_NOTES"; t
   exit 1
 fi
 
+# Skills that exist in both .agents/skills/ and .claude/skills/ must be byte-identical,
+# except for known-divergent pairs that carry legitimate adapter differences. A fix landing
+# in one copy but not the other is invisible to the runtime that loads the other — measured
+# three times across two skills, each found in the field rather than at staging (AST-093).
+SKILL_SYNC_FAIL=0
+DIVERGENT_ALLOWLIST="codex-arm review-with-rin"
+for agents_skill in "$PAYLOAD/.agents/skills"/*/SKILL.md; do
+  [ -f "$agents_skill" ] || continue
+  skill_name="$(basename "$(dirname "$agents_skill")")"
+  claude_skill="$PAYLOAD/.claude/skills/$skill_name/SKILL.md"
+  [ -f "$claude_skill" ] || continue
+  # Skip known-divergent pairs
+  case " $DIVERGENT_ALLOWLIST " in *" $skill_name "*) continue ;; esac
+  if ! diff -q "$agents_skill" "$claude_skill" >/dev/null 2>&1; then
+    echo "ERROR: .agents/skills/$skill_name/SKILL.md differs from .claude/skills/$skill_name/SKILL.md" >&2
+    echo "  These copies must be identical (not in the divergent allowlist)." >&2
+    echo "  Diff:" >&2
+    diff "$agents_skill" "$claude_skill" | sed 's/^/    /' >&2
+    SKILL_SYNC_FAIL=1
+  fi
+done
+[ "$SKILL_SYNC_FAIL" -eq 0 ] || {
+  echo >&2
+  echo "Sync the copies before staging. A fix in one but not the other is unreachable" >&2
+  echo "on the runtime that loads the other copy." >&2
+  exit 1
+}
+
 TARGET="${1:-}"
 [ -n "$TARGET" ] || {
   echo "Usage: $0 <target-repo-path> [--project-name NAME]" >&2

@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 91 entries (AST-001 … AST-092, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 92 entries (AST-001 … AST-093, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1975,3 +1975,25 @@ Fixed in both places:
 Thomas's self-added habit of running `git status` before trusting pane status was the only
 thing that caught this five times. That habit is now in the contract.
 Bound: builder.md, dispatch-ticket/SKILL.md.
+
+### AST-093 — A fix landing in .agents/skills/ but not .claude/skills/ is unreachable on the runtime that loads the other copy · promoted 2026-08-18
+
+Third instance of this pair diverging, reported independently by both adapted-project Thomas
+instances on the same release (2.2.20). The AST-092 dirty-worktree guard was added to
+`.agents/skills/dispatch-ticket/SKILL.md` but not to `.claude/skills/dispatch-ticket/SKILL.md`.
+Claude Code scans `.claude/skills/` for discovery, so a Claude-root Thomas loads the copy
+without the guard — the fix exists on disk and is out of reach.
+
+Previous instances: 2.2.18 dropped the `addr-ok` annotation in builder-claude.md (a single
+file, not a pair — different shape). review-with-rin `.claude` copy carried a stale launcher
+matrix from a release earlier. Two different skills, same failure class: a fix applied to one
+copy of a paired file, with nothing in the release process comparing the pair.
+
+Fixed by adding a sync check to `install.sh` that runs before staging. Every skill present in
+both `.agents/skills/` and `.claude/skills/` must be byte-identical, except for named pairs on
+a divergent allowlist (`codex-arm`, `review-with-rin`). The allowlist documents the reason
+each pair legitimately differs. A divergence not on the list blocks staging with a diff.
+
+"Remember to sync both copies" failed twice in three releases. A mechanical check at the gate
+cannot be forgotten.
+Bound: install.sh.

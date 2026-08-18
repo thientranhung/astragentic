@@ -1,3 +1,24 @@
+# Astragentic 2.2.21
+
+Fix: the AST-092 dirty-worktree guard landed in `.agents/skills/dispatch-ticket/SKILL.md`
+but not in `.claude/skills/dispatch-ticket/SKILL.md`. Claude Code loads the `.claude` copy,
+so the guard was unreachable on every Claude-root dispatch. Reported independently by both
+adapted-project Thomas instances on 2.2.20 — third instance of this pair diverging (AST-093).
+
+"Remember to sync both copies" failed twice in three releases. Fixed by adding a mechanical
+sync check to `install.sh`: every skill present in both `.agents/skills/` and `.claude/skills/`
+must be byte-identical, except for named pairs on a divergent allowlist (`codex-arm`,
+`review-with-rin`). A divergence not on the list blocks staging with a diff.
+
+- `.claude/skills/dispatch-ticket/SKILL.md`: synced with `.agents` copy (AST-092 guard)
+- `install.sh`: skill-sync check added, runs before staging
+- `recurring-failure-modes.md`: AST-093 added (92 entries)
+
+## Upgrade from 2.2.20
+
+Copy `.claude/skills/dispatch-ticket/SKILL.md` (the AST-092 guard was missing from it).
+The `install.sh` sync check is package-side and does not need copying into adapted projects.
+
 # Astragentic 2.2.20
 
 Fix: Builder stops after writing code but before committing — pane reads `done`, Thomas's
