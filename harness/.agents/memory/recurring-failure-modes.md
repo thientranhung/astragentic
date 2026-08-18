@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 74 entries (AST-001 … AST-075, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 75 entries (AST-001 … AST-076, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1370,4 +1370,37 @@ GROUP, because on macOS the script re-execs under `caffeinate`, so signalling on
 process listing shows leaves the working half alive — independent confirmation, from a second
 project, of the exact class AST-072 already fixed by isolating into a dedicated group before
 that PID is ever written down.
+Bound: `harness/scripts/herdr-watchdog.sh`.
+
+### AST-076 — AST-072's own fix left a window between acquiring the lock and recording who holds it · promoted 2026-08-18
+
+Found by an adapted project's own Thomas, dispatched to run the cross-vendor arm against the
+2.2.0 fold-in before it was adopted there — the review-before-adopt discipline catching a
+defect in the very payload it was reviewing, one commit downstream of where AST-072 first
+shipped it.
+
+AST-072 fixed the single-instance lock by having `mkdir "$LOCK_DIR"` double as the lock
+primitive, atomic and portable. What it missed: the PID written into that lock as proof of
+ownership was not available until two re-exec hops later — first into a `setsid` wrapper for
+process-group isolation, then into `caffeinate`, which itself forked a new child to run the
+script, so the PID that finally reached `echo $$ > "$PID_FILE"` was neither the PID that ran
+`mkdir` nor any PID visible before that second hop completed. Between `mkdir` succeeding and
+that write landing, `LOCK_DIR` existed with no matching `PID_FILE` — and the script's own
+stale-lock recovery path reads exactly that state as "a crashed instance, safe to reclaim."
+
+A second `start` landing in that window doesn't just fail to be blocked — it **evicts the
+first instance's lock**, `rm -rf`s the directory the first instance is still mid-setup inside,
+and re-creates it as its own. Whichever of the two writes `PID_FILE` last wins the record;
+both keep running. Measured: ten `start` invocations fired at once with the original ordering
+would, on an unlucky interleaving, have left more than one watchdog alive — each one polling,
+alerting, and racing the other's cooldown state. Restructured to fire the isolation hop
+BEFORE the lock is acquired, so `$$` is already final and stable when `mkdir` succeeds, and
+`caffeinate` is launched as a background helper (`caffeinate -i -w $$ &`) rather than exec'd
+into — a helper we start, never a wrapper that forks a second, different-PID copy of us out
+of our own control. Re-measured the same way after the fix: ten concurrent `start`
+invocations, exactly one survivor, nine correctly refused.
+
+**A lock is only as good as the record it produces.** `mkdir` being atomic proved only that
+one process won the directory; it said nothing about how long that process took to prove it
+was the one that won, and every instruction between the two was a window nobody had measured.
 Bound: `harness/scripts/herdr-watchdog.sh`.

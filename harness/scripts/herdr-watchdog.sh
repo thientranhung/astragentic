@@ -69,13 +69,18 @@ LOG="/tmp/herdr-watchdog-${WORKSPACE_LABEL}.log"
 HEARTBEAT_FILE="$LOCK_DIR/alive"
 
 # A recorded PID counts as "us" only if it is alive AND its command line
-# still names this script or its caffeinate wrapper — never trust the PID
-# number alone, since PIDs are reused.
+# still names this script — never trust the PID number alone, since PIDs are
+# reused. One `ps` call for both fields, not two: a second call moments
+# later is a second chance for the process to have already exited between
+# them, and the pgid is needed only when the identity check already passed.
+WATCHDOG_PGID=""
 is_watchdog_process() {
-  local pid="$1" args
+  local pid="$1" line
   [ -n "$pid" ] || return 1
-  args=$(ps -o args= -p "$pid" 2>/dev/null) || return 1
-  [[ "$args" == *herdr-watchdog.sh* ]]
+  line=$(ps -o pgid=,args= -p "$pid" 2>/dev/null) || return 1
+  [[ "$line" == *herdr-watchdog.sh* ]] || return 1
+  WATCHDOG_PGID="${line%% *}"
+  return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -88,9 +93,8 @@ if [ "${1:-}" = "stop" ]; then
     rm -rf "$LOCK_DIR"
     exit 0
   fi
-  pgid=$(ps -o pgid= -p "$pid" 2>/dev/null | tr -d ' ')
-  if [ -n "$pgid" ]; then
-    kill -TERM -"$pgid" 2>/dev/null
+  if [ -n "$WATCHDOG_PGID" ]; then
+    kill -TERM -"$WATCHDOG_PGID" 2>/dev/null
   else
     kill -TERM "$pid" 2>/dev/null
   fi
@@ -103,24 +107,16 @@ COOLDOWN="${2:-900}"
 MAX_ALERTS_HOUR="${3:-6}"
 
 # ---------------------------------------------------------------------------
-# Single-instance lock + isolated process group, before anything else runs.
-# mkdir is atomic on every filesystem herdr runs on, so it doubles as the
-# lock primitive — no flock/setsid binary required on macOS.
+# Isolate into our own process group FIRST, before the lock exists at all.
+# setsid(2) replaces the process image in place (same PID throughout), so
+# this is the only re-exec in the whole startup path — from here on, $$ is
+# the PID that will run the main loop, and it never changes again. Doing
+# this before acquiring the lock is what makes the lock's own PID_FILE write
+# race-free: there is no second hop left that could still be in flight when
+# a concurrent `start` checks it.
 # ---------------------------------------------------------------------------
 if [ -z "${HERDR_WATCHDOG_ISOLATED:-}" ]; then
-  if ! mkdir "$LOCK_DIR" 2>/dev/null; then
-    existing_pid=$(cat "$PID_FILE" 2>/dev/null || true)
-    if is_watchdog_process "$existing_pid"; then
-      echo "STOP: watchdog already running for workspace $WORKSPACE_LABEL (pid $existing_pid)" >&2
-      exit 3
-    fi
-    # Stale lock from a crashed or killed-9 instance — reclaim it.
-    rm -rf "$LOCK_DIR"
-    mkdir "$LOCK_DIR" 2>/dev/null || { echo "STOP: could not acquire lock" >&2; exit 3; }
-  fi
   export HERDR_WATCHDOG_ISOLATED=1
-  # Move into our own session (pgid = our own pid) so a later `stop` can
-  # signal the whole group without ever touching the caller's shell/pane.
   # setsid(2) raises EPERM only when we are already a process-group leader
   # — i.e. already isolated — so that failure is safe to ignore.
   exec python3 -c '
@@ -133,10 +129,32 @@ os.execvp(sys.argv[1], sys.argv[1:])
 ' "$0" "$@"
 fi
 
-if [ -z "${HERDR_WATCHDOG_CAFFEINATED:-}" ] && [ -z "${HERDR_WATCHDOG_NO_CAFFEINATE:-}" ] \
-   && command -v caffeinate >/dev/null 2>&1; then
-  export HERDR_WATCHDOG_CAFFEINATED=1
-  exec caffeinate -i -- "$0" "$@"
+# ---------------------------------------------------------------------------
+# Single-instance lock. mkdir is atomic on every filesystem herdr runs on,
+# so it doubles as the lock primitive — no flock binary required on macOS.
+# PID_FILE is written IMMEDIATELY after mkdir succeeds, in this same PID,
+# with no exec, fork or other hop between them (AST-076: a caffeinate that
+# forked a child at this point, instead of being started as a background
+# helper below, is exactly what left that window open before).
+# ---------------------------------------------------------------------------
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+  existing_pid=$(cat "$PID_FILE" 2>/dev/null || true)
+  if is_watchdog_process "$existing_pid"; then
+    echo "STOP: watchdog already running for workspace $WORKSPACE_LABEL (pid $existing_pid)" >&2
+    exit 3
+  fi
+  # Stale lock from a crashed or killed-9 instance — reclaim it.
+  rm -rf "$LOCK_DIR"
+  mkdir "$LOCK_DIR" 2>/dev/null || { echo "STOP: could not acquire lock" >&2; exit 3; }
+fi
+echo $$ > "$PID_FILE"
+
+# caffeinate as a background helper we launch, never a wrapper we exec into.
+# `-w $$` makes it wait on and track our own PID and exit on its own once we
+# do — no child of it ever becomes the process this script's identity
+# depends on, so there is no second PID for PID_FILE to race against.
+if [ -z "${HERDR_WATCHDOG_NO_CAFFEINATE:-}" ] && command -v caffeinate >/dev/null 2>&1; then
+  caffeinate -i -w $$ &
 fi
 
 # ---------------------------------------------------------------------------
@@ -144,7 +162,6 @@ fi
 # ---------------------------------------------------------------------------
 STATE_DIR="$LOCK_DIR/state"
 mkdir -p "$STATE_DIR"
-echo $$ > "$PID_FILE"
 echo 0  > "$STATE_DIR/alert_count"
 date +%s > "$STATE_DIR/alert_reset"
 HEARTBEAT_EVERY="${HEARTBEAT_EVERY:-5}"

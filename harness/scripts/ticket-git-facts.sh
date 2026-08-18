@@ -38,12 +38,11 @@
 #   worktree          a checked-out worktree for that branch
 set -uo pipefail
 
-BASE="${BASE_BRANCH:-main}"
-# No default on purpose. A bare [A-Z]+-[0-9]+ sweep also catches ADR ids, spec
-# ids and any other kebab-tagged history the repo carries as noise that is not
-# a tracker ticket — a live project's first run returned a third noise on
-# exactly this mistake. Guessing a prefix produces a confident wrong answer;
-# an unset value is a STOP.
+# No default on TICKET_PREFIX on purpose. A bare [A-Z]+-[0-9]+ sweep also
+# catches ADR ids, spec ids and any other kebab-tagged history the repo
+# carries as noise that is not a tracker ticket — a live project's first run
+# returned a third noise on exactly this mistake. Guessing a prefix produces
+# a confident wrong answer; an unset value is a STOP.
 PREFIX="${TICKET_PREFIX:?TICKET_PREFIX must be set to the tracker prefix this project uses, e.g. TRA}"
 # A literal prefix only — no regex metacharacters, since PREFIX is interpolated
 # straight into grep -E patterns below. Rejects the unset-but-truthy footgun too
@@ -54,12 +53,18 @@ case "$PREFIX" in
 esac
 cd "$(git rev-parse --show-toplevel)" || exit 1
 
-if ! git rev-parse --verify --quiet "$BASE" >/dev/null; then
-  echo "ticket-git-facts: base branch '$BASE' does not exist" >&2
-  exit 1
-fi
+# BASE_BRANCH does default, unlike TICKET_PREFIX: origin's default branch is
+# a real fact this repo already knows, not a guess across an open namespace.
+# A live project on `master` measured the old hardcoded `main` failing its
+# very first run — auto-detect first, and "main" is the last resort only
+# when origin/HEAD is not set (a fresh clone before its first fetch).
+BASE="${BASE_BRANCH:-$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's#^origin/##')}"
+BASE="${BASE:-main}"
 
 # Ticket ids: from argv, else every id named in a subject on the base branch.
+# Validated against PREFIX before BASE is even checked, so a caller who got
+# both wrong sees the more specific error first rather than only ever
+# learning about the base branch.
 #
 # NOT `mapfile`. macOS ships bash 3.2 (2007, a GPLv3 licensing decision) which
 # has no `mapfile` and no `readarray` — a live project's first real run died on
@@ -77,7 +82,14 @@ if [ "$#" -gt 0 ]; then
     }
   done
   tickets="$*"
-else
+fi
+
+if ! git rev-parse --verify --quiet "$BASE" >/dev/null; then
+  echo "ticket-git-facts: base branch '$BASE' does not exist (set BASE_BRANCH to override the default)" >&2
+  exit 1
+fi
+
+if [ -z "$tickets" ]; then
   tickets=$(
     git log "$BASE" --format='%s' \
       | grep -oE "${PREFIX}-[0-9]+" \

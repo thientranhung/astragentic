@@ -63,7 +63,7 @@ Rin has **no fallback row** — an absent row is the correct state and adaptatio
 it: no root runtime that can host the gate means STOP, not a degraded gate. Sandboxes stay
 as they are; an enforced read-only posture is what makes such a reviewer worth having.
 
-**Pane mechanics.** Rin gets its OWN tab `rin:<ticket-id>` and its OWN **detached**
+**Pane mechanics.** Rin gets its OWN tab `rin:<artifact-key>` and its OWN **detached**
 worktree at the reviewed SHA, in the same workspace — never a second pane in a ticket tab,
 and never the Builder's worktree (sharing it destroys independence and puts a shell-capable
 reviewer inside the author's checkout).
@@ -86,13 +86,17 @@ GATE_FILE="$GATE_ROOT/<artifact-key>-<short-sha>-$GATE_TOKEN.md"
 git worktree add --detach \
   <repo-parent>/<repo-dir-name>.worktrees/gate-<artifact-key> <reviewed-sha>
 git worktree list          # verify the exact path before anything uses it (AST-028)
-herdr tab create --workspace <workspace-id> --label "rin:<ticket-id>" \
+herdr tab create --workspace <workspace-id> --label "rin:<artifact-key>" \
   --cwd <gate-worktree> --no-focus
 herdr pane rename <returned-root-pane-id> "rin:<artifact-key>"
 herdr pane get <returned-root-pane-id>    # foreground_cwd gate — mismatch is STOP (AST-028)
 herdr agent start "rin-<artifact-key>" --pane <returned-root-pane-id> --timeout 60000 \
-  --kind <rin row: Runtime> -- <argv from the dispatch-ticket launcher matrix>
+  --kind <rin row: Runtime> -- <argv from the runtime-specific dispatch-ticket skill>
 ```
+
+**The argv comes from the runtime-specific dispatch skill** (`dispatch-ticket-claude`,
+`dispatch-ticket-codex` or `dispatch-ticket-opencode`), resolved from the `rin` row's Runtime
+column in `orchestrator.md`. No adapter for the needed runtime → STOP and tell the owner.
 
 **The brief names `$GATE_FILE` as an absolute path.** Rin cannot create a nested directory
 and cannot invent the path: you create the directory, you name the file.
@@ -117,10 +121,8 @@ Every check in that block is fail-closed, and each earns its place:
   `stat -f` (BSD) versus `stat -c` (GNU). It also makes concurrent dispatchers safe: two
   roots gating the same SHA get different paths and cannot read or delete each other's.
 
-The argv comes from the launcher matrix in `dispatch-ticket` (rows carry runtime, model and
-effort; never argv). No adapter for the needed runtime → STOP and tell the owner. Gates run
-without `--dangerously-skip-permissions`. The brief carries everything §1 lists, plus
-`$GATE_FILE`, plus an explicit "stay inside this worktree" line.
+Gates run without `--dangerously-skip-permissions`. The brief carries everything §1 lists,
+plus `$GATE_FILE`, plus an explicit "stay inside this worktree" line.
 
 Cleanup is Thomas's, after the report: **collect and verify `$GATE_FILE` FIRST** (§3) →
 `herdr tab close <gate-tab-id>` → confirm the pane is gone → `git worktree remove

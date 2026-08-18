@@ -1,3 +1,39 @@
+# Astraler Harness 2.2.1
+
+Fix: a real double-watchdog race, plus five documentation/UX defects, found by an adapted
+project's own Thomas dispatched to run the cross-vendor arm against 2.2.0 before adopting it.
+
+- **A real race, not a review nitpick (AST-076).** AST-072's single-instance lock (`mkdir`
+  as the atomic primitive) had a window between the lock existing and the owning PID being
+  recorded — two re-exec hops wide, since `caffeinate` forked a new, different-PID child to
+  run the script. A `start` landing in that window read the lock as stale and reclaimed it,
+  running a second watchdog alongside the first. Measured before the fix: ten concurrent
+  `start` calls could leave more than one alive. Fixed by moving the isolation hop before the
+  lock is acquired and launching `caffeinate` as a background helper (`-w $$`) instead of
+  exec'ing into it — no hop left where the final PID is still unknown. Re-measured: ten
+  concurrent `start` calls, exactly one survivor, nine correctly refused.
+- `thomas.md`'s Watchdog section named the wrong PID path (missed the `.lock/` AST-072
+  introduced) and never mentioned the heartbeat file at all — the one role that owns this
+  script had no documented way to check it.
+- `ticket-git-facts.sh` defaulted `BASE_BRANCH` to `main` unconditionally; a repo on `master`
+  would fail its first real run. Now auto-detects `origin/HEAD`, falling back to `main` only
+  when that is unset. Ticket-id validation also now runs before the base-branch check, so a
+  caller with both wrong sees the more specific error first.
+- `.claude/skills/review-with-rin/SKILL.md` had drifted from its `.agents/` twin: it still
+  described argv as coming from a "launcher matrix in `dispatch-ticket`" — the matrix moved
+  to the runtime-specific companion skills a release ago. Pre-existing, unrelated to this
+  cycle's changes, caught in the same pass. Also fixed: the tab-create line labeled Rin's tab
+  `rin:<ticket-id>`, inconsistent with the pane rename two lines below and wrong for a spec
+  gate, which has no ticket id — both now read `rin:<artifact-key>`, the identifier the skill
+  already resolves first and uses everywhere else.
+- `herdr-watchdog.sh`'s `stop` path made two separate `ps` calls where the second existed
+  only to read a field the first call could have returned too — combined into one.
+
+## Upgrade from 2.2.0
+
+Copy `herdr-watchdog.sh`, `ticket-git-facts.sh`, `thomas.md`'s Watchdog section, and both
+`review-with-rin/SKILL.md` copies.
+
 # Astraler Harness 2.2.0
 
 Feature: reconcile the tracker against git, and a watchdog you can check.
