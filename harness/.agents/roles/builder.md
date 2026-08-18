@@ -109,6 +109,18 @@ git commit -m '<ticket-id>: <what this does>'
 git push origin <ticket-branch>
 ```
 
+**Before returning, verify your own phases completed.** Count simplify markers on your branch:
+
+```bash
+git log <base>..HEAD --grep '^simplify(increment):' --oneline
+```
+
+If the count is zero, you skipped the simplify pass — go back and run it. Two measured
+instances of Builders who committed, pushed, and returned correctly but never ran simplify:
+pane reads `done`, worktree is clean, branch is pushed, and Thomas's merge check catches
+it (AST-094). Same shape as AST-092 (work written but not committed) — a step that does not
+self-check is a step that can be silently skipped.
+
 Then return to Thomas: the branch, the final SHA, which acceptance criteria pass, the
 exact validation commands and their output, the `simplify(increment):` marker, the browser
 evidence for any surface you changed (or the named skip), and anything you reported rather than

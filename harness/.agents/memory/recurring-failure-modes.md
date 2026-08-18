@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 92 entries (AST-001 … AST-093, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 93 entries (AST-001 … AST-094, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1997,3 +1997,33 @@ each pair legitimately differs. A divergence not on the list blocks staging with
 "Remember to sync both copies" failed twice in three releases. A mechanical check at the gate
 cannot be forgotten.
 Bound: install.sh.
+
+### AST-094 — Builder commits and pushes correctly but silently skips the simplify pass · promoted 2026-08-18
+
+Measured by nizzy-ecom Thomas on 2.2.21: two tickets dispatched in parallel (TRA-198,
+TRA-192), both Builders committed, pushed, returned with clean worktrees and pane status
+`done` — but `git log main..HEAD --grep '^simplify(increment):'` returned zero on both.
+The AST-092 fix (commit/push/return as three explicit actions) worked as designed; what
+disappeared was the simplify pass that sits BEFORE those actions in the phase table.
+
+For comparison: two tickets dispatched immediately before (TRA-185, TRA-186), same project,
+same orchestrator row, same runtime/model, each carried 3-4 simplify markers with correct
+`Pass:` lines. The 2.2.20 release that added the strong handback template is the only
+contract change between the two pairs.
+
+Hypothesis (correlation, not causation, n=2): a phase endpoint with a strong template and
+three explicit verbs can become the target a Builder aims for, causing earlier phases without
+equivalent templates to be skipped. Not proven — both Builders may independently have been
+careless. Thomas asked both Builders directly what they read or aimed for at the point of
+stopping; those answers are pending and would be the only data from inside the turn.
+
+Regardless of cause, nothing in the pipeline self-detected this. Pane status, worktree
+cleanliness, branch push, and commit messages all read as correct. Only Thomas's artifact
+check at merge (the grep for `^simplify(increment):`) caught it. Same class as AST-092:
+a step that does not self-check is a step that can be silently skipped.
+
+Fixed by adding a self-check in builder.md's "Handing back" section: before returning, the
+Builder runs the same grep Thomas would run and verifies the count is non-zero. Zero is STOP
+— go back and run simplify. The guard sits between push and return, so the Builder cannot
+reach the return-to-Thomas step without passing it.
+Bound: builder.md.

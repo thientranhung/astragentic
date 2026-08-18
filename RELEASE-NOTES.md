@@ -1,3 +1,18 @@
+# Astragentic 2.2.22
+
+Fix: Builder can commit, push, and return correctly while silently skipping the simplify
+pass. Measured on two parallel tickets (TRA-198, TRA-192) on nizzy-ecom: pane `done`,
+worktree clean, branch pushed, zero simplify markers. Only Thomas's merge-time grep caught
+it. Same class as AST-092 — a step that does not self-check can be silently skipped (AST-094).
+
+- builder.md: self-check added to "Handing back" — before returning, the Builder runs
+  `git log <base>..HEAD --grep '^simplify(increment):'` and verifies non-zero. Zero is STOP.
+- recurring-failure-modes.md: AST-094 added (93 entries)
+
+## Upgrade from 2.2.21
+
+Copy `.agents/roles/builder.md`. The ledger carries AST-094.
+
 # Astragentic 2.2.21
 
 Fix: the AST-092 dirty-worktree guard landed in `.agents/skills/dispatch-ticket/SKILL.md`
