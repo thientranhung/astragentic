@@ -1,4 +1,4 @@
-# Astraler Harness 2.0.0
+# Astraler Harness 2.0.2
 
 An operating framework that lets **several agents build software together on an existing
 codebase**.
@@ -41,6 +41,21 @@ and tickets run in one unbroken context, and each `implement` runs in a fresh on
 | **Rin** — reviewer | per milestone | second opinion, artifact verification; owns the arm's standard |
 | **QA** | per walk | exercises the RUNNING product — interface, journeys, API contracts, data as experienced |
 
+```mermaid
+flowchart LR
+    A["wayfinder\nfoggy, > 1 session"] --> C[to-spec]
+    B["grill-with-docs\nfits 1 session"] --> C
+    C --> D[to-tickets]
+    D --> E["implement\n(one per ticket, fresh session)"]
+    E --> F["mattpocock-skills:code-review"]
+    F -.->|blocking finding| Q[to-questionnaire] -.-> Owner((owner))
+
+    style A fill:#e8f0fe,stroke:#4285f4
+    style B fill:#e8f0fe,stroke:#4285f4
+    style E fill:#fef7e0,stroke:#f9ab00
+    style F fill:#e6f4ea,stroke:#34a853
+```
+
 Every agent reaches the craft layer directly, since those skills are model-invoked:
 `grilling`, `tdd`, `mattpocock-skills:code-review`, `codebase-design`, `domain-modeling`, `research`,
 `prototype`, `diagnosing-bugs`, `wizard`, `resolving-merge-conflicts`. Installing the plugin
@@ -58,12 +73,68 @@ worktree and pane, so several Builders work the frontier at once under the isola
 carried over from the prior package. That is the throughput mechanism, and
 `dispatch-ticket` is where it lives.
 
+**Each project resolves to exactly one herdr workspace.** `orchestrator.md` carries the
+`workspace-label`; Thomas matches or creates that workspace before any dispatch, and every
+dispatched pane lands in a tab named by role — `ticket:<id>`, `spec:<id>`, `qa:<id>`,
+`rin:<id>` — so owner-created tabs are never split into, renamed or closed. A background
+watchdog, `herdr-watchdog.sh`, can poll that workspace during autonomous dispatch and wake
+Thomas on a blocked or stalled pane.
+
+```mermaid
+flowchart TB
+    Tracker[("Tracker\nfrontier query: blockers done")]
+
+    subgraph WS["herdr workspace — one per project (workspace-label)"]
+        T["tab: thomas\nresident router session"]
+        T1["tab: ticket:TRA-139\nBuilder · own worktree · own branch"]
+        T2["tab: ticket:TRA-142\nBuilder · own worktree · own branch"]
+        T3["tab: spec:TRA-87\nShaper · unbroken session"]
+        T4["tab: qa:TRA-125\nQA · running app, own worktree"]
+        T5["tab: rin:TRA-125\nRin · detached worktree, read-only"]
+    end
+
+    Tracker -->|claim ticket, keeps sessions apart| T
+    T -->|dispatch-ticket| T1
+    T -->|dispatch-ticket| T2
+    T -->|dispatch-ticket| T3
+    T -->|dispatch-qa-walk| T4
+    T -->|review-with-rin| T5
+    Watchdog(["herdr-watchdog.sh\npolls agent list"]) -.->|wakes on blocked/stuck| T
+
+    style T fill:#e8f0fe,stroke:#4285f4
+    style T1 fill:#fef7e0,stroke:#f9ab00
+    style T2 fill:#fef7e0,stroke:#f9ab00
+    style T3 fill:#fce8e6,stroke:#ea4335
+    style T5 fill:#e6f4ea,stroke:#34a853
+```
+
+Several Builders sit in the same workspace but never the same worktree — that is what lets
+them work the frontier concurrently without colliding.
+
 **Review keeps its weight and drops the loop.** Per ticket: `mattpocock-skills:code-review`'s two axes in one
 pass, a per-increment simplify pass leaving a `simplify(increment):` marker commit, and the
 cross-vendor arm before the merge — no ticket merges without one. At a milestone: one Rin
 round, verifying the artifact and that the process left its traces. Once more at the spec,
 before tickets are cut, and once over the slice when it closes. A design-level blocking
 finding escalates to the owner through `to-questionnaire` rather than to another round.
+
+```mermaid
+flowchart LR
+    subgraph PT["Per ticket — every ticket, no exceptions"]
+        direction LR
+        R1["code-review\nStandards + Spec axes"] --> R2["simplify pass\nsimplify(increment): commit"] --> R3["cross-vendor arm\nCodex ↔ Claude"]
+    end
+    PT --> M["merge"]
+    M --> RM{"milestone,\nspec, or slice close?"}
+    RM -->|yes| Rin["Rin gate\nadversarial / code-review mode\nverifies artifact + process traces"]
+    RM -->|no| Next["next ticket"]
+    Rin -->|design-level blocker| Owner(("owner\nvia to-questionnaire"))
+
+    style R1 fill:#e6f4ea,stroke:#34a853
+    style R2 fill:#e6f4ea,stroke:#34a853
+    style R3 fill:#e6f4ea,stroke:#34a853
+    style Rin fill:#fce8e6,stroke:#ea4335
+```
 
 **Answers carry a source.** Agents resolve the Align frontier themselves, answering from the
 codebase, a prior ADR, `research`, `prototype`, or a second opinion — and recording which. An
@@ -129,7 +200,8 @@ harness/                          the payload staged into a target repo
       thomas.md · thomas-{claude,codex,opencode}.md
       rin.md · rin-{claude,codex,opencode}.md
       shaper.md · qa.md             runtime-neutral, no supplements
-    orchestrator.md               role → runtime/model/effort; the owner's file
+    orchestrator.md               role → runtime/model/effort + workspace/tab identity;
+                                  the owner's file
     skills/
       dispatch-ticket/            shared protocol — binding, worktree, brief, review
       dispatch-ticket-claude/     Claude launcher + verification
@@ -153,6 +225,8 @@ harness/                          the payload staged into a target repo
     recurring-failure-modes.md    70 measured failure modes; append-only, the evidence base
   scripts/
     herdr-watch-terminal.sh       turn watcher with a real start guard
+    herdr-watchdog.sh             background poll of `herdr agent list`; wakes Thomas on a
+                                  blocked/stuck pane during autonomous dispatch
     docs-staleness-audit.sh       always-on word budgets, and numbers docs state about themselves
     check-reachability.sh         eight checks: does the method the docs describe
                                   exist, is it reachable, and is it addressed correctly?

@@ -128,14 +128,16 @@ git worktree list   # verify the new entry is exactly <worktree-path>
 herdr workspace list
 ```
 
-Resolve the project/epic workspace from `herdr workspace list`. Reuse an exact existing
-workspace only where it represents the same project/epic and its durable record matches the
-returned ID. Otherwise create one rooted at the repo, and record
-`workspace_managed_by_root=true` at workspace level immediately:
+Resolve the project workspace from `herdr workspace list` by matching the `workspace-label`
+field in `orchestrator.md`. Reuse an exact label match. No match → create one rooted at the
+repo:
 
 ```bash
-herdr workspace create --label "<workspace-label>" --cwd <repo-root> --no-focus
+herdr workspace create --label "<workspace-label from orchestrator.md>" --cwd <repo-root> --no-focus
 ```
+
+**One project, one workspace.** Never create a second workspace for the same project. Never
+invent a label — always read it from `orchestrator.md`.
 
 The workspace is project-scoped and outlives any one ticket, while a ticket's worktree is
 removed at cleanup — so the workspace cwd stays at repo-root rather than binding to the
@@ -152,14 +154,18 @@ herdr pane send-text <returned-root-pane-id> "cd <worktree-path>"
 herdr pane send-keys <returned-root-pane-id> Enter
 ```
 
-Where the workspace already exists, create exactly one additional tab for the new ticket and
-read its returned pane ID — its other tabs may be owner-owned or hold an active ticket:
+Where the workspace already exists, **always create a new tab** — never split into or reuse
+an existing tab. Tabs you did not create belong to the owner or another dispatch; splitting
+into them renames the tab in herdr UI and creates confusion.
 
 ```bash
 herdr tab create --workspace <workspace-id> --label "ticket:<ticket-id>" \
   --cwd <worktree-path> --no-focus
 herdr pane rename <returned-root-pane-id> "builder:<ticket-id>"
 ```
+
+Tab label follows the convention in `orchestrator.md` § Workspace identity:
+`ticket:<id>` for builders, `spec:<id>` for shapers, `qa:<id>` for QA, `rin:<id>` for Rin.
 
 **Mandatory cwd gate before launch.** `--cwd` on create is not guaranteed to stick, and
 agent resolution depends on cwd — launched from `$HOME` it errors "agent not found" or runs
@@ -288,10 +294,18 @@ idle` as a substitute, do NOT use `sleep` + `herdr agent get` in a loop. The scr
 caffeinate (machine cannot sleep and kill the watch), a start guard, debounce, and a
 3600-second cap — hand-rolled alternatives lack all four.
 
-Branch on `$?` when it returns:
-- `0` + `TERMINAL:<state>` → builder finished or blocked, proceed to artifact verification
+Branch on `$?` **and the payload** when it returns:
+
+- `0` + `TERMINAL:done` → builder finished, proceed to artifact verification
+- `0` + `TERMINAL:idle` → builder idle, check git log — may be finished or may have stopped early
+- `0` + `TERMINAL:blocked` → builder is asking a question, **read pane immediately and answer** — do NOT proceed to artifact verification, the builder is waiting for you
 - `1` + `TIMEOUT` → builder exceeded cap, inspect pane
 - `2` + `NO_START` → builder never started working, re-read pane
+
+**Read the payload, not just the exit code.** Exit 0 has three meanings. `blocked` means
+the builder hit a decision it cannot make alone — read the pane, answer the question, then
+restart the watcher. Jumping straight to artifact verification on `blocked` leaves the
+builder waiting indefinitely.
 
 **`--wait` collapses submit, start-guard and settle into one call, and it is trustworthy
 ONLY on a pane whose turn you just opened.** Herdr's own help says it "does not track turns:

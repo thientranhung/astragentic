@@ -63,7 +63,7 @@ Rin has **no fallback row** — an absent row is the correct state and adaptatio
 it: no root runtime that can host the gate means STOP, not a degraded gate. Sandboxes stay
 as they are; an enforced read-only posture is what makes such a reviewer worth having.
 
-**Pane mechanics.** Rin gets its OWN tab `gate:<artifact-key>` and its OWN **detached**
+**Pane mechanics.** Rin gets its OWN tab `rin:<ticket-id>` and its OWN **detached**
 worktree at the reviewed SHA, in the same workspace — never a second pane in a ticket tab,
 and never the Builder's worktree (sharing it destroys independence and puts a shell-capable
 reviewer inside the author's checkout).
@@ -86,7 +86,7 @@ GATE_FILE="$GATE_ROOT/<artifact-key>-<short-sha>-$GATE_TOKEN.md"
 git worktree add --detach \
   <repo-parent>/<repo-dir-name>.worktrees/gate-<artifact-key> <reviewed-sha>
 git worktree list          # verify the exact path before anything uses it (AST-028)
-herdr tab create --workspace <workspace-id> --label "gate:<artifact-key>" \
+herdr tab create --workspace <workspace-id> --label "rin:<ticket-id>" \
   --cwd <gate-worktree> --no-focus
 herdr pane rename <returned-root-pane-id> "rin:<artifact-key>"
 herdr pane get <returned-root-pane-id>    # foreground_cwd gate — mismatch is STOP (AST-028)

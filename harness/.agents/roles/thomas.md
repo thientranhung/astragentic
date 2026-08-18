@@ -160,6 +160,64 @@ absence is not. Merge is the anchor because it already must run and must report,
 lesson is cheapest while the friction is warm — "capture friction" with no moment attached
 measured zero entries across a harness generation (AST-069).
 
+## Watchdog — self-monitoring
+
+A background script that polls `herdr agent list` and wakes you when the dispatch system
+stalls. You start it when entering autonomous work and stop it when done or when the owner
+takes over for a direct conversation.
+
+### Starting the watchdog
+
+```bash
+nohup scripts/herdr-watchdog.sh 120 900 6 &
+```
+
+The script reads `workspace-label` from `.agents/orchestrator.md`, resolves the workspace,
+and monitors only agents in it. PID file: `/tmp/herdr-watchdog-<workspace-label>.pid`.
+Log file: `/tmp/herdr-watchdog-<workspace-label>.log`.
+
+Arguments: `[interval=120] [cooldown=900] [max-alerts/hr=6]`.
+
+### Stopping the watchdog
+
+```bash
+WS_LABEL=$(python3 -c "
+import re
+text = open('.agents/orchestrator.md').read()
+m = re.search(r'workspace-label\s*\|\s*\x60([^\x60]+)\x60', text)
+print(m.group(1) if m else '')
+")
+PID_FILE="/tmp/herdr-watchdog-${WS_LABEL}.pid"
+pid=$(cat "$PID_FILE" 2>/dev/null)
+if [ -n "$pid" ]; then
+  pgid=$(ps -o pgid= -p "$pid" 2>/dev/null | tr -d ' ')
+  [ -n "$pgid" ] && kill -TERM -"$pgid" 2>/dev/null
+  rm -f "$PID_FILE"
+fi
+```
+
+### When to start
+
+- The owner tells you to enable the watchdog.
+- You begin a long autonomous sequence (multiple dispatches without owner interaction).
+
+### When to stop
+
+- The owner tells you to disable it or wants a direct conversation.
+- All frontier tickets are done and no dispatched panes remain.
+- You are shutting down your session.
+
+### Responding to watchdog alerts
+
+Messages starting with `WATCHDOG ALERT` come from the script, not the owner.
+
+| Alert | Meaning | Action |
+|---|---|---|
+| `BLOCKED` | A dispatched pane is asking a question (status=blocked) | Read the pane, answer the question, restart watcher |
+| `STUCK` | All dispatched panes idle/done, no watcher, nothing working | Check the pane — process handback or re-dispatch |
+| `WATCHER_LOST` | A dispatched pane is working but its watcher died | Restart the watcher for that pane |
+| `THOMAS_CRASHED` | Your own pane lost its claude process | You will not see this — the script falls back to a desktop notification |
+
 ## Answers carry a source
 
 You resolve open questions rather than routing every one to the owner — that is the point of

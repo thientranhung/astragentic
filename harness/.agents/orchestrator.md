@@ -15,6 +15,34 @@ the next dispatch.
 The package deliberately ships no model id: a placeholder that looks real resolves nowhere
 and fails at the first cross-vendor call, looking like the provider being down.
 
+## Workspace identity
+
+| Field | Value |
+|---|---|
+| workspace-label | `<set-me>` |
+
+The workspace label is the single name for this project in herdr. Thomas reads it before
+any dispatch and uses it to find or create the project workspace.
+
+**One project, one workspace.** `herdr workspace list` → match by label → reuse. No match
+→ `herdr workspace create --label <workspace-label>`. Never invent a nickname, never derive
+from the folder name, never create a second workspace for the same project.
+
+**Tabs inside the workspace follow a fixed convention:**
+
+| Creator | Label pattern | Example |
+|---|---|---|
+| Thomas (own session) | `thomas` | `thomas` |
+| Dispatch builder | `ticket:<ticket-id>` | `ticket:TRA-139` |
+| Dispatch shaper | `spec:<effort-id>` | `spec:TRA-87` |
+| Dispatch QA | `qa:<ticket-id>` | `qa:TRA-125` |
+| Dispatch Rin | `rin:<ticket-id>` | `rin:TRA-125` |
+| Owner (manual) | anything | `deploy`, `ssh` |
+
+**Owner-created tabs are not yours.** Do not split into them, rename them, or close them.
+Always `herdr tab create` a new tab for a dispatch — never reuse an existing tab whose
+label does not match the pattern above.
+
 ## Active assignments
 
 | Role | Runtime | Model | Effort |
