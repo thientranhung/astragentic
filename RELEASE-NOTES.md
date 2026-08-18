@@ -1,3 +1,21 @@
+# Astragentic 2.2.28
+
+Ledger header auto-update: `install.sh` now computes the entry count, first/last AST
+number, and withdrawn flag from the ledger file itself before staging. The header line is
+patched in the source file if it differs from the computed values.
+
+Previously the count was hand-maintained — a number typed by a human in a file copied
+wholesale on every release. Measured: two consecutive releases (2.2.26, 2.2.27) shipped
+with the header claiming 93 entries while the file contained 97. The adapted project
+fixed it twice; each fix was overwritten by the next release. A correction that downstream
+projects must re-apply every release is a tax, not a fix.
+
+Also fixes the current header: 97 entries (AST-001…AST-098, 067 withdrawn).
+
+## Upgrade from 2.2.27
+
+Copy `install.sh` and `.agents/memory/recurring-failure-modes.md`.
+
 # Astragentic 2.2.27
 
 Three more findings from workspace-app-inception Thomas, same night, all the same defect

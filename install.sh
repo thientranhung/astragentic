@@ -63,6 +63,28 @@ done
   exit 1
 }
 
+# Auto-update the ledger header count from actual content before staging.
+# A hand-maintained count in a file copied wholesale on every release is a tax every
+# downstream project pays when it drifts — measured: two consecutive releases shipped with
+# a stale header, and the adapted project had to fix it twice.
+LEDGER="$PAYLOAD/.agents/memory/recurring-failure-modes.md"
+if [ -f "$LEDGER" ]; then
+  ACTUAL_COUNT=$(grep -c '^### AST-' "$LEDGER")
+  FIRST_AST=$(grep -m1 -oE 'AST-[0-9]+' "$LEDGER" | head -1)
+  LAST_AST=$(grep -oE '^### AST-[0-9]+' "$LEDGER" | tail -1 | grep -oE 'AST-[0-9]+')
+  WITHDRAWN=$(grep -c 'withdrawn' "$LEDGER" | head -1)
+  if [ "$WITHDRAWN" -gt 0 ]; then
+    HEADER_NEW="Status: current · $ACTUAL_COUNT entries ($FIRST_AST … $LAST_AST, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged"
+  else
+    HEADER_NEW="Status: current · $ACTUAL_COUNT entries ($FIRST_AST … $LAST_AST) · AST-001…034 carried into 1.0.0 unchanged"
+  fi
+  HEADER_OLD=$(sed -n '3p' "$LEDGER")
+  if [ "$HEADER_OLD" != "$HEADER_NEW" ]; then
+    sed -i '' "3s|.*|$HEADER_NEW|" "$LEDGER"
+    echo "Ledger header auto-updated: $ACTUAL_COUNT entries ($FIRST_AST … $LAST_AST)"
+  fi
+fi
+
 TARGET="${1:-}"
 [ -n "$TARGET" ] || {
   echo "Usage: $0 <target-repo-path> [--project-name NAME]" >&2

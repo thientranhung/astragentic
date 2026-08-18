@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 93 entries (AST-001 … AST-094, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 97 entries (AST-001 … AST-098, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
