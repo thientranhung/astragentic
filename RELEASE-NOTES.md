@@ -1,3 +1,34 @@
+# Astraler Harness 2.2.5
+
+Fix: `stop`'s identity check could be fooled into signaling an unrelated process. Found and
+reproduced by a second adapted project's own Thomas, running the cross-vendor arm against the
+2.1.1–2.2.4 fold-in before adopting it.
+
+- **`is_watchdog_process()` matched by substring on the whole command line** — anything with
+  `herdr-watchdog.sh` anywhere in its argv passed, including `tail -f herdr-watchdog.sh`, an
+  editor with the file open, or a grep. Reproduced directly: start a `tail -f` on the script,
+  overwrite the lock's PID file with its PID, run `stop` — it received `kill -TERM` on its
+  whole process group. Chained to PID reuse after a crash that bypasses the cleanup trap (a
+  `kill -9`, a reboot), this reopens exactly the failure class AST-072 was built to close.
+  Fixed by matching the shape of the real invocation — `argv[0]` a bash interpreter, `argv[1]`
+  a path ending in the exact filename — instead of a substring anywhere in the line.
+- `ticket-git-facts.sh`'s base-branch check resolved against tags as readily as branches; a
+  tag sharing the default branch's name passed while the actual branch did not exist. Scoped
+  to `refs/heads/$BASE` specifically.
+- A related comment claiming `setsid()`'s `EPERM` "only" means the process is already isolated
+  was corrected — it does not rule out sharing a group with other pipeline stages. No runtime
+  check shipped for that narrower gap: one was built and measured to report three different
+  process-group member counts for the same isolated process across three counting strategies,
+  because counting a group forks its own transient members into it. Documented as a known
+  assumption (the watchdog is always launched as a plain background job, never a pipeline
+  stage) instead of a broken guard.
+
+Recorded as **AST-077**.
+
+## Upgrade from 2.2.4
+
+Copy `herdr-watchdog.sh` and `ticket-git-facts.sh`.
+
 # Astraler Harness 2.2.4
 
 Simplified: the watchdog's single-instance lock, deliberately, after three rounds closed it

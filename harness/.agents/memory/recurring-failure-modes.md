@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 75 entries (AST-001 … AST-076, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 76 entries (AST-001 … AST-077, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1472,3 +1472,49 @@ point of its own — every fix admits a smaller, rarer race than the last — so
 ends it has to be an explicit judgement about the failure's real cost, made once, and cheaper
 to make before three rounds of building than after.
 Bound: `harness/scripts/herdr-watchdog.sh`.
+
+### AST-077 — Identity by substring match let `stop` sign a kill order for an unrelated process · promoted 2026-08-18
+
+Found by a second adapted project's own Thomas, dispatched to run the cross-vendor arm
+against the 2.1.1–2.2.4 fold-in before adopting it — reproduced, not merely argued: `tail -f
+herdr-watchdog.sh` was started, its PID written into the lock's PID file in place of the real
+one, and `stop` run against it.
+
+`is_watchdog_process()` (AST-072's own safety check, the one thing standing between `stop` and
+signaling a stranger) matched by SUBSTRING on the whole command line —
+`[[ "$line" == *herdr-watchdog.sh* ]]`. That string appears in the command line of anything
+with the file open or named in its arguments: `tail -f` on it, an editor, a grep, a git-blame.
+Chained to a real but separate gap — a crash that bypasses the `cleanup` EXIT trap (a `kill -9`,
+a reboot) leaves a stale `PID_FILE` behind, and PIDs are reused by the OS — the chain resolves
+to `stop` sending `kill -TERM` at a process group that was never the watchdog at all. This is
+exactly the failure class AST-072 was built to close, reopened by the fix meant to prevent it,
+because a check that answers "is this string present" is not a check for "is this process the
+one thing I mean."
+
+Fixed by matching the SHAPE of the actual invocation instead of a fragment of it: `argv[0]` a
+bash interpreter, `argv[1]` a path ending in the exact filename — `tail -f`'s argv is `tail -f
+herdr-watchdog.sh`, which fails the check at the first token, not the second. Re-verified with
+the same reproduction: `stop` now reports no live watchdog and leaves the `tail` running.
+
+**A second, narrower finding from the same pass never shipped a fix**, on purpose, and the
+reasoning is worth keeping: the comment claiming `setsid()`'s EPERM "only" means we are already
+isolated is false — a pipeline's first stage is also a process-group leader while still sharing
+that group with the other stages, so trusting EPERM there can hand a group-kill company it was
+never meant to have. A runtime check for it was built and measured **unreliable at counting its
+own group**: three different counting strategies (`ps | wc -l`, a single command substitution,
+a pure-bash loop over its output) returned three different member counts — 5, 3, and the
+correct 1 — on the SAME isolated process, because command substitution and pipelines fork their
+own concurrent subprocesses into the very group being measured. Shipped as a corrected comment
+instead of a check: the gap (a watchdog launched as a pipeline stage, never the documented
+`nohup ... &`) is real but narrow enough, and unreliable enough to verify at runtime, that a
+documented assumption beat a broken guard — the same call AST-076's closing note argued for,
+applied a second time in the same file on the same day.
+
+**Same pass, a smaller version of the same lesson in `ticket-git-facts.sh`:** its base-branch
+check, `git rev-parse --verify "$BASE"`, resolves against tags and commit hashes as readily as
+branches. A repo with a tag sharing the default branch's name — measured directly — passed the
+check while `refs/heads/$BASE` did not exist, so every following `git log "$BASE"` read a
+fixed, wrong point in history instead of failing loudly. Scoped the check to `refs/heads/$BASE`
+specifically; the failure it prevents is the same shape as the watchdog's — a check that
+accepts more than the one thing it is meant to verify.
+Bound: `harness/scripts/herdr-watchdog.sh`, `harness/scripts/ticket-git-facts.sh`.

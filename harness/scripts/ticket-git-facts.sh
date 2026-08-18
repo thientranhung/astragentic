@@ -84,7 +84,12 @@ if [ "$#" -gt 0 ]; then
   tickets="$*"
 fi
 
-if ! git rev-parse --verify --quiet "$BASE" >/dev/null; then
+# `refs/heads/$BASE` specifically, not bare `$BASE` — a bare name also
+# resolves against tags, HEAD and commit hashes, so a repo with a tag
+# named the same as a nonexistent branch (measured: a "main" tag on a repo
+# whose actual branch was "trunk") would pass this check while every
+# following `git log "$BASE"` read the wrong history.
+if ! git rev-parse --verify --quiet "refs/heads/$BASE" >/dev/null; then
   echo "ticket-git-facts: base branch '$BASE' does not exist (set BASE_BRANCH to override the default)" >&2
   exit 1
 fi

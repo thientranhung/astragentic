@@ -73,15 +73,25 @@ HEARTBEAT_FILE="$LOCK_DIR/alive"
 # them, and the pgid is needed only when the identity check already passed.
 WATCHDOG_PGID=""
 is_watchdog_process() {
-  local pid="$1" line pgid rest
+  local pid="$1" line pgid rest cmd script
   [ -n "$pid" ] || return 1
   line=$(ps -o pgid=,args= -p "$pid" 2>/dev/null) || return 1
-  [[ "$line" == *herdr-watchdog.sh* ]] || return 1
   # `read` splits on runs of whitespace and discards leading/trailing blanks
   # itself — unlike `${line%% *}`, which returns EMPTY when BSD/macOS `ps`
   # right-pads the pgid column with leading spaces (it does, routinely).
   read -r pgid rest <<< "$line"
   [[ "$pgid" =~ ^[0-9]+$ ]] || return 1
+  # A SUBSTRING match on the whole command line (the earlier form of this
+  # check) also matches `tail -f herdr-watchdog.sh`, an editor with the file
+  # open, or a shell with the path in its history buffer — measured: a
+  # `tail -f` on this exact file passed it. Combined with PID reuse after a
+  # crash that bypassed the EXIT trap, that hands `stop` a live but
+  # unrelated process to send a process-group TERM to. Require the shape of
+  # our own invocation instead: argv[0] a bash interpreter, argv[1] a path
+  # ending in this filename — not merely present anywhere in the line.
+  read -r cmd script _ <<< "$rest"
+  case "$cmd" in bash|*/bash) ;; *) return 1 ;; esac
+  case "$script" in herdr-watchdog.sh|*/herdr-watchdog.sh) ;; *) return 1 ;; esac
   WATCHDOG_PGID="$pgid"
   return 0
 }
@@ -117,8 +127,21 @@ MAX_ALERTS_HOUR="${3:-6}"
 # ---------------------------------------------------------------------------
 if [ -z "${HERDR_WATCHDOG_ISOLATED:-}" ]; then
   export HERDR_WATCHDOG_ISOLATED=1
-  # setsid(2) raises EPERM only when we are already a process-group leader
-  # — i.e. already isolated — so that failure is safe to ignore.
+  # setsid(2) raising EPERM means we are ALREADY a process-group leader —
+  # it does NOT mean we are alone in that group. A shell pipeline's first
+  # stage is also a group leader while sharing the group with every other
+  # stage, so this failure is proof only that a new session could not be
+  # created, not proof of isolation. Catching it and proceeding is still
+  # correct for the one path that normally produces it here — re-running
+  # this exec after `HERDR_WATCHDOG_ISOLATED` is already set, where we are
+  # already alone. A watchdog launched as a pipeline stage instead of the
+  # documented plain background job (`nohup ... &`) is a real but narrow
+  # gap this does not close: a runtime member-count check was tried and
+  # measured unreliable (three different counting strategies gave three
+  # different member counts on the same isolated process, because the
+  # counting itself forks concurrent subprocesses that transiently share
+  # the group being counted). Stays a documented assumption about how this
+  # script is invoked, not a guarantee the code enforces.
   exec python3 -c '
 import os, sys
 try:
