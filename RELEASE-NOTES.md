@@ -1,3 +1,46 @@
+# Astraler Harness 2.2.15
+
+Fix: `check-requirements.sh`'s payload-committed check had a hand-maintained scope list, and
+it was already three files behind what the package actually ships into a project's `scripts/`.
+Found by workspace-app-inception's own Thomas while verifying 2.2.11, not by reading the code.
+
+The check walked every file under `.agents`/`.claude`/`.codex`, plus exactly three named
+scripts. But the package ships FIVE scripts into `scripts/` (`harness/scripts/*.sh` plus this
+file itself, staged separately from the package root by `install.sh`) — the list was missing
+`check-reachability.sh`, `docs-staleness-audit.sh`, and `check-requirements.sh` itself.
+Measured directly: a real dirty tree with ten payload files modified, seven counted, the
+uncounted three being those two scripts plus `.astraler/CANDIDATE` (correctly excluded). A
+project whose only stale payload was one of those two scripts got a green from the one check
+whose job is to say the payload is stale — including, with a certain symmetry, when the stale
+file was the checker itself.
+
+- The scope is now derived from the package's own `harness/scripts/*.sh` plus this file, not
+  restated as a name list — self-maintaining, so a script the package adds later is covered
+  automatically instead of silently falling outside the check's reach. Falls back to a fixed
+  list only when this file is the vendored copy running standalone inside a project, where the
+  package tree that lets it self-maintain is not present.
+- Re-verified against the exact scenario that exposed this: a tree with only
+  `docs-staleness-audit.sh` stale now correctly reports MISS instead of OK.
+
+**One more, found inside the 2.2.14 commit itself, applying that commit's own principle to
+budgets it did not touch.** `orchestrator.md`'s margin fix stated "a budget equal to the file
+it bounds passes zero projects" — true of `thomas.md` (32-word margin), `rin.md` (23) and
+`qa.md` (51) too, in the same file, untouched by that commit. Confirmed live and not caused by
+project drift: a reporting project's own `thomas.md` was already 1878 words before that
+session touched it — 178 over the PRIOR 1700 budget on its own, still 28 over the 1850 that
+raise produced, because the raise closed the gap Thomas's own new responsibility opened
+without separately reserving margin for what every adaptation adds on top.
+
+- `thomas`, `rin` and `qa` budgets carry the same ~150-word margin over current package ship
+  size that `orchestrator.md` was restored to: 1850→1970, 1200→1350, 1200→1300. `builder`
+  (360-word margin) and `shaper` (221-word margin) already cleared the floor, unchanged. This
+  is not a fifth raise of Thomas's own remit under the file's "fourth raise" rule — margin and
+  scope are different questions, and the comment says so explicitly.
+
+## Upgrade from 2.2.14
+
+Copy `check-requirements.sh`.
+
 # Astraler Harness 2.2.14
 
 Fix: the watchdog was blind to any Builder or Shaper on a runtime that overwrites its own

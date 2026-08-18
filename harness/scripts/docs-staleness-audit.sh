@@ -51,8 +51,21 @@ fi
 # meaning — the last four words cut to reach 1200 all carried some. Raise a budget only with
 # a reason recorded in the same commit.
 role_budget() {
+  # Every number below carries a MARGIN over the package's own shipped word count for that
+  # role — the ~150-word headroom AST-085 restored for orchestrator.md, applied here for the
+  # same reason: an adapted project MUST add its own content to these files (that is the
+  # point of adapting), and a budget with near-zero margin over ship size fails a project the
+  # moment it does the one thing adaptation requires. Measured 2026-08-18, package vs budget:
+  # thomas 1818/1850 (32 margin), rin 1177/1200 (23), qa 1149/1200 (51) — all three read as
+  # "raised enough" while leaving less headroom than a single sentence. Found live, by an
+  # adapted project whose own thomas.md sat at 1878 words before anyone touched it that
+  # session: 178 over the PRIOR 1700 budget, then still 28 over the 1850 this file raised it
+  # to the same day, because that raise closed the gap thomas's OWN new responsibility opened
+  # without separately budgeting the margin every adaptation needs on top. This is that
+  # margin, applied once, to every role, not a fifth raise of thomas's remit — the case below
+  # still needs a stated reason before its OWN ceiling moves again.
   case "$1" in
-    thomas)  echo 1850 ;;  # widest remit: claim protocol + three dispatch points + the arm
+    thomas)  echo 1970 ;;  # widest remit: claim protocol + three dispatch points + the arm
                            # cadence at three scopes. Raised from 1400 by owner decision
                            # 2026-08-13, porting a project ruling: the arm fires per ticket
                            # before its merge, so Thomas owns three fire points instead of
@@ -74,10 +87,20 @@ role_budget() {
                            # start, alongside the arm and the ledger write. Only the wiring and
                            # the read-only ruling landed here; the drift classes, the join rule
                            # and the exercise-it lesson live in the skill, which loads only
-                           # when the check runs.
+                           # when the check runs. 1850 -> 1970 the SAME day: not a fifth raise
+                           # of remit, the margin-calibration pass above — 1850 had shipped at
+                           # 1818, a 32-word margin no project's own required addition fits in.
     builder) echo 1400 ;;  # widest DOING surface: build, increment review, simplify,
-                           # visual verification, the two correctness rules, handback
-    *)       echo 1200 ;;
+                           # visual verification, the two correctness rules, handback.
+                           # Ships at 1040; the 360-word margin already clears the floor
+                           # above, so this pass leaves it unchanged.
+    rin)     echo 1350 ;;  # ships at 1177 (23-word margin before this pass) — second
+                           # opinion, artifact verification, the arm's standard. Raised
+                           # under the same margin-calibration pass as thomas and qa.
+    qa)      echo 1300 ;;  # ships at 1149 (51-word margin before this pass) — the running-
+                           # product walk, interface/journey/contract/data axes. Raised
+                           # under the same margin-calibration pass as thomas and rin.
+    *)       echo 1200 ;;  # shaper ships at 979, a 221-word margin already above the floor.
   esac
 }
 BUDGETS_RUN=0

@@ -384,9 +384,33 @@ else
             PAYLOAD_PATHS+=("${F#"$TARGET"/}")
           done < <(find "$TARGET/$D" -type f -print0)
         done
-        for S in herdr-watchdog.sh herdr-watch-terminal.sh ticket-git-facts.sh; do
-          [ -f "$TARGET/scripts/$S" ] && PAYLOAD_PATHS+=("scripts/$S")
-        done
+        # The set of harness-owned scripts install.sh stages into a project's scripts/ —
+        # derived from the package's own harness/scripts/*.sh, plus this file (staged
+        # separately from the package ROOT; see install.sh), rather than a hand-written
+        # name list. A fixed list is correct the day it is written and silently stops
+        # covering whatever the package later adds beside it: measured directly, this list
+        # named three scripts while the package shipped five into scripts/, missing
+        # check-reachability.sh, docs-staleness-audit.sh AND this file itself — so a
+        # project whose only stale payload was one of those got a green from the one check
+        # whose job is to say the payload is stale, up to and including the checker being
+        # the stale file. Falls back to a fixed list only when this file is the VENDORED
+        # copy running inside a project, where the package tree that lets this
+        # self-maintain is not present.
+        if [ -d "$PKG_DIR/harness/scripts" ]; then
+          NAMED_SCRIPTS=$(cd "$PKG_DIR/harness/scripts" && printf '%s\n' *.sh)
+          NAMED_SCRIPTS="$NAMED_SCRIPTS
+check-requirements.sh"
+        else
+          NAMED_SCRIPTS='herdr-watchdog.sh
+herdr-watch-terminal.sh
+ticket-git-facts.sh
+check-reachability.sh
+docs-staleness-audit.sh
+check-requirements.sh'
+        fi
+        while IFS= read -r S; do
+          [ -n "$S" ] && [ -f "$TARGET/scripts/$S" ] && PAYLOAD_PATHS+=("scripts/$S")
+        done <<< "$NAMED_SCRIPTS"
         for PATHNAME in "${PAYLOAD_PATHS[@]}"; do
           # A deliberately gitignored file under .claude/ or .codex/ (settings.local.json,
           # a machine-local codex config) is not payload going stale — it was never meant

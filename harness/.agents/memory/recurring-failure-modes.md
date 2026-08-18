@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 84 entries (AST-001 … AST-085, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 86 entries (AST-001 … AST-087, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1782,4 +1782,66 @@ re-checks that claim as the fact it describes moves** — the same shape as AST-
 current gap, applied to a number in a comment instead of a file in git: both pass fine on the
 day they are written and both silently stop meaning what they say the moment what they
 describe changes under them.
+Bound: `harness/scripts/docs-staleness-audit.sh`.
+
+### AST-086 — the payload checker's own scope list was already stale, including for itself · promoted 2026-08-18
+
+Found by an adapted project's own Thomas while verifying the AST-080 fix, not by reading the
+code. `check-requirements.sh`'s payload-committed check walked every file under
+`.agents`/`.claude`/`.codex` plus a hand-written list of three named scripts. The package
+ships FIVE scripts into a project's `scripts/` directory — `harness/scripts/*.sh` plus this
+file itself, staged separately from the package root by `install.sh` — and the list named
+three. Measured directly on a real dirty tree: ten payload files modified, seven counted, the
+missing three being `check-reachability.sh`, `docs-staleness-audit.sh` and (found separately,
+by checking the package's own script directory rather than trusting the report alone)
+`check-requirements.sh` itself. A project whose only stale payload was one of those scripts
+got a green from the one check whose whole job is to say the payload is stale — up to and
+including the case where the stale file was the checker.
+
+Fixed by deriving the scope from the package's own `harness/scripts/*.sh` directory listing
+plus this file, instead of restating filenames — self-maintaining, so a script the package
+adds later is covered automatically rather than requiring someone to remember to update a
+list beside it. Falls back to the old fixed list only when this file is the vendored copy
+running standalone inside a project, where the package tree that would let it self-maintain
+is not present. Re-verified against the exact scenario that exposed the gap: a tree with only
+`docs-staleness-audit.sh` stale now correctly fails instead of passing.
+
+**The third finding in one evening with this exact shape** — AST-072 (title-prefix list),
+AST-084 (the same list's name-based fix), now a scope defined by hand-written filenames
+instead of the manifest that already knows the answer. A list is correct on the day it is
+written and silently stops being correct the day something changes beside it without anyone
+updating the list; the fix each time was the same move — stop restating a fact the system
+already tracks somewhere, and read it from there instead.
+Bound: `check-requirements.sh`.
+
+### AST-087 — the same-day orchestrator margin fix was not applied to the role budgets it sits beside · promoted 2026-08-18
+
+Found by an adapted project's own Thomas inside the very commit that shipped AST-085 (the
+orchestrator.md margin fix), applying the exact principle that commit's own message stated —
+"a budget equal to the file it bounds passes zero projects" — to the other budgets in the
+same file, which AST-085 had not touched. Measured: package `thomas.md` ships at 1818 words
+against an 1850 budget (32-word margin), `rin.md` at 1177/1200 (23), `qa.md` at 1149/1200
+(51) — all three read as adequately provisioned in isolation while carrying less headroom
+than a single sentence. Confirmed live and NOT caused by the reporting project's own drift:
+its `thomas.md` was already 1878 words before that session touched it, 178 over the prior
+1700 budget on its own, and still 28 over the 1850 that same-day raise produced — the raise
+had closed the gap thomas's own new responsibility opened without separately reserving the
+margin every adaptation needs on top of it.
+
+Fixed by applying the identical margin-calibration principle to `thomas`, `rin` and `qa`:
+budgets now carry roughly the same ~150-word margin over current package ship size that
+AST-085 restored for `orchestrator.md` — 1850 to 1970, 1200 to 1350, 1200 to 1300
+respectively. `builder` (360-word margin) and `shaper` (221-word margin) already cleared the
+floor and were left unchanged. This is explicitly NOT counted as a fifth raise of thomas's own
+remit under the file's own "fourth raise" rule — no new Thomas responsibility landed — and the
+comment says so, since the rule that governs raising a ceiling for growing scope is a
+different question from the margin every budget needs regardless of scope.
+
+**A fix applied to one instance of a pattern, in the same commit, beside three more instances
+of the identical pattern, closes one and ships the other three unchanged** — the margin
+principle was correct and freshly re-derived that same session for `orchestrator.md`, and nothing
+carried it sideways to the budgets sitting nine lines above it in the same file. The third
+same-shape finding in one evening (AST-080 tracked-vs-current, AST-086 hand-written scope list,
+now a hand-set number not re-derived from a principle just established beside it) is the
+pattern worth remembering more than any one of the three fixes.
 Bound: `harness/scripts/docs-staleness-audit.sh`.
