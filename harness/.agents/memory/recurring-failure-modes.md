@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 86 entries (AST-001 … AST-087, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 87 entries (AST-001 … AST-088, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1845,3 +1845,27 @@ same-shape finding in one evening (AST-080 tracked-vs-current, AST-086 hand-writ
 now a hand-set number not re-derived from a principle just established beside it) is the
 pattern worth remembering more than any one of the three fixes.
 Bound: `harness/scripts/docs-staleness-audit.sh`.
+
+### AST-088 — the fix for a stale hardcoded list wrote a new hardcoded assumption beside it · promoted 2026-08-18
+
+Found by an adapted project's own Thomas verifying AST-086 against a real staged release,
+not the raw package source. AST-086 derived `check-requirements.sh`'s payload-scope list from
+`harness/scripts/*.sh`, then appended `check-requirements.sh` unconditionally — correct of the
+raw package source tree, where this file lives at the package root and genuinely is not in
+that directory, but not of a STAGED release: `install.sh` copies this file into
+`harness/scripts/` for staging too, so the glob already contains it there, and the fix's own
+append put it in twice. Measured against a real staged 2.2.15: 7 derived entries, 6 unique,
+`check-requirements.sh` doubled — over-counting one file, never producing a false green, but
+wrong in exactly the number this check exists to get right.
+
+Fixed by running the derived list through `sort -u`, correct under either layout instead of
+correct for only the one it was written against.
+
+**The fix for AST-086 assumed the layout it was tested against instead of the layout it would
+also run under, and repeated the exact shape of the bug it was closing one line later** — a
+hardcoded list correct when written, wrong the moment a second context appeared that the
+author had not run it against. Same lesson as AST-072/084/086 a fourth time in one evening,
+now inside the fix for the third instance rather than in a fresh one: verifying a fix only
+against the context that exposed the original bug is not the same claim as verifying it
+against every context the fix will actually run in.
+Bound: `check-requirements.sh`.

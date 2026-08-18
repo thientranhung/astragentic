@@ -1,3 +1,26 @@
+# Astraler Harness 2.2.16
+
+Fix: 2.2.15's own fix for the payload checker's stale scope list introduced a duplicate.
+Found by workspace-app-inception's own Thomas verifying that exact fix, against a real staged
+release rather than the raw package source.
+
+The derived-scope logic reads `harness/scripts/*.sh` then appends `check-requirements.sh`
+unconditionally, on the assumption that this file always lives outside that directory — true
+of the raw package source tree, where it does not exist there at all, but false of a STAGED
+release: `install.sh` also copies it into `harness/scripts/` for staging, so a checker running
+from `.astraler/releases/<version>/` finds the name already in the glob and appends it again.
+Measured against a real staged 2.2.15: 7 derived entries, 6 unique, `check-requirements.sh`
+doubled. Impact was genuinely small — it over-reports, never under-reports, so it could not
+produce a false green — but a count is exactly what this check exists to get right.
+
+- The derived list now runs through `sort -u`, correct under either layout instead of correct
+  for only the one it was written against. Re-verified against a real staged release with a
+  dirty `check-requirements.sh`: one file, one line, no duplicate.
+
+## Upgrade from 2.2.15
+
+Copy `check-requirements.sh`.
+
 # Astraler Harness 2.2.15
 
 Fix: `check-requirements.sh`'s payload-committed check had a hand-maintained scope list, and

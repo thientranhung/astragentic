@@ -397,9 +397,16 @@ else
         # copy running inside a project, where the package tree that lets this
         # self-maintain is not present.
         if [ -d "$PKG_DIR/harness/scripts" ]; then
+          # This file is staged separately from the RAW package source tree — true there,
+          # but not of a STAGED release, where install.sh copies it into harness/scripts/
+          # too, so the glob already contains it. Appending unconditionally assumed the
+          # source layout inside code that also runs against the staged layout; measured
+          # against a real staged release, the duplicate over-counted one file (never
+          # under-counted, so it never produced a false green — but a count is exactly the
+          # thing this check exists to get right). `sort -u` makes the append correct under
+          # either layout instead of correct for only the one it was written against.
           NAMED_SCRIPTS=$(cd "$PKG_DIR/harness/scripts" && printf '%s\n' *.sh)
-          NAMED_SCRIPTS="$NAMED_SCRIPTS
-check-requirements.sh"
+          NAMED_SCRIPTS="$(printf '%s\ncheck-requirements.sh\n' "$NAMED_SCRIPTS" | sort -u)"
         else
           NAMED_SCRIPTS='herdr-watchdog.sh
 herdr-watch-terminal.sh
