@@ -1,3 +1,30 @@
+# Astragentic 2.2.30
+
+AST-099: Simplify marker subject exists without skill provenance. Builder committed four
+`simplify(increment):` subjects but only invoked the skill once — the other three were
+manual mimicry (two via parallel fork calls replicating the skill's four-corner review, one
+deliberate skip because forks had twice overstepped their reviewer-only brief).
+
+The review work was real in all cases — specific findings, applied and deferred. But the
+commit subject claims `simplify(increment):` which names the skill, while no `Pass:` line
+names the tool invocation. A subject the builder types is not evidence that a tool ran.
+
+Fix: dispatch-ticket Check 2 now counts TWO values:
+- `MARKERS` — subject grep (`--grep '^simplify(increment):'`)
+- `WELLFORMED` — body grep (`grep -c '^Pass: Skill(skill: "simplify")'`)
+
+Zero markers → AST-094's STOP. Markers present but `WELLFORMED < MARKERS` → AST-099's STOP.
+The two counts carry information only when they disagree.
+
+Thomas's co-failure: he printed `markers=4 wellformed=1` and merged in the same command
+without reading the second count. A measurement performed but not read is worse than one
+not performed — it leaves the feeling of having checked. He recorded this as PROJ-003.
+
+## Upgrade from 2.2.29
+
+Copy `.agents/skills/dispatch-ticket/SKILL.md` and its `.claude` copy.
+Copy `.agents/memory/recurring-failure-modes.md`.
+
 # Astragentic 2.2.29
 
 AST-097 update: the reference point for "no new commits" is the last instruction, not the

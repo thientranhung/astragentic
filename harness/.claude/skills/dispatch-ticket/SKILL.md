@@ -498,20 +498,24 @@ Non-empty output (staged, modified, or untracked files) — **STOP**. The worktr
 that was not committed. Report to the owner with the file list and ticket id, and wait for a
 decision: commit and continue, or discard explicitly.
 
-**Check 2: simplify markers** (AST-094). A Builder that commits and pushes correctly can
-still skip the simplify pass — measured on well-specified tickets where the ticket's own
-acceptance criteria substituted for the role contract's definition of done.
+**Check 2: simplify markers AND provenance** (AST-094, AST-099). A Builder that commits and
+pushes correctly can still skip the simplify pass, or run a manual review and commit with
+the correct subject but without invoking the skill.
 
 ```bash
-git log <base>..HEAD --grep '^simplify(increment):' --oneline
+MARKERS=$(git log <base>..HEAD --grep '^simplify(increment):' --oneline | wc -l | tr -d ' ')
+WELLFORMED=$(git log <base>..HEAD --grep '^simplify(increment):' --format='%b' | grep -c '^Pass: Skill(skill: "simplify")' || true)
+echo "markers=$MARKERS wellformed=$WELLFORMED"
 ```
 
-Zero markers — **STOP**. Send the Builder back to run simplify. Do not merge a branch with
-zero simplify markers. The Builder carries its own self-check (`builder.md`), but the
-mechanism that causes the skip — the ticket checklist displacing the contract — also
-displaces the self-check, so Thomas verifies independently.
+Zero markers — **STOP** (AST-094). Send the Builder back to run simplify. Markers present
+but well-formed fewer than markers — **STOP** (AST-099): some commits carry the simplify
+subject without the skill's provenance. The two counts carry information only when they
+disagree — print both, read both, act in a separate step. The Builder carries its own
+self-check (`builder.md`), but the mechanism that causes the skip — the ticket checklist
+displacing the contract — also displaces the self-check, so Thomas verifies independently.
 
-**Only when both checks pass** — `git status` empty AND at least one simplify marker — is
+**Only when both checks pass** — `git status` empty AND markers equal well-formed — is
 removal safe:
 
 ```bash

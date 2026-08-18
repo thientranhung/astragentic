@@ -1,10 +1,10 @@
-# Astragentic 2.2.29
+# Astragentic 2.2.30
 
 **Agent orchestration framework and operating harness** for multi-agent software development.
 
 Astragentic coordinates several AI agents building software together on an existing
 codebase. The orchestration decides *who works on what, where, and on which runtime*. The
-harness holds the contracts, the review gates, and the 97 measured failure modes that shaped
+harness holds the contracts, the review gates, and the 98 measured failure modes that shaped
 every rule in this system.
 
 ---
@@ -93,7 +93,7 @@ Every answer carries a source — codebase, ADR, research, prototype, or second 
 reports are written outside every checkout with token-unique paths. Merge commits carry a
 `Ledger:` line. A summary without evidence is not accepted as proof.
 
-### 5. 97 measured failure modes
+### 5. 98 measured failure modes
 
 Every rule in this system can point at an entry in `recurring-failure-modes.md`. A rule that
 cannot point at one is a rule to re-examine. The ledger is append-only — a lesson that later
@@ -301,7 +301,7 @@ Thomas reads the orchestrator, claims the workspace, and begins routing work.
 | **Runtimes** | 3 — Claude Code, Codex, OpenCode |
 | **Review layers per ticket** | 3 — code-review, simplify, cross-vendor arm |
 | **Review rounds per milestone** | 1 (prior system: 5-14) |
-| **Measured failure modes** | 88 entries, append-only evidence base |
+| **Measured failure modes** | 98 entries, append-only evidence base |
 | **Isolation** | 1 worktree per Builder, 1 branch per ticket |
 
 ---
@@ -315,7 +315,7 @@ harness/                          payload staged into a target repo
     orchestrator.md               role → runtime/model/effort (owner's file)
     skills/                       13+ skills for dispatch, review, brownfield, arm
     memory/
-      recurring-failure-modes.md  88 failure modes — the evidence base
+      recurring-failure-modes.md  98 failure modes — the evidence base
   .claude/
     agents/                       Claude adapters (--agent <role>)
     skills/                       Claude-discovered skills

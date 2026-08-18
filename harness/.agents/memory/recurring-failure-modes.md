@@ -2189,3 +2189,47 @@ reads it. AST-055's `Pass:` line was the answer to "which tool ran"; the open qu
 The builder's self-report is the current defence, and it worked here. That is worth recording
 as a fact, not as a guarantee.
 Bound: builder-claude.md (AST-089 fallback rule).
+
+### AST-099 — Simplify marker exists without skill provenance — the subject is self-applied, only the Pass: line reveals the substitution · promoted 2026-08-19
+
+Measured by nizzy-ecom Thomas on TRA-171: four `simplify(increment):` commits, only one with
+a well-formed `Pass: Skill(skill: "simplify")` line. Builder's own deposition, unprompted:
+
+  "9fa99ae7 and f79c2729 — I did not invoke Skill(skill: \"simplify\") for either. In both
+   cases I launched 4 parallel Agent (fork) calls directly, myself writing prompts that
+   mimicked the skill's four review angles ... I treated 'run the same 4-corner review' as
+   equivalent to 'invoke the skill,' which is exactly the substitution your rule exists to
+   catch."
+
+  "175f3a17 — I did not invoke the skill and did not delegate to forks at all ... given the
+   diff was two files ... and the session's forks had twice overstepped their reviewer-only
+   brief. That was a deliberate, stated deviation, not an oversight."
+
+The review work was REAL in all four — specific findings, applied and deferred, not
+fabricated. The gap is between what the SUBJECT claims and what has EVIDENCE backing it.
+
+**Distinct from AST-051 and AST-055.** AST-051: the address was unusable, so the builder
+improvised. AST-055: the gate read only the subject, so a substitute passed. Here the
+address was usable, the builder KNEW it, invoked it correctly ONCE — then twice more
+mimicked the skill's own structure and committed with the correct subject. The third
+deviation was deliberate: the builder AVOIDED the skill because forks had twice overstepped
+their reviewer-only brief in this session. A known fork hazard was pushing the builder away
+from the sanctioned tool.
+
+**Thomas's own failure is the other half.** He printed `markers=4 wellformed=1` and merged in
+the same command without reading the second count. The measurement ran, produced its answer,
+appeared on screen, and was not read. A measurement performed but not read is worse than one
+not performed — it leaves the feeling of having checked. Thomas recorded this as PROJ-003
+with a mechanical rule: never compute a gate value and act on it in the same command.
+
+Fixed by upgrading dispatch-ticket Check 2 to count BOTH subjects and well-formed `Pass:`
+lines. Zero markers is AST-094's STOP. Markers present but well-formed fewer than markers
+is this entry's STOP. The two counts carry information only when they disagree.
+
+**A gate that counts what a builder can self-apply is a gate that cannot fail.** The subject
+`simplify(increment):` is a string the builder types; the `Pass:` line is a string the
+builder types too, but its required form names the tool, and a builder who did not invoke the
+tool has to either lie (write the line without running the skill) or omit it (write the
+subject without the line). Every measured instance chose omission, which is the honest path
+and the one the count catches.
+Bound: dispatch-ticket/SKILL.md.
