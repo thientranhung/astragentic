@@ -1,4 +1,4 @@
-# Astraler Harness 2.2.1
+# Astraler Harness 2.2.2
 
 An operating framework that lets **several agents build software together on an existing
 codebase**.

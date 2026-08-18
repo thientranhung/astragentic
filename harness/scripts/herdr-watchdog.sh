@@ -75,11 +75,16 @@ HEARTBEAT_FILE="$LOCK_DIR/alive"
 # them, and the pgid is needed only when the identity check already passed.
 WATCHDOG_PGID=""
 is_watchdog_process() {
-  local pid="$1" line
+  local pid="$1" line pgid rest
   [ -n "$pid" ] || return 1
   line=$(ps -o pgid=,args= -p "$pid" 2>/dev/null) || return 1
   [[ "$line" == *herdr-watchdog.sh* ]] || return 1
-  WATCHDOG_PGID="${line%% *}"
+  # `read` splits on runs of whitespace and discards leading/trailing blanks
+  # itself — unlike `${line%% *}`, which returns EMPTY when BSD/macOS `ps`
+  # right-pads the pgid column with leading spaces (it does, routinely).
+  read -r pgid rest <<< "$line"
+  [[ "$pgid" =~ ^[0-9]+$ ]] || return 1
+  WATCHDOG_PGID="$pgid"
   return 0
 }
 
@@ -133,17 +138,32 @@ fi
 # Single-instance lock. mkdir is atomic on every filesystem herdr runs on,
 # so it doubles as the lock primitive — no flock binary required on macOS.
 # PID_FILE is written IMMEDIATELY after mkdir succeeds, in this same PID,
-# with no exec, fork or other hop between them (AST-076: a caffeinate that
-# forked a child at this point, instead of being started as a background
-# helper below, is exactly what left that window open before).
+# with no exec, fork or other hop between them (AST-076).
+#
+# That still leaves ONE unavoidable gap: the instant between `mkdir`
+# succeeding and `echo $$ > "$PID_FILE"` landing, where LOCK_DIR exists with
+# no PID recorded yet — indistinguishable, from a single snapshot, from a
+# crashed instance that never got that far. Closing it outright would need
+# the directory's own creation to carry the PID atomically, which mkdir
+# cannot do. So a PID-less lock is NOT reclaimed on sight: retry for up to a
+# second, in case it is a real instance still inside that one-line gap,
+# before treating it as a genuine crash (AST-076 follow-up, same review).
 # ---------------------------------------------------------------------------
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
-  existing_pid=$(cat "$PID_FILE" 2>/dev/null || true)
+  existing_pid=""
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    existing_pid=$(cat "$PID_FILE" 2>/dev/null || true)
+    [ -n "$existing_pid" ] && break
+    sleep 0.1
+  done
   if is_watchdog_process "$existing_pid"; then
     echo "STOP: watchdog already running for workspace $WORKSPACE_LABEL (pid $existing_pid)" >&2
     exit 3
   fi
-  # Stale lock from a crashed or killed-9 instance — reclaim it.
+  # Either a PID was recorded but no longer names this script (a crashed
+  # instance), or a full second passed with no PID ever appearing (a crash
+  # before the write, since a live instance writes it in well under that) —
+  # both are a genuine stale lock. Reclaim.
   rm -rf "$LOCK_DIR"
   mkdir "$LOCK_DIR" 2>/dev/null || { echo "STOP: could not acquire lock" >&2; exit 3; }
 fi

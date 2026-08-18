@@ -1403,4 +1403,21 @@ invocations, exactly one survivor, nine correctly refused.
 **A lock is only as good as the record it produces.** `mkdir` being atomic proved only that
 one process won the directory; it said nothing about how long that process took to prove it
 was the one that won, and every instruction between the two was a window nobody had measured.
+
+**A second arm pass, fired against this exact fix, found the fix itself still narrowing
+rather than closing the window** — correctly: moving the isolation hop earlier shrank the gap
+between `mkdir` and the PID write to one line, but did not remove it, and a single line is
+still a line the scheduler can preempt between. Treating a PID-less lock as reclaimable on
+first sight was the actual defect, not the gap's width. Fixed by retrying for up to a second
+before concluding a PID-less lock is a genuine crash rather than a live instance still inside
+that line — long enough that a real instance, which writes its PID in microseconds, is never
+mistaken for a dead one, without leaving a doomed instance waiting forever on a lock nothing
+will ever release. The same pass found a second, unrelated bug in the fix's own `stop`-path
+change: BSD/macOS `ps -o pgid=,args=` right-pads the pgid column with leading spaces, and
+`${line%% *}` — written to combine two `ps` calls into one — returned EMPTY on exactly that
+padding, silently downgrading every group-kill to a single-PID kill. `read -r pgid rest <<<
+"$line"` replaced it, since `read` discards leading and internal whitespace runs itself.
+**A fix for one AST entry is not exempt from becoming the subject of the next one** — this
+review found real defects in code written specifically to close a review finding, twice in
+the same file in one day.
 Bound: `harness/scripts/herdr-watchdog.sh`.

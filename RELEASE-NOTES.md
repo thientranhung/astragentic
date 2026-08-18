@@ -1,3 +1,22 @@
+# Astraler Harness 2.2.2
+
+Fix: 2.2.1's own race fix still narrowed the window rather than closing it, plus a PGID
+parsing bug in the same diff — both found by a second arm pass fired against 2.2.1 itself.
+
+- The single-instance lock still had a one-line gap between `mkdir` succeeding and the PID
+  being written, and a PID-less lock was still reclaimed on first sight. Now retried for up
+  to a second before a PID-less lock is treated as a genuine crash — long enough that a real
+  instance (which writes its PID in microseconds) is never mistaken for a dead one.
+  Re-measured: 20 concurrent `start` calls, exactly one survivor.
+- `stop`'s combined `ps -o pgid=,args=` parsing used `${line%% *}`, which returns empty when
+  BSD/macOS right-pads the pgid column with leading spaces — silently downgrading a group
+  kill to a single-PID kill. Replaced with `read -r`, which discards leading and internal
+  whitespace itself.
+
+## Upgrade from 2.2.1
+
+Copy `herdr-watchdog.sh`.
+
 # Astraler Harness 2.2.1
 
 Fix: a real double-watchdog race, plus five documentation/UX defects, found by an adapted
