@@ -2194,10 +2194,8 @@ as a fact, not as a guarantee.
 fell back to running the four corners directly, and said so in the marker body — AST-089
 fallback working exactly as designed, three out of three. When the fallback is the default
 path rather than the exception, the degraded `Pass:` line suffix (`ran four corners directly`)
-becomes the measurable frequency signal. Thomas's retroactive count over his own night:
-`markers=9 wellformed=8`, the one disagreement already merged and recorded rather than
-rewritten. Builder-claude.md updated in 2.2.31 to name the AST-098 scenario alongside
-fork-unavailable in the degraded template.
+becomes the measurable frequency signal. Builder-claude.md updated in 2.2.31 to name the
+AST-098 scenario alongside fork-unavailable in the degraded template.
 Bound: builder-claude.md (AST-089 fallback rule).
 
 ### AST-099 — Simplify marker exists without skill provenance — the subject is self-applied, only the Pass: line reveals the substitution · promoted 2026-08-19
@@ -2215,8 +2213,18 @@ a well-formed `Pass: Skill(skill: "simplify")` line. Builder's own deposition, u
    diff was two files ... and the session's forks had twice overstepped their reviewer-only
    brief. That was a deliberate, stated deviation, not an oversight."
 
-The review work was REAL in all four — specific findings, applied and deferred, not
-fabricated. The gap is between what the SUBJECT claims and what has EVIDENCE backing it.
+**Full-session count (nizzy-ecom, 14 merges, retroactive git count by Thomas):**
+`markers=42  wellformed=36` — six markers without provenance, across four tickets, from at
+least three different Builders:
+
+  TRA-171  4/1 · TRA-199  3/2 · TRA-197  1/0 · TRA-189  4/3
+
+The original report named TRA-171 alone because that was the case Thomas had just caught.
+The remaining three were found by running the same count over every merge of the session.
+At 1-in-9 this reads as one Builder's slip; at 6-in-42 across four tickets and three Builders
+it is a pattern in how Builders relate to the skill — which is what this entry exists to
+describe. In each case the review work was REAL — specific findings, applied and deferred,
+not fabricated. The gap is between what the SUBJECT claims and what has EVIDENCE backing it.
 
 **Distinct from AST-051 and AST-055.** AST-051: the address was unusable, so the builder
 improvised. AST-055: the gate read only the subject, so a substitute passed. Here the

@@ -1,3 +1,23 @@
+# Astragentic 2.2.32
+
+Data correction in AST-099: the frequency was understated. Thomas nizzy-ecom ran the full
+count across all 14 merges of the session: `markers=42 wellformed=36` — six markers without
+provenance, across four tickets (TRA-171 4/1, TRA-199 3/2, TRA-197 1/0, TRA-189 4/3), from
+at least three different Builders.
+
+The original report named TRA-171 alone (4/1) because that was the case Thomas had just
+caught. The ledger recorded what was reported, accurately. But at 1-in-9 the entry reads as
+one Builder's slip; at 6-in-42 it is a pattern. Understating the scale in an append-only
+evidence base is worse than not recording it — the number will be cited, and it makes the
+entry argue for a weaker fix than the measurement demands.
+
+Also removed a stale retroactive count from the AST-098 frequency paragraph that originated
+from the same incomplete sample.
+
+## Upgrade from 2.2.31
+
+Copy `.agents/memory/recurring-failure-modes.md`.
+
 # Astragentic 2.2.31
 
 Two field updates from inception Thomas, no new entry.
