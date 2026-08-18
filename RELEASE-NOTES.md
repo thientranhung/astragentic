@@ -1,3 +1,33 @@
+# Astraler Harness 2.2.10
+
+Fix: the reaper added in 2.2.9 exits the watchdog silently.
+
+Both etsy-fulfillment-thanh's and workspace-app-inception's own Thomas, re-verifying 2.2.9 by
+hand, ran the holder-alone-death scenario and found the log carried no trace of why the
+watchdog had vanished. `holder_gone_die()` (called from `sleep_or_die`, between main-loop
+iterations) logs before it exits; the reaper (added in 2.2.9 specifically to catch a holder
+death that happens WHILE the main loop is stuck in a slow or hung `herdr` call) signals via
+`kill -TERM "$$"`, which the existing `trap 'exit 0' INT TERM` catches silently. Measured on one
+project's machine: the reaper wins that race essentially every time, so the operator was left
+with a watchdog that stopped and nothing in the log to say why.
+
+- The reaper now logs the same explanation before it signals. Whichever of the two watchers
+  wins the race, the log carries the reason.
+
+**A transition hazard worth naming, found by the same re-verification pass**: `LOCK_FILE` uses
+the same path before and after 2.2.5, but the type changed — a `mkdir`-based lock before it, a
+`flock`-held plain file from 2.2.5 on. Any *other* copy of this script on the same machine still
+below 2.2.5 (a global fallback path, an unrelated project's stale copy) that starts against the
+same workspace-label will see a "directory" it cannot create, conclude the lock is broken, and
+`rm -rf` it — deleting a live 2.2.9 instance's lock file out from under it. Not a defect in
+2.2.9; a hazard in any machine mid-upgrade with more than one copy of this script live. Upgrade
+every copy of `herdr-watchdog.sh` together, including any fallback path outside a project's own
+repo, not just the primary one.
+
+## Upgrade from 2.2.9
+
+Copy `herdr-watchdog.sh`.
+
 # Astraler Harness 2.2.9
 
 Fix: the 2.2.7 flock-plus-holder rewrite only watched in one direction. A fresh arm pass fired

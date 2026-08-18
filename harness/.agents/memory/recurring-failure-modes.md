@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 77 entries (AST-001 … AST-078, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 78 entries (AST-001 … AST-079, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1605,4 +1605,25 @@ hand, named this directly: "pass 1 of a new gate, because the artifact changed u
 not a third pass of the one already spent. Trusting a design's own reproductions to stand in for
 a gate that was never actually run against it is the same mistake AST-076's "the judgement
 itself was wrong" closing note already named once.
+Bound: `harness/scripts/herdr-watchdog.sh`.
+
+### AST-079 — the reaper that closes AST-078 exits silently, and the lock changed type across a version boundary · promoted 2026-08-18
+
+Two smaller findings from the same round of independent re-verification, both from adapted
+projects' own Thomas re-testing the 2.2.9 fix by hand rather than trusting the arm's word for
+it. First: the reaper process added in 2.2.9 to close AST-078 signals the watchdog via
+`kill -TERM "$$"`, caught by the existing silent `trap 'exit 0' INT TERM` — so the one log
+line that would explain a holder-death exit, written by `holder_gone_die()`, only fires when
+the OTHER watcher (the one built into the main loop) happens to win the race. Measured on one
+project's machine: the reaper won every single time, so every holder-death exit left nothing in
+the log. Fixed by logging in the reaper too, before it signals.
+
+Second, found in the course of testing rather than by the arm: `LOCK_FILE` kept its path across
+the 2.2.4 → 2.2.5 boundary but changed type, from a `mkdir`-made directory to a `flock`-held
+plain file. A stale copy of the pre-2.2.5 script anywhere else on the same machine — a fallback
+path, an unrelated project's own copy not yet upgraded — that starts against the same
+workspace-label sees a path it cannot `mkdir`, concludes the lock is broken by the old design's
+own logic, and `rm -rf`s it, deleting a live 2.2.9 instance's lock out from under it. Not a
+defect in the new lock; a hazard specific to any lock scheme changing type at a fixed path
+during the window before every copy referencing that path has been upgraded together.
 Bound: `harness/scripts/herdr-watchdog.sh`.

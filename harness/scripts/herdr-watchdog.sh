@@ -294,7 +294,13 @@ sleep_or_die() {
 # Runs independently of the main loop, so a dead holder is still caught
 # within about a second even while that loop is stuck inside a slow or
 # hung `herdr` call — sleep_or_die alone only checks between iterations.
+# Logs before signalling: this reaper wins the race against
+# holder_gone_die's own log line almost every time (measured: zero holder-
+# death runs ever hit the sleep_or_die path first), so without this line
+# the operator sees a watchdog that vanished with nothing in the log to
+# explain why.
 ( while holder_alive; do sleep 1; done
+  log "lock holder (pid $HOLDER_PID) is gone — signalling this process to exit"
   kill -TERM "$$" 2>/dev/null ) &
 REAPER_PID=$!
 
