@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 97 entries (AST-001 … AST-098, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 98 entries (AST-001 … AST-099, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -2188,6 +2188,16 @@ reads it. AST-055's `Pass:` line was the answer to "which tool ran"; the open qu
 
 The builder's self-report is the current defence, and it worked here. That is worth recording
 as a fact, not as a guarantee.
+
+**Frequency update (inception, one session):** three builders on three unrelated tickets
+(TRA-179, TRA-201, TRA-181) all hit fork-narration in the same night. All three named it,
+fell back to running the four corners directly, and said so in the marker body — AST-089
+fallback working exactly as designed, three out of three. When the fallback is the default
+path rather than the exception, the degraded `Pass:` line suffix (`ran four corners directly`)
+becomes the measurable frequency signal. Thomas's retroactive count over his own night:
+`markers=9 wellformed=8`, the one disagreement already merged and recorded rather than
+rewritten. Builder-claude.md updated in 2.2.31 to name the AST-098 scenario alongside
+fork-unavailable in the degraded template.
 Bound: builder-claude.md (AST-089 fallback rule).
 
 ### AST-099 — Simplify marker exists without skill provenance — the subject is self-applied, only the Pass: line reveals the substitution · promoted 2026-08-19
@@ -2232,4 +2242,15 @@ builder types too, but its required form names the tool, and a builder who did n
 tool has to either lie (write the line without running the skill) or omit it (write the
 subject without the line). Every measured instance chose omission, which is the honest path
 and the one the count catches.
+
+**The mirror exists too: provenance without a marker.** Measured on inception TRA-181: the
+Builder did real simplify work, wrote a correct `Pass: Skill(skill: "simplify")` line, then
+folded it into the `feat(core):` commit instead of a separate `simplify(increment):` commit.
+Check 2 reports `markers=0 wellformed=0` — both counts agree, and agreement means no finding
+under this entry's rule. AST-094's zero-markers STOP catches it independently. The lesson is
+the same from the other side: the marker subject is the ONLY thing a later grep can see. A
+well-formed Pass: line living inside a non-marker commit is invisible to the check. The
+Builder was not cutting a corner — it produced MORE evidence than the contract asks for and
+put it in the wrong place. One handback asking for an `--allow-empty` marker commit resolved
+it.
 Bound: dispatch-ticket/SKILL.md.

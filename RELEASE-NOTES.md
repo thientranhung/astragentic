@@ -1,3 +1,27 @@
+# Astragentic 2.2.31
+
+Two field updates from inception Thomas, no new entry.
+
+**AST-099 mirror case:** a Builder wrote a correct `Pass:` line but folded it into the `feat`
+commit instead of a separate `simplify(increment):` commit. Check 2 sees `markers=0
+wellformed=0` — agreement, no finding under the new rule. AST-094's zero-markers STOP caught
+it independently. Same lesson, opposite direction: the marker subject is the only thing a
+later grep can see. Added as a paragraph in AST-099.
+
+**AST-098 frequency:** fork-narration hit three builders on three unrelated tickets in one
+session (TRA-179, TRA-201, TRA-181). All three used the AST-089 fallback correctly. When the
+fallback is effectively the default path, the degraded `Pass:` line suffix becomes the
+measurable frequency signal.
+
+**builder-claude.md:** the degraded template now names both variants — fork unavailable AND
+forks returned narration (AST-098) — with separate examples. Builders hitting the more common
+failure now see the template that matches their situation.
+
+## Upgrade from 2.2.30
+
+Copy `.agents/roles/builder-claude.md`.
+Copy `.agents/memory/recurring-failure-modes.md`.
+
 # Astragentic 2.2.30
 
 AST-099: Simplify marker subject exists without skill provenance. Builder committed four

@@ -18,15 +18,21 @@ exist and the call errors — measured, on a Builder that had just invoked
 stop; do not reach for the `code-simplifier` agent, another skill, or your own pass — a
 substitute leaves the same marker, so every check after it reads as satisfied (AST-055).
 
-**A fan-out failure inside a started invocation is not an invocation failure.** If
-`Skill(skill: "simplify")` runs but its internal parallel review cannot fork — measured as
-`Fork is not available inside a forked worker`, from a Builder dispatched into a Herdr pane —
-running the four review corners directly, inside that same invocation, is the skill completing
-degraded, not you substituting for it. The `Pass:` line still names the skill, with the
-fallback named:
+**A fan-out failure inside a started invocation is not an invocation failure.** Two measured
+variants:
+- **Fork unavailable** — `Fork is not available inside a forked worker`, from a Builder
+  dispatched into a Herdr pane.
+- **Forks return narration** — forks launch but return the coordinator's own turn-by-turn
+  status chatter instead of doing the assigned review (AST-098). Three builders in one
+  session hit this on three unrelated tickets.
+
+In both cases: running the four review corners directly, inside that same invocation, is the
+skill completing degraded, not you substituting for it. The `Pass:` line still names the
+skill, with the reason after a ` — `:
 
 ```
 Pass: Skill(skill: "simplify") — fork unavailable, ran four corners directly
+Pass: Skill(skill: "simplify") — forks returned narration (AST-098), ran four corners directly
 ```
 
 Only a total invocation failure — the skill never starts, or errors before any review runs —
@@ -44,12 +50,18 @@ git commit -m 'simplify(increment): <what was cleaned>
 Pass: Skill(skill: "simplify")'
 ```
 
-**Degraded run** (fork unavailable — append the reason after a ` — `):
+**Degraded run** (fork unavailable or forks returned narration — append the reason after ` — `):
 
 ```bash
 git commit -m 'simplify(increment): <what was cleaned>
 
 Pass: Skill(skill: "simplify") — fork unavailable, ran four corners directly'
+```
+
+```bash
+git commit -m 'simplify(increment): <what was cleaned>
+
+Pass: Skill(skill: "simplify") — forks returned narration (AST-098), ran four corners directly'
 ```
 
 **Empty run** (no findings):
