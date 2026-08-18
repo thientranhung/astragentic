@@ -1517,4 +1517,16 @@ check while `refs/heads/$BASE` did not exist, so every following `git log "$BASE
 fixed, wrong point in history instead of failing loudly. Scoped the check to `refs/heads/$BASE`
 specifically; the failure it prevents is the same shape as the watchdog's — a check that
 accepts more than the one thing it is meant to verify.
+
+**That fix itself shipped incomplete, caught by a SECOND arm pass fired against it** — the
+kind of check this exact ledger exists to normalize. `refs/heads/$BASE` was verified, and then
+every `git log`, the unmerged-commit count, all four of them, kept reading the bare `$BASE`
+regardless — so a repo carrying BOTH a branch and a tag named `main` still passed the
+(correct) existence check and then still read the tag's history, because git's own bare-name
+resolution does not favor whichever ref a caller happened to verify a moment earlier.
+Reproduced directly: a branch commit subject `ONBRANCH` and a tag commit subject `ONTAG` on
+the same name, and the script reported the tag's. The comment written alongside the first fix
+NAMED this exact hazard and did not apply it to the reads — writing down a risk is not the
+same act as closing it. Fixed by binding one `BASE_REF="refs/heads/$BASE"` right after
+verification and reading through it everywhere, not just checking through it once.
 Bound: `harness/scripts/herdr-watchdog.sh`, `harness/scripts/ticket-git-facts.sh`.

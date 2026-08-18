@@ -89,14 +89,24 @@ fi
 # named the same as a nonexistent branch (measured: a "main" tag on a repo
 # whose actual branch was "trunk") would pass this check while every
 # following `git log "$BASE"` read the wrong history.
+#
+# BASE_REF, not bare $BASE, in every read below too — a live project's own
+# arm pass caught the first version of this fix verifying the branch and
+# then reading the bare name anyway: a repo with BOTH a branch and a tag
+# named "main" passes the check above (the branch exists) and then every
+# `git log "$BASE"` reads the TAG instead, because git's own bare-name
+# resolution does not favor the ref this script just verified. Naming the
+# hazard in a comment and not applying it to the reads is the same defect
+# as not naming it at all.
 if ! git rev-parse --verify --quiet "refs/heads/$BASE" >/dev/null; then
   echo "ticket-git-facts: base branch '$BASE' does not exist (set BASE_BRANCH to override the default)" >&2
   exit 1
 fi
+BASE_REF="refs/heads/$BASE"
 
 if [ -z "$tickets" ]; then
   tickets=$(
-    git log "$BASE" --format='%s' \
+    git log "$BASE_REF" --format='%s' \
       | grep -oE "${PREFIX}-[0-9]+" \
       | sort -u -t- -k2 -n
   )
@@ -111,10 +121,10 @@ printf 'ticket\tsubject_commits\tnewest_subject\tlocal_branch\tunmerged_commits\
 
 for t in $tickets; do
   # \b so a shorter id never matches inside a longer one.
-  n=$(git log "$BASE" --format='%s' | grep -cE "${t}\b" || true)
+  n=$(git log "$BASE_REF" --format='%s' | grep -cE "${t}\b" || true)
 
   if [ "$n" -gt 0 ]; then
-    newest=$(git log "$BASE" --format='%s' | grep -E "${t}\b" | head -1)
+    newest=$(git log "$BASE_REF" --format='%s' | grep -E "${t}\b" | head -1)
   else
     newest="-"
   fi
@@ -124,7 +134,7 @@ for t in $tickets; do
   branch=${branch:-"-"}
 
   if [ "$branch" != "-" ]; then
-    unmerged=$(git rev-list --count "${BASE}..${branch}" 2>/dev/null || echo "?")
+    unmerged=$(git rev-list --count "${BASE_REF}..${branch}" 2>/dev/null || echo "?")
     wt=$(git worktree list --porcelain \
          | awk -v b="refs/heads/$branch" '/^worktree /{p=$2} /^branch /{if($2==b) print p}' \
          | head -1)

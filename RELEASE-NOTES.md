@@ -1,3 +1,23 @@
+# Astraler Harness 2.2.6
+
+Fix: 2.2.5's own base-branch fix was incomplete, caught by a second arm pass fired against it.
+
+`refs/heads/$BASE` was verified to exist, and then every `git log`, plus the unmerged-commit
+count, kept reading the bare `$BASE` regardless — so a repo carrying both a branch and a tag
+named `main` still passed the (correct) existence check and then still read the tag's history.
+Reproduced directly: a branch commit and a tag commit on the same name, script reported the
+tag's. The comment written alongside the first fix named this exact hazard without applying it
+to the reads. Bound one `BASE_REF="refs/heads/$BASE"` right after verification; every read now
+goes through it.
+
+A related arm claim — that `bash -x scripts/herdr-watchdog.sh` breaks the identity check from
+2.2.5 and lets `stop` silently fail — was reproduced against and refuted: the internal setsid
+re-exec normalizes argv before the PID is ever recorded, so `-x` never survives to the check.
+
+## Upgrade from 2.2.5
+
+Copy `ticket-git-facts.sh`.
+
 # Astraler Harness 2.2.5
 
 Fix: `stop`'s identity check could be fooled into signaling an unrelated process. Found and
