@@ -487,6 +487,21 @@ If the output is non-empty — staged, modified, or untracked files — **STOP**
 has work that was not committed. Do not remove it. Report to the owner with the file list and
 the ticket id, and wait for a decision: commit and continue, or discard explicitly.
 
+**Check the worktree for simplify markers before accepting the handback.** A Builder that
+commits and pushes correctly can still skip the simplify pass — two measured instances on
+well-specified tickets where the ticket's own acceptance criteria substituted for the role
+contract's definition of done (AST-094). The Builder's self-check may catch this, but the
+mechanism that causes the skip (the ticket checklist displacing the contract) also displaces
+the self-check, so Thomas verifies independently:
+
+```bash
+cd <worktree-path>
+git log <base>..HEAD --grep '^simplify(increment):' --oneline
+```
+
+If the count is zero, the simplify pass was skipped. **STOP** — send the Builder back to run
+it. Do not merge a branch with zero simplify markers.
+
 If the output is empty, the worktree is clean and removal is safe:
 
 ```bash

@@ -1,3 +1,29 @@
+# Astragentic 2.2.23
+
+AST-094 update: the initial hypothesis (strong handback template displaces simplify) was
+retracted after Thomas asked both Builders directly. Neither mentioned the handback.
+
+**Actual mechanism:** the ticket's acceptance criteria substituted for the role contract's
+definition of done. Both Builders read the contract at session start; at session end, both
+looked at the ticket's checklist and the green test suite. Builder TRA-198: "a ticket that
+is itself well-specified is exactly the case where I skip the step that isn't in the ticket."
+This correlates with well-specified tickets, not careless ones.
+
+The 2.2.22 Builder-side self-check may be insufficient alone — the mechanism that causes the
+skip also displaces the self-check, since both live in the same contract the Builder stopped
+consulting. This release adds a Thomas-side independent guard:
+
+- dispatch-ticket: Thomas checks `git log <base>..HEAD --grep '^simplify(increment):'`
+  before accepting a handback for merge. Zero markers = STOP, send Builder back. This guard
+  does not depend on the Builder's memory.
+- .claude copy synced (AST-093 guard in place)
+- AST-094 ledger entry updated with actual mechanism and Builder depositions
+
+## Upgrade from 2.2.22
+
+Copy `.agents/skills/dispatch-ticket/SKILL.md` and its `.claude` copy. The ledger entry for
+AST-094 is updated with the real mechanism.
+
 # Astragentic 2.2.22
 
 Fix: Builder can commit, push, and return correctly while silently skipping the simplify

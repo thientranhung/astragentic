@@ -2011,19 +2011,36 @@ same orchestrator row, same runtime/model, each carried 3-4 simplify markers wit
 `Pass:` lines. The 2.2.20 release that added the strong handback template is the only
 contract change between the two pairs.
 
-Hypothesis (correlation, not causation, n=2): a phase endpoint with a strong template and
-three explicit verbs can become the target a Builder aims for, causing earlier phases without
-equivalent templates to be skipped. Not proven — both Builders may independently have been
-careless. Thomas asked both Builders directly what they read or aimed for at the point of
-stopping; those answers are pending and would be the only data from inside the turn.
+Initial hypothesis (2.2.22): the strong handback template in 2.2.20 displaced the simplify
+step. RETRACTED by Thomas after asking both Builders directly. Neither mentioned the handback.
 
-Regardless of cause, nothing in the pipeline self-detected this. Pane status, worktree
-cleanliness, branch push, and commit messages all read as correct. Only Thomas's artifact
-check at merge (the grep for `^simplify(increment):`) caught it. Same class as AST-092:
-a step that does not self-check is a step that can be silently skipped.
+**Actual mechanism, from two independent Builder depositions:** the ticket's acceptance
+criteria substituted for the role contract's definition of done. Both Builders had read the
+contract's three-phase table at session start. At session end, both looked at the ticket's
+acceptance checklist and the green test suite. Builder TRA-198: "a ticket that is itself
+well-specified is exactly the case where I skip the step that isn't in the ticket, because
+the ticket already felt authoritative." Builder TRA-192: "I let the ticket's acceptance list
+... stand in as the complete definition of finished."
 
-Fixed by adding a self-check in builder.md's "Handing back" section: before returning, the
-Builder runs the same grep Thomas would run and verifies the count is non-zero. Zero is STOP
-— go back and run simplify. The guard sits between push and return, so the Builder cannot
-reach the return-to-Thomas step without passing it.
-Bound: builder.md.
+**This correlates with well-specified tickets, not careless ones.** The better the ticket's
+own checklist, the more authoritative it feels, and the more likely it displaces contract
+phases not named in it. This project writes tickets well. That may be why the failure
+appeared here first.
+
+Nothing in the pipeline self-detected this. Pane status, worktree cleanliness, branch push,
+and commit messages all read as correct. Only Thomas's artifact check at merge (the grep for
+`^simplify(increment):`) caught it. Same class as AST-092: a step that does not self-check
+is a step that can be silently skipped.
+
+Fixed in two places:
+- builder.md: self-check before returning — Builder runs the simplify grep and verifies
+  non-zero. Zero is STOP. This guard sits between push and return.
+- dispatch-ticket: Thomas-side independent check — the same grep, run by Thomas before
+  accepting the handback for merge. This guard does not depend on the Builder's memory,
+  which is exactly the faculty the measured mechanism displaces.
+
+The Builder-side guard (2.2.22) may be insufficient alone, because the mechanism that causes
+the skip (the ticket checklist displacing the contract) also displaces the self-check — both
+live in the same contract the Builder stopped consulting. The Thomas-side guard (2.2.23) is
+independent of that mechanism.
+Bound: builder.md, dispatch-ticket/SKILL.md.
