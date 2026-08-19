@@ -3,13 +3,23 @@
     "WorktreeRemove": [
       {
         "matcher": "",
-        "command": "GATE_WORKTREE=\"$WORKTREE_PATH\"; broker_pid=$(ps -eo pid=,command= | grep 'app-server-broker.mjs' | grep -- \"--cwd $GATE_WORKTREE\" | awk '{print $1}'); [ -n \"$broker_pid\" ] && kill \"$broker_pid\" 2>/dev/null; make -C \"$GATE_WORKTREE\" db-down 2>/dev/null || true"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "GATE_WORKTREE=\"$WORKTREE_PATH\"; broker_pid=$(ps -eo pid=,command= | grep 'app-server-broker.mjs' | grep -- \"--cwd $GATE_WORKTREE\" | awk '{print $1}'); [ -n \"$broker_pid\" ] && kill \"$broker_pid\" 2>/dev/null; make -C \"$GATE_WORKTREE\" db-down 2>/dev/null || true"
+          }
+        ]
       }
     ],
     "SubagentStop": [
       {
         "matcher": "",
-        "command": "echo \"HOOK: SubagentStop — agent=$AGENT_NAME session=$SESSION_ID exited\" >> /tmp/harness-hook-events.log"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"HOOK: SubagentStop — agent=$AGENT_NAME session=$SESSION_ID exited\" >> /tmp/harness-hook-events.log"
+          }
+        ]
       }
     ]
   }
