@@ -111,41 +111,8 @@ for ROLE in thomas shaper builder rin qa; do
     budget_check "roles/$ROLE.md" "$(role_budget "$ROLE")" "$(wc -w < "$RF" | tr -d ' ')"
   fi
 done
-# Runtime supplements (*-claude.md, *-codex.md, *-opencode.md) load alongside their base
-# contract every session on that runtime, so they are always-on for any Builder/Thomas/Rin
-# dispatched there. Until 2.2.36 nothing measured them — builder-claude.md grew 47% in one
-# session (546 → 802 words across four releases) and no alarm fired. The base contract's
-# budget only tracks itself; the combined surface a Claude Builder actually pays is
-# builder.md + builder-claude.md, and only the first was bounded.
-#
-# Budgets calibrated 2026-08-19 with ~150-word margin over current ship size, same policy
-# as the base role budgets above.
-supplement_budget() {
-  case "$1" in
-    builder-claude)   echo 950  ;;  # ships at 802; widest supplement — simplify templates,
-                                    # fan-out variants, background-work rules
-    thomas-claude)    echo 400  ;;  # ships at 259
-    thomas-codex)     echo 300  ;;  # ships at 149
-    thomas-opencode)  echo 400  ;;  # ships at 263
-    builder-codex)    echo 320  ;;  # ships at 167
-    builder-opencode) echo 330  ;;  # ships at 174
-    rin-claude)       echo 220  ;;  # ships at 64
-    rin-codex)        echo 220  ;;  # ships at 72
-    rin-opencode)     echo 220  ;;  # ships at 72
-    *)                echo 400  ;;  # unknown supplement — generous default
-  esac
-}
-SUPP_RUN=0
-for SF in "$PAYLOAD"/.agents/roles/*-claude.md "$PAYLOAD"/.agents/roles/*-codex.md "$PAYLOAD"/.agents/roles/*-opencode.md; do
-  if [[ -f "$SF" ]]; then
-    SUPP_RUN=$((SUPP_RUN + 1))
-    BASENAME="$(basename "$SF" .md)"
-    budget_check "roles/$BASENAME.md" "$(supplement_budget "$BASENAME")" "$(wc -w < "$SF" | tr -d ' ')"
-  fi
-done
-if [[ $SUPP_RUN -gt 0 ]]; then
-  echo "  ($SUPP_RUN supplements measured)"
-fi
+
+
 # `orchestrator.md` is always-on too — Thomas reads it at session start — and until now
 # nothing measured it, so it was the one billed surface that could grow without a verdict.
 # It also cannot be repaired by a release: it is SCAFFOLD, written once and never

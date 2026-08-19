@@ -22,8 +22,5 @@ finds it.
 
 ## Context management
 
-This runtime has no `/compact` or `/clear`. opencode's TUI manages context by scrolling;
-there is no compact or clear command. When the conversation grows long, write a durable
-checkpoint — branch and SHA, WIP state, criteria passed, exact validation results, blockers,
-next action — into the tracker or the handoff artifact, then re-ground from it plus `git log`
-and the current diff.
+No `/compact` or `/clear` on this runtime. opencode's TUI manages context by scrolling.
+Write a durable checkpoint when conversation grows long (same as base contract).

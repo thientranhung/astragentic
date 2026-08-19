@@ -22,7 +22,5 @@ finds it.
 
 ## Context management
 
-This runtime has no `/compact` or `/clear`. Context grows until the session ends.
-When the conversation grows long, write a durable checkpoint — branch and SHA, WIP state,
-criteria passed, exact validation results, blockers, next action — into the tracker or the
-handoff artifact, then re-ground from it plus `git log` and the current diff.
+No `/compact` or `/clear` on this runtime. Context grows until session ends. Write a durable
+checkpoint when conversation grows long (same as base contract).

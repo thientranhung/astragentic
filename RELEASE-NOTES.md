@@ -1,3 +1,24 @@
+# Astragentic 2.2.37
+
+Deduplicate runtime supplements and remove supplement budget constraints.
+
+**builder-claude.md**: 802 → 325 words (-60%). Removed content duplicated from builder.md:
+simplify intro sentence, cleanup limits, Long tickets checkpoint guidance. Only
+Claude-specific content remains (invocation address, fan-out variants, commit templates,
+background work rules).
+
+**builder-codex.md**: 167 → 136 (-19%). **builder-opencode.md**: 174 → 137 (-21%). Both:
+context management section trimmed to one sentence referencing base contract.
+
+**docs-staleness-audit.sh**: removed the supplement budget system added in 2.2.36. The
+real problem was duplicate content, not file size. Budget constraints on supplements created
+recurring friction without catching actual issues.
+
+## Upgrade from 2.2.36
+
+Copy `.agents/roles/builder-claude.md`, `builder-codex.md`, `builder-opencode.md`.
+Copy `scripts/docs-staleness-audit.sh`.
+
 # Astragentic 2.2.36
 
 Nine runtime supplement files (*-claude.md, *-codex.md, *-opencode.md) were always-on
