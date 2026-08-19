@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 108 entries (AST-001 … AST-109, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 109 entries (AST-001 … AST-110, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -2527,3 +2527,40 @@ Fix: locate the Makefile that actually declares the target, then run it there �
 container" and "the command was aimed at the wrong directory" stop reading the same.
 
 Bound: codex-arm/SKILL.md (both variants), .claude/settings.json.
+
+### AST-110 — A protocol change is an edit plus a sweep, and doc drift has at least three shapes · promoted 2026-08-19
+
+2.3.4 changed how every runtime watches a builder. It changed the two files that state the
+rule, was tested, validated and staged, and shipped with **six** other places still teaching
+the old one. Nothing in the process was skipped; the missing step was the question *who else
+says this?*, which no check asks and no test fails on.
+
+Each of the three follow-up releases found a different shape, and the sweep written for one
+shape could not see the next:
+
+| Shape | Example | Why the previous sweep missed it |
+|---|---|---|
+| **Contradiction** | `thomas-claude.md`: "Do not use the shared protocol's … watcher script for Claude builders" — forbidding what the release made mandatory | Nothing; a grep for the old rule finds these |
+| **Withheld instruction** | A section headed "(Codex/OpenCode only)" opening "Claude runtime — skip this section", after Claude started using it | Reads as *scoping*, not as an error, until you notice the scope moved. A grep for contradictions cannot see it |
+| **Partial edit** | A `pane=<id>` suffix propagated to the three `TERMINAL:` rows of a branch table, skipping the `TIMEOUT` and `NO_START` rows beside them | The author pattern-matched on `TERMINAL:`. Three rows updated reads as a finished table to anyone diffing it |
+
+The severity order is the reverse of the discovery order, and the last is the quietest: a
+contradiction announces itself to any careful reader, a partial edit looks complete.
+
+**Documents compared to documents can agree and both be wrong.** The check that works
+compares the document to the EMITTER: read the literals the script echoes, then require every
+branch-table row to quote the real shape, suffix included. That is now axis 3 of
+`docs-staleness-audit.sh`, and it is proven to fail by reverting one row.
+
+The first version of that sweep asked whether the word `pane` appeared on the row. Both broken
+rows passed — their prose ends "inspect pane" and "re-read pane". **A check whose green means
+a word occurred, rather than the documented string matching the emitted one, is AST-032 in a
+sweep's costume** — rebuilt, once again, inside the check written to prevent it.
+
+Every one of the six sites was found by the downstream agent applying the upgrade, not by the
+release that shipped it. That is the wrong end of the pipe, and it worked only because that
+agent re-derived the delta instead of trusting the release's own file list.
+
+Bound: scripts/docs-staleness-audit.sh (axis 3), dispatch-ticket/SKILL.md,
+dispatch-ticket-claude/SKILL.md, thomas-claude.md, thomas-codex.md, thomas-opencode.md.
+

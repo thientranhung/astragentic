@@ -235,5 +235,56 @@ fi
 [[ $A5 -eq 1 ]] || echo "(clean)"
 
 echo
+echo "=== 3. documented signal strings vs what the emitter actually prints ==="
+# Documents compared to documents can agree and both be wrong. This axis compares the
+# branch tables to the EMITTER: it reads every literal the watcher script echoes and
+# requires each documented row to quote the real shape, suffix included.
+#
+# It exists because a partial edit passed every other check. 2.3.4 added a `pane=<id>`
+# suffix to the watcher's output; 2.3.6 propagated it to the three TERMINAL: rows of each
+# branch table and silently skipped the TIMEOUT and NO_START rows beside them, because the
+# author was pattern-matching on `TERMINAL:`. Three rows updated reads as a finished table
+# to anyone diffing it.
+#
+# The first sweep written for this asked whether the word "pane" appeared on the row. Both
+# broken rows passed — their prose ends "inspect pane" and "re-read pane". A check whose
+# green means A WORD OCCURRED rather than THE DOCUMENTED STRING MATCHES THE EMITTED ONE is
+# AST-032 in a sweep's costume. Match the token AND its required suffix, or match nothing.
+A6=0
+WATCHER="$PAYLOAD/scripts/herdr-watch-terminal.sh"
+if [[ -f "$WATCHER" ]]; then
+  # Every state token the script can print, taken from the script, never from a doc.
+  TOKENS="$( { grep -oE 'echo "(TERMINAL:\$?[a-z]*|TIMEOUT|NO_START)' "$WATCHER" || true; } \
+             | sed 's/echo "//' | sed 's/TERMINAL:\$first/TERMINAL:/' | sort -u )"
+  EMITS_PANE=0
+  grep -q 'pane=\$PANE' "$WATCHER" && EMITS_PANE=1
+
+  if [[ -z "$TOKENS" ]]; then
+    echo "  the watcher script prints no recognisable state token — this axis read nothing"
+    A6=1; FOUND=1
+  elif [[ $EMITS_PANE -eq 1 ]]; then
+    while IFS= read -r doc; do
+      [[ -f "$doc" ]] || continue
+      while IFS= read -r tok; do
+        [[ -n "$tok" ]] || continue
+        # Rows are the lines that quote the token as a branch value: `- `TOKEN...` → `.
+        while IFS= read -r row; do
+          [[ -n "$row" ]] || continue
+          if [[ "$row" != *"pane="* ]]; then
+            echo "  ${doc#$ROOT/}: branch row quotes \`$tok\` without the pane= suffix the script emits"
+            echo "    $(echo "$row" | sed 's/^[0-9]*://' | cut -c1-90)"
+            A6=1; FOUND=1
+          fi
+        done < <( { grep -nE "^- .*\`[^\`]*${tok}[^\`]*\`.*→" "$doc" || true; } )
+      done <<< "$TOKENS"
+    done < <(find "$PAYLOAD/.agents/skills" "$PAYLOAD/.claude/skills" -name SKILL.md 2>/dev/null)
+  fi
+else
+  echo "  no watcher script at $WATCHER — this axis measured nothing"
+  A6=1; FOUND=1
+fi
+[[ $A6 -eq 1 ]] || echo "(clean)"
+
+echo
 [[ $FOUND -eq 1 ]] && echo "RESULT: findings above — verify each against code/truth-model before editing." || echo "RESULT: all clean."
 exit $FOUND

@@ -352,8 +352,8 @@ Branch on `$?` **and the payload** when it returns:
 - `0` + `TERMINAL:done pane=<id>` → builder's turn ended, **not necessarily finished** — check for background processes before concluding (see below)
 - `0` + `TERMINAL:idle pane=<id>` → builder idle, check git log — may be finished or may have stopped early
 - `0` + `TERMINAL:blocked pane=<id>` → builder is asking a question, **read pane immediately and answer** — do NOT proceed to artifact verification, the builder is waiting for you
-- `1` + `TIMEOUT` → builder exceeded cap, inspect pane
-- `2` + `NO_START` → builder never started working, re-read pane
+- `1` + `TIMEOUT after <max>s pane=<id>` → builder exceeded cap, inspect pane
+- `2` + `NO_START pane=<id>` → builder never started working, re-read pane
 
 **Read the payload, not just the exit code.** Exit 0 has four meanings now. `blocked` means
 the builder hit a decision it cannot make alone — read the pane, answer the question, then

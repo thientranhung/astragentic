@@ -120,8 +120,8 @@ slices the wait and takes its verdict from a fresh `herdr agent get`, so a deaf 
 - `TERMINAL:done pane=<id>` → builder's turn ended, **not necessarily finished** — check for background processes (AST-097) before concluding
 - `TERMINAL:blocked pane=<id>` → read the pane immediately, answer via SendMessage, start a NEW Monitor
 - `TERMINAL:idle pane=<id>` → check git log — may be finished or may have stopped early
-- `TIMEOUT` → builder exceeded the cap, inspect the pane
-- `NO_START` → builder never reached `working`, re-read the pane; the brief may not have arrived
+- `TIMEOUT after <max>s pane=<id>` → builder exceeded the cap, inspect the pane
+- `NO_START pane=<id>` → builder never reached `working`, re-read the pane; the brief may not have arrived
 
 **Three builders in flight means three Monitors, one per pane — not one Monitor for all.**
 Verified 2026-08-19: three concurrent Monitors were armed and all three delivered, each with

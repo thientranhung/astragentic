@@ -1,3 +1,40 @@
+# Astragentic 2.3.7
+
+The sixth stale site, and the check that would have caught all six. Found by the downstream
+agent applying 2.3.6 — the third consecutive release whose defect was found downstream rather
+than upstream.
+
+## What changed
+
+- **`TIMEOUT` and `NO_START` branch rows carry the `pane=<id>` suffix**, in both
+  `dispatch-ticket` and `dispatch-ticket-claude`, both payload copies. 2.3.6 added the suffix
+  to the three `TERMINAL:` rows of each table and skipped the two siblings beside them,
+  because the edit was pattern-matched on `TERMINAL:`. The release whose stated defect was
+  "a reader matching the documented string against real output finds it does not match"
+  shipped that defect in two of five rows of the table it existed to fix.
+- **`docs-staleness-audit.sh` axis 3 — documented signal strings vs what the emitter prints**:
+  reads every literal `herdr-watch-terminal.sh` echoes and requires each branch-table row to
+  quote the real shape, suffix included. Documents compared to documents can agree and both be
+  wrong; this compares documents to the emitter. **Proven to fail**: reverting one row turns
+  the axis red, and it catches the row whose prose ends "re-read pane" — the false-green the
+  first draft of this sweep fell for.
+- **AST-110**: a protocol change is an edit plus a sweep, and doc drift has at least three
+  shapes — contradiction, withheld instruction, partial edit — in reverse order of how loudly
+  they announce themselves. A sweep written for one shape does not see the next.
+
+## Why this took four releases
+
+2.3.4 changed the watching protocol correctly and shipped with six other places teaching the
+old one. 2.3.5 fixed four, 2.3.6 fixed the fifth and introduced the sixth, 2.3.7 fixes that
+and replaces the human sweep with a check. Each round found a shape the previous round's sweep
+was blind to, and every one was caught by the downstream agent applying the upgrade rather
+than by the release — which worked only because that agent re-derived the delta instead of
+trusting the release's own file list.
+
+## Upgrade from 2.3.6
+
+Copy entire `harness/` directory. One script gains an axis; no settings or hook changes.
+
 # Astragentic 2.3.6
 
 The fifth stale site, found by the same downstream agent, one heading below the four that
