@@ -86,8 +86,21 @@ disambiguator (`-p2`, a counter, a short token) when a previous gate used that p
 session.
 
 A count of zero, or a changed-file set that is not the artifact you meant to review, is a
-STOP — not a pass. Remove the worktree when the pass is recorded; the arm never removes the
-Builder's.
+STOP — not a pass.
+
+**Clean up the gate worktree when the pass is recorded**, in this order:
+
+1. Kill the companion's broker process BEFORE removing the directory — after
+   removal, only argv identifies the orphan. Find it by the `--cwd` that matches
+   the gate worktree path:
+   ```bash
+   broker_pid=$(ps -eo pid=,command= | grep "app-server-broker.mjs" \
+     | grep -- "--cwd $GATE_WORKTREE" | awk '{print $1}')
+   [ -n "$broker_pid" ] && kill "$broker_pid" 2>/dev/null
+   ```
+2. Remove the worktree: `git worktree remove --force <path>`.
+
+The arm never removes the Builder's worktree.
 
 Gotchas, each of which has cost us a run:
 

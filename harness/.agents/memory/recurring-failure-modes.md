@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 98 entries (AST-001 … AST-099, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 99 entries (AST-001 … AST-100, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -2292,3 +2292,26 @@ Builder was not cutting a corner — it produced MORE evidence than the contract
 put it in the wrong place. One handback asking for an `--allow-empty` marker commit resolved
 it.
 Bound: dispatch-ticket/SKILL.md.
+
+### AST-100 — Codex companion broker leaks one process per arm pass, accumulating silently · promoted 2026-08-19
+
+Every `codex-companion.mjs adversarial-review` invocation spawns an `app-server-broker.mjs`
+process bound to the gate worktree via `--cwd`. When the arm finishes and removes the gate
+worktree, the broker keeps running — holding a cwd that no longer exists on disk.
+
+Measured on a live machine: **92 orphaned broker processes** across two projects (66 from
+etsy-fulfillment-thanh, 27 from workspace-app-inception), consuming ~405 MB RSS total. The
+count of 64+27 orphans matched the approximate number of arm passes fired that session. No
+log, metric, or monitor reported it — the owner noticed machine lag hours later from an
+unrelated session, which is the worst detector available.
+
+The leak is not a missed step: the cleanup instruction in codex-arm said "Remove the worktree
+when the pass is recorded" and every Thomas followed it. The instruction simply did not name
+the broker. A step that names what to do, is followed correctly, and still leaves a leak is a
+gap in the instruction, not in execution.
+
+Fixed by adding a broker-kill step to codex-arm's cleanup sequence: find the broker by
+`--cwd` match BEFORE removing the worktree directory, then SIGTERM it. Order matters — after
+removal, only argv identifies the orphan.
+
+Bound: codex-arm/SKILL.md (both `.agents/` and `.claude/` variants).
