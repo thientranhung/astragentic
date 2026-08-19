@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 99 entries (AST-001 … AST-100, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 100 entries (AST-001 … AST-101, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -2313,5 +2313,25 @@ gap in the instruction, not in execution.
 Fixed by adding a broker-kill step to codex-arm's cleanup sequence: find the broker by
 `--cwd` match BEFORE removing the worktree directory, then SIGTERM it. Order matters — after
 removal, only argv identifies the orphan.
+
+Bound: codex-arm/SKILL.md (both `.agents/` and `.claude/` variants).
+
+### AST-101 — Gate worktree removal leaks database containers, not just broker processes · promoted 2026-08-19
+
+AST-100 fixed the broker leak but missed a second orphan: projects that run a database
+container per worktree (via `make db-up` or `docker compose`) leave that container running
+after `git worktree remove`. The container's compose project name derives from the directory
+path, so `docker ps` reads like a healthy fleet — no signal that it is orphaned.
+
+Measured on a live machine: three surviving Postgres containers brought the total to seven
+instances. A gate arm returned `signal: killed` on four packages with `--- FAIL = 0` —
+resource exhaustion wearing the costume of a test failure, which is the worst disguise
+because the operator reads the diff instead of checking system resources. Stopping one
+container turned the same command into `EXIT=0, 40 ok`.
+
+Cleanup is now THREE steps, in order: (1) kill broker by verified `--cwd` PID match,
+(2) stop the database container scoped to this worktree, (3) remove the worktree. Never
+`pkill -f` by name (kills every project's brokers) or blanket `docker compose down` (stops
+other projects' databases). Match by verified path for both.
 
 Bound: codex-arm/SKILL.md (both `.agents/` and `.claude/` variants).

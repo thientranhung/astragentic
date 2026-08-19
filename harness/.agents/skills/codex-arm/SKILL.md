@@ -95,15 +95,26 @@ the pass-1 worktree to create the `-p2` worktree orphans the pass-1 broker
 
 In this order, every time you remove a gate worktree:
 
-1. Kill the companion's broker process BEFORE removing the directory — after
-   removal, only argv identifies the orphan. Find it by the `--cwd` that matches
-   the gate worktree path:
+1. Kill the companion's broker process. Find it by verifying each PID's `--cwd`
+   matches the gate worktree path — **never `pkill -f` by name**, which kills
+   every project's brokers on the machine (34 were live the night this was
+   measured, including other projects'):
    ```bash
    broker_pid=$(ps -eo pid=,command= | grep "app-server-broker.mjs" \
      | grep -- "--cwd $GATE_WORKTREE" | awk '{print $1}')
    [ -n "$broker_pid" ] && kill "$broker_pid" 2>/dev/null
    ```
-2. Remove the worktree: `git worktree remove --force <path>`.
+2. Stop the gate worktree's database container, if the project uses one.
+   Same rule: stop only the container whose compose project matches this
+   worktree, not a blanket `docker compose down`:
+   ```bash
+   make -C "$GATE_WORKTREE" db-down 2>/dev/null || true
+   ```
+   Measured: three surviving Postgres containers took a machine to seven
+   instances; a gate returned `signal: killed` on four packages with
+   `FAIL = 0` — resource exhaustion wearing the costume of a test failure.
+   Stopping one container turned the same command into `EXIT=0, 40 ok`.
+3. Remove the worktree: `git worktree remove --force <path>`.
 
 The arm never removes the Builder's worktree.
 
