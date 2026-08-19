@@ -1,3 +1,18 @@
+# Astragentic 2.2.40
+
+Fix codex-arm broker process leak (AST-100). Every `codex-companion.mjs adversarial-review`
+spawned an `app-server-broker.mjs` that outlived the review — one orphan per arm pass,
+accumulating silently. Measured: 92 orphans (~405 MB) across two projects on a live machine.
+
+The cleanup step now kills the broker by `--cwd` match BEFORE removing the gate worktree,
+on every removal — including the mid-ticket removal between pass 1 and pass 2 (most tickets
+that go to two passes leaked one process from the pass-1 worktree removal).
+
+## Upgrade from 2.2.38
+
+Copy `.agents/skills/codex-arm/SKILL.md` and `.claude/skills/codex-arm/SKILL.md`.
+Copy `.agents/memory/recurring-failure-modes.md`.
+
 # Astragentic 2.2.38
 
 Restore the second degraded `Pass:` line example (forks returned narration) that 2.2.37's
