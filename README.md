@@ -1,131 +1,109 @@
-# Astragentic 2.3.0
+<p align="center">
+  <strong>Astragentic</strong><br>
+  <em>Multi-agent orchestration for real codebases</em>
+</p>
 
-**Agent orchestration framework and operating harness** for multi-agent software development.
+<p align="center">
+  <img src="https://img.shields.io/badge/version-2.3.0-blue" alt="version">
+  <img src="https://img.shields.io/badge/license-proprietary-lightgrey" alt="license">
+  <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
+  <img src="https://img.shields.io/badge/failure_modes-101_measured-red" alt="failure modes">
+</p>
 
-Astragentic coordinates several AI agents building software together on an existing
-codebase. The orchestration decides *who works on what, where, and on which runtime*. The
-harness holds the contracts, the review gates, and the 101 measured failure modes that shaped
-every rule in this system.
+<p align="center">
+  <strong>English</strong> ·
+  <a href="README.vn.md">Tieng Viet</a>
+</p>
 
 ---
 
-## The problem
+AI coding agents are powerful alone. The moment you run several of them on a real codebase
+— concurrent branches, shared state, legacy code — things break in predictable ways: agents
+overwrite each other's work, reviews loop 5-14 rounds, and nobody knows what actually ran.
 
-AI coding agents are powerful individually. But the moment you try to scale — multiple
-agents, real codebase, concurrent work — things fall apart in predictable ways.
+**Astragentic is an orchestration framework that coordinates multiple AI agents building
+software together.** It handles isolation, dispatch, review, and provenance — so you get
+concurrent agents that cannot collide, reviews that finish in one round, and artifacts that
+prove what happened.
 
-### Agents collide
+---
+
+## Quickstart
+
+```bash
+# 1. Verify your machine has what's needed
+./check-requirements.sh
+
+# 2. Stage the harness into your project
+./install.sh /path/to/your-repo
+
+# 3. Open your repo in Claude Code and run the adaptive installer
+cd /path/to/your-repo
+claude "Read .astraler/releases/2.3.0/ADAPT-HARNESS.md completely and execute it."
+
+# 4. Start the router
+claude --agent thomas
+```
+
+Thomas reads your orchestrator config, claims the workspace, and begins routing work.
+
+> **Prerequisites:** [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code),
+> Git (with worktree support),
+> [herdr](https://github.com/AstralEr/herdr) >= 0.8.0,
+> [mattpocock-skills](https://github.com/mattpocock/skills) plugin >= 1.2.3
+
+---
+
+## Why this exists
+
+### Agents collide without isolation
 
 Two agents sharing a checkout: one runs `git switch` while the other is committing. Three
-commits land on the wrong branch and vanish. No isolation boundary means no concurrency.
+commits land on the wrong branch. **Astragentic gives each Builder its own git worktree** —
+they share a frontier but never a checkout. Concurrent by design, isolated by construction.
 
-### Reviews loop forever
+### Reviews loop forever without structure
 
-A prior system measured 5-14 review rounds per plan. Round 2 added a lock, round 3 cut it,
-round 8 was still cleaning up round 2's leftovers. The exit condition — zero findings — was
-held by the reviewer, who always controls it. Most of the later rounds were the loop cleaning
-up after itself.
+A prior system measured 5-14 review rounds per ticket. Round 2 added a lock, round 3 cut it,
+round 8 was still cleaning up round 2's leftovers. **Astragentic runs one review round, three
+layers deep** — code-review, simplify pass, cross-vendor arm — then it's done.
 
-### Brownfield is invisible
+### Brownfield code gets ignored
 
-The best agent skills assume a clean starting point. They contain no mention of *legacy*,
-*brownfield*, *characterisation* or *untestable*. Point a code-review's Standards axis at a
-repo with no written standards and it silently becomes the thing it was built to prevent — a
-generic review with no anchor.
-
-### Silent degradation
-
-A substitute tool producing the same marker passes every automated check. A summary claiming
-findings were folded while the text was untouched — caught only because a human happened to
-be watching the pane. Three consecutive spec gates ran unseen while owner-scale decisions
-were made inside them.
+Most agent skills assume a clean starting point. They have no concept of legacy, untestable,
+or "standards that only exist in people's heads." **Astragentic ships four brownfield-specific
+skills** that extract knowledge from the codebase as-is — never inventing what isn't there.
 
 ### Nobody knows what actually ran
 
-An agent reports "done" — but did it run the simplify pass, or skip it? Did it use the
-sanctioned tool, or fall back to something that leaves the same commit marker? Without
-provenance in the artifact, every check reads green by construction.
+An agent reports "done" — but did it run the simplify pass or skip it? Did it use the right
+tool or a fallback that leaves the same marker? **Astragentic embeds provenance in every
+artifact** — every commit carries a `Pass:` line naming what ran, every gate report has a
+token-unique path.
 
 ---
 
-## How Astragentic solves this
+## How it works
 
-### 1. Worktree isolation: agents that cannot collide
+### Five roles, clear boundaries
 
-Each Builder gets its own git worktree and its own terminal pane. They share a frontier but
-never a checkout. One project, one workspace, several Builders — concurrent by design,
-isolated by construction.
+| Role | Session | What it does |
+|---|---|---|
+| **Thomas** | resident | Routes work, manages the frontier, dispatches tickets, runs cross-vendor arm |
+| **Shaper** | one unbroken session | Grills requirements, writes specs, cuts tickets — while the whole picture is in context |
+| **Builder** | one per ticket | Implements in its own worktree — sole writer there |
+| **Rin** | per milestone | Adversarial reviewer — verifies both the artifact and the process traces |
+| **QA** | per walk | Exercises the running product — UI journeys, API contracts, real data |
 
-### 2. One review round, three layers deep
-
-No loops. Every ticket passes three review layers before it can merge — once each, no
-exceptions:
-
-1. **Code review** — `mattpocock-skills:code-review`, Standards + Spec axes in one pass
-2. **Simplify pass** — `Skill(skill: "simplify")`, leaving a marker commit with provenance
-3. **Cross-vendor arm** — a different AI provider reviews the work (Codex reviews Claude, or
-   vice versa)
-
-At milestones: **Rin's gate** — adversarial or code-review mode, verifying the artifact and
-that the process left its traces. A design-level finding goes to the owner, not to another
-round.
-
-Prior system: 5-14 rounds. This system: 1 round per milestone.
-
-### 3. Brownfield-native
-
-Four skills close the gaps that upstream leaves open:
-
-| Skill | What it does |
-|---|---|
-| `bootstrap-glossary` | Seeds `CONTEXT.md` from code — every term cites its source file |
-| `batch-triage` | Converts an inherited backlog into tickets with labels and blocking edges |
-| `legacy-testing` | Characterisation tests + seam creation for untested code |
-| `untangle` | Refactor path for code too tangled for `improve-codebase-architecture` |
-
-The rule: **extract, never invent**. A standard the code does not follow, or a glossary term
-nobody confirmed, becomes confident-sounding lore that later sessions treat as truth.
-
-### 4. Provenance in every artifact
-
-Every commit carries a `Pass:` line naming *what actually ran* — not what was supposed to.
-Every answer carries a source — codebase, ADR, research, prototype, or second opinion. Gate
-reports are written outside every checkout with token-unique paths. Merge commits carry a
-`Ledger:` line. A summary without evidence is not accepted as proof.
-
-### 5. 101 measured failure modes
-
-Every rule in this system can point at an entry in `recurring-failure-modes.md`. A rule that
-cannot point at one is a rule to re-examine. The ledger is append-only — a lesson that later
-proved wrong is marked `superseded` in place, never deleted. That is the test 1.0.0 applied
-to everything it carried over, and it is why this package is smaller than the one it
-replaces.
-
----
-
-## The method
-
-### The spine: Matt Pocock's skills
-
-[Matt Pocock's `mattpocock-skills` plugin](https://github.com/mattpocock/skills) supplies
-the engineering method one agent follows. Astragentic wraps it with orchestration and
-extends it to brownfield.
-
-Work enters through one of two doors:
-
-- **`wayfinder`** — foggy efforts larger than one session
-- **`grill-with-docs`** — anything that fits one session
-
-Both converge into: **`to-spec`** → **`to-tickets`** → one **`implement`** per ticket →
-**`code-review`**.
+### The workflow
 
 ```mermaid
 flowchart LR
     A["wayfinder\nfoggy, > 1 session"] --> C[to-spec]
     B["grill-with-docs\nfits 1 session"] --> C
     C --> D[to-tickets]
-    D --> E["implement\n(one per ticket, fresh session)"]
-    E --> F["mattpocock-skills:code-review"]
+    D --> E["implement\n(one per ticket)"]
+    E --> F["code-review"]
     F -.->|blocking finding| Q[to-questionnaire] -.-> Owner((owner))
 
     style A fill:#e8f0fe,stroke:#4285f4
@@ -134,42 +112,29 @@ flowchart LR
     style F fill:#e6f4ea,stroke:#34a853
 ```
 
-Every agent also reaches the craft layer directly — `grilling`, `tdd`, `codebase-design`,
-`domain-modeling`, `research`, `prototype`, `diagnosing-bugs`, `wizard`,
-`resolving-merge-conflicts`. Installing the plugin once equips the whole team.
-
-### Five roles
-
-| Role | Session | Responsibility |
-|---|---|---|
-| **Thomas** — router | resident | Triage, frontier, merge, dispatch, cross-vendor arm, event-driven monitoring |
-| **Shaper** | one unbroken session | `grill-with-docs` → `to-spec` → `to-tickets`; decides seams while the whole picture is in context |
-| **Builder** | one per ticket | `implement` in its own worktree — sole writer there |
-| **Rin** — reviewer | per milestone | Adversarial or code-review gate; artifact + process verification |
-| **QA** | per walk | Exercises the RUNNING product — interface, journeys, API contracts, data as experienced |
+Work enters through two doors based on scope. Both converge into the same pipeline:
+**spec → tickets → implement → review**. The engineering method comes from
+[Matt Pocock's skills](https://github.com/mattpocock/skills) — Astragentic wraps it with
+orchestration and extends it to brownfield.
 
 ### Orchestration topology
 
 ```mermaid
 flowchart TB
-    Tracker[("Tracker\nfrontier query: blockers done")]
-
-    subgraph WS["herdr workspace — one per project"]
-        T["tab: thomas\nresident router"]
-        T1["tab: ticket:TRA-139\nBuilder · own worktree"]
-        T2["tab: ticket:TRA-142\nBuilder · own worktree"]
-        T3["tab: spec:TRA-87\nShaper"]
-        T4["tab: qa:TRA-125\nQA · running app"]
-        T5["tab: rin:TRA-125\nRin · read-only"]
+    subgraph WS["herdr workspace"]
+        T["thomas\nresident router"]
+        T1["ticket:TRA-139\nBuilder"]
+        T2["ticket:TRA-142\nBuilder"]
+        T3["spec:TRA-87\nShaper"]
+        T4["qa:TRA-125\nQA"]
+        T5["rin:TRA-125\nRin"]
     end
 
-    Tracker -->|claim ticket| T
-    T -->|dispatch-ticket| T1
-    T -->|dispatch-ticket| T2
-    T -->|dispatch-ticket| T3
-    T -->|dispatch-qa-walk| T4
-    T -->|review-with-rin| T5
-    Watchdog(["watchdog\nsafety net"]) -.->|wakes on stuck pane| T
+    T -->|dispatch| T1
+    T -->|dispatch| T2
+    T -->|dispatch| T3
+    T -->|dispatch-qa| T4
+    T -->|review| T5
 
     style T fill:#e8f0fe,stroke:#4285f4
     style T1 fill:#fef7e0,stroke:#f9ab00
@@ -178,17 +143,20 @@ flowchart TB
     style T5 fill:#e6f4ea,stroke:#34a853
 ```
 
-### Review pipeline
+Each Builder gets its own terminal pane and git worktree.
+[herdr](https://github.com/AstralEr/herdr) manages the workspace topology.
+
+### Review pipeline — one round, three layers
 
 ```mermaid
 flowchart LR
-    subgraph PT["Per ticket — no exceptions"]
+    subgraph PT["Per ticket"]
         direction LR
-        R1["code-review\nStandards + Spec"] --> R2["simplify pass\nmarker commit"] --> R3["cross-vendor arm\nCodex ↔ Claude"]
+        R1["code-review\nStandards + Spec"] --> R2["simplify\nmarker commit"] --> R3["cross-vendor\nCodex ↔ Claude"]
     end
     PT --> M["merge"]
     M --> RM{"milestone?"}
-    RM -->|yes| Rin["Rin gate\nartifact + process traces"]
+    RM -->|yes| Rin["Rin gate"]
     RM -->|no| Next["next ticket"]
     Rin -->|design blocker| Owner(("owner"))
 
@@ -198,79 +166,81 @@ flowchart LR
     style Rin fill:#fce8e6,stroke:#ea4335
 ```
 
+Every ticket passes all three layers — no exceptions. At milestones, Rin runs an additional
+gate verifying both the artifact and the process traces. Design-level blockers go to the
+owner, not to another review round.
+
+---
+
+## Brownfield skills
+
+These close the gaps that upstream agent skills leave open:
+
+| Skill | Purpose |
+|---|---|
+| `bootstrap-glossary` | Seeds a `CONTEXT.md` from your code — every term cites its source file |
+| `batch-triage` | Converts an inherited backlog into tickets with labels and blocking edges |
+| `legacy-testing` | Generates characterisation tests + seam creation for untested code |
+| `untangle` | Refactoring path for code too tangled for standard architecture tools |
+
+The rule: **extract, never invent**. A standard the code does not follow, or a glossary
+term nobody confirmed, becomes confident-sounding lore that later agents treat as truth.
+
 ---
 
 ## Tech stack
 
 ### Required
 
-| Component | Role in the system |
+| Component | Role |
 |---|---|
-| [**Claude Code CLI**](https://docs.anthropic.com/en/docs/claude-code) | Root runtime. Every role can run here. Rin's gate requires it |
-| **Git** (with worktree support) | Isolation boundary — one worktree per Builder, one branch per ticket |
-| [**herdr**](https://github.com/AstralEr/herdr) ≥ 0.8.0 | Terminal workspace manager. Agent panes, prompt/wait/read, workspace topology |
-| [**mattpocock-skills**](https://github.com/mattpocock/skills) plugin ≥ 1.2.3 | The engineering method spine — wayfinder, grill, spec, tickets, implement, code-review |
+| [**Claude Code CLI**](https://docs.anthropic.com/en/docs/claude-code) | Root runtime — every role can run here |
+| **Git** (worktree support) | Isolation boundary — one worktree per Builder |
+| [**herdr**](https://github.com/AstralEr/herdr) >= 0.8.0 | Terminal workspace manager — agent panes, prompt/wait/read |
+| [**mattpocock-skills**](https://github.com/mattpocock/skills) >= 1.2.3 | Engineering method — wayfinder, grill, spec, tickets, implement, review |
 
 ### Optional
 
-| Component | What it adds | Without it |
-|---|---|---|
-| **Codex CLI** | Cross-vendor arm — a second AI provider reviews every ticket | Single-provider mode; arm records `NOT RUN` |
-| **OpenCode CLI** | Third runtime option; roles dispatch to it via `orchestrator.md` | Two-runtime system (Claude + Codex) |
-
-### Target repo needs
-
-The doctor (`check-requirements.sh`) checks everything and names what is missing:
-
-- Tracker configuration (`docs/agents/issue-tracker.md`, triage labels)
-- Git worktree support
-- Payload committed to HEAD (uncommitted contracts are invisible in worktrees)
+| Component | What it adds |
+|---|---|
+| **Codex CLI** | Cross-vendor arm — a second AI reviews every ticket |
+| **OpenCode CLI** | Third runtime option for role dispatch |
 
 ---
 
 ## Installation
 
-Three phases: stage, adapt, configure.
-
-### Phase 1 — Stage the release
+### Phase 1 — Stage
 
 ```bash
-./check-requirements.sh                      # verify machine readiness
-./install.sh <target-repo>                   # stage the release
-# optionally: ./install.sh <target-repo> --project-name "My Project"
+./check-requirements.sh              # verify machine readiness
+./install.sh <target-repo>           # stage the release
 ```
 
-This copies the harness into `<target>/.astraler/releases/<version>/`. No project files are
-touched. The staging is **idempotent** (rerunning does nothing) and **immutable** (a staged
-release is a fixed record of what was shipped).
+This copies the harness into `<target>/.astraler/releases/<version>/`. No project files
+are touched. Idempotent and immutable — rerunning does nothing, a staged release is a
+fixed record.
 
-### Phase 2 — Adapt into the project
+### Phase 2 — Adapt
 
-Open a Claude Code or Codex session in the target repo:
+Open Claude Code (or Codex) in the target repo:
 
 ```
 Read .astraler/releases/<version>/ADAPT-HARNESS.md completely and execute it.
 ```
 
-The adaptation agent:
-1. Reads the release notes for this version's intent and breaking changes
-2. Inspects the project — structure, dependencies, existing configuration
-3. Compares against any previously applied release (three-way for upgrades)
-4. Confirms `mattpocock-skills` is installed; asks the owner to run its setup step
-5. Integrates the harness — role contracts, skills, adapters, scripts
-6. Runs brownfield bootstrap if this is a first install (glossary, backlog triage)
-7. **Verifies by artifact** — git diff, bash syntax, requirements check, reachability check
-8. Records the applied version and writes an adaptation report
+The agent inspects your project, integrates the harness, runs brownfield bootstrap if needed,
+and verifies everything by artifact.
 
-### Phase 3 — Configure and start
+### Phase 3 — Configure
 
-Edit `.agents/orchestrator.md` — **your file**, never overwritten by an upgrade:
+Edit `.agents/orchestrator.md` — your file, never overwritten by upgrades:
 
 ```markdown
 ## Workspace identity
 | Field | Value |
 |---|---|
-| workspace-label | `my-project` |       ← your herdr workspace name
+| workspace-label | `my-project` |
 
 ## Active assignments
 | Role    | Runtime | Model           | Effort |
@@ -282,13 +252,7 @@ Edit `.agents/orchestrator.md` — **your file**, never overwritten by an upgrad
 | qa      | claude  | claude-sonnet-5 | low    |
 ```
 
-Then start:
-
-```bash
-claude --agent thomas
-```
-
-Thomas reads the orchestrator, claims the workspace, and begins routing work.
+Then: `claude --agent thomas`
 
 ---
 
@@ -297,48 +261,50 @@ Thomas reads the orchestrator, claims the workspace, and begins routing work.
 | | |
 |---|---|
 | **Roles** | 5 — Thomas, Shaper, Builder, Rin, QA |
-| **Skills** | 13+ Claude-discovered, 4 brownfield-specific |
-| **Runtimes** | 3 — Claude Code, Codex, OpenCode |
-| **Review layers per ticket** | 3 — code-review, simplify, cross-vendor arm |
-| **Review rounds per milestone** | 1 (prior system: 5-14) |
-| **Measured failure modes** | 101 entries, append-only evidence base |
+| **Skills** | 13+ orchestration, 4 brownfield-specific |
+| **Runtimes** | Claude Code, Codex, OpenCode |
+| **Review layers** | 3 per ticket (prior system: 5-14 rounds) |
+| **Failure modes** | 101 measured, append-only evidence base |
 | **Isolation** | 1 worktree per Builder, 1 branch per ticket |
 
 ---
 
-## Layout
+## Project layout
 
-```text
-harness/                          payload staged into a target repo
+```
+harness/
   .agents/
-    roles/                        five role contracts + per-runtime supplements
-    orchestrator.md               role → runtime/model/effort (owner's file)
-    skills/                       13+ skills for dispatch, review, brownfield, arm
+    roles/            five role contracts + runtime supplements
+    orchestrator.md   role -> runtime/model/effort (your file)
+    skills/           13+ skills — dispatch, review, brownfield, arm
     memory/
-      recurring-failure-modes.md  98 failure modes — the evidence base
+      recurring-failure-modes.md
   .claude/
-    agents/                       Claude adapters (--agent <role>)
-    skills/                       Claude-discovered skills
-  .opencode/agents/               OpenCode adapters
-  .codex/profiles/                Codex role profiles
+    agents/           Claude adapters (--agent <role>)
+    skills/           Claude-discovered skills
+  .opencode/agents/   OpenCode adapters
+  .codex/profiles/    Codex role profiles
   scripts/
-    herdr-watch-terminal.sh       turn watcher (Codex/OpenCode; Claude uses native Monitor)
-    herdr-watchdog.sh             safety-net poll, wakes Thomas on stuck panes
-    ticket-git-facts.sh           git state for tracker reconciliation
-    docs-staleness-audit.sh       word budgets, self-reported numbers
-    check-reachability.sh         8 checks: method exists, reachable, addressed
-    check-requirements.sh         the doctor (also vendored into adapted projects)
-docs/adr/0001-…                   why the method was rebuilt around the plugin
-prompts/ADAPT-HARNESS.md          the semantic installer
-install.sh                        mechanical staging
-check-requirements.sh             the doctor
+    herdr-watch-terminal.sh    turn watcher (Codex/OpenCode)
+    herdr-watchdog.sh          safety-net, wakes Thomas on stuck panes
+    ticket-git-facts.sh        git state for tracker reconciliation
+    docs-staleness-audit.sh    word budgets, self-reported numbers
+    check-reachability.sh      8 checks: exists, reachable, addressed
+    check-requirements.sh      the doctor
+docs/adr/                      architectural decision records
+prompts/ADAPT-HARNESS.md       the semantic installer
+install.sh                     staging script
+check-requirements.sh          machine readiness check
 ```
 
-## Vocabulary
+## Glossary
 
-| Word | Means |
+| Term | Meaning |
 |---|---|
-| **package** | this repo — the thing that produces a harness |
-| **adapted project** | a repo the harness was installed into |
-| **payload** | what a release stages and may overwrite freely |
-| **scaffold** | the owner's values, written once, never overwritten (`orchestrator.md`, `.codex/profiles/*`) |
+| **package** | This repo — produces the harness |
+| **adapted project** | A repo the harness was installed into |
+| **payload** | What a release stages (may overwrite freely) |
+| **scaffold** | Owner's config, written once, never overwritten (`orchestrator.md`) |
+| **frontier** | The set of tickets currently claimable by agents |
+| **gate** | A verification checkpoint — Rin's review at milestones |
+| **arm** | Cross-vendor review pass (Codex reviews Claude's work, or vice versa) |
