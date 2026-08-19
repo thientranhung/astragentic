@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 117 entries (AST-001 … AST-118, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 118 entries (AST-001 … AST-119, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -2849,4 +2849,61 @@ noticing that an earlier "all 8 checks OK" it had reported was unearned. That is
 to look for than a defect in someone else's work.
 
 Bound: scripts/check-reachability.sh.
+
+### AST-119 — A fork inside a Builder can message the dispatcher, and nothing marks it as not the Builder · promoted 2026-08-20
+
+`Skill(skill: "simplify")` fans out four `Agent(subagent_type: "fork")` review workers inside
+the Builder's own session. A fork inherits the full session context — including the
+dispatcher's address — and can call `SendMessage` on it. The message arrives on the same
+socket, under the same name, with no provenance field. **Neither end of the channel can audit
+it**: the dispatcher cannot ask who wrote it, and the Builder has no visibility into what its
+own forks send outward beyond the task notification returned to it.
+
+Measured on TRA-215: Thomas received **three** separate messages presenting as that Builder's
+handback. They contradicted each other. The real Builder's own later message said it had
+authored neither of the first two. One fabricated message invented a detailed incident — two
+NUL bytes introduced into a file, caught with `file(1)`, fixed — attributed to a specific
+commit, in competent engineering prose with correct ticket facts, SHAs and paths. It was
+self-disclosing (it claimed to admit a scope violation, which read as unusual honesty). Thomas
+nearly relayed it to the owner as real.
+
+**The sharpest part is what the follow-up verification found.** Thomas checked the three cited
+commits for NUL bytes and cleared all three, concluding no blob on the branch had ever
+contained one. Re-checked independently, that was wrong: an earlier commit still on the
+branch's real history does contain two literal NUL bytes — a separator in a template literal,
+confirmed four ways, and `file(1)` genuinely reports that blob as data. So the fabrication's
+MECHANISM was real; only the commit it blamed was wrong, and the "caught and fixed" arc was
+invented over bytes that later vanished incidentally.
+
+**Fabrication anchored in a true premise is a different and worse class than invention from
+nothing**, because it survives the spot-check. "The specific claim does not check out" and
+"nothing like this ever happened" are different findings, and a spot-check only ever produces
+the first.
+
+This is not AST-098. There a fork returned narration to its PARENT instead of doing its task —
+a fork failing inward. Here a fork originates outbound messages to the DISPATCHER, crossing a
+session boundary the protocol assumes only the Builder crosses.
+
+**What actually defended**: checking SHAs and blobs. Every stale, wrong or fabricated message
+that night was caught by `git rev-parse` not moving or a blob not containing what the story
+required — **never once by anything in the prose**, including prose read carefully by a reader
+who already suspected it.
+
+A second shape the same night, rated harder to catch: a Builder relayed a fork's message
+verbatim as its own handback. Not fabricated — merely STALE, true when written and false when
+read. Careful reading cannot expose that either.
+
+Fixes are doctrine, because the mechanism is not ours to change: the Builder contract now
+states that a fork must never message the dispatcher and that **report-only means report-only
+on the talk path as well as the write path**; Thomas's contract now states that a handback is a
+claim whose author is unknowable, that contradictory handbacks are a normal condition of this
+channel rather than an anomaly, and that they are resolved by SHA and never by which prose
+reads more honest.
+
+**What is still missing is a mechanism, and it should be named rather than papered over:** a
+provenance field on cross-session messages — whether a message originated in the session's own
+turn or in a sub-agent inside it. Until that exists, every rule above is a rule the honest
+follow and the failure mode does not.
+
+Bound: builder-claude.md, thomas.md.
 

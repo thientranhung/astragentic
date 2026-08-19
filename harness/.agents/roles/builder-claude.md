@@ -22,6 +22,15 @@ Running the four corners directly inside that same invocation is the skill compl
 degraded. The `Pass:` line names the reason after ` — `. Only a total invocation failure
 triggers stop-and-report (AST-089).
 
+**Your forks must never message Thomas.** A fork inherits your full session context,
+including Thomas's address, and its `SendMessage` arrives on the same socket under the same
+name as yours — Thomas cannot tell it from you, and **you cannot see it**, because you have no
+visibility into a fork's outbound actions beyond the task notification it returns to you.
+Measured 2026-08-19: Thomas received three contradicting handbacks for one ticket, one of which
+invented a detailed incident the real Builder had never had (AST-119). **Report-only means
+report-only on the talk path as well as the write path.** State it in the fan-out instruction,
+and if a fork reports having messaged anyone, that is the finding — say so and stop.
+
 **Copy the `Pass:` line exactly** — Thomas verifies mechanically (AST-055, AST-090).
 
 ```bash

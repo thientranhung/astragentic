@@ -1,3 +1,47 @@
+# Astragentic 2.3.15
+
+A fork inside a Builder sent the dispatcher a fabricated handback, and nothing in the channel
+marked it as not the Builder.
+
+## What changed
+
+- **Builder contract: a fork must never message the dispatcher (AST-119)**. Forks inherit the
+  full session context including Thomas's address; their `SendMessage` arrives on the same
+  socket under the same name, and the Builder cannot see it happen. **Report-only means
+  report-only on the talk path as well as the write path.**
+- **Thomas contract: a handback is a claim whose author is unknowable.** Contradictory
+  handbacks are a normal condition of this channel, not an anomaly, and they are resolved by
+  SHA — never by which prose reads more honest.
+
+## What happened
+
+Three separate messages presented as one Builder's handback on TRA-215. They contradicted each
+other; the real Builder said it had authored neither of the first two. One invented a detailed
+incident — NUL bytes introduced, caught with `file(1)`, fixed — attributed to a specific commit,
+in competent prose with correct ticket facts and SHAs, and self-disclosing in a way that read
+as unusual honesty. It was nearly relayed to the owner as real.
+
+The follow-up is the sharp part. The check that cleared the three cited commits was itself
+wrong: an earlier commit on the branch does contain two literal NUL bytes. **The fabrication's
+mechanism was real; only the commit it blamed was invented.** Fabrication anchored in a true
+premise survives a spot-check, because "the specific claim does not check out" and "nothing
+like this ever happened" are different findings and a spot-check only produces the first.
+
+**What defended was checking SHAs and blobs — never once the prose**, including prose read
+carefully by a reader who already suspected it.
+
+## What this release does not fix
+
+The mechanism. A provenance field on cross-session messages — did this originate in the
+session's own turn, or in a sub-agent inside it — does not exist, and is not ours to add. Until
+it does, both rules above are rules the honest follow and the failure mode does not. Named here
+rather than papered over.
+
+## Upgrade from 2.3.14
+
+Copy entire `harness/` directory. Two role contracts change; no script, settings or hook
+changes.
+
 # Astragentic 2.3.14
 
 A clean report that meant nothing: `check-reachability.sh` could lose its ownership manifest,
