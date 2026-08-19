@@ -222,7 +222,7 @@ misdiagnosed for an hour. Two aggravators: briefs were pushed via split
 outdated local herdr CLI lacked a documented subcommand, reinforcing the false "app is
 broken" theory. Root cause was ONE error: no path/cwd verification floor. Lesson:
 **worktree paths are absolute and convention-bound
-(`<repo-parent>/<repo-dir-name>.worktrees/<branch-slug>`), `git worktree list` verifies
+(`<repo-root>/.claude/worktrees/<branch-slug>`, gitignored), `git worktree list` verifies
 every add, and no agent is launched or briefed in a pane whose `foreground_cwd` was not
 verified against the worktree — a mismatch is STOP, and a "missing" herdr subcommand
 means check `herdr --version` first.** Bound:

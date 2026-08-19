@@ -24,7 +24,7 @@ shell access (AST-016). Name it `gate-arm-<artifact-key>`, distinct from the rev
 `gate-<artifact-key>`, so the two can never collide. Commit first.
 
 ```bash
-git worktree add --detach <repo-parent>/<repo-dir-name>.worktrees/gate-arm-<artifact-key> <head-sha>
+git worktree add --detach <repo-root>/.claude/worktrees/gate-arm-<artifact-key> <head-sha>
 cd <that worktree>
 git diff <base>...<head> > <gate-worktree>/GATE-DIFF.patch
 git log --oneline <base>..<head> > <gate-worktree>/GATE-LOG.txt

@@ -14,13 +14,9 @@ Skill(skill: "dispatch-ticket-claude")
 
 Follow the loaded instructions. Do not dispatch from memory or reasoning alone.
 
-After submitting the brief and confirming `working`, start the watcher immediately:
-
-```bash
-<repo-root>/scripts/herdr-watch-terminal.sh <pane-id> 3 3600 120
-```
-
-This is the ONLY way to monitor a dispatched pane. Do not write your own loop.
+**Brief, watching, and steering all use Claude-native tools** — `dispatch-ticket-claude`
+has the full protocol: SendMessage for briefs and steering, Monitor for watching.
+Do not use the shared protocol's Herdr paste or watcher script for Claude builders.
 
 ## Simplify artifact verification
 

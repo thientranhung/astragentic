@@ -117,9 +117,9 @@ improvises, which is harder to notice than a Builder that fails.
 ## Worktree and named tab
 
 `<worktree-path>` is the ABSOLUTE path
-`<repo-parent>/<repo-dir-name>.worktrees/<branch-slug>` (branch `/` → `-`), outside the repo
-checkout and outside system tmp (AST-028). A relative path once resolved through a stale
-shell cwd to a location INSIDE the repo, which is why the absolute form is fixed here.
+`<repo-root>/.claude/worktrees/<branch-slug>` (branch `/` → `-`), inside the repo but
+gitignored (AST-028). A relative path once resolved through a stale shell cwd to an
+unexpected location, which is why the absolute form is fixed here.
 
 ```bash
 git worktree list
@@ -280,6 +280,9 @@ brief having been sent.
 
 ### Submitting it
 
+**Claude runtime: use SendMessage** — see `dispatch-ticket-claude` for direct message
+delivery. The Herdr paste method below is for **Codex and OpenCode only**.
+
 ```bash
 herdr agent prompt <pane-id> "<brief>" --wait --until working --timeout 30000
 ```
@@ -310,15 +313,18 @@ anything about the work.
 
 **Every dispatched pane gets a watcher. No exceptions, no hand-rolled loops.**
 
+**Claude runtime: use Monitor** — see `dispatch-ticket-claude` for the Monitor-based
+watching section. The watcher script below is for **Codex and OpenCode only**.
+
 ```bash
 <repo-root>/scripts/herdr-watch-terminal.sh <pane-id> 3 3600 120
 ```
 
-Run this immediately after confirming `working`. It is the ONLY sanctioned way to monitor a
-dispatched builder. Do NOT write your own polling loop, do NOT use `herdr agent wait --until
-idle` as a substitute, do NOT use `sleep` + `herdr agent get` in a loop. The script has
-caffeinate (machine cannot sleep and kill the watch), a start guard, debounce, and a
-3600-second cap — hand-rolled alternatives lack all four.
+Run this immediately after confirming `working`. For Codex/OpenCode, it is the ONLY
+sanctioned way to monitor a dispatched builder. Do NOT write your own polling loop, do NOT
+use `herdr agent wait --until idle` as a substitute, do NOT use `sleep` + `herdr agent get`
+in a loop. The script has caffeinate (machine cannot sleep and kill the watch), a start
+guard, debounce, and a 3600-second cap — hand-rolled alternatives lack all four.
 
 Branch on `$?` **and the payload** when it returns:
 
@@ -366,9 +372,11 @@ not run, because an empty composer matches `prompt_box_body`. On opencode nothin
 establishes idle at all. Either way you get a signal incapable of failing (AST-032).
 
 **So for any pane you did not prompt in that same call** — watching another role's pane,
-resuming after a break, waiting on an artifact — the start guard
-`<repo-root>/scripts/herdr-watch-terminal.sh` stays MANDATORY. It observes `working` for THIS turn
-before it blesses anything, and `working` is rule-backed on all three runtimes.
+resuming after a break, waiting on an artifact — the start guard stays MANDATORY.
+**Claude runtime**: use Monitor (see `dispatch-ticket-claude`).
+**Codex/OpenCode**: use `<repo-root>/scripts/herdr-watch-terminal.sh`.
+Both observe `working` for THIS turn before blessing anything, and `working` is rule-backed
+on all three runtimes.
 
 On `agent_prompt_stalled` or a blocking modal, inspect first, resolve the modal, then use
 the low-level submission fallback (`send-text` + `send-keys` can drop input, so it is a last
@@ -401,7 +409,11 @@ working pane gives `agent_not_idle` with the fix named, a bad target `agent_not_
 `--wait` with no state change `timeout`. Treat a non-zero herdr exit as a real failure worth
 reading, and keep the scepticism for the `agent_status` it returns on success.
 
-**Watching.** `<repo-root>/scripts/herdr-watch-terminal.sh` watches a NEWLY SUBMITTED turn: it waits to
+### Watcher script operational details (Codex/OpenCode only)
+
+**Claude runtime uses Monitor — skip this section.** See `dispatch-ticket-claude`.
+
+`<repo-root>/scripts/herdr-watch-terminal.sh` watches a NEWLY SUBMITTED turn: it waits to
 observe `working` first, so pointing it at an already-idle pane returns `NO_START` —
 truthful output rather than a fault. Point it at the pane whose turn you just opened. Any
 role may read or watch any pane, and concurrent watchers are fine (three simultaneous waits

@@ -73,7 +73,7 @@ range before you trust the verdict**:
 
 ```bash
 git worktree prune                         # clear stale registrations BEFORE add (AST-096)
-git worktree add --detach <repo-parent>/<repo-dir-name>.worktrees/gate-arm-<key> <head-sha>
+git worktree add --detach <repo-root>/.claude/worktrees/gate-arm-<key> <head-sha>
 cd <that worktree>
 [ "$(git rev-parse HEAD)" = "<head-sha>" ] || { echo "STOP: HEAD mismatch"; exit 1; }
 git rev-list --count <base>..<head-sha>   # zero commits means you are reviewing nothing
@@ -92,6 +92,10 @@ STOP — not a pass.
 cleanup, but also the mid-ticket removal between pass 1 and pass 2. Removing
 the pass-1 worktree to create the `-p2` worktree orphans the pass-1 broker
 (AST-100, measured: every two-pass ticket leaked one process this way).
+
+**Claude runtime**: the `WorktreeRemove` hook in `.claude/settings.json` handles steps 1-2
+automatically. The manual steps below are still required for **Codex and OpenCode** runtimes
+where hooks do not run.
 
 In this order, every time you remove a gate worktree:
 

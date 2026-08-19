@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # herdr-watchdog.sh — monitors harness agents in this project's workspace
 #
-# Usage: herdr-watchdog.sh [interval=120] [cooldown=900] [max-alerts/hr=6]
+# Usage: herdr-watchdog.sh [interval=300] [cooldown=900] [max-alerts/hr=6]
 #        herdr-watchdog.sh stop
 #
 # Run from project root. Reads workspace-label from .agents/orchestrator.md,
@@ -140,7 +140,7 @@ if [ "${1:-}" = "stop" ]; then
   exit 0
 fi
 
-INTERVAL="${1:-120}"
+INTERVAL="${1:-300}"
 COOLDOWN="${2:-900}"
 MAX_ALERTS_HOUR="${3:-6}"
 

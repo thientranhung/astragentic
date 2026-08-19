@@ -1,3 +1,28 @@
+# Astragentic 2.3.0
+
+Native tools integration — poll-to-event-driven upgrade for Claude runtime.
+
+## What changed
+
+- **Worktree convention standardized**: all worktrees now at `<repo-root>/.claude/worktrees/`
+  (gitignored), replacing the scattered `<repo-parent>/<repo-dir-name>.worktrees/` pattern.
+- **Monitor replaces watcher script** for Claude builders. `herdr-watch-terminal.sh` stays
+  for Codex/OpenCode only. Thomas uses Monitor tool + TaskStop instead of PID/process group.
+- **Hooks enforce safety rules**: WorktreeRemove auto-kills brokers and containers (AST-100,
+  AST-101), SubagentStop logs builder crashes. Watchdog interval 120s → 300s (safety net).
+- **SendMessage for brief delivery**: Claude builders receive briefs and steering via
+  SendMessage instead of Herdr paste (eliminates AST-037 paste-doesn't-submit problem).
+- **Prose consolidation**: dispatch-ticket-claude is now the definitive Claude dispatch
+  reference. thomas-claude.md trimmed. Codex/OpenCode sections clearly labeled.
+
+## Files changed
+
+14 files modified, 1 new file (`harness/.claude/settings.json`).
+
+## Upgrade from 2.2.40
+
+Copy entire `harness/` directory. New file: `harness/.claude/settings.json` (hooks).
+
 # Astragentic 2.2.40
 
 Fix codex-arm broker process leak (AST-100). Every `codex-companion.mjs adversarial-review`

@@ -101,8 +101,9 @@ contract dispatches does not run: ADR 0001.*
 runtime from `orchestrator.md`. One ticket becomes one Builder in one pane over one
 worktree; several run at once on the frontier.
 
-**Steer** the Builder directly; there is no intermediate role. A pane's status is a bell; the
-verdict comes from the diff, the tests and the artifact.
+**Steer** the Builder directly; there is no intermediate role. Claude builders: via
+SendMessage. Codex/OpenCode: via Herdr pane. A pane's status is a bell; the verdict comes
+from the diff, the tests and the artifact.
 
 **At a milestone**, dispatch Rin's gate through `review-with-rin`. Rin advises and **you
 classify**: a design-level blocker goes to the owner through `to-questionnaire`, since a second
@@ -169,28 +170,25 @@ absence is not. Merge is the anchor because it already must run and must report,
 lesson is cheapest while the friction is warm — "capture friction" with no moment attached
 measured zero entries across a harness generation (AST-069).
 
-## Watchdog — self-monitoring
+## Watchdog — safety net
 
-Polls `herdr agent list`; wakes you when dispatch stalls. Start on autonomous work; stop on
-owner takeover or shutdown.
+Primary enforcement is now via hooks (`.claude/settings.json`): WorktreeRemove auto-kills
+brokers and containers (AST-100, AST-101), SubagentStop logs builder crashes. The watchdog
+is a **backup** for what hooks cannot cover: THOMAS_CRASHED detection and non-Claude runtime
+anomalies.
 
 ```bash
-nohup scripts/herdr-watchdog.sh 120 900 6 &   # interval, cooldown, max-alerts/hr
+nohup scripts/herdr-watchdog.sh 300 900 6 &   # interval, cooldown, max-alerts/hr
 scripts/herdr-watchdog.sh stop
 ```
 
-Reads `workspace-label` from `.agents/orchestrator.md`; `stop` verifies the PID first, to
-avoid signaling an unrelated process. PID: `/tmp/herdr-watchdog-<workspace-label>.lock`.
-If you suspect it has wedged, check `…state/alive`'s **mtime, not its presence** — the process
-table and the PID file can both say alive while the loop itself is not.
-
-`WATCHDOG ALERT` messages come from the script, not the owner:
+Reads `workspace-label` from `.agents/orchestrator.md`; `stop` verifies the PID first.
+PID: `/tmp/herdr-watchdog-<workspace-label>.lock`.
 
 | Alert | Action |
 |---|---|
-| `BLOCKED` | Pane asking a question — read, answer, restart watcher |
-| `STUCK` | No pane working, no watcher — inspect, handback or re-dispatch |
-| `WATCHER_LOST` | Pane working, watcher died — restart it |
+| `BLOCKED` | Pane asking a question — read, answer, restart Monitor (Claude) or watcher (Codex/OpenCode) |
+| `STUCK` | No pane working — inspect, handback or re-dispatch |
 | `THOMAS_CRASHED` | Your runtime process is gone — desktop notification substitutes |
 
 ## Answers carry a source
