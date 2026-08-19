@@ -57,12 +57,22 @@ So resolve the head yourself, review from a detached checkout at that SHA, and *
 range before you trust the verdict**:
 
 ```bash
+set -euo pipefail
 git worktree prune                         # clear stale registrations BEFORE add (AST-096)
 git worktree add --detach <repo-root>/.claude/worktrees/gate-arm-<key> <head-sha>
 cd <that worktree>
 [ "$(git rev-parse HEAD)" = "<head-sha>" ] || { echo "STOP: HEAD mismatch"; exit 1; }
-git rev-list --count <base>..<head-sha>   # zero commits means you are reviewing nothing
+COMMIT_COUNT=$(git rev-list --count <base>..<head-sha>)
+FILE_COUNT=$(git diff --name-only <base>...<head-sha> | wc -l | tr -d ' ')
+[ "$COMMIT_COUNT" -gt 0 ] || { echo "STOP: range <base>..<head-sha> has 0 commits — reviewing nothing"; exit 1; }
+echo "arm range: $COMMIT_COUNT commits, $FILE_COUNT files changed (<base>..<head-sha>)"
 ```
+
+**The first line of arm output must state the range.** A review of 0 commits and a review
+of 40 commits look identical once the verdict line prints — the header is what makes the
+silent-empty-range failure visible to a reader who glances at the top. Two incidents in two
+days were caught by the operator, not the gate, because nothing in the output distinguished
+a real review from a vacuous one.
 
 **Never reuse a gate worktree path across dispatches.** The companion caches state keyed to
 the workspace root; deleting and recreating the directory at the same path inherits stale
@@ -70,17 +80,16 @@ configuration that causes a silent failure — exit 0, no review started (AST-09
 disambiguator (`-p2`, a counter, a short token) when a previous gate used that path in this
 session.
 
-A count of zero, or a changed-file set that is not the artifact you meant to review, is a
-STOP — not a pass.
-
 **Every gate worktree removal must kill its broker first** — not only the final
 cleanup, but also the mid-ticket removal between pass 1 and pass 2. Removing
 the pass-1 worktree to create the `-p2` worktree orphans the pass-1 broker
 (AST-100, measured: every two-pass ticket leaked one process this way).
 
-**Claude runtime**: the `WorktreeRemove` hook in `.claude/settings.json` handles steps 1-2
-automatically. The manual steps below are still required for **Codex and OpenCode** runtimes
-where hooks do not run.
+**The `WorktreeRemove` hook in `.claude/settings.json` is intended to automate steps 1-2,
+but field testing (2.3.0) showed it does not fire on `git worktree remove` or
+`ExitWorktree` — confirmed by A/B test with control (SubagentStop fires from the same
+file, same minute). Until the hook is proven live by probe, treat steps 1-3 below as
+required on ALL runtimes.**
 
 In this order, every time you remove a gate worktree:
 

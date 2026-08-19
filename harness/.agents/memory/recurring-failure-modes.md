@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 100 entries (AST-001 … AST-101, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 104 entries (AST-001 … AST-104, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -2335,3 +2335,58 @@ Cleanup is now THREE steps, in order: (1) kill broker by verified `--cwd` PID ma
 other projects' databases). Match by verified path for both.
 
 Bound: codex-arm/SKILL.md (both `.agents/` and `.claude/` variants).
+
+### AST-102 — WorktreeRemove hook does not fire, but documentation declares manual cleanup redundant · promoted 2026-08-19
+
+The 2.3.0 release shipped a `WorktreeRemove` hook in `.claude/settings.json` as "primary
+enforcement" for broker/container cleanup (AST-100, AST-101), and the codex-arm skill
+declared the manual kill steps redundant for Claude runtime. Field testing with A/B control
+proved the hook does not fire on either `git worktree remove` or `ExitWorktree`, while a
+`SubagentStop` hook in the same file, modified the same minute, fires normally.
+
+The failure is silent — no error, no log, nothing reports that the hook did not run. A
+Thomas trusting the documentation skips the manual steps and leaks one broker per gate
+worktree, reproducing AST-100 exactly. The operator who caught it was running the "redundant"
+manual steps anyway.
+
+Suspected cause: Claude Code changelog 2.1.5x fixed `WorktreeRemove` and `WorktreeCreate`
+**plugin hooks** being silently ignored — the project-settings path may remain unfixed.
+
+Bound: codex-arm/SKILL.md, thomas.md (both now say manual steps required on all runtimes
+until hook is proven live by probe).
+
+### AST-103 — Cross-vendor arm silently reviews a zero-commit range and returns clean · promoted 2026-08-19
+
+When the arm runs from the base checkout instead of a detached gate worktree, or when
+`--base` resolves to the same SHA as HEAD, `git diff` produces nothing and the arm returns
+a clean verdict on an empty review. The mandatory gate becomes a check that cannot fail —
+AST-032 recurring on the newest mechanism.
+
+Measured twice in two days on the same project. Both caught by the operator, not the gate.
+The first (PROJ-005): unquoted focus text caused a shell parse error, the arm command never
+started, and a deadline-less wait sat 15h51m on a file that never appeared. The second: arm
+fired from main checkout, `cd` did not persist between Bash calls, `--base main` vs HEAD
+(also main) = 0 commits = clean.
+
+The skill already warned about this scenario in prose, and the operator who caused the
+second incident had read the warning. Prose warnings do not survive contact with an operator
+who just read them.
+
+Fix: the arm setup block now exits non-zero when `git rev-list --count` is 0, and the first
+line of output states the range (commit count + file count) so a vacuous review is visible
+at a glance.
+
+Bound: codex-arm/SKILL.md, codex-claude-arm/SKILL.md (both `.agents/` and `.claude/`).
+
+### AST-104 — herdr agent start rejects uppercase in agent names, but dispatch convention generates them · promoted 2026-08-19
+
+`herdr agent start` validates agent names against `[a-z0-9_-]` — no uppercase. The dispatch
+convention `builder-<ticket-id>` passes the ticket ID as-is, and ticket IDs are uppercase
+by convention (`TRA-169`). Every dispatch produces an invalid agent name on the first attempt.
+
+The dispatch skill documented the `:` restriction (pane label vs agent name) but not the
+case restriction. One failed launch per dispatch until the operator learned to lowercase.
+
+Fix: dispatch-ticket/SKILL.md now says to lowercase the ticket ID in the agent name.
+
+Bound: dispatch-ticket/SKILL.md (both `.agents/` and `.claude/` variants).

@@ -172,10 +172,11 @@ measured zero entries across a harness generation (AST-069).
 
 ## Watchdog — safety net
 
-Primary enforcement is now via hooks (`.claude/settings.json`): WorktreeRemove auto-kills
-brokers and containers (AST-100, AST-101), SubagentStop logs builder crashes. The watchdog
-is a **backup** for what hooks cannot cover: THOMAS_CRASHED detection and non-Claude runtime
-anomalies.
+Hooks (`.claude/settings.json`) are **intended** to auto-kill brokers and containers
+(AST-100, AST-101) and log builder crashes, but field testing showed `WorktreeRemove` does
+not fire (confirmed by A/B with control). **Until proven live, manual broker/container
+cleanup on every worktree removal remains required on all runtimes.** The watchdog covers
+THOMAS_CRASHED detection and non-Claude runtime anomalies.
 
 ```bash
 nohup scripts/herdr-watchdog.sh 300 900 6 &   # interval, cooldown, max-alerts/hr

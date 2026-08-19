@@ -1,3 +1,25 @@
+# Astragentic 2.3.1
+
+Field report fixes from first production run of 2.3.0 (TRA-169, etsy-fulfillment-thanh).
+
+## What changed
+
+- **WorktreeRemove hook downgraded**: field testing proved hook does not fire (A/B with
+  control). Manual broker/container cleanup restored as required on ALL runtimes until hook
+  is proven live. Documentation no longer says manual steps are redundant (AST-102).
+- **Arm rejects zero-commit range**: setup block now exits non-zero when `git rev-list --count`
+  is 0. First line of output states range (commit count + file count) so vacuous reviews are
+  visible at a glance (AST-103).
+- **SubagentStop hook reads stdin JSON**: env vars `$AGENT_NAME` and `$SESSION_ID` were empty;
+  hook now parses payload from stdin and logs `payload_size` for diagnostics.
+- **Agent name lowercase**: dispatch-ticket now documents that `herdr agent start` rejects
+  uppercase, and instructs to lowercase the ticket ID in agent names (AST-104).
+- **3 new failure modes**: AST-102, AST-103, AST-104 added to recurring-failure-modes.md.
+
+## Upgrade from 2.3.0
+
+Copy entire `harness/` directory. No new files.
+
 # Astragentic 2.3.0
 
 Native tools integration — poll-to-event-driven upgrade for Claude runtime.

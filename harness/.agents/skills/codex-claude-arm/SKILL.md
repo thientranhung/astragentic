@@ -24,8 +24,14 @@ shell access (AST-016). Name it `gate-arm-<artifact-key>`, distinct from the rev
 `gate-<artifact-key>`, so the two can never collide. Commit first.
 
 ```bash
+set -euo pipefail
 git worktree add --detach <repo-root>/.claude/worktrees/gate-arm-<artifact-key> <head-sha>
 cd <that worktree>
+[ "$(git rev-parse HEAD)" = "<head-sha>" ] || { echo "STOP: HEAD mismatch"; exit 1; }
+COMMIT_COUNT=$(git rev-list --count <base>..<head-sha>)
+FILE_COUNT=$(git diff --name-only <base>...<head-sha> | wc -l | tr -d ' ')
+[ "$COMMIT_COUNT" -gt 0 ] || { echo "STOP: range <base>..<head-sha> has 0 commits — reviewing nothing"; exit 1; }
+echo "arm range: $COMMIT_COUNT commits, $FILE_COUNT files changed (<base>..<head-sha>)"
 git diff <base>...<head> > <gate-worktree>/GATE-DIFF.patch
 git log --oneline <base>..<head> > <gate-worktree>/GATE-LOG.txt
 claude -p "<intent-loaded focus; review GATE-DIFF.patch, the net <base>...<head> diff>" \

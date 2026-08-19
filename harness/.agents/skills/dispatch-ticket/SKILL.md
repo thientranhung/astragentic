@@ -200,9 +200,10 @@ an unintended default. Confirm the pane's `foreground_cwd` equals `<worktree-pat
 `herdr pane run <pane-id> "cd <worktree-path>"`, then re-verify).
 
 **Agent names and pane labels are different strings.** `herdr agent start` accepts lowercase
-letters, digits, `-` and `_` — no `:` — while pane labels take `:`. So the agent is
-`builder-<ticket-id>` while the pane is `builder:<ticket-id>`. Passing a pane label as an
-agent name fails the dispatch.
+letters, digits, `-` and `_` — no `:`, no uppercase — while pane labels take `:`. So the
+agent is `builder-<ticket-id-lowercased>` while the pane is `builder:<ticket-id>`.
+**Lowercase the ticket ID in the agent name** (`TRA-169` → `builder-tra-169`); passing
+uppercase or a pane label as an agent name fails the dispatch silently.
 
 Print the resolved dispatch before launching:
 

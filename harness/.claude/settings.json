@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"HOOK: SubagentStop — agent=$AGENT_NAME session=$SESSION_ID exited\" >> /tmp/harness-hook-events.log"
+            "command": "payload=$(cat); agent_name=$(echo \"$payload\" | grep -o '\"agent_name\":\"[^\"]*\"' | head -1 | cut -d'\"' -f4); session_id=$(echo \"$payload\" | grep -o '\"session_id\":\"[^\"]*\"' | head -1 | cut -d'\"' -f4); echo \"HOOK: SubagentStop — agent=${agent_name:-unknown} session=${session_id:-unknown} payload_size=${#payload} exited\" >> /tmp/harness-hook-events.log"
           }
         ]
       }
