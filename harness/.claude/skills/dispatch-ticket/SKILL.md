@@ -336,12 +336,25 @@ builder waiting indefinitely.
 **`done` means the turn ended, not that the work finished** (AST-097). A builder that
 launches background work and parks while waiting for a notification reads as `done` while its
 artifact is still being built — measured three times on one pane in one session. Before
-concluding finished: check for active background processes in the worktree (`pgrep` for test
-runners, build tools, the builder's own monitors). Processes still running → PARKED, wait
-for exit, then re-check. All exited AND no new commits since the last instruction → read
-the pane before concluding — the turn may have crashed (529, OOM, context limit) with the
-error visible on screen (AST-097). All exited AND new commits since the last instruction →
-proceed to artifact verification.
+concluding finished: check TWO sources for active background work:
+
+1. **OS processes** — `pgrep` for test runners, build tools, or the builder's own monitors
+   whose argv contains the worktree path.
+2. **Runtime status line** — `herdr agent get <pane-id>` reports shells and monitors the
+   runtime itself tracks (ScheduleWakeup, Monitor). These are invisible to `pgrep`.
+
+The two sources can disagree: measured on nizzy-ecom, `pgrep` returned 0 while the pane
+status line read "1 shell, 1 monitor still running" — the builder had called ScheduleWakeup,
+the call failed, and it parked waiting for a notification that would never arrive. Trusting
+`pgrep` alone would have read STUCK; the status line read PARKED; the truth was
+PARKED-permanently. **Disagreement between the two sources is itself a signal — read the
+pane** (AST-097).
+
+Processes or runtime tasks still running → PARKED, wait for exit, then re-check. All
+quiet on BOTH sources AND no new commits since the last instruction → read the pane before
+concluding — the turn may have crashed (529, OOM, context limit) with the error visible on
+screen (AST-097). All quiet AND new commits since the last instruction → proceed to artifact
+verification.
 
 **`--wait` collapses submit, start-guard and settle into one call, and it is trustworthy
 ONLY on a pane whose turn you just opened.** Herdr's own help says it "does not track turns:

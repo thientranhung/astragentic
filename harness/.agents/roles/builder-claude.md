@@ -81,6 +81,14 @@ The skill carries what counts as a cleanup; two limits are this contract's. Anyt
 change behaviour is a **finding for Thomas**, and a cleanup touching a floor item's construction
 line is reported instead.
 
+## Scheduling failures
+
+**If `ScheduleWakeup` or any scheduling/notification mechanism errors, do not park.** A
+failed schedule command means the notification will never arrive — parking to wait for it
+creates a permanently-parked state indistinguishable from normal PARKED (AST-097). Read the
+result directly, retry the operation, or report to Thomas. A builder that says "I'll wait
+for the notification" after the scheduling call errored is committed to waiting forever.
+
 ## Long tickets
 
 When the conversation grows long, write a durable checkpoint **before** `/compact` — branch and

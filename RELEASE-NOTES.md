@@ -1,3 +1,29 @@
+# Astragentic 2.2.33
+
+AST-097 variant: PARKED-permanently — a Builder whose ScheduleWakeup call failed then parked
+waiting for a notification that would never arrive. The background-process check (`pgrep`
+alone) answered WRONG: 0 OS processes, while the pane status line read "1 shell, 1 monitor
+still running." Two sources disagreed, and the check only consulted one.
+
+Check 1 (dirty worktree, AST-092) is what actually saved 5 files including migration and
+tests. Two guards stacked; the second caught what the first's wrong answer missed.
+
+**dispatch-ticket**: background-process gate now names TWO sources — OS processes (`pgrep`)
+and runtime status line (`herdr agent get`) — and requires both. Disagreement between them
+is itself a signal: read the pane.
+
+**builder-claude.md**: new rule — if ScheduleWakeup or any scheduling mechanism errors, do
+not park. A failed schedule means the notification will never arrive; read the result
+directly instead.
+
+**AST-097**: updated with the permanently-PARKED variant and the two-source measurement.
+
+## Upgrade from 2.2.32
+
+Copy `.agents/skills/dispatch-ticket/SKILL.md` and its `.claude` copy.
+Copy `.agents/roles/builder-claude.md`.
+Copy `.agents/memory/recurring-failure-modes.md`.
+
 # Astragentic 2.2.32
 
 Data correction in AST-099: the frequency was understated. Thomas nizzy-ecom ran the full

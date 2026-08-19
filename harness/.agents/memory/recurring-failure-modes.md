@@ -2152,6 +2152,25 @@ instruction's SHA caught that zero new work had landed.
 Four meanings of `done`: finished, PARKED (background work running), STUCK (no commits),
 CRASHED (turn died mid-flight, error visible on screen).
 
+**Fifth variant: PARKED-permanently.** Measured on nizzy-ecom: Builder called ScheduleWakeup,
+received `Error: prompt is required when stop is not true`, then said "I'll pause here and
+wait for the notification to arrive." The scheduling call failed; the notification will never
+come; the builder is committed to waiting forever. Pane status line: "1 shell, 1 monitor
+still running" — while `pgrep` by worktree path returned 0. The two background-process
+sources DISAGREED: the runtime tracked a task invisible to the OS.
+
+The background-process check as originally written (`pgrep` alone) answered WRONG at exactly
+this case — it said "nothing running, this is STUCK or CRASHED," while the truth was
+PARKED-without-exit. If Thomas had trusted `pgrep` and followed the STUCK branch, he would
+have removed the worktree and deleted 5 files including a migration and tests — precisely
+what AST-092 exists to prevent. Check 1's dirty worktree is what actually caught it: two
+guards stacked, the second saved because the first measured the wrong source.
+
+Fixed in dispatch-ticket by naming both sources (OS processes AND runtime status line) and
+requiring both. Fixed in builder-claude.md: a failed scheduling call must not lead to
+parking — read the result directly instead. Disagreement between the two sources is itself a
+signal: read the pane.
+
 **The general shape, stated by the reporter: this package keeps shipping signals that cannot
 fail.** `done` cannot distinguish "finished" from "parked". Pane status cannot see a headless
 subagent. A fork's output cannot distinguish a real review from echoed narration. All three
