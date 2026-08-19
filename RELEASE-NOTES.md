@@ -1,3 +1,14 @@
+# Astragentic 2.2.34
+
+Command name fix: dispatch-ticket source 2 said `herdr agent get` which has no
+shell/monitor fields. The status bar with "1 shell, 1 monitor still running" comes from
+`herdr agent read`. A Thomas following the documented command would get "nothing running"
+from both sources and conclude STUCK — the exact wrong answer this gate exists to prevent.
+
+## Upgrade from 2.2.33
+
+Copy `.agents/skills/dispatch-ticket/SKILL.md` and its `.claude` copy.
+
 # Astragentic 2.2.33
 
 AST-097 variant: PARKED-permanently — a Builder whose ScheduleWakeup call failed then parked

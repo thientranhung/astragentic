@@ -340,8 +340,9 @@ concluding finished: check TWO sources for active background work:
 
 1. **OS processes** — `pgrep` for test runners, build tools, or the builder's own monitors
    whose argv contains the worktree path.
-2. **Runtime status line** — `herdr agent get <pane-id>` reports shells and monitors the
-   runtime itself tracks (ScheduleWakeup, Monitor). These are invisible to `pgrep`.
+2. **Runtime status line** — `herdr agent read <pane-id>` renders the pane's status bar,
+   which names shells and monitors the runtime itself tracks (ScheduleWakeup, Monitor).
+   These are invisible to `pgrep`.
 
 The two sources can disagree: measured on nizzy-ecom, `pgrep` returned 0 while the pane
 status line read "1 shell, 1 monitor still running" — the builder had called ScheduleWakeup,
