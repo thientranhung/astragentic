@@ -1,3 +1,37 @@
+# Astragentic 2.3.6
+
+The fifth stale site, found by the same downstream agent, one heading below the four that
+2.3.5 fixed. Documentation only.
+
+## What changed
+
+- **`dispatch-ticket/SKILL.md` § watcher script operational details**: the section was headed
+  "(Codex/OpenCode only)" and opened "Claude runtime uses Monitor — skip this section." Since
+  2.3.4 Claude runs that same script, so its `NO_START` semantics and exit contract are now
+  Claude's too; only the process-group stop is not (Claude uses `TaskStop`). A Claude reader
+  was being told to skip a section that had become half theirs. Heading is now "(all
+  runtimes)", the skip line is inverted, and the process-group block is scoped to
+  Codex/OpenCode where it still belongs.
+- **Exit contract quotes carry the `pane=<id>` suffix** 2.3.4 added to the script's output, in
+  the branch table and the operational section. A reader matching the documented string
+  against real output would have found it did not match.
+
+## The sweep, run this time
+
+2.3.5's lesson was that a protocol change is an edit plus a sweep. This release ran one before
+shipping rather than after: every `Codex/OpenCode only`, `skip this section`, `for Claude
+builders` and bare `TERMINAL:` in the payload was read against the post-2.3.4 protocol. The
+surviving hits are all about Herdr paste, which genuinely remains Codex/OpenCode only.
+
+Worth recording that the fifth site was a lower-severity shape than the first four: it
+**withheld** an instruction rather than forbidding a required one. That is why it survived a
+sweep aimed at contradictions — a section that says "skip me" reads as scoping, not as an
+error, until you notice the scope moved.
+
+## Upgrade from 2.3.5
+
+Copy entire `harness/` directory. Documentation only — no script, settings or ledger changes.
+
 # Astragentic 2.3.5
 
 Propagation fixes for 2.3.4, found by the nizzy-ecom harness agent while applying it. The

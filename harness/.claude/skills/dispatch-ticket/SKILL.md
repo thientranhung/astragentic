@@ -349,9 +349,9 @@ stall the watch (AST-107) — hand-rolled alternatives lack all five.
 
 Branch on `$?` **and the payload** when it returns:
 
-- `0` + `TERMINAL:done` → builder's turn ended, **not necessarily finished** — check for background processes before concluding (see below)
-- `0` + `TERMINAL:idle` → builder idle, check git log — may be finished or may have stopped early
-- `0` + `TERMINAL:blocked` → builder is asking a question, **read pane immediately and answer** — do NOT proceed to artifact verification, the builder is waiting for you
+- `0` + `TERMINAL:done pane=<id>` → builder's turn ended, **not necessarily finished** — check for background processes before concluding (see below)
+- `0` + `TERMINAL:idle pane=<id>` → builder idle, check git log — may be finished or may have stopped early
+- `0` + `TERMINAL:blocked pane=<id>` → builder is asking a question, **read pane immediately and answer** — do NOT proceed to artifact verification, the builder is waiting for you
 - `1` + `TIMEOUT` → builder exceeded cap, inspect pane
 - `2` + `NO_START` → builder never started working, re-read pane
 
@@ -455,19 +455,26 @@ and it converts precisely the failures you needed to hear about into silence (AS
 cmd … > /tmp/out.log 2>&1; status=$?; tail -25 /tmp/out.log; exit $status
 ```
 
-### Watcher script operational details (Codex/OpenCode only)
+### Watcher script operational details (all runtimes)
 
-**Claude runtime uses Monitor — skip this section.** See `dispatch-ticket-claude`.
+**Claude runtime does NOT skip this section.** Since 2.3.4 every runtime runs this same
+script; Claude only differs in how it is launched and stopped — `Monitor` instead of a
+direct call, `TaskStop` instead of the process-group kill below. Everything else here —
+`NO_START` semantics, the exit contract, status-is-a-bell — applies to Claude unchanged.
+Only the "Stopping a watch" block is Codex/OpenCode-specific.
 
 `<repo-root>/scripts/herdr-watch-terminal.sh` watches a NEWLY SUBMITTED turn: it waits to
 observe `working` first, so pointing it at an already-idle pane returns `NO_START` —
 truthful output rather than a fault. Point it at the pane whose turn you just opened. Any
 role may read or watch any pane, and concurrent watchers are fine (three simultaneous waits
 on one pane ran independently and timed out cleanly). Its exit status IS the signal
-(`0`+`TERMINAL:<state>` / `1`+`TIMEOUT` / `2`+`NO_START`), so call it by absolute path,
+(`0`+`TERMINAL:<state> pane=<id>` / `1`+`TIMEOUT ... pane=<id>` / `2`+`NO_START pane=<id>`
+— every line names its pane so concurrent watches stay distinguishable), so call it by
+absolute path,
 alone on its own line, and branch on `$?`. The pipe table above applies here too.
 
-**Stopping a watch takes the process GROUP.** On macOS the watcher re-execs under
+**Stopping a watch takes the process GROUP — Codex/OpenCode only.** On Claude runtime the
+watch is a `Monitor`, and `TaskStop` cancels it; none of the PID work below applies. On macOS the watcher re-execs under
 `caffeinate`, so `caffeinate` is the visible PID and killing it orphans the wrapped shell,
 still polling. Signal the group, then confirm:
 
