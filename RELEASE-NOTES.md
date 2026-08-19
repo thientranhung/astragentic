@@ -1,3 +1,40 @@
+# Astragentic 2.3.9
+
+A real dispatch, not a sweep, found this one: the brief's slash command has never fired on
+Claude runtime.
+
+## What changed
+
+- **Brief submission is two steps (AST-112)**: `SendMessage` carries the brief body, and the
+  bare slash command is then TYPED into the pane with `herdr pane run` + `send-keys Enter`, and
+  confirmed by its echo. Releases through 2.3.8 sent both in one `SendMessage` on the stated
+  ground that "the brief arrives as a user-turn message in the builder's session". That
+  sentence was false — a peer message arrives wrapped as `<cross-session-message from="...">`,
+  and the flow skills are `disable-model-invocation: true`, so only a user turn reaches them.
+  The shared protocol said so all along; the Claude section contradicted it.
+- **`shaper.md` gains the no-substitute rule**: measured in the same round, a builder whose
+  invocation failed stopped and reported, while a shaper whose invocation failed began reading
+  the plugin's own skill files and working from their prose. Same defect, one contract carried
+  AST-055 and one did not. A rule in one contract and not its sibling holds half the time.
+- **This failure is not `NO_START`**: the refusal and the substitute are real turns, so the
+  watcher returns `TERMINAL:done`, exit 0. Documented at the point of use, because the
+  confirmation step is the only thing that can catch it.
+
+## What this says about the last five releases
+
+2.3.4 through 2.3.8 made the watch accurate — sliced waits, one guard, one Monitor per builder,
+a two-directional audit. It works; it was verified against a live pane the same day. And an
+accurate bell reported `TERMINAL:done`, exit 0, on a dispatch that produced nothing.
+
+**A signal can be perfectly correct about the wrong question.** Every documentation sweep in
+this sequence read the section containing the false sentence, and none caught it, because it
+was not a contradiction between documents but a claim about the runtime that no document could
+check. It took a real dispatch.
+
+## Upgrade from 2.3.8
+
+Copy entire `harness/` directory. No settings or hook changes.
+
 # Astragentic 2.3.8
 
 Axis 3 made two-directional. The check that closed AST-110 could not see a missing row.

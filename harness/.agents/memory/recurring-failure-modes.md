@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 110 entries (AST-001 … AST-111, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 111 entries (AST-001 … AST-112, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -2599,4 +2599,46 @@ when it can fail in every direction the thing it guards can break.** "It goes re
 it" is one direction, and it was enough to feel finished twice.
 
 Bound: scripts/docs-staleness-audit.sh (axis 3).
+
+### AST-112 — SendMessage is not a user turn, so the brief's slash command never fires · promoted 2026-08-19
+
+`dispatch-ticket-claude` told Thomas to send the whole brief — slash command and all — with
+one `SendMessage`, on the stated ground that "the brief arrives as a user-turn message in the
+builder's session." **That sentence was false.** A message sent to another Claude session
+arrives wrapped as `<cross-session-message from="...">`: a tool-delivered peer message. The
+flow skills are `disable-model-invocation: true`, and the shared protocol says plainly that a
+user turn is the only thing that reaches them — so the one mechanism the brief depended on was
+the one mechanism SendMessage does not provide. The protocol contradicted itself across two
+files and shipped that way for four releases.
+
+Measured on two dispatches in one round, both following the skill to the letter:
+
+| Pane | Command | Outcome |
+|---|---|---|
+| builder | `/mattpocock-skills:implement` | **Loud** — invocation refused, builder stopped without touching the worktree, cited its own contract, asked for a human to type it |
+| shaper | `/mattpocock-skills:grill-with-docs` | **Silent** — began `cat`-ing the plugin's `grill-with-docs.md` and `to-spec.md` out of the plugin cache and proceeding from prose |
+
+Same defect, same round, two outcomes — and the difference was neither the runtime nor the
+command. `builder-claude.md` carried "if the invocation fails, the failure IS the finding —
+do not substitute" (AST-055); `shaper.md` did not. **A rule that exists in one contract and
+not its sibling is a rule that holds half the time**, and the half where it is absent produces
+work that looks finished.
+
+**Nothing in the watching apparatus could see this.** The refusal and the substitute are both
+real turns — they start, run and end — so the watcher returns `TERMINAL:done pane=<id>`,
+exit 0, the reassuring line. Five releases of work on that watch (AST-107 through AST-111) made
+the bell accurate, and an accurate bell reported success on a dispatch that produced nothing.
+**A signal can be perfectly correct about the wrong question.**
+
+Fix: submission is two steps. `SendMessage` carries the brief body; the bare slash command is
+then TYPED into the pane (`herdr pane run` + `send-keys Enter`) and confirmed by its echo. One
+line, so it does not reintroduce AST-037. The false sentence is deleted, and the no-substitute
+rule now lives in `shaper.md` as well.
+
+Reported by nizzy-ecom Thomas, relayed by the harness agent, against applied 2.3.8 — the first
+finding in this sequence to come from a real dispatch rather than a documentation sweep. Every
+sweep in five releases read that section and none caught it, because it is not a contradiction
+between two documents but a claim about the runtime that no document could check.
+
+Bound: dispatch-ticket-claude/SKILL.md (both variants), shaper.md.
 

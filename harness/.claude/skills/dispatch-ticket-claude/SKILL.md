@@ -36,30 +36,56 @@ A missing adapter means the payload was not committed or was gitignored (AST-036
 shared protocol's worktree-visibility check catches this too, but this is the exact file
 `claude --agent <role>` will try to load.
 
-## Brief submission — SendMessage
+## Brief submission — SendMessage carries the body, the pane receives the command
 
-**Claude builders receive briefs via SendMessage, not Herdr paste.** The shared protocol's
-paste-based submission (AST-037) applies to Codex/OpenCode only.
+**Claude builders receive the brief BODY via SendMessage, not Herdr paste.** The shared
+protocol's paste-based submission (AST-037) applies to Codex/OpenCode only.
 
-After launching the builder with `herdr agent start`, discover its session name via
-`ListAgents`, then send the brief directly:
+**But SendMessage cannot deliver the phase's slash command, and through 2.3.8 this section
+claimed it could.** A message sent to another Claude session arrives wrapped as
+`<cross-session-message from="...">` — a tool-delivered peer message, **not a user turn**. The
+flow skills are `disable-model-invocation: true`, so a user turn is the only thing that reaches
+them. The sentence "the brief arrives as a user-turn message in the builder's session" was
+false, and the entire submission rested on it (AST-112).
+
+Submission is therefore TWO steps, in this order:
+
+**1. Body via SendMessage.** Discover the session name via `ListAgents`, then:
 
 ```
 SendMessage({
   to: "<builder-session-name>",
-  message: "<full brief including slash command>"
+  message: "<brief body — everything except the slash command>"
 })
 ```
 
-One call. No paste, no Enter, no idle false-positive. The brief arrives as a user-turn
-message in the builder's session.
+**2. The bare slash command, TYPED into the pane as real input:**
 
-**Do not confirm `working` yourself — arm the watch and let it answer.** The watcher script
-carries its own start guard and returns `NO_START` when the turn never began, which is the
-same question a hand-rolled `herdr agent wait --until working` asks. Asking it twice delays
-the script's start, and a builder that finishes inside that delay makes the script miss
-`working` and report `NO_START` on work that actually happened — a second guard buying a new
-false negative. On `NO_START`, read the pane and fall back to Herdr paste.
+```bash
+herdr pane run <pane-id> '/mattpocock-skills:implement TRA-123'
+herdr pane send-keys <pane-id> Enter
+```
+
+**Confirm it echoed in the pane before moving on.** The command needs no arguments beyond the
+ticket id, because the brief body is already in context — so it stays a single line and does
+not reintroduce the multi-line-paste-does-not-submit problem SendMessage exists to avoid
+(AST-037).
+
+**This failure does NOT surface as `NO_START`.** The refusal or the substitute is a real turn:
+it starts, it runs, it ends. The watcher returns `TERMINAL:done pane=<id>`, exit 0 — the
+reassuring line. Nothing in the watching apparatus can see this, which is why the confirmation
+above is positive-evidence and not optional.
+
+**Two dispatches, same round, same defect, two outcomes** (measured 2026-08-19):
+
+| Pane | Command | Outcome |
+|---|---|---|
+| builder | `/mattpocock-skills:implement` | **Loud** — invocation refused, builder stopped without touching the worktree, cited its own rule, asked for a human to type it. One round trip lost. |
+| shaper | `/mattpocock-skills:grill-with-docs` | **Silent** — began `cat`-ing the plugin's own skill files from the cache and proceeding from prose. Produces something shaped like a spec, indistinguishable from a real invocation. |
+
+The difference is not the runtime and not the command. `builder-claude.md` carries "if the
+invocation fails, the failure IS the finding — do not substitute" (AST-055); `shaper.md` did
+not. One contract had the rule and one did not, so the same defect surfaced once and hid once.
 
 **Steering on BLOCKED**: when Monitor reports `blocked`, read the pane to understand the
 question, then reply via SendMessage:

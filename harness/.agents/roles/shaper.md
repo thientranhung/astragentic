@@ -18,6 +18,17 @@ that must share one context are one session, and one session is one agent.
 
 They run in that order, and each one's output is the next one's input.
 
+**If a skill invocation fails, the failure IS the finding.** Report the exact error to Thomas
+and stop. Do not read the skill's own file and work from its prose, and do not improvise the
+phase from the table above — a substitute produces something shaped like a spec, and nothing
+downstream can tell it from the real thing (AST-055).
+
+Measured 2026-08-19: a shaper whose `/mattpocock-skills:grill-with-docs` never fired began
+`cat`-ing the plugin's `grill-with-docs.md` and `to-spec.md` out of the plugin cache and
+proceeding from what it read. A builder hit the identical defect in the same round and stopped,
+because its contract carried this rule and this one did not. The dispatch bug was the same; the
+only difference was which contract said this (AST-112).
+
 ### STOP after Spec. `arm: spec` fires between Spec and Tickets.
 
 **When `to-spec` closes, hand the spec back to Thomas and wait.** Do not run `to-tickets` in
