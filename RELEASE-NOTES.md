@@ -1,3 +1,37 @@
+# Astragentic 2.3.12
+
+The payload's own reachability check has been failing upstream since 2.3.2, and 2.3.11's prose
+added a second failure to it.
+
+## What changed
+
+- **`check-reachability.sh` passes upstream again (AST-116)**, for the first time in ten
+  releases. Two distinct causes, two distinct fixes:
+  - `builder-tra-123`, shipped in `dispatch-ticket` since 2.3.2, is harness vocabulary and now
+    sits in `NOT_A_SKILL` **upstream**. It had been fixed downstream in an adapted copy that
+    never travelled back, so every fresh install re-bought the failure.
+  - The container name AST-115 quoted is a project's own name, not harness vocabulary, so the
+    backticks come off rather than the name going into a shared exclusion list. That list
+    carries its own warning that a long one means the check has stopped discriminating.
+- **Break-tested after both fixes**: a planted `some-nonexistent-skill` still fails and the
+  payload is clean without it — because a repair that silences a checker looks exactly like a
+  repair that fixes what it complained about.
+- **AST-116**: a green check downstream says nothing about upstream when the checker itself is
+  adaptable payload. The adapted copy is the one that runs, and it accumulates repairs the
+  source never sees.
+
+## How it surfaced
+
+Only because AST-115's new prose tripped the same heuristic, and the downstream agent's report
+mentioned the pre-existing entry in passing. Without that aside, the new defect would have been
+fixed and the ten-release-old one would have stayed invisible.
+
+## Upgrade from 2.3.11
+
+Copy entire `harness/` directory. One script and one skill change. If your adapted
+`check-reachability.sh` already carries a local `builder-tra-123` entry, this release makes
+that local edit redundant rather than conflicting.
+
 # Astragentic 2.3.11
 
 A live incident, not a sweep: the documented gate cleanup stopped the shared test database

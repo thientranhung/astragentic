@@ -198,6 +198,10 @@ NOT_A_SKILL = {
     "adversarial-review", "send-text", "send-keys", "gate-diff", "no-focus",
     "allowed-tools", "dangerously-skip-permissions", "project-name", "optional-too",
     "applied-version",
+    # Dispatch naming convention, not a skill. It has shipped in dispatch-ticket since 2.3.2
+    # and this check has been red upstream ever since — papered over by a local edit
+    # downstream that never came back (AST-116).
+    "builder-tra-123",
     # Frontmatter keys quoted in prose about how skills are reached.
     "disable-model-invocation",
     # A triage LABEL that to-tickets writes at creation. Named in the frontier audit precisely

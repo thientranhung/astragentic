@@ -133,7 +133,7 @@ In this order, every time you remove a gate worktree:
    **NEVER run the project's own `make db-down` here, and never any project-level target.**
    Its blast radius is defined by the project, not by this worktree. Measured 2026-08-19: the
    documented `make -C <dir> db-down` resolved correctly, ran correctly, and stopped
-   `etsy-server-shared-test-postgres` — the SHARED test database every live Builder was
+   etsy-server-shared-test-postgres — the SHARED test database every live Builder was
    standing on, because the project had that day migrated to one shared server across
    worktrees. A Builder mid-ticket survived on timing alone: it had finished its test run four
    minutes earlier and was reading source when the container went away (AST-115).

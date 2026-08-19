@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 114 entries (AST-001 … AST-115, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 115 entries (AST-001 … AST-116, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -2706,7 +2706,7 @@ Bound: dispatch-ticket-claude/SKILL.md (both variants).
 ### AST-115 — Two correct changes composed into a live one, and the repair is what armed it · promoted 2026-08-20
 
 The documented gate cleanup ran `make -C <dir> db-down` and stopped
-`etsy-server-shared-test-postgres` — the SHARED test database every live Builder was standing
+etsy-server-shared-test-postgres — the SHARED test database every live Builder was standing
 on. A Builder mid-ticket survived on timing alone: it had finished its test run four minutes
 earlier and was reading source when the container went away. That is luck, not safety.
 
@@ -2744,4 +2744,39 @@ in that order. Here they land together: the hook's command is fixed in this rele
 hook is still confirmed asleep.
 
 Bound: codex-arm/SKILL.md (both variants), .claude/settings.json.
+
+### AST-116 — A local fix that never goes upstream is a defect every fresh install re-buys · promoted 2026-08-20
+
+`check-reachability.sh` has been FAILING in the upstream payload since 2.3.2, and nobody
+upstream knew. The 2.3.2 release genericised an example agent name to `builder-tra-123`; the
+check treats any backticked kebab-case token as a candidate skill reference, so the example
+tripped it. Downstream, the operator added the name to that script's `NOT_A_SKILL` list and
+moved on — a correct local fix, applied to an adapted copy, that never travelled back. Every
+install since has re-bought the same failure and, presumably, re-fixed it the same way.
+
+It surfaced only because a NEW entry (AST-115's prose) tripped the same heuristic and the
+downstream agent reported it — and the report mentioned the prior entry in passing. Without
+that aside the second defect would have been fixed and the first would have stayed invisible
+for another dozen releases.
+
+**A green check downstream says nothing about upstream when the checker itself is adapted per
+project.** The adapted copy is the one that runs, and it accumulates repairs the source never
+sees. Any check that ships as adaptable payload needs its own upstream run, or its verdict is
+only ever about somebody's local edits.
+
+Two distinct fixes, and which one applies is a rule worth keeping:
+
+- **Harness vocabulary belongs in `NOT_A_SKILL`** — `builder-tra-123` is the dispatch naming
+  convention, ships in every install, and will trip the check everywhere. Fixed upstream.
+- **A project's own names must never be backticked in payload prose.** AST-115 named a real
+  container, etsy-server-shared-test-postgres, in backticks. Adding it to the shared exclusion
+  list would have put one project's container into every other project's checker — and that
+  list carries its own warning that a long list means the check has stopped discriminating.
+  Removing the backticks fixes it without spending the list.
+
+The check was break-tested after both fixes, because a repair that silences a checker is
+indistinguishable from a repair that fixes what it complained about: a planted
+`some-nonexistent-skill` still fails, and the payload is clean without it.
+
+Bound: scripts/check-reachability.sh, codex-arm/SKILL.md (both variants), this ledger.
 
