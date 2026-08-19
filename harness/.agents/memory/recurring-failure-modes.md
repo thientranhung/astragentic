@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 109 entries (AST-001 … AST-110, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 110 entries (AST-001 … AST-111, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -2563,4 +2563,40 @@ agent re-derived the delta instead of trusting the release's own file list.
 
 Bound: scripts/docs-staleness-audit.sh (axis 3), dispatch-ticket/SKILL.md,
 dispatch-ticket-claude/SKILL.md, thomas-claude.md, thomas-codex.md, thomas-opencode.md.
+
+### AST-111 — A check that validates the rows it finds never notices the row that is missing · promoted 2026-08-19
+
+AST-110 ended with a check: read the literals the watcher script echoes, require every
+branch-table row to quote the real shape. It compared document to emitter and it was proven to
+fail before it was trusted. It was still one-directional.
+
+Demonstrated on the shipped check, not argued:
+
+- **A phantom row passes.** A row for `TERMINAL:crashed` — a state the script's `case` arms
+  cannot produce — was added to a branch table. The axis read it, found a well-formed row with
+  the right suffix, and reported clean. A reader branching on it waits for a line that can
+  never arrive.
+- **A deleted row passes.** The real `TERMINAL:blocked` row was removed — the one state that
+  means a builder is standing there waiting for an answer. The axis reported clean.
+
+The defect is not in the document, it is in the check: green meant *the rows I found look
+right*, not *the documented set matches the emitted set*. The suffix half compared document to
+emitter; the membership half still compared the document to itself. AST-032 one level above
+where AST-110 put it, inside the file written to end that class — the third time in this
+sequence that a fix rebuilt the defect it was fixing.
+
+Fix, needing no new source of truth: derive the reachable set from the same place the literals
+came from — the `case` arms plus `TIMEOUT` and `NO_START` — then assert BOTH directions. Every
+documented token must be reachable; every reachable state must have a row. Proven by breaking
+each direction separately and restoring.
+
+Scope was widened in the same pass, for the reason the fifth site survived: the axis searched
+only `skills/**/SKILL.md`, while role contracts also instruct on the watcher. A sweep that
+looks only where the author expects the defect measures the author's expectation.
+
+**The general rule this sequence earned: a check is not done when it can fail — it is done
+when it can fail in every direction the thing it guards can break.** "It goes red when I break
+it" is one direction, and it was enough to feel finished twice.
+
+Bound: scripts/docs-staleness-audit.sh (axis 3).
 

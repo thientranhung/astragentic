@@ -253,31 +253,64 @@ echo "=== 3. documented signal strings vs what the emitter actually prints ==="
 A6=0
 WATCHER="$PAYLOAD/scripts/herdr-watch-terminal.sh"
 if [[ -f "$WATCHER" ]]; then
-  # Every state token the script can print, taken from the script, never from a doc.
-  TOKENS="$( { grep -oE 'echo "(TERMINAL:\$?[a-z]*|TIMEOUT|NO_START)' "$WATCHER" || true; } \
-             | sed 's/echo "//' | sed 's/TERMINAL:\$first/TERMINAL:/' | sort -u )"
+  # THE REACHABLE SET, derived from the script and never from a doc. Terminal states are the
+  # case arms; TIMEOUT and NO_START are the two the loop prints on its own.
+  CASE_STATES="$( { grep -oE '^ *(done\|blocked\|idle|[a-z|]+)\)$' "$WATCHER" || true; } \
+                  | tr -d ' )' | tr '|' '\n' | grep -E '^[a-z]+$' | sort -u )"
+  REACHABLE="$( { for st in $CASE_STATES; do echo "TERMINAL:$st"; done; echo TIMEOUT; echo NO_START; } | sort -u )"
   EMITS_PANE=0
   grep -q 'pane=\$PANE' "$WATCHER" && EMITS_PANE=1
 
-  if [[ -z "$TOKENS" ]]; then
-    echo "  the watcher script prints no recognisable state token — this axis read nothing"
+  # Docs that carry a branch table: any file with at least one `- \`TOKEN…\` → ` row naming a
+  # state. Scope is every skill AND every role contract — the fifth stale site survived because
+  # a sweep looked only where the author expected the defect, not everywhere it can live.
+  DOCS="$(find "$PAYLOAD/.agents" "$PAYLOAD/.claude" -name '*.md' 2>/dev/null)"
+
+  if [[ -z "$CASE_STATES" || -z "$REACHABLE" ]]; then
+    echo "  the watcher script exposes no parsable terminal states — this axis read nothing"
     A6=1; FOUND=1
-  elif [[ $EMITS_PANE -eq 1 ]]; then
+  elif [[ $EMITS_PANE -eq 0 ]]; then
+    echo "  the watcher script no longer prints pane=\$PANE — the suffix rule below is unverifiable"
+    A6=1; FOUND=1
+  else
     while IFS= read -r doc; do
       [[ -f "$doc" ]] || continue
+      ROWS="$( { grep -nE '^- .*`(TERMINAL:[a-z]+|TIMEOUT|NO_START)[^`]*`.*→' "$doc" || true; } )"
+      [[ -n "$ROWS" ]] || continue        # no branch table here, nothing to check
+
+      # (1) FORM — every row quotes the suffix the script actually emits.
+      while IFS= read -r row; do
+        [[ -n "$row" ]] || continue
+        if [[ "$row" != *"pane="* ]]; then
+          echo "  ${doc#$ROOT/}: branch row omits the pane= suffix the script emits"
+          echo "    $(echo "$row" | sed 's/^[0-9]*://' | cut -c1-90)"
+          A6=1; FOUND=1
+        fi
+      done <<< "$ROWS"
+
+      # (2) MEMBERSHIP, both directions. Form-only was one-directional: it validated the rows
+      # that existed and never compared the documented SET against the reachable one. Measured:
+      # a phantom `TERMINAL:crashed` row (a state the case arms cannot produce) passed clean,
+      # and DELETING the `TERMINAL:blocked` row — the one state that means a builder is waiting
+      # for an answer — also passed clean. A green meaning "the rows I found look right" rather
+      # than "the documented set matches the emitted set" is AST-032 one level up, inside the
+      # check written to end that class (AST-110).
+      DOC_TOKENS="$(echo "$ROWS" | grep -oE '`(TERMINAL:[a-z]+|TIMEOUT|NO_START)' | tr -d '`' | sort -u)"
       while IFS= read -r tok; do
         [[ -n "$tok" ]] || continue
-        # Rows are the lines that quote the token as a branch value: `- `TOKEN...` → `.
-        while IFS= read -r row; do
-          [[ -n "$row" ]] || continue
-          if [[ "$row" != *"pane="* ]]; then
-            echo "  ${doc#$ROOT/}: branch row quotes \`$tok\` without the pane= suffix the script emits"
-            echo "    $(echo "$row" | sed 's/^[0-9]*://' | cut -c1-90)"
-            A6=1; FOUND=1
-          fi
-        done < <( { grep -nE "^- .*\`[^\`]*${tok}[^\`]*\`.*→" "$doc" || true; } )
-      done <<< "$TOKENS"
-    done < <(find "$PAYLOAD/.agents/skills" "$PAYLOAD/.claude/skills" -name SKILL.md 2>/dev/null)
+        if ! echo "$REACHABLE" | grep -qx "$tok"; then
+          echo "  ${doc#$ROOT/}: branch row documents \`$tok\`, which the script can never print"
+          A6=1; FOUND=1
+        fi
+      done <<< "$DOC_TOKENS"
+      while IFS= read -r tok; do
+        [[ -n "$tok" ]] || continue
+        if ! echo "$DOC_TOKENS" | grep -qx "$tok"; then
+          echo "  ${doc#$ROOT/}: branch table has no row for \`$tok\`, which the script can print"
+          A6=1; FOUND=1
+        fi
+      done <<< "$REACHABLE"
+    done <<< "$DOCS"
   fi
 else
   echo "  no watcher script at $WATCHER — this axis measured nothing"

@@ -1,3 +1,36 @@
+# Astragentic 2.3.8
+
+Axis 3 made two-directional. The check that closed AST-110 could not see a missing row.
+
+## What changed
+
+- **`docs-staleness-audit.sh` axis 3 now asserts membership in both directions**, deriving the
+  reachable set from the watcher's `case` arms plus `TIMEOUT` and `NO_START`. Every documented
+  token must be a state the script can print; every state the script can print must have a row.
+  Previously it validated the form of the rows that existed and never compared the sets — so a
+  phantom `TERMINAL:crashed` row passed clean, and deleting the real `TERMINAL:blocked` row
+  passed clean too.
+- **Scope widened from `skills/**/SKILL.md` to every payload `.md`**, role contracts included.
+  Files are selected by whether they carry a branch table, not by where the defect was expected.
+  A sweep that looks only where the author expects the defect measures the author's expectation
+  — which is how the fifth stale site survived 2.3.5.
+- **Proven in four directions before shipping**: phantom row → red; deleted row → red; missing
+  `pane=` suffix → red; role contract carrying a bad row → red, confirming the widened scope is
+  live. Clean restore verified byte-identical each time.
+- **AST-111**: a check is not done when it can fail — it is done when it can fail in every
+  direction the thing it guards can break.
+
+## Where this sequence stands
+
+Findings 7 and the coverage note are now closed; the queue is empty. Nothing in 2.3.5 through
+2.3.8 has touched the dispatch path — they are documentation and one audit-time script. The
+measurement this chain has been waiting on is unchanged and unmade: no part of 2.3.4's watcher
+fix has run against a live pane.
+
+## Upgrade from 2.3.7
+
+Copy entire `harness/` directory. One script changes; no settings or hook changes.
+
 # Astragentic 2.3.7
 
 The sixth stale site, and the check that would have caught all six. Found by the downstream
