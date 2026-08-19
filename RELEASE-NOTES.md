@@ -1,3 +1,70 @@
+# Astragentic 2.3.4
+
+Field report round 3 fixes (nizzy-ecom, 2026-08-19). Four measurements, all about the watch —
+the thing that tells Thomas a builder is done.
+
+## What changed
+
+- **`herdr agent wait` no longer trusted for the verdict (AST-107)**: a single
+  `--timeout 3600000` wait was measured ALIVE AND DEAF — 10m25s against a pane that was
+  already `idle`, returning nothing, while an identical wait issued in the same minute
+  returned in 0s. `pgrep` showed it running, so the watch read healthy.
+  `herdr-watch-terminal.sh` now waits in 60s slices (start guard included) and takes every
+  verdict from a fresh `herdr agent get`; the wait is demoted to an interruptible sleep.
+  Worst-case detection lag: 60 seconds, not the session. The upstream cause is herdr's; this
+  is the harness-side guard.
+- **Claude runtime stops hand-rolling the Monitor command (AST-107)**: `Monitor` now wraps
+  `herdr-watch-terminal.sh` instead of a bare `herdr agent wait`. Monitor is the delivery
+  channel — it carries the script's output into Thomas's stream and knows nothing about
+  panes; the script does the detecting. Claude runtime thereby regains the start guard,
+  debounce, cap, slicing — and `caffeinate`. The 2.3.x claim that "Monitor is a native tool,
+  not a shell process subject to idle sleep" was wrong: a Monitor command is an ordinary
+  shell process.
+- **Monitor templates now set `timeout_ms` (AST-108)**: the old template omitted it, taking
+  the 300000ms default — a five-minute watch over an hour-long `wait`. Measured the same day:
+  Monitor enforces the cap, kills the child cleanly, and delivers a timeout notification, so
+  the watch ends early but says so. Templates now pass `timeout_ms` and `persistent`
+  explicitly, matched to the script's cap.
+- **One start guard, not two**: the protocol told the dispatcher to confirm `working` before
+  arming the watch, while the watcher script already asks exactly that and answers `NO_START`.
+  Two sequential guards delay the script's start, and a builder that finishes inside the delay
+  makes the script miss `working` and report `NO_START` on work that happened — a second guard
+  buying a new false negative. Removed from every submit form on every runtime; dispatch is
+  now start → send brief → arm watch.
+- **One Monitor per builder, stated explicitly**: verified 2026-08-19 that three concurrent
+  Monitors all deliver, each with its own task id, and that the notification carries the
+  Monitor's `description`. Multiplexing several panes into one watch is a single point of
+  failure for every builder behind it — this release's own bug, times N. Every line the
+  watcher emits now names its pane (`TERMINAL:done pane=<id>`), so three identical verdicts
+  in one stream stay distinguishable.
+
+- **AST-102 re-diagnosed**: `WorktreeRemove` is likely **not broken but unreached** — the
+  event hangs off the `EnterWorktree`/`ExitWorktree` tool path while Thomas removes worktrees
+  with plain `git worktree remove` in Bash, where no harness stands between the command and
+  git. Unproven, so manual cleanup stays required; but the hook now logs to
+  `/tmp/harness-hook-events.log` before doing anything, so the next `ExitWorktree` answers
+  the question by writing a file instead of needing another A/B.
+- **`db-down` cleanup aimed at a directory that never had the target (AST-109)**:
+  `make -C "$GATE_WORKTREE" db-down` returned `No rule to make target` on every run since it
+  was written — the target lives in `apps/server`, not the repo root. `|| true` hid it for
+  weeks; removing it in 2.3.3 exposed it. Cleanup now locates the Makefile that declares
+  `^db-down:` and runs it there, and WARNs explicitly when no such target exists.
+- **4 failure-mode entries**: AST-107, AST-108, AST-109 added; AST-102 amended with the
+  corrected diagnosis and the lesson that survives it — when a mechanism does not fire, ask
+  whether the trigger was reached before concluding the mechanism is broken.
+
+## Considered and rejected
+
+A `Stop` hook writing a completion marker to `/tmp` for Thomas to poll, as a second
+builder-finished signal. Rejected by the owner: it does not remove a polling loop, it adds
+one; the marker's absence is indistinguishable from a builder still working (the exact defect
+of AST-102, one hook over); and it is not independent — a wedged builder fires neither the
+hook nor the pane state. Detection stays in the watcher script, where it already lives.
+
+## Upgrade from 2.3.3
+
+Copy entire `harness/` directory. No new files, no new hooks.
+
 # Astragentic 2.3.3
 
 Field report round 2 fixes (TRA-209, etsy-fulfillment-thanh).

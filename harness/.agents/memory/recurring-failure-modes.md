@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 105 entries (AST-001 … AST-106, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 108 entries (AST-001 … AST-109, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -2349,11 +2349,25 @@ Thomas trusting the documentation skips the manual steps and leaks one broker pe
 worktree, reproducing AST-100 exactly. The operator who caught it was running the "redundant"
 manual steps anyway.
 
-Suspected cause: Claude Code changelog 2.1.5x fixed `WorktreeRemove` and `WorktreeCreate`
-**plugin hooks** being silently ignored — the project-settings path may remain unfixed.
+Suspected cause, 2026-08-19 revision (supersedes the earlier "project-settings path may
+remain unfixed" reading, which was a changelog guess): **the hook is not broken, it is
+unreached.** `WorktreeRemove` hangs off the `EnterWorktree`/`ExitWorktree` tool path. Thomas
+removes worktrees with plain `git worktree remove` in a Bash call — ordinary git, with no
+harness standing between the command and the repo, so no event exists to fire. A hook bolted
+to a door nobody walks through fires exactly as often as a broken one, and the two are
+indistinguishable from the outside, which is why "hook is broken" survived a release.
 
-Bound: codex-arm/SKILL.md, thomas.md (both now say manual steps required on all runtimes
-until hook is proven live by probe).
+Not yet proven. What makes it testable is cheap: the hook now appends a line to
+`/tmp/harness-hook-events.log` before doing anything else, so the next `ExitWorktree` answers
+the question by writing a file. Until that line appears, manual cleanup stays required on all
+runtimes.
+
+The general lesson is the one that outlives this hook: **when a mechanism does not fire, ask
+whether the trigger was reached before concluding the mechanism is broken.** The first
+diagnosis chose a cause that needed no evidence to state and produced no test to run.
+
+Bound: codex-arm/SKILL.md, thomas.md (both say manual steps required on all runtimes until
+the hook is proven live), .claude/settings.json (fire-logging added).
 
 ### AST-103 — Cross-vendor arm silently reviews a zero-commit range and returns clean · promoted 2026-08-19
 
@@ -2428,3 +2442,88 @@ Fixed by adding "Isolation covers all disk activity, not only git" to the one-ch
 with the measured incident as the example.
 
 Bound: dispatch-ticket/SKILL.md (both `.agents/` and `.claude/` variants).
+
+### AST-107 — A long `herdr agent wait` stays alive and goes deaf, so the watch never fires · promoted 2026-08-19
+
+Measured on nizzy-ecom, same machine, same pane, same minute — an A/B with a control:
+
+| | the wait already watching | an identical wait issued fresh |
+|---|---|---|
+| command | `herdr agent wait wC:p3S --until blocked --until idle --timeout 3600000` | identical |
+| actual pane state | `idle` | `idle` |
+| result | 10m25s, returned nothing | returned in 0s, exit 0, 634 bytes |
+| Monitor output file | empty | populated |
+
+The long-lived waiter misses the transition and then waits forever on a state that has
+already happened. It does not die: `pgrep` reports it running, so the operator reads a
+healthy watch. That is worse than a crash — a dead watcher looks wrong, this one looks
+right. AST-032 inside the watching tool itself.
+
+Consequence measured twice in two sessions: the owner saw the builder finish before the tool
+did. The second time, Thomas only learned of it because the owner asked.
+
+Alternative cause tested and rejected: that the `Monitor` wrapping the wait had timed out
+and orphaned it, making a disconnected process look alive. Measured the same day — Monitor
+kills its child at the cap and announces the timeout (AST-108). It cannot produce a process
+still running at 10m25s. The deaf-wait reading stands, and herdr remains the suspect.
+
+Fix: stop trusting `wait` for the verdict. `herdr-watch-terminal.sh` now waits in slices of
+at most 60s (start guard included) and takes every verdict from a fresh `herdr agent get`.
+The wait is demoted to an interruptible sleep: if it fires, detection is instant; if it is
+deaf, the next poll catches the state within a slice. Claude runtime no longer puts a bare
+`herdr agent wait` in a `Monitor` — it wraps this script, which also restores the
+`caffeinate -i` wrapper that the "Monitor is not a shell process" claim had wrongly retired
+(a Monitor command IS a shell process).
+
+Bound: scripts/herdr-watch-terminal.sh, dispatch-ticket/SKILL.md, dispatch-ticket-claude/SKILL.md
+(both `.agents/` and `.claude/` variants).
+
+### AST-108 — A Monitor with no `timeout_ms` caps an hour-long watch at five minutes · promoted 2026-08-19
+
+The `Monitor` template in dispatch-ticket-claude passed only `command` and `description`.
+`timeout_ms` defaults to 300000 — five minutes — while the command inside it was
+`herdr agent wait --timeout 3600000`, an hour. Two numbers, two places, never read side by
+side. Every builder that takes longer than five minutes outruns its own watch, so the bigger
+the ticket the likelier the watch is already gone.
+
+Measured 2026-08-19, deliberately, with a Monitor capped at 120s wrapping a loop that wanted
+600s: at the cap the child was killed (`ps` → gone), the log stopped on the same second, and
+a `Monitor timed out` notification was delivered. So the cap is enforced, the cleanup is
+clean, and **the ending is announced** — this is a watch that stops early and says so, not a
+silent one.
+
+Recorded because the investigation went the other way first: the hypothesis under test was
+that Monitor's timeout orphaned its child, leaving a live-but-disconnected `herdr agent wait`
+that would explain AST-107 without blaming herdr. **The test refuted it** — no orphan, and a
+notification either way. Written down so the next person does not spend the same six minutes
+proving the same negative. A tidy hypothesis that explains every symptom is still worth ten
+minutes oftesting it before it becomes a fix.
+
+Fix: `timeout_ms` and `persistent` are now explicit in every Monitor template, matched to the
+watcher script's own cap. And a `Monitor timed out` notification is a watch that ENDED — the
+builder is now running unwatched, so re-arm rather than reading it as noise.
+
+Bound: dispatch-ticket-claude/SKILL.md (both `.agents/` and `.claude/` variants).
+
+### AST-109 — Cleanup command aimed at the worktree root, where the target has never lived · promoted 2026-08-19
+
+`make -C "$GATE_WORKTREE" db-down` shipped as the container-cleanup step for AST-101. The
+`db-down` target lives in a package directory (`apps/server`), not the repo root, so the
+command answered `No rule to make target` on every run since the day it was written. It has
+never once stopped a container.
+
+`|| true` hid it for weeks. 2.3.3 removed the `|| true` for an unrelated reason (AST-105) and
+the failure surfaced immediately — the fix that made the harness noisier is what exposed a
+step that had never worked.
+
+Two lessons, and the second is the expensive one: (1) a cleanup step needs a positive
+observation — a container gone, a PID reaped — not an exit code from a command that may have
+had nothing to do; (2) **a suppressor added for tidiness buys silence at the price of the
+next audit**, and the interval is measured in weeks, not runs.
+
+Fix: locate the Makefile that actually declares the target, then run it there —
+`find "$GATE_WORKTREE" -maxdepth 3 -name Makefile -not -path '*/node_modules/*' -exec grep -l '^db-down:' {} +`
+— and print an explicit WARN when no such target exists, so "this project has no database
+container" and "the command was aimed at the wrong directory" stop reading the same.
+
+Bound: codex-arm/SKILL.md (both variants), .claude/settings.json.

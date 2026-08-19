@@ -293,8 +293,11 @@ brief having been sent.
 delivery. The Herdr paste method below is for **Codex and OpenCode only**.
 
 ```bash
-herdr agent prompt <pane-id> "<brief>" --wait --until working --timeout 30000
+herdr agent prompt <pane-id> "<brief>"
 ```
+
+No `--wait --until working` here either: the watcher's start guard is the one place that
+question gets asked, on every runtime and every submit form.
 
 **A multi-line brief lands in the composer WITHOUT submitting.** Measured: `herdr pane run`
 and `agent prompt` both send text plus Enter, but a multi-line block is pasted as a unit and
@@ -306,24 +309,31 @@ not the edge case.
 matches Claude's idle rule — a signal incapable of failing (AST-032, AST-037). A dispatcher
 that trusts that `idle` concludes the Builder finished instantly.
 
-So a multi-line brief takes an explicit second step, then a positive confirmation:
+So a multi-line brief takes an explicit second step:
 
 ```bash
 herdr pane run <pane-id> "<multi-line brief>"
 herdr pane send-keys <pane-id> Enter        # the brief is pasted; THIS submits it
-herdr agent wait <pane-id> --until working --timeout 30000
 ```
 
-**`working` is the confirmation that the turn started.** Reaching `idle` or `done` without
-having observed `working` means the brief never ran — re-read the pane before concluding
-anything about the work.
+**Do not hand-roll the `working` confirmation — start the watcher and let it answer.** The
+watcher script carries its own start guard and returns `NO_START` when the turn never began,
+which is the same question a separate `herdr agent wait --until working` asks. Asking twice
+delays the watcher's start, and a builder that finishes inside that delay makes the watcher
+miss `working` and report `NO_START` on work that actually happened — a second guard buying a
+new false negative. On `NO_START`, read the pane: an unsent brief sitting in the composer is
+the likeliest cause, and the fix is to send Enter again.
 
 ### Start the watcher — mandatory, immediately after submit
 
 **Every dispatched pane gets a watcher. No exceptions, no hand-rolled loops.**
 
-**Claude runtime: use Monitor** — see `dispatch-ticket-claude` for the Monitor-based
-watching section. The watcher script below is for **Codex and OpenCode only**.
+**All runtimes run the same watcher script**; they differ only in how its output reaches
+the dispatcher. Claude runtime wraps it in `Monitor` so each line arrives as a notification —
+see `dispatch-ticket-claude`, which also covers the one-Monitor-per-builder rule. Codex and
+OpenCode run it directly and branch on `$?`, as below. Through 2.3.3 the Claude section
+substituted a bare `herdr agent wait` for the script; it went deaf and cost two sessions
+(AST-107).
 
 ```bash
 <repo-root>/scripts/herdr-watch-terminal.sh <pane-id> 3 3600 120
@@ -333,7 +343,8 @@ Run this immediately after confirming `working`. For Codex/OpenCode, it is the O
 sanctioned way to monitor a dispatched builder. Do NOT write your own polling loop, do NOT
 use `herdr agent wait --until idle` as a substitute, do NOT use `sleep` + `herdr agent get`
 in a loop. The script has caffeinate (machine cannot sleep and kill the watch), a start
-guard, debounce, and a 3600-second cap — hand-rolled alternatives lack all four.
+guard, debounce, a 3600-second cap, and wait slicing so a deaf `herdr agent wait` cannot
+stall the watch (AST-107) — hand-rolled alternatives lack all five.
 
 Branch on `$?` **and the payload** when it returns:
 

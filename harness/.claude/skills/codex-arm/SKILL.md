@@ -106,8 +106,19 @@ In this order, every time you remove a gate worktree:
    Same rule: stop only the container whose compose project matches this
    worktree, not a blanket `docker compose down`:
    ```bash
-   make -C "$GATE_WORKTREE" db-down 2>&1 || echo "WARN: db-down failed for $GATE_WORKTREE"
+   db_mk=$(find "$GATE_WORKTREE" -maxdepth 3 -name Makefile -not -path '*/node_modules/*' \
+     -exec grep -l '^db-down:' {} + 2>/dev/null | head -1)
+   if [ -n "$db_mk" ]; then
+     make -C "$(dirname "$db_mk")" db-down 2>&1 || echo "WARN: db-down failed for $db_mk"
+   else
+     echo "WARN: no db-down target found under $GATE_WORKTREE"
+   fi
    ```
+   **Find the Makefile, do not assume the worktree root.** `make -C "$GATE_WORKTREE" db-down`
+   was shipped for weeks and never once ran: the target lives in a package directory
+   (`apps/server`), so make answered `No rule to make target` every time. `|| true` hid it
+   until 2.3.3 removed it (AST-109).
+
    **Do not `|| true` or `2>/dev/null` this command** — both swallow the failure and its
    reason, leaving containers running while the operator believes cleanup succeeded.
    Measured: an operator ran the `|| true` form after every gate for a full day and

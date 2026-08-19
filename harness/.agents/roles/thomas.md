@@ -174,9 +174,15 @@ measured zero entries across a harness generation (AST-069).
 
 Hooks (`.claude/settings.json`) are **intended** to auto-kill brokers and containers
 (AST-100, AST-101) and log builder crashes, but field testing showed `WorktreeRemove` does
-not fire (confirmed by A/B with control). **Until proven live, manual broker/container
-cleanup on every worktree removal remains required on all runtimes.** The watchdog covers
-THOMAS_CRASHED detection and non-Claude runtime anomalies.
+not fire (confirmed by A/B with control). The current reading is that it is not broken but
+unreached: the event hangs off the `EnterWorktree`/`ExitWorktree` tool path, while you remove
+worktrees with plain `git worktree remove` in Bash — no harness stands between the command
+and git, so there is no event to fire (AST-102). **Manual broker/container cleanup on every
+worktree removal remains required on all runtimes**, and the hook now logs to
+`/tmp/harness-hook-events.log` so "did it fire" is a question you can answer by reading a
+file instead of running an A/B.
+
+The watchdog covers THOMAS_CRASHED detection and non-Claude runtime anomalies.
 
 ```bash
 nohup scripts/herdr-watchdog.sh 300 900 6 &   # interval, cooldown, max-alerts/hr
@@ -188,7 +194,7 @@ PID: `/tmp/herdr-watchdog-<workspace-label>.lock`.
 
 | Alert | Action |
 |---|---|
-| `BLOCKED` | Pane asking a question — read, answer, restart Monitor (Claude) or watcher (Codex/OpenCode) |
+| `BLOCKED` | Pane asking a question — read, answer, restart the watch (Monitor on Claude, watcher script on Codex/OpenCode) |
 | `STUCK` | No pane working — inspect, handback or re-dispatch |
 | `THOMAS_CRASHED` | Your runtime process is gone — desktop notification substitutes |
 

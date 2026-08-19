@@ -54,9 +54,12 @@ SendMessage({
 One call. No paste, no Enter, no idle false-positive. The brief arrives as a user-turn
 message in the builder's session.
 
-**Confirm `working` after sending**: use `herdr agent wait <pane-id> --until working
---timeout 30000` to verify the builder started. If it does not reach `working`, the
-message may not have been received — fall back to Herdr paste.
+**Do not confirm `working` yourself — arm the watch and let it answer.** The watcher script
+carries its own start guard and returns `NO_START` when the turn never began, which is the
+same question a hand-rolled `herdr agent wait --until working` asks. Asking it twice delays
+the script's start, and a builder that finishes inside that delay makes the script miss
+`working` and report `NO_START` on work that actually happened — a second guard buying a new
+false negative. On `NO_START`, read the pane and fall back to Herdr paste.
 
 **Steering on BLOCKED**: when Monitor reports `blocked`, read the pane to understand the
 question, then reply via SendMessage:
@@ -86,37 +89,62 @@ herdr agent start "<role>-<artifact-key>" --kind claude --pane <pane-id> --timeo
   -- --agent <role> --model <row: Model> --effort <row: Effort>
 ```
 
-## Watching — Monitor replaces watcher script
+## Watching — Monitor delivers, the watcher script decides
 
-**Claude builders use Monitor, not `herdr-watch-terminal.sh`.** The shared protocol's
-watcher section applies to Codex/OpenCode only.
+**Claude runtime uses Monitor as the delivery channel and `herdr-watch-terminal.sh` as the
+watch itself.** Monitor turns each stdout line into a notification; the script decides what
+a line means. Through 2.3.3 this section told Thomas to put a bare `herdr agent wait` inside
+Monitor — that shape went deaf in the field, twice in two sessions (AST-107).
 
-After submitting the brief and confirming `working`, start a Monitor:
+Immediately after sending the brief, start a Monitor:
 
 ```
 Monitor({
-  command: "herdr agent wait <pane-id> --until done --until blocked --until idle --timeout 3600000",
-  description: "builder-<ticket-id> status"
+  command: "<repo-root>/scripts/herdr-watch-terminal.sh <pane-id> 3 3600 120",
+  description: "builder-<ticket-id> status",
+  timeout_ms: 3600000,
+  persistent: false
 })
 ```
 
-Monitor wraps the command and delivers each stdout line as a notification to Thomas.
-When the builder reaches a terminal state, `herdr agent wait` outputs the state and exits,
-and Monitor delivers it.
+**Never put a bare `herdr agent wait --timeout 3600000` in a Monitor.** Measured 2026-08-19:
+the waiter sat 10m25s against a pane that was already `idle` and returned nothing, while an
+identical wait issued in the same minute against the same pane returned in 0s with 634 bytes
+of state. `pgrep` reported it running the whole time, so the operator believed the watch was
+live — a signal that cannot fire, wearing the costume of a healthy one (AST-032). The script
+slices the wait and takes its verdict from a fresh `herdr agent get`, so a deaf waiter costs
+60 seconds instead of the session.
+
+**Branch on the line the script emits** — same contract as the shared protocol:
+
+- `TERMINAL:done pane=<id>` → builder's turn ended, **not necessarily finished** — check for background processes (AST-097) before concluding
+- `TERMINAL:blocked pane=<id>` → read the pane immediately, answer via SendMessage, start a NEW Monitor
+- `TERMINAL:idle pane=<id>` → check git log — may be finished or may have stopped early
+- `TIMEOUT` → builder exceeded the cap, inspect the pane
+- `NO_START` → builder never reached `working`, re-read the pane; the brief may not have arrived
+
+**Three builders in flight means three Monitors, one per pane — not one Monitor for all.**
+Verified 2026-08-19: three concurrent Monitors were armed and all three delivered, each with
+its own task id, and the notification carries the Monitor's `description`, so
+`description: "builder-<ticket-id> status"` is what tells you which builder reported. Every
+line the script emits also names its pane.
+
+Do not multiplex three panes into one watch. A gathered watch is a single point of failure
+for every builder behind it — the failure this release exists to fix, multiplied by three —
+and it needs a hand-rolled loop, which is where that failure came from. One dispatch, one
+pane, one Monitor. `TaskStop` cancels exactly one.
 
 **On notification, the same debounce applies**: re-check with `herdr agent get <pane-id>`
 before acting. The notification is the bell, not the verdict.
 
-**Branch on the reported state** — same logic as the shared protocol's watcher:
-
-- `done` → check for background processes (AST-097) before concluding finished
-- `blocked` → read pane immediately, answer the question, start a NEW Monitor
-- `idle` → check git log — may be finished or stopped early
-
 **To cancel a Monitor**, use `TaskStop` — no PID management, no process group kill.
 
-**Caffeinate is not needed.** Monitor is a native Claude Code tool, not a shell process
-subject to idle sleep (AST-032).
+**Caffeinate IS needed, and the script carries it.** A Monitor command is an ordinary shell
+process, not an in-process native watch, so an idle sleep kills it exactly as it killed five
+hand-rolled watchers in one session. Releases through 2.3.3 stated the opposite; that was
+wrong. Use the script rather than a hand-rolled Monitor command and you inherit the
+`caffeinate -i` wrapper, the start guard, the debounce, the cap, and the wait slicing — a
+hand-rolled command has none of the five.
 
 ## Measured runtime facts
 
