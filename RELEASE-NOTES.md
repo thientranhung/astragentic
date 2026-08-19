@@ -1,3 +1,19 @@
+# Astragentic 2.3.2
+
+SubagentStop hook fix + example cleanup.
+
+## What changed
+
+- **SubagentStop hook reads correct fields**: `agent_type` and `agent_id` instead of
+  non-existent `agent_name`. Field names confirmed by payload dump in production.
+- **Example ticket ID**: `TRA-169` → `TRA-123` (generic) in dispatch-ticket lowercase
+  convention docs, so downstream projects don't need a reachability exclusion for a
+  closed ticket.
+
+## Upgrade from 2.3.1
+
+Copy entire `harness/` directory. No new files.
+
 # Astragentic 2.3.1
 
 Field report fixes from first production run of 2.3.0 (TRA-169, etsy-fulfillment-thanh).
