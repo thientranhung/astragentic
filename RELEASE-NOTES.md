@@ -1,3 +1,37 @@
+# Astragentic 2.3.13
+
+The stager writes to a fixed path, so a worktree given to an adaptation session does not
+isolate it.
+
+## What changed
+
+- **`install.sh` warns when the target repo has more than one checkout (AST-117)**, naming the
+  `.astraler/` it is actually writing to and what goes wrong if the adapting session lives in a
+  different worktree. Measured 2026-08-20: a session was given its own worktree specifically to
+  stop two sessions colliding, the next release was staged into the main checkout anyway, and
+  that session's merge aborted on a `CANDIDATE` and a `releases/` directory it had never
+  touched.
+- Deliberately a warning, not an automatic redirect. The stager cannot know which checkout is
+  the right one — that is the operator's knowledge — so it makes the choice visible instead of
+  guessing. Verified both ways: fires on a repo with four worktrees, silent on a single-checkout
+  repo.
+
+## The lesson
+
+This is AST-106 — "isolation covers all disk activity, not only git" — arriving at the
+mechanism that ships the harness itself. That entry was written, bound to dispatch, and the one
+place the harness writes into a project from outside it was never read as being in scope.
+
+**Isolation is a property of a path, not of a session.** A worktree answers "which branch am I
+on" and says nothing about where a tool the session did not run will write. Before treating
+worktree-per-session as a pattern, enumerate every tool that writes into the project by
+absolute path — each one is a hole in the isolation the pattern appears to provide.
+
+## Upgrade from 2.3.12
+
+Copy entire `harness/` directory. The change is in `install.sh` itself, so it takes effect the
+next time you stage, not when you adapt.
+
 # Astragentic 2.3.12
 
 The payload's own reachability check has been failing upstream since 2.3.2, and 2.3.11's prose

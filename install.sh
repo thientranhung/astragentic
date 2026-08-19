@@ -111,6 +111,29 @@ if [ -z "$PROJECT_NAME" ]; then
   fi
 fi
 
+# WHICH CHECKOUT — this stages to a FIXED path under $TARGET, and nothing about git stops it
+# from landing in a checkout that some other session is holding. Measured 2026-08-20: an
+# adaptation agent was given its own worktree so the two sessions would stop colliding, the
+# release was staged into the MAIN checkout anyway, and the agent's merge aborted on a
+# CANDIDATE it had never touched and an untracked releases/ directory it had never written.
+# A worktree stops git operations from colliding; it does nothing about a tool writing to a
+# fixed disk path (AST-106, now landing on the stager itself — AST-117).
+#
+# So: stage into the checkout that will RUN the adaptation, and if a session is resident in
+# the target, tell it before staging. The warning below exists because that is knowable here
+# and the operator usually is not thinking about it.
+if command -v git >/dev/null 2>&1 && git -C "$TARGET" rev-parse --git-dir >/dev/null 2>&1; then
+  WT_COUNT="$( { git -C "$TARGET" worktree list 2>/dev/null || true; } | wc -l | tr -d ' ')"
+  if [ "${WT_COUNT:-1}" -gt 1 ]; then
+    echo "NOTE: $TARGET has $WT_COUNT checkouts (worktrees). Staging writes to THIS one:"
+    echo "        $TARGET/.astraler/"
+    echo "      If the session doing the adaptation works in a different worktree, the"
+    echo "      candidate will not be in its tree, and its merge will meet files it never"
+    echo "      wrote. Stage into that checkout instead, or tell the resident session first."
+    echo
+  fi
+fi
+
 STATE_ROOT="$TARGET/.astraler"
 RELEASES_DIR="$STATE_ROOT/releases"
 RELEASE_DIR="$RELEASES_DIR/$VERSION"

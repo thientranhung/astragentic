@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 115 entries (AST-001 … AST-116, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 116 entries (AST-001 … AST-117, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -2779,4 +2779,36 @@ indistinguishable from a repair that fixes what it complained about: a planted
 `some-nonexistent-skill` still fails, and the payload is clean without it.
 
 Bound: scripts/check-reachability.sh, codex-arm/SKILL.md (both variants), this ledger.
+
+### AST-117 — A worktree isolates git, not a tool that writes to a fixed path · promoted 2026-08-20
+
+Two sessions kept colliding in one main checkout (a `git commit` that returned "nothing to
+commit" because the other session had swept up everything staged), so one was given its own
+worktree. Correct fix for the problem it addressed. The next release was then staged into the
+**main** checkout anyway — because the stager writes to `$TARGET/.astraler/`, a fixed path,
+chosen by whoever invokes it and not by whoever is doing the work.
+
+The result: the worktree session's merge aborted on a modified `.astraler/CANDIDATE` and an
+untracked `releases/<version>/` directory **it had never touched**. Two tools were told about
+two different working directories, and only one of them was told by git.
+
+This is AST-106 arriving at the mechanism that ships the harness itself. That entry generalised
+"one checkout, one driver" from git operations to any disk write. The lesson had been written,
+bound to dispatch, and the staging path — the one place the harness writes into a project from
+outside it — was not read as being in scope.
+
+**Isolation is a property of a path, not of a session.** Handing a session a worktree answers
+"which branch am I on"; it answers nothing about where any tool it did not run will write.
+Before formalising worktree-per-session as a pattern, every tool that writes into the project
+by absolute path has to be enumerated, because each one is a hole in the isolation the pattern
+appears to provide.
+
+Fix, deliberately a warning and not an automatic redirect: `install.sh` now detects that the
+target repo has more than one checkout and says plainly which one it is writing to, and what
+goes wrong if the adapting session lives in another. It cannot know which checkout is the right
+one — that is the operator's knowledge — so it makes the choice visible rather than guessing.
+Verified in both directions: the warning fires on a repo with four worktrees, and a
+single-checkout repo is not bothered by it.
+
+Bound: install.sh.
 
