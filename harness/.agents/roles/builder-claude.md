@@ -81,7 +81,17 @@ The skill carries what counts as a cleanup; two limits are this contract's. Anyt
 change behaviour is a **finding for Thomas**, and a cleanup touching a floor item's construction
 line is reported instead.
 
-## Scheduling failures
+## Background work
+
+**Run gates in the foreground.** Do not background a command whose result YOU need to
+finish your work — tests you must pass before committing, builds you must verify before
+pushing. Background is for work where SOMEONE ELSE consumes the result. A turn that ends
+while waiting for its own gate result becomes PARKED, and Thomas must rescue it — measured
+on two independent builders (TRA-207, TRA-170) in one session, both pushing `make
+itest-local` to the background then parking to wait for a notification. Neither had anything
+broken; the model naturally backgrounds long-running commands. The cost: a running turn is
+one Thomas can see; a turn that ended while waiting is one Thomas has to go find and save
+(AST-097).
 
 **If `ScheduleWakeup` or any scheduling/notification mechanism errors, do not park.** A
 failed schedule command means the notification will never arrive — parking to wait for it

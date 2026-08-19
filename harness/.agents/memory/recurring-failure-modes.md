@@ -2171,6 +2171,17 @@ requiring both. Fixed in builder-claude.md: a failed scheduling call must not le
 parking — read the result directly instead. Disagreement between the two sources is itself a
 signal: read the pane.
 
+**The two-source gate caught on its first use (TRA-170).** `pgrep` returned 0, pane status
+bar read "1 shell" — disagreement. 5 dirty files including detail.go, dynamic.go,
+queries.sql. Without the command-name fix (2.2.34, `agent get` → `agent read`), both sources
+would have returned "nothing" and Thomas would have concluded STUCK. Second case same night
+(TRA-207): same shape, unrelated ticket, independent builder. Two on two makes this a
+pattern, not an incident: builders naturally background long-running gates and park.
+
+Fixed in builder-claude.md (2.2.35): run gates in the foreground. Do not background a
+command whose result you need to finish your own work. Background is for work where someone
+else consumes the result. This addresses the cause; the two-source gate addresses detection.
+
 **The general shape, stated by the reporter: this package keeps shipping signals that cannot
 fail.** `done` cannot distinguish "finished" from "parked". Pane status cannot see a headless
 subagent. A fork's output cannot distinguish a real review from echoed narration. All three

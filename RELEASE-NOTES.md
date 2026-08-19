@@ -1,3 +1,22 @@
+# Astragentic 2.2.35
+
+The two-source gate from 2.2.34 caught on its first use (TRA-170): `pgrep` returned 0, pane
+status bar read "1 shell" — disagreement saved 5 files. Second case same night (TRA-207),
+independent builder, same shape. Two on two makes this a pattern: builders naturally
+background long-running gates and park, ending the turn before the result arrives.
+
+**builder-claude.md**: new rule — run gates in the foreground. Do not background a command
+whose result you need to finish your own work. Background is for work where someone else
+consumes the result. The 2.2.33 ScheduleWakeup rule handles a broken scheduling call; this
+handles the case where nothing is broken and the builder simply parks naturally.
+
+**AST-097**: updated with TRA-170/TRA-207 frequency data and the foreground-gate rule.
+
+## Upgrade from 2.2.34
+
+Copy `.agents/roles/builder-claude.md`.
+Copy `.agents/memory/recurring-failure-modes.md`.
+
 # Astragentic 2.2.34
 
 Command name fix: dispatch-ticket source 2 said `herdr agent get` which has no
