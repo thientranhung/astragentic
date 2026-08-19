@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.3.16-blue" alt="version">
+  <img src="https://img.shields.io/badge/version-2.3.17-blue" alt="version">
   <img src="https://img.shields.io/badge/license-proprietary-lightgrey" alt="license">
   <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
   <img src="https://img.shields.io/badge/failure_modes-119_measured-red" alt="failure modes">
@@ -217,7 +217,7 @@ Tuỳ chọn: **Codex CLI** (cross-vendor review), **OpenCode CLI** (runtime th�
 
 # 3. Mở repo trong Claude Code, chạy bộ cài đặt thích ứng
 cd <target-repo>
-claude "Read .astraler/releases/2.3.16/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/2.3.17/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Cấu hình orchestrator.md (role → runtime → model → effort)
 # 5. Khởi động

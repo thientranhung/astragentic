@@ -2914,41 +2914,54 @@ follow and the failure mode does not.
 
 Bound: builder-claude.md, thomas.md.
 
-### AST-120 — bash silently eats NUL bytes in `$(...)`, so the instrument that looks for them reports zero · promoted 2026-08-20
+### AST-120 — A verification that fired twice on immutable input and disagreed with itself, cause unknown · promoted 2026-08-20
 
 While verifying AST-119, the same NUL-byte check was run twice against the same SHA and
-returned **0 the first time and 2 the second**. Neither operator could explain it, and it was
-correctly escalated as an open question rather than waved away — "verified by artifact" is only
-as good as the instrument, and this instrument had failed silently at least once with no way to
-bound how many other checks that night it had also failed.
+returned **0 the first time and 2 the second**. A git SHA is immutable, so the input cannot
+have changed. The failing reading is the reassuring one, and it was used to conclude that a
+defect had never existed.
 
-Reproduced, with a root cause:
+**The cause is unknown, and this entry says so rather than closing the question.** Both
+readings are recorded above because the next operator to hit this needs the observation, not a
+story about it.
+
+**A cause was proposed and it does not cover this case.** `bash` discards NUL bytes when data
+passes through command substitution, silently — reproduced independently by two parties:
 
 ```
-bash,  x=$(cat file); printf '%s' "$x" | tr -dc '\0' | wc -c   →  0    WRONG, silent
-bash,  cat file | tr -dc '\0' | wc -c                          →  2    correct
-zsh,   x=$(cat file); printf '%s' "$x" | tr -dc '\0' | wc -c   →  2    correct
+bash   x=$(cat f); printf '%s' "$x" | tr -dc '\0' | wc -c   ->  0    silent, wrong
+bash   cat f | tr -dc '\0' | wc -c                          ->  2    correct
+zsh    x=$(cat f); printf '%s' "$x" | tr -dc '\0' | wc -c   ->  2    correct
 ```
 
-**bash discards NUL bytes when data passes through command substitution**, with no warning and
-no error. zsh preserves them. So the identical command form, against the identical blob, gives
-opposite answers depending on which shell ran it — and the failing answer is the reassuring one.
+That trap is real and worth avoiding on its own terms: **an instrument looking for bytes must
+never route the data through a shell variable** — pipe the producer straight into the consumer,
+`git show <sha>:<path> | …`, never `x=$(git show <sha>:<path>)`. Command substitution also
+strips trailing newlines, so it applies to byte counts generally.
 
-The rule: **an instrument looking for bytes must never route the data through a shell
-variable.** Pipe the producer straight into the consumer. `git show <sha>:<path> | …`, never
-`x=$(git show <sha>:<path>)`. This applies to any binary-content check, not just NUL: command
-substitution also strips trailing newlines, which quietly changes byte counts.
+But it is **not what happened here**, for two independent reasons, either of which alone is
+decisive: the session runs `zsh`, which the reproduction above shows does NOT have the
+behaviour; and the failing invocation was `git show $c:<path> | python3 -c "…"` inside a loop —
+a direct pipe with no variable in the data path at all.
 
-The scope lesson underneath it, which is AST-118 one level up and in a human step rather than a
-script: **"check the specific blob this story names" and "verify this defect never existed on
-this branch" are different claims requiring different work.** The second needs every commit
-walked. The first was run and the second was reported. A check whose scope is narrower than the
-claim it is used to support is the shape of nearly every failure in this sequence — and here it
-appeared in the verification step itself, which is the last place it can be caught.
+**The author of this entry proposed that cause and shipped it as the explanation without
+checking that it covered the reported case.** That is precisely AST-119's shape — a true
+mechanism attached to the wrong incident, which passes inspection because the mechanism checks
+out — committed one entry later, by the person writing the entry about it. It was caught by the
+operator whose failure it purported to explain, testing an account that exonerated them rather
+than accepting it. **A plausible cause that does not cover the reported case is worse than an
+admitted unknown**, because it closes the question.
 
-Recorded with the operator's own name on the error at their explicit request, because a
-correction that travels as a footnote is a correction most readers never reach.
+**The durable lesson does not depend on the cause.** A single measurement is not a
+verification — and least of all when a check is being used to DISPROVE a specific claim rather
+than to look around. What settled this was three instruments: `file(1)` and
+`tr -dc '\000' | wc -c` agreeing with each other and disagreeing with the first tool. Two
+independent agreeing measurements are what make a negative mean anything, which is the same
+argument the `WorktreeRemove` A/B rests on (AST-102): the 27 control events are what turned
+"we saw nothing" into evidence. **A disproof needs a control group exactly as much as a
+negative does.**
 
-Bound: this ledger. No payload rule changes — the instrument belongs to whoever runs it, and
-what generalises is the reproduction above.
+Recorded with the reporting operator's name on their original error at their request, and with
+this entry's author's name on the wrong cause, for the same reason.
 
+Bound: this ledger. No payload rule changes.

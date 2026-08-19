@@ -1,3 +1,44 @@
+# Astragentic 2.3.17
+
+A correction: 2.3.16 gave AST-120 a cause that does not cover the case it explains.
+
+## What changed
+
+- **AST-120 rewritten.** The observed failure — the same NUL-byte check returning 0 then 2
+  against an immutable SHA — is now recorded as **observed and unexplained**, with both
+  readings, instead of attributed to bash's command-substitution behaviour.
+- **That behaviour is kept, as its own hazard.** It is real and independently reproduced:
+  `bash` silently discards NUL bytes routed through `$(...)`, `zsh` does not. An instrument
+  looking for bytes must never route the data through a shell variable. Worth avoiding on its
+  own terms.
+- **It is not what happened.** Two independent reasons, either decisive: the session runs
+  `zsh`, which does not have the behaviour; and the failing invocation was a direct pipe with
+  no variable in the data path.
+
+## The part worth keeping
+
+2.3.16 proposed a cause and shipped it as the explanation **without checking that it covered
+the reported case**. That is exactly AST-119's shape — a true mechanism attached to the wrong
+incident, which passes inspection because the mechanism itself checks out — committed one entry
+later, by the author of the entry about it.
+
+It was caught by the operator whose failure it claimed to explain, who tested an account that
+exonerated them instead of accepting it.
+
+**A plausible cause that does not cover the reported case is worse than an admitted unknown,
+because it closes the question.**
+
+The durable lesson never depended on the cause: a single measurement is not a verification, and
+least of all when a check is used to DISPROVE a specific claim rather than to look around. What
+settled it was three instruments, two agreeing against the first. **A disproof needs a control
+group exactly as much as a negative does** — the same argument the `WorktreeRemove` A/B rests
+on, where 27 control events are what turned "we saw nothing" into evidence.
+
+## Upgrade from 2.3.16
+
+Copy entire `harness/` directory. Ledger only. If you applied 2.3.16, its AST-120 carries the
+wrong causal claim — this replaces it.
+
 # Astragentic 2.3.16
 
 The instrument that verified AST-119 had itself failed silently. Root cause found and
