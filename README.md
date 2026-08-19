@@ -1,4 +1,4 @@
-# Astragentic 2.2.35
+# Astragentic 2.2.36
 
 **Agent orchestration framework and operating harness** for multi-agent software development.
 

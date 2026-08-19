@@ -1,3 +1,22 @@
+# Astragentic 2.2.36
+
+Nine runtime supplement files (*-claude.md, *-codex.md, *-opencode.md) were always-on
+surfaces with no word budget — docs-staleness-audit.sh measured the base contracts but not
+the supplements loaded alongside them. builder-claude.md grew 47% in one session (546 → 802
+words across four releases) with no alarm firing.
+
+Now measured: 9 supplements with per-file budgets calibrated to ~150-word margin over current
+ship size, same policy as the base role budgets. Total always-on surfaces measured: 14 (5
+base contracts + 9 supplements + orchestrator.md - 1 already counted).
+
+Spotted by nizzy-ecom Thomas as an observation, not a bug — nothing is over budget today,
+but three consecutive releases growing the same unmonitored file is the pattern the audit
+exists to catch elsewhere.
+
+## Upgrade from 2.2.35
+
+Copy `scripts/docs-staleness-audit.sh`.
+
 # Astragentic 2.2.35
 
 The two-source gate from 2.2.34 caught on its first use (TRA-170): `pgrep` returned 0, pane
