@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "GATE_WORKTREE=\"$WORKTREE_PATH\"; echo \"HOOK: WorktreeRemove — path=${GATE_WORKTREE:-unset} at $(date -u +%FT%TZ)\" >> /tmp/harness-hook-events.log; broker_pid=$(ps -eo pid=,command= | grep 'app-server-broker.mjs' | grep -- \"--cwd $GATE_WORKTREE\" | awk '{print $1}'); [ -n \"$broker_pid\" ] && kill \"$broker_pid\" 2>/dev/null; db_mk=$(find \"$GATE_WORKTREE\" -maxdepth 3 -name Makefile -not -path '*/node_modules/*' -exec grep -l '^db-down:' {} + 2>/dev/null | head -1); if [ -n \"$db_mk\" ]; then make -C \"$(dirname \"$db_mk\")\" db-down 2>&1 || echo \"WARN: db-down failed for $db_mk\"; else echo \"WARN: no db-down target found under $GATE_WORKTREE\"; fi"
+            "command": "GATE_WORKTREE=\"$WORKTREE_PATH\"; echo \"HOOK: WorktreeRemove — path=${GATE_WORKTREE:-unset} at $(date -u +%FT%TZ)\" >> /tmp/harness-hook-events.log; broker_pid=$(ps -eo pid=,command= | grep 'app-server-broker.mjs' | grep -- \"--cwd $GATE_WORKTREE\" | awk '{print $1}'); [ -n \"$broker_pid\" ] && kill \"$broker_pid\" 2>/dev/null; proj=$(basename \"$GATE_WORKTREE\" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]//g'); ids=$(docker ps -q --filter \"label=com.docker.compose.project=$proj\" 2>/dev/null); if [ -n \"$ids\" ]; then docker stop $ids || echo \"WARN: docker stop failed for compose project $proj\"; else echo \"NOTE: no container labelled com.docker.compose.project=$proj — this worktree started none\"; fi"
           }
         ]
       }

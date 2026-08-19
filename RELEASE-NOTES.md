@@ -1,3 +1,45 @@
+# Astragentic 2.3.11
+
+A live incident, not a sweep: the documented gate cleanup stopped the shared test database
+every Builder was standing on. Ships the scoping fix **and** the same fix in the dormant hook,
+in one release, deliberately.
+
+## What changed
+
+- **Container cleanup is scoped by this worktree's own compose project label (AST-115)**, in
+  `codex-arm` and in the `WorktreeRemove` hook. `make -C <dir> db-down` is now forbidden
+  outright: a project-level target's blast radius is defined by the project, not by the
+  worktree. Measured 2026-08-19 — the documented step resolved correctly, ran correctly, and
+  stopped `etsy-server-shared-test-postgres`, which a Builder mid-ticket survived only because
+  it had finished its test run four minutes earlier.
+- **Three distinguishable outcomes, none silent**: containers stopped, nothing scoped to this
+  worktree, or a stop that failed. No `|| true` on any of them (AST-105). Both branches
+  verified before shipping — the stop path against a stub `docker`, so no real container was
+  touched, with the shared container confirmed still running afterwards.
+- **AST-102 closed: the `WorktreeRemove` hook is confirmed DORMANT**, with a dated negative
+  rather than an inference. Three worktrees removed after the log's last mtime produced zero
+  hook events, while the `SubagentStop` control in the same file and session logged 27 in the
+  same window; independently corroborated by the shared container still being `Up (healthy)`
+  after a removal. The fire-logging added in 2.3.4 for exactly this purpose is what answered
+  it. A control group is what turns "we saw nothing" into evidence — and the original "hook is
+  broken" conclusion was reached without one.
+
+## Why both fixes are in one release
+
+The vulnerable command lived in two places: the manual `codex-arm` step, which fired, and the
+dormant hook, which did not. Landing "the hook now fires" before this scoping fix would have
+turned a hazard needing a human to run a documented step into one firing silently inside every
+`git worktree remove`, after every dispatch, with Builders live — a strictly wider blast radius
+than the incident that actually happened.
+
+**A dormant hazard and the repair that wakes it are one change, not two.** They land together
+here, while the hook is still asleep.
+
+## Upgrade from 2.3.10
+
+Copy entire `harness/` directory. **`settings.json` changes** — merge if your copy carries
+project-owned keys. Whoever holds a running session should merge this before the next gate.
+
 # Astragentic 2.3.10
 
 Two defects introduced by the previous two releases, both found downstream at apply time.

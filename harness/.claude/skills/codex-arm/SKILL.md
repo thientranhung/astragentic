@@ -106,23 +106,35 @@ In this order, every time you remove a gate worktree:
    Same rule: stop only the container whose compose project matches this
    worktree, not a blanket `docker compose down`:
    ```bash
-   db_mk=$(find "$GATE_WORKTREE" -maxdepth 3 -name Makefile -not -path '*/node_modules/*' \
-     -exec grep -l '^db-down:' {} + 2>/dev/null | head -1)
-   if [ -n "$db_mk" ]; then
-     make -C "$(dirname "$db_mk")" db-down 2>&1 || echo "WARN: db-down failed for $db_mk"
+   proj=$(basename "$GATE_WORKTREE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]//g')
+   ids=$(docker ps -q --filter "label=com.docker.compose.project=$proj" 2>/dev/null)
+   if [ -n "$ids" ]; then
+     docker stop $ids || echo "WARN: docker stop failed for compose project $proj"
    else
-     echo "WARN: no db-down target found under $GATE_WORKTREE"
+     echo "NOTE: no container labelled com.docker.compose.project=$proj — this gate started none"
    fi
    ```
-   **Find the Makefile, do not assume the worktree root.** `make -C "$GATE_WORKTREE" db-down`
-   was shipped for weeks and never once ran: the target lives in a package directory
-   (`apps/server`), so make answered `No rule to make target` every time. `|| true` hid it
-   until 2.3.3 removed it (AST-109).
 
-   **Do not `|| true` or `2>/dev/null` this command** — both swallow the failure and its
-   reason, leaving containers running while the operator believes cleanup succeeded.
-   Measured: an operator ran the `|| true` form after every gate for a full day and
-   ended with 3 orphaned containers (AST-105).
+   **NEVER run the project's own `make db-down` here, and never any project-level target.**
+   Its blast radius is defined by the project, not by this worktree. Measured 2026-08-19: the
+   documented `make -C <dir> db-down` resolved correctly, ran correctly, and stopped
+   `etsy-server-shared-test-postgres` — the SHARED test database every live Builder was
+   standing on, because the project had that day migrated to one shared server across
+   worktrees. A Builder mid-ticket survived on timing alone: it had finished its test run four
+   minutes earlier and was reading source when the container went away (AST-115).
+
+   Match by the **compose project label derived from this worktree's own path** — the same
+   verified-scope rule as the broker above, which the `make` form violated by delegating to a
+   target that matches by name.
+
+   **Three outcomes, all distinguishable, none silent**: containers stopped (named by
+   `docker stop`), nothing scoped to this worktree (the `NOTE:` line), or a stop that failed
+   (the `WARN:` line). Do not `|| true` any of them.
+
+   **When scoping is uncertain, stop NOTHING.** If the project sets its own
+   `COMPOSE_PROJECT_NAME`, the filter finds nothing and the step does nothing — correct, and
+   the correct direction to fail in. The `make` form failed the other way: uncertain about
+   scope, it stopped everything the Makefile could name.
 
    Measured earlier: three surviving Postgres containers took a machine to seven
    instances; a gate returned `signal: killed` on four packages with

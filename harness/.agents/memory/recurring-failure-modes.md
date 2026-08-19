@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 113 entries (AST-001 … AST-114, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 114 entries (AST-001 … AST-115, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -2357,10 +2357,19 @@ harness standing between the command and the repo, so no event exists to fire. A
 to a door nobody walks through fires exactly as often as a broken one, and the two are
 indistinguishable from the outside, which is why "hook is broken" survived a release.
 
-Not yet proven. What makes it testable is cheap: the hook now appends a line to
-`/tmp/harness-hook-events.log` before doing anything else, so the next `ExitWorktree` answers
-the question by writing a file. Until that line appears, manual cleanup stays required on all
-runtimes.
+**Confirmed dormant, 2026-08-20, with a dated negative.** The fire-logging added for exactly
+this purpose produced the answer: three worktrees were removed after the log's last mtime —
+including a plain `git worktree remove` — and logged **zero** `WorktreeRemove` events, while
+the `SubagentStop` control in the same settings.json and the same session logged 27 in that
+window. Confirmed a second way, independent of the log: the shared test container was still
+`Up (healthy)` after the removal, which a live hook would have stopped.
+
+**A control group is what turns "we saw nothing" into evidence.** Without those 27
+`SubagentStop` events the same observation would have been indistinguishable from "hooks are
+off entirely" — and the original "hook is broken" conclusion was reached without one.
+
+Manual cleanup therefore remains required on all runtimes, and the hook's command must be kept
+safe against the day it wakes (AST-115).
 
 The general lesson is the one that outlives this hook: **when a mechanism does not fire, ask
 whether the trigger was reached before concluding the mechanism is broken.** The first
@@ -2693,4 +2702,46 @@ the whole — and those sentences do not change, so no diff shows them.
 Caught by the downstream agent as "genuine ambiguity, probably harmless". It was neither.
 
 Bound: dispatch-ticket-claude/SKILL.md (both variants).
+
+### AST-115 — Two correct changes composed into a live one, and the repair is what armed it · promoted 2026-08-20
+
+The documented gate cleanup ran `make -C <dir> db-down` and stopped
+`etsy-server-shared-test-postgres` — the SHARED test database every live Builder was standing
+on. A Builder mid-ticket survived on timing alone: it had finished its test run four minutes
+earlier and was reading source when the container went away. That is luck, not safety.
+
+**Neither contributing change was wrong.** AST-109 taught the cleanup to FIND the Makefile
+declaring the target instead of assuming the worktree root — correct, and before it the command
+had never once run (`No rule to make target`), so its blast radius was zero. The project
+separately migrated to one shared test server across worktrees — also correct, and it made
+every worktree's `db-down` name the same container. Each is right alone. **The bug was hiding
+the bug, and the release that fixed the no-op is the release that armed it.**
+
+The rule was already written one paragraph above the defect. Step 1 of the same cleanup says:
+match the broker by verified `--cwd` path, **never `pkill -f` by name**, because a name matches
+other people's processes. Step 2 then delegated to a project-level `make` target, which matches
+by whatever name the project chose — the same defect the section had just forbidden, wearing a
+Makefile.
+
+Fix: scope by the compose project label derived from THIS worktree's own path, never a
+project-level target, whose blast radius is defined by the project and not by this worktree.
+Three distinguishable outcomes — stopped, nothing-scoped, failed — and no `|| true` on any of
+them (AST-105). Both branches verified before shipping, the stop path against a stub `docker`
+so no real container was touched, and the shared container confirmed still running after.
+
+**When scoping is uncertain, stop NOTHING.** If a project sets its own `COMPOSE_PROJECT_NAME`
+the filter matches nothing and the step does nothing — the correct direction to fail in. The
+`make` form failed the other way: uncertain about scope, it stopped everything the target could
+reach.
+
+**Sequencing, which is the part that generalises.** The identical command also sits in the
+dormant `WorktreeRemove` hook (AST-102). Landing "the hook now fires" before this scoping fix
+would have converted a hazard requiring a human to run a documented step into one firing
+silently inside every `git worktree remove`, after every dispatch, with Builders live — wider
+than what actually happened, since the manual step follows only a gate worktree. **A dormant
+hazard and the repair that wakes it are one change, not two**, and they must land together or
+in that order. Here they land together: the hook's command is fixed in this release, while the
+hook is still confirmed asleep.
+
+Bound: codex-arm/SKILL.md (both variants), .claude/settings.json.
 
