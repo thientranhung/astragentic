@@ -1,3 +1,37 @@
+# Astragentic 2.3.10
+
+Two defects introduced by the previous two releases, both found downstream at apply time.
+
+## What changed
+
+- **Watch is armed after the slash command, not after the body (AST-114)**: 2.3.9 split
+  submission into two steps and left "Immediately after sending the brief, start a Monitor"
+  pointing at neither. A body-only `SendMessage` still produces a turn — the builder reads it,
+  finds nothing to act on, and settles — so a watch armed then can report `TERMINAL:idle` on a
+  builder that never started. The order is now stated at the point of use: body → command typed
+  → echo confirmed → arm the watch.
+- **Axis 3 prunes worktrees and archived releases (AST-113)**: 2.3.8's widened scope was right
+  for role contracts and wrong for everything else it swept up. Run on a live project it
+  returned 100+ findings, all noise — frozen `.astraler/releases/*` copies carrying pre-fix
+  tables by design, and another agent's break-test prose in the matching row shape. Proven in
+  both directions: planted noise inside a worktree and an archived release is ignored, a real
+  defect in a live role contract is still caught.
+- **AST-113 and AST-114**. The first: a check that fires on everything and a check that fires
+  on nothing both carry no information, and the noisy one is worse in practice because it
+  trains its reader to skip the section. The second: when a step becomes two steps, every
+  sentence that pointed at "the step" now points at nothing — and those sentences do not
+  change, so no diff shows them.
+
+## Still open
+
+The AST-107 watcher fix has been verified against a live pane in isolation, but not yet
+end-to-end through a real dispatch — every real dispatch so far hit the AST-112 slash-command
+defect first. That measurement remains the one that matters most.
+
+## Upgrade from 2.3.9
+
+Copy entire `harness/` directory. One script and one skill change; no settings or hook changes.
+
 # Astragentic 2.3.9
 
 A real dispatch, not a sweep, found this one: the brief's slash command has never fired on

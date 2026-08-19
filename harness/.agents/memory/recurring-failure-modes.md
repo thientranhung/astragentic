@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 111 entries (AST-001 … AST-112, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 113 entries (AST-001 … AST-114, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -2641,4 +2641,56 @@ sweep in five releases read that section and none caught it, because it is not a
 between two documents but a claim about the runtime that no document could check.
 
 Bound: dispatch-ticket-claude/SKILL.md (both variants), shaper.md.
+
+### AST-113 — An audit that always screams is an audit nobody reads · promoted 2026-08-19
+
+AST-111 widened axis 3's scope from `skills/**/SKILL.md` to every payload `.md`, for a good
+reason: role contracts carry branch tables too, and a sweep that looks only where the author
+expects the defect measures the author's expectation. The widening was correct and the bound
+was missing.
+
+Run downstream on a live project, the widened axis returned **100+ findings, every one of them
+noise**: frozen `.astraler/releases/2.2.17`…`2.3.6` copies inside other agents' worktrees, which
+carry pre-fix branch tables **by design** and must never be corrected, plus another agent's
+break-test prose written in the same `- \`TOKEN\` → text` shape the axis matches. The installed
+payload was genuinely clean; the check could not tell the payload from the archive.
+
+This is the same defect class as a check that cannot fail, arriving from the other end. A check
+that fires on everything and a check that fires on nothing are both checks whose output carries
+no information — and the noisy one is worse in practice, because it trains its reader to skip
+the section, so the real finding arrives in a list already known to be worthless.
+
+Fix: prune `*/worktrees/*` and `*/.astraler/*` from the axis's `find`. Proven in both
+directions, per AST-111's own rule: planted noise inside a worktree and an archived release is
+ignored, and a real defect planted in a live role contract is still caught. A prune that also
+blinds the check is the failure this fix could most easily have introduced.
+
+**Scope is part of a check's definition, not a detail of its implementation.** AST-111 proved
+axis 3 could fail in every direction; it did not ask where the axis was entitled to look. Both
+questions have to be answered before a check is done.
+
+Bound: scripts/docs-staleness-audit.sh (axis 3).
+
+### AST-114 — Splitting submission into two steps left the watch armed against the wrong one · promoted 2026-08-19
+
+AST-112 split brief submission into `SendMessage` for the body and a typed slash command for
+the invocation. The watching section still opened "Immediately after sending the brief, start a
+Monitor" — text written when submission was one call, and now ambiguous between two.
+
+It is not merely ambiguous, it is wrong on the reading it invites. A body-only `SendMessage`
+still produces a turn in the builder: it reads the message, finds nothing to act on yet, and
+settles. **A watch armed at that moment can see that turn end and report `TERMINAL:idle`** on a
+builder that has not started — the stale-terminal-state defect (AST-032, AST-037) reintroduced
+by the fix for a different bug, in the file that fixes it.
+
+Fix: the order is body → command typed → echo confirmed → **then** arm the watch, stated at the
+point of use rather than left to inference.
+
+**When a step becomes two steps, every instruction that pointed at "the step" now points at
+nothing in particular.** The edit that splits is responsible for the sentences that referenced
+the whole — and those sentences do not change, so no diff shows them.
+
+Caught by the downstream agent as "genuine ambiguity, probably harmless". It was neither.
+
+Bound: dispatch-ticket-claude/SKILL.md (both variants).
 

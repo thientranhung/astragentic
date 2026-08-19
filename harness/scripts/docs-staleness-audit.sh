@@ -264,7 +264,17 @@ if [[ -f "$WATCHER" ]]; then
   # Docs that carry a branch table: any file with at least one `- \`TOKEN…\` → ` row naming a
   # state. Scope is every skill AND every role contract — the fifth stale site survived because
   # a sweep looked only where the author expected the defect, not everywhere it can live.
-  DOCS="$(find "$PAYLOAD/.agents" "$PAYLOAD/.claude" -name '*.md' 2>/dev/null)"
+  # SCOPE. Widening this in 2.3.8 was right for role contracts and wrong for everything else
+  # it swept up: run downstream, it walked other agents' worktrees and archived releases and
+  # produced 100+ findings, every one of them a frozen historical copy or another agent's
+  # break-test prose in the same `- \`TOKEN\` → text` shape. An audit that always screams is an
+  # audit nobody reads — the same defect class as one that can never fail, from the other end.
+  # Archived releases are history by design and must NOT be corrected; worktrees are other
+  # agents' checkouts and not this payload.
+  DOCS="$(find "$PAYLOAD/.agents" "$PAYLOAD/.claude" \
+            -path '*/worktrees/*' -prune -o \
+            -path '*/.astraler/*' -prune -o \
+            -name '*.md' -print 2>/dev/null)"
 
   if [[ -z "$CASE_STATES" || -z "$REACHABLE" ]]; then
     echo "  the watcher script exposes no parsable terminal states — this axis read nothing"

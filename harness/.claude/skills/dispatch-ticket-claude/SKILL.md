@@ -122,7 +122,13 @@ watch itself.** Monitor turns each stdout line into a notification; the script d
 a line means. Through 2.3.3 this section told Thomas to put a bare `herdr agent wait` inside
 Monitor — that shape went deaf in the field, twice in two sessions (AST-107).
 
-Immediately after sending the brief, start a Monitor:
+**Arm the watch after step 2, not after step 1.** "Sending the brief" now means two things,
+and the order matters: a body-only `SendMessage` still produces a turn in the builder — it
+reads the message, has nothing to act on yet, and settles. A watch armed before the slash
+command is typed can see THAT turn end and report `TERMINAL:idle pane=<id>` on a builder that
+has not started (AST-032, AST-037 — a terminal state that belongs to the previous turn).
+
+So: body → command typed → echo confirmed → **then** Monitor:
 
 ```
 Monitor({
