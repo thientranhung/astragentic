@@ -88,7 +88,12 @@ session.
 A count of zero, or a changed-file set that is not the artifact you meant to review, is a
 STOP — not a pass.
 
-**Clean up the gate worktree when the pass is recorded**, in this order:
+**Every gate worktree removal must kill its broker first** — not only the final
+cleanup, but also the mid-ticket removal between pass 1 and pass 2. Removing
+the pass-1 worktree to create the `-p2` worktree orphans the pass-1 broker
+(AST-100, measured: every two-pass ticket leaked one process this way).
+
+In this order, every time you remove a gate worktree:
 
 1. Kill the companion's broker process BEFORE removing the directory — after
    removal, only argv identifies the orphan. Find it by the `--cwd` that matches
