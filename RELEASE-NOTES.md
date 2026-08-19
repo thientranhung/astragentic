@@ -1,3 +1,13 @@
+# Astragentic 2.2.38
+
+Restore the second degraded `Pass:` line example (forks returned narration) that 2.2.37's
+dedup removed. AST-090 says builders rephrase what they are not handed literally, and this
+variant was measured 3/3 in one session — the most common case lost its copyable line.
+
+## Upgrade from 2.2.37
+
+Copy `.agents/roles/builder-claude.md`.
+
 # Astragentic 2.2.37
 
 Deduplicate runtime supplements and remove supplement budget constraints.

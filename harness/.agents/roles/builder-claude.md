@@ -35,6 +35,10 @@ git commit -m 'simplify(increment): <what was cleaned>
 
 Pass: Skill(skill: "simplify") — fork unavailable, ran four corners directly'
 
+git commit -m 'simplify(increment): <what was cleaned>
+
+Pass: Skill(skill: "simplify") — forks returned narration (AST-098), ran four corners directly'
+
 # Empty (no findings)
 git commit --allow-empty -m 'simplify(increment): no findings on <base>..<head>
 
