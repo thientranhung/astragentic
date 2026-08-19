@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 104 entries (AST-001 … AST-104, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 105 entries (AST-001 … AST-106, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -2388,5 +2388,43 @@ The dispatch skill documented the `:` restriction (pane label vs agent name) but
 case restriction. One failed launch per dispatch until the operator learned to lowercase.
 
 Fix: dispatch-ticket/SKILL.md now says to lowercase the ticket ID in the agent name.
+
+Bound: dispatch-ticket/SKILL.md (both `.agents/` and `.claude/` variants).
+
+### AST-105 — Pipe after a command swallows exit code, turning a failed gate into exit 0 · promoted 2026-08-19
+
+Measured by nizzy-ecom Thomas on TRA-209: `make itest-local 2>&1 | tail -25` returned exit 0
+on a RED gate. The pipeline reports the last command's status (`tail`, always 0), not the
+first's (`make`, non-zero). Thomas read the output, saw truncated test names, concluded the
+gate passed, and proceeded. The failure was caught later by artifact verification.
+
+The pipe table documenting this pattern existed in dispatch-ticket since 2.2.x, but was placed
+under "Watcher script operational details (Codex/OpenCode only)" with a "Claude runtime uses
+Monitor — skip this section" header. Thomas, running Claude runtime, skipped the section and
+then applied the exact shape the table warns about to a different command.
+
+**A warning placed at the site of the FIRST failure does not protect the NEXT failure if the
+next failure uses a different command.** The table's content was correct; its placement made
+it invisible to the reader who needed it.
+
+Fixed by moving the pipe table to its own section "Pipes swallow exit codes — all runtimes",
+above the runtime-specific watcher details, applying to every command Thomas runs.
+
+Bound: dispatch-ticket/SKILL.md (both `.agents/` and `.claude/` variants).
+
+### AST-106 — Worktree isolation stated about git, violated by non-git disk writes · promoted 2026-08-19
+
+Measured by nizzy-ecom Thomas on TRA-209: Thomas ran `make itest-local` inside a Builder's
+worktree. The test suite wrote to a fixed path (test fixture / log file), colliding with the
+Builder's own test run. Both Thomas's AND the Builder's suites went red on a conflict neither
+caused — each blamed their own diff.
+
+The "one checkout, one driver" rule in dispatch-ticket was stated about git operations (branch
+switching, committing). Running tests, builds, or any process that writes to disk causes the
+same isolation violation, but the rule's wording did not cover it. The arm already did this
+correctly: each pass gets its own detached worktree. Thomas's test run did not.
+
+Fixed by adding "Isolation covers all disk activity, not only git" to the one-checkout section,
+with the measured incident as the example.
 
 Bound: dispatch-ticket/SKILL.md (both `.agents/` and `.claude/` variants).

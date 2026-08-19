@@ -1,3 +1,28 @@
+# Astragentic 2.3.3
+
+Field report round 2 fixes (TRA-209, etsy-fulfillment-thanh).
+
+## What changed
+
+- **Pipe-swallows-exit-code table moved to all-runtimes section**: was buried under
+  "Watcher script (Codex/OpenCode only)" where Claude runtime Thomas skipped it, then
+  applied the exact pipe shape to `make itest-local`. Now its own section above
+  runtime-specific details, with a safe alternative pattern (AST-105).
+- **Worktree isolation generalized to disk writes**: "one checkout, one driver" now
+  explicitly covers test runs, builds, and any disk-writing process — not only git.
+  Measured: Thomas ran tests in Builder's worktree, fixed-path writes caused both
+  suites to fail (AST-106).
+- **Brief template adds "Source of truth" line**: `Source of truth: the codebase, not
+  this ticket — verify every claim against the actual code.` Measured: Thomas's own
+  ticket table had 2/4 rows wrong and 1 missing; the brief instruction caught it.
+- **db-down cleanup no longer swallows failure**: `|| true` and `2>/dev/null` removed
+  from codex-arm cleanup and WorktreeRemove hook. Operator ran the old form all day
+  and ended with 3 orphaned containers while believing cleanup succeeded.
+
+## Upgrade from 2.3.2
+
+Copy entire `harness/` directory. No new files.
+
 # Astragentic 2.3.2
 
 SubagentStop hook fix + example cleanup.

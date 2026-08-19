@@ -106,9 +106,14 @@ In this order, every time you remove a gate worktree:
    Same rule: stop only the container whose compose project matches this
    worktree, not a blanket `docker compose down`:
    ```bash
-   make -C "$GATE_WORKTREE" db-down 2>/dev/null || true
+   make -C "$GATE_WORKTREE" db-down 2>&1 || echo "WARN: db-down failed for $GATE_WORKTREE"
    ```
-   Measured: three surviving Postgres containers took a machine to seven
+   **Do not `|| true` or `2>/dev/null` this command** — both swallow the failure and its
+   reason, leaving containers running while the operator believes cleanup succeeded.
+   Measured: an operator ran the `|| true` form after every gate for a full day and
+   ended with 3 orphaned containers (AST-105).
+
+   Measured earlier: three surviving Postgres containers took a machine to seven
    instances; a gate returned `signal: killed` on four packages with
    `FAIL = 0` — resource exhaustion wearing the costume of a test failure.
    Stopping one container turned the same command into `EXIT=0, 40 ok`.

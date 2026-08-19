@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "GATE_WORKTREE=\"$WORKTREE_PATH\"; broker_pid=$(ps -eo pid=,command= | grep 'app-server-broker.mjs' | grep -- \"--cwd $GATE_WORKTREE\" | awk '{print $1}'); [ -n \"$broker_pid\" ] && kill \"$broker_pid\" 2>/dev/null; make -C \"$GATE_WORKTREE\" db-down 2>/dev/null || true"
+            "command": "GATE_WORKTREE=\"$WORKTREE_PATH\"; broker_pid=$(ps -eo pid=,command= | grep 'app-server-broker.mjs' | grep -- \"--cwd $GATE_WORKTREE\" | awk '{print $1}'); [ -n \"$broker_pid\" ] && kill \"$broker_pid\" 2>/dev/null; make -C \"$GATE_WORKTREE\" db-down 2>&1 || echo \"WARN: db-down failed for $GATE_WORKTREE\""
           }
         ]
       }

@@ -89,6 +89,13 @@ not the branch it was dispatched onto. That check costs nothing and is the only 
 catches a checkout moving underneath you, because the symptom appears later and somewhere
 else.
 
+**Isolation covers all disk activity, not only git** (AST-106). Running tests, build commands,
+or any process that writes to a worktree you do not own causes the same class of collision —
+measured: Thomas ran `make itest-local` in a Builder's worktree, the test wrote to a fixed
+path, and both Thomas's AND the Builder's test suites went red on a conflict neither of them
+caused. The arm already does this correctly: each pass gets its own detached worktree. Apply
+the same rule to any command that writes to disk.
+
 ## The payload must be COMMITTED before the first dispatch
 
 **A git worktree contains tracked content and nothing else.** So a harness whose files are
@@ -259,6 +266,7 @@ Owner intent: …
 Validation: …
 Owned elsewhere: TRA-38 owns docs/…/WIRE-CONTRACT.md — do not edit it; report what you
 would have changed.
+Source of truth: the codebase, not this ticket — verify every claim against the actual code.
 ```
 
 **The `Owned elsewhere:` line is what converts a merge conflict into a handback note**, and it
@@ -410,6 +418,31 @@ working pane gives `agent_not_idle` with the fix named, a bad target `agent_not_
 `--wait` with no state change `timeout`. Treat a non-zero herdr exit as a real failure worth
 reading, and keep the scepticism for the `agent_status` it returns on success.
 
+### Pipes swallow exit codes — all runtimes
+
+Any command piped through `tail`, `grep`, `head` or similar **loses the original exit code**
+and reports the last command's status instead (AST-105). This applies to ANY command Thomas
+runs — test suites, arm invocations, watchers — not only the watcher script below. Measured:
+`make itest-local 2>&1 | tail -25` returned exit 0 on a RED gate, losing both the failure
+and the package names.
+
+| shape | status |
+| :--- | :--- |
+| `cmd … \| tail -3` | **always lost** — the pipeline reports the last command |
+| `cmd … \|\| true` / `\|\| echo "failed"` | **lost exactly when the command FAILS**, since that is when the right side runs; both failure codes are non-zero, so a real failure becomes 0 |
+| `echo "$(cmd …)"`, `export v=$(…)`, `local v=$(…)` | lost |
+| `v=$(cmd …)` (bare assignment) | preserved |
+| `cmd … && rhs` | preserved on FAILURE; a success is overwritten by `rhs` |
+
+`||` is the one to watch for: it is the shape people reach for when they are being careful,
+and it converts precisely the failures you needed to hear about into silence (AST-032).
+
+**Safe alternatives when you need both status and trimmed output:**
+
+```bash
+cmd … > /tmp/out.log 2>&1; status=$?; tail -25 /tmp/out.log; exit $status
+```
+
 ### Watcher script operational details (Codex/OpenCode only)
 
 **Claude runtime uses Monitor — skip this section.** See `dispatch-ticket-claude`.
@@ -420,18 +453,7 @@ truthful output rather than a fault. Point it at the pane whose turn you just op
 role may read or watch any pane, and concurrent watchers are fine (three simultaneous waits
 on one pane ran independently and timed out cleanly). Its exit status IS the signal
 (`0`+`TERMINAL:<state>` / `1`+`TIMEOUT` / `2`+`NO_START`), so call it by absolute path,
-alone on its own line, and branch on `$?`. Measured, these shapes discard it:
-
-| shape | status |
-| :--- | :--- |
-| `watch.sh … \| tail -3` | **always lost** — the pipeline reports the last command |
-| `watch.sh … \|\| true` / `\|\| echo "failed"` | **lost exactly when the watcher FAILS**, since that is when the right side runs; both failure codes are non-zero, so a real TIMEOUT or NO_START becomes 0 |
-| `echo "$(watch.sh …)"`, `export v=$(…)`, `local v=$(…)` | lost |
-| `v=$(watch.sh …)` (bare assignment) | preserved |
-| `watch.sh … && rhs` | preserved on FAILURE; a success is overwritten by `rhs` |
-
-`||` is the one to watch for: it is the shape people reach for when they are being careful,
-and it converts precisely the failures you needed to hear about into silence (AST-032).
+alone on its own line, and branch on `$?`. The pipe table above applies here too.
 
 **Stopping a watch takes the process GROUP.** On macOS the watcher re-execs under
 `caffeinate`, so `caffeinate` is the visible PID and killing it orphans the wrapped shell,
