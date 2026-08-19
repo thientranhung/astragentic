@@ -1,3 +1,41 @@
+# Astragentic 2.3.14
+
+A clean report that meant nothing: `check-reachability.sh` could lose its ownership manifest,
+say so, and keep reporting.
+
+## What changed
+
+- **Missing release manifest is now a `FAIL`, not a footnote (AST-118)**. The checker decides
+  which skills the harness owns by reading the staged release archive for the applied version.
+  With no archive it fell back to "treat every skill as harness-owned", printed that it was
+  doing so, and continued — same checks, same exit codes, different meaning. It now stops
+  making a claim it can no longer support, and names the remedy.
+- **Break-tested both directions** on a scratch project layout: no archive → `FAIL 0`, archive
+  present → `ownership from: release manifest` and clean.
+
+## Why printing the degradation was not enough
+
+The loud half of this was cheap: with the fallback engaged, the checker flagged a project's own
+skills as broken and someone investigated within minutes. The expensive half was a round
+earlier, when the same fallback was silently active, tripped on nothing, and the run reported
+all checks OK. That pass was true by accident rather than by a working mechanism — and **nobody
+investigates a pass**.
+
+The notice was there, correct, and in the output. It was read past, because everything around
+it looked normal and the exit code agreed. A degraded mode that keeps the same verdict
+vocabulary is indistinguishable from the healthy one at the only moment anyone is looking. If a
+run can no longer make the claim it usually makes, it has to stop making it rather than
+annotate it.
+
+Found by the downstream agent auditing its own process rather than the release, and by
+noticing that an "all 8 checks OK" it had itself reported was unearned.
+
+## Upgrade from 2.3.13
+
+Copy entire `harness/` directory. One script changes. If your project does not commit
+`.astraler/releases/<applied-version>/`, this release will fail until it does — that is the
+point; only the current applied release needs to be present.
+
 # Astragentic 2.3.13
 
 The stager writes to a fixed path, so a worktree given to an adaptation session does not

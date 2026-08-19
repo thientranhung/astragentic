@@ -4,10 +4,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.3.13-blue" alt="version">
+  <img src="https://img.shields.io/badge/version-2.3.14-blue" alt="version">
   <img src="https://img.shields.io/badge/license-proprietary-lightgrey" alt="license">
   <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
-  <img src="https://img.shields.io/badge/failure_modes-116_measured-red" alt="failure modes">
+  <img src="https://img.shields.io/badge/failure_modes-117_measured-red" alt="failure modes">
 </p>
 
 <p align="center">
@@ -39,7 +39,7 @@ prove what happened.
 
 # 3. Open your repo in Claude Code and run the adaptive installer
 cd /path/to/your-repo
-claude "Read .astraler/releases/2.3.13/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/2.3.14/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Start the router
 claude --agent thomas
@@ -264,7 +264,7 @@ Then: `claude --agent thomas`
 | **Skills** | 13+ orchestration, 4 brownfield-specific |
 | **Runtimes** | Claude Code, Codex, OpenCode |
 | **Review layers** | 3 per ticket (prior system: 5-14 rounds) |
-| **Failure modes** | 116 measured, append-only evidence base |
+| **Failure modes** | 117 measured, append-only evidence base |
 | **Isolation** | 1 worktree per Builder, 1 branch per ticket |
 
 ---

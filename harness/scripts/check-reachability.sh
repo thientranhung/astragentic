@@ -137,6 +137,19 @@ ATTRIBUTION = "release manifest"
 if not HARNESS_OWNED:
     HARNESS_OWNED = set(all_skills)
     ATTRIBUTION = "NONE — no staged release found, treating every skill as harness-owned"
+    # ABSENCE IS A FINDING, not a footnote. Printing the fallback was not enough: the run
+    # continued and could still exit 0, and a clean verdict under "everything is ours" is a
+    # DIFFERENT CLAIM from a clean verdict under the manifest — same word, same exit code.
+    # Measured 2026-08-20: an adaptation session copied a release's payload into its worktree
+    # without committing the release ARCHIVE, the glob came up empty, and the checker flagged
+    # that project's OWN skills as broken references. A round earlier the same fallback was
+    # silently active and happened to trip on nothing, so it reported all checks OK — true by
+    # accident, not by a working mechanism, which is the worse of the two outcomes because
+    # nobody investigates a pass (AST-118).
+    fail("0", "no staged release manifest for the applied version — ownership is unknown, "
+              "so every verdict below is about a guess rather than about the harness",
+         "commit .astraler/releases/<applied-version>/ alongside the payload it installed; "
+         "only the CURRENT applied release needs to be present")
 PROJECT_OWNED = set(all_skills) - HARNESS_OWNED
 skills = {n: v for n, v in all_skills.items() if n in HARNESS_OWNED}
 

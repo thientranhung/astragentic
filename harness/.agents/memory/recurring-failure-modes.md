@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 116 entries (AST-001 … AST-117, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 117 entries (AST-001 … AST-118, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -2811,4 +2811,42 @@ Verified in both directions: the warning fires on a repo with four worktrees, an
 single-checkout repo is not bothered by it.
 
 Bound: install.sh.
+
+### AST-118 — A fallback that changes what the verdict MEANS, while keeping the same exit code · promoted 2026-08-20
+
+`check-reachability.sh` decides which skills the harness owns by reading the staged release
+archive for the applied version. With no archive, it fell back to "treat every skill as
+harness-owned", **printed that it was doing so**, and carried on — same checks, same exit
+codes, different meaning.
+
+Measured on a live project: an adaptation session working in a worktree copied a release's
+payload in without committing the release ARCHIVE. The glob came up empty, the fallback
+engaged, and the checker flagged that project's own skills and their prose as broken
+references. Loud, and therefore cheap.
+
+**The expensive half happened a round earlier.** The same fallback was silently active, tripped
+on nothing that round, and the run reported all checks OK. That pass was true by accident
+rather than by a working mechanism — and nobody investigates a pass. A false alarm gets chased
+within minutes; a hollow all-clear can sit for as long as nothing happens to trip it.
+
+Printing the degradation was not enough, and that is the part worth carrying: the notice was
+there, correct, and in the output. It was read past, because everything around it looked
+normal and the exit code agreed. **A degraded mode that keeps the same verdict vocabulary is
+indistinguishable from the healthy one at the only moment anyone is looking.** If a run can no
+longer make the claim it usually makes, it has to stop making it — not annotate it.
+
+Fix: absence of the manifest is now a FINDING, not a footnote — the same rule
+`docs-staleness-audit.sh` axis 2 already states about its own unparsable header, applied one
+script over. Break-tested in both directions on a scratch project layout: no archive → `FAIL 0`
+naming the remedy, archive present → `ownership from: release manifest` and clean.
+
+Operating consequence, already adopted by the session that found it: commit the applied
+release's archive in the same commit as the payload it installed. Only the CURRENT release
+needs to be present.
+
+Found by the downstream agent auditing its OWN process rather than the release — and by
+noticing that an earlier "all 8 checks OK" it had reported was unearned. That is a harder thing
+to look for than a defect in someone else's work.
+
+Bound: scripts/check-reachability.sh.
 
