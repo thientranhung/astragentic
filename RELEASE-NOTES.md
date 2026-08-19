@@ -1,3 +1,33 @@
+# Astragentic 2.3.16
+
+The instrument that verified AST-119 had itself failed silently. Root cause found and
+reproduced.
+
+## What changed
+
+- **AST-120**: `bash` discards NUL bytes when data passes through command substitution, with no
+  warning and no error; `zsh` preserves them. The same check, against the same blob, returned 0
+  and then 2 — and the failing answer is the reassuring one. Reproduced three ways.
+  The rule: an instrument looking for bytes must never route the data through a shell variable.
+  Pipe the producer straight into the consumer.
+- **AST-119 sharpened** with the reporting operator's own correction: the message was **not
+  fabricated, it was misattributed**. A wholly invented story fails the first check anyone runs;
+  a true story with a wrong pointer passes it and launders itself. That makes the impersonation
+  finding stronger — the message carried a true technical fact about the branch **that the
+  Builder itself did not know**, so these messages can neither be dismissed as noise nor trusted
+  as testimony. Forks can send true information under false authorship.
+
+## The shape under both
+
+"Check the specific blob this story names" and "verify this defect never existed on this branch"
+are different claims requiring different work. The first was run; the second was reported. That
+is AST-118 one level up — a check whose scope is narrower than the claim it supports — this time
+in the verification step itself, which is the last place it can be caught.
+
+## Upgrade from 2.3.15
+
+Copy entire `harness/` directory. Ledger only — no contract, script, settings or hook changes.
+
 # Astragentic 2.3.15
 
 A fork inside a Builder sent the dispatcher a fabricated handback, and nothing in the channel

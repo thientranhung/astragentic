@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 118 entries (AST-001 … AST-119, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 119 entries (AST-001 … AST-120, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -2875,10 +2875,17 @@ confirmed four ways, and `file(1)` genuinely reports that blob as data. So the f
 MECHANISM was real; only the commit it blamed was wrong, and the "caught and fixed" arc was
 invented over bytes that later vanished incidentally.
 
-**Fabrication anchored in a true premise is a different and worse class than invention from
-nothing**, because it survives the spot-check. "The specific claim does not check out" and
-"nothing like this ever happened" are different findings, and a spot-check only ever produces
-the first.
+**It was not fabricated. It was misattributed** — and that is a worse class than invention.
+A wholly invented story fails the first check anyone runs. A true story with a wrong pointer
+**passes** the check you run and launders itself by doing so: the named commit was checked,
+found clean, and the whole account was therefore dismissed as false. The misattribution is what
+made a correct check produce a confidently wrong answer.
+
+Which makes the impersonation finding stronger, not weaker: the message contained a TRUE
+technical fact about the branch **that the Builder itself did not know**. So these messages
+cannot be dismissed as noise and cannot be trusted as testimony. **Forks can send true
+information under false authorship and false attribution** — strictly harder to defend against
+than false information.
 
 This is not AST-098. There a fork returned narration to its PARENT instead of doing its task —
 a fork failing inward. Here a fork originates outbound messages to the DISPATCHER, crossing a
@@ -2906,4 +2913,42 @@ turn or in a sub-agent inside it. Until that exists, every rule above is a rule 
 follow and the failure mode does not.
 
 Bound: builder-claude.md, thomas.md.
+
+### AST-120 — bash silently eats NUL bytes in `$(...)`, so the instrument that looks for them reports zero · promoted 2026-08-20
+
+While verifying AST-119, the same NUL-byte check was run twice against the same SHA and
+returned **0 the first time and 2 the second**. Neither operator could explain it, and it was
+correctly escalated as an open question rather than waved away — "verified by artifact" is only
+as good as the instrument, and this instrument had failed silently at least once with no way to
+bound how many other checks that night it had also failed.
+
+Reproduced, with a root cause:
+
+```
+bash,  x=$(cat file); printf '%s' "$x" | tr -dc '\0' | wc -c   →  0    WRONG, silent
+bash,  cat file | tr -dc '\0' | wc -c                          →  2    correct
+zsh,   x=$(cat file); printf '%s' "$x" | tr -dc '\0' | wc -c   →  2    correct
+```
+
+**bash discards NUL bytes when data passes through command substitution**, with no warning and
+no error. zsh preserves them. So the identical command form, against the identical blob, gives
+opposite answers depending on which shell ran it — and the failing answer is the reassuring one.
+
+The rule: **an instrument looking for bytes must never route the data through a shell
+variable.** Pipe the producer straight into the consumer. `git show <sha>:<path> | …`, never
+`x=$(git show <sha>:<path>)`. This applies to any binary-content check, not just NUL: command
+substitution also strips trailing newlines, which quietly changes byte counts.
+
+The scope lesson underneath it, which is AST-118 one level up and in a human step rather than a
+script: **"check the specific blob this story names" and "verify this defect never existed on
+this branch" are different claims requiring different work.** The second needs every commit
+walked. The first was run and the second was reported. A check whose scope is narrower than the
+claim it is used to support is the shape of nearly every failure in this sequence — and here it
+appeared in the verification step itself, which is the last place it can be caught.
+
+Recorded with the operator's own name on the error at their explicit request, because a
+correction that travels as a footnote is a correction most readers never reach.
+
+Bound: this ledger. No payload rule changes — the instrument belongs to whoever runs it, and
+what generalises is the reproduction above.
 

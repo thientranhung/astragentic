@@ -4,10 +4,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.3.15-blue" alt="version">
+  <img src="https://img.shields.io/badge/version-2.3.16-blue" alt="version">
   <img src="https://img.shields.io/badge/license-proprietary-lightgrey" alt="license">
   <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
-  <img src="https://img.shields.io/badge/failure_modes-118_measured-red" alt="failure modes">
+  <img src="https://img.shields.io/badge/failure_modes-119_measured-red" alt="failure modes">
 </p>
 
 <p align="center">
@@ -217,7 +217,7 @@ Tuỳ chọn: **Codex CLI** (cross-vendor review), **OpenCode CLI** (runtime th�
 
 # 3. Mở repo trong Claude Code, chạy bộ cài đặt thích ứng
 cd <target-repo>
-claude "Read .astraler/releases/2.3.15/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/2.3.16/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Cấu hình orchestrator.md (role → runtime → model → effort)
 # 5. Khởi động
@@ -236,7 +236,7 @@ Thomas đọc orchestrator, nhận workspace, và bắt đầu điều phối.
 | **Skill** | 13+ điều phối, 4 brownfield |
 | **Runtime** | Claude Code, Codex, OpenCode |
 | **Lớp review** | 3 mỗi ticket · 1 vòng duy nhất |
-| **Failure mode** | 118 đo lường được, evidence base chỉ thêm không xoá |
+| **Failure mode** | 119 đo lường được, evidence base chỉ thêm không xoá |
 | **Tracker** | Linear, Jira — nguồn sự thật chung giữa người và agent |
 
 ---
