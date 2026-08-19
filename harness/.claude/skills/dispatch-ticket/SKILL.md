@@ -339,7 +339,8 @@ substituted a bare `herdr agent wait` for the script; it went deaf and cost two 
 <repo-root>/scripts/herdr-watch-terminal.sh <pane-id> 3 3600 120
 ```
 
-Run this immediately after confirming `working`. For Codex/OpenCode, it is the ONLY
+Run this immediately after submitting the brief — there is no confirm-`working` step to wait
+for any more, the script's own start guard is that step. For Codex/OpenCode, it is the ONLY
 sanctioned way to monitor a dispatched builder. Do NOT write your own polling loop, do NOT
 use `herdr agent wait --until idle` as a substitute, do NOT use `sleep` + `herdr agent get`
 in a loop. The script has caffeinate (machine cannot sleep and kill the watch), a start

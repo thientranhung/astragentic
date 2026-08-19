@@ -14,9 +14,15 @@ Skill(skill: "dispatch-ticket-claude")
 
 Follow the loaded instructions. Do not dispatch from memory or reasoning alone.
 
-**Brief, watching, and steering all use Claude-native tools** — `dispatch-ticket-claude`
-has the full protocol: SendMessage for briefs and steering, Monitor for watching.
-Do not use the shared protocol's Herdr paste or watcher script for Claude builders.
+**Briefs and steering use Claude-native tools; watching does not.** `dispatch-ticket-claude`
+has the full protocol: SendMessage for briefs and steering, and `Monitor` **wrapping
+`scripts/herdr-watch-terminal.sh`** for watching — the same watcher script every runtime
+uses. Monitor is the delivery channel; the script does the detecting.
+
+Do not use the shared protocol's Herdr paste for Claude builders — that part is still
+Codex/OpenCode only. But **do** use its watcher script. Through 2.3.3 this file said
+otherwise, Claude runtime substituted a bare `herdr agent wait` for the script, and it went
+deaf and cost two sessions (AST-107).
 
 ## Simplify artifact verification
 

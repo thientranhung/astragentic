@@ -1,3 +1,45 @@
+# Astragentic 2.3.5
+
+Propagation fixes for 2.3.4, found by the nizzy-ecom harness agent while applying it. The
+2.3.4 payload changed the dispatch protocol in two skills and left four places still teaching
+the old one — including one that forbade the new rule outright.
+
+## What changed
+
+- **`thomas-claude.md` no longer forbids the watcher script**: it said "Do not use the shared
+  protocol's Herdr paste or watcher script for Claude builders" — the second half is exactly
+  what 2.3.4 makes mandatory. A Thomas reading its own runtime supplement would have
+  re-created AST-107 while running the release that fixes it. Paste stays Codex/OpenCode only;
+  the watcher script is now explicitly all-runtime.
+- **`thomas-codex.md` and `thomas-opencode.md`**: "After submitting the brief and confirming
+  `working`, start the watcher" — the confirm step 2.3.4 removed. Now: arm the watch
+  immediately, the script's start guard is that step.
+- **`dispatch-ticket/SKILL.md`**: "Run this immediately after confirming `working`" sat one
+  paragraph below the passage that removes confirming `working`. Same file, same release.
+- **Verified NOT stale**: `dispatch-ticket-codex` and `dispatch-ticket-opencode` carry no
+  submit or watch instructions of their own — the shared skill owns both for those runtimes,
+  so 2.3.4's claim of "every submit form on every runtime" holds.
+
+## The lesson this release is
+
+2.3.4 changed a rule in the two files that state the rule, and shipped with four files still
+teaching the old one. Nothing in the process was skipped — the change was correct, tested,
+validated, and staged. What was missing was the question "who else says this?", which no
+check asks and no test can fail on.
+
+A protocol change is not one edit, it is an edit plus a sweep. The sweep is a grep, and it
+takes a minute. The two releases that came out of this pair of field reports were both about
+signals that could not fail; a contradiction between two files is the documentation form of
+the same defect, and the reader who obeys the wrong copy has no way to know.
+
+Caught by the downstream agent applying the upgrade, not by the release. That is the wrong
+place to catch it, and one release too late.
+
+## Upgrade from 2.3.4
+
+Copy entire `harness/` directory. No new files, no new hooks. Documentation only — no script,
+settings or ledger changes.
+
 # Astragentic 2.3.4
 
 Field report round 3 fixes (nizzy-ecom, 2026-08-19). Four measurements, all about the watch —

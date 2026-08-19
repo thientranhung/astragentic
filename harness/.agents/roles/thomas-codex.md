@@ -14,7 +14,8 @@ Skill(skill: "dispatch-ticket-codex")
 
 Follow the loaded instructions. Do not dispatch from memory or reasoning alone.
 
-After submitting the brief and confirming `working`, start the watcher immediately:
+Immediately after submitting the brief, start the watcher — do not confirm `working`
+first, the script's own start guard is that step and answers `NO_START`:
 
 ```bash
 <repo-root>/scripts/herdr-watch-terminal.sh <pane-id> 3 3600 120
