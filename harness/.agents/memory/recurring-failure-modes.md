@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 127 entries (AST-001 … AST-128, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 128 entries (AST-001 … AST-129, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -3273,3 +3273,25 @@ now lists every payload path whose live copy differs, with its commits, before o
 anything — eight paths on the project measured, all owner-tuned.
 
 Bound: `prompts/ADAPT-HARNESS.md` (step 4).
+
+### AST-129 — The receipt was a producer with no reader, and it hid the one fact that had readers · promoted 2026-08-20
+
+The adaptation receipt was mandated in full — every file added, replaced, merged, preserved;
+every requirement judged; validation transcripts — and appended per upgrade. One measured
+project accreted **3,093 lines across 39 receipts**, and nothing read them: no contract, no
+skill, no later install. The single fact in there with recurring readers — the rendering path,
+which the Builder needs per ticket and `dispatch-qa-walk` reads per walk — was buried in a
+state file those readers never load, while the entry doc they do load carried nothing.
+
+Same class as AST-069 from the producing side: a required artifact whose write moment has no
+read moment attached measures as pure cost. The same window measured release bookkeeping at
+**~3 lines written per line of behaviour change** — one lesson written three times, as a
+commit message, a release-note narrative and a ledger entry.
+
+**A fact goes where its reader already is; a record with no reader is written as exceptions
+or not at all.** The receipt now overwrites (history is git's) and records only decisions —
+DIFFERS, PENDING, conflicts, candidate defects. The rendering path, standards pointer and
+ledger path live in the project's entry doc. The ledger entry is the one canonical home for
+a lesson; the release note states the change and points here.
+
+Bound: `prompts/ADAPT-HARNESS.md` (steps 5 and 7), `dispatch-qa-walk/SKILL.md`, `qa.md`.

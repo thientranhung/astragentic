@@ -267,12 +267,15 @@ reaching them is the agents' business, not this run's.
 **Name the repo's rendering path, or record that it has none.** The Builder's contract
 requires browser evidence for work that changes a user-visible surface, and Rin's gate checks
 for it, but the *tool* is the project's — a browser skill, a preview or dev command, a
-storybook. Find what this repo already uses and record it in the receipt so a Builder does
-not have to rediscover it per ticket. A repo with a UI and no way to render it is a finding
-worth stating plainly: every visual defect there will reach the owner's screen first.
+storybook. Find what this repo already uses and **record it in the project's entry doc**
+(`AGENTS.md` or `CLAUDE.md`), beside the tracker pointer — its readers are the Builder per
+ticket and `dispatch-qa-walk`, and they load the entry doc, not a state file. A repo with a
+UI and no way to render it is a finding worth stating plainly: every visual defect there
+will reach the owner's screen first.
 
-Record the glossary counts, the triage counts, the standards pointer and the rendering path
-under a **`## Brownfield bootstrap`** heading in the receipt.
+**The standards pointer and the rendering path live in the entry doc**, for the same reason
+the ticket prefix does: a fact goes where its reader already is. The glossary and triage
+counts go to the owner in your handback; they have no later reader and do not need a file.
 
 ## 6. Validate by artifact
 
@@ -301,12 +304,16 @@ Only after validation succeeds:
 
 1. Create `.astraler/state/` when needed.
 2. Write `<candidate>` to `.astraler/state/applied-version`.
-3. Write `.astraler/state/ADAPTATION-REPORT.md` containing: fresh install or upgrade with
-   previous → candidate versions; release-note requirements applied, superseded or judged not
-   applicable; files added, replaced, merged, preserved and removed; project-specific
-   decisions and why; the plugin version and the step-2 verification results; a
-   **`## Brownfield gaps`** section from step 5; validation commands and their outcomes; and
-   unresolved conflicts or follow-up work.
+3. **Overwrite** `.astraler/state/ADAPTATION-REPORT.md` — never append to the previous one.
+   The file is committed, so prior receipts live in git history; a receipt that appends
+   accretes forever and one measured project reached 3,000 lines nobody read (AST-129).
+   It records **exceptions only** — each `DIFFERS` path and its decision, every `PENDING`
+   and why, ownership conflicts, defects found in the candidate, and validation failures.
+   A clean upgrade produces a receipt of a few lines, and that is the correct output, not a
+   thin one. What has a recurring reader — the ticket prefix, the standards pointer, the
+   rendering path, the project ledger path — goes in the project's entry doc (steps 2.4, 3
+   and 5), never here: this file is where decisions are auditable, not where facts are
+   looked up.
 
 Where validation fails or a real ownership conflict is unresolved, leave `applied-version`
 where it is, record the blocker, and return `PENDING`.

@@ -79,22 +79,17 @@ weeks across two active projects without one request (AST-070).
 router's. Every session you dispatch gets its own worktree, without exception, including
 read-only ones with a shell.
 
-The incident behind this is not hypothetical: two root sessions shared a main checkout, one
-ran `git switch` while the other was committing, and three commits landed on the wrong branch
-and then vanished when it switched back. Nothing errored. Both sessions were behaving
-correctly in isolation (AST-016, AST-027).
+Two root sessions sharing a main checkout have silently lost commits to a concurrent
+`git switch` (AST-016, AST-027).
 
 **Every session verifies `git branch --show-current` before each commit**, and stops if it is
 not the branch it was dispatched onto. That check costs nothing and is the only thing that
 catches a checkout moving underneath you, because the symptom appears later and somewhere
 else.
 
-**Isolation covers all disk activity, not only git** (AST-106). Running tests, build commands,
-or any process that writes to a worktree you do not own causes the same class of collision —
-measured: Thomas ran `make itest-local` in a Builder's worktree, the test wrote to a fixed
-path, and both Thomas's AND the Builder's test suites went red on a conflict neither of them
-caused. The arm already does this correctly: each pass gets its own detached worktree. Apply
-the same rule to any command that writes to disk.
+**Isolation covers all disk activity, not only git** (AST-106): running tests or builds in a
+worktree you do not own causes the same collision class. Apply the one-driver rule to any
+command that writes to disk — the arm already does, one detached worktree per pass.
 
 ## The watchdog must be RUNNING before the first dispatch
 
@@ -106,20 +101,11 @@ pgrep -f 'herdr-watchdog.sh' >/dev/null \
 **A dispatch with no watchdog is not permitted.** Start it if it is not up (`thomas.md`
 §Watchdog has the invocation), then dispatch.
 
-The reason this is a gate rather than advice: a watcher covers ONE submitted turn and exits
-correctly when that turn ends. Every later turn — a fold after a gate, an answer to a blocked
-Builder, more work on the same pane — needs a new watcher, and the moment it gets skipped is
-after a long absorbing task the contract itself mandates. Measured: two Builders ran unwatched
-for an extended stretch, one advancing four commits, across six trips through the identical gap
-in one session. **The owner noticed before the dispatcher did, from the absence of
-notifications on his own screen** (AST-124).
-
-**An unwatched pane and a quiet healthy pane produce identical evidence: nothing.** With the
-watchdog up, forgetting to re-arm costs latency; without it, forgetting costs silence.
-
-**And it is checked HERE because its absence is invisible everywhere else** — a watchdog that
-was never started manifests as no alerts, which is exactly what a healthy session looks like.
-The one moment the question can be asked is the moment the first pane starts working.
+The reason this is a gate rather than advice: a watcher covers ONE submitted turn, every later
+turn needs a new one, and a missed re-arm is invisible — **an unwatched pane and a quiet
+healthy pane produce identical evidence: nothing** (AST-124). With the watchdog up, forgetting
+to re-arm costs latency; without it, silence. It is checked HERE because a watchdog that was
+never started manifests as no alerts, exactly what a healthy session looks like.
 
 **Coverage, stated so nobody starts it and assumes the rest is covered**: the watchdog's
 `STUCK` rule requires that NO pane is working, so an active Thomas suppresses it — a Builder
@@ -197,12 +183,9 @@ first worktree.
 **The commands below show a Builder dispatch. Substitute the tab/pane prefix for the role
 actually being dispatched** — tab `ticket:<id>`/pane `builder:<id>` for a Builder, but tab
 AND pane both `spec:<id>` for a Shaper, `qa:<id>` for QA, `rin:<id>` for Rin — per the table
-right after them. This same skill
-dispatches a Shaper too (`thomas.md`: "same mechanics as any dispatch"), and copying the
-literal `builder:`/`ticket:` shown here for a Shaper renames its pane to something the
-watchdog's `DISPATCH_PREFIXES` does not recognize, so it dispatches unmonitored — measured
-directly: a Shaper pane renamed `shaper:<id>` by reflex was invisible to the watchdog end to
-end, silently, until the mismatch was noticed by hand.
+right after them. This same skill dispatches a Shaper too (`thomas.md`: "same mechanics as
+any dispatch"). An invented prefix — `shaper:<id>` — is one the watchdog's
+`DISPATCH_PREFIXES` does not recognize, so that pane dispatches unmonitored, silently.
 
 A new workspace already owns an initial tab and root pane. Read the create response, then
 `herdr tab list` / `herdr pane list`, and rename that initial tab and pane for the first
@@ -306,12 +289,8 @@ Derive this ticket's own write-set from its body plus whatever the repo's docs-s
 in, record it against the ticket, and read the other live tickets' write-sets back out to find
 the overlap. **A Builder that edits a file another ticket owns is obeying a correct rule** —
 usually the docs-sync one — so nothing in the ticket itself can carry the boundary; it has to
-arrive with the brief.
-
-Measured twice in one day: once on a shared document, once on `routes.go` and its test an hour
-later, dispatched by the operator who had just diagnosed the first occurrence and did not
-generalise it. That is why this is a field rather than a rule in prose — a boundary a careful
-dispatcher forgets that fast needs a slot that blocks the launch (AST-056).
+arrive with the brief. It is a required field rather than a rule in prose because a boundary a
+careful dispatcher forgets needs a slot that blocks the launch (AST-056).
 
 This is what "an agent playing the human at that step" means mechanically. Verify by
 artifact that the skill actually ran — its own output in the transcript — rather than by the
@@ -329,30 +308,21 @@ herdr agent prompt <pane-id> "<brief>"
 No `--wait --until working` here either: the watcher's start guard is the one place that
 question gets asked, on every runtime and every submit form.
 
-**A multi-line brief lands in the composer WITHOUT submitting.** Measured: `herdr pane run`
-and `agent prompt` both send text plus Enter, but a multi-line block is pasted as a unit and
-the Enter is consumed by the paste — the transcript shows `[Pasted text #1 +N lines]` sitting
-in an unsent composer. Every real dispatch brief is multi-line, so this is the default case,
-not the edge case.
-
-**And the pane reports `idle` while it sits there**, because an empty-looking composer
-matches Claude's idle rule — a signal incapable of failing (AST-032, AST-037). A dispatcher
-that trusts that `idle` concludes the Builder finished instantly.
-
-So a multi-line brief takes an explicit second step:
+**A multi-line brief lands in the composer WITHOUT submitting** — the paste consumes the
+Enter, the transcript shows `[Pasted text #1 +N lines]` in an unsent composer, **and the pane
+reports `idle` while it sits there** (AST-032, AST-037). Every real dispatch brief is
+multi-line, so this is the default case. It takes an explicit second step:
 
 ```bash
 herdr pane run <pane-id> "<multi-line brief>"
 herdr pane send-keys <pane-id> Enter        # the brief is pasted; THIS submits it
 ```
 
-**Do not hand-roll the `working` confirmation — start the watcher and let it answer.** The
-watcher script carries its own start guard and returns `NO_START` when the turn never began,
-which is the same question a separate `herdr agent wait --until working` asks. Asking twice
-delays the watcher's start, and a builder that finishes inside that delay makes the watcher
-miss `working` and report `NO_START` on work that actually happened — a second guard buying a
-new false negative. On `NO_START`, read the pane: an unsent brief sitting in the composer is
-the likeliest cause, and the fix is to send Enter again.
+**Do not hand-roll the `working` confirmation — start the watcher and let it answer.** Its
+start guard asks the same question a separate `herdr agent wait --until working` would, and
+asking twice delays the watcher into missing `working` on a fast builder. On `NO_START`, read
+the pane: an unsent brief sitting in the composer is the likeliest cause, and the fix is to
+send Enter again.
 
 ### Start the watcher — mandatory, immediately after submit
 
@@ -361,10 +331,8 @@ the likeliest cause, and the fix is to send Enter again.
 **And every NEW turn gets a NEW watcher — not just the first brief.** The watcher watches one
 submitted turn and exits when that turn reaches terminal, correctly. A fold sent after a gate,
 an answer to a blocked Builder, any further work on the same pane: each is a new turn, each
-needs a new watcher, and nothing re-arms one for you. This is the step that gets skipped,
-because it comes after a long absorbing task — building a gate worktree, running an arm pass,
-reading the report, writing the fold — and by then the previous watcher has been gone for
-fifteen minutes without having failed at anything (AST-124).
+needs a new watcher, and nothing re-arms one for you — the re-arm is the step that gets
+skipped, because it comes right after a long absorbing task (AST-124).
 
 **Sending work and arming the watch are one action, not two adjacent ones.** If you have typed
 a message to a pane and not armed a watcher, the dispatch is not finished.
@@ -372,9 +340,8 @@ a message to a pane and not armed a watcher, the dispatch is not finished.
 **All runtimes run the same watcher script**; they differ only in how its output reaches
 the dispatcher. Claude runtime wraps it in `Monitor` so each line arrives as a notification —
 see `dispatch-ticket-claude`, which also covers the one-Monitor-per-builder rule. Codex and
-OpenCode run it directly and branch on `$?`, as below. Through 2.3.3 the Claude section
-substituted a bare `herdr agent wait` for the script; it went deaf and cost two sessions
-(AST-107).
+OpenCode run it directly and branch on `$?`, as below. A bare `herdr agent wait` is not a
+substitute; it goes deaf (AST-107).
 
 ```bash
 <repo-root>/scripts/herdr-watch-terminal.sh <pane-id> 3 3600 120
@@ -402,9 +369,9 @@ restart the watcher. Jumping straight to artifact verification on `blocked` leav
 builder waiting indefinitely.
 
 **`done` means the turn ended, not that the work finished** (AST-097). A builder that
-launches background work and parks while waiting for a notification reads as `done` while its
-artifact is still being built — measured three times on one pane in one session. Before
-concluding finished: check TWO sources for active background work:
+launches background work and parks waiting for a notification reads as `done` while its
+artifact is still being built. Before concluding finished, check TWO sources for active
+background work:
 
 1. **OS processes** — `pgrep` for test runners, build tools, or the builder's own monitors
    whose argv contains the worktree path.
@@ -412,12 +379,9 @@ concluding finished: check TWO sources for active background work:
    which names shells and monitors the runtime itself tracks (ScheduleWakeup, Monitor).
    These are invisible to `pgrep`.
 
-The two sources can disagree: measured in the field, `pgrep` returned 0 while the pane
-status line read "1 shell, 1 monitor still running" — the builder had called ScheduleWakeup,
-the call failed, and it parked waiting for a notification that would never arrive. Trusting
-`pgrep` alone would have read STUCK; the status line read PARKED; the truth was
-PARKED-permanently. **Disagreement between the two sources is itself a signal — read the
-pane** (AST-097).
+**Disagreement between the two sources is itself a signal — read the pane** (AST-097): a
+`pgrep`-quiet pane whose status line still names a monitor may be parked permanently on a
+notification that will never arrive.
 
 Processes or runtime tasks still running → PARKED, wait for exit, then re-check. All
 quiet on BOTH sources AND no new commits since the last instruction → read the pane before
@@ -426,12 +390,9 @@ screen (AST-097). All quiet AND new commits since the last instruction → proce
 verification.
 
 **`--wait` collapses submit, start-guard and settle into one call, and it is trustworthy
-ONLY on a pane whose turn you just opened.** Herdr's own help says it "does not track turns:
-if the agent is already working, that active turn's completion may match". Underneath that,
-`--until idle` is satisfied by whatever the runtime's rules call idle — and measured on
-0.8.0, `agent prompt --wait --until idle` returned SUCCESS on a Claude pane whose prompt had
-not run, because an empty composer matches `prompt_box_body`. On opencode nothing
-establishes idle at all. Either way you get a signal incapable of failing (AST-032).
+ONLY on a pane whose turn you just opened.** Herdr does not track turns, and `--until idle`
+is satisfied by whatever the runtime's rules call idle — an unsent composer on Claude, and
+nothing at all on opencode: a signal incapable of failing (AST-032).
 
 **So for any pane you did not prompt in that same call** — watching another role's pane,
 resuming after a break, waiting on an artifact — the start guard stays MANDATORY.
@@ -453,12 +414,10 @@ Where a documented subcommand appears missing, check `herdr --version` against t
 floor before diagnosing the app.
 
 **A pane is for OBSERVATION; artifacts travel as files.** A pane read returns only the
-visible ROW COUNT, and no `--lines` value gets past it — measured, `--lines 200` and
-`--lines 1000` both returned 78 rows on a 78-row pane, and a socket read of 5000 lines
-returned `truncated:false` and still only the screen. The read reports SUCCESS, so anything
-longer than the viewport comes back silently cut. **Truncation is detectable**: `tab create`
-and `agent get` expose `scroll.viewport_rows`, and a read returning exactly that many lines
-is the signal — compare the count rather than judging by eye.
+visible ROW COUNT — no `--lines` value gets past it — and reports SUCCESS, so anything longer
+than the viewport comes back silently cut. **Truncation is detectable**: `tab create` and
+`agent get` expose `scroll.viewport_rows`, and a read returning exactly that many lines is
+the signal — compare the count rather than judging by eye.
 
 **Who writes the file follows the role.** An agent that may write (the Builder) writes into
 the worktree it owns and replies with the path. A READ-ONLY agent (Rin)
@@ -466,18 +425,14 @@ returns its report and the DISPATCHER persists it — which keeps an artifact ou
 disposable gate worktree that cleanup is about to delete (AST-031, AST-032).
 
 **herdr fails loudly, so its EXIT STATUS is trustworthy — it is the status FIELD that
-lies.** Measured on 0.8.0, each exits 1 with a JSON `error`: an over-viewport read on a
-working pane gives `agent_not_idle` with the fix named, a bad target `agent_not_found`, a
-`--wait` with no state change `timeout`. Treat a non-zero herdr exit as a real failure worth
-reading, and keep the scepticism for the `agent_status` it returns on success.
+lies.** Treat a non-zero herdr exit as a real failure worth reading, and keep the scepticism
+for the `agent_status` it returns on success.
 
 ### Pipes swallow exit codes — all runtimes
 
 Any command piped through `tail`, `grep`, `head` or similar **loses the original exit code**
 and reports the last command's status instead (AST-105). This applies to ANY command Thomas
-runs — test suites, arm invocations, watchers — not only the watcher script below. Measured:
-`make itest-local 2>&1 | tail -25` returned exit 0 on a RED gate, losing both the failure
-and the package names.
+runs — test suites, arm invocations, watchers — not only the watcher script below.
 
 | shape | status |
 | :--- | :--- |
@@ -507,12 +462,11 @@ Only the "Stopping a watch" block is Codex/OpenCode-specific.
 `<repo-root>/scripts/herdr-watch-terminal.sh` watches a NEWLY SUBMITTED turn: it waits to
 observe `working` first, so pointing it at an already-idle pane returns `NO_START` —
 truthful output rather than a fault. Point it at the pane whose turn you just opened. Any
-role may read or watch any pane, and concurrent watchers are fine (three simultaneous waits
-on one pane ran independently and timed out cleanly). Its exit status IS the signal
-(`0`+`TERMINAL:<state> pane=<id>` / `1`+`TIMEOUT ... pane=<id>` / `2`+`NO_START pane=<id>`
-— every line names its pane so concurrent watches stay distinguishable), so call it by
-absolute path,
-alone on its own line, and branch on `$?`. The pipe table above applies here too.
+role may read or watch any pane, and concurrent watchers are fine. Its exit status IS the
+signal (`0`+`TERMINAL:<state> pane=<id>` / `1`+`TIMEOUT ... pane=<id>` / `2`+`NO_START
+pane=<id>` — every line names its pane so concurrent watches stay distinguishable), so call
+it by absolute path, alone on its own line, and branch on `$?`. The pipe table above applies
+here too.
 
 **Stopping a watch takes the process GROUP — Codex/OpenCode only.** On Claude runtime the
 watch is a `Monitor`, and `TaskStop` cancels it; none of the PID work below applies. On macOS the watcher re-execs under
@@ -630,11 +584,9 @@ Run the checker rather than the arithmetic:
 Exit 0 is green. Exit 1 prints every reason, one `STOP:` line each. It replaces the inline
 counting above, which could not express what follows.
 
-Two measured cases produce `markers > wellformed` honestly: a Builder that published a
-correction commit declaring its own earlier `Pass:` line false, and a Builder that committed a
-truthful record that no pass had run before later running one for real. Both are the check
-WORKING — a substitute caught and declared — and both read as the check failing (AST-121). So a
-later marker may name the one it replaces:
+`markers > wellformed` can be an honest state: a Builder retracting its own earlier false or
+premature `Pass:` line in the open is the check WORKING, and it reads as the check failing
+(AST-121). So a later marker may name the one it replaces:
 
 ```
 Supersedes: <sha of the marker this replaces>
@@ -649,26 +601,14 @@ Supersedes: <sha of the marker this replaces>
 3. **The named SHA must be a marker IN RANGE**, named by only one marker.
 4. **Green: every LIVE marker — one nothing supersedes — is well-formed.**
 
-**Existence is not relationship.** The first version of this verified only that the named SHA
-was a real marker, and a genuine pass could clear any number of unrelated fabrications by
-citing them. "Points at a real marker" and "replaces what this pass actually redid" are
-different claims; only the first is cheap to check.
-
 **Residual, stated because it is not closed**: markers carry no increment identity — the
 subject is free prose. Nothing proves the superseding pass covers the SAME increment as the
 marker it retracts, so a Builder with two increments can still retract one using the other's
-real pass. **The counts are a filter, not a verdict — read the bodies.**
-
-**The reason this is a mechanism and not a documented exception**: an exception leaves honest
-retraction costing a failing count plus a paragraph of merge-commit prose every time, while a
-quiet amend costs nothing and leaves no trace. **A protocol that prices honesty above
-concealment gets concealment.** Both measured Builders told the truth when a lie was easier and
-would have passed every check — neither was caught by a check, both were caught by being asked,
-and both then chose the option that made their own record look worse. This exists so that
-choice stays cheap. The two counts carry information only when they
-disagree — print both, read both, act in a separate step. The Builder carries its own
-self-check (`builder.md`), but the mechanism that causes the skip — the ticket checklist
-displacing the contract — also displaces the self-check, so Thomas verifies independently.
+real pass. **The counts are a filter, not a verdict — read the bodies.** A protocol that
+prices honesty above concealment gets concealment, which is why retraction is a cheap
+mechanism here rather than a documented exception (AST-121). The Builder carries its own
+self-check (`builder.md`), but the mechanism that causes the skip also displaces the
+self-check, so Thomas verifies independently.
 
 **Only when both checks pass** — `git status` empty AND `markers == wellformed + superseded`
 with every named SHA verified — is

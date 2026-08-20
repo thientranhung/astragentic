@@ -1,3 +1,31 @@
+# Astragentic 2.3.27
+
+The receipt was a producer with no reader; the QA walk re-walked the whole product per merge.
+Canonical account: AST-129 — this note states the changes and points there, which is itself
+the new release-note format: the ledger entry is a lesson's one home, not this file.
+
+## What changed
+
+- **The adaptation receipt overwrites and records exceptions only** (`ADAPT-HARNESS` §7):
+  DIFFERS decisions, PENDING, conflicts, candidate defects. Prior receipts live in git
+  history. A clean upgrade yields a few lines.
+- **Facts with recurring readers move to the project's entry doc** (§5): the rendering path
+  and standards pointer join the ticket prefix and ledger path there. `dispatch-qa-walk` and
+  `qa.md` now point at the entry doc, not the receipt.
+- **QA walks get two depths** (`qa.md`): incremental (default before a PR/merge — changed
+  surfaces, concept-siblings, their journeys; verified-clean surfaces skipped and listed)
+  and full (release/slice close — everything, list rebuilt). Text-first evidence: DOM for
+  structural questions, pixels only for visual judgement, one viewport by default.
+  `dispatch-qa-walk` adds the depth field and lets one walk cover a batch head SHA.
+- **`dispatch-ticket` sheds ~90 lines of incident narrative** restated from the ledger.
+  Every rule, command, table and AST citation stays; the ledger is where the stories live.
+
+## Upgrade from 2.3.26
+
+Copy `harness/` — subject to step 4's DIFFERS listing. On the next adaptation, move the
+rendering path and standards pointer into the entry doc, then overwrite the accreted
+receipt; its history is already in the project's git.
+
 # Astragentic 2.3.26
 
 The packager shipped 61 MB per release of files its own ignore rules exclude.

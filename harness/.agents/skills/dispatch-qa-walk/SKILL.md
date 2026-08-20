@@ -17,11 +17,19 @@ reviewed SHA, which makes it the only gate with an environment to arrange.
 **Not the Builder's checkout.** Independence is the same rule as always, and a running app
 writes caches, logs and local state — sharing the author's tree would corrupt what is being
 judged. Create `gate-walk-<artifact-key>` at the reviewed SHA and start the app there with
-the project's own command. The adaptation receipt records that command under the rendering
+the project's own command. The project's entry doc records that command as the rendering
 path; where a repo has none, a walk cannot run and that is a finding for the owner, not a
 reason to approximate one.
 
-The brief carries §1's contents plus four more:
+**One walk covers a batch.** When several tickets land together toward one PR or one
+release, dispatch one walk at the batch head SHA rather than one per merge — the verdict is
+valid for the SHA it walked, and that SHA carries every ticket in the batch. Scope the brief
+to the union of their surfaces.
+
+The brief carries §1's contents plus five more:
+
+- **The walk depth** — incremental (the default, before a PR or a merge) or full (at a
+  release or a slice close). `qa.md` § Two walk depths owns what each covers.
 
 - **Persona and data state.** Who QA acts as, and what the data looks like. A walk on empty
   data and a walk on realistic volume find different defects, so the verdict is only
