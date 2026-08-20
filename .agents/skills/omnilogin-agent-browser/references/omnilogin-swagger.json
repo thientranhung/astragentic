@@ -1,0 +1,2150 @@
+﻿{
+  "swagger": "2.0",
+  "info": {
+    "description": "OmniLogin local HTTP API. Manages browser profiles, proxies, groups, automation workflows, and AI Apps. The same server also exposes a Streamable-HTTP MCP endpoint at POST /mcp for AI agents (Claude, Antigravity, Cursor, etc.).",
+    "version": "1.1.0",
+    "title": "Omnilogin Local API"
+  },
+  "host": "localhost:35353",
+  "basePath": "/",
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/open": {
+      "get": {
+        "tags": [
+          "Browser"
+        ],
+        "summary": "Open browser",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "query",
+            "type": "string",
+            "required": true,
+            "description": "Profile to open"
+          },
+          {
+            "name": "remote_debug_port",
+            "in": "query",
+            "type": "string",
+            "description": "Fixed debug port to remote by driver like selenium"
+          },
+          {
+            "name": "scale",
+            "in": "query",
+            "type": "number",
+            "description": "Browser windows scale percent. Example open browser with scale 50%: ?scale=50"
+          },
+          {
+            "name": "headless",
+            "in": "query",
+            "type": "boolean",
+            "description": "Open browser without showing windows. Example: ?headless=true"
+          },
+          {
+            "name": "addition_args",
+            "in": "query",
+            "type": "string",
+            "description": "Additional args to pass when open chrome. You can pass multiple of this param. Example: ?addition_args=[arg1]&addition_args=[arg2]"
+          },
+          {
+            "name": "launch_bridge",
+            "in": "query",
+            "type": "boolean",
+            "description": "Start an OmniBridge automation server for this profile. When true, the response includes bridge_url for connecting via @omnilogin/sdk. Example: ?launch_bridge=true"
+          },
+          {
+            "name": "show_virtual_mouse",
+            "in": "query",
+            "type": "boolean",
+            "description": "Show the virtual mouse overlay for the launched browser. Useful when you want cursor movement to stay visible while using OmniBridge or MCP. Example: ?show_virtual_mouse=true"
+          },
+          {
+            "name": "humanize_mouse",
+            "in": "query",
+            "type": "boolean",
+            "description": "Enable humanized mouse movement for the launched browser. OmniBridge launch defaults this to true when the query is omitted. Example: ?humanize_mouse=false"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean"
+                },
+                "profile_id": {
+                  "type": "string"
+                },
+                "browser_location": {
+                  "type": "string"
+                },
+                "remote_debug_address": {
+                  "type": "string"
+                },
+                "drive_location": {
+                  "type": "string"
+                },
+                "web_socket_debugger_url": {
+                  "type": "string"
+                },
+                "bridge_url": {
+                  "type": "string",
+                  "description": "WebSocket URL for OmniBridge automation connection. Only present when launch_bridge=true. Connect using @omnilogin/sdk OmniClient."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stop/{profile_id}": {
+      "get": {
+        "tags": [
+          "Browser"
+        ],
+        "summary": "Close browser by profile id",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "Profile close"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "closed": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/active/{profile_id}": {
+      "get": {
+        "tags": [
+          "Browser"
+        ],
+        "summary": "Check if a profile's browser is currently open",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "Profile ID to check"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "true if a browser is currently running for this profile",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "/proxies": {
+      "get": {
+        "tags": [
+          "Proxy"
+        ],
+        "summary": "Get proxies",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/parameters/sort"
+          },
+          {
+            "$ref": "#/parameters/sort_type"
+          },
+          {
+            "$ref": "#/parameters/page"
+          },
+          {
+            "$ref": "#/parameters/pageSize"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/Proxies"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Proxy"
+        ],
+        "summary": "Add a new proxy",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BProxy"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/Proxies"
+            }
+          }
+        }
+      }
+    },
+    "/proxies/{proxyId}": {
+      "parameters": [
+        {
+          "name": "proxyId",
+          "in": "path",
+          "description": "ID of proxy to delete",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Proxy"
+        ],
+        "summary": "Get a proxy by id",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/LProxy"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Proxy"
+        ],
+        "summary": "Update an existing proxy",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BProxy"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/LProxy"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Proxy"
+        ],
+        "summary": "Deletes a proxy",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          }
+        }
+      }
+    },
+    "/profiles": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Get all profiles",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/parameters/sort"
+          },
+          {
+            "$ref": "#/parameters/sort_type"
+          },
+          {
+            "$ref": "#/parameters/page"
+          },
+          {
+            "$ref": "#/parameters/pageSize"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/Profiles"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Add a new profile",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CProfile"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/Profile"
+            }
+          }
+        }
+      }
+    },
+    "/profiles/{profileId}/clone": {
+      "post": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Add a new profile base on select profile",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "profileId",
+            "in": "path",
+            "description": "ID of profile to Clone",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CloneProfile"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/Profile"
+            }
+          }
+        }
+      }
+    },
+    "/profiles/{profileId}": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Get a profile by id",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "profileId",
+            "in": "path",
+            "description": "ID of profile",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/Profile"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Deletes a profile",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "profileId",
+            "in": "path",
+            "description": "ID of profile to delete",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "deleteData",
+            "in": "query",
+            "description": "Pass 'y' to delete profile data folder. Other, not",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          }
+        }
+      }
+    },
+    "/profiles/{profileId}/name": {
+      "put": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Update name an existing profile",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "profileId",
+            "in": "path",
+            "description": "ID of profile",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "new name of profile"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/Profile"
+            }
+          }
+        }
+      }
+    },
+    "/profiles/{profileId}/status": {
+      "put": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Update status of an existing profile",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "profileId",
+            "in": "path",
+            "description": "ID of profile",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "description": "new status of profile. Value can be a valid color (ex. red, blue, ...), or Hex color (#00ffff)"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "number",
+                  "description": "ID of profile"
+                },
+                "status": {
+                  "type": "string",
+                  "description": "New status of profile"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profiles/{profileId}/disable-proxy": {
+      "put": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Update disable proxy status of profile",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "profileId",
+            "in": "path",
+            "description": "ID of profile",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "disabled": {
+                  "type": "boolean",
+                  "description": "disable or not: true/false"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          }
+        }
+      }
+    },
+    "/profiles/tags": {
+      "put": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Update tags of an existing profile",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "tags": {
+                  "type": "array",
+                  "description": "A array of tags",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "ids": {
+                  "type": "array",
+                  "description": "A array of profile ids want to update",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "append": {
+                  "type": "boolean",
+                  "description": "true: Thêm tags vào cuối danh sách. false: Thay thế hoàn toàn danh sách cũ bằng danh sách mới",
+                  "default": true
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ids": {
+                  "type": "array",
+                  "description": "A array of profile ID",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profiles/{profileId}/fingerprint": {
+      "put": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Update fingerprint an existing profile",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "profileId",
+            "in": "path",
+            "description": "ID of profile",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UFingerprints"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/Profile"
+            }
+          }
+        }
+      }
+    },
+    "/profiles/proxy": {
+      "put": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Change proxy for profiles",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "proxyId": {
+                  "type": "string",
+                  "description": "target proxy id"
+                },
+                "profileIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          }
+        }
+      }
+    },
+    "/profiles/embedded-proxy": {
+      "put": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Change embedded proxy for profiles",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "proxy": {
+                  "$ref": "#/definitions/BProxy"
+                },
+                "profileIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          }
+        }
+      }
+    },
+    "/groups": {
+      "get": {
+        "tags": [
+          "Group"
+        ],
+        "summary": "Get groups",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/parameters/sort"
+          },
+          {
+            "$ref": "#/parameters/sort_type"
+          },
+          {
+            "$ref": "#/parameters/page"
+          },
+          {
+            "$ref": "#/parameters/pageSize"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/Groups"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Group"
+        ],
+        "summary": "Add a new group",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CGroup"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/RGroup"
+            }
+          }
+        }
+      }
+    },
+    "/groups/{groupId}": {
+      "parameters": [
+        {
+          "name": "groupId",
+          "in": "path",
+          "description": "ID of group to fetch",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Group"
+        ],
+        "summary": "Get a group by id",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/RGroup"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Group"
+        ],
+        "summary": "Update an existing group",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CGroup"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/RGroup"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Group"
+        ],
+        "summary": "Deletes a group",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "description": "ID of group to delete",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          }
+        }
+      }
+    },
+    "/automation/workflow/{workflowId}/start": {
+      "parameters": [
+        {
+          "name": "workflowId",
+          "in": "path",
+          "description": "ID of workflow. You can get this in Automation screen -> Copy Workflow ID",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Automation"
+        ],
+        "summary": "Start workflow",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean"
+                },
+                "taskId": {
+                  "type": "string",
+                  "description": "The ID of task created"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/automation/workflow/{workflowId}/stop": {
+      "parameters": [
+        {
+          "name": "workflowId",
+          "in": "path",
+          "description": "ID of workflow. You can get this in Automation screen -> Copy Workflow ID",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "put": {
+        "tags": [
+          "Automation"
+        ],
+        "summary": "Stop a workflow",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/automation/stop-all": {
+      "put": {
+        "tags": [
+          "Automation"
+        ],
+        "summary": "Stop all running workflow",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/referral/search": {
+      "get": {
+        "tags": [
+          "Referral"
+        ],
+        "summary": "Search referral by username or email",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "type": "string",
+            "required": true,
+            "description": "Username or email to search"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "enum": [
+              "transactions",
+              "new_invites"
+            ],
+            "description": "Optional. If not provided or invalid, search both types"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ReferralSearchResult"
+            }
+          },
+          "400": {
+            "description": "q is required"
+          }
+        }
+      }
+    },
+    "/automation/task/{id}/status": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "ID of task. (taskId returned from start api",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Automation"
+        ],
+        "summary": "Get status of a task",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "isRunning": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai-app": {
+      "get": {
+        "tags": [
+          "AI App"
+        ],
+        "summary": "List all AI Apps",
+        "description": "Requires the user to be logged in to OmniLogin. Returns the full app list with scripts, runner config, and metadata.",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AiApp"
+              }
+            }
+          },
+          "401": {
+            "description": "Not logged in"
+          }
+        }
+      }
+    },
+    "/ai-app/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "AI App ID",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "get": {
+        "tags": [
+          "AI App"
+        ],
+        "summary": "Get one AI App by id",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/AiApp"
+            }
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "404": {
+            "description": "AI App not found"
+          }
+        }
+      }
+    },
+    "/ai-app/{id}/run": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "AI App ID",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "post": {
+        "tags": [
+          "AI App"
+        ],
+        "summary": "Run an AI App",
+        "description": "Run an app in `debug` mode against a single profile (good for iterating on the script) or in `batch` mode using the app's saved runner config.",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": false,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "type": "string",
+                  "enum": [
+                    "debug",
+                    "batch"
+                  ],
+                  "description": "`debug` runs once against `profileId` (or `app.profileId`). Anything else runs the saved batch (`runBatch`)."
+                },
+                "profileId": {
+                  "type": "number",
+                  "description": "Profile to run against in `debug` mode. Falls back to `app.profileId` if omitted."
+                },
+                "inputValues": {
+                  "type": "object",
+                  "description": "Values for the app's declared input parameters."
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ok": {
+                  "type": "boolean"
+                },
+                "error": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Profile ID is required for debug mode"
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "404": {
+            "description": "AI App or profile not found"
+          }
+        }
+      }
+    },
+    "/ai-app/{id}/stop": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "AI App ID. Currently the runner is process-global, so any app id is accepted; the call stops whatever is running.",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "put": {
+        "tags": [
+          "AI App"
+        ],
+        "summary": "Stop the currently running AI App",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not logged in"
+          }
+        }
+      }
+    },
+    "/ipv6/rotate/{proxyId}": {
+      "get": {
+        "tags": [
+          "IPv6"
+        ],
+        "summary": "Rotate the outgoing IPv6 address bound to a saved IPv6 proxy",
+        "description": "Triggers IPv6 rotation for the given proxy. Only works for proxies whose host is on the local IPv6 pool managed by OmniLogin.",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "proxyId",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "ID of the IPv6-pool proxy to rotate."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the literal string \"OK\".",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "400": {
+            "description": "Proxy ID is required"
+          },
+          "500": {
+            "description": "Failed to rotate IPv6 proxy"
+          }
+        }
+      }
+    },
+    "/mcp": {
+      "post": {
+        "tags": [
+          "MCP"
+        ],
+        "summary": "MCP server endpoint (Streamable HTTP transport)",
+        "description": "JSON-RPC 2.0 endpoint implementing the [Model Context Protocol](https://modelcontextprotocol.io). Used by external AI agents (Claude Code, Claude Desktop, Cursor, Windsurf, Codex, Antigravity) to drive OmniLogin: list/create profiles, launch browsers, automate pages, etc. Authenticated by the same session check as the rest of the API. Tool surface can be narrowed via `?categories=cat1,cat2` (cat names: profile, group, proxy, browser, automation, ipv6, navigate, interact, read, input, tab, context, wait, evaluate, omni, page).",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "categories",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "Comma-separated category allowlist for `tools/list`. Omit to expose all tools."
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "description": "JSON-RPC 2.0 request (or batch). Methods: `initialize`, `ping`, `tools/list`, `tools/call`.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "jsonrpc": {
+                  "type": "string",
+                  "example": "2.0"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "method": {
+                  "type": "string"
+                },
+                "params": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON-RPC 2.0 response (or batch).",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "jsonrpc": {
+                  "type": "string",
+                  "example": "2.0"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "result": {
+                  "type": "object"
+                },
+                "error": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Accepted (no response payload, e.g. for notifications)."
+          },
+          "400": {
+            "description": "Parse error"
+          },
+          "403": {
+            "description": "Unauthorized"
+          },
+          "405": {
+            "description": "Method not allowed (use POST)"
+          }
+        }
+      }
+    }
+  },
+  "parameters": {
+    "sort": {
+      "name": "sort",
+      "description": "",
+      "in": "query",
+      "type": "string",
+      "enum": [
+        "name",
+        "date_created",
+        "date_updated"
+      ]
+    },
+    "sort_type": {
+      "name": "sort_type",
+      "description": "",
+      "in": "query",
+      "type": "string",
+      "enum": [
+        "desc",
+        "asc"
+      ]
+    },
+    "page": {
+      "name": "page",
+      "in": "query",
+      "type": "number"
+    },
+    "pageSize": {
+      "name": "pageSize",
+      "in": "query",
+      "type": "number"
+    }
+  },
+  "definitions": {
+    "Base": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "Pageable": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "type": "number"
+        },
+        "pageSize": {
+          "type": "number"
+        },
+        "total": {
+          "type": "number"
+        }
+      }
+    },
+    "Proxies": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/Base"
+        },
+        {
+          "$ref": "#/definitions/Pageable"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "docs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/LProxy"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Profiles": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/Base"
+        },
+        {
+          "$ref": "#/definitions/Pageable"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "docs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Profile"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Groups": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/Base"
+        },
+        {
+          "$ref": "#/definitions/Pageable"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "docs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/LGroup"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ReferralSearchResult": {
+      "type": "object",
+      "properties": {
+        "has_user": {
+          "type": "boolean",
+          "description": "true if at least one of transactions or new_invites has data"
+        },
+        "transactions": {
+          "type": "object",
+          "description": "Present when type=transactions or type not provided. null if no match",
+          "properties": {
+            "referred_user": {
+              "type": "string"
+            },
+            "referred_email": {
+              "type": "string"
+            },
+            "transaction_id": {
+              "type": "string"
+            },
+            "transaction_amount": {
+              "type": "number"
+            },
+            "balance": {
+              "type": "number"
+            },
+            "withdrawal_method": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "date_created": {
+              "type": "string"
+            }
+          }
+        },
+        "new_invites": {
+          "type": "object",
+          "description": "Present when type=new_invites or type not provided. null if no match",
+          "properties": {
+            "email": {
+              "type": "string"
+            },
+            "createdAt": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "BProxy": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "proxy_type": {
+          "type": "string",
+          "enum": [
+            "HTTPS",
+            "HTTP",
+            "Socks5"
+          ]
+        },
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "type": "number"
+        },
+        "user_name": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "LProxy": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BProxy"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number",
+              "example": "1"
+            },
+            "profile_number": {
+              "type": "number"
+            }
+          }
+        }
+      ]
+    },
+    "Proxy": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BProxy"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "number",
+              "example": "1"
+            },
+            "profile_number": {
+              "type": "number"
+            }
+          }
+        }
+      ]
+    },
+    "CGroup": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "RGroup": {
+      "type": "object",
+      "properties": {
+        "group_id": {
+          "type": "number",
+          "example": "1"
+        },
+        "name": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "ownerId": {
+          "type": "string"
+        }
+      }
+    },
+    "LGroup": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "number",
+          "example": "1"
+        },
+        "name": {
+          "type": "string"
+        },
+        "profile_number": {
+          "type": "number"
+        },
+        "date_created": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "user_role": {
+          "type": "string"
+        }
+      }
+    },
+    "Account": {
+      "type": "object",
+      "properties": {
+        "notes": {
+          "type": "string"
+        },
+        "cookie": {
+          "type": "string"
+        },
+        "userDataType": {
+          "type": "string",
+          "enum": [
+            "automatic",
+            "manual"
+          ]
+        },
+        "userData": {
+          "type": "string"
+        }
+      }
+    },
+    "WebGLMetadata": {
+      "type": "object",
+      "properties": {
+        "vendor": {
+          "type": "string",
+          "example": "Google Inc."
+        },
+        "renderer": {
+          "type": "string",
+          "example": "ANGLE (NVIDIA, NVIDIA GeForce GTX 650 Direct3D11 vs_5_0 ps_5_0, D3D11-27.21.14.5671)"
+        }
+      }
+    },
+    "BFingerprints": {
+      "type": "object",
+      "properties": {
+        "timezone": {
+          "type": "boolean",
+          "example": false,
+          "description": "true: Generate corresponding timezone based on IP. otherwise, use tzValue as timezone"
+        },
+        "tzValue": {
+          "type": "string",
+          "example": "Pacific/Honolulu",
+          "description": "Apply when timezone=false. Name of timezone. Leave it empty string if you want to use local timezone"
+        },
+        "web_rtc": {
+          "type": "string",
+          "enum": [
+            "automatic",
+            "manual",
+            "real",
+            "disabled"
+          ],
+          "description": "Web RTC options:\n * `automatic` - WebRTC enabled. Public IP will be replaced by proxy IP and Local IP will be masked\n * `manual` - WebRTC enabled. Public IP will be replaced by IP which you entered and Local IP will be masked\n * `real` - WebRTC enabled. Your real IP address will be used\n * `disabled` - WebRTC is closed. Websites will detect that you close the WebRTC\n"
+        },
+        "public_ip": {
+          "type": "string",
+          "description": "Required when web_rtc=manual. Otherwise it should be null",
+          "example": "192.0.2.1"
+        },
+        "screen_resolution": {
+          "type": "string",
+          "example": "Default select is empty. Can be a string like 800x600 or random"
+        },
+        "fonts": {
+          "type": "string",
+          "example": "SystemDefault",
+          "enum": [
+            "SystemDefault",
+            "Custom"
+          ],
+          "description": "SystemDefault or Custom. Use system fonts or We will random a custom font list for you"
+        },
+        "canvas": {
+          "type": "string",
+          "enum": [
+            "Noise",
+            "DeepNoise",
+            "Close"
+          ]
+        },
+        "web_gl_type": {
+          "type": "string",
+          "enum": [
+            "Custom",
+            "Close"
+          ]
+        },
+        "web_gl_image_type": {
+          "type": "string",
+          "enum": [
+            "Noise",
+            "Close"
+          ]
+        },
+        "audio_context": {
+          "type": "string",
+          "enum": [
+            "Noise",
+            "Close"
+          ]
+        },
+        "client_rects": {
+          "type": "string",
+          "enum": [
+            "Noise",
+            "Close"
+          ]
+        },
+        "lang": {
+          "type": "string",
+          "example": "Empty string (''), 'auto', or 'en-US,en,es-US,st'. Notes: 'random' is not allow from this version"
+        },
+        "device_memory": {
+          "type": "number",
+          "enum": [
+            1,
+            2,
+            4,
+            8
+          ],
+          "description": "navigator.deviceMemory value (GB). One of 1, 2, 4, 8."
+        },
+        "user_agent": {
+          "type": "string",
+          "description": "Custom user-agent string. Defaults to empty (auto)."
+        }
+      }
+    },
+    "Fingerprints": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BFingerprints"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "omni_browser_version": {
+              "type": "string",
+              "example": "32",
+              "description": "Default: Latest version.  Example: 28 | 31 | 32"
+            },
+            "browser_version": {
+              "type": "string",
+              "example": "random | 102.0.4952.0",
+              "description": "Random or a specific value"
+            },
+            "operating_system": {
+              "type": "string",
+              "enum": [
+                "window",
+                "mac",
+                "linux",
+                "android",
+                "custom",
+                "iphone"
+              ]
+            },
+            "browser_type": {
+              "type": "string",
+              "enum": [
+                "chrome",
+                "edge"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "CFingerprints": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BFingerprints"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operating_system": {
+              "type": "string",
+              "enum": [
+                "window",
+                "mac",
+                "linux",
+                "android",
+                "iphone",
+                "custom"
+              ]
+            },
+            "browser_type": {
+              "type": "string",
+              "enum": [
+                "chrome",
+                "edge"
+              ],
+              "example": "chrome",
+              "description": "can be chrome/edge"
+            },
+            "user_agent": {
+              "type": "string",
+              "required": false,
+              "example": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0"
+            },
+            "omni_browser_version": {
+              "type": "string",
+              "required": "false",
+              "example": "60"
+            }
+          }
+        }
+      ]
+    },
+    "UFingerprints": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BFingerprints"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "omni_browser_version": {
+              "type": "string",
+              "example": "32",
+              "description": "Example: 28 | 31 | 32"
+            },
+            "operating_system": {
+              "type": "string",
+              "enum": [
+                "window",
+                "mac",
+                "linux",
+                "android",
+                "custom",
+                "iphone"
+              ]
+            },
+            "browser_type": {
+              "type": "string",
+              "enum": [
+                "chrome",
+                "edge"
+              ],
+              "description": "Browser type: chrome or edge"
+            }
+          }
+        }
+      ]
+    },
+    "CloneProfile": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "example": "TK1"
+        },
+        "account": {
+          "$ref": "#/definitions/Account"
+        },
+        "embedded_proxy": {
+          "$ref": "#/definitions/BProxy"
+        },
+        "idProxy": {
+          "type": "number"
+        }
+      }
+    },
+    "CProfile": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "example": "TK1"
+        },
+        "account": {
+          "$ref": "#/definitions/Account"
+        },
+        "fingerprints": {
+          "$ref": "#/definitions/CFingerprints"
+        },
+        "embedded_proxy": {
+          "$ref": "#/definitions/BProxy"
+        },
+        "idProxy": {
+          "type": "number"
+        },
+        "dest_url": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "example": [
+            "https://whoer.net/"
+          ]
+        },
+        "group": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "Profile": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "number",
+          "example": "1"
+        },
+        "name": {
+          "type": "string",
+          "example": "Tài khoản VN - Nam Le"
+        },
+        "account": {
+          "$ref": "#/definitions/Account"
+        },
+        "fingerprints": {
+          "$ref": "#/definitions/Fingerprints"
+        },
+        "dest_url": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "example": [
+            "https://whoer.net/"
+          ]
+        },
+        "group": {
+          "$ref": "#/definitions/LGroup"
+        },
+        "date_created": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "date_updated": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "last_visit": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "proxy": {
+          "$ref": "#/definitions/Proxy"
+        },
+        "embedded_proxy": {
+          "$ref": "#/definitions/Proxy"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "AiAppRunnerConfig": {
+      "type": "object",
+      "properties": {
+        "runMode": {
+          "type": "string",
+          "enum": [
+            "each",
+            "batch"
+          ]
+        },
+        "profilesBy": {
+          "type": "string",
+          "enum": [
+            "list",
+            "group",
+            "tag"
+          ]
+        },
+        "profiles": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "group": {
+          "type": "number"
+        },
+        "tags": {
+          "type": "string"
+        },
+        "randomProfileOrder": {
+          "type": "boolean"
+        },
+        "arrangeBy": {
+          "type": "string",
+          "enum": [
+            "default",
+            "shift",
+            "fullscreen",
+            "noArrange"
+          ]
+        },
+        "screenSize": {
+          "type": "string"
+        },
+        "fixedScaleFactor": {
+          "type": "number"
+        },
+        "maxProfileConcurrent": {
+          "type": "number"
+        },
+        "timeSleepProfile": {
+          "type": "number"
+        },
+        "maxTimesToRunProfileInMin": {
+          "type": "number"
+        },
+        "repeatEnabled": {
+          "type": "boolean"
+        },
+        "repeat": {
+          "type": "number"
+        },
+        "repeatTimeSleep": {
+          "type": "number"
+        },
+        "headless": {
+          "type": "boolean"
+        },
+        "additionalArgs": {
+          "type": "string"
+        }
+      }
+    },
+    "AiApp": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "script": {
+          "type": "string",
+          "description": "Deno-compatible TypeScript script the app runs."
+        },
+        "uiCode": {
+          "type": "string",
+          "description": "Optional renderer UI code for the app's input panel."
+        },
+        "profileId": {
+          "type": "number",
+          "description": "Default profile used in debug mode. May be null if the app is intended for batch only."
+        },
+        "provider": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "apiKey": {
+          "type": "string"
+        },
+        "telegramToken": {
+          "type": "string"
+        },
+        "telegramChatId": {
+          "type": "string"
+        },
+        "runnerConfig": {
+          "$ref": "#/definitions/AiAppRunnerConfig"
+        },
+        "inputValues": {
+          "type": "object",
+          "description": "Default values for the app's declared input parameters."
+        },
+        "createdAt": {
+          "type": "number",
+          "format": "int64"
+        },
+        "updatedAt": {
+          "type": "number",
+          "format": "int64"
+        }
+      }
+    }
+  }
+}

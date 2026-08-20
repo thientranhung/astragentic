@@ -1,0 +1,4 @@
+interface:
+  display_name: "OmniLogin Agent Browser"
+  short_description: "Open OmniLogin profiles for CDP automation"
+  default_prompt: "Use $omnilogin-agent-browser to open my OmniLogin profile and automate the requested website."
