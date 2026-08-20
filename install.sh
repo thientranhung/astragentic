@@ -146,6 +146,16 @@ cleanup() { [ ! -d "$STAGING_DIR" ] || rm -rf "$STAGING_DIR"; }
 trap cleanup EXIT
 
 cp -R "$PAYLOAD" "$STAGING_DIR/harness"
+# Ship only what the package considers itself. `.opencode/.gitignore` names node_modules,
+# package.json, package-lock.json and bun.lock as local residue — this package does not track
+# them, and `cp -R` shipped them anyway: 3,645 of 3,712 payload files and 61 MB PER RELEASE.
+# Measured on one adapted project: 2.3 GB under `.astraler/`. It stayed out of that project's
+# git only because its .gitignore happened to carry `node_modules/`; a project without that
+# line commits 61 MB per upgrade into a history ADAPT-HARNESS itself warns cannot be trimmed
+# without a rewrite. A packager shipping what its own ignore rules exclude is the defect.
+while IFS= read -r RESIDUE; do
+  [ -n "$RESIDUE" ] && rm -rf "$STAGING_DIR/harness/.opencode/$RESIDUE"
+done < "$PAYLOAD/.opencode/.gitignore"
 cp "$ADAPT_PROMPT"                    "$STAGING_DIR/ADAPT-HARNESS.md"
 cp "$HARNESS_ROOT/README.md"          "$STAGING_DIR/README.md"
 cp "$RELEASE_NOTES"                   "$STAGING_DIR/RELEASE-NOTES.md"

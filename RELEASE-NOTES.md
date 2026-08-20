@@ -1,3 +1,39 @@
+# Astragentic 2.3.26
+
+The packager shipped 61 MB per release of files its own ignore rules exclude.
+
+## What changed
+
+- **`install.sh` no longer stages `.opencode/` residue.** `harness/.opencode/.gitignore` names
+  `node_modules`, `package.json`, `package-lock.json` and `bun.lock` as local residue — this
+  package does not track them, and `cp -R` shipped them anyway. The staging step now reads that
+  ignore file and drops exactly what it names, so the rule has one home and a future addition
+  to it needs no change here.
+
+## Measured
+
+**3,645 of 3,712 payload files were `node_modules`** — 98% of the payload, 61 MB per release.
+One adapted project carried **2.3 GB** under `.astraler/`.
+
+It stayed out of that project's git only because its `.gitignore` happened to carry
+`node_modules/`. A project without that line commits 61 MB per upgrade into the history
+`ADAPT-HARNESS` §4 itself warns *"cannot be trimmed without a rewrite"* — so this package was
+the thing producing the megabytes its own prompt warns about.
+
+Reported by an adapted project as a cosmetic packaging nit. It was neither.
+
+## Not a bug — the version banner
+
+The same report flagged `check-requirements.sh` printing `2.3.23` while shipping in 2.3.25.
+That is the documented behaviour of the VENDORED copy: it reports the version the project has
+APPLIED, which during an adaptation is still the previous one. Left alone.
+
+## Upgrade from 2.3.25
+
+Copy entire `harness/` directory — subject to step 4's `DIFFERS` listing. No payload file
+changes; `install.sh` does. Existing `.astraler/releases/*/harness/.opencode/node_modules`
+can be deleted; nothing reads them.
+
 # Astragentic 2.3.25
 
 A project can author a file at a path the payload only starts shipping later. Nothing was
