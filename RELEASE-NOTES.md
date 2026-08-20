@@ -1,3 +1,40 @@
+# Astragentic 2.3.23
+
+Axis 4 was scoped by a variable that means `harness` upstream and `.` downstream. Downstream it
+scanned the whole repository.
+
+## What changed
+
+- **Axis 4 runs in package layout only (AST-126)**, and prints *skipped* rather than *clean*, so
+  a run that made no claim does not look like one that made a claim and passed.
+- Measured downstream before the fix: **4,443 findings**, including the project's own lessons
+  file — whose documented purpose is to cite real tickets permanently — its `AGENTS.md`, design
+  docs and JSON test fixtures. The audit would have exited 1 forever on every adapted project.
+- Break-tested in both layouts: a simulated adapted project skips the axis cleanly; upstream
+  still catches a planted ticket id.
+
+## The obvious repair was also wrong
+
+Narrowing to `$PAYLOAD/{.agents,.claude,scripts}` looks right and still fails —
+`.agents/memory/project-lessons.md` exists precisely to cite real ticket ids, and
+`.agents/orchestrator.md` is owner-tuned. The legitimate names live inside the narrowed scope.
+
+The right question was not "where should this look" but **"does this question apply here at
+all."** Whether the scaffold has absorbed one project's identity is a maintainer's question
+about the package. An adapted project names its own tickets legitimately, everywhere.
+
+## The pattern
+
+The release that shipped this cited AST-113 by name and described catching that exact defect in
+the same axis one draft earlier. It was caught in package layout and shipped broken in the
+layout it was written for. **A payload check must be exercised in BOTH layouts** — `PAYLOAD` is
+the one variable whose meaning changes between them, and three scope defects in three
+consecutive releases have all hidden behind it.
+
+## Upgrade from 2.3.22
+
+Copy entire `harness/` directory. One script changes.
+
 # Astragentic 2.3.22
 
 The alert for AST-124's failure already existed, and was suppressed by the exact state that

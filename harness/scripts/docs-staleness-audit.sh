@@ -343,6 +343,21 @@ echo "=== 4. payload names no real project, ticket or host ==="
 # one day. Only the generic example series is allowed. Project and host names cannot be
 # enumerated from up here, so those stay a human rule stated in the entry (AST-123).
 A7=0
+# PACKAGE LAYOUT ONLY. This axis asks whether the SCAFFOLD has absorbed one project's
+# identity — a maintainer question. An adapted project names its own tickets legitimately and
+# everywhere, including inside the payload directories: `.agents/memory/project-lessons.md`
+# exists precisely to cite them permanently, and `.agents/orchestrator.md` is owner-tuned.
+#
+# Shipped without this guard, the axis scoped on the bare $PAYLOAD, which is `harness` here and
+# `.` in an adapted project — so downstream it walked the entire repository: 4,443 findings,
+# and exit 1 forever (AST-126). Narrowing to $PAYLOAD/{.agents,.claude,scripts} was the obvious
+# repair and was still wrong, because the legitimate ticket ids live inside those directories.
+# The axis does not belong downstream at all.
+#
+# Skipped is not clean: say which, so a reader knows this run made no claim.
+if [[ "$PAYLOAD" != "harness" ]]; then
+  echo "(skipped — this axis is about the scaffold, and an adapted project names its own tickets)"
+else
 # SHAPE, not "any uppercase token with a dash". The first draft matched SHA-1, BSD-3, AFL-2 and
 # UTF-8, walked node_modules, and matched its own pattern string — 19 findings, every one noise,
 # which is AST-113 reproduced inside the release that cites it. Three letters and two digits is
@@ -352,11 +367,19 @@ while IFS= read -r hit; do
   [[ -n "$hit" ]] || continue
   echo "  ${hit#$ROOT/} — payload must not name a real ticket (AST-123)"
   A7=1; FOUND=1
-done < <( { grep -rnoE '\b[A-Z]{3,5}-[0-9]{2,}\b' "$PAYLOAD" \
+# SCOPE BY SUBDIRECTORY, never by $PAYLOAD alone. In package layout $PAYLOAD is `harness`;
+# in an ADAPTED PROJECT it is `.` — the repo root — so a bare $PAYLOAD grep walks the whole
+# project. Measured downstream: 4,443 findings, including the project's own lessons file whose
+# documented purpose is to cite real tickets permanently, its AGENTS.md, its design docs and
+# its JSON test fixtures. The axis would have exited 1 forever on every adapted project
+# (AST-126). Axis 3 already scoped this way; axis 4 shipped without it.
+done < <( { grep -rnoE '\b[A-Z]{3,5}-[0-9]{2,}\b' \
+              "$PAYLOAD/.agents" "$PAYLOAD/.claude" "$PAYLOAD/scripts" \
               --include='*.md' --include='*.sh' --include='*.json' \
               --exclude-dir=node_modules --exclude='docs-staleness-audit.sh' 2>/dev/null || true; } \
           | grep -vE "$ALLOW" )
 [[ $A7 -eq 1 ]] || echo "(clean)"
+fi
 
 echo
 [[ $FOUND -eq 1 ]] && echo "RESULT: findings above — verify each against code/truth-model before editing." || echo "RESULT: all clean."

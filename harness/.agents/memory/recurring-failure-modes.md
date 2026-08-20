@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 124 entries (AST-001 … AST-125, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 125 entries (AST-001 … AST-126, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -3189,4 +3189,40 @@ The general form, and it is the fourth variant of scope in this ledger: **an ale
 scoped by the subject it describes, not by the state of whoever would receive it.**
 
 Bound: scripts/herdr-watchdog.sh, thomas.md.
+
+### AST-126 — The check was scoped by a variable that means two different things · promoted 2026-08-20
+
+Axis 4 was added to keep the scaffold free of any one project's identity. It grepped
+`"$PAYLOAD"`. Upstream `PAYLOAD=harness`, so it passed every test run here.
+
+In an adapted project `PAYLOAD="."` — the repository root. Downstream it walked the entire
+project: **4,443 findings**, including the project's own lessons file (whose documented purpose
+is to cite real tickets permanently), its `AGENTS.md`, its design docs and its JSON test
+fixtures. `docs-staleness-audit.sh` would have exited 1 forever on every adapted project, and
+the operator's remedy would have been a local edit that never travels back (AST-116).
+
+The release that shipped it **cited AST-113 by name** — a check that fires on everything is a
+check nobody reads — and described catching that exact defect in the same axis, one draft
+earlier. It was caught in package layout and shipped broken in the layout it was written for.
+
+**The obvious repair was also wrong.** Narrowing to `$PAYLOAD/{.agents,.claude,scripts}` looks
+correct and still fails: `.agents/memory/project-lessons.md` exists precisely to cite real
+ticket ids, and `.agents/orchestrator.md` is owner-tuned. The legitimate names live INSIDE the
+narrowed scope.
+
+The right question was not "where should this look" but **"does this question apply here at
+all"** — and it does not. Whether the scaffold has absorbed one project's identity is a
+maintainer's question about the package. An adapted project names its own tickets legitimately,
+everywhere, including in payload directories. The axis now runs in package layout only and
+prints *skipped* rather than *clean*, because a run that made no claim must not look like a run
+that made one and passed.
+
+**A payload check must be exercised in BOTH layouts.** `PAYLOAD` is the one variable whose
+meaning changes between them, so it is the one every scope bug hides behind — three scope
+defects in three consecutive releases, all of them here.
+
+Found downstream by running the shipped axis against a real adapted project, which is the only
+place the second meaning exists.
+
+Bound: scripts/docs-staleness-audit.sh (axis 4).
 
