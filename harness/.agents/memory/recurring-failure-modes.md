@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 122 entries (AST-001 … AST-123, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 123 entries (AST-001 … AST-124, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -3091,4 +3091,59 @@ reproduced inside the release that cites it** — scoping a new check is where t
 every time. Three letters and two digits is the ticket shape; break-tested with a planted id.
 
 Bound: scripts/docs-staleness-audit.sh (axis 4), and a sweep of the whole payload.
+
+### AST-124 — The watcher covers one turn; the protocol never said who covers the next one · promoted 2026-08-20
+
+Two dispatched Builders ran unwatched for an extended stretch, one advancing four commits.
+**The project owner noticed before the dispatcher did**, from the absence of notifications on
+his own screen.
+
+Nothing malfunctioned. `herdr-watch-terminal.sh` watches ONE newly-submitted turn and exits
+correctly when that turn reaches terminal. The gap is between the parts:
+
+```
+send brief → arm watcher → work → handback → watcher exits (all correct)
+  → long absorbing task the contract itself mandates (gate worktree, arm pass 5-15 min,
+    read report, write fold)
+  → send the fold as a NEW turn → no watcher, because the old one ended correctly
+    and nothing re-arms it
+```
+
+Six trips through the identical gap in one session. **It generalises to every dispatched role**
+— a Shaper's spec gates, a Builder's ticket gates, a reviewer classifying findings, a QA
+deciding what its walk found. The contract prescribes the gates and prescribes the watch, and
+never connects them. More gates means more of this gap.
+
+**An unwatched pane and a quiet healthy pane produce identical evidence: nothing.** This
+ledger's most-repeated shape, landing on the dispatcher instead of on a check. A Builder that
+parks on `blocked` mid-gap parks indefinitely.
+
+**The first proposed fix was rejected by the owner, and that rejection is the finding.** The
+proposal was "arm the watcher in the same action as sending the message" — still a rule that
+depends on remembering it, which is exactly what had just failed. **A firmer promise is not a
+repair for a discipline failure.**
+
+The structural answer already existed and was opt-in: `herdr-watchdog.sh` alerts on `BLOCKED`
+independently of any per-turn watcher. Nine hours of dispatch, six gate passes and three
+concurrent Builders ran with it off, and **nothing anywhere reported its absence** — because a
+watchdog that was never started manifests as no alerts, which is what a healthy session looks
+like too. It sat as a `nohup` line under a heading reading "safety net", with no step that
+starts it and no check that notices it missing. **A safety net nobody is required to hang is
+one that is usually not hanging.**
+
+Fix, in two places because one would not have held: `dispatch-ticket` now **gates** on the
+watchdog before the first dispatch — the one moment the question can be asked, since its
+absence is invisible everywhere else — and states that every NEW turn needs a NEW watcher, at
+the point where the fold is sent rather than only where the first brief is.
+
+**Coverage, stated rather than assumed**: the watchdog's `STUCK` rule requires that no pane is
+working, so an active dispatcher suppresses it — a Builder finishing while the dispatcher is
+busy still pings nothing. The per-turn watcher and the watchdog cover different halves. With
+the watchdog up, a missed re-arm costs latency; without it, silence. Anyone who starts it and
+assumes full coverage has traded one invisible gap for another.
+
+Raised by a human owner, not by a check — and the sharpest correction in it was the owner
+rejecting the dispatcher's own first fix.
+
+Bound: dispatch-ticket/SKILL.md (both variants), thomas.md.
 

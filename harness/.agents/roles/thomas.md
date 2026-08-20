@@ -179,17 +179,16 @@ measured zero entries across a harness generation (AST-069).
 
 ## Watchdog — safety net
 
-Hooks (`.claude/settings.json`) are **intended** to auto-kill brokers and containers
-(AST-100, AST-101) and log builder crashes, but field testing showed `WorktreeRemove` does
-not fire (confirmed by A/B with control). The current reading is that it is not broken but
-unreached: the event hangs off the `EnterWorktree`/`ExitWorktree` tool path, while you remove
-worktrees with plain `git worktree remove` in Bash — no harness stands between the command
-and git, so there is no event to fire (AST-102). **Manual broker/container cleanup on every
-worktree removal remains required on all runtimes**, and the hook now logs to
-`/tmp/harness-hook-events.log` so "did it fire" is a question you can answer by reading a
-file instead of running an A/B.
+**The watchdog is REQUIRED, not optional — `dispatch-ticket` refuses to dispatch without it.**
+A per-turn watcher covers one turn and exits; every later turn needs a new one, and the miss is
+invisible because an unwatched pane and a quiet healthy one both emit nothing (AST-124). Its
+`STUCK` rule needs no pane working, so an active you suppresses it: it converts a missed re-arm
+from silence into latency, and replaces nothing.
 
-The watchdog covers THOMAS_CRASHED detection and non-Claude runtime anomalies.
+The `WorktreeRemove` hook is **confirmed dormant** — a dated negative against a 27-event
+`SubagentStop` control (AST-102). **Manual broker/container cleanup on every worktree removal
+stays required on all runtimes.** The hook logs to `/tmp/harness-hook-events.log`, so the day
+it wakes is a file you can read.
 
 ```bash
 nohup scripts/herdr-watchdog.sh 300 900 6 &   # interval, cooldown, max-alerts/hr

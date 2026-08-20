@@ -1,3 +1,46 @@
+# Astragentic 2.3.21
+
+A watcher covers one turn. The protocol never said who covers the next one.
+
+## What changed
+
+- **`dispatch-ticket` now gates on the watchdog (AST-124)**: a dispatch with no
+  `herdr-watchdog.sh` running is not permitted. It is checked at the first dispatch because
+  that is the one moment the question can be asked — a watchdog that was never started
+  manifests as no alerts, which is what a healthy session looks like too.
+- **Every NEW turn gets a NEW watcher**, stated where the fold is sent rather than only where
+  the first brief is. Sending work and arming the watch are one action, not two adjacent ones.
+- **`thomas.md`** now says the watchdog is required rather than a "safety net", and states what
+  it does not cover.
+
+## What happened
+
+Two Builders ran unwatched for an extended stretch, one advancing four commits. The owner
+noticed before the dispatcher did, from the absence of notifications on his own screen. Nothing
+malfunctioned: the watcher watches one submitted turn and exits correctly. The gap is what comes
+after — a long absorbing task the contract itself mandates, then a fold sent as a new turn with
+nothing to re-arm the watch. Six trips through the identical gap in one session, and it
+generalises to every dispatched role.
+
+## The rejected fix is the finding
+
+The first proposal was "arm the watcher in the same action as sending the message." The owner
+rejected it: still a rule that depends on remembering it, which is exactly what had just failed.
+**A firmer promise is not a repair for a discipline failure.**
+
+Nine hours of dispatch ran with the watchdog off and nothing reported its absence. **A safety
+net nobody is required to hang is one that is usually not hanging.**
+
+## Coverage, stated rather than assumed
+
+The watchdog's `STUCK` rule requires that no pane is working, so an active dispatcher suppresses
+it — a Builder finishing while the dispatcher is busy still pings nothing. The two mechanisms
+cover different halves. With the watchdog up a missed re-arm costs latency; without it, silence.
+
+## Upgrade from 2.3.20
+
+Copy entire `harness/` directory. One skill and one role contract change.
+
 # Astragentic 2.3.20
 
 The scaffold had accumulated the identity of whoever last measured a lesson. Swept, and the

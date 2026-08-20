@@ -96,6 +96,36 @@ path, and both Thomas's AND the Builder's test suites went red on a conflict nei
 caused. The arm already does this correctly: each pass gets its own detached worktree. Apply
 the same rule to any command that writes to disk.
 
+## The watchdog must be RUNNING before the first dispatch
+
+```bash
+pgrep -f 'herdr-watchdog.sh' >/dev/null \
+  || echo "STOP: watchdog is not running — start it before dispatching"
+```
+
+**A dispatch with no watchdog is not permitted.** Start it if it is not up (`thomas.md`
+§Watchdog has the invocation), then dispatch.
+
+The reason this is a gate rather than advice: a watcher covers ONE submitted turn and exits
+correctly when that turn ends. Every later turn — a fold after a gate, an answer to a blocked
+Builder, more work on the same pane — needs a new watcher, and the moment it gets skipped is
+after a long absorbing task the contract itself mandates. Measured: two Builders ran unwatched
+for an extended stretch, one advancing four commits, across six trips through the identical gap
+in one session. **The owner noticed before the dispatcher did, from the absence of
+notifications on his own screen** (AST-124).
+
+**An unwatched pane and a quiet healthy pane produce identical evidence: nothing.** With the
+watchdog up, forgetting to re-arm costs latency; without it, forgetting costs silence.
+
+**And it is checked HERE because its absence is invisible everywhere else** — a watchdog that
+was never started manifests as no alerts, which is exactly what a healthy session looks like.
+The one moment the question can be asked is the moment the first pane starts working.
+
+**Coverage, stated so nobody starts it and assumes the rest is covered**: the watchdog's
+`STUCK` rule requires that NO pane is working, so an active Thomas suppresses it — a Builder
+that finishes while Thomas is busy still pings nothing. The per-turn watcher and the watchdog
+cover different halves. Neither replaces the other.
+
 ## The payload must be COMMITTED before the first dispatch
 
 **A git worktree contains tracked content and nothing else.** So a harness whose files are
@@ -327,6 +357,17 @@ the likeliest cause, and the fix is to send Enter again.
 ### Start the watcher — mandatory, immediately after submit
 
 **Every dispatched pane gets a watcher. No exceptions, no hand-rolled loops.**
+
+**And every NEW turn gets a NEW watcher — not just the first brief.** The watcher watches one
+submitted turn and exits when that turn reaches terminal, correctly. A fold sent after a gate,
+an answer to a blocked Builder, any further work on the same pane: each is a new turn, each
+needs a new watcher, and nothing re-arms one for you. This is the step that gets skipped,
+because it comes after a long absorbing task — building a gate worktree, running an arm pass,
+reading the report, writing the fold — and by then the previous watcher has been gone for
+fifteen minutes without having failed at anything (AST-124).
+
+**Sending work and arming the watch are one action, not two adjacent ones.** If you have typed
+a message to a pane and not armed a watcher, the dispatch is not finished.
 
 **All runtimes run the same watcher script**; they differ only in how its output reaches
 the dispatcher. Claude runtime wraps it in `Monitor` so each line arrives as a notification —
