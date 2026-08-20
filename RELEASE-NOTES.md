@@ -1,3 +1,42 @@
+# Astragentic 2.3.22
+
+The alert for AST-124's failure already existed, and was suppressed by the exact state that
+defines that failure.
+
+## What changed
+
+- **`WATCHER_LOST` and `BLOCKED` now fire while the dispatcher is working (AST-125)**. The
+  watchdog exited early whenever the dispatcher was `working` — silencing every alert for the
+  entire 5-15 minutes of a gate pass, which is the window the missed re-arm happens in. Nine
+  hours of dispatch, and the `WATCHER_LOST` check never ran once.
+- **Only `STUCK` remains gated on it**, because only `STUCK` is about system liveness. `BLOCKED`
+  and `WATCHER_LOST` are facts about a dispatched pane and are true whatever the dispatcher is
+  doing.
+- **`thomas.md`'s alert table gains the missing `WATCHER_LOST` row.** The script could emit it
+  and the contract never mentioned it — an alert with no reader.
+
+## Break-tested in five directions
+
+Dispatcher busy + pane working, no watcher → fires (silent before). Dispatcher busy + pane
+blocked → fires (silent before). Dispatcher busy + pane idle → correctly silent. Dispatcher idle
++ pane idle → `STUCK`. **Pane working WITH a watcher → silent**, because a repair that makes an
+alarm ring constantly is indistinguishable from one that fixed nothing.
+
+## The general form
+
+2.3.21 answered AST-124 with a gate and a rule — both still things a person has to follow, which
+is the objection the owner had already raised against the first proposed fix, now applying to
+the second. This is the mechanical half, and it needed no new mechanism: only the removal of a
+suppression.
+
+**An alert must be scoped by the subject it describes, not by the state of whoever would receive
+it.**
+
+## Upgrade from 2.3.21
+
+Copy entire `harness/` directory. One script and one role contract change. Restart any running
+watchdog to pick it up.
+
 # Astragentic 2.3.21
 
 A watcher covers one turn. The protocol never said who covers the next one.

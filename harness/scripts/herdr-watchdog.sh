@@ -486,9 +486,17 @@ if tstatus == "idle":
     except Exception:
         pass
 
-# Thomas working = system active
-if tstatus == "working":
-    sys.exit(0)
+# Thomas working = system active. This used to exit here, silencing EVERY alert while the
+# dispatcher was busy — and "the dispatcher is busy" is precisely the window the alerts exist
+# for. Measured: a dispatcher spent 5-15 minutes per gate pass with Builders live, and the
+# WATCHER_LOST check sitting below this line never ran once in nine hours (AST-125).
+#
+# Only STUCK depends on system liveness ("nothing is working, so nothing is moving"). BLOCKED
+# and WATCHER_LOST are facts about a DISPATCHED pane and are true regardless of what the
+# dispatcher is doing — a Builder asking a question is still asking it, and a Builder running
+# with nobody watching is still unwatched. Suppressing them by the state of the dispatcher was
+# scoping an alert by the wrong subject.
+thomas_busy = (tstatus == "working")
 
 # Thomas idle/done — check dispatched panes in this workspace
 dispatched = [a for a in ws_agents
@@ -515,11 +523,11 @@ for d in dispatched:
         has_w = True
 
     if dstatus == "blocked":
-        print(f"BLOCKED|{dpane}_blocked|workspace={ws_label} thomas={tpane}(idle) {dname}={dpane}(blocked) — builder asking a question, read pane and answer")
-    elif dstatus in ("idle", "done") and not has_w and not any_working:
-        print(f"STUCK|{dpane}_stuck|workspace={ws_label} thomas={tpane}(idle) {dname}={dpane}({dstatus}) watcher=none — no pane working")
+        print(f"BLOCKED|{dpane}_blocked|workspace={ws_label} thomas={tpane}({tstatus}) {dname}={dpane}(blocked) — builder asking a question, read pane and answer")
+    elif dstatus in ("idle", "done") and not has_w and not any_working and not thomas_busy:
+        print(f"STUCK|{dpane}_stuck|workspace={ws_label} thomas={tpane}({tstatus}) {dname}={dpane}({dstatus}) watcher=none — no pane working")
     elif dstatus == "working" and not has_w:
-        print(f"WATCHER_LOST|{dpane}_wlost|workspace={ws_label} thomas={tpane}(idle) {dname}={dpane}(working) watcher=none")
+        print(f"WATCHER_LOST|{dpane}_wlost|workspace={ws_label} thomas={tpane}({tstatus}) {dname}={dpane}(working) watcher=none — re-arm the watch")
 ' 2>/dev/null
 }
 

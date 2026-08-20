@@ -201,6 +201,7 @@ PID: `/tmp/herdr-watchdog-<workspace-label>.lock`.
 | Alert | Action |
 |---|---|
 | `BLOCKED` | Pane asking a question — read, answer, restart the watch (Monitor on Claude, watcher script on Codex/OpenCode) |
+| `WATCHER_LOST` | Pane working, nobody watching — re-arm the watch now |
 | `STUCK` | No pane working — inspect, handback or re-dispatch |
 | `THOMAS_CRASHED` | Your runtime process is gone — desktop notification substitutes |
 

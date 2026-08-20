@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 123 entries (AST-001 … AST-124, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 124 entries (AST-001 … AST-125, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -3146,4 +3146,47 @@ Raised by a human owner, not by a check — and the sharpest correction in it wa
 rejecting the dispatcher's own first fix.
 
 Bound: dispatch-ticket/SKILL.md (both variants), thomas.md.
+
+### AST-125 — The alert for the failure existed, and was suppressed by the state that defines the failure · promoted 2026-08-20
+
+AST-124 recorded a dispatcher forgetting to re-arm a watcher, and fixed it with a gate and a
+rule. Both are still rules someone has to follow — which is the objection the owner had already
+raised against the first fix, applied to the second.
+
+**The mechanical answer was already in the watchdog and had been all along.** It emits
+`WATCHER_LOST` for exactly this: a dispatched pane `working` with no watcher process attached.
+It had never fired, because eleven lines above it:
+
+```python
+# Thomas working = system active
+if tstatus == "working":
+    sys.exit(0)
+```
+
+The dispatcher is `working` for the entire 5-15 minutes of a gate pass. **That is not merely a
+window where the alert was suppressed — it is the window the alert exists for**, because the
+missed re-arm happens on the far side of exactly that absorbing task. Nine hours of dispatch,
+and the check below that line never ran once.
+
+The early exit was right about one alert and wrong about the other two by inheritance. `STUCK`
+genuinely depends on system liveness: nothing working means nothing moving. `BLOCKED` and
+`WATCHER_LOST` are facts about a DISPATCHED pane — a Builder asking a question is still asking
+it, and a Builder running unwatched is still unwatched, whatever the dispatcher is doing.
+**Suppressing them by the state of the dispatcher scoped an alert by the wrong subject.**
+
+`WATCHER_LOST` was also absent from the dispatcher contract's alert table — so on the rare
+occasion it could have fired, there was no documented action for it. **An alert a script can
+emit and a contract never mentions is an alert with no reader.**
+
+Fix: the early exit becomes a flag that gates `STUCK` alone; the alert table gains its missing
+row. Break-tested on stubbed pane data across five states: dispatcher busy + pane working with
+no watcher → fires (silent before); dispatcher busy + pane blocked → fires (silent before);
+dispatcher busy + pane idle → correctly silent; dispatcher idle + pane idle → `STUCK`;
+**and pane working WITH a watcher present → silent**, because a repair that makes an alarm ring
+constantly is indistinguishable from one that fixed nothing (AST-113).
+
+The general form, and it is the fourth variant of scope in this ledger: **an alert must be
+scoped by the subject it describes, not by the state of whoever would receive it.**
+
+Bound: scripts/herdr-watchdog.sh, thomas.md.
 
