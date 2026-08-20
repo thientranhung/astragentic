@@ -55,7 +55,12 @@ integration work.
    finding**, not a detail to fill in yourself — writing one by hand produces a tracker
    pointer nothing actually configured. Report it and ask the owner.
 
-4. **Confirm the tracker is reachable** using whatever `issue-tracker.md` names, and that a
+4. **Record the tracker's ticket prefix** in the instructions this project loads at session
+   start (`AGENTS.md` or `CLAUDE.md`), beside its tracker pointer.
+   `scripts/ticket-git-facts.sh` requires it and refuses to guess. Declare it once; where the
+   project keeps both files, the other one points at it.
+
+5. **Confirm the tracker is reachable** using whatever `issue-tracker.md` names, and that a
    ticket can carry an **assignee** and **blocking edges**. Those two fields are the
    coordination substrate: assignee is the claim that keeps concurrent Builders apart, and
    blocking edges are what the frontier query reads. A tracker missing either one is a

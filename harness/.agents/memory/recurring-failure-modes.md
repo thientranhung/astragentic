@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 125 entries (AST-001 … AST-126, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 126 entries (AST-001 … AST-127, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -3226,3 +3226,22 @@ place the second meaning exists.
 
 Bound: scripts/docs-staleness-audit.sh (axis 4).
 
+### AST-127 — The runnable example contradicted the prose eight lines below it · promoted 2026-08-20
+
+`reconcile-tracker`'s copy-paste block called `scripts/ticket-git-facts.sh` with no
+`TICKET_PREFIX`, labelled **"ALWAYS this form"** — a command the script refuses. Eight lines
+down, same file: *"`TICKET_PREFIX` has no default and is required."*
+
+An adapted project reported it as ITS drift. It was ours: the bare call sites were copied from
+this skill. The variable has been required since 2.2.0, the release that introduced the script.
+
+**Fix the EXAMPLE first — the prose is the half that does not run.** Prose is read; a fenced
+block is copied. The project's own first remediation corrected the sentence and left the bare
+block six lines above it, reproducing the defect inside its own fix, because every description
+of it led with "the prose disagrees". State the finding as the example or the fix arrives half.
+
+**A required value also needs a home the agent already has open**: the project's session-start
+instructions, not a load-on-demand doc (AST-069). Declared once — a second home, whether a
+sibling doc or an `.envrc`, is this entry's own defect returning.
+
+Bound: `harness/.agents/skills/reconcile-tracker/SKILL.md` (and its `.claude/` twin).

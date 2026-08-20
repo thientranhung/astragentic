@@ -55,8 +55,8 @@ mid-flight with eleven unmerged commits was simply absent from the output. The g
 the script cannot report a ticket it was never told about.
 
 ```bash
-scripts/ticket-git-facts.sh $(<tracker ids>)      # ALWAYS this form
-scripts/ticket-git-facts.sh                       # merged tickets only — audit use, not reconcile
+TICKET_PREFIX=<prefix> scripts/ticket-git-facts.sh $(<tracker ids>)   # ALWAYS this form
+TICKET_PREFIX=<prefix> scripts/ticket-git-facts.sh                    # merged tickets only — audit use, not reconcile
 ```
 
 List the tracker with its lightest read call, and request only `id`, `status` and `assignee`
@@ -65,8 +65,9 @@ compare row by row.
 
 **`TICKET_PREFIX` has no default and is required.** A bare `[A-Z]+-[0-9]+` sweep also catches
 ADR ids, spec ids and any other kebab-tagged history the repo carries — a live project's
-first run returned a third noise on exactly this mistake. Set it to the prefix this project's
-tracker actually issues before running the script; an unset value is a STOP, not a guess.
+first run returned a third noise on exactly this mistake. Read it from this project's
+session-start instructions (`AGENTS.md` / `CLAUDE.md`), where adaptation records it; an unset
+value is a STOP, not a guess.
 
 ## Matching is by commit SUBJECT, never the body
 

@@ -1,3 +1,26 @@
+# Astragentic 2.3.24
+
+`reconcile-tracker`'s copy-paste block called `ticket-git-facts.sh` without `TICKET_PREFIX`,
+eight lines above the prose saying the variable is required.
+
+## What changed
+
+- **The runnable examples now carry the variable (AST-127)**. The old block was labelled
+  *"ALWAYS this form"* while showing a command the script refuses.
+- **The prefix has a declared home**: the project's session-start instructions (`AGENTS.md` /
+  `CLAUDE.md`), declared once, the other file pointing at it. Not `docs/agents/issue-tracker.md`,
+  which is opened on demand and so is never open when a command runs (AST-069).
+- **Adaptation records it at install time** (step 2), so an undeclared prefix surfaces then.
+- The script is unchanged and still refuses to guess.
+
+An adapted project reported this as its own drift; the bare call sites were ours. Its first
+remediation then fixed the prose and left the example — the defect reproducing inside its own
+fix. Fix the example first.
+
+## Upgrade from 2.3.23
+
+Copy entire `harness/` directory. One skill changes, at both of its paths.
+
 # Astragentic 2.3.23
 
 Axis 4 was scoped by a variable that means `harness` upstream and `.` downstream. Downstream it
