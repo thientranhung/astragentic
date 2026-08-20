@@ -1,3 +1,37 @@
+# Astragentic 2.3.25
+
+A project can author a file at a path the payload only starts shipping later. Nothing was
+looking, on either side.
+
+## What changed
+
+- **Step 4 lists every payload path whose live copy differs, with its commits, before
+  overwriting anything (AST-128).** Each `DIFFERS` line is decided and recorded in the receipt.
+  Eight paths on the project measured, all owner-tuned — its `orchestrator.md` and Codex
+  profiles, the AST-041 set nothing else watches.
+- **AST-127's causal claim is corrected in place.** It recorded that a downstream project had
+  copied our bare call sites. It had not: it wrote its own script, with its own default, and its
+  doc quoted its own code exactly. The self-contradiction 2.3.24 fixed is real and unrelated.
+
+## Why neither side could see it
+
+The project authored the file; the first payload carrying that path arrived **nine hours
+later**; a bulk adaptation replaced it the next day naming the script zero times; a second
+adaptation passed over it; the refusal came **twenty-two hours** after the replacement.
+
+Upstream measured its own releases and concluded "mandatory since 2.2.0, so the divergence was
+only in prose" — true of the payload, false of that repo. The project measured its releases
+directory and confirmed it. Neither party's evidence contained the one fact that mattered, so an
+accurate report and an accurate investigation produced the same wrong answer twice.
+
+A project-side rule cannot close this: payload path ownership grows per release, so a project
+cannot check itself against a set that does not exist yet. **The adapter is the only place both
+files exist at once.**
+
+## Upgrade from 2.3.24
+
+Copy entire `harness/` directory. No payload file changes — the adaptation prompt does.
+
 # Astragentic 2.3.24
 
 `reconcile-tracker`'s copy-paste block called `ticket-git-facts.sh` without `TICKET_PREFIX`,

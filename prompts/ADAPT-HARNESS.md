@@ -139,6 +139,30 @@ block safe integration — before you edit.
 
 ## 4. Apply
 
+**Before overwriting anything, list the payload paths the project has already written to.**
+A project can author a file at a path the payload only starts shipping later — measured: a
+project wrote its own `scripts/ticket-git-facts.sh`, the first payload carrying that path
+arrived nine hours afterwards, and a bulk adaptation the next day replaced the file with a
+version whose calling contract differed. The commit message named the script zero times, a
+second adaptation passed over it undetected, and the failure surfaced twenty-two hours later
+as a refused command. Neither side could see the collision when it was created: the project
+checked for a payload owning that path and there was none yet. **The adapter is the only place
+both files exist at once**, which makes this the only place the check can run.
+
+```bash
+CAND="$(cat .astraler/CANDIDATE)"; PAY=".astraler/releases/$CAND/harness"
+( cd "$PAY" && find . -type f ) | sed 's|^\./||' | while read -r P; do
+  [ -f "$P" ] || continue                    # new path, nothing to overwrite
+  cmp -s "$P" "$PAY/$P" && continue          # identical, nothing to say
+  echo "DIFFERS: $P"; git log --oneline -2 -- "$P"
+done
+```
+
+Every `DIFFERS` line is decided and recorded in the receipt — taken, merged or preserved. The
+list is short in practice (one measured project: eight paths, all owner-tuned — its
+`orchestrator.md` and Codex profiles, exactly the AST-041 set nothing else watches). A path
+that appears here and is copied over without a receipt line is the defect above.
+
 Integrate the smallest coherent result.
 
 1. Keep project instructions and system truth intact. Mature project docs stay; harness

@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 126 entries (AST-001 … AST-127, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 127 entries (AST-001 … AST-128, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -3232,8 +3232,12 @@ Bound: scripts/docs-staleness-audit.sh (axis 4).
 `TICKET_PREFIX`, labelled **"ALWAYS this form"** — a command the script refuses. Eight lines
 down, same file: *"`TICKET_PREFIX` has no default and is required."*
 
-An adapted project reported it as ITS drift. It was ours: the bare call sites were copied from
-this skill. The variable has been required since 2.2.0, the release that introduced the script.
+An adapted project reported it as ITS drift, and this entry first recorded the opposite — that
+the bare call sites were ours and it had copied them. **Corrected 2026-08-20: that was wrong.**
+That project had authored its own script at the same path, with its own `TRA` default; its doc
+quoted its own code and was exact. The variable has been required since 2.2.0 *in this payload*,
+which is true of the payload and says nothing about a file a project wrote itself (AST-128).
+The self-contradiction below is real and was fixed; it did not cause that incident.
 
 **Fix the EXAMPLE first — the prose is the half that does not run.** Prose is read; a fenced
 block is copied. The project's own first remediation corrected the sentence and left the bare
@@ -3245,3 +3249,27 @@ instructions, not a load-on-demand doc (AST-069). Declared once — a second hom
 sibling doc or an `.envrc`, is this entry's own defect returning.
 
 Bound: `harness/.agents/skills/reconcile-tracker/SKILL.md` (and its `.claude/` twin).
+
+### AST-128 — Only the adapter is ever standing where both files exist · promoted 2026-08-20
+
+A project authored `scripts/ticket-git-facts.sh` itself, with its own `TICKET_PREFIX:-TRA`
+default. The first payload shipping that path arrived **nine hours later**. A bulk adaptation
+the next day replaced the file with the payload's mandatory-prefix version; the commit message
+named the script **zero times**; a second adaptation passed over it undetected; the failure
+surfaced **twenty-two hours** after the replacement as a refused command.
+
+Both sides then reasoned correctly from what they could see and reached opposite conclusions.
+Upstream measured its own releases — "mandatory since 2.2.0, so the divergence existed only in
+prose" — true of the payload, false of that repo. The project measured its releases directory
+and confirmed it. **Neither party's evidence contained the fact that the project had authored
+the file first**, so an accurate report and an accurate investigation produced a wrong shared
+answer, twice, and the first fix was aimed at the wrong defect.
+
+**Nor could a rule have prevented it from either end.** "Check whether a payload already ships
+this path before authoring here" returns clean at the moment it matters: payload path ownership
+is not a published stable set, it grows per release, and a project cannot check itself against a
+set that does not exist yet. **The adapter is the only place both files exist at once.** Step 4
+now lists every payload path whose live copy differs, with its commits, before overwriting
+anything — eight paths on the project measured, all owner-tuned.
+
+Bound: `prompts/ADAPT-HARNESS.md` (step 4).
