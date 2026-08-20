@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 120 entries (AST-001 … AST-121, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 121 entries (AST-001 … AST-122, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -3010,4 +3010,52 @@ answer to a direct question is the one thing in this entire ledger that no check
 the cheapest thing to accidentally tax out of existence.
 
 Bound: dispatch-ticket/SKILL.md (both variants), builder.md.
+
+### AST-122 — Existence is not relationship: a verified pointer that proves nothing about what it points at · promoted 2026-08-20
+
+AST-121 shipped a retraction token with a verification that felt sufficient: the SHA named by
+`Supersedes:` must be a real marker in range. The release notes even named the attack it was
+guarding — "an unverified `Supersedes:` line is a way to balance the arithmetic by writing one
+more line."
+
+It was verified, and it still balanced the arithmetic. Demonstrated on throwaway repos by the
+reviewer who was asked to try: two fabricated markers X and Y, then one marker Z that genuinely
+ran the pass on unrelated work, citing `Supersedes: X` and `Supersedes: Y`.
+
+```
+markers=3  wellformed=1 (Z)  superseded=2 (X and Y, both verified present)   3 == 1 + 2  →  green
+```
+
+**"Points at a real marker" and "replaces what this pass actually redid" are different claims,
+and the check only made the first.** One genuine pass could clear an unbounded number of
+unrelated fabrications. The guard was written against exactly this shape and stopped one level
+short of it — verifying the pointer's target exists rather than the relationship it asserts.
+
+Closed by two rules that need no new data: **at most one `Supersedes:` per marker**, and **a
+marker that supersedes must itself be well-formed**. Together they force every fabricated
+marker to cost its own genuine pass, which is the whole economy. Break-tested on five fixtures:
+honest retraction green, the reviewer's two-citation attack red, a chained-fabrication evasion
+red, no-markers red, plain healthy green.
+
+**Residual, named rather than papered over**: markers carry no increment identity — the subject
+is free prose — so nothing proves the superseding pass covers the same increment as the marker
+it retracts. The counts remain a filter, not a verdict.
+
+Two things learned building it, both worth more than the rule:
+
+**Logic that needs bash 4 is logic that silently passes on macOS.** The first implementation
+used `declare -A` and `mapfile`. macOS ships bash 3.2, where both fail — and the observed
+failure was `markers=0`, which this check reports as GREEN. A checker that reads nothing and
+says nothing is wrong is the exact defect this ledger is mostly about, and it would have shipped
+to every macOS operator. That is why it is now a script running python3, like
+`check-reachability.sh`, rather than inline shell.
+
+**The testbed produced a vacuous pass twice before it produced a result.** First it forgot to
+tag the base, so the range was empty and every case reported green. Then its fixtures omitted
+the blank line git needs to split subject from body, so `%b` was empty and every case reported
+red — which briefly looked like a defect in the harness's own documented commit form. Checking
+that before reporting it is the only reason a second wrong attribution did not ship the same day
+as AST-120's. **A test fixture is code, and it fails in the same ways as the thing it tests.**
+
+Bound: scripts/check-simplify-markers.sh, dispatch-ticket/SKILL.md (both variants).
 

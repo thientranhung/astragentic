@@ -1,3 +1,49 @@
+# Astragentic 2.3.19
+
+2.3.18's retraction token was verified and still launderable. Found by the reviewer who was
+asked to attack it.
+
+## What changed
+
+- **`scripts/check-simplify-markers.sh`** replaces the inline marker arithmetic. Exit 0 green,
+  exit 1 with one `STOP:` line per reason.
+- **Two rules close the laundering hole (AST-122)**: at most one `Supersedes:` per marker, and a
+  marker that supersedes must itself be well-formed. Together they force every fabricated marker
+  to cost its own genuine pass.
+- **Break-tested on five fixtures** before shipping: honest retraction green, the reviewer's
+  two-citation attack red, a chained-fabrication evasion red, no markers red, plain healthy
+  green.
+
+## The hole
+
+2.3.18 verified that the SHA named by `Supersedes:` was a real marker in range — and named the
+attack it was guarding against. It still balanced: two fabricated markers plus one genuine pass
+citing both gives `3 == 1 + 2`, green. **"Points at a real marker" and "replaces what this pass
+actually redid" are different claims, and only the first was checked.** The guard was written
+against exactly this shape and stopped one level short of it.
+
+## Residual, not closed
+
+Markers carry no increment identity — the subject is free prose. Nothing proves the superseding
+pass covers the same increment as the marker it retracts. The counts are a filter, not a verdict.
+
+## Two things learned building it
+
+**Logic that needs bash 4 silently passes on macOS.** The first implementation used `declare -A`
+and `mapfile`; macOS ships bash 3.2, where both fail — and the observed failure was `markers=0`,
+which this check reports as GREEN. It would have shipped to every macOS operator. Hence a script
+running python3, like `check-reachability.sh`.
+
+**A test fixture is code, and fails the same ways as the thing it tests.** The testbed produced
+a vacuous pass twice before producing a result — once from an untagged base, once from fixtures
+missing the blank line git needs to split subject from body, which briefly looked like a defect
+in the harness's own documented commit form. Checking that before reporting it is the only
+reason a second wrong attribution did not ship the same day as the first.
+
+## Upgrade from 2.3.18
+
+Copy entire `harness/` directory. One new script; one skill changes.
+
 # Astragentic 2.3.18
 
 The marker check had no way to express being obeyed, so two honest Builders registered as

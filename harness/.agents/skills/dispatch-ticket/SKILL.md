@@ -578,36 +578,45 @@ echo "markers=$MARKERS wellformed=$WELLFORMED"
 
 Zero markers — **STOP** (AST-094). Send the Builder back to run simplify.
 
-**A marker may be superseded, and that is a GREEN state, not a shortfall.** Two measured cases
-produce `markers > wellformed` honestly: a Builder that published a correction commit declaring
-its own earlier `Pass:` line false, and a Builder that committed a truthful record that no pass
-had run before later running one for real. Both are the check WORKING — a substitute caught and
-declared — and both read as the check failing (AST-121).
+**A marker may be superseded, and that is a GREEN state, not a shortfall.**
 
-So a later marker may name the one it replaces:
+Run the checker rather than the arithmetic:
+
+```bash
+<repo-root>/scripts/check-simplify-markers.sh <base> [head]
+```
+
+Exit 0 is green. Exit 1 prints every reason, one `STOP:` line each. It replaces the inline
+counting above, which could not express what follows.
+
+Two measured cases produce `markers > wellformed` honestly: a Builder that published a
+correction commit declaring its own earlier `Pass:` line false, and a Builder that committed a
+truthful record that no pass had run before later running one for real. Both are the check
+WORKING — a substitute caught and declared — and both read as the check failing (AST-121). So a
+later marker may name the one it replaces:
 
 ```
 Supersedes: <sha of the marker this replaces>
 ```
 
-```bash
-SUPERSEDES=$(git log <base>..HEAD --grep '^simplify(increment):' --format='%b' \
-  | sed -n 's/^Supersedes: \([0-9a-f]\{7,40\}\).*/\1/p')
-# Every named SHA must itself be a marker in range, or the token launders substitutes.
-for sha in $SUPERSEDES; do
-  git log <base>..HEAD --grep '^simplify(increment):' --format='%H' | grep -q "^$sha" \
-    || echo "UNPAIRED: Supersedes names $sha, which is not a marker in this range"
-done
-SUPERSEDED=$(printf '%s\n' $SUPERSEDES | grep -c . || true)
-```
+**Four rules, and the attack each one closes** (AST-122):
 
-**Green is `markers == wellformed + superseded`, with every named SHA verified present.**
-Anything else — **STOP** (AST-099): some commits carry the simplify subject without the skill's
-provenance and without a declared replacement.
+1. **At most one `Supersedes:` per marker.** Without it, one genuine pass launders an unbounded
+   number of fabricated markers by listing their SHAs.
+2. **A marker that supersedes must itself be well-formed.** Without it, rule 1 is evaded by
+   chaining fabricated markers, each superseding the last.
+3. **The named SHA must be a marker IN RANGE**, named by only one marker.
+4. **Green: every LIVE marker — one nothing supersedes — is well-formed.**
 
-**Verify the pairing, never just the count.** An unverified `Supersedes:` line is a way to
-balance the arithmetic by writing one more line, which is precisely the substitute this check
-exists to catch, wearing the retraction's clothes.
+**Existence is not relationship.** The first version of this verified only that the named SHA
+was a real marker, and a genuine pass could clear any number of unrelated fabrications by
+citing them. "Points at a real marker" and "replaces what this pass actually redid" are
+different claims; only the first is cheap to check.
+
+**Residual, stated because it is not closed**: markers carry no increment identity — the
+subject is free prose. Nothing proves the superseding pass covers the SAME increment as the
+marker it retracts, so a Builder with two increments can still retract one using the other's
+real pass. **The counts are a filter, not a verdict — read the bodies.**
 
 **The reason this is a mechanism and not a documented exception**: an exception leaves honest
 retraction costing a failing count plus a paragraph of merge-commit prose every time, while a
