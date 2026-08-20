@@ -121,6 +121,19 @@ pane reads `done`, worktree is clean, branch is pushed, and Thomas's merge check
 it (AST-094). Same shape as AST-092 (work written but not committed) — a step that does not
 self-check is a step that can be silently skipped.
 
+**If a marker you already committed is wrong, retract it in the open — do not amend.** Commit
+a new marker carrying the real pass plus a line naming the one it replaces:
+
+```
+Supersedes: <sha of the marker being retracted>
+```
+
+That is a green state on Thomas's side, not a shortfall, and it is deliberately cheaper than
+rewriting history. Measured: two Builders found a false or absent `Pass:` line on their own
+branch and both published the correction rather than hiding it — one had written a line
+describing a process it never ran. **The record showing you were wrong is worth more than a
+record that looks clean**, and this token exists so that stays true (AST-121).
+
 Then return to Thomas: the branch, the final SHA, which acceptance criteria pass, the
 exact validation commands and their output, the `simplify(increment):` marker, the browser
 evidence for any surface you changed (or the named skip), and anything you reported rather than

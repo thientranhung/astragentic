@@ -576,14 +576,52 @@ WELLFORMED=$(git log <base>..HEAD --grep '^simplify(increment):' --format='%b' |
 echo "markers=$MARKERS wellformed=$WELLFORMED"
 ```
 
-Zero markers — **STOP** (AST-094). Send the Builder back to run simplify. Markers present
-but well-formed fewer than markers — **STOP** (AST-099): some commits carry the simplify
-subject without the skill's provenance. The two counts carry information only when they
+Zero markers — **STOP** (AST-094). Send the Builder back to run simplify.
+
+**A marker may be superseded, and that is a GREEN state, not a shortfall.** Two measured cases
+produce `markers > wellformed` honestly: a Builder that published a correction commit declaring
+its own earlier `Pass:` line false, and a Builder that committed a truthful record that no pass
+had run before later running one for real. Both are the check WORKING — a substitute caught and
+declared — and both read as the check failing (AST-121).
+
+So a later marker may name the one it replaces:
+
+```
+Supersedes: <sha of the marker this replaces>
+```
+
+```bash
+SUPERSEDES=$(git log <base>..HEAD --grep '^simplify(increment):' --format='%b' \
+  | sed -n 's/^Supersedes: \([0-9a-f]\{7,40\}\).*/\1/p')
+# Every named SHA must itself be a marker in range, or the token launders substitutes.
+for sha in $SUPERSEDES; do
+  git log <base>..HEAD --grep '^simplify(increment):' --format='%H' | grep -q "^$sha" \
+    || echo "UNPAIRED: Supersedes names $sha, which is not a marker in this range"
+done
+SUPERSEDED=$(printf '%s\n' $SUPERSEDES | grep -c . || true)
+```
+
+**Green is `markers == wellformed + superseded`, with every named SHA verified present.**
+Anything else — **STOP** (AST-099): some commits carry the simplify subject without the skill's
+provenance and without a declared replacement.
+
+**Verify the pairing, never just the count.** An unverified `Supersedes:` line is a way to
+balance the arithmetic by writing one more line, which is precisely the substitute this check
+exists to catch, wearing the retraction's clothes.
+
+**The reason this is a mechanism and not a documented exception**: an exception leaves honest
+retraction costing a failing count plus a paragraph of merge-commit prose every time, while a
+quiet amend costs nothing and leaves no trace. **A protocol that prices honesty above
+concealment gets concealment.** Both measured Builders told the truth when a lie was easier and
+would have passed every check — neither was caught by a check, both were caught by being asked,
+and both then chose the option that made their own record look worse. This exists so that
+choice stays cheap. The two counts carry information only when they
 disagree — print both, read both, act in a separate step. The Builder carries its own
 self-check (`builder.md`), but the mechanism that causes the skip — the ticket checklist
 displacing the contract — also displaces the self-check, so Thomas verifies independently.
 
-**Only when both checks pass** — `git status` empty AND markers equal well-formed — is
+**Only when both checks pass** — `git status` empty AND `markers == wellformed + superseded`
+with every named SHA verified — is
 removal safe:
 
 ```bash

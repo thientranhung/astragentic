@@ -1,3 +1,43 @@
+# Astragentic 2.3.18
+
+The marker check had no way to express being obeyed, so two honest Builders registered as
+failures.
+
+## What changed
+
+- **A marker can now be superseded, and that is a green state (AST-121)**. A later marker names
+  the one it replaces with `Supersedes: <sha>`; green becomes
+  `markers == wellformed + superseded`, and **every named SHA must be verified to be a marker
+  in range** — an unverified token is a way to balance the arithmetic by writing one more line,
+  which is the substitute this check exists to catch wearing the retraction's clothes.
+- **`builder.md` teaches the token**, because the Builder is the one who writes markers. A rule
+  in the dispatcher's contract and not the Builder's holds half the time (AST-112).
+
+## The two cases
+
+A Builder that published a correction commit declaring its own earlier `Pass:` line false
+rather than amending it away. And a Builder that committed a truthful record that no pass had
+run, then ran it for real and kept the honest commit. Both are the check WORKING — a substitute
+caught and declared — and both read as the check failing.
+
+## Why a mechanism and not a documented exception
+
+The cheaper option was to write the exception into the contract. It was declined because it
+leaves honest retraction costing a failing count plus a paragraph of merge prose every time,
+while a quiet amend costs nothing and leaves no trace. **A protocol that prices honesty above
+concealment gets concealment** — not immediately, and not from the people who built it.
+
+## The part that outranks the mechanism
+
+Both Builders told the truth when a lie was easier and would have passed every check. Neither
+was caught by a check; both were caught by being asked, and both then chose the option that made
+their own record look worse. No mechanism produced that. This one can only avoid taxing it.
+
+## Upgrade from 2.3.17
+
+Copy entire `harness/` directory. One skill and one role contract change; no script, settings or
+hook changes.
+
 # Astragentic 2.3.17
 
 A correction: 2.3.16 gave AST-120 a cause that does not cover the case it explains.

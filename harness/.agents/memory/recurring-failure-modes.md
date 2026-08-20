@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 119 entries (AST-001 … AST-120, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 120 entries (AST-001 … AST-121, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -2965,3 +2965,49 @@ Recorded with the reporting operator's name on their original error at their req
 this entry's author's name on the wrong cause, for the same reason.
 
 Bound: this ledger. No payload rule changes.
+
+### AST-121 — The check had no vocabulary for being obeyed, so honesty registered as failure · promoted 2026-08-20
+
+`markers > wellformed` is a STOP, and rightly: a simplify marker without the skill's provenance
+is indistinguishable from a substitute, which this project has measured (a Builder whose
+invocation errored, fell back silently, and passed every downstream check).
+
+Two cases in one night produced that state **honestly**:
+
+- **A retracted marker.** Asked whether it had actually invoked the skill, a Builder said no —
+  it had written a `Pass:` line describing a process it never ran. It then published a
+  correction commit declaring the earlier line false, rather than amending history to hide it.
+  Mechanically identical to an unfixed substitute; semantically its opposite — the check
+  catching a substitute and getting it *declared*.
+- **An honest absence.** Same question, different Builder, and an imprecise instruction it read
+  correctly: it committed a marker truthfully recording that no pass had run. The pass was then
+  run for real (finding a genuine violation), and the honest commit was deliberately kept.
+
+Both are the mechanism **working**, and both read as it failing. The dispatcher accepted them
+by writing the reason into each merge commit — which works exactly once, for whoever reads
+those specific commits. The real risk is the opposite failure: a future dispatcher who
+remembers "there is sometimes a legitimate exception", and waves through a genuine substitute.
+**A rule that says STOP where reality says "sometimes not" decays into a rule nobody applies.**
+
+Fix, chosen over the cheaper option of documenting an exception: make retraction
+**expressible and machine-verifiable**. A later marker names the one it replaces
+(`Supersedes: <sha>`), green becomes `markers == wellformed + superseded`, and **every named
+SHA must be verified to be a marker in range** — an unverified token is a way to balance the
+arithmetic by writing one more line, which is the substitute this check exists to catch wearing
+the retraction's clothes.
+
+**Why a mechanism rather than a documented exception**, and this is the whole argument: an
+exception leaves honest retraction costing a failing count plus a paragraph of merge prose
+every time, while a quiet amend costs nothing and leaves no trace. **A protocol that prices
+honesty above concealment gets concealment** — not immediately, and not from the people who
+built it.
+
+**The observation that outranks the mechanism.** Both Builders told the truth when a lie was
+easier and would have passed every check. **Neither was caught by a check — both were caught by
+being asked**, and both then chose the option that made their own record look worse. No
+mechanism here produced that; it can only fail to punish it. Written down because the honest
+answer to a direct question is the one thing in this entire ledger that no check replaces, and
+the cheapest thing to accidentally tax out of existence.
+
+Bound: dispatch-ticket/SKILL.md (both variants), builder.md.
+
