@@ -264,7 +264,7 @@ Worktree: … · Branch: … · Base: …
 Acceptance criteria: …
 Owner intent: …
 Validation: …
-Owned elsewhere: TRA-38 owns docs/…/WIRE-CONTRACT.md — do not edit it; report what you
+Owned elsewhere: TRA-127 owns docs/…/WIRE-CONTRACT.md — do not edit it; report what you
 would have changed.
 Source of truth: the codebase, not this ticket — verify every claim against the actual code.
 ```
@@ -371,7 +371,7 @@ concluding finished: check TWO sources for active background work:
    which names shells and monitors the runtime itself tracks (ScheduleWakeup, Monitor).
    These are invisible to `pgrep`.
 
-The two sources can disagree: measured on nizzy-ecom, `pgrep` returned 0 while the pane
+The two sources can disagree: measured in the field, `pgrep` returned 0 while the pane
 status line read "1 shell, 1 monitor still running" — the builder had called ScheduleWakeup,
 the call failed, and it parked waiting for a notification that would never arrive. Trusting
 `pgrep` alone would have read STUCK; the status line read PARKED; the truth was

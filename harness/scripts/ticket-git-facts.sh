@@ -17,7 +17,7 @@
 # grep returning commits that only cited a ticket in a handback; subject-only
 # matching returned exactly the genuine set. This relies on a real, consistent
 # convention in the commit history — the ticket id appears in the subject line,
-# e.g. `feat(scope): summary (TRA-176)` or `docs(TRA-159): handback`.
+# e.g. `feat(scope): summary (TRA-124)` or `docs(TRA-130): handback`.
 #
 # THE KEY IS STILL NOT EXACT, WHICH IS WHY NOTHING HERE WRITES. A commit naming
 # a ticket is not proof the ticket is complete — a partial fix, a revert, or a
@@ -27,7 +27,7 @@
 #
 # Usage:
 #   TICKET_PREFIX=TRA scripts/ticket-git-facts.sh              # every ticket named on base
-#   TICKET_PREFIX=TRA scripts/ticket-git-facts.sh TRA-159 TRA-84  # only these
+#   TICKET_PREFIX=TRA scripts/ticket-git-facts.sh TRA-130 TRA-126  # only these
 #
 # Output: TSV with a header. Columns:
 #   ticket            the id

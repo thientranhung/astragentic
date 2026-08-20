@@ -1,3 +1,42 @@
+# Astragentic 2.3.20
+
+The scaffold had accumulated the identity of whoever last measured a lesson. Swept, and the
+mechanically checkable half is now a check.
+
+## What changed
+
+- **Whole-payload sweep (AST-123)**: one project's name removed from 18 places, five real ticket
+  ids from a single day's field reports, a container name, and a package path. The measurements
+  stay in full — only the identity goes. "Measured in the field: 5 instances, 3 Builder
+  sessions" carries everything the named version carried, for every reader who is not that
+  project.
+- **`docs-staleness-audit.sh` axis 4** forbids ticket-shaped tokens in the payload outside the
+  ledger's own ids and a generic example series. Break-tested with a planted id.
+- Project and host names cannot be enumerated from upstream, so those stay a human rule: **when
+  a lesson names its source, keep the numbers and drop the name.**
+
+## Why it is not just tidiness
+
+A real ticket id in the payload is a name a downstream checker can trip on, and the remedy an
+operator reaches for is a local exclusion — AST-116, a fix that never travels back, bought
+again. A container name from one project's compose file, cited in a lesson, invites adding it to
+a shared exclusion list whose own comment warns that a long list means the check has stopped
+discriminating.
+
+The precedent existed: an earlier release genericised a single ticket id for exactly this
+reason. It did not survive a day of live field reports, where naming the source felt like rigour.
+
+## The new axis got its own scope wrong first
+
+The first draft matched `SHA-1`, `BSD-3`, `AFL-2` and `UTF-8`, walked `node_modules`, and
+matched its own pattern string — 19 findings, all noise. That is AST-113 reproduced inside the
+release that cites it. Scoping a new check is where that failure lives, every time.
+
+## Upgrade from 2.3.19
+
+Copy entire `harness/` directory. Ledger, one script, and prose throughout; no contract, settings
+or hook changes.
+
 # Astragentic 2.3.19
 
 2.3.18's retraction token was verified and still launderable. Found by the reviewer who was

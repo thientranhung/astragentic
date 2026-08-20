@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 121 entries (AST-001 … AST-122, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 122 entries (AST-001 … AST-123, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -1737,7 +1737,7 @@ arm. `herdr-watchdog.sh` classified a dispatched pane by matching its terminal t
 Claude runtime overwrites its own pane's terminal title after launch and does not honor a
 rename that predates it. Measured live, on this exact machine, on the real pane the finding
 named: a genuine Builder dispatch, `herdr agent start "builder-tra-180"`, its title correctly
-set to `builder:TRA-180` at rename time — then rewritten by the runtime to a bare `builder`,
+set to `builder:TRA-123` at rename time — then rewritten by the runtime to a bare `builder`,
 no colon, no ticket id. `is_dispatched()` never matched it. The pane never entered
 `dispatched`; the watchdog polled, heartbeat and all, and could never fire `BLOCKED`, `STUCK`
 or `WATCHER_LOST` for it — running normally while structurally unable to detect the one thing
@@ -1872,7 +1872,7 @@ Bound: `check-requirements.sh`.
 
 ### AST-089 — A fork-fallback inside `simplify` read as a substitute because only the `Pass:` line's wording changed · promoted 2026-08-18
 
-Found by an adapted project's Thomas verifying a `simplify(increment):` commit on TRA-189 (a
+Found by an adapted project's Thomas verifying a `simplify(increment):` commit on one ticket (a
 guard blocking role-string comparison in a dashboard), dispatched through a real Herdr pane.
 `Skill(skill: "simplify")` tried to fan out into four parallel review corners and failed inside
 its own execution — `Fork is not available inside a forked worker`, on every nested fork
@@ -1944,7 +1944,7 @@ Bound: install.sh.
 
 ### AST-092 — Builder stops after writing code but before committing — pane reads done, cleanup deletes the work · promoted 2026-08-18
 
-Measured by nizzy-ecom Thomas: 5 instances, 3 different Builder sessions, runtime claude,
+Measured in the field: 5 instances, 3 different Builder sessions, runtime claude,
 dispatched via herdr pane. Each time the Builder wrote substantial work (93-433 lines),
 pane status settled to `done` or `idle`, watcher returned `TERMINAL:done`, but `git status`
 on the worktree showed uncommitted changes.
@@ -2000,13 +2000,13 @@ Bound: install.sh.
 
 ### AST-094 — Builder commits and pushes correctly but silently skips the simplify pass · promoted 2026-08-18
 
-Measured by nizzy-ecom Thomas on 2.2.21: two tickets dispatched in parallel (TRA-198,
-TRA-192), both Builders committed, pushed, returned with clean worktrees and pane status
+Measured in the field on 2.2.21: two tickets dispatched in parallel (two tickets,
+a second), both Builders committed, pushed, returned with clean worktrees and pane status
 `done` — but `git log main..HEAD --grep '^simplify(increment):'` returned zero on both.
 The AST-092 fix (commit/push/return as three explicit actions) worked as designed; what
 disappeared was the simplify pass that sits BEFORE those actions in the phase table.
 
-For comparison: two tickets dispatched immediately before (TRA-185, TRA-186), same project,
+For comparison: two tickets dispatched immediately before, same project,
 same orchestrator row, same runtime/model, each carried 3-4 simplify markers with correct
 `Pass:` lines. The 2.2.20 release that added the strong handback template is the only
 contract change between the two pairs.
@@ -2017,9 +2017,9 @@ step. RETRACTED by Thomas after asking both Builders directly. Neither mentioned
 **Actual mechanism, from two independent Builder depositions:** the ticket's acceptance
 criteria substituted for the role contract's definition of done. Both Builders had read the
 contract's three-phase table at session start. At session end, both looked at the ticket's
-acceptance checklist and the green test suite. Builder TRA-198: "a ticket that is itself
+acceptance checklist and the green test suite. One Builder: "a ticket that is itself
 well-specified is exactly the case where I skip the step that isn't in the ticket, because
-the ticket already felt authoritative." Builder TRA-192: "I let the ticket's acceptance list
+the ticket already felt authoritative." Another Builder: "I let the ticket's acceptance list
 ... stand in as the complete definition of finished."
 
 **This correlates with well-specified tickets, not careless ones.** The better the ticket's
@@ -2143,7 +2143,7 @@ artifact verification.
 **The reference point is the last instruction, not the initial dispatch.** The difference
 matters only from the second instruction onward — every fold-finding steer, every nudge —
 which is exactly when it is most expensive: pass 1 has already blocked, someone is waiting
-for the fix, and "done + commits present" reads as finished. Measured on nizzy-ecom: a
+for the fix, and "done + commits present" reads as finished. Measured in the field: a
 Builder received a fold instruction, crashed on `529 Overloaded` before doing anything,
 pane read `done`, and the branch carried two commits from the FIRST instruction. The
 original "no commits since dispatch" rule said proceed. Only comparing against the last
@@ -2152,7 +2152,7 @@ instruction's SHA caught that zero new work had landed.
 Four meanings of `done`: finished, PARKED (background work running), STUCK (no commits),
 CRASHED (turn died mid-flight, error visible on screen).
 
-**Fifth variant: PARKED-permanently.** Measured on nizzy-ecom: Builder called ScheduleWakeup,
+**Fifth variant: PARKED-permanently.** Measured in the field: Builder called ScheduleWakeup,
 received `Error: prompt is required when stop is not true`, then said "I'll pause here and
 wait for the notification to arrive." The scheduling call failed; the notification will never
 come; the builder is committed to waiting forever. Pane status line: "1 shell, 1 monitor
@@ -2171,11 +2171,11 @@ requiring both. Fixed in builder-claude.md: a failed scheduling call must not le
 parking — read the result directly instead. Disagreement between the two sources is itself a
 signal: read the pane.
 
-**The two-source gate caught on its first use (TRA-170).** `pgrep` returned 0, pane status
+**The two-source gate caught on its first use.** `pgrep` returned 0, pane status
 bar read "1 shell" — disagreement. 5 dirty files including detail.go, dynamic.go,
 queries.sql. Without the command-name fix (2.2.34, `agent get` → `agent read`), both sources
 would have returned "nothing" and Thomas would have concluded STUCK. Second case same night
-(TRA-207): same shape, unrelated ticket, independent builder. Two on two makes this a
+A second, later: same shape, unrelated ticket, independent builder. Two on two makes this a
 pattern, not an incident: builders naturally background long-running gates and park.
 
 Fixed in builder-claude.md (2.2.35): run gates in the foreground. Do not background a
@@ -2220,7 +2220,7 @@ The builder's self-report is the current defence, and it worked here. That is wo
 as a fact, not as a guarantee.
 
 **Frequency update (inception, one session):** three builders on three unrelated tickets
-(TRA-179, TRA-201, TRA-181) all hit fork-narration in the same night. All three named it,
+all hit fork-narration in the same night. All three named it,
 fell back to running the four corners directly, and said so in the marker body — AST-089
 fallback working exactly as designed, three out of three. When the fallback is the default
 path rather than the exception, the degraded `Pass:` line suffix (`ran four corners directly`)
@@ -2230,7 +2230,7 @@ Bound: builder-claude.md (AST-089 fallback rule).
 
 ### AST-099 — Simplify marker exists without skill provenance — the subject is self-applied, only the Pass: line reveals the substitution · promoted 2026-08-19
 
-Measured by nizzy-ecom Thomas on TRA-171: four `simplify(increment):` commits, only one with
+Measured in the field: four `simplify(increment):` commits, only one with
 a well-formed `Pass: Skill(skill: "simplify")` line. Builder's own deposition, unprompted:
 
   "9fa99ae7 and f79c2729 — I did not invoke Skill(skill: \"simplify\") for either. In both
@@ -2243,13 +2243,13 @@ a well-formed `Pass: Skill(skill: "simplify")` line. Builder's own deposition, u
    diff was two files ... and the session's forks had twice overstepped their reviewer-only
    brief. That was a deliberate, stated deviation, not an oversight."
 
-**Full-session count (nizzy-ecom, 14 merges, retroactive git count by Thomas):**
+**Full-session count (one project, 14 merges, retroactive git count by Thomas):**
 `markers=42  wellformed=36` — six markers without provenance, across four tickets, from at
 least three different Builders:
 
-  TRA-171  4/1 · TRA-199  3/2 · TRA-197  1/0 · TRA-189  4/3
+  ticket A  4/1 · ticket B  3/2 · ticket C  1/0 · ticket D  4/3
 
-The original report named TRA-171 alone because that was the case Thomas had just caught.
+The original report named ticket A alone because that was the case Thomas had just caught.
 The remaining three were found by running the same count over every merge of the session.
 At 1-in-9 this reads as one Builder's slip; at 6-in-42 across four tickets and three Builders
 it is a pattern in how Builders relate to the skill — which is what this entry exists to
@@ -2267,7 +2267,7 @@ from the sanctioned tool.
 **Thomas's own failure is the other half.** He printed `markers=4 wellformed=1` and merged in
 the same command without reading the second count. The measurement ran, produced its answer,
 appeared on screen, and was not read. A measurement performed but not read is worse than one
-not performed — it leaves the feeling of having checked. Thomas recorded this as PROJ-003
+not performed — it leaves the feeling of having checked. Thomas recorded this in the project's own ledger
 with a mechanical rule: never compute a gate value and act on it in the same command.
 
 Fixed by upgrading dispatch-ticket Check 2 to count BOTH subjects and well-formed `Pass:`
@@ -2281,7 +2281,7 @@ tool has to either lie (write the line without running the skill) or omit it (wr
 subject without the line). Every measured instance chose omission, which is the honest path
 and the one the count catches.
 
-**The mirror exists too: provenance without a marker.** Measured on inception TRA-181: the
+**The mirror exists too: provenance without a marker.** Measured on another project: the
 Builder did real simplify work, wrote a correct `Pass: Skill(skill: "simplify")` line, then
 folded it into the `feat(core):` commit instead of a separate `simplify(increment):` commit.
 Check 2 reports `markers=0 wellformed=0` — both counts agree, and agreement means no finding
@@ -2300,7 +2300,7 @@ process bound to the gate worktree via `--cwd`. When the arm finishes and remove
 worktree, the broker keeps running — holding a cwd that no longer exists on disk.
 
 Measured on a live machine: **92 orphaned broker processes** across two projects (66 from
-etsy-fulfillment-thanh, 27 from workspace-app-inception), consuming ~405 MB RSS total. The
+one project, 27 from another), consuming ~405 MB RSS total. The
 count of 64+27 orphans matched the approximate number of arm passes fired that session. No
 log, metric, or monitor reported it — the owner noticed machine lag hours later from an
 unrelated session, which is the worst detector available.
@@ -2386,7 +2386,7 @@ a clean verdict on an empty review. The mandatory gate becomes a check that cann
 AST-032 recurring on the newest mechanism.
 
 Measured twice in two days on the same project. Both caught by the operator, not the gate.
-The first (PROJ-005): unquoted focus text caused a shell parse error, the arm command never
+The first (one project's own ledger): unquoted focus text caused a shell parse error, the arm command never
 started, and a deadline-less wait sat 15h51m on a file that never appeared. The second: arm
 fired from main checkout, `cd` did not persist between Bash calls, `--base main` vs HEAD
 (also main) = 0 commits = clean.
@@ -2405,7 +2405,7 @@ Bound: codex-arm/SKILL.md, codex-claude-arm/SKILL.md (both `.agents/` and `.clau
 
 `herdr agent start` validates agent names against `[a-z0-9_-]` — no uppercase. The dispatch
 convention `builder-<ticket-id>` passes the ticket ID as-is, and ticket IDs are uppercase
-by convention (`TRA-169`). Every dispatch produces an invalid agent name on the first attempt.
+by convention (`TRA-123`). Every dispatch produces an invalid agent name on the first attempt.
 
 The dispatch skill documented the `:` restriction (pane label vs agent name) but not the
 case restriction. One failed launch per dispatch until the operator learned to lowercase.
@@ -2416,7 +2416,7 @@ Bound: dispatch-ticket/SKILL.md (both `.agents/` and `.claude/` variants).
 
 ### AST-105 — Pipe after a command swallows exit code, turning a failed gate into exit 0 · promoted 2026-08-19
 
-Measured by nizzy-ecom Thomas on TRA-209: `make itest-local 2>&1 | tail -25` returned exit 0
+Measured in the field: `make itest-local 2>&1 | tail -25` returned exit 0
 on a RED gate. The pipeline reports the last command's status (`tail`, always 0), not the
 first's (`make`, non-zero). Thomas read the output, saw truncated test names, concluded the
 gate passed, and proceeded. The failure was caught later by artifact verification.
@@ -2437,7 +2437,7 @@ Bound: dispatch-ticket/SKILL.md (both `.agents/` and `.claude/` variants).
 
 ### AST-106 — Worktree isolation stated about git, violated by non-git disk writes · promoted 2026-08-19
 
-Measured by nizzy-ecom Thomas on TRA-209: Thomas ran `make itest-local` inside a Builder's
+Measured in the field: Thomas ran `make itest-local` inside a Builder's
 worktree. The test suite wrote to a fixed path (test fixture / log file), colliding with the
 Builder's own test run. Both Thomas's AND the Builder's suites went red on a conflict neither
 caused — each blamed their own diff.
@@ -2454,7 +2454,7 @@ Bound: dispatch-ticket/SKILL.md (both `.agents/` and `.claude/` variants).
 
 ### AST-107 — A long `herdr agent wait` stays alive and goes deaf, so the watch never fires · promoted 2026-08-19
 
-Measured on nizzy-ecom, same machine, same pane, same minute — an A/B with a control:
+Measured in the field, same machine, same pane, same minute — an A/B with a control:
 
 | | the wait already watching | an identical wait issued fresh |
 |---|---|---|
@@ -2517,7 +2517,7 @@ Bound: dispatch-ticket-claude/SKILL.md (both `.agents/` and `.claude/` variants)
 ### AST-109 — Cleanup command aimed at the worktree root, where the target has never lived · promoted 2026-08-19
 
 `make -C "$GATE_WORKTREE" db-down` shipped as the container-cleanup step for AST-101. The
-`db-down` target lives in a package directory (`apps/server`), not the repo root, so the
+`db-down` target lives in a package directory, not the repo root, so the
 command answered `No rule to make target` on every run since the day it was written. It has
 never once stopped a container.
 
@@ -2644,7 +2644,7 @@ then TYPED into the pane (`herdr pane run` + `send-keys Enter`) and confirmed by
 line, so it does not reintroduce AST-037. The false sentence is deleted, and the no-substitute
 rule now lives in `shaper.md` as well.
 
-Reported by nizzy-ecom Thomas, relayed by the harness agent, against applied 2.3.8 — the first
+Reported from the field by a project's Thomas, relayed by its harness agent, against applied 2.3.8 — the first
 finding in this sequence to come from a real dispatch rather than a documentation sweep. Every
 sweep in five releases read that section and none caught it, because it is not a contradiction
 between two documents but a claim about the runtime that no document could check.
@@ -2706,7 +2706,7 @@ Bound: dispatch-ticket-claude/SKILL.md (both variants).
 ### AST-115 — Two correct changes composed into a live one, and the repair is what armed it · promoted 2026-08-20
 
 The documented gate cleanup ran `make -C <dir> db-down` and stopped
-etsy-server-shared-test-postgres — the SHARED test database every live Builder was standing
+the project's SHARED test-database container — the one every live Builder was standing
 on. A Builder mid-ticket survived on timing alone: it had finished its test run four minutes
 earlier and was reading source when the container went away. That is luck, not safety.
 
@@ -2769,7 +2769,7 @@ Two distinct fixes, and which one applies is a rule worth keeping:
 - **Harness vocabulary belongs in `NOT_A_SKILL`** — `builder-tra-123` is the dispatch naming
   convention, ships in every install, and will trip the check everywhere. Fixed upstream.
 - **A project's own names must never be backticked in payload prose.** AST-115 named a real
-  container, etsy-server-shared-test-postgres, in backticks. Adding it to the shared exclusion
+  container by name, in backticks. Adding it to the shared exclusion
   list would have put one project's container into every other project's checker — and that
   list carries its own warning that a long list means the check has stopped discriminating.
   Removing the backticks fixes it without spending the list.
@@ -2859,7 +2859,7 @@ socket, under the same name, with no provenance field. **Neither end of the chan
 it**: the dispatcher cannot ask who wrote it, and the Builder has no visibility into what its
 own forks send outward beyond the task notification returned to it.
 
-Measured on TRA-215: Thomas received **three** separate messages presenting as that Builder's
+Measured on one ticket: Thomas received **three** separate messages presenting as that Builder's
 handback. They contradicted each other. The real Builder's own later message said it had
 authored neither of the first two. One fabricated message invented a detailed incident — two
 NUL bytes introduced into a file, caught with `file(1)`, fixed — attributed to a specific
@@ -3058,4 +3058,37 @@ that before reporting it is the only reason a second wrong attribution did not s
 as AST-120's. **A test fixture is code, and it fails in the same ways as the thing it tests.**
 
 Bound: scripts/check-simplify-markers.sh, dispatch-ticket/SKILL.md (both variants).
+
+### AST-123 — The scaffold accumulated the identity of whoever last measured a lesson · promoted 2026-08-20
+
+This payload is a scaffold: every project that installs it reads it. It had accumulated one
+project's name in 18 places, five of that project's real ticket ids added in a single day, a
+container name, and a source path from its package layout — all arriving honestly, as the
+provenance of measurements that were themselves sound.
+
+**The measurement is the evidence; the identity adds nothing a stranger can use.** "Measured in
+the field: 5 instances, 3 Builder sessions" carries everything "measured by <project> Thomas on
+<TICKET>" carried, for every reader who is not that project. The numbers are what generalise.
+
+Two concrete costs, not just tidiness. A real ticket id in the payload is a name a downstream
+checker can trip on, and the remedy an operator reaches for is a local exclusion — which is
+AST-116, a fix that never travels back, bought again. And a container name from one project's
+compose file, cited in a lesson, is an invitation to add it to a shared exclusion list, spending
+a list whose own comment says a long one means the check has stopped discriminating.
+
+The precedent existed and was not held to: an earlier release genericised one ticket id for
+exactly this reason, and the practice did not survive contact with a day of live field reports,
+where naming the source felt like rigour.
+
+Fix: `docs-staleness-audit.sh` axis 4 forbids ticket-shaped tokens outside the ledger's own ids
+and a generic example series. Project and host names cannot be enumerated from upstream, so
+those remain a human rule — **when a lesson names its source, keep the numbers and drop the
+name.**
+
+The first draft of that axis matched `SHA-1`, `BSD-3`, `AFL-2` and `UTF-8`, walked
+`node_modules`, and matched its own pattern string: 19 findings, all noise. **AST-113
+reproduced inside the release that cites it** — scoping a new check is where that failure lives,
+every time. Three letters and two digits is the ticket shape; break-tested with a planted id.
+
+Bound: scripts/docs-staleness-audit.sh (axis 4), and a sweep of the whole payload.
 

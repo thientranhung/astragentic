@@ -329,5 +329,35 @@ fi
 [[ $A6 -eq 1 ]] || echo "(clean)"
 
 echo
+echo "=== 4. payload names no real project, ticket or host ==="
+# This is a SCAFFOLD. Every project that installs it reads this payload, so a real ticket id,
+# project name or container name from whoever happened to measure a lesson is noise to every
+# other reader — and worse, it invites a downstream local edit (AST-116) to silence a checker
+# that trips on it.
+#
+# The measurement is the evidence; the identity adds nothing a stranger can use. Keep the
+# numbers, drop the name: "measured in the field: 5 instances, 3 sessions" carries everything
+# "measured by <project> Thomas on <TICKET>" carried.
+#
+# Ticket ids are the mechanically checkable half, and the half that actually leaked — five in
+# one day. Only the generic example series is allowed. Project and host names cannot be
+# enumerated from up here, so those stay a human rule stated in the entry (AST-123).
+A7=0
+# SHAPE, not "any uppercase token with a dash". The first draft matched SHA-1, BSD-3, AFL-2 and
+# UTF-8, walked node_modules, and matched its own pattern string — 19 findings, every one noise,
+# which is AST-113 reproduced inside the release that cites it. Three letters and two digits is
+# the ticket shape; ledger ids and the generic example series are allowed by name.
+ALLOW='AST-[0-9]+|TRA-1[23][0-9]|ABC-123'
+while IFS= read -r hit; do
+  [[ -n "$hit" ]] || continue
+  echo "  ${hit#$ROOT/} — payload must not name a real ticket (AST-123)"
+  A7=1; FOUND=1
+done < <( { grep -rnoE '\b[A-Z]{3,5}-[0-9]{2,}\b' "$PAYLOAD" \
+              --include='*.md' --include='*.sh' --include='*.json' \
+              --exclude-dir=node_modules --exclude='docs-staleness-audit.sh' 2>/dev/null || true; } \
+          | grep -vE "$ALLOW" )
+[[ $A7 -eq 1 ]] || echo "(clean)"
+
+echo
 [[ $FOUND -eq 1 ]] && echo "RESULT: findings above — verify each against code/truth-model before editing." || echo "RESULT: all clean."
 exit $FOUND

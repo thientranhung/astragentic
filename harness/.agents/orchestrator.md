@@ -31,10 +31,10 @@ This project's herdr name, read before dispatch.
 | Creator | Pattern | Example |
 |---|---|---|
 | Thomas | `thomas` | `thomas` |
-| Builder | `ticket:<id>` | `ticket:TRA-139` |
-| Shaper | `spec:<id>` | `spec:TRA-87` |
-| QA | `qa:<id>` | `qa:TRA-125` |
-| Rin | `rin:<id>` | `rin:TRA-125` |
+| Builder | `ticket:<id>` | `ticket:TRA-129` |
+| Shaper | `spec:<id>` | `spec:TRA-128` |
+| QA | `qa:<id>` | `qa:TRA-130` |
+| Rin | `rin:<id>` | `rin:TRA-130` |
 | Owner (manual) | anything | `deploy` |
 
 **Owner tabs are not yours** — never split, rename or close one; always create a fresh tab.
