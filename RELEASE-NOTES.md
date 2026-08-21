@@ -1,3 +1,24 @@
+# Astragentic 2.3.33
+
+2.3.30 gave the applied version a second home, and on the first project carrying both, the two
+disagreed.
+
+## What changed
+
+- **`--apply` reads and writes `.astraler/state/applied-version`** — the home
+  `ADAPT-HARNESS` §7 has always written and §1 has always read. 2.3.30 invented
+  `.astraler/APPLIED` beside it. Measured on the first project that had both: `state/` said
+  2.3.3 while `APPLIED` said 2.3.32, and the divergence arbiter read the wrong one.
+- Delete a stray `.astraler/APPLIED` if a 2.3.30–2.3.32 `--apply` left one; nothing reads it
+  now.
+
+The failure is the package's own recurring one — two homes for one fact, the shipped copy
+winning by accident. `orchestrator.md` opens by warning about it.
+
+## Upgrade from 2.3.32
+
+Copy `harness/`, or `./install.sh <target> --apply`.
+
 # Astragentic 2.3.32
 
 2.3.28 broke `check-reachability.sh`, and 2.3.28's own notes did not notice because they only

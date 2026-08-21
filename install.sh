@@ -153,6 +153,11 @@ STATE_ROOT="$TARGET/.astraler"
 RELEASES_DIR="$STATE_ROOT/releases"
 RELEASE_DIR="$RELEASES_DIR/$VERSION"
 CANDIDATE_FILE="$STATE_ROOT/CANDIDATE"
+# The applied version has ONE home, and it is ADAPT-HARNESS section 7's:
+# .astraler/state/applied-version. 2.3.30 invented .astraler/APPLIED beside it, and on a
+# project carrying both they disagreed immediately - state/ said 2.3.3 while APPLIED said
+# 2.3.32. Two homes for one fact, in the package that keeps saying so.
+APPLIED_FILE="$STATE_ROOT/state/applied-version"
 PROJECT_NAME_FILE="$STATE_ROOT/PROJECT_NAME"
 
 mkdir -p "$RELEASES_DIR"
@@ -240,14 +245,14 @@ if [ "$APPLY" -eq 1 ]; then
 
   OWNER_PATHS=".agents/orchestrator.md .claude/settings.json"
   # The arbiter for "did the project change this, or did the package?" is the release the
-  # project last received. APPLIED records it — but APPLIED only exists from 2.3.30 on, and a
+  # project last received. `state/applied-version` records it — but a project may predate
   # project adapted before that has a full harness and no marker. Fall back to the newest
   # staged release below this one: it is what the project was last given, whatever integrated it.
-  PREV_VERSION="$(cat "$STATE_ROOT/APPLIED" 2>/dev/null || true)"
+  PREV_VERSION="$(cat "$APPLIED_FILE" 2>/dev/null || true)"
   if [ -z "$PREV_VERSION" ] || [ ! -d "$RELEASES_DIR/$PREV_VERSION/harness" ]; then
     PREV_VERSION="$(ls "$RELEASES_DIR" 2>/dev/null | grep -v "^$VERSION\$" \
       | sort -t. -k1,1n -k2,2n -k3,3n | tail -1)"
-    [ -n "$PREV_VERSION" ] && echo "  (no APPLIED marker — comparing against staged $PREV_VERSION)" && echo
+    [ -n "$PREV_VERSION" ] && echo "  (no applied-version marker — comparing against staged $PREV_VERSION)" && echo
   fi
   PREV_DIR="$RELEASES_DIR/$PREV_VERSION/harness"
   [ -n "$PREV_VERSION" ] && [ -d "$PREV_DIR" ] || PREV_DIR=""
@@ -304,7 +309,8 @@ if [ "$APPLY" -eq 1 ]; then
 
   echo
   echo "  new $N_NEW · updated $N_UPD · unchanged $N_SAME · kept $N_KEPT · owner-kept $N_OWNER · conflicts $N_CONFLICT"
-  [ "$PLAN" -eq 1 ] || printf '%s\n' "$VERSION" > "$STATE_ROOT/APPLIED"
+  # --apply lands the payload; ADAPT-HARNESS section 7 still owns the semantic half.
+  [ "$PLAN" -eq 1 ] || { mkdir -p "$(dirname "$APPLIED_FILE")"; printf '%s\n' "$VERSION" > "$APPLIED_FILE"; }
 
   if [ "$N_CONFLICT" -gt 0 ]; then
     echo
