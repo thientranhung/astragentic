@@ -214,7 +214,9 @@ term nobody confirmed, becomes confident-sounding lore that later agents treat a
 
 ```bash
 ./check-requirements.sh              # verify machine readiness
-./install.sh <target-repo>           # stage the release
+./install.sh <target-repo>           # stage the release (edits no project file)
+./install.sh <target-repo> --plan    # show what --apply would write
+./install.sh <target-repo> --apply   # write the payload in directly
 ```
 
 This copies the harness into `<target>/.astraler/releases/<version>/`. No project files

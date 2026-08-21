@@ -213,7 +213,9 @@ Tuỳ chọn: **Codex CLI** (cross-vendor review), **OpenCode CLI** (runtime th�
 ./check-requirements.sh
 
 # 2. Stage harness vào repo
-./install.sh <target-repo>
+./install.sh <target-repo>           # stage (khong sua file nao cua project)
+./install.sh <target-repo> --plan    # xem --apply se ghi gi
+./install.sh <target-repo> --apply   # ghi payload thang vao
 
 # 3. Mở repo trong Claude Code, chạy bộ cài đặt thích ứng
 cd <target-repo>

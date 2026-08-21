@@ -1,3 +1,35 @@
+# Astragentic 2.3.30
+
+`install.sh --apply` writes the payload in; semantic adaptation keeps only what is actually
+semantic.
+
+## What changed
+
+- **`install.sh --apply`** copies the payload straight into the target. Role contracts,
+  adapters, skills, scripts and the ledger are replaced wholesale by a release anyway, so
+  routing them through a 20k-word adaptation prompt bought latency, not safety.
+- **`--plan`** prints the same report and writes nothing — this is the "where do I upgrade"
+  view, available before committing to the write.
+- **Owner files are never overwritten.** `.agents/orchestrator.md` (the runtime and model
+  rows, AST-041) and `.claude/settings.json` (project hooks) are written only when absent.
+- **A payload path the project diverged on is reported, never overwritten.** The previously
+  applied release is the arbiter: a project copy still matching what the last release shipped
+  was never touched, so the upgrade is clean; anything else is a `CONFLICT` line naming the
+  two diffs that decide it. A project can author a file at a path the payload only starts
+  shipping later, and overwriting that is silent data loss (ADAPT-HARNESS §4).
+- **`.astraler/APPLIED`** records the applied version, which is what makes the divergence
+  test above possible on the next upgrade.
+
+The default run is unchanged and still edits no project file. `ADAPT-HARNESS.md` still owns
+the genuinely semantic half — the project entry doc, the ledger namespace, and every
+`CONFLICT`.
+
+## Upgrade from 2.3.29
+
+Nothing to do in the package. In a target project, the first `--apply` has no prior `APPLIED`
+marker, so every differing file reports as `UPDATED (no prior release to compare — review
+this one)`. Run `--plan` first there.
+
 # Astragentic 2.3.29
 
 The ledger is 57k tokens and had no way in but reading it.

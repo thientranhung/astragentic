@@ -85,9 +85,24 @@ if [ -f "$LEDGER" ]; then
   fi
 fi
 
+APPLY=0
+PLAN=0
+ARGS=()
+for a in "$@"; do
+  case "$a" in
+    --apply) APPLY=1 ;;
+    --plan)  APPLY=1; PLAN=1 ;;
+    *) ARGS+=("$a") ;;
+  esac
+done
+set -- "${ARGS[@]+"${ARGS[@]}"}"
+
 TARGET="${1:-}"
 [ -n "$TARGET" ] || {
-  echo "Usage: $0 <target-repo-path> [--project-name NAME]" >&2
+  echo "Usage: $0 <target-repo-path> [--project-name NAME] [--plan|--apply]" >&2
+  echo "  (default)  stage only — edits no project file" >&2
+  echo "  --plan     show what --apply would write; writes nothing" >&2
+  echo "  --apply    write the payload in; owner files kept, diverged paths reported" >&2
   exit 2
 }
 shift
@@ -196,6 +211,101 @@ fi
 
 printf '%s\n' "$VERSION"      > "$CANDIDATE_FILE"
 printf '%s\n' "$PROJECT_NAME" > "$PROJECT_NAME_FILE"
+
+
+# ---------------------------------------------------------------------------
+# --apply: write the PAYLOAD straight into the project.
+#
+# The default run still edits no project file. --apply is the opt-in that skips semantic
+# adaptation for files a release overwrites wholesale anyway — role contracts, adapters,
+# skills, scripts, the ledger. Making an agent read a 20k-word prompt to "integrate" a file
+# that gets replaced whole is latency, not safety.
+#
+# What it will NOT do, and why:
+#   - OWNER FILES are never overwritten. `.agents/orchestrator.md` carries the owner's runtime
+#     and model rows (AST-041); `.claude/settings.json` carries project hooks. Written only
+#     when absent.
+#   - A payload path the PROJECT has diverged on is reported, never overwritten. A project can
+#     author a file at a path the payload only starts shipping later, and overwriting it is
+#     silent data loss (ADAPT-HARNESS §4).
+# ---------------------------------------------------------------------------
+if [ "$APPLY" -eq 1 ]; then
+  echo
+  if [ "$PLAN" -eq 1 ]; then
+    echo "--plan: what an --apply would do to $TARGET (nothing is written)"
+  else
+    echo "--apply: writing payload into $TARGET"
+  fi
+  echo
+
+  OWNER_PATHS=".agents/orchestrator.md .claude/settings.json"
+  PREV_VERSION="$(cat "$STATE_ROOT/APPLIED" 2>/dev/null || true)"
+  PREV_DIR="$RELEASES_DIR/$PREV_VERSION/harness"
+  [ -n "$PREV_VERSION" ] && [ -d "$PREV_DIR" ] || PREV_DIR=""
+
+  N_NEW=0; N_UPD=0; N_SAME=0; N_OWNER=0; N_CONFLICT=0
+  CONFLICTS=""
+
+  while IFS= read -r SRC; do
+    REL="${SRC#$RELEASE_DIR/harness/}"
+    DST="$TARGET/$REL"
+
+    # owner files: only when absent
+    OWNED=0
+    for o in $OWNER_PATHS; do [ "$REL" = "$o" ] && OWNED=1; done
+    if [ "$OWNED" -eq 1 ]; then
+      if [ -e "$DST" ]; then
+        echo "  owner   $REL (kept — yours)"; N_OWNER=$((N_OWNER+1))
+      else
+        [ "$PLAN" -eq 1 ] || { mkdir -p "$(dirname "$DST")"; cp "$SRC" "$DST"; }
+        echo "  NEW     $REL (owner file, scaffolded — fill its <set-me> rows)"; N_NEW=$((N_NEW+1))
+      fi
+      continue
+    fi
+
+    if [ ! -e "$DST" ]; then
+      [ "$PLAN" -eq 1 ] || { mkdir -p "$(dirname "$DST")"; cp "$SRC" "$DST"; }
+      echo "  NEW     $REL"; N_NEW=$((N_NEW+1)); continue
+    fi
+
+    if cmp -s "$SRC" "$DST"; then N_SAME=$((N_SAME+1)); continue; fi
+
+    # Differs. Did the PROJECT diverge, or is this just a newer payload?
+    # The previous applied release is the arbiter: if the project's copy still matches what
+    # the last release shipped, the project never touched it and this is a clean upgrade.
+    if [ -n "$PREV_DIR" ] && [ -f "$PREV_DIR/$REL" ] && cmp -s "$PREV_DIR/$REL" "$DST"; then
+      [ "$PLAN" -eq 1 ] || cp "$SRC" "$DST"; echo "  UPDATED $REL"; N_UPD=$((N_UPD+1))
+    elif [ -z "$PREV_DIR" ]; then
+      [ "$PLAN" -eq 1 ] || cp "$SRC" "$DST"; echo "  UPDATED $REL (no prior release to compare — review this one)"
+      N_UPD=$((N_UPD+1))
+    else
+      echo "  CONFLICT $REL — project diverged from $PREV_VERSION; NOT overwritten"
+      CONFLICTS="$CONFLICTS$REL"$'\n'; N_CONFLICT=$((N_CONFLICT+1))
+    fi
+  done < <(find "$RELEASE_DIR/harness" -type f ! -name '.DS_Store' | sort)
+
+  echo
+  echo "  new $N_NEW · updated $N_UPD · unchanged $N_SAME · owner-kept $N_OWNER · conflicts $N_CONFLICT"
+  [ "$PLAN" -eq 1 ] || printf '%s\n' "$VERSION" > "$STATE_ROOT/APPLIED"
+
+  if [ "$N_CONFLICT" -gt 0 ]; then
+    echo
+    echo "CONFLICTS — the project changed these and so did the package. Decide each:"
+    printf '%s' "$CONFLICTS" | sed 's|^|  |'
+    echo
+    echo "  diff <(cat .astraler/releases/$PREV_VERSION/harness/<path>) <path>   # what you changed"
+    echo "  diff <(cat .astraler/releases/$VERSION/harness/<path>) <path>        # what the release brings"
+  fi
+
+  echo
+  if [ "$PLAN" -eq 1 ]; then
+    echo "Nothing written. Rerun with --apply to write it."
+    exit 0
+  fi
+  echo "Payload applied. ADAPT-HARNESS.md still owns the semantic half — the project entry doc,"
+  echo "the ledger namespace, and anything above listed as CONFLICT."
+  exit 0
+fi
 
 cat <<EOF
 
