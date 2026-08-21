@@ -1,3 +1,28 @@
+# Astragentic 2.3.34
+
+2.3.28's supplement-load fix reached the Claude adapters only, so the same role stated
+contradictory load rules depending on which runtime read it.
+
+## What changed
+
+- **`.opencode/agents/{thomas,rin,builder,qa,shaper}.md` and the Codex `thomas`/`rin`
+  `developer_instructions`** now carry 2.3.28's rule: runtime supplements load **per builder,
+  not per session**, and the contract's Load table is the single home for what else a role
+  reads. Four surfaces still said "read ALL runtime supplements" — 758 words a Thomas on
+  opencode or Codex loaded at session start and could not use.
+- The opencode adapters get 2.3.28's prose treatment too: they stopped restating the contract
+  they load beside. 1031 → 674 words across five.
+
+**Both gates passed over this the whole time**, which is the more useful half. `check-reachability`
+verifies a path exists; neither checker asks whether two files stating the same rule agree.
+Found downstream by an adaptation agent reading the payload it had just received.
+
+## Upgrade from 2.3.33
+
+Copy `harness/`, or `./install.sh <target> --apply`. Codex profiles are `kept` by `--apply`
+where you have tuned them, so a project on Codex must merge line 14 of `thomas.config.toml`
+and `rin.config.toml` by hand — `--apply` will report them as `kept`, not `UPDATED`.
+
 # Astragentic 2.3.33
 
 2.3.30 gave the applied version a second home, and on the first project carrying both, the two
