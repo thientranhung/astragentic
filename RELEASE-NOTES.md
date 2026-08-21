@@ -1,3 +1,30 @@
+# Astragentic 2.3.32
+
+2.3.28 broke `check-reachability.sh`, and 2.3.28's own notes did not notice because they only
+ran the other checker.
+
+## What changed
+
+- **Phase ownership is read from the phase table, not from every table in the contract.** The
+  code's comment always said "leading phase table"; the code scanned every row and passed only
+  because no other table happened to carry a bare backticked token in column 2. 2.3.28 gave
+  each contract a Load table whose column 2 *is* such a token, so `untangle` — offered to two
+  roles and owned by neither — read as a phase two contracts both owned:
+  `[FAIL 2] 'untangle' is owned by 2 contracts: builder, shaper`.
+- Owned phases go 19 → 11, which is exactly the phase tables: thomas 6, builder 2, shaper 3.
+  Duplicate-ownership detection is unchanged — a phase genuinely declared twice still fails.
+
+Found downstream, by the adaptation agent on a real project, running the gate `ADAPT-HARNESS`
+§6 requires. 2.3.28 through 2.3.31 each asserted "docs-staleness-audit.sh clean on all four
+axes" and none of them ran this checker; the axis a release does not run is the axis that
+catches it.
+
+## Upgrade from 2.3.31
+
+Copy `harness/`, or `./install.sh <target> --apply`. A project on 2.3.28–2.3.31 sees
+`check-reachability.sh` fail on untouched payload; this release is the fix, and no project
+edit resolves it.
+
 # Astragentic 2.3.31
 
 Three defects in 2.3.30, all found by running `--apply` against a real adapted project.

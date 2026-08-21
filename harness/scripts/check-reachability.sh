@@ -251,10 +251,22 @@ if readme:
 else:
     fail("1", f"README not found at {README}, so the method's own role table cannot be read")
 
-# Phases each contract OWNS: rows of its leading phase table, second column.
+# Phases each contract OWNS: rows of its PHASE table, second column.
+#
+# Scoped to that table by heading, not "every table in the file". The comment here always
+# said "leading phase table"; the code scanned every row in the contract, and passed only
+# because no other table happened to carry a bare backticked token in column 2. 2.3.28 gave
+# each contract a Load table whose column 2 IS such a token, and `untangle` — offered to two
+# roles, owned by neither — read as a phase two contracts both owned (FAIL 2).
 owned = {}          # phase -> [role, ...]
 for role, text in roles.items():
+    in_phase_table = False
     for line in text.splitlines():
+        if line.startswith("#"):
+            in_phase_table = bool(re.match(r"#+\s+Phases\b", line, re.I))
+            continue
+        if not in_phase_table:
+            continue
         if not line.startswith("|") or line.startswith("|---"):
             continue
         cells = [c.strip() for c in line.strip("|").split("|")]
