@@ -382,5 +382,22 @@ done < <( { grep -rnoE '\b[A-Z]{3,5}-[0-9]{2,}\b' \
 fi
 
 echo
+echo "=== 5. ledger index vs the ledger ==="
+# The index is what makes the ledger browsable without reading it (~57k tokens). A stale index
+# sends a reader to an id that moved, or hides one that was added — and the failure is silent,
+# because a stale index is indistinguishable from a current one by reading it.
+IDX_GEN="$ROOT/harness/scripts/ledger-index.sh"
+[[ -x "$IDX_GEN" ]] || IDX_GEN="$ROOT/scripts/ledger-index.sh"
+if [[ -x "$IDX_GEN" ]]; then
+  if OUT="$("$IDX_GEN" --check 2>&1)"; then
+    echo "  $OUT"
+  else
+    echo "  $OUT"; FOUND=1
+  fi
+else
+  echo "(skipped — no ledger-index.sh on this layout)"
+fi
+
+echo
 [[ $FOUND -eq 1 ]] && echo "RESULT: findings above — verify each against code/truth-model before editing." || echo "RESULT: all clean."
 exit $FOUND

@@ -16,7 +16,8 @@ at once.
 | no seam to test through | `legacy-testing` | characterise → seam → TDD, in that order |
 | blast radius keeps growing as you read | `untangle` | scoping a refactor that will not scope |
 | branch has drifted | `resolving-merge-conflicts` | |
-| a finding recurs | `.agents/memory/recurring-failure-modes.md` — grep the `AST-` id | the measurement behind a rule |
+| a finding recurs, or you need a rule's evidence | `.agents/memory/INDEX.md` — one line per entry | find the `AST-` id without opening the ledger |
+| the index named an entry | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only — the ledger is ~57k tokens |
 
 Every `AST-` id here points into that ledger. Follow one when you need the evidence; the rule
 stands without it.

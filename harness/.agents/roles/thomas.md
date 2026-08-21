@@ -14,7 +14,8 @@ yours.
 | session start | `reconcile-tracker` | tracker measured against git |
 | before each dispatch | `dispatch-ticket` + `dispatch-ticket-<builder-runtime>` | dispatch protocol |
 | before each merge | `.agents/roles/thomas-<builder-runtime>.md` | `Pass:` line validation |
-| a finding recurs | `.agents/memory/recurring-failure-modes.md` — grep the `AST-` id | the measurement behind a rule |
+| a finding recurs, or you need a rule's evidence | `.agents/memory/INDEX.md` — one line per entry | find the `AST-` id without opening the ledger |
+| the index named an entry | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only — the ledger is ~57k tokens |
 
 Every `AST-` id in this file is a pointer into that ledger. Follow one when you need the
 evidence; the rule stands without it.

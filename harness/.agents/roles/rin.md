@@ -15,7 +15,8 @@ author's checkout.
 | session start | your brief | mode, refs, spec, owner intent, UI evidence |
 | validating a `Pass:` line | `.agents/roles/rin-<builder-runtime>.md` | what counts as valid on **the builder's** runtime, not yours (AST-055) |
 | dispatch, gate file, collection | `review-with-rin` | the one home for those mechanics |
-| a finding recurs | `.agents/memory/recurring-failure-modes.md` — grep the `AST-` id | the measurement behind a rule |
+| a finding recurs, or you need a rule's evidence | `.agents/memory/INDEX.md` — one line per entry | find the `AST-` id without opening the ledger |
+| the index named an entry | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only — the ledger is ~57k tokens |
 
 The builder's runtime comes from `orchestrator.md`.
 

@@ -1,3 +1,34 @@
+# Astragentic 2.3.29
+
+The ledger is 57k tokens and had no way in but reading it.
+
+## What changed
+
+- **`scripts/ledger-index.sh` generates `.agents/memory/INDEX.md`** from the ledger's own
+  headings — id, lesson, status, length, and which live contracts and skills cite it. 3.8k
+  tokens against the ledger's 57k. Generated, never hand-edited; `--check` exits 1 on drift.
+- **Reading the ledger is now two steps.** The Load tables point at the index first, then at
+  `grep -A40 '^### AST-0NN'` for the one entry it named. Browsing no longer means opening the
+  file, which is the only way a 57k-token lookup stays affordable.
+- **Axis 5 in `docs-staleness-audit.sh`** runs `ledger-index.sh --check`. A stale index is
+  indistinguishable from a current one by reading it, so it needs a machine.
+- **The index exposes what the ledger could not.** 88 of 128 entries are cited by no live
+  contract or skill. `AST-001`–`AST-014` run 12–53 words each — the layer that went stale when
+  1.0.0 rebuilt the method around the plugin. Whether a given orphan was closed in code, went
+  stale, or names an unbound lesson is not derivable from the table; the index says so rather
+  than guessing.
+
+Nothing auto-loaded the ledger before this change and nothing does now. It is a lookup target,
+and the index is what makes the lookup cheap enough to actually happen.
+
+`qa.md` gets no ledger row: it sits at 1271/1300 words against axis 1, and a walk's findings
+are product defects rather than harness failure modes.
+
+## Upgrade from 2.3.28
+
+Copy `harness/`. Run `scripts/ledger-index.sh` once after copying — `INDEX.md` is generated,
+and a project whose ledger has diverged needs its own.
+
 # Astragentic 2.3.28
 
 Contracts and skills carried their own evidence inline; the load schedule cost more than the
