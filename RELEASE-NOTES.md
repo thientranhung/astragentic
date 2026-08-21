@@ -1,3 +1,32 @@
+# Astragentic 2.3.31
+
+Three defects in 2.3.30, all found by running `--apply` against a real adapted project.
+
+## What changed
+
+- **`--apply` no longer overwrites on a guess.** A file that exists, differs, and has no prior
+  release to compare against is now a `CONFLICT`, not an overwrite. 2.3.30 shipped that branch
+  as `cp` — and every project adapted before `.astraler/APPLIED` existed has exactly that shape,
+  so the first upgrade would have replaced its whole adaptation.
+- **Missing `APPLIED` falls back to the newest staged release.** That marker only exists from
+  2.3.30 on; the release a project last received is knowable without it, from
+  `.astraler/releases/`.
+- **A file the release did not change is `kept`, not `CONFLICT`.** The classification is
+  three-way now: package-unchanged-since-prior means an owner edit has nothing to reconcile
+  against. Measured on the same upgrade — five `.codex/profiles/*.config.toml` the owner had
+  filled in reported CONFLICT while the release carried no change to any of them.
+- **`ledger-index.sh` resolves its root by finding the ledger**, not by counting `..` hops. It
+  ships into two layouts — `harness/scripts/` in the package, `scripts/` in an adapted project
+  — and a fixed hop count picks one. Measured: `../..` from an adapted project resolved above
+  the repo and reported "ledger not found" on a ledger that was present. Axis 5 read as clean
+  only because it had been run from the package.
+
+## Upgrade from 2.3.30
+
+Copy `harness/`, or `./install.sh <target> --apply`. If you ran 2.3.30's `--apply` against a
+project adapted before 2.3.30, check `git status` there — that build could overwrite adapted
+files without reporting a conflict.
+
 # Astragentic 2.3.30
 
 `install.sh --apply` writes the payload in; semantic adaptation keeps only what is actually

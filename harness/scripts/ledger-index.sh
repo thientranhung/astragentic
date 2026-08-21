@@ -5,21 +5,31 @@
 #   --check   exit 1 if INDEX.md differs from what this run would write
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-LEDGER="$ROOT/harness/.agents/memory/recurring-failure-modes.md"
-[[ -f "$LEDGER" ]] || LEDGER="$ROOT/.agents/memory/recurring-failure-modes.md"
-[[ -f "$LEDGER" ]] || { echo "STOP: ledger not found"; exit 1; }
+# Two layouts, and the script ships into both. In the PACKAGE it sits at harness/scripts/;
+# in an ADAPTED PROJECT adaptation lands it at scripts/. Deriving the root by a fixed number
+# of `..` hops picks one and silently misses the other — measured: `../..` from an adapted
+# project resolved above the repo and reported "ledger not found" on a ledger that was there.
+# Resolve by finding the ledger, not by counting directories.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LEDGER=""
+for CAND in "$SCRIPT_DIR/.." "$SCRIPT_DIR/../.."; do
+  for SUB in "harness/.agents/memory" ".agents/memory"; do
+    if [[ -f "$CAND/$SUB/recurring-failure-modes.md" ]]; then
+      LEDGER="$(cd "$CAND/$SUB" && pwd)/recurring-failure-modes.md"; break 2
+    fi
+  done
+done
+[[ -n "$LEDGER" ]] || { echo "STOP: ledger not found"; exit 1; }
+ROOT="$(cd "$(dirname "$LEDGER")/../.." && pwd)"
 INDEX="$(dirname "$LEDGER")/INDEX.md"
 
 # Surfaces a citation must appear in to count an entry LIVE.
 CITE_DIRS=()
-for d in "$ROOT/harness/.agents/roles" "$ROOT/harness/.agents/skills" \
-         "$ROOT/harness/.claude/agents" "$ROOT/harness/.claude/skills" \
-         "$ROOT/.agents/roles" "$ROOT/.agents/skills" \
+for d in "$ROOT/.agents/roles" "$ROOT/.agents/skills" \
          "$ROOT/.claude/agents" "$ROOT/.claude/skills"; do
   [[ -d "$d" ]] && CITE_DIRS+=("$d")
 done
-ORCH="$(dirname "$(dirname "$LEDGER")")/orchestrator.md"
+ORCH="$ROOT/.agents/orchestrator.md"
 [[ -f "$ORCH" ]] && CITE_DIRS+=("$ORCH")
 
 cited_in() { # $1 = AST id -> comma-separated basenames, or empty

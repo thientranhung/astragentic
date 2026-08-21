@@ -239,11 +239,20 @@ if [ "$APPLY" -eq 1 ]; then
   echo
 
   OWNER_PATHS=".agents/orchestrator.md .claude/settings.json"
+  # The arbiter for "did the project change this, or did the package?" is the release the
+  # project last received. APPLIED records it — but APPLIED only exists from 2.3.30 on, and a
+  # project adapted before that has a full harness and no marker. Fall back to the newest
+  # staged release below this one: it is what the project was last given, whatever integrated it.
   PREV_VERSION="$(cat "$STATE_ROOT/APPLIED" 2>/dev/null || true)"
+  if [ -z "$PREV_VERSION" ] || [ ! -d "$RELEASES_DIR/$PREV_VERSION/harness" ]; then
+    PREV_VERSION="$(ls "$RELEASES_DIR" 2>/dev/null | grep -v "^$VERSION\$" \
+      | sort -t. -k1,1n -k2,2n -k3,3n | tail -1)"
+    [ -n "$PREV_VERSION" ] && echo "  (no APPLIED marker — comparing against staged $PREV_VERSION)" && echo
+  fi
   PREV_DIR="$RELEASES_DIR/$PREV_VERSION/harness"
   [ -n "$PREV_VERSION" ] && [ -d "$PREV_DIR" ] || PREV_DIR=""
 
-  N_NEW=0; N_UPD=0; N_SAME=0; N_OWNER=0; N_CONFLICT=0
+  N_NEW=0; N_UPD=0; N_SAME=0; N_OWNER=0; N_CONFLICT=0; N_KEPT=0
   CONFLICTS=""
 
   while IFS= read -r SRC; do
@@ -273,11 +282,20 @@ if [ "$APPLY" -eq 1 ]; then
     # Differs. Did the PROJECT diverge, or is this just a newer payload?
     # The previous applied release is the arbiter: if the project's copy still matches what
     # the last release shipped, the project never touched it and this is a clean upgrade.
-    if [ -n "$PREV_DIR" ] && [ -f "$PREV_DIR/$REL" ] && cmp -s "$PREV_DIR/$REL" "$DST"; then
+    # Three-way, and the first branch is the one a two-way check gets wrong: when the package
+    # has shipped no change since the prior release, a project's edit is not a conflict — there
+    # is nothing to reconcile it against. Measured on a real upgrade: five .codex profiles the
+    # owner had filled in reported CONFLICT while the release carried no change to any of them.
+    if [ -n "$PREV_DIR" ] && [ -f "$PREV_DIR/$REL" ] && cmp -s "$PREV_DIR/$REL" "$SRC"; then
+      echo "  kept    $REL (yours; release ships no change here)"; N_KEPT=$((N_KEPT+1))
+    elif [ -n "$PREV_DIR" ] && [ -f "$PREV_DIR/$REL" ] && cmp -s "$PREV_DIR/$REL" "$DST"; then
       [ "$PLAN" -eq 1 ] || cp "$SRC" "$DST"; echo "  UPDATED $REL"; N_UPD=$((N_UPD+1))
     elif [ -z "$PREV_DIR" ]; then
-      [ "$PLAN" -eq 1 ] || cp "$SRC" "$DST"; echo "  UPDATED $REL (no prior release to compare — review this one)"
-      N_UPD=$((N_UPD+1))
+      # No arbiter at all, and the file already exists and differs. Whether the project wrote
+      # it or an older payload did is unknowable here, so this fails CLOSED. Overwriting on a
+      # guess is the silent-data-loss case ADAPT-HARNESS §4 measured.
+      echo "  CONFLICT $REL — exists and differs, no prior release to compare; NOT overwritten"
+      CONFLICTS="$CONFLICTS$REL"$'\n'; N_CONFLICT=$((N_CONFLICT+1))
     else
       echo "  CONFLICT $REL — project diverged from $PREV_VERSION; NOT overwritten"
       CONFLICTS="$CONFLICTS$REL"$'\n'; N_CONFLICT=$((N_CONFLICT+1))
@@ -285,7 +303,7 @@ if [ "$APPLY" -eq 1 ]; then
   done < <(find "$RELEASE_DIR/harness" -type f ! -name '.DS_Store' | sort)
 
   echo
-  echo "  new $N_NEW · updated $N_UPD · unchanged $N_SAME · owner-kept $N_OWNER · conflicts $N_CONFLICT"
+  echo "  new $N_NEW · updated $N_UPD · unchanged $N_SAME · kept $N_KEPT · owner-kept $N_OWNER · conflicts $N_CONFLICT"
   [ "$PLAN" -eq 1 ] || printf '%s\n' "$VERSION" > "$STATE_ROOT/APPLIED"
 
   if [ "$N_CONFLICT" -gt 0 ]; then
@@ -293,8 +311,10 @@ if [ "$APPLY" -eq 1 ]; then
     echo "CONFLICTS — the project changed these and so did the package. Decide each:"
     printf '%s' "$CONFLICTS" | sed 's|^|  |'
     echo
-    echo "  diff <(cat .astraler/releases/$PREV_VERSION/harness/<path>) <path>   # what you changed"
-    echo "  diff <(cat .astraler/releases/$VERSION/harness/<path>) <path>        # what the release brings"
+    if [ -n "$PREV_DIR" ]; then
+      echo "  diff .astraler/releases/$PREV_VERSION/harness/<path> <path>   # what YOU changed"
+    fi
+    echo "  diff .astraler/releases/$VERSION/harness/<path> <path>   # what the release brings"
   fi
 
   echo
