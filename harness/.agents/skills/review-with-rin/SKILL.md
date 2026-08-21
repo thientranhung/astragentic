@@ -1,6 +1,6 @@
 ---
 name: review-with-rin
-description: Thomas-only recipe to run Rin's milestone gate — mode=adversarial on a finalized spec, mode=code-review on a ticket/PR or epic close. Pack the brief (mode, refs, spec, owner intent, UI evidence), dispatch Rin as a Herdr GATE PANE (the only legal form; cannot create a pane → STOP), collect the report Rin writes outside every checkout, classify the findings, and route design-level blockers to the owner. Use when a spec is finalized, a milestone closes, or the owner asks for a Rin review.
+description: Thomas-only recipe to run Rin's milestone gate as an observable Herdr gate pane — brief, dispatch, collect the report, classify. Use when a spec is finalized, a ticket/PR or epic closes, or the owner asks for a Rin review.
 ---
 
 # Review with Rin — one round per milestone, in an observable pane
@@ -44,16 +44,14 @@ which is the thing the gate exists to remove. The pane is also the only form the
 watcher can watch. This adds no dependency — `check-requirements.sh` already treats herdr as
 hard-required.
 
-The earlier lookup ("is there a live ticket tab?") is superseded: at a spec gate the
-question has no referent, because a spec is gated BEFORE its tickets are dispatched. It
-therefore answered "no" every time and made every SPEC gate a subagent — invisible, at
-exactly the milestone where design decisions get made. Three consecutive spec gates ran
-unseen while owner-scale calls were made inside them (AST-033).
+The earlier lookup ("is there a live ticket tab?") is superseded: a spec is gated BEFORE its
+tickets exist, so it answered "no" every time and made every spec gate a subagent — invisible,
+at exactly the milestone where design decisions get made (AST-033).
 
-**Do not probe the session with `herdr tab list`** — a daemon answering proves the daemon is
-up, not that you have a nameable workspace, and `HERDR_ENV` is absent for Thomas by design
-(a terminal session, not a pane). The only question is *can I name the workspace this gate
-belongs to*, and an ambiguous workspace is a STOP.
+**The only question is: can I name the workspace this gate belongs to?** An ambiguous
+workspace is a STOP. `herdr tab list` answers a different question — a daemon answering proves
+the daemon is up, not that a workspace is nameable — and `HERDR_ENV` is absent for Thomas by
+design.
 
 **Consequence for the `rin` row.** The pane form requires Rin to write exactly one file
 outside every checkout (§3), so a runtime whose permissions deny all writes cannot serve a
@@ -64,9 +62,8 @@ it: no root runtime that can host the gate means STOP, not a degraded gate. Sand
 as they are; an enforced read-only posture is what makes such a reviewer worth having.
 
 **Pane mechanics.** Rin gets its OWN tab `rin:<artifact-key>` and its OWN **detached**
-worktree at the reviewed SHA, in the same workspace — never a second pane in a ticket tab,
-and never the Builder's worktree (sharing it destroys independence and puts a shell-capable
-reviewer inside the author's checkout).
+worktree at the reviewed SHA, in the same workspace. Sharing the Builder's worktree destroys
+independence and puts a shell-capable reviewer inside the author's checkout.
 
 ```bash
 # --- gate-file setup: FAIL-CLOSED, and the path is unique to THIS dispatch ---
@@ -100,8 +97,8 @@ herdr agent start "rin-<artifact-key>" --pane <returned-root-pane-id> --timeout 
 `dispatch-ticket-codex` or `dispatch-ticket-opencode`), resolved from the `rin` row's Runtime
 column in `orchestrator.md`. No adapter for the needed runtime → STOP and tell the owner.
 
-**The brief names `$GATE_FILE` as an absolute path.** Rin cannot create a nested directory
-and cannot invent the path: you create the directory, you name the file.
+**The brief names `$GATE_FILE` as an absolute path.** You create the directory and you name
+the file; Rin writes to what you named.
 
 Every check in that block is fail-closed, and each earns its place:
 
@@ -113,11 +110,9 @@ Every check in that block is fail-closed, and each earns its place:
 - **`mkdir`, `chmod` and the token are STOPs, not best-effort** — a tolerated failure here
   is setup that "ran" without landing, exactly what the collection check exists to catch.
 - **`pipefail` and the length check keep the token from silently becoming EMPTY.** `set -e`
-  alone misses a failure in the MIDDLE of a pipeline: if `od` fails, `tr` still exits 0, the
-  assignment succeeds, and `$GATE_TOKEN` is empty — collapsing the path back to the
-  deterministic form the token exists to prevent, with nothing reporting a problem.
-  Verified: `set -e` yields `len=0` and survives; `set -euo pipefail` aborts. This is AST-032
-  inside the mechanism written to satisfy AST-032, so both guards stay.
+  alone misses a mid-pipeline failure: `od` fails, `tr` still exits 0, and `$GATE_TOKEN` is
+  empty — collapsing the path back to the deterministic form the token exists to prevent.
+  Verified: `set -e` yields `len=0` and survives; `set -euo pipefail` aborts (AST-032).
 - **The token is the whole freshness mechanism.** The path cannot pre-exist, so existence at
   it IS proof this dispatch produced it — no mtime comparison, and so no dependency on
   `stat -f` (BSD) versus `stat -c` (GNU). It also makes concurrent dispatchers safe: two
@@ -128,10 +123,10 @@ plus `$GATE_FILE`, plus an explicit "stay inside this worktree" line.
 
 Cleanup is Thomas's, after the report: **collect and verify `$GATE_FILE` FIRST** (§3) →
 `herdr tab close <gate-tab-id>` → confirm the pane is gone → `git worktree remove
-<gate-worktree>` (never `--force`). Nothing is written inside the gate worktree, so the tree
-stays clean and the remove succeeds. **A refusal is a signal**: git refuses only when the
-worktree holds modified or untracked files, so a correctly-behaving Rin never triggers one —
-inspect what was written before doing anything else. Rin never removes its own worktree.
+<gate-worktree>` (plain, never `--force`). Rin writes nothing inside the gate worktree and
+removes nothing, so the tree stays clean and the remove succeeds. **A refusal is a signal** —
+git refuses only on modified or untracked files, so inspect what was written before doing
+anything else.
 
 ## 3. Collect the report
 
@@ -146,12 +141,11 @@ unreadable.
   one line per blocking finding. That is what keeps the gate observable to the owner.
 - **You copy `$GATE_FILE` into the gate history and verify it BEFORE cleanup.**
 
-**Why outside every checkout, and why not bare `/tmp`.** Rin must stay out of the gate
-worktree because you delete that tree at cleanup. Outside every checkout violates neither
-that nor the ban on touching your own checkout. But it must be `${TMPDIR:-/tmp}`: on macOS
-`/tmp` is `1777` and a directory created under it is world-readable, while `$TMPDIR` is
-per-user `0700`. Gate reports quote production measurements and code, so
-`no-secrets-in-exports` (AST-015) binds them — which is why the `chmod 700` is explicit.
+**Outside every checkout, and `${TMPDIR:-/tmp}` rather than bare `/tmp`.** You delete the
+gate worktree at cleanup, so the report lives outside it. On macOS `/tmp` is `1777` and
+anything under it is world-readable, while `$TMPDIR` is per-user `0700`. Gate reports quote
+production measurements and code, so `no-secrets-in-exports` binds them — hence the explicit
+`chmod 700` (AST-015).
 
 ```bash
 # after the pane reports, BEFORE any cleanup — all fail-closed
@@ -166,22 +160,20 @@ test -s "$DEST"                                               # MUST pass before
 rm -f "$GATE_FILE"                                            # only what THIS dispatch made
 ```
 
-**There is no freshness check because the token already is one.** With a deterministic
-filename, a re-dispatch reuses the same key and SHA, so a Rin that never got as far as
-writing would leave the previous file in place and `test -s` would pass on it happily — a
-check that cannot fail (AST-032), blessing a stale verdict as this round's.
+**The token IS the freshness check.** With a deterministic filename a re-dispatch reuses the
+same key and SHA, so a Rin that never wrote would leave the previous file in place and
+`test -s` would pass on it — a check that cannot fail, blessing a stale verdict as this
+round's (AST-032).
 
 **The destination is deliberately NOT tokenized, so it refuses to overwrite.** The gate
-history is durable and human-readable — it answers "why did we merge this SHA" months later
-— and a hex blob in every filename would damage exactly the property that made it worth
-keeping. An existing destination means two gates converged on the same artifact AND SHA,
-which is pathological and belongs in front of the owner.
+history is durable and human-readable — it answers "why did we merge this SHA" months later —
+and a hex blob per filename would damage that. An existing destination means two gates
+converged on the same artifact AND SHA: pathological, and the owner's call.
 
 **A missing or empty file is a FAILED gate: re-dispatch** (a fresh dispatch takes a fresh
-token). A verdict you cannot read in full is not a verdict, so a partial report reconstructed
-from the pane is not one either. There is no subagent to fall back to, and that is
-deliberate. On an opencode pane, remember `idle` is fabricated — a terminal state never
-stands in for having collected the file.
+token). A verdict you cannot read in full is not a verdict, so a report reconstructed from the
+pane is not one either, and there is no subagent to fall back to. On opencode `idle` is
+fabricated — collecting the file is what ends the gate.
 
 The rule generalizes: **evidence goes to files; panes and replies carry pointers and
 headlines.** A verdict held only in your context dies at the next compaction, which is the
@@ -191,10 +183,10 @@ second reason the file exists.
 it there rather than against a copy here — a restatement drifts, and the prior package's
 already had. A verdict is valid only for its SHA.
 
-**Read the artifact, never the author's account of it.** A summary table saying a finding
-was folded is not evidence the body changed: grep the body. Three times in one session
-findings were recorded as folded while the text was untouched — all three caught only
-because the reviewer refused the summary as proof.
+**Read the artifact rather than the author's account of it.** A summary table saying a
+finding was folded is not evidence the body changed: grep the body. Three times in one session
+findings were recorded as folded while the text was untouched, all three caught only by
+refusing the summary as proof.
 
 ## 4. Act on the findings
 

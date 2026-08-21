@@ -9,6 +9,21 @@ description: "Claude Code-specific dispatch protocol. Covers SendMessage brief d
 worktree law, brief format, submission, watching, simplify, cleanup). This skill adds only
 the Claude Code-specific launcher and verification.
 
+## The submission order
+
+Four actions, in this order. Getting them out of order produces a false terminal state that
+every downstream check reads as healthy (AST-032, AST-037).
+
+1. **Body via `SendMessage`** — everything except the slash command.
+2. **Slash command typed into the pane** as real input, plugin-qualified, single line.
+3. **Confirm it echoed in the pane.** Positive evidence, because a refusal or a substitute is
+   a real turn that ends `TERMINAL:done`, exit 0.
+4. **Arm the Monitor** — after step 3, never after step 1. A body-only `SendMessage` produces
+   its own turn; a watch armed before the command sees THAT turn end and reports
+   `TERMINAL:idle` on a builder that has not started.
+
+Detail for each is below.
+
 ## Launcher matrix — Claude rows
 
 ```text
@@ -41,16 +56,12 @@ shared protocol's worktree-visibility check catches this too, but this is the ex
 **Claude builders receive the brief BODY via SendMessage, not Herdr paste.** The shared
 protocol's paste-based submission (AST-037) applies to Codex/OpenCode only.
 
-**But SendMessage cannot deliver the phase's slash command, and through 2.3.8 this section
-claimed it could.** A message sent to another Claude session arrives wrapped as
-`<cross-session-message from="...">` — a tool-delivered peer message, **not a user turn**. The
-flow skills are `disable-model-invocation: true`, so a user turn is the only thing that reaches
-them. The sentence "the brief arrives as a user-turn message in the builder's session" was
-false, and the entire submission rested on it (AST-112).
+**SendMessage cannot deliver the phase's slash command.** A message to another Claude session
+arrives wrapped as `<cross-session-message from="...">` — a tool-delivered peer message, **not a
+user turn** — and the flow skills are `disable-model-invocation: true`, so a user turn is the
+only thing that reaches them (AST-112).
 
-Submission is therefore TWO steps, in this order:
-
-**1. Body via SendMessage.** Discover the session name via `ListAgents`, then:
+**Step 1 — body via SendMessage.** Discover the session name via `ListAgents`, then:
 
 ```
 SendMessage({
@@ -59,22 +70,20 @@ SendMessage({
 })
 ```
 
-**2. The bare slash command, TYPED into the pane as real input:**
+**Step 2 — the bare slash command, TYPED into the pane as real input:**
 
 ```bash
 herdr pane run <pane-id> '/mattpocock-skills:implement TRA-123'
 herdr pane send-keys <pane-id> Enter
 ```
 
-**Confirm it echoed in the pane before moving on.** The command needs no arguments beyond the
-ticket id, because the brief body is already in context — so it stays a single line and does
-not reintroduce the multi-line-paste-does-not-submit problem SendMessage exists to avoid
-(AST-037).
+**Step 3 — confirm it echoed in the pane.** The command needs no arguments beyond the ticket
+id, since the body is already in context, so it stays a single line and avoids the
+multi-line-paste problem SendMessage exists to solve (AST-037).
 
-**This failure does NOT surface as `NO_START`.** The refusal or the substitute is a real turn:
-it starts, it runs, it ends. The watcher returns `TERMINAL:done pane=<id>`, exit 0 — the
-reassuring line. Nothing in the watching apparatus can see this, which is why the confirmation
-above is positive-evidence and not optional.
+**This failure does NOT surface as `NO_START`** — a refusal or a substitute is a real turn that
+starts, runs and ends `TERMINAL:done`, exit 0. Nothing in the watching apparatus can see it,
+which is why step 3 is positive evidence rather than a courtesy.
 
 **Two dispatches, same round, same defect, two outcomes** (measured 2026-08-19):
 
@@ -83,9 +92,8 @@ above is positive-evidence and not optional.
 | builder | `/mattpocock-skills:implement` | **Loud** — invocation refused, builder stopped without touching the worktree, cited its own rule, asked for a human to type it. One round trip lost. |
 | shaper | `/mattpocock-skills:grill-with-docs` | **Silent** — began `cat`-ing the plugin's own skill files from the cache and proceeding from prose. Produces something shaped like a spec, indistinguishable from a real invocation. |
 
-The difference is not the runtime and not the command. `builder-claude.md` carries "if the
-invocation fails, the failure IS the finding — do not substitute" (AST-055); `shaper.md` did
-not. One contract had the rule and one did not, so the same defect surfaced once and hid once.
+Same runtime, same command shape. The builder's contract carried "the failure IS the finding"
+and the shaper's did not, so one defect surfaced and one hid (AST-055). Both carry it now.
 
 **Steering on BLOCKED**: when Monitor reports `blocked`, read the pane to understand the
 question, then reply via SendMessage:
@@ -117,18 +125,11 @@ herdr agent start "<role>-<artifact-key>" --kind claude --pane <pane-id> --timeo
 
 ## Watching — Monitor delivers, the watcher script decides
 
-**Claude runtime uses Monitor as the delivery channel and `herdr-watch-terminal.sh` as the
-watch itself.** Monitor turns each stdout line into a notification; the script decides what
-a line means. Through 2.3.3 this section told Thomas to put a bare `herdr agent wait` inside
-Monitor — that shape went deaf in the field, twice in two sessions (AST-107).
+**Monitor is the delivery channel; `herdr-watch-terminal.sh` is the watch.** Monitor turns
+each stdout line into a notification; the script decides what a line means. A bare
+`herdr agent wait` inside Monitor goes deaf — measured twice in two sessions (AST-107).
 
-**Arm the watch after step 2, not after step 1.** "Sending the brief" now means two things,
-and the order matters: a body-only `SendMessage` still produces a turn in the builder — it
-reads the message, has nothing to act on yet, and settles. A watch armed before the slash
-command is typed can see THAT turn end and report `TERMINAL:idle pane=<id>` on a builder that
-has not started (AST-032, AST-037 — a terminal state that belongs to the previous turn).
-
-So: body → command typed → echo confirmed → **then** Monitor:
+**Step 4 — arm the Monitor**, after the echo is confirmed:
 
 ```
 Monitor({
@@ -161,10 +162,9 @@ its own task id, and the notification carries the Monitor's `description`, so
 `description: "builder-<ticket-id> status"` is what tells you which builder reported. Every
 line the script emits also names its pane.
 
-Do not multiplex three panes into one watch. A gathered watch is a single point of failure
-for every builder behind it — the failure this release exists to fix, multiplied by three —
-and it needs a hand-rolled loop, which is where that failure came from. One dispatch, one
-pane, one Monitor. `TaskStop` cancels exactly one.
+**One dispatch, one pane, one Monitor.** A gathered watch is a single point of failure for
+every builder behind it, and it needs a hand-rolled loop — which is where that failure class
+came from. `TaskStop` cancels exactly one.
 
 **On notification, the same debounce applies**: re-check with `herdr agent get <pane-id>`
 before acting. The notification is the bell, not the verdict.
@@ -172,11 +172,10 @@ before acting. The notification is the bell, not the verdict.
 **To cancel a Monitor**, use `TaskStop` — no PID management, no process group kill.
 
 **Caffeinate IS needed, and the script carries it.** A Monitor command is an ordinary shell
-process, not an in-process native watch, so an idle sleep kills it exactly as it killed five
-hand-rolled watchers in one session. Releases through 2.3.3 stated the opposite; that was
-wrong. Use the script rather than a hand-rolled Monitor command and you inherit the
-`caffeinate -i` wrapper, the start guard, the debounce, the cap, and the wait slicing — a
-hand-rolled command has none of the five.
+process, not an in-process native watch, so an idle sleep kills it — measured on five
+hand-rolled watchers in one session. The script gives you `caffeinate -i`, the start guard,
+the debounce, the cap and the wait slicing; a hand-rolled Monitor command has none of the
+five.
 
 ## Measured runtime facts
 

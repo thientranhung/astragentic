@@ -20,9 +20,8 @@ Load `docs/agents/triage-labels.md` — the label set is the project's, produced
 
 **Then read the tree, not a map of it.** Most triage decisions turn on whether the code an
 item names still exists, so resolve each item against the CURRENT tree with `rg` and `git
-log`. This step used to say "load the code map", which named an artifact this package
-produced and nothing was told to read — removed in 1.6.1. A map would be faster and would
-also be the thing most likely to be stale exactly where triage needs it: on code that moved
+log`. A map would be faster and would also be the thing most likely to be stale exactly
+where triage needs it: on code that moved
 or died.
 
 ## 2. Classify each item against the code

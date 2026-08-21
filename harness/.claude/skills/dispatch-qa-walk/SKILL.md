@@ -9,6 +9,16 @@ Role contract: `.agents/roles/qa.md`. The gate-file setup, the pane form and the
 checks are identical to `review-with-rin` §2–3 and are **not restated here** — that skill is
 their one home. This skill owns only what a walk needs and the other gates do not.
 
+## The sequence
+
+1. **Create `gate-walk-<artifact-key>`** at the reviewed SHA — never the Builder's checkout.
+2. **Start the app there** with the project's own command.
+3. **Pack the brief** — `review-with-rin` §1 plus the five below.
+4. **Dispatch as a gate pane** and collect the report — mechanics are `review-with-rin` §2–3.
+5. **Stop the app and confirm the port is free**, then remove the worktree.
+
+Step 5 is the one this gate adds; a surviving dev server binds a port the next walk needs.
+
 ## The running app
 
 The other two modes read a detached worktree. A walk needs the product **running** at the
@@ -48,6 +58,6 @@ and a design-level blocker goes to the owner through `to-questionnaire`. A walk 
 is a *product* decision — two labels that disagree because the concepts genuinely differ — is
 the owner's, not a bug to assign.
 
-Cleanup adds one step before the worktree removal: stop the app you started, and confirm the
-port is free. A surviving dev server binds a port the next walk needs.
+Cleanup adds step 5 before the worktree removal: stop the app you started, and confirm the
+port is free.
 

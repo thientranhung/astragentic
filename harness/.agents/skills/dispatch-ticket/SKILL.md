@@ -1,6 +1,6 @@
 ---
 name: dispatch-ticket
-description: "Shared protocol for dispatching one claimed ticket as a visible Herdr pane — one Builder, one worktree, one branch, one pane. Covers the binding identity, inputs/resolution, worktree law, brief format, submission, watching, simplify artifact contract, and cleanup. Runtime-specific launcher and verification live in dispatch-ticket-claude, dispatch-ticket-codex or dispatch-ticket-opencode."
+description: "Dispatch one claimed ticket as a visible Herdr pane — one Builder, one worktree, one branch, one pane. Use when launching a Builder, a Shaper, QA or Rin into a pane. Pair with dispatch-ticket-claude, dispatch-ticket-codex or dispatch-ticket-opencode for the launcher."
 ---
 
 # Dispatch a ticket — shared protocol
@@ -13,6 +13,22 @@ Herdr topology and the artifact contract stay identical across all three.
 **The runtime-specific launcher, pre-dispatch verification and measured runtime facts live in
 the companion skill**: `dispatch-ticket-claude`, `dispatch-ticket-codex` or
 `dispatch-ticket-opencode`. Read both this skill and the runtime-specific one.
+
+## The sequence
+
+Every dispatch runs these in order. Each names where its detail lives.
+
+1. **Preflight, first dispatch of the session only** — watchdog running, payload committed.
+2. **Resolve the row** — runtime, model, effort from `orchestrator.md`; write-set collected.
+3. **Claim, then create branch and worktree** — the claim precedes the worktree (`thomas.md`).
+4. **Resolve or create the workspace**, then create the tab and pane, and gate on `foreground_cwd`.
+5. **Print the resolved dispatch**, then launch via the runtime-specific skill.
+6. **Submit the brief** — first line is the phase's plugin-qualified slash command.
+7. **Arm the watcher immediately** — submitting and arming are one action, not two.
+8. **Branch on the watcher's exit status and payload**, never on pane status alone.
+9. **Verify by artifact**, then cleanup — [`CLEANUP.md`](CLEANUP.md).
+
+A step that reports nothing is a step nobody can tell was skipped.
 
 ## The binding identity
 
@@ -67,11 +83,9 @@ before dispatching — inferring a runtime from installed binaries or from the t
 produces a confident wrong answer.
 
 **Headless implementation is not supported, on any runtime.** Every Builder runs in a visible
-Herdr pane, because the owner seeing work in flight is what this package sells — a topology
-nobody can observe is trusted on the dispatcher's word, which is the thing panes exist to
-remove. A `visibility=headless` request is a STOP: say it is unsupported and dispatch
-normally, or take it to the owner. The bounded exception this package used to ship went three
-weeks across two active projects without one request (AST-070).
+Herdr pane: a topology nobody can observe is trusted on the dispatcher's word, which is the
+thing panes exist to remove. A `visibility=headless` request is a STOP — say it is unsupported
+and dispatch normally, or take it to the owner (AST-070).
 
 ## One checkout, one driver
 
@@ -101,25 +115,22 @@ pgrep -f 'herdr-watchdog.sh' >/dev/null \
 **A dispatch with no watchdog is not permitted.** Start it if it is not up (`thomas.md`
 §Watchdog has the invocation), then dispatch.
 
-The reason this is a gate rather than advice: a watcher covers ONE submitted turn, every later
-turn needs a new one, and a missed re-arm is invisible — **an unwatched pane and a quiet
-healthy pane produce identical evidence: nothing** (AST-124). With the watchdog up, forgetting
-to re-arm costs latency; without it, silence. It is checked HERE because a watchdog that was
-never started manifests as no alerts, exactly what a healthy session looks like.
+A gate rather than advice because **an unwatched pane and a quiet healthy pane produce
+identical evidence: nothing** (AST-124). With the watchdog up, a missed re-arm costs latency;
+without it, silence.
 
-**Coverage, stated so nobody starts it and assumes the rest is covered**: the watchdog's
-`STUCK` rule requires that NO pane is working, so an active Thomas suppresses it — a Builder
-that finishes while Thomas is busy still pings nothing. The per-turn watcher and the watchdog
-cover different halves. Neither replaces the other.
+**Coverage**: the watchdog's `STUCK` rule requires that NO pane is working, so an active Thomas
+suppresses it — a Builder that finishes while Thomas is busy still pings nothing. The per-turn
+watcher and the watchdog cover different halves; neither replaces the other.
 
 ## The payload must be COMMITTED before the first dispatch
 
-**A git worktree contains tracked content and nothing else.** So a harness whose files are
+**A git worktree contains tracked content and nothing else.** A harness whose files are
 untracked — gitignored, or merely staged-but-uncommitted — is invisible inside every Builder
-worktree, including `.agents/roles/builder.md`, the file the Builder's adapter tells it to
-read first. The Builder starts with no contract and no sign that anything is missing.
+worktree, including `.agents/roles/builder.md`. The Builder starts with no contract and no
+sign that anything is missing.
 
-Two conditions, and both are needed (AST-036):
+Two conditions, both needed (AST-036):
 
 1. **Nothing in the payload is gitignored.** A repo with a broad `.agents/*` or `.claude/*`
    ignore rule needs allow-list entries for the harness paths.
@@ -165,16 +176,12 @@ No match → create one rooted at the repo:
 herdr workspace create --label "<workspace-label from orchestrator.md>" --cwd <repo-root> --no-focus
 ```
 
-Immediately after create, `herdr workspace list` again and confirm exactly one workspace now
-carries this label — a second session racing the same create can otherwise leave two. Record
+Immediately after create, `herdr workspace list` again and confirm exactly one workspace
+carries this label — a racing session can otherwise leave two. Record
 `workspace_managed_by_root=true` at workspace level right away: it is this dispatch's only
-durable statement that it owns the workspace, and cleanup below has no other source for it.
-Where the label already matched an existing workspace, read that workspace's own
-`workspace_managed_by_root` from its prior record — never assume it, and never overwrite an
-existing `false` with `true`.
-
-**One project, one workspace.** Never create a second workspace for the same project. Never
-invent a label — always read it from `orchestrator.md`.
+durable statement that it owns the workspace, and cleanup has no other source for it. Where the
+label matched an existing workspace, read that workspace's own `workspace_managed_by_root` from
+its prior record; an existing `false` stands.
 
 The workspace is project-scoped and outlives any one ticket, while a ticket's worktree is
 removed at cleanup — so the workspace cwd stays at repo-root rather than binding to the
@@ -198,9 +205,8 @@ herdr pane send-text <returned-root-pane-id> "cd <worktree-path>"
 herdr pane send-keys <returned-root-pane-id> Enter
 ```
 
-Where the workspace already exists, **always create a new tab** — never split into or reuse
-an existing tab. Tabs you did not create belong to the owner or another dispatch; splitting
-into them renames the tab in herdr UI and creates confusion.
+Where the workspace already exists, **always create a new tab**. Tabs you did not create
+belong to the owner or another dispatch, and splitting into one renames it in the herdr UI.
 
 ```bash
 herdr tab create --workspace <workspace-id> --label "ticket:<ticket-id>" \
@@ -252,23 +258,19 @@ a visible pane.
 
 **The plugin's flow skills are `disable-model-invocation: true`** — `implement`, `triage`,
 `wayfinder`, `to-spec`, `to-tickets`, `grill-with-docs`, `setup-matt-pocock-skills`. A model
-cannot reach them at all, so an agent that is *told about* `implement` in prose will read the
-prose and start coding without the skill.
+cannot reach them at all, so an agent merely *told about* `implement` in prose reads the prose
+and starts coding without the skill.
 
-What does reach them is **text arriving as a user turn**. So the brief's first line is the
-slash command itself, **written in its plugin-qualified form** — `/mattpocock-skills:<name>`
-— and the rest of the brief follows it. A bare `/implement` <!-- addr-ok: wrong form, cited -->
-resolves today only because
-nothing else claims that word yet; the qualified form is correct whatever gets installed
-later (AST-050). Claude Code's own `/compact` and `/clear` keep their bare names: they are CLI
-commands rather than skills, so no agent can reach them and a typed form is the only form.
+What reaches them is **text arriving as a user turn**. So the brief's first line is the slash
+command itself, **plugin-qualified** — `/mattpocock-skills:<name>` — with the rest of the brief
+below it. A bare `/implement` <!-- addr-ok: wrong form, cited --> resolves today only because
+nothing else claims that word yet (AST-050). Claude Code's own `/compact` and `/clear` keep
+their bare names: they are CLI commands, so a typed form is the only form.
 
-**A built-in that IS a skill is the opposite case.** `simplify` carries no
-`disable-model-invocation`, so an agent invokes it as `Skill(skill: "simplify")` and never
-needs a user turn. Writing it as `/simplify` <!-- addr-ok: cited as the wrong form --> hands
-an agent an address it cannot use, and a
-Builder given an unusable address rolls its own pass instead — measured on two tickets
-(AST-051). Slash form for what only a human can type; Skill form for what the model can.
+**Slash form for what only a human can type; Skill form for what the model can.** `simplify`
+carries no `disable-model-invocation`, so an agent invokes it as `Skill(skill: "simplify")`.
+Writing it as `/simplify` <!-- addr-ok: cited as the wrong form --> hands an agent an address
+it cannot use, and a Builder given an unusable address rolls its own pass instead (AST-051).
 
 ```text
 /mattpocock-skills:implement TICKET-123
@@ -326,7 +328,7 @@ send Enter again.
 
 ### Start the watcher — mandatory, immediately after submit
 
-**Every dispatched pane gets a watcher. No exceptions, no hand-rolled loops.**
+**Every dispatched pane gets a watcher, from the script below.**
 
 **And every NEW turn gets a NEW watcher — not just the first brief.** The watcher watches one
 submitted turn and exits when that turn reaches terminal, correctly. A fold sent after a gate,
@@ -347,13 +349,12 @@ substitute; it goes deaf (AST-107).
 <repo-root>/scripts/herdr-watch-terminal.sh <pane-id> 3 3600 120
 ```
 
-Run this immediately after submitting the brief — there is no confirm-`working` step to wait
-for any more, the script's own start guard is that step. For Codex/OpenCode, it is the ONLY
-sanctioned way to monitor a dispatched builder. Do NOT write your own polling loop, do NOT
-use `herdr agent wait --until idle` as a substitute, do NOT use `sleep` + `herdr agent get`
-in a loop. The script has caffeinate (machine cannot sleep and kill the watch), a start
-guard, debounce, a 3600-second cap, and wait slicing so a deaf `herdr agent wait` cannot
-stall the watch (AST-107) — hand-rolled alternatives lack all five.
+Run this immediately after submitting the brief — the script's own start guard is the
+confirm-`working` step. For Codex/OpenCode it is the ONLY sanctioned monitor: it carries
+caffeinate (the machine cannot sleep and kill the watch), a start guard, debounce, a
+3600-second cap, and wait slicing so a deaf `herdr agent wait` cannot stall it (AST-107).
+The script is the sanctioned monitor because hand-rolled loops, `herdr agent wait --until
+idle`, and `sleep` + `herdr agent get` carry none of the five.
 
 Branch on `$?` **and the payload** when it returns:
 
@@ -363,10 +364,8 @@ Branch on `$?` **and the payload** when it returns:
 - `1` + `TIMEOUT after <max>s pane=<id>` → builder exceeded cap, inspect pane
 - `2` + `NO_START pane=<id>` → builder never started working, re-read pane
 
-**Read the payload, not just the exit code.** Exit 0 has four meanings now. `blocked` means
-the builder hit a decision it cannot make alone — read the pane, answer the question, then
-restart the watcher. Jumping straight to artifact verification on `blocked` leaves the
-builder waiting indefinitely.
+**Read the payload, not just the exit code** — exit 0 carries four meanings. On `blocked`,
+read the pane, answer the question, then restart the watcher; the builder is waiting on you.
 
 **`done` means the turn ended, not that the work finished** (AST-097). A builder that
 launches background work and parks waiting for a notification reads as `done` while its
@@ -428,68 +427,10 @@ disposable gate worktree that cleanup is about to delete (AST-031, AST-032).
 lies.** Treat a non-zero herdr exit as a real failure worth reading, and keep the scepticism
 for the `agent_status` it returns on success.
 
-### Pipes swallow exit codes — all runtimes
-
-Any command piped through `tail`, `grep`, `head` or similar **loses the original exit code**
-and reports the last command's status instead (AST-105). This applies to ANY command Thomas
-runs — test suites, arm invocations, watchers — not only the watcher script below.
-
-| shape | status |
-| :--- | :--- |
-| `cmd … \| tail -3` | **always lost** — the pipeline reports the last command |
-| `cmd … \|\| true` / `\|\| echo "failed"` | **lost exactly when the command FAILS**, since that is when the right side runs; both failure codes are non-zero, so a real failure becomes 0 |
-| `echo "$(cmd …)"`, `export v=$(…)`, `local v=$(…)` | lost |
-| `v=$(cmd …)` (bare assignment) | preserved |
-| `cmd … && rhs` | preserved on FAILURE; a success is overwritten by `rhs` |
-
-`||` is the one to watch for: it is the shape people reach for when they are being careful,
-and it converts precisely the failures you needed to hear about into silence (AST-032).
-
-**Safe alternatives when you need both status and trimmed output:**
-
-```bash
-cmd … > /tmp/out.log 2>&1; status=$?; tail -25 /tmp/out.log; exit $status
-```
-
-### Watcher script operational details (all runtimes)
-
-**Claude runtime does NOT skip this section.** Since 2.3.4 every runtime runs this same
-script; Claude only differs in how it is launched and stopped — `Monitor` instead of a
-direct call, `TaskStop` instead of the process-group kill below. Everything else here —
-`NO_START` semantics, the exit contract, status-is-a-bell — applies to Claude unchanged.
-Only the "Stopping a watch" block is Codex/OpenCode-specific.
-
-`<repo-root>/scripts/herdr-watch-terminal.sh` watches a NEWLY SUBMITTED turn: it waits to
-observe `working` first, so pointing it at an already-idle pane returns `NO_START` —
-truthful output rather than a fault. Point it at the pane whose turn you just opened. Any
-role may read or watch any pane, and concurrent watchers are fine. Its exit status IS the
-signal (`0`+`TERMINAL:<state> pane=<id>` / `1`+`TIMEOUT ... pane=<id>` / `2`+`NO_START
-pane=<id>` — every line names its pane so concurrent watches stay distinguishable), so call
-it by absolute path, alone on its own line, and branch on `$?`. The pipe table above applies
-here too.
-
-**Stopping a watch takes the process GROUP — Codex/OpenCode only.** On Claude runtime the
-watch is a `Monitor`, and `TaskStop` cancels it; none of the PID work below applies. On macOS the watcher re-execs under
-`caffeinate`, so `caffeinate` is the visible PID and killing it orphans the wrapped shell,
-still polling. Signal the group, then confirm:
-
-```bash
-pgid=$(ps -o pgid= -p <watch-pid> | tr -d ' ')   # read it first — see below
-kill -TERM -"$pgid"                              # leading '-' targets the GROUP
-pgrep -g "$pgid" >/dev/null && echo SURVIVORS || echo clean
-```
-
-Verify with `pgrep` rather than `ps | grep herdr-watch-terminal`: that grep matches its own
-command line, so it can never return empty — a check incapable of passing, the mirror of a
-signal incapable of failing (AST-032). (`grep '[h]erdr-watch-terminal'` works too; the
-brackets are what stop the pattern matching itself.) Read the PGID before signalling: a
-watch launched inline from your own shell may share that shell's group, so a watch you
-intend to group-kill belongs in its own.
-
-Status is a bell. The verdict comes from branch movement, the diff, the tests, the final SHA
-and the reported artifact. **Observation is unrestricted — reading or watching any pane is
-always legal, and verify-by-artifact requires it. Only TASKING is restricted**, and Thomas
-tasks the Builder directly, since there is no intermediate role.
+**Watcher operational reference** — the exit contract in full, `NO_START` semantics,
+stopping a watch by process group, and the pipe-swallows-exit-code table that applies to every
+command Thomas runs: [`WATCHING.md`](WATCHING.md). Read it when a watch returns something you
+did not expect, before diagnosing herdr.
 
 ## Long tickets
 
@@ -503,123 +444,9 @@ the current diff. Runtime auto-compaction carries the same re-grounding requirem
 rather than inside one — and a new ticket takes a fresh pane and worktree anyway. It is not
 cwd, branch, worktree, process or lifecycle cleanup.
 
-## The simplify pass
+## Cleanup
 
-**Each increment runs one simplify pass over its own diff, after the build is green.** The
-artifact is a `simplify(increment):` commit on the ticket branch — real cleanup, or an
-`--allow-empty` one reading `no findings on <base>..<head>` where the pass finds nothing. An
-empty pass is legitimate; an ABSENT marker and an empty one are otherwise indistinguishable
-in the tree, which is why the marker is the artifact.
-
-**The commit body carries a `Pass:` line naming what ran**, because the subject cannot
-distinguish the sanctioned pass from a substitute that produced the same string. The Builder
-contract owns the exact form.
-
-Behaviour-preserving only: dead code and orphans, duplication that appeared because two
-changes touched one seam, wrong-altitude fixes, comments that no longer describe the code.
-Anything that would change behaviour is a finding for Thomas rather than a change, and a
-cleanup that would touch a floor item's construction line is reported instead.
-
-Thomas verifies by artifact before the milestone gate —
-`git log <base>..<head> --grep '^simplify(increment):' --format='%h %s%n%b'` — rather than by
-asking whether the pass ran, and reads the `Pass:` line rather than only the subject.
-
-## Review and cleanup
-
-The Builder pushes and returns the artifact. Thomas reads the real diff, dispatches Rin's
-milestone gate, and alone decides merge. A settled Herdr status does not authorize cleanup:
-capture the final transcript and verify the merge or an explicit owner-approved abandonment
-first. Herdr refuses to close the last tab in a workspace, so resolve the topology rather
-than calling `tab close` blindly:
-
-```bash
-herdr tab list --workspace <returned-workspace-id>
-herdr pane list --workspace <returned-workspace-id>
-```
-
-- Another tab remains → close the exact ticket tab: `herdr tab close <returned-tab-id>`.
-- The ticket tab is last AND the inherited `workspace_managed_by_root=true` AND no owner
-  resource or active ticket remains → close the exact workspace instead:
-  `herdr workspace close <returned-workspace-id>`.
-- The ticket tab is last and workspace ownership is false, missing or ambiguous → STOP.
-  Record the survivor and ask whether to close or retain it. A dummy shell created to hide
-  an orphan reports success while leaving the orphan.
-
-Re-list the workspace and confirm the pane is absent before removing the checkout.
-
-**Two checks before removing a worktree.** Both must pass — failing either is STOP.
-
-**Check 1: uncommitted work** (AST-092). A Builder that stops before committing leaves work
-that exists only on disk — `git worktree remove` deletes it silently.
-
-```bash
-cd <worktree-path>
-git status --short
-```
-
-Non-empty output (staged, modified, or untracked files) — **STOP**. The worktree has work
-that was not committed. Report to the owner with the file list and ticket id, and wait for a
-decision: commit and continue, or discard explicitly.
-
-**Check 2: simplify markers AND provenance** (AST-094, AST-099). A Builder that commits and
-pushes correctly can still skip the simplify pass, or run a manual review and commit with
-the correct subject but without invoking the skill.
-
-```bash
-MARKERS=$(git log <base>..HEAD --grep '^simplify(increment):' --oneline | wc -l | tr -d ' ')
-WELLFORMED=$(git log <base>..HEAD --grep '^simplify(increment):' --format='%b' | grep -c '^Pass: Skill(skill: "simplify")' || true)
-echo "markers=$MARKERS wellformed=$WELLFORMED"
-```
-
-Zero markers — **STOP** (AST-094). Send the Builder back to run simplify.
-
-**A marker may be superseded, and that is a GREEN state, not a shortfall.**
-
-Run the checker rather than the arithmetic:
-
-```bash
-<repo-root>/scripts/check-simplify-markers.sh <base> [head]
-```
-
-Exit 0 is green. Exit 1 prints every reason, one `STOP:` line each. It replaces the inline
-counting above, which could not express what follows.
-
-`markers > wellformed` can be an honest state: a Builder retracting its own earlier false or
-premature `Pass:` line in the open is the check WORKING, and it reads as the check failing
-(AST-121). So a later marker may name the one it replaces:
-
-```
-Supersedes: <sha of the marker this replaces>
-```
-
-**Four rules, and the attack each one closes** (AST-122):
-
-1. **At most one `Supersedes:` per marker.** Without it, one genuine pass launders an unbounded
-   number of fabricated markers by listing their SHAs.
-2. **A marker that supersedes must itself be well-formed.** Without it, rule 1 is evaded by
-   chaining fabricated markers, each superseding the last.
-3. **The named SHA must be a marker IN RANGE**, named by only one marker.
-4. **Green: every LIVE marker — one nothing supersedes — is well-formed.**
-
-**Residual, stated because it is not closed**: markers carry no increment identity — the
-subject is free prose. Nothing proves the superseding pass covers the SAME increment as the
-marker it retracts, so a Builder with two increments can still retract one using the other's
-real pass. **The counts are a filter, not a verdict — read the bodies.** A protocol that
-prices honesty above concealment gets concealment, which is why retraction is a cheap
-mechanism here rather than a documented exception (AST-121). The Builder carries its own
-self-check (`builder.md`), but the mechanism that causes the skip also displaces the
-self-check, so Thomas verifies independently.
-
-**Only when both checks pass** — `git status` empty AND `markers == wellformed + superseded`
-with every named SHA verified — is
-removal safe:
-
-```bash
-git worktree remove <worktree-path>
-git branch -d <ticket-branch>
-git worktree prune
-```
-
-`-D` is for an explicitly owner-approved abandonment. Close only what this dispatch created.
-Cleanup is complete when the Herdr tab and the Git worktree and branch are all retired, or
-an exact retained-state reason is recorded for each survivor.
+**Cleanup protocol** — the simplify-pass artifact contract, the two pre-removal checks
+(uncommitted work, simplify markers and provenance), the `Supersedes:` rules, and Herdr tab /
+workspace / worktree retirement: [`CLEANUP.md`](CLEANUP.md). Read it when the Builder has
+handed back, before removing anything.

@@ -1,3 +1,49 @@
+# Astragentic 2.3.28
+
+Contracts and skills carried their own evidence inline; the load schedule cost more than the
+prose did.
+
+## What changed
+
+- **Rationale moves to its designated home.** Every contract and skill now cites `AST-` ids
+  where it used to restate the incident. The ledger already declared itself the evidence base;
+  the contracts just never respected the split. Every id is unchanged, none invented.
+- **Each contract opens with a Load table** — what to read, when, and for what. Scattered
+  pointers (`orchestrator.md` named in four places in `thomas.md`, `docs/agents/*` buried
+  mid-paragraph) collapse into one place per role.
+- **Runtime supplements load per builder, not per session.** The `thomas` and `rin` adapters
+  told each role to read ALL THREE supplements at session start — 758 and 208 words of which
+  two thirds never apply. The adapters now point at the contract's Load table instead of
+  keeping a competing copy of the load rule. Thomas's boot chain: −44%.
+- **Adapters stop restating their contract.** They co-load with it, so the role summary was
+  real duplication. 972 → 604 words across five.
+- **`dispatch-ticket` splits by branch.** `WATCHING.md` (watcher exit contract, stopping a
+  watch, the pipe table) and `CLEANUP.md` (simplify verification, `Supersedes:` rules, worktree
+  retirement) load when their branch fires. Per-dispatch cost 5,262 → 3,749 words. A block of
+  inline marker arithmetic the file itself called superseded is gone.
+- **Justification vacates heading position.** `reconcile-tracker` had five "Why" headings;
+  `codex-arm` opened with 230 words defending a cadence the same file declares belongs to
+  `thomas.md`. Headings now name the rule.
+- **`dispatch-ticket-claude` gains a step spine.** Its four-step submission order was split
+  across two sections sixty lines apart, and getting that order wrong produces a false terminal
+  state every downstream check reads as healthy.
+- **`dispatch-qa-walk` gains one too** — it grew 13%, deliberately: a dispatch recipe with a
+  mandatory order and no numbered steps.
+- **`review-with-rin` points at Rin's contract**, not at the Claude adapter that declares it
+  carries no rule of its own.
+
+Applied against `mattpocock-skills:writing-for-agents`, which `SPEC-1.0.0.md` §Writing rules
+has mandated since 1.0.0 and which no release had cited. Its prohibition-density axis was
+already satisfied; pruning, leading words and progressive disclosure were not.
+
+No rule, command, table, `AST-` citation or owner-set value changed. `docs-staleness-audit.sh`
+clean on all four axes.
+
+## Upgrade from 2.3.27
+
+Copy `harness/`. `.agents/orchestrator.md` is yours and keeps its values — only its prose is
+shorter. `dispatch-ticket` now ships two sibling reference files; copy the whole skill folder.
+
 # Astragentic 2.3.27
 
 The receipt was a producer with no reader; the QA walk re-walked the whole product per merge.

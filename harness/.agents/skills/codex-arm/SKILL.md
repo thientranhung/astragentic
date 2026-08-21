@@ -9,26 +9,15 @@ description: Invocation mechanics for the cross-vendor arm — the Codex pass Th
 Do not restate the cadence in this file; this skill owns the HOW. `codex-claude-arm` is the
 mirror for a Codex root.
 
-## Why per ticket, so nobody reverts it as a mistake
+**Thomas fires it, never Rin**, and records which vendor ran. Rin is dispatched per gate and
+would otherwise fire the arm from inside its own review.
 
-The arm ran at phase end until a project measured the payload it builds. At slice scope one
-measured slice reached **6,904 added lines across 31 files**, against **1,238 for a single
-ticket** — about six times. A payload that size forces the reviewer to skim, and skimming is
-how a hollow test survives: three survived in one day on that project, each of them plainly
-visible at single-ticket scope, all three caught by hand at the merge rather than by any
-gate. The first per-ticket arm returned a HIGH the author's own mutation pass had missed — a
-destructive reset authorizing outside its write transaction, while an established fence in
-the same codebase rechecks inside. **That is the class the arm wins at: internal
-inconsistency against the project's own standard**, because the author reads the ticket and
-the arm reads the repository.
-
-The second pass earns its cost the same way, and it is why `rin.md` makes it mandatory rather
-than advisory: on one ticket pass 1 found authorization outside the write transaction, the
-fix added transaction and locking code, and **pass 2 found a real 40P01 deadlock cycle inside
-that new code**. Nobody had looked at it, because it did not exist when pass 1 ran.
-
-**Thomas fires it, never Rin.** Rin is dispatched per gate and would fire the arm from
-inside its own review. Thomas also records which vendor ran.
+**What the arm wins at: internal inconsistency against the project's own standard**, because
+the author reads the ticket and the arm reads the repository. Measured, for why the cadence in
+`thomas.md` is per ticket rather than per phase: a slice-scope payload reached 6,904 added
+lines across 31 files against 1,238 for one ticket, and three hollow tests survived that skim
+in a single day. Pass 2 earns its cost the same way — on one ticket it found a real 40P01
+deadlock inside the code pass 1's fix had just added.
 
 ## Invocation
 

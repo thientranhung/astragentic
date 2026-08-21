@@ -23,18 +23,16 @@ in-progress with a live assignee **after their code was on the base branch**, th
 full day. Nothing errored. The merge ran; the write-back did not; no artifact recorded the
 omission. That is AST-057 — *a step nothing reports is one nobody can tell was skipped.*
 
-## Why git is the oracle, and not the tracker itself
+## Git is the oracle
 
-A wrong ticket state is **perfectly consistent with itself**. In-progress with an assignee and
-no other evidence is exactly what a real in-flight ticket looks like; from inside the tracker
-the two are indistinguishable. So a check that reads only the tracker can detect nothing.
+**Measure the tracker against git, never against itself.** A wrong ticket state is perfectly
+consistent with itself — in-progress with an assignee looks exactly like a real in-flight
+ticket — so a check reading only the tracker detects nothing.
 
-**An oracle must be independent of what it measures.** Applied to the tracker, that means git —
-the same law behind the standing rule that a test's expected value must never be derived from
-the code under test, and that a parity or coverage denominator must come from an independent
-enumeration, never from the thing being measured.
+An oracle must be independent of what it measures: the same law that keeps a test's expected
+value out of the code under test, and a coverage denominator out of the thing being counted.
 
-## The two halves, and why they are split
+## The two halves
 
 Neither half can do this alone, and pretending otherwise is how it breaks:
 
@@ -69,7 +67,7 @@ first run returned a third noise on exactly this mistake. Read it from this proj
 session-start instructions (`AGENTS.md` / `CLAUDE.md`), where adaptation records it; an unset
 value is a STOP, not a guess.
 
-## Matching is by commit SUBJECT, never the body
+## Match on the commit SUBJECT
 
 A live project measured a body grep for one ticket id returning commits that only *cited* it
 in a handback — subject-only matching returned exactly the genuine set. The script already
@@ -87,24 +85,20 @@ a body grep first. Use `\b` so a shorter id never matches inside a longer one.
 A ticket with `subject_commits = 0` **and** a branch with unmerged commits **and** a worktree
 is not drift — that is a healthy in-flight ticket. Do not report it.
 
-## Why nothing here writes
+## Report only — nothing here writes
 
-The join key is a ticket id in a commit subject, and **that key is not exact.** A commit
-naming a ticket is not proof the ticket is finished: a partial fix, a revert, a review-pass
-fold and a forward-citation all produce a hit. A live project's own first real run flagged a
-phase ticket as "merged" on three commits that were spec work *naming* the phase without
-completing it — the fuzzy-key failure arriving on the very first run, exactly where it is
-cheapest to see and most tempting to wave off.
+**Thomas applies each fix by hand**, and the join key stays approximate no matter how many
+drift classes get added.
 
-So auto-closing on this signal would eventually mark unfinished work done. That is the
-**phantom-done** direction, and it is worse than lag in a specific way: a tracker that is
-wrong and *messy* still invites suspicion, while a tracker that is wrong and *tidy* gets
-believed — by the one reader who cannot re-run the frontier query, which is the owner.
+The key is a ticket id in a commit subject, and **it is not exact**: a partial fix, a revert,
+a review-pass fold and a forward-citation all produce a hit. A live project's first real run
+flagged a phase ticket as "merged" on three commits that were spec work merely *naming* it.
 
-**Report only; Thomas applies each fix by hand.** Do not let a tidy-looking automation absorb
-this ruling — the join key stays approximate no matter how many drift classes get added.
+Auto-closing on that signal marks unfinished work done — the **phantom-done** direction, worse
+than lag because a tracker that is wrong and *messy* invites suspicion while one that is wrong
+and *tidy* gets believed, by the one reader who cannot re-run the frontier query.
 
-## What stays Thomas's judgement, and is NOT a rule
+## Thomas's judgement, not a rule
 
 - **Frontier promotion is over-inclusive if computed from blocking edges alone.** A live
   project measured this the same day: the raw rule returned claimable tickets that included
@@ -143,7 +137,7 @@ tracker-write capability Thomas already has — never something this skill or it
 performs. If that later action changes the tracker, report what changed at that time, not
 here.
 
-## A tool that has never run is not evidence
+## Run it before citing it
 
 Build it, commit it, then **run it against real data before trusting a line of it.** The
 project this skill was adapted from did exactly that and the exercise failed three separate
