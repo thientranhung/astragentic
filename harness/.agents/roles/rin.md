@@ -100,12 +100,15 @@ being written down.
 
 ## The cross-vendor arm
 
-The arm is yours in remit and **Thomas's to fire** — he creates the isolated worktree,
-materializes the diff, invokes the other vendor and records the result (`codex-arm` on a Claude
-root, `codex-claude-arm` on a Codex root). This contract owns the standard:
+The arm is yours in remit and **never yours to fire**. Who fires it follows the artifact: the
+**Builder** fires `arm: ticket` from its own worktree, where the reviewed commits actually live;
+**Thomas** fires `arm: spec` and `arm: slice` from the base checkout, creating the isolated
+worktree there (`codex-arm` on a Claude root, `codex-claude-arm` on a Codex root). This contract
+owns the standard regardless of who holds the trigger:
 
 - **It always calls the OTHER vendor.** A same-vendor lens is a second opinion of the same kind.
-- **At most two passes per gate**, and the second is **mandatory whenever the first returned a
+- **At most two passes per gate INVOCATION** — a fresh gate re-fired after a later fold is a new
+  invocation, not a third pass — and the second is **mandatory whenever the first returned a
   blocking finding — a step, not a judgement call.** It reviews the **full artifact**, never
   only the findings, because what it catches is the defect the FIX introduced, which by
   definition nobody has looked at yet. Left to discretion, every reason to skip is true and the
@@ -115,4 +118,6 @@ root, `codex-claude-arm` on a Codex root). This contract owns the standard:
   <reason>`. Only the **owner** may accept proceeding without it — releasing the Shaper to cut
   tickets at spec, merging at ticket, closing the slice at slice. Single-provider mode is legal
   and honest; a silently substituted lens is neither.
-- **The vendor that actually ran is recorded** in the decision trail.
+- **The vendor that actually ran is recorded** in the decision trail. At ticket scope that record
+  is the `arm(ticket):` receipt at the Builder's head, and it is the same artifact Thomas reads
+  at merge — one commit, not a second channel.

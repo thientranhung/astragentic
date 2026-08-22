@@ -1,3 +1,89 @@
+# Astragentic 2.4.0
+
+The ticket arm moves into the Builder, and its receipt gets a validator in the same release —
+so the format and the thing that checks it are never one version apart.
+
+## What changed
+
+- **The Builder fires `arm: ticket`, from its own worktree**, inside one closed loop that hands
+  back once: `implement → code-review → simplify → arm pass 1 → [fold → arm pass 2] →
+  arm(ticket): receipt → handback`. `thomas.md` keeps `arm: spec` and `arm: slice`, which still
+  fire from the base checkout.
+
+  **This deletes machinery; it does not repair something still broken**, and the distinction is
+  worth stating plainly because the opposite version reads better and is false. The empty-range
+  failure (AST-103) was closed on 2026-08-19 by a guard that has never been shown to fail. But it
+  closes the hole *by adding a step an operator must execute*, and AST-103's own closing line is
+  that prose warnings do not survive contact with an operator who just read them — a bash block
+  embedded in prose is the same genus, one notch stronger. Standing in the reviewed tree makes
+  the correct range the **default**, and takes the gate worktree, the broker kill (AST-100), the
+  container stop (AST-115) and the never-reuse-a-path rule (AST-095) out of the ticket path
+  altogether. The other half is the router's queue: three concurrent tickets produced **nine fold
+  rounds and one merge in half a day**, every round a turn of Thomas's, and QA was never
+  dispatched at all (AST-135).
+
+- **`codex-claude-arm` does NOT mirror this at ticket scope, deliberately.** `claude -p` is a full
+  agent with Edit and Bash, so it keeps its detached worktree even when the Builder is already
+  standing in the reviewed tree. The range is correct by construction either way; the isolation is
+  not what the move removed. Mirroring the Codex path here would hand a writing reviewer the
+  Builder's live checkout (AST-016).
+
+- **`arm(ticket):` is a real format now, and `check-simplify-markers.sh` validates it.** Written
+  from a measurement of **32 real receipts**, not from the contract, and the corpus is less
+  uniform than the contract would have suggested. What that changed:
+
+  | | |
+  |---|---|
+  | field detection | **substring, not line-anchored** — `Vendor:`, `Tests:` and `Pass:` are commonly packed on one line separated by runs of spaces |
+  | `Tests:` | leading token `RAN` or `NOT RUN`, **prefix not equality** (`NOT RUN by the arm (…)` is real), everything after is prose |
+  | `Output:` | **not required** — absent in 4 of 32, prose in 3, and where it is a path it is a session-scoped scratch path belonging to a session that has ended. Requiring it buys presence, not evidence |
+  | `Pass:` | **no cap assertion** — `Pass: 8` is legal where a fresh gate re-fired per fold and no single invocation exceeded two |
+
+- **Field validation is scoped per kind, and the two kinds differ for a reason.**
+  `simplify(increment)` validates every live marker, because AST-122's economy — every fabricated
+  marker costs its own genuine pass — collapses if a junk live marker is not a finding.
+  `arm(ticket)` validates **only the marker that IS the head**. That dissolves three correct
+  shapes a field-list validator would reject (two `Supersedes:` repairs, one of them a Builder
+  catching the covers-head failure in the field and re-firing; one fieldless correction marker)
+  without a special case: the router merges one tree on one receipt, and whatever is at the head
+  is that receipt. Everything below it is narration, and there is nothing to launder when exactly
+  one commit is asserted against.
+
+- **`Reviewed:` == the receipt's own parent, OR `Unreviewed-delta:` is present. Never neither**
+  (AST-134). The receipt commits empty, so its parent is the tree the gate read. The fold makes
+  that equality legitimately false — the tree moves past what any pass read and a pass 3 is over
+  the cap — so the gap gets declared instead of hidden. **Its absence where `Reviewed:` is not the
+  parent is the failure.** Same shape as AST-121: a check with no vocabulary for being obeyed
+  reads honesty as failure.
+
+- **`thomas.md`'s capacity section was in the wrong place.** 2.3.35 inserted it mid-way through
+  §The frontier, orphaning that section's closing paragraph about over-inclusive blocking edges.
+  Moved below it; no wording changed.
+
+## The residual, stated rather than implied
+
+The receipt is **a commit written by the agent being verified**. AST-130 measured a fork forging
+exactly this shape with a sanctioned degraded `Pass:` line quoting a real error string, caught by
+no check. That is the trade the router's queue is worth, and 2.3.35's `isolation: "worktree"` rule
+is what narrows it. It is not closed. The marker is a receipt; the diff is still the evidence.
+
+## Upgrade from 2.3.36
+
+Copy `harness/`, or `./install.sh <target> --apply`. Four role contracts and both arm skills
+change, so a project that has edited any of them will see `CONFLICT` and keep its own — read both
+sides rather than taking either whole.
+
+**The merge command changed shape**: one call reads both receipts.
+
+```bash
+scripts/check-simplify-markers.sh <base> <head> \
+    --marker 'simplify(increment)' --marker 'arm(ticket)'
+```
+
+A project not yet writing `arm(ticket):` receipts should pass only `--marker 'simplify(increment)'`
+until its Builders do; asking for a marker kind nobody writes is an immediate `AST-094` STOP, which
+is correct and is not the finding you want on day one.
+
 # Astragentic 2.3.36
 
 2.3.35 fixed one half of a matcher bug and shipped the other half unchanged, three files away.

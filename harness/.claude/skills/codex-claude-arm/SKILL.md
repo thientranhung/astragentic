@@ -1,6 +1,6 @@
 ---
 name: codex-claude-arm
-description: ARM ONLY — the Claude pass a Codex root fires over a completed artifact, per ticket before its merge, plus one at spec and one at slice close. Covers the isolated worktree, the read-only allowlist, cleanup order, and recording. This skill never dispatches a reviewer and never hosts a gate; a Codex root cannot host the gate (see review-with-rin). Use on a Codex root when an artifact is committed and ready for its arm.
+description: ARM ONLY — the Claude pass a Codex root fires over a completed artifact: the Builder fires it per ticket from its own worktree, Thomas fires it at spec and at slice close. Covers the isolated worktree, the read-only allowlist, cleanup order, and recording. This skill never dispatches a reviewer and never hosts a gate; a Codex root cannot host the gate (see review-with-rin). Use on a Codex root when an artifact is committed and ready for its arm.
 ---
 
 # The cross-vendor arm on a Codex root
@@ -14,7 +14,16 @@ provider's runtime, and no Codex adapter can host it, so a `rin` row naming Code
 misconfigured row to raise with the owner. The gate runs on a Claude root; this pass is what
 a Codex root contributes. The arm always calls the OTHER vendor.
 
-**The root leader fires this pass, never the reviewer.**
+**Never the reviewer.** Who fires it follows the artifact: the **Builder** fires `arm: ticket`,
+**Thomas** fires `arm: spec` and `arm: slice`.
+
+**The ticket scope is NOT symmetric with `codex-arm`, and the difference is load-bearing.** A
+Builder firing the Codex arm runs it in its own worktree, because `codex exec review` reads. A
+Builder firing THIS arm may not: `claude -p` is a full agent with Edit and Bash, so it gets its
+own detached worktree even though the Builder is already standing in the reviewed tree. The
+range is still correct by construction — the head is the Builder's own `HEAD` — but the
+isolation below is not optional and is not something the move removed. Mirroring `codex-arm`'s
+ticket path here would hand a writing reviewer the Builder's live checkout (AST-016).
 
 ## Isolation is unconditional
 

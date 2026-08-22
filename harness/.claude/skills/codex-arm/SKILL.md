@@ -1,16 +1,24 @@
 ---
 name: codex-arm
-description: Invocation mechanics for the cross-vendor arm on a Claude root — the Codex pass Thomas fires over a completed artifact. Covers the runtime invocation, argv and quoting gotchas, intent-loaded focus text, failover, and where the outcome is recorded. Thomas fires it, never Rin. Cadence lives in thomas.md; it is per ticket, at handback, before the merge, plus one at spec and one at slice close.
+description: Invocation mechanics for the cross-vendor arm on a Claude root — the Codex pass Thomas fires over a completed artifact. Covers the runtime invocation, argv and quoting gotchas, intent-loaded focus text, failover, and where the outcome is recorded. The BUILDER fires the ticket arm from its own worktree; Thomas fires spec and slice from the base checkout. Never Rin. Cadence lives in thomas.md and builder.md.
 ---
 
 # The cross-vendor arm on a Claude root
 
-**When it fires belongs to `thomas.md`, not here** — three scopes, at most two passes each.
-Do not restate the cadence in this file; this skill owns the HOW. `codex-claude-arm` is the
-mirror for a Codex root.
+**When it fires belongs to `thomas.md` and `builder.md`, not here** — three scopes, at most two
+passes **per gate invocation**. Do not restate the cadence in this file; this skill owns the HOW.
+`codex-claude-arm` is the mirror for a Codex root.
 
-**Thomas fires it, never Rin**, and records which vendor ran. Rin is dispatched per gate and
-would otherwise fire the arm from inside its own review.
+**Who fires it depends on the scope**, and it is never Rin — Rin is dispatched per gate and would
+otherwise fire the arm from inside its own review.
+
+| Scope | Fired by | Standing in |
+|---|---|---|
+| `arm: spec` | Thomas | the base checkout |
+| `arm: ticket` | **the Builder**, inside its own closed loop | its own worktree, which holds the reviewed commits |
+| `arm: slice` | Thomas | the base checkout |
+
+Whoever fires it records which vendor actually ran.
 
 **What the arm wins at: internal inconsistency against the project's own standard**, because
 the author reads the ticket and the arm reads the repository. Measured, for why the cadence in
@@ -33,17 +41,43 @@ background; the completion notification is your bell.
 
 ### Bind it to the reviewed head, and fail closed
 
-**The companion resolves `HEAD` from the checkout it runs in, and `--base` alone does not
-say which head.** At the ticket fire point you are resident in the base checkout while the
-reviewed commits are still in the Builder's worktree, unmerged — so the run compares the base
-branch to itself, reads nothing, and returns **clean**. The mandatory arm becomes a check that
-cannot fail, at the one moment the ticket is about to merge on its verdict.
+**The companion resolves `HEAD` from the checkout it runs in, and `--base` alone does not say
+which head.** Where the two disagree, the run compares the base branch to itself, reads nothing,
+and returns **clean** — a mandatory gate that cannot fail. Measured twice in two days, both
+caught by the operator rather than the gate (AST-103).
 
-It is only the ticket scope that exposes this. At slice scope the commits are already on the
-base branch, which is why the old phase-end invocation never met it.
+Which apparatus you need depends on **where you are standing**, and the two cases are not
+symmetric.
 
-So resolve the head yourself, review from a detached checkout at that SHA, and **verify the
-range before you trust the verdict**:
+#### At TICKET scope — you are already standing in the reviewed tree
+
+The Builder fires this one, in its own pane, whose cwd **is** the worktree holding the reviewed
+commits. `HEAD` resolves to the head under review because there is nowhere else it could
+resolve to. **No gate worktree, no broker to kill, no container to stop, no path disambiguator**
+— none of the apparatus below applies, because none of it is needed to make the range correct.
+
+Keep the range header, which costs one command and is the thing a reader glances at:
+
+```bash
+COMMIT_COUNT=$(git rev-list --count <base>..HEAD)
+FILE_COUNT=$(git diff --name-only <base>...HEAD | wc -l | tr -d ' ')
+[ "$COMMIT_COUNT" -gt 0 ] || { echo "STOP: range <base>..HEAD has 0 commits — reviewing nothing"; exit 1; }
+echo "arm range: $COMMIT_COUNT commits, $FILE_COUNT files changed (<base>..HEAD)"
+```
+
+**This is why the ticket arm moved into the Builder, and the reason is worth keeping straight.**
+AST-103's guard — the detached checkout, the HEAD assert, the count gate — closed the hole on
+2026-08-19 and closed it correctly. But it closes it by adding **a step an operator must
+execute**, and AST-103's own closing line is that prose warnings do not survive contact with an
+operator who just read them. A bash block embedded in prose is the same genus, one notch
+stronger. Firing from the tree under review makes the correct range **the default**, and takes
+the worktree, the broker and the container cleanup out of the ticket path entirely. The move is
+a simplification, not a repair of something still broken.
+
+#### At SPEC and SLICE scope — Thomas fires from the base checkout
+
+Here the two can disagree, so resolve the head yourself and review from a detached checkout at
+that SHA:
 
 ```bash
 set -euo pipefail
@@ -62,6 +96,9 @@ of 40 commits look identical once the verdict line prints — the header is what
 silent-empty-range failure visible to a reader who glances at the top. Two incidents in two
 days were caught by the operator, not the gate, because nothing in the output distinguished
 a real review from a vacuous one.
+
+**Everything from here to the end of the cleanup rules is SPEC/SLICE apparatus.** A Builder
+running the ticket arm has no gate worktree and skips all of it.
 
 **Never reuse a gate worktree path across dispatches.** The companion caches state keyed to
 the workspace root; deleting and recreating the directory at the same path inherits stale

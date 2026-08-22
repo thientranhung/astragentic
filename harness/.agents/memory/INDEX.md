@@ -114,7 +114,7 @@ from this table — read the entry.
 | `AST-100` | Codex companion broker leaks one process per arm pass, accumulating silently | promoted | 201 | codex-arm |
 | `AST-101` | Gate worktree removal leaks database containers, not just broker processes | promoted | 182 |   |
 | `AST-102` | WorktreeRemove hook does not fire, but documentation declares manual cleanup redundant | promoted | 418 | thomas.md |
-| `AST-103` | Cross-vendor arm silently reviews a zero-commit range and returns clean | promoted | 206 |   |
+| `AST-103` | Cross-vendor arm silently reviews a zero-commit range and returns clean | promoted | 206 | codex-arm,thomas.md |
 | `AST-104` | herdr agent start rejects uppercase in agent names, but dispatch convention generates them | promoted | 87 |   |
 | `AST-105` | Pipe after a command swallows exit code, turning a failed gate into exit 0 | promoted | 182 | WATCHING.md |
 | `AST-106` | Worktree isolation stated about git, violated by non-git disk writes | promoted | 137 | dispatch-ticket |
@@ -144,4 +144,6 @@ from this table — read the entry.
 | `AST-130` | A report-only fork forged a verification marker using a TRUE excuse | promoted | 427 | builder-claude.md |
 | `AST-131` | The queue drained and nothing asked whether a slot was free | promoted | 265 | orchestrator.md,thomas.md |
 | `AST-132` | Two owners for one path, and neither can see the other | promoted | 307 | thomas.md |
-| `AST-133` | `--grep` is not a subject matcher, and it failed in both directions on the same day | promoted | 400 | CLEANUP.md |
+| `AST-133` | `--grep` is not a subject matcher, and it failed in both directions on the same day | promoted | 400 | CLEANUP.md,thomas.md |
+| `AST-134` | After the fold, "the gate read this tree" is structurally false and the protocol had no way t… | promoted | 238 | builder.md |
+| `AST-135` | The verifier's queue was invisible to itself, and the fire point had to follow the artifact | promoted | 363 | thomas.md |

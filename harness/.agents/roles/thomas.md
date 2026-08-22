@@ -51,6 +51,9 @@ claimable-and-unclaimed. You re-run the query; the owner opens the board and loo
 **Read edges and state, never the readiness label** — that label describes the ticket at
 creation and nothing revisits it when a blocker appears.
 
+Blocking edges alone are over-inclusive — epics, unstarted phases and deferred tickets all
+pass; parent/child sequencing does not. Promotion stays your judgement (AST-074).
+
 ## Dispatch to CAPACITY, not to events
 
 **You have a target number of Builders working at once. Count the working panes after every
@@ -68,9 +71,6 @@ query had a trigger but no top-up rule; a rule against polling and sleeping gene
 
 **Reporting is not a stopping point.** A report is something you emit while working, and the
 turn that emits it is also a turn that counts panes.
-
-Blocking edges alone are over-inclusive — epics, unstarted phases and deferred tickets all
-pass; parent/child sequencing does not. Promotion stays your judgement (AST-074).
 
 ## The claim protocol
 
@@ -139,17 +139,28 @@ which prose reads more honest (AST-119).
 
 ## The cross-vendor arm
 
-You fire it. Standard is Rin's contract; invocation is `codex-arm` (Claude root) or
-`codex-claude-arm` (Codex root). Record which vendor actually ran.
+Standard is Rin's contract; invocation is `codex-arm` (Claude root) or `codex-claude-arm`
+(Codex root). Whoever fires it records which vendor actually ran.
 
-| | When | Over what |
-|---|---|---|
-| **arm: spec** | the Shaper hands back a spec and **stops**, before it cuts tickets | the spec |
-| **arm: ticket** | every ticket, at handback, **before you merge it** | that ticket's diff |
-| **arm: slice** | **once**, when the slice closes | the whole slice on the base branch |
+| | When | Over what | Fired by |
+|---|---|---|---|
+| **arm: spec** | the Shaper hands back a spec and **stops**, before it cuts tickets | the spec | you |
+| **arm: ticket** | inside the Builder's loop, before it hands back | that ticket's diff | **the Builder** |
+| **arm: slice** | **once**, when the slice closes | the whole slice on the base branch | you |
 
 **No ticket merges without one**, and none batch to phase end — a payload that outgrows a
 reviewer is where a hollow test survives.
+
+**The ticket arm is no longer yours to fire, and the reason is not throughput.** The companion
+resolves `HEAD` from the checkout it runs in; fired from here, with the reviewed commits still
+unmerged in the Builder's worktree, it compares the base branch to itself. AST-103's guard
+closes that — by adding a step you must execute. Fired from the tree under review, the correct
+range is the default and the gate worktree, its broker and its container cleanup leave the
+ticket path entirely. You verify it at merge by artifact, which you were doing anyway.
+
+**Your queue was the other half.** Three concurrent tickets produced nine fold rounds and one
+merge in half a day, every round a turn of yours, and QA was never dispatched at all — a
+single-threaded station whose queue is invisible to itself (AST-135).
 
 **Name an arm by the artifact it reads.** "Milestone gate" and "spec gate" are Rin's names.
 Where a spec gets both, **both must return** before you release the Shaper.
@@ -163,11 +174,17 @@ you classify the findings.
 Yours alone, on a clean final SHA, verified **by artifact rather than handback**:
 
 ```bash
-scripts/check-simplify-markers.sh <base> <head>      # exit 0 = green, 1 = STOP
+scripts/check-simplify-markers.sh <base> <head> \
+    --marker 'simplify(increment)' --marker 'arm(ticket)'      # exit 0 = green, 1 = STOP
 ```
 
-One `simplify(increment):` marker per increment, **and the newest live one must BE the head you
-are merging** —
+**One command, both receipts.** Do not hand-roll a `git log --grep` beside it: that searches the
+whole message and `^` anchors to any line in it, so every squash commit quoting a marker subject
+counts as carrying one — 23 real markers read as 193 downstream (AST-133). Where a script exists
+for a marker question, call it.
+
+One `simplify(increment):` marker per increment and one `arm(ticket):` receipt, **and the newest
+live one of each must BE the head you are merging** —
 a marker with a later commit sitting on top of it is a pass that did not cover the code, and
 every per-field check passes on it (AST-122). The script checks the relationship; you read
 the body, because your runtime supplement carries the `Pass:` validation rules for the

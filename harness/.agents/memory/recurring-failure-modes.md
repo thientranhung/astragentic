@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 132 entries (AST-001 … AST-133, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 134 entries (AST-001 … AST-135, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -3440,3 +3440,63 @@ hand-rolled `git log` beside a script that does the job properly is machinery to
 keep in sync — and keeping it in sync is the failure this entry is about.
 
 Bound: `scripts/check-simplify-markers.sh`, `dispatch-ticket/CLEANUP.md`, `thomas.md`, `rin.md`.
+
+### AST-134 — After the fold, "the gate read this tree" is structurally false and the protocol had no way to say so · promoted 2026-08-22
+
+The `arm(ticket):` receipt commits empty, so its parent IS the tree the gate read, and
+`Reviewed: == parent` is the relationship that makes the receipt mean anything. AST-122's rule
+one level in: a receipt naming a SHA proves nothing about what the receipt sits on.
+
+**But the fold makes that relationship legitimately false.** Pass 2 returns a blocking finding,
+the Builder folds it, and the tree is now past what any pass read — while a pass 3 is over the
+two-per-invocation cap. The honest state is *reviewed up to here, plus this much nobody read*,
+and the protocol had no vocabulary for it. Without one, the Builder's options were to write a
+`Reviewed:` that was false, or to skip the receipt.
+
+So: **`Reviewed:` equals the marker's parent, OR `Unreviewed-delta:` declares the gap. Never
+neither.** The delta names the range, the size and what changed, and the router rules on its
+content. **Its ABSENCE where `Reviewed:` is not the parent is the failure** — the declaration
+itself is cheap and is expected to be small and boring.
+
+Same shape as AST-121: a check with no vocabulary for being obeyed reads honesty as failure. A
+Builder that folded correctly and said so was, before this, indistinguishable from one that had
+not run the gate at all.
+
+Measured over a real corpus of 32 receipts: 9 carry a delta. The validator asks the relationship,
+not the field.
+
+Bound: `builder.md`, `scripts/check-simplify-markers.sh`.
+
+### AST-135 — The verifier's queue was invisible to itself, and the fire point had to follow the artifact · promoted 2026-08-22
+
+The router fired the ticket arm. Two things were wrong with that, and only the second is about
+correctness.
+
+**The queue.** Every gate round was a turn of the router's. Three concurrent tickets produced
+**nine fold rounds and one merge in half a day**, and QA was never dispatched at all — a
+single-threaded station serialising work that had no reason to be serial, whose own queue it
+could not see. AST-131 is the same organ failing the other way: there the router did not notice
+idle capacity, here it did not notice it had become the bottleneck.
+
+**The fire point.** The companion resolves `HEAD` from the checkout it runs in. Fired from the
+base checkout while the reviewed commits sat unmerged in a Builder's worktree, it compared the
+base branch to itself and returned clean over 0 commits (AST-103). That was closed on
+2026-08-19 by a guard — a detached checkout, a HEAD assert, a `rev-list --count` gate — and the
+guard has never been shown to fail.
+
+**The distinction that survives, and it is the reason for the move.** AST-103's guard closes the
+hole **by adding a step an operator must execute**, and that entry's own closing line is that
+prose warnings do not survive contact with an operator who just read them. A bash block embedded
+in prose is the same genus, one notch stronger. Firing from the Builder's worktree makes the
+correct range the **default** — and takes the gate worktree, the broker kill (AST-100), the
+container stop (AST-115) and the never-reuse-a-path rule (AST-095) out of the ticket path
+entirely. **The move deletes machinery; it does not repair something still broken.** Stating it
+the other way would have been the more dramatic release note and the false one.
+
+Verification did not move, it got cheaper: an `arm(ticket):` receipt read at merge by the same
+script that already reads `simplify(increment):`. No new file, no new script, no new step.
+
+Residual, and it is the same one AST-130 names: the receipt is a commit written by the agent
+being verified. That is the trade the queue is worth, and it is stated rather than implied.
+
+Bound: `builder.md`, `thomas.md`, `rin.md`, `codex-arm/SKILL.md`, `codex-claude-arm/SKILL.md`.

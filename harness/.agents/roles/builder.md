@@ -29,6 +29,7 @@ stands without it.
 | Build | `mattpocock-skills:implement` | the ticket's acceptance criteria pass and the build is green |
 | Increment review | `mattpocock-skills:code-review` | both axes have run once over the increment |
 | Simplify | see runtime supplement | a `simplify(increment):` commit exists whose body names the pass that ran |
+| Cross-vendor arm | `codex-arm` / `codex-claude-arm` | an `arm(ticket):` receipt at your head |
 | Visual verification | — | every changed user-visible surface has browser evidence, or the skip is named |
 
 `implement` is **user-invoked**: drive it by name. The craft layer is model-invoked and needs no
@@ -93,6 +94,55 @@ Tickets that touch no user-visible surface skip this, and the skip is named in t
 This is **your change rendering correctly**, narrower than whether the product still coheres,
 which is QA's walk.
 
+## The cross-vendor arm — yours to fire, and it closes your loop
+
+**You run one closed loop and hand back once:**
+
+`implement` → `code-review` (both axes) → simplify → **arm pass 1** → [fold → **arm pass 2**] →
+`arm(ticket):` receipt → handback.
+
+**Fire it from your own worktree.** Your cwd is the tree under review, so the range is correct
+by construction — no gate worktree, no broker, no container cleanup. `codex-arm` owns the
+invocation; read its TICKET-scope section and skip the spec/slice apparatus below it.
+
+**At most two passes per gate invocation**, and pass 2 is mandatory whenever pass 1 returned a
+blocking finding: it reads the full artifact, because what it catches is the defect the FIX
+introduced. Re-firing a fresh gate after a later fold is a new invocation, not a third pass.
+
+**Two rules, and deliberately only two: fold what is real, by class and not by instance, and
+say what you leave.** Longer versions of this — rules forbidding you to decline a finding, a
+low/medium/high severity ladder — were written and rejected. The gate runs better without them.
+
+### The receipt
+
+An **empty** commit at your head, read at merge by the same script that reads your simplify
+marker. Empty matters: the parent of the receipt IS the tree the gate read.
+
+```
+arm(ticket): <ticket-id> — <verdict>, <n> passes
+
+Range: <n> commits, <m> files (<base>..<head>)
+Reviewed: <full sha of the tree the gate read>
+Vendor: <vendor>   Tests: RAN|NOT RUN <free prose>   Pass: <n>
+```
+
+`Vendor:`, `Tests:` and `Pass:` on one line is normal. `Tests:` must begin `RAN` or `NOT RUN`
+and everything after is prose. `Output:` is optional and usually worthless by the time anyone
+reads it — a scratch path belonging to a session that has ended. `Pass:` above two is legal
+where a fresh gate re-fired per fold; say so in the parenthetical.
+
+**`Reviewed:` must be this commit's parent — OR you declare `Unreviewed-delta:`. Never
+neither.**
+
+```
+Unreviewed-delta: <from>..<to> — <n> lines, <m> files: <what changed and why it is safe>
+```
+
+When pass 2's finding is **folded**, `Reviewed: == parent` is structurally impossible: the fold
+moves the tree past what any pass read, and a pass 3 is over the cap. So declare the gap and let
+Thomas rule on its content. **Its absence where `Reviewed:` is not the parent is the failure**
+(AST-134). Small and boring is the expected shape.
+
 ## Handing back
 
 **Run every machine that can answer before you hand back** — typecheck, linters, tests, build.
@@ -111,10 +161,11 @@ git push origin <ticket-branch>
 **Verify your own phases before returning.** Count simplify markers on your branch:
 
 ```bash
-scripts/check-simplify-markers.sh <base> HEAD
+scripts/check-simplify-markers.sh <base> HEAD \
+    --marker 'simplify(increment)' --marker 'arm(ticket)'
 ```
 
-Zero markers means you skipped the simplify pass — go back and run it. A step that does not
+Zero markers means you skipped the pass — go back and run it. A step that does not
 self-check is a step that can be silently skipped (AST-094, same shape as AST-092).
 
 **A marker that is not your head is the same finding wearing a green shirt.** Commits on top
