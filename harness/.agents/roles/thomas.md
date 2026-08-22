@@ -51,6 +51,24 @@ claimable-and-unclaimed. You re-run the query; the owner opens the board and loo
 **Read edges and state, never the readiness label** — that label describes the ticket at
 creation and nothing revisits it when a blocker appears.
 
+## Dispatch to CAPACITY, not to events
+
+**You have a target number of Builders working at once. Count the working panes after every
+merge, every handback and every report to the owner, and top up to the target from the
+frontier.** The default is **4**; `.agents/orchestrator.md` carries the override where the
+owner has set one, and the default applies when it has no row.
+
+Nothing else in this contract asks whether a slot is free, and an event-driven reading of it
+is a queue that drains and never refills. Measured: after two merges, **two of four Builder
+slots sat idle while twelve claimable tickets waited** — the loop was
+`notification → verify → merge → report → wait`, and every step of it was performed
+correctly. Three readings produced that idle state and all three are reasonable: the frontier
+query had a trigger but no top-up rule; a rule against polling and sleeping generalised into
+*"do nothing while waiting"*; and reporting to the owner read as a phase boundary (AST-131).
+
+**Reporting is not a stopping point.** A report is something you emit while working, and the
+turn that emits it is also a turn that counts panes.
+
 Blocking edges alone are over-inclusive — epics, unstarted phases and deferred tickets all
 pass; parent/child sequencing does not. Promotion stays your judgement (AST-074).
 
@@ -145,11 +163,20 @@ you classify the findings.
 Yours alone, on a clean final SHA, verified **by artifact rather than handback**:
 
 ```bash
-git log <base>..<head> --grep '^simplify(increment):' --format='%h %s%n%b'
+scripts/check-simplify-markers.sh <base> <head>      # exit 0 = green, 1 = STOP
 ```
 
-One marker per increment. **Read the body, not just the subject** — your runtime supplement
-carries the `Pass:` validation rules for the builder's runtime.
+One `simplify(increment):` marker per increment, **and the newest live one must BE the head you
+are merging** —
+a marker with a later commit sitting on top of it is a pass that did not cover the code, and
+every per-field check passes on it (AST-122). The script checks the relationship; you read
+the body, because your runtime supplement carries the `Pass:` validation rules for the
+builder's runtime.
+
+**A project-authored file at a payload-owned path is silently replaceable by an upgrade.**
+Where this project runs `scripts/check-payload-drift.sh`, a pre-commit failure from it is
+either your own reviewed edit — re-hash it — or a release adaptation that overwrote something
+the project wrote, which you diff before accepting (AST-132).
 
 **Merge is not complete until the frontier write-back is done.** Re-run the query, move every
 ticket this merge unblocked into the claimable state, and **report which ones moved**. `none`

@@ -48,7 +48,7 @@ from this table — read the entry.
 | `AST-033` | A lookup whose question has no referent at one of its call sites | promoted | 262 | review-with-rin |
 | `AST-034` | A mandatory rule that lives only in load-on-demand docs is skipped, and only the owner notices | promoted | 754 |   |
 | `AST-035` | `set -euo pipefail` plus a no-match `grep` aborts before its own guard | promoted | 272 |   |
-| `AST-036` | A git worktree carries TRACKED content only | promoted | 154 | dispatch-ticket,dispatch-ticket-claude |
+| `AST-036` | A git worktree carries TRACKED content only | promoted | 154 | builder-claude.md,dispatch-ticket,dispatch-ticket-claude |
 | `AST-037` | A multi-line prompt pastes without submitting, and the pane calls it idle | promoted | 140 | dispatch-ticket,dispatch-ticket-claude |
 | `AST-038` | A checker that cannot tell project content from package content fires on every adopted repo | promoted | 146 |   |
 | `AST-039` | An ID namespace shared with the host project resolves confidently to the wrong lesson | promoted | 160 |   |
@@ -133,7 +133,7 @@ from this table — read the entry.
 | `AST-119` | A fork inside a Builder can message the dispatcher, and nothing marks it as not the Builder | promoted | 677 | builder-claude.md,thomas.md |
 | `AST-120` | A verification that fired twice on immutable input and disagreed with itself, cause unknown | promoted | 520 |   |
 | `AST-121` | The check had no vocabulary for being obeyed, so honesty registered as failure | promoted | 463 | CLEANUP.md,builder.md |
-| `AST-122` | Existence is not relationship: a verified pointer that proves nothing about what it points at | promoted | 481 | CLEANUP.md |
+| `AST-122` | Existence is not relationship: a verified pointer that proves nothing about what it points at | promoted | 481 | CLEANUP.md,thomas.md |
 | `AST-123` | The scaffold accumulated the identity of whoever last measured a lesson | promoted | 341 |   |
 | `AST-124` | The watcher covers one turn; the protocol never said who covers the next one | promoted | 512 | dispatch-ticket,thomas.md |
 | `AST-125` | The alert for the failure existed, and was suppressed by the state that defines the failure | promoted | 396 |   |
@@ -141,3 +141,6 @@ from this table — read the entry.
 | `AST-127` | The runnable example contradicted the prose eight lines below it | promoted | 242 |   |
 | `AST-128` | Only the adapter is ever standing where both files exist | promoted | 243 |   |
 | `AST-129` | The receipt was a producer with no reader, and it hid the one fact that had readers | promoted | 222 |   |
+| `AST-130` | A report-only fork forged a verification marker using a TRUE excuse | promoted | 427 | builder-claude.md |
+| `AST-131` | The queue drained and nothing asked whether a slot was free | promoted | 265 | orchestrator.md,thomas.md |
+| `AST-132` | Two owners for one path, and neither can see the other | promoted | 307 | thomas.md |

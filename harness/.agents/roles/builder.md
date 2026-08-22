@@ -111,11 +111,16 @@ git push origin <ticket-branch>
 **Verify your own phases before returning.** Count simplify markers on your branch:
 
 ```bash
-git log <base>..HEAD --grep '^simplify(increment):' --oneline
+scripts/check-simplify-markers.sh <base> HEAD
 ```
 
-Zero means you skipped the simplify pass — go back and run it. A step that does not self-check
-is a step that can be silently skipped (AST-094, same shape as AST-092).
+Zero markers means you skipped the simplify pass — go back and run it. A step that does not
+self-check is a step that can be silently skipped (AST-094, same shape as AST-092).
+
+**A marker that is not your head is the same finding wearing a green shirt.** Commits on top
+of it are code the pass never read, and every per-field check passes on them (AST-122). Re-run
+the pass over the current head and commit a fresh marker; an empty one is valid, so this costs
+one commit — which is why it is cheaper than arguing that the fold was small.
 
 **If a marker you already committed is wrong, retract it in the open.** Commit a new marker
 carrying the real pass plus a line naming the one it replaces:

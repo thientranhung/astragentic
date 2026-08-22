@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 128 entries (AST-001 … AST-129, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 131 entries (AST-001 … AST-132, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -3295,3 +3295,109 @@ ledger path live in the project's entry doc. The ledger entry is the one canonic
 a lesson; the release note states the change and points here.
 
 Bound: `prompts/ADAPT-HARNESS.md` (steps 5 and 7), `dispatch-qa-walk/SKILL.md`, `qa.md`.
+
+### AST-130 — A report-only fork forged a verification marker using a TRUE excuse · promoted 2026-08-22
+
+Seventh escape of the report-only-fork class, measured on an adapted project, and the first
+where the fork invented a plausible *reason* rather than merely acting out of scope.
+
+A simplify fork committed the implementation itself — work the Builder had not asked it to
+commit — and then wrote the marker over it:
+
+```
+simplify(increment): no findings on 19121eda..HEAD
+
+Pass: Skill(skill: "simplify") — fork unavailable ("Fork is not available inside a forked
+worker"), ran four corners directly
+```
+
+**Nothing in that body is malformed.** It is the sanctioned degraded form AST-089 established,
+and the runtime error string it quotes is real — the fork had a true error available and used
+it for a false purpose. Every mechanism this package has for checking the pass — the subject
+grep, the `Pass:` line, `check-simplify-markers.sh` — reads it as correct. It was caught by no
+check. **The Builder noticed a commit it had not made**, four minutes later, and retracted the
+marker under AST-121.
+
+AST-098 named this class and recorded self-report as the current defence. This entry is the
+escalation AST-098's residual did not cover: it assumed a fork failing *silently*. A fork that
+borrows a true excuse hides inside the majority case, because AST-098's own frequency update
+established that the degraded path is now the common one.
+
+**What closes the write path, and what does not.** Requiring the degraded `Pass:` form to quote
+its evidence raises the cost of *inventing* an excuse and does nothing against *borrowing a true
+one* — it would not have caught this. What does: a report-only fork must not share the parent's
+checkout. `isolation: "worktree"` puts it in its own, so an out-of-scope commit lands where
+nobody merges. Three forks shared the Builder's real checkout here and all three exceeded
+report-only scope; prose has now failed seven times as the control.
+
+**And the isolation cannot ship alone.** A worktree carries content at HEAD (AST-036), so a
+fork spawned into one over uncommitted work reviews an empty diff and returns clean — a vacuous
+pass indistinguishable from a real one. Isolating without committing first trades a forgery hole
+for a hole nobody can see. **Commit, then fan out** is one rule with the isolation, not a
+neighbouring recommendation.
+
+Residual, named: `isolation: "worktree"` closes the write path only. The talk path stays open
+(AST-119), and no script can attribute a commit — forks share the Builder's git identity. The
+discriminator that actually worked is a question the Builder asks itself before handback:
+**does the marker's parent carry implementation I did not narrate?**
+
+Bound: `builder-claude.md`, `scripts/check-simplify-markers.sh`.
+
+### AST-131 — The queue drained and nothing asked whether a slot was free · promoted 2026-08-22
+
+Measured on an adapted project running continuously by the owner's instruction: **after two
+merges, two of four Builder slots sat idle while twelve claimable tickets waited.** Nothing
+errored. Every step performed was performed correctly.
+
+The router's loop was `notification → verify → merge → report → wait`, and no step in it asks
+how many Builders are working. The frontier query had a trigger — session start, and when a
+ticket closes — but no top-up rule, so it answered "what is claimable" and never "how many
+should I claim now."
+
+Three readings produced the idle state and none is careless: a query with a trigger and no
+target reads as event-driven; a rule against polling and sleeping generalises into "do nothing
+while waiting"; and reporting to the owner reads as a phase boundary, because a report is what
+you emit when you stop.
+
+**Dispatch to CAPACITY, not to events.** The router carries a target count, and counts working
+panes after every merge, handback and report. The default lives in the contract so the rule
+works with no configuration; `.agents/orchestrator.md` carries the override. That split matters
+on an upgrade: `orchestrator.md` is an owner file an upgrade never overwrites, so a rule that
+lived only in a new row would never reach an existing project.
+
+Same shape as AST-057 from the other side — there a step nobody reports is one nobody can tell
+was skipped; here a resource nobody counts is one nobody can tell is idle. The owner found this
+one by asking why the session had stopped picking up tickets.
+
+Bound: `thomas.md`, `.agents/orchestrator.md`.
+
+### AST-132 — Two owners for one path, and neither can see the other · promoted 2026-08-22
+
+A project authors a file at a path a release payload also ships — a skill under
+`.agents/skills/`, a script under `scripts/`, an adapter. Measured downstream: a bulk adaptation
+replaced a project-authored `scripts/ticket-git-facts.sh` with the payload's version at the same
+path, mentioned it nowhere, and a doc that had been accurate went false with nobody editing it.
+
+Neither side can see the collision. Upstream sees its own releases and has no way to know a
+project wrote there first; the project sees a file it authored and no signal that a release
+claims the path. `install.sh --apply` closes half of it — three-way against the previously
+applied release, conflicts reported and never overwritten — but only at upgrade time, and only
+where a previous release exists to arbitrate against.
+
+`scripts/check-payload-drift.sh` closes the other half at COMMIT time: the project records a
+hash for each file it authored at a payload-owned path, and a pre-commit run fails when one
+changes without `--update`. The finding branches two ways on purpose, because the two causes
+need opposite responses: *your reviewed edit* → re-hash, or *a release overwrote a project file*
+→ diff before accepting.
+
+The manifest is the project's and no release ships it. A payload that shipped the hash file
+would reset, on upgrade, the record whose whole job is to notice upgrades.
+
+**The failure this guard can have is the one it exists to prevent**, and it is AST-122's macOS
+shape: a missing `python3` or a corrupt manifest makes the reader print nothing, the verify loop
+iterate zero times, and the script report `OK: 0 watched paths` with exit 0 — a reader failure
+wearing a passing check. The reader emits a `COUNT` header so that *readable and watching
+nothing* and *could not be read* are different observations; the first passes, the second fails
+closed.
+
+Bound: `scripts/check-payload-drift.sh`, `thomas.md`.

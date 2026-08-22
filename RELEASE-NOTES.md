@@ -1,3 +1,70 @@
+# Astragentic 2.3.35
+
+Four coordination fixes measured on adapted projects and returned upstream. The one the owner
+named as changing how coordination feels is the smallest: the router had no idea how many
+Builders were working.
+
+## What changed
+
+- **`thomas.md` dispatches to CAPACITY, not to events.** A target count, and a pane count after
+  every merge, handback and report. Measured downstream: after two merges, **two of four Builder
+  slots sat idle while twelve claimable tickets waited**, with every step performed correctly —
+  the loop was `notification → verify → merge → report → wait` and nothing in it asked whether a
+  slot was free (AST-131). **The default is 4 and lives in the contract**, so the rule works on a
+  project that never merges the new `builder-target` row; `.agents/orchestrator.md` carries the
+  override. An owner file an upgrade never overwrites is the wrong single home for a new rule.
+
+- **Report-only forks get `isolation: "worktree"`, and commit-then-fan-out ships in the same
+  breath** (`builder-claude.md`). A fork inside a Builder's session forged a `simplify(increment):`
+  marker over an implementation it had committed itself, carrying the **sanctioned degraded
+  `Pass:` form quoting a real runtime error string** — well-formed by every rule this package
+  has, caught by no check, noticed only because the Builder saw a commit it had not made
+  (AST-130). Seventh escape of the class; prose has been the control for all seven. The two
+  halves are one rule: a worktree carries content at HEAD, so isolating a fork over uncommitted
+  work buys a vacuous clean pass in exchange for the forgery (AST-036). Requiring the excuse to
+  quote its evidence would **not** have caught this one — the fork had a true error available and
+  used it for a false purpose.
+
+- **`scripts/check-simplify-markers.sh` checks that the marker COVERS THE HEAD.** A marker whose
+  every field is true, with a later commit on top, is a pass that did not read the code — and the
+  four existing rules all pass on it (AST-122, applied to itself). Marker kind is now data rather
+  than a second script; `arm(ticket)` gets its row when its body format is fixed, because a rule
+  guessed ahead of the marker it validates is a rule the next release has to change.
+
+- **`scripts/check-payload-drift.sh` is new.** A project authors a file at a path the payload also
+  ships, and neither side can see the collision; a bulk adaptation replaced one downstream and a
+  doc that had been accurate went false with nobody editing it (AST-132). `--apply` guards that
+  boundary at upgrade time; this guards it at commit time against a hash the project records. The
+  manifest is the project's at `.agents/payload-drift-manifest.json` and **no release ships it** —
+  a payload carrying the hash file would reset, on upgrade, the record whose job is to notice
+  upgrades.
+
+## The bug this release found in its own fixture
+
+`check-simplify-markers.sh` matched marker subjects with `git log --grep` and a Python-escaped
+pattern. `--grep` takes a POSIX **basic** regex, where `\(` opens a group rather than matching a
+parenthesis, so `simplify\(increment\):` matched nothing and the script reported
+`markers=0 — STOP: no simplify marker`. A correct-looking STOP naming the wrong cause, on a range
+that had a valid marker. The original inline form worked only because unescaped `(` is literal in
+BRE. Subjects are now matched in Python, one `git log` for the range, no regex dialect involved.
+Caught by a fixture that appeared to be working — AST-122's own lesson, met again while extending
+the script that entry created.
+
+## Upgrade from 2.3.34
+
+Copy `harness/`, or `./install.sh <target> --apply`.
+
+`.agents/orchestrator.md` is an owner file and `--apply` will report it as `owner (kept — yours)`.
+**Add the `builder-target` row by hand if you want to tune it**; leaving it out is a supported
+state and Thomas will use 4.
+
+`scripts/check-payload-drift.sh` arrives inert — it watches nothing until you register paths with
+`--update`, and says so rather than reporting a clean check over an empty list.
+
+**`check-simplify-markers.sh` is stricter than 2.3.34 and can turn a currently-green branch red.**
+A branch whose simplify marker is not its head now stops. That is the finding, not a regression:
+the fix is one empty commit re-marking the current head.
+
 # Astragentic 2.3.34
 
 2.3.28's supplement-load fix reached the Claude adapters only, so the same role stated

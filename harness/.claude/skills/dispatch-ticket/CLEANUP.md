@@ -80,14 +80,18 @@ and it reads as the check failing (AST-121). So a later marker may name the one 
 Supersedes: <sha of the marker this replaces>
 ```
 
-**Four rules, and the attack each one closes** (AST-122):
+**Five rules, and the attack each one closes** (AST-122):
 
 1. **At most one `Supersedes:` per marker.** Without it, one genuine pass launders an unbounded
    number of fabricated markers by listing their SHAs.
 2. **A marker that supersedes must itself be well-formed.** Without it, rule 1 is evaded by
    chaining fabricated markers, each superseding the last.
 3. **The named SHA must be a marker IN RANGE**, named by only one marker.
-4. **Green: every LIVE marker — one nothing supersedes — is well-formed.**
+4. **Every LIVE marker — one nothing supersedes — is well-formed.**
+5. **The newest live marker IS the head being merged.** Existence is not relationship: a marker
+   whose every field is true, with a later commit sitting on top of it, is a pass that did not
+   cover the code — and rules 1-4 all pass on it. Send the Builder back for a fresh marker; an
+   empty one is valid, so a re-mark after a fold costs one commit.
 
 **Residual, stated because it is not closed**: markers carry no increment identity — the
 subject is free prose. Nothing proves the superseding pass covers the SAME increment as the

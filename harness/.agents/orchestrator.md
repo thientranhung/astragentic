@@ -18,8 +18,14 @@ fails at the first cross-vendor call, looking like the provider being down.
 | Field | Value |
 |---|---|
 | workspace-label | `<set-me>` |
+| builder-target | `4` |
 
-This project's herdr name, read before dispatch.
+`workspace-label` is this project's herdr name, read before dispatch.
+
+`builder-target` is how many Builders Thomas keeps working at once — he counts panes after
+every merge, handback and report, and tops up to it from the frontier. **Thomas defaults to 4
+when this row is absent**, so an upgraded project that never merges the row still dispatches to
+capacity; the row exists to tune it, not to enable it (AST-131).
 
 **One project, one workspace.** `herdr workspace list` → match label → reuse; no match →
 `herdr workspace create --label <workspace-label>`. Never a nickname, never a duplicate.
