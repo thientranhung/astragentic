@@ -12,8 +12,8 @@
 #   IDEMPOTENT   an identical rerun re-stages nothing and says so.
 #   IMMUTABLE    a release directory, once written, is a fixed record of what was shipped.
 #                Changed content at an unchanged VERSION is refused, because the adaptation
-#                agent and uninstall.sh both read that directory as the manifest of what
-#                the package contained.
+#                agent reads that directory as the manifest of what the package contained,
+#                and --apply's three-way arbitration compares against it.
 set -euo pipefail
 
 HARNESS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -201,9 +201,9 @@ if [ -d "$RELEASE_DIR" ]; then
     echo >&2
     echo "  staged at: $RELEASE_DIR" >&2
     echo >&2
-    echo "Releases are immutable: the adaptation agent and uninstall.sh both read that" >&2
-    echo "directory as the record of what $VERSION shipped. Bump VERSION and add a matching" >&2
-    echo "RELEASE-NOTES.md heading before staging changed content." >&2
+    echo "Releases are immutable: the adaptation agent reads that directory as the record" >&2
+    echo "of what $VERSION shipped, and --apply arbitrates against it. Bump VERSION and add a" >&2
+    echo "matching RELEASE-NOTES.md heading before staging changed content." >&2
     echo >&2
     echo "Differences:" >&2
     diff -qr "$STAGING_DIR" "$RELEASE_DIR" 2>&1 | sed "s|$STAGING_DIR|<package>|g; s|$RELEASE_DIR|<staged>|g; s|^|  |" >&2
