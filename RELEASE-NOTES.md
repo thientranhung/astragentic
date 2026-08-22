@@ -1,3 +1,54 @@
+# Astragentic 2.5.2
+
+Nine scripts ship and three of them had no moment. The owner asked when they run, and the
+package could not answer.
+
+## What changed
+
+`README.md` gains **"When each script runs"**, in two tables, because the two groups are not the
+same kind of thing:
+
+- **In the pipeline** — `herdr-watchdog`, `herdr-watch-terminal`, `check-simplify-markers`,
+  `ticket-git-facts`, `check-payload-drift`, `project-status-sync`, `check-requirements`. Each is
+  already named by a role's contract or a skill, so it runs without anyone remembering. This
+  table documents what was already true.
+- **On the harness itself** — `check-reachability`, `docs-staleness-audit`, `ledger-index`. These
+  run when the PAYLOAD changes, not when work happens, and **this is the group that had no
+  moment.** `ledger-index` had zero callers anywhere: its only pointer was inside the file it
+  generates.
+
+`ADAPT-HARNESS` §7 already required `check-reachability` at the end of an adaptation. It now
+requires all three, in the same breath, wherever the run edited a contract, a skill or the ledger.
+
+The README's script tree, which listed six of nine with one-line descriptions, is replaced by a
+pointer to the tables — one home for the answer instead of two that could disagree.
+
+## Why three and not one
+
+They catch different classes and are individually blind:
+
+| | catches |
+|---|---|
+| `check-reachability` | a phase no contract owns, a skill nothing reaches, a path that does not exist, a skill addressed in a form its caller cannot use |
+| `docs-staleness-audit` | a contract over its word budget, a number a document states about itself that is no longer true, a payload naming a real project's tickets, a stale index |
+| `ledger-index` | nothing — it is the fix for the last of those |
+
+**2.5.0 is the argument.** It was built with `check-reachability` green throughout, and
+`docs-staleness-audit` then found three defect classes in it: adapters naming another project's
+real ticket ids, a stale index, and two contracts pushed over budget by 2.3.35 and 2.4.0. None
+was visible by reading. 2.5.1 is those fixes and nothing else.
+
+## The rule this follows
+
+These three are named in the README rather than in a role's contract on purpose. **A rule in a
+contract is read every time that role starts.** A project that never edits the harness never
+needs them, and putting them in `thomas.md` would bill every session for a step most projects
+never take.
+
+## Upgrade from 2.5.1
+
+Copy `harness/`, or `./install.sh <target> --apply`. Documentation only; no script changed.
+
 # Astragentic 2.5.1
 
 `docs-staleness-audit.sh` was run against 2.5.0 and found three defects in it. This release is

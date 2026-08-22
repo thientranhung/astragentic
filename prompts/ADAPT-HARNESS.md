@@ -316,6 +316,11 @@ Run checks proportional to what changed:
   that every path, agent and profile a contract or skill names actually exists. A contract
   naming a file that does not exist is how the prior package failed, so this is a hard
   failure rather than a warning;
+- **`scripts/docs-staleness-audit.sh` and `scripts/ledger-index.sh`**, in the same breath as
+  the check above, whenever this run edited a contract, a skill or the ledger. The first
+  measures word budgets and re-derives every number a document states about itself; the
+  second regenerates the ledger index. Run all three or none — they catch different classes
+  and a release that ran only the first shipped defects of the other two;
 - Codex profile templates compared with their machine-local destinations, each recorded
   provisioned, drifted, missing or declined, and agreeing with their `orchestrator.md` rows;
 - referenced files exist, and project-owned entry docs carry no leftover placeholders;

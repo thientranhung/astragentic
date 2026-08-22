@@ -286,18 +286,53 @@ harness/
     skills/           Claude-discovered skills
   .opencode/agents/   OpenCode adapters
   .codex/profiles/    Codex role profiles
-  scripts/
-    herdr-watch-terminal.sh    turn watcher (Codex/OpenCode)
-    herdr-watchdog.sh          safety-net, wakes Thomas on stuck panes
-    ticket-git-facts.sh        git state for tracker reconciliation
-    docs-staleness-audit.sh    word budgets, self-reported numbers
-    check-reachability.sh      8 checks: exists, reachable, addressed
-    check-requirements.sh      the doctor
+  scripts/                     see "When each script runs" below
 docs/adr/                      architectural decision records
 prompts/ADAPT-HARNESS.md       the semantic installer
 install.sh                     staging script
 check-requirements.sh          machine readiness check
 ```
+
+## When each script runs
+
+Every script has a moment and an owner. A script with neither is one nobody runs until
+something has already gone wrong.
+
+**In the pipeline — a role's contract names these, and they run without anyone remembering:**
+
+| Script | Moment | Owner |
+|---|---|---|
+| `herdr-watchdog.sh` | before any dispatch, and it stays running | Thomas — `dispatch-ticket` refuses to dispatch without it |
+| `herdr-watch-terminal.sh` | per turn on a Codex/OpenCode pane | called by the watchdog, not by hand |
+| `check-simplify-markers.sh` | Builder before handback, Thomas before merge | both, independently |
+| `ticket-git-facts.sh` | session start and after every merge | `reconcile-tracker` |
+| `check-payload-drift.sh` | pre-commit | the git hook, where a project has installed one |
+| `project-status-sync.sh` | at claim, at the merge write-back, at session start | Thomas, GitHub projects only |
+| `check-requirements.sh` | install, upgrade, and when a runtime misbehaves | whoever is installing |
+
+**On the harness itself — these run when the PAYLOAD changes, not when work happens:**
+
+| Script | Moment |
+|---|---|
+| `check-reachability.sh` | after editing any contract, skill or the README role table |
+| `docs-staleness-audit.sh` | same moment — it measures the surfaces that bill every session |
+| `ledger-index.sh` | after adding or editing a ledger entry |
+
+**Run all three together; they are one gesture, and the release that skipped them is the
+argument for it.** 2.5.0 shipped adapters that named another project's real ticket ids, a stale
+index, and two contracts over their word budget — three classes, none visible by reading, all
+introduced by careful work an hour earlier. 2.5.1 is those fixes and nothing else.
+
+```bash
+python3 scripts/check-reachability.sh .   # exit 0 required
+bash scripts/ledger-index.sh              # regenerates INDEX.md
+bash scripts/docs-staleness-audit.sh .    # exit 1 = read every finding
+```
+
+A project that never edits the harness never needs the second table. That is the normal case,
+and it is why these three are named here rather than in a role's contract: **a rule in a
+contract is read every time the role starts, and a rule nobody needs most days does not belong
+there.**
 
 ## Glossary
 
