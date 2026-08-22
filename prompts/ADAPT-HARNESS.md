@@ -66,6 +66,33 @@ integration work.
    blocking edges are what the frontier query reads. A tracker missing either one is a
    finding for the owner, because the concurrency model rests on them.
 
+   `.agents/tracker-contract.md` states all five requirements and what each tracker charges
+   for them. Read it when the answer is not obvious.
+
+6. **Split `issue-tracker.md` into the pointer half and the adapter half.** The setup skill
+   offers GitHub, GitLab and local markdown as first-class choices and records anything else —
+   Jira, Linear — as freeform prose. That prose is where tracker mechanics accumulate: two
+   projects moved tracker on the same day and each hand-wrote its own operating manual,
+   independently, sharing nothing.
+
+   Three adapters ship with this harness: `github-issue-tracker`, `jira-issue-tracker`,
+   `linear-issue-tracker`. Where the project runs one of them, **move the mechanics out of
+   `issue-tracker.md` and leave the pointer set**:
+
+   | Stays in `docs/agents/issue-tracker.md` | Moves to the adapter |
+   |---|---|
+   | which adapter to load · site, `cloudId`, repo or project key · the ticket prefix · the status→label or status→state map · what came from where and when · this project's own decisions | how to write a status · how to create an edge · which id an API wants · every trap that is the same for every project on that tracker |
+
+   A shrunk file should read as WHY and WHERE with no commands in it. One measured example
+   runs to 56 lines against a 227-line adapter.
+
+   **Say in the file that the mechanics live in the named adapter.** The setup skill owns this
+   file and a later re-run of it can re-expand the prose; a file that describes its own split
+   makes that visibly a regression instead of a silent revert.
+
+   Where the project runs a tracker no adapter covers, leave the freeform prose alone — that
+   path exists for exactly this case.
+
 ## 3. Build an integration map
 
 Classify candidate material before editing anything:

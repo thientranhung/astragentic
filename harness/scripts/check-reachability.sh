@@ -226,6 +226,12 @@ NOT_A_SKILL = {
     # A field in orchestrator.md's Workspace identity table, not a skill — the herdr
     # workspace name Thomas resolves before any dispatch.
     "workspace-label",
+    # A tracker STATUS LABEL on GitHub, named in the adapter beside `backlog` and `todo`,
+    # which are single words and do not reach this list.
+    "in-progress",
+    # An MCP SERVER, not a skill — the Linear adapter names it so a session reaches Linear
+    # through its tools rather than shelling out to a CLI.
+    "linear-server",
 }
 
 # --- 1. METHOD -> CONTRACT --------------------------------------------------------------

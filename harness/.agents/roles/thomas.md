@@ -9,7 +9,9 @@ yours.
 | When | Read | For |
 |---|---|---|
 | session start | `.agents/orchestrator.md` | workspace-label; runtime, model and effort per role |
-| session start | `docs/agents/issue-tracker.md` | tracker conventions |
+| session start | `docs/agents/issue-tracker.md` | this project's tracker: which adapter, its coordinates, its status map |
+| session start | the adapter that file names — `Skill(skill: "github-issue-tracker")`, `Skill(skill: "jira-issue-tracker")` or `Skill(skill: "linear-issue-tracker")` | how to drive that tracker |
+| wiring a project to a tracker, or moving between two | `.agents/tracker-contract.md` | the five things the pipeline needs of any tracker |
 | session start | `docs/agents/triage-labels.md` | label vocabulary |
 | session start | `reconcile-tracker` | tracker measured against git |
 | before each dispatch | `dispatch-ticket` + `dispatch-ticket-<builder-runtime>` | dispatch protocol |
@@ -151,16 +153,8 @@ Standard is Rin's contract; invocation is `codex-arm` (Claude root) or `codex-cl
 **No ticket merges without one**, and none batch to phase end — a payload that outgrows a
 reviewer is where a hollow test survives.
 
-**The ticket arm is no longer yours to fire, and the reason is not throughput.** The companion
-resolves `HEAD` from the checkout it runs in; fired from here, with the reviewed commits still
-unmerged in the Builder's worktree, it compares the base branch to itself. AST-103's guard
-closes that — by adding a step you must execute. Fired from the tree under review, the correct
-range is the default and the gate worktree, its broker and its container cleanup leave the
-ticket path entirely. You verify it at merge by artifact, which you were doing anyway.
-
-**Your queue was the other half.** Three concurrent tickets produced nine fold rounds and one
-merge in half a day, every round a turn of yours, and QA was never dispatched at all — a
-single-threaded station whose queue is invisible to itself (AST-135).
+**The ticket arm is the Builder's**, which keeps the gate off your turn and puts it in the tree
+it reads. You verify it at merge by artifact, which you were doing anyway (AST-135).
 
 **Name an arm by the artifact it reads.** "Milestone gate" and "spec gate" are Rin's names.
 Where a spec gets both, **both must return** before you release the Shaper.

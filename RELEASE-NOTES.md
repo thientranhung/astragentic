@@ -1,3 +1,82 @@
+# Astragentic 2.5.0
+
+Three tracker adapters, so a project stops hand-writing tracker mechanics into its own docs.
+
+## The gap this closes
+
+`ADAPT-HARNESS` §2 has always required `docs/agents/issue-tracker.md` to exist and verified that
+the tracker can carry an assignee and blocking edges — and delegated the HOW entirely to
+`setup-matt-pocock-skills`, which covers GitHub, GitLab and local markdown and records anything
+else as freeform prose. Confirmed against plugin 1.2.3: there is no Jira adapter and no Linear
+adapter; both fall to *"Other — describe the workflow in one paragraph"*.
+
+**Two live projects changed tracker on 2026-08-21** — one Linear → GitHub, one Linear → Jira —
+and each then wrote its own operating manual into its own `issue-tracker.md`, in parallel, sharing
+nothing. Every trap in this release was paid for at least once, and several twice.
+
+## What ships
+
+- **`github-issue-tracker`** — status as labels (exactly one of three), native dependencies keyed
+  by the **database id** not the issue number, the two-second read-back lag on
+  `issue_dependencies_summary` and why the fix is *read the endpoint that is not lagging* rather
+  than retry, the N+1 frontier, and the Projects board mirror. Ships
+  `project-status-sync.sh` beside it, parameterised — the Status field id and its options are
+  **discovered at runtime**, because a pasted opaque id that has gone stale writes to a field that
+  is not the one on the board.
+
+- **`jira-issue-tracker`** — status is a **transition taken by a numeric id that is
+  project-specific, non-sequential and not guessable**, so a remembered id is a valid write to the
+  wrong state; read `getTransitionsForJiraIssue` every time and the extra call IS the guard.
+  `cloudId` appears in no URL a human pastes. A project key can collide with a JQL keyword.
+  `editJiraIssue` replaces `description` whole. Link direction is silently invertible — read back
+  the **rendered wording**. Adding a state is an owner action in the UI, invisible to the API
+  until published.
+
+- **`linear-issue-tracker`** — the thin one, because Linear meets all five requirements natively.
+  Carries the two things that are not obvious: the claim protocol is **weaker** where `assignee`
+  cannot hold a Builder identity, so git is the only interlock left; and the free tier stops
+  accepting new issues, which does not degrade a pipeline but stops one.
+
+- **`.agents/tracker-contract.md`** — the layer above all three: the five things the pipeline
+  requires of any tracker, what each tracker charges, how to choose, and what a migration costs.
+
+- **`ADAPT-HARNESS` §2 step 6** — after the owner picks, the adaptation shrinks
+  `issue-tracker.md` to the pointer set and moves mechanics into the adapter. It does **not**
+  replace `setup-matt-pocock-skills`: that skill still owns writing the file and the project's own
+  decisions, and where a project runs a tracker no adapter covers, the freeform path is left alone
+  because that is what it is for.
+
+## Two things deliberately not done
+
+**No checker for "adapter shipped but not named by this project."** Two of three adapters are
+unnamed on any given project. That is the normal state, and `check-reachability`'s check 3 already
+concedes it cannot tell a skill that runs every session from one never invoked.
+
+**`install.sh` ships all three and prunes nothing.** The stager takes a target path and a project
+name; teaching it which tracker a project runs would put a semantic question in the half that is
+deliberately not semantic, and would make `releases/<version>/harness` stop being a complete
+record of what shipped.
+
+## Also in this release
+
+`builder.md` said the range is correct *"firing HERE"*, one careless reading from *"in my
+checkout"* — which is the exposure, since `codex-claude-arm` genuinely needs its own worktree
+(`claude -p` writes). Rewritten as a positive pointer: isolation is a per-runtime question, take
+it from the arm skill for your runtime. Two rationale paragraphs added in 2.4.0 — one in
+`thomas.md`, one in `codex-arm` — were provenance rather than instruction and are now one clause
+each; the ledger holds the history. **A correction to a contract that lands as added prose is
+still a contract that only got longer.**
+
+## Upgrade from 2.4.0
+
+Copy `harness/`, or `./install.sh <target> --apply`. Everything new arrives as `NEW`; the only
+edited payload files are `thomas.md` (three Load rows), `builder.md`, `codex-arm` and
+`check-reachability.sh` (two vocabulary entries).
+
+A project already carrying its own tracker skill at one of these paths will see `CONFLICT` and
+keep its own — the shipped adapter is the portable half of what it already wrote, so diff rather
+than take either whole.
+
 # Astragentic 2.4.0
 
 The ticket arm moves into the Builder, and its receipt gets a validator in the same release —

@@ -101,17 +101,14 @@ which is QA's walk.
 `implement` → `code-review` (both axes) → simplify → **arm pass 1** → [fold → **arm pass 2**] →
 `arm(ticket):` receipt → handback.
 
-**Fire it from your own worktree.** Your cwd is the tree under review, so the range is correct
-by construction — no gate worktree, no broker, no container cleanup. `codex-arm` owns the
-invocation; read its TICKET-scope section and skip the spec/slice apparatus below it.
+**The head under review is yours**, so the range is correct without you resolving it. Isolation
+is a separate question with a per-runtime answer — take it from the arm skill for your runtime.
 
 **At most two passes per gate invocation**, and pass 2 is mandatory whenever pass 1 returned a
 blocking finding: it reads the full artifact, because what it catches is the defect the FIX
 introduced. Re-firing a fresh gate after a later fold is a new invocation, not a third pass.
 
-**Two rules, and deliberately only two: fold what is real, by class and not by instance, and
-say what you leave.** Longer versions of this — rules forbidding you to decline a finding, a
-low/medium/high severity ladder — were written and rejected. The gate runs better without them.
+**Two rules: fold what is real, by class and not by instance, and say what you leave.**
 
 ### The receipt
 

@@ -80,15 +80,6 @@ FILE_COUNT=$(git diff --name-only <base>...HEAD | wc -l | tr -d ' ')
 echo "arm range: $COMMIT_COUNT commits, $FILE_COUNT files changed (<base>..HEAD)"
 ```
 
-**This is why the ticket arm moved into the Builder, and the reason is worth keeping straight.**
-AST-103's guard — the detached checkout, the HEAD assert, the count gate — closed the hole on
-2026-08-19 and closed it correctly. But it closes it by adding **a step an operator must
-execute**, and AST-103's own closing line is that prose warnings do not survive contact with an
-operator who just read them. A bash block embedded in prose is the same genus, one notch
-stronger. Firing from the tree under review makes the correct range **the default**, and takes
-the worktree, the broker and the container cleanup out of the ticket path entirely. The move is
-a simplification, not a repair of something still broken.
-
 #### At SPEC and SLICE scope — Thomas fires from the base checkout
 
 Here the two can disagree, so resolve the head yourself and review from a detached checkout at
