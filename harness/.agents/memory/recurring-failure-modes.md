@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 131 entries (AST-001 … AST-132, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 132 entries (AST-001 … AST-133, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -3401,3 +3401,42 @@ nothing* and *could not be read* are different observations; the first passes, t
 closed.
 
 Bound: `scripts/check-payload-drift.sh`, `thomas.md`.
+
+### AST-133 — `--grep` is not a subject matcher, and it failed in both directions on the same day · promoted 2026-08-22
+
+`git log --grep` searches the **whole commit message**, and its `^` anchors to the start of
+**any line** in it. Every marker check written as `--grep '^simplify(increment):'` therefore
+asks a question nobody meant to ask. Two failures fell out of that in one day, in two
+codebases, pointing opposite ways.
+
+**Over-match, measured downstream over 200 commits: `simplify(increment):` had 23 real
+subjects and 193 `--grep` matches.** The 170 extras were squash and merge commits whose bodies
+list the subjects they absorbed. A commit that merely *quotes* a marker counts as carrying one,
+so every per-field check then runs against a marker the branch never had — AST-122's
+existence-is-not-relationship arriving through the matcher rather than through the marker. The
+same range read `arm(ticket):` as 29 of 29 only because nothing had quoted one yet, and a
+retraction commit is exactly the shape that will.
+
+**Under-match, measured in this package while extending `check-simplify-markers.sh`:** the kind
+was escaped with Python's `re.escape` before being handed to `--grep`, which takes a POSIX
+**basic** regex where `\(` opens a group rather than matching a parenthesis. `simplify\(increment\):`
+matched nothing, and the script reported `markers=0 — STOP: no simplify marker` over a range
+that had a valid one. A correct-looking STOP naming the wrong cause. The inline form it replaced
+had worked only because unescaped `(` is literal in BRE — an accident, not a decision.
+
+**Match subjects against subjects.** One `git log --format` for the range, split the fields,
+compare the subject with `startswith`. No regex dialect, no body, no anchor semantics to reason
+about.
+
+The lesson was already in this payload and had been unlearned: `scripts/ticket-git-facts.sh`
+reads `--format='%s'` and greps that, with a comment at the top saying why — *"grep returning
+commits that only cited a ticket in a handback; subject-only"*. Same trap, same repo, solved in
+one script and walked into by another. **A rule that lives only as a comment in the file that
+learned it does not travel**, which is why this is a ledger entry and why the merge gate now
+calls the script instead of carrying its own command.
+
+**Standing consequence:** where a script exists for a marker question, contracts call it. A
+hand-rolled `git log` beside a script that does the job properly is machinery to delete, not to
+keep in sync — and keeping it in sync is the failure this entry is about.
+
+Bound: `scripts/check-simplify-markers.sh`, `dispatch-ticket/CLEANUP.md`, `thomas.md`, `rin.md`.

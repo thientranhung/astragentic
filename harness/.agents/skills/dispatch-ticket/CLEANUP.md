@@ -20,9 +20,12 @@ changes touched one seam, wrong-altitude fixes, comments that no longer describe
 Anything that would change behaviour is a finding for Thomas rather than a change, and a
 cleanup that would touch a floor item's construction line is reported instead.
 
-Thomas verifies by artifact before the milestone gate —
-`git log <base>..<head> --grep '^simplify(increment):' --format='%h %s%n%b'` — rather than by
-asking whether the pass ran, and reads the `Pass:` line rather than only the subject.
+Thomas verifies by artifact before the milestone gate — `scripts/check-simplify-markers.sh
+<base> <head>` — rather than by asking whether the pass ran, and reads the `Pass:` line rather
+than only the subject. **Not a hand-rolled `git log --grep`**: that searches the whole message
+and `^` anchors to any line in it, so every squash or merge commit quoting a marker subject in
+its body counts as carrying one — measured downstream at **193 matches over 23 real markers**
+(AST-133).
 
 ## Review and cleanup
 

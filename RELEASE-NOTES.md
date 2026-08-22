@@ -1,3 +1,42 @@
+# Astragentic 2.3.36
+
+2.3.35 fixed one half of a matcher bug and shipped the other half unchanged, three files away.
+
+## What changed
+
+- **`dispatch-ticket/CLEANUP.md` calls `scripts/check-simplify-markers.sh`** instead of carrying
+  its own `git log --grep '^simplify(increment):'`. That command searches the **whole message**,
+  and `^` anchors to the start of **any line** in it — so every squash or merge commit that
+  quotes a marker subject in its body counts as carrying one. Measured downstream over 200
+  commits: **23 real markers, 193 matches**, the 170 extras all squash bodies. Every per-field
+  check then runs against a marker the branch never had (AST-133).
+
+- **`rin.md` asks whether the marker IS the head**, not whether one exists, and names the script
+  that reads both. 2.3.35 put that rule in `thomas.md` and `builder.md` and left the gate's own
+  contract on the old wording.
+
+- **AST-133** records the root cause both failures share. 2.3.35's release note described the
+  under-matching half — `re.escape` handed to a POSIX **basic** regex, where `\(` opens a group,
+  so the pattern matched nothing and the script printed a confident STOP naming the wrong cause.
+  The over-matching half above is the same mistake pointing the other way. Two codebases, one
+  day, opposite directions, one root: **`--grep` is not a subject matcher.**
+
+The lesson was already in this payload and had been unlearned. `scripts/ticket-git-facts.sh`
+reads `--format='%s'` and greps that, with a comment saying why — *"grep returning commits that
+only cited a ticket in a handback; subject-only"*. Solved in one script, walked into by another.
+A rule that lives only as a comment in the file that learned it does not travel.
+
+**Standing consequence, now written down:** where a script exists for a marker question,
+contracts call it. A hand-rolled `git log` beside a script that does the job properly is
+machinery to delete, not to keep in sync — and keeping it in sync is the failure this entry is
+about. 2.4.0 removes the last one when `arm(ticket):` gets its kind.
+
+## Upgrade from 2.3.35
+
+Copy `harness/`, or `./install.sh <target> --apply`. Documentation and one ledger entry; no
+script behaviour changed. A project still on 2.3.34 can take this directly — 2.3.35's notes
+apply unchanged and are immediately below.
+
 # Astragentic 2.3.35
 
 Four coordination fixes measured on adapted projects and returned upstream. The one the owner

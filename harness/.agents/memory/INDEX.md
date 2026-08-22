@@ -133,7 +133,7 @@ from this table — read the entry.
 | `AST-119` | A fork inside a Builder can message the dispatcher, and nothing marks it as not the Builder | promoted | 677 | builder-claude.md,thomas.md |
 | `AST-120` | A verification that fired twice on immutable input and disagreed with itself, cause unknown | promoted | 520 |   |
 | `AST-121` | The check had no vocabulary for being obeyed, so honesty registered as failure | promoted | 463 | CLEANUP.md,builder.md |
-| `AST-122` | Existence is not relationship: a verified pointer that proves nothing about what it points at | promoted | 481 | CLEANUP.md,thomas.md |
+| `AST-122` | Existence is not relationship: a verified pointer that proves nothing about what it points at | promoted | 481 | CLEANUP.md,builder.md,rin.md,thomas.md |
 | `AST-123` | The scaffold accumulated the identity of whoever last measured a lesson | promoted | 341 |   |
 | `AST-124` | The watcher covers one turn; the protocol never said who covers the next one | promoted | 512 | dispatch-ticket,thomas.md |
 | `AST-125` | The alert for the failure existed, and was suppressed by the state that defines the failure | promoted | 396 |   |
@@ -144,3 +144,4 @@ from this table — read the entry.
 | `AST-130` | A report-only fork forged a verification marker using a TRUE excuse | promoted | 427 | builder-claude.md |
 | `AST-131` | The queue drained and nothing asked whether a slot was free | promoted | 265 | orchestrator.md,thomas.md |
 | `AST-132` | Two owners for one path, and neither can see the other | promoted | 307 | thomas.md |
+| `AST-133` | `--grep` is not a subject matcher, and it failed in both directions on the same day | promoted | 400 | CLEANUP.md |

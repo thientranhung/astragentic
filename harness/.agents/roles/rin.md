@@ -48,8 +48,9 @@ context-starved reviewer judges "clean" rather than "right".
 **Verification that the process left its traces.** The gate is where evidence gets checked
 rather than assumed:
 
-- the `simplify(increment):` marker exists on the branch, **and its body names the pass that
-  ran** — per the builder's runtime supplement (AST-055);
+- the `simplify(increment):` marker **is the head of the branch**, and its body names the pass
+  that ran — per the builder's runtime supplement (AST-055). `scripts/check-simplify-markers.sh`
+  reads both; existing is not the same claim as covering the code (AST-122);
 - **the merge commit carries a `Ledger:` line.** `Ledger: none` is an answer; an absent line is
   not. You are the only reader positioned to catch its absence, because the step that produces
   it is the step that closes the work;
