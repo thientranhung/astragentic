@@ -42,7 +42,7 @@ things — nothing else in the method reads the tracker at all.
 | 5 | **A surface the OWNER can open and read without running a query** | the owner | the pipeline becomes invisible to the one person who cannot query it |
 
 **Requirement 5 is the one that gets dropped**, because every agent satisfies itself with
-requirement 2 and never notices 5 is unmet. `PROJ-033` is the measured case here: the board
+requirement 2 and never notices 5 is unmet. Measured on a GitHub project: the board
 said `Backlog` on 68 of 71 items — three with live Builders — while every query the harness ran
 was correct. Inception derived the same rule independently and states it better: *"`To Do`
 exists for the HUMAN, and that is the whole point. An agent does not need it — it recomputes
@@ -153,7 +153,7 @@ tools/project-status-sync.sh --apply      # the second half; skipping it is invi
 ```
 
 Skipping the second half fails **silently and in the owner's direction** — the queries stay
-right, and only the human sees the lie (`PROJ-033`). The board field also needs the `project`
+right, and only the human sees the lie. The board field also needs the `project`
 OAuth scope, absent from `gh`'s default set, and without it `--json projectItems` returns `[]`
 rather than an error — an emptiness that reads exactly like "this issue is on no board".
 
@@ -204,8 +204,8 @@ Four things to expect, each of them measured:
 - **Budget an ORACLE SCRIPT, not a review pass.** On inception's migration, **six subagents all
   reported success while three distinct corruptions had occurred** — two wrong-but-real ticket
   keys, silently stripped markup, a dropped Vietnamese word. None appeared in any report. A
-  wrong-but-real key is invisible to a reader precisely because it resolves. This is `PROJ-031`
-  in another costume: self-report is weak evidence even from an honest reporter, and the only
+  wrong-but-real key is invisible to a reader precisely because it resolves. Self-report is
+  weak evidence even from an honest reporter, and the only
   thing that caught it was a purpose-built independent checker.
 - **Only active work moves.** Completed tickets stay behind as an archive, so a blocker named in
   a body with no counterpart in the new tracker is **satisfied, not missing**. Reading it the

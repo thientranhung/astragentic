@@ -1,3 +1,35 @@
+# Astragentic 2.5.1
+
+`docs-staleness-audit.sh` was run against 2.5.0 and found three defects in it. This release is
+those fixes, and the audit is the reason it exists.
+
+## What it caught
+
+- **Seven payload files naming a real project's tickets** (`PROJ-033`, `PROJ-031`) and a real
+  ticket-shaped example (`ABC-251`) — in the adapters and the contract written the previous day.
+  AST-123 is exactly this: the payload accumulating the identity of whoever last measured a
+  lesson. Replaced with neutral forms; the measurements survive, the ids do not.
+- **A stale `INDEX.md`.** Re-generated.
+- **Two contracts over their word budget** — `thomas.md` 2009/1970 and `builder.md` 1621/1400 —
+  entirely from what 2.3.35 and 2.4.0 added. Both were compressed; `builder.md`'s arm section
+  went from 470 words to 250.
+
+## One budget was raised, and it is worth reading as a decision
+
+`builder.md`: 1400 → **1500**. Raising a budget to fit prose is the failure this check exists to
+catch, so the reason is recorded in the script beside the number: 2.4.0 moved `arm: ticket` into
+this role, and the old budget's own comment enumerated **five** responsibilities where the role
+now has **six**. That is a change of remit, not accretion. Compression came first and took the
+section down by 220 words; what remains is the receipt shape and the `Reviewed:`-or-delta rule,
+and a Builder cannot write the artifact without either.
+
+## Why this is the whole release
+
+Three checkers ran over 2.5.0 and two of them found things: `check-reachability` caught the
+adapters being reached by nothing and two project names read as skill references while the
+release was being built; `docs-staleness-audit` caught the above. Both classes were introduced by
+careful work an hour earlier and neither was visible by reading.
+
 # Astragentic 2.5.0
 
 Three tracker adapters, so a project stops hand-writing tracker mechanics into its own docs.

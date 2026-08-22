@@ -96,58 +96,42 @@ which is QA's walk.
 
 ## The cross-vendor arm — yours to fire, and it closes your loop
 
-**You run one closed loop and hand back once:**
-
-`implement` → `code-review` (both axes) → simplify → **arm pass 1** → [fold → **arm pass 2**] →
-`arm(ticket):` receipt → handback.
+**One closed loop, one handback:** `implement` → `code-review` → simplify → **arm pass 1** →
+[fold → **arm pass 2**] → `arm(ticket):` receipt → handback.
 
 **The head under review is yours**, so the range is correct without you resolving it. Isolation
 is a separate question with a per-runtime answer — take it from the arm skill for your runtime.
 
-**At most two passes per gate invocation**, and pass 2 is mandatory whenever pass 1 returned a
+**Two passes per gate invocation at most**, and pass 2 is mandatory whenever pass 1 returned a
 blocking finding: it reads the full artifact, because what it catches is the defect the FIX
-introduced. Re-firing a fresh gate after a later fold is a new invocation, not a third pass.
+introduced. A fresh gate after a later fold is a new invocation, not a third pass.
 
-**Two rules: fold what is real, by class and not by instance, and say what you leave.**
+**Fold what is real, by class and not by instance, and say what you leave.**
 
-### The receipt
-
-An **empty** commit at your head, read at merge by the same script that reads your simplify
-marker. Empty matters: the parent of the receipt IS the tree the gate read.
+The receipt is an **empty** commit at your head — empty, so its parent is the tree the gate
+read. `scripts/check-simplify-markers.sh` owns the rules; this is the shape:
 
 ```
 arm(ticket): <ticket-id> — <verdict>, <n> passes
 
 Range: <n> commits, <m> files (<base>..<head>)
-Reviewed: <full sha of the tree the gate read>
-Vendor: <vendor>   Tests: RAN|NOT RUN <free prose>   Pass: <n>
+Reviewed: <sha of the tree the gate read>
+Vendor: <vendor>   Tests: RAN|NOT RUN <prose>   Pass: <n>
+Unreviewed-delta: <from>..<to> — <n> lines, <m> files: <what changed, why it is safe>
 ```
 
-`Vendor:`, `Tests:` and `Pass:` on one line is normal. `Tests:` must begin `RAN` or `NOT RUN`
-and everything after is prose. `Output:` is optional and usually worthless by the time anyone
-reads it — a scratch path belonging to a session that has ended. `Pass:` above two is legal
-where a fresh gate re-fired per fold; say so in the parenthetical.
-
-**`Reviewed:` must be this commit's parent — OR you declare `Unreviewed-delta:`. Never
-neither.**
-
-```
-Unreviewed-delta: <from>..<to> — <n> lines, <m> files: <what changed and why it is safe>
-```
-
-When pass 2's finding is **folded**, `Reviewed: == parent` is structurally impossible: the fold
-moves the tree past what any pass read, and a pass 3 is over the cap. So declare the gap and let
-Thomas rule on its content. **Its absence where `Reviewed:` is not the parent is the failure**
-(AST-134). Small and boring is the expected shape.
+**`Reviewed:` is this commit's parent, OR `Unreviewed-delta:` declares the gap. Never neither**
+(AST-134): a fold moves the tree past what any pass read, so the equality is legitimately false
+and the omission is the failure. Small and boring is the expected shape.
 
 ## Handing back
 
 **Run every machine that can answer before you hand back** — typecheck, linters, tests, build.
 A surface that stays green when it should not have is the more important half of that result.
 
-**Commit, push, then return to Thomas** — three actions you perform in your last turn, not a
-description of the desired end state. Work that is written but not committed does not exist in
-git, and Thomas's cleanup removes the worktree (AST-092).
+**Commit, push, then return to Thomas** — three actions in your last turn, not a description of
+a desired end state. Uncommitted work does not exist in git, and Thomas's cleanup removes the
+worktree (AST-092).
 
 ```bash
 git add <your-files>
@@ -155,7 +139,7 @@ git commit -m '<ticket-id>: <what this does>'
 git push origin <ticket-branch>
 ```
 
-**Verify your own phases before returning.** Count simplify markers on your branch:
+**Verify your own phases before returning:**
 
 ```bash
 scripts/check-simplify-markers.sh <base> HEAD \
@@ -170,16 +154,10 @@ of it are code the pass never read, and every per-field check passes on them (AS
 the pass over the current head and commit a fresh marker; an empty one is valid, so this costs
 one commit — which is why it is cheaper than arguing that the fold was small.
 
-**If a marker you already committed is wrong, retract it in the open.** Commit a new marker
-carrying the real pass plus a line naming the one it replaces:
-
-```
-Supersedes: <sha of the marker being retracted>
-```
-
-That is a green state on Thomas's side, not a shortfall, and it is deliberately cheaper than
-rewriting history. **The record showing you were wrong is worth more than a record that looks
-clean**, and this token exists so that stays true (AST-121).
+**If a marker you already committed is wrong, retract it in the open** — a new marker carrying
+the real pass plus `Supersedes: <sha>`. That is a green state on Thomas's side, and deliberately
+cheaper than rewriting history: **the record showing you were wrong is worth more than a record
+that looks clean** (AST-121).
 
 Then return to Thomas: the branch, the final SHA, which acceptance criteria pass, the exact
 validation commands and their output, the `simplify(increment):` marker, the browser evidence

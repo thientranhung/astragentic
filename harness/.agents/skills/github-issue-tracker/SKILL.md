@@ -48,7 +48,7 @@ not simulate it with labels — a label nobody sorts by is noise.
 The project's ticket prefix (`<PREFIX>-<n>`) leads every title:
 
 ```
-ABC-251 — D5: Go order-level reconcile-all
+<PREFIX>-251 — <what the ticket does>
 ```
 
 That token is what keeps citations in code comments, docs, ledgers and commit messages

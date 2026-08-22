@@ -4,7 +4,7 @@
 # The label is the source of truth: the frontier is derived from labels + native issue
 # dependencies, and Status takes part in no query. Status is a one-way MIRROR, written so the
 # owner — the one person who does not run queries — can open the board and see the truth.
-# PROJ-033 is why this exists: for one day the board showed 68 tickets in Backlog while three
+# Why this exists: for one day one project's board showed 68 tickets in Backlog while three
 # of them had live Builders on them.
 #
 #   ./project-status-sync.sh            # report the drift, change nothing

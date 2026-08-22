@@ -90,10 +90,18 @@ role_budget() {
                            # when the check runs. 1850 -> 1970 the SAME day: not a fifth raise
                            # of remit, the margin-calibration pass above — 1850 had shipped at
                            # 1818, a 32-word margin no project's own required addition fits in.
-    builder) echo 1400 ;;  # widest DOING surface: build, increment review, simplify,
-                           # visual verification, the two correctness rules, handback.
-                           # Ships at 1040; the 360-word margin already clears the floor
-                           # above, so this pass leaves it unchanged.
+    builder) echo 1500 ;;  # widest DOING surface: build, increment review, simplify,
+                           # THE CROSS-VENDOR ARM, visual verification, the two correctness
+                           # rules, handback.
+                           # 1400 -> 1500 in 2.5.0, and the reason is a change of REMIT, not
+                           # accretion: 2.4.0 moved arm: ticket into this role, and the old
+                           # budget's own comment enumerated five responsibilities where the
+                           # role now has six. Raising a budget to fit prose is the failure
+                           # this check exists to catch; raising it because the role gained a
+                           # phase is calibration. The arm section was compressed from 470 to
+                           # 250 words first, and what is left is the receipt shape and the
+                           # Reviewed-or-delta rule — a Builder cannot write the artifact
+                           # without either.
     rin)     echo 1350 ;;  # ships at 1177 (23-word margin before this pass) — second
                            # opinion, artifact verification, the arm's standard. Raised
                            # under the same margin-calibration pass as thomas and qa.

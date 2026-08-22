@@ -63,13 +63,9 @@ merge, every handback and every report to the owner, and top up to the target fr
 frontier.** The default is **4**; `.agents/orchestrator.md` carries the override where the
 owner has set one, and the default applies when it has no row.
 
-Nothing else in this contract asks whether a slot is free, and an event-driven reading of it
-is a queue that drains and never refills. Measured: after two merges, **two of four Builder
-slots sat idle while twelve claimable tickets waited** — the loop was
-`notification → verify → merge → report → wait`, and every step of it was performed
-correctly. Three readings produced that idle state and all three are reasonable: the frontier
-query had a trigger but no top-up rule; a rule against polling and sleeping generalised into
-*"do nothing while waiting"*; and reporting to the owner read as a phase boundary (AST-131).
+Nothing else here asks whether a slot is free, and a queue with a trigger and no top-up rule
+drains and never refills: measured at **two of four slots idle against twelve claimable
+tickets**, every step performed correctly (AST-131).
 
 **Reporting is not a stopping point.** A report is something you emit while working, and the
 turn that emits it is also a turn that counts panes.

@@ -114,7 +114,7 @@ from this table — read the entry.
 | `AST-100` | Codex companion broker leaks one process per arm pass, accumulating silently | promoted | 201 | codex-arm |
 | `AST-101` | Gate worktree removal leaks database containers, not just broker processes | promoted | 182 |   |
 | `AST-102` | WorktreeRemove hook does not fire, but documentation declares manual cleanup redundant | promoted | 418 | thomas.md |
-| `AST-103` | Cross-vendor arm silently reviews a zero-commit range and returns clean | promoted | 206 | codex-arm,thomas.md |
+| `AST-103` | Cross-vendor arm silently reviews a zero-commit range and returns clean | promoted | 206 | codex-arm |
 | `AST-104` | herdr agent start rejects uppercase in agent names, but dispatch convention generates them | promoted | 87 |   |
 | `AST-105` | Pipe after a command swallows exit code, turning a failed gate into exit 0 | promoted | 182 | WATCHING.md |
 | `AST-106` | Worktree isolation stated about git, violated by non-git disk writes | promoted | 137 | dispatch-ticket |
