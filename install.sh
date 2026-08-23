@@ -19,11 +19,12 @@ set -euo pipefail
 HARNESS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PAYLOAD="$HARNESS_ROOT/harness"
 ADAPT_PROMPT="$HARNESS_ROOT/prompts/ADAPT-HARNESS.md"
+UNINSTALL_PROMPT="$HARNESS_ROOT/prompts/UNINSTALL-HARNESS.md"
 RELEASE_NOTES="$HARNESS_ROOT/RELEASE-NOTES.md"
 VERSION="$(cat "$HARNESS_ROOT/VERSION")"
 
-for REQUIRED in "$PAYLOAD" "$ADAPT_PROMPT" "$RELEASE_NOTES" "$HARNESS_ROOT/README.md" \
-                "$HARNESS_ROOT/check-requirements.sh"; do
+for REQUIRED in "$PAYLOAD" "$ADAPT_PROMPT" "$UNINSTALL_PROMPT" "$RELEASE_NOTES" \
+                "$HARNESS_ROOT/README.md" "$HARNESS_ROOT/check-requirements.sh"; do
   [ -e "$REQUIRED" ] || { echo "ERROR: package is incomplete, missing $REQUIRED" >&2; exit 1; }
 done
 
@@ -177,6 +178,10 @@ while IFS= read -r RESIDUE; do
   [ -n "$RESIDUE" ] && rm -rf "$STAGING_DIR/harness/.opencode/$RESIDUE"
 done < "$PAYLOAD/.opencode/.gitignore"
 cp "$ADAPT_PROMPT"                    "$STAGING_DIR/ADAPT-HARNESS.md"
+# Staged beside its mirror, and for the same reason the release directory is immutable: removal
+# is classified against THIS release's bytes, so the prompt that does the classifying has to be
+# the one that shipped with them.
+cp "$UNINSTALL_PROMPT"                "$STAGING_DIR/UNINSTALL-HARNESS.md"
 cp "$HARNESS_ROOT/README.md"          "$STAGING_DIR/README.md"
 cp "$RELEASE_NOTES"                   "$STAGING_DIR/RELEASE-NOTES.md"
 cp "$HARNESS_ROOT/check-requirements.sh" "$STAGING_DIR/check-requirements.sh"
@@ -343,4 +348,8 @@ Give your root Claude Code or Codex agent this instruction:
 
 It will inspect this project, compare any previously applied release, integrate the
 candidate, verify the result by artifact, and record the applied version.
+
+To remove the harness later, the mirror of that instruction is:
+
+  Read .astraler/releases/<applied>/UNINSTALL-HARNESS.md completely and execute it.
 EOF

@@ -1,3 +1,54 @@
+# Astragentic 2.6.0
+
+Removal gets a prompt, not a script — which is the shape this package already had and I had
+missed. The owner pointed it out.
+
+## What changed
+
+**`prompts/UNINSTALL-HARNESS.md`**, staged into every release beside `ADAPT-HARNESS.md`:
+
+```
+Read .astraler/releases/<applied>/UNINSTALL-HARNESS.md completely and execute it.
+```
+
+2.5.3 wrote the removal procedure into the README as five steps for a human. That was the wrong
+home, and the package's own architecture says why: `install.sh` is deliberately **not** the
+semantic installer, because integrating a release needs judgement over project context. Removal
+has exactly the same shape — the mechanical half is `rm`, and the hard half is deciding, for
+every file at a path the payload also ships, whether the PROJECT wrote it. A script cannot decide
+that. A prompt with the evidence in front of it can.
+
+**It is staged per release, deliberately.** Removal is classified against the bytes the project
+actually received, so the prompt doing the classifying has to be the one that shipped with them.
+
+## What it does that a README section could not
+
+- **Stops what is running first**, and treats a live Builder as a STOP rather than a cleanup step.
+- **Classifies by `diff -rq` against the applied release**, and reads
+  `check-payload-drift.sh`'s manifest as an independent second statement of the same fact —
+  **where the two disagree, the disagreement is the finding**, not something to resolve by
+  picking the convenient one.
+- **Fails closed.** A file it cannot classify is kept and reported. An over-cautious uninstall
+  leaves a directory the owner deletes in one command; an over-confident one loses authored work
+  silently, and the silence is what makes it unrecoverable.
+- **Refuses to run without `applied-version`**, because there is no oracle without it and a guess
+  is the silent-loss case.
+- **Unwires the semantic half** — the rows and pointers the adaptation wrote into `AGENTS.md` and
+  `CLAUDE.md` — which no file-level removal reaches.
+- **Names what to KEEP**: the three `docs/agents/` files (they come from
+  `setup-matt-pocock-skills` and describe the tracker, not this harness), the ledger, and every
+  ticket and commit the harness helped produce. "Clean removal" has been read as "revert" before.
+- **Leaves a receipt** in one commit, so a later session can tell a deliberate removal from an
+  accident.
+
+`install.sh` now requires and stages the file, and its closing instruction names the mirror.
+
+## Upgrade from 2.5.3
+
+Copy `harness/`, or `./install.sh <target> --apply`. The new prompt is staged, not installed into
+the project tree — a release you have already staged does not have it, so removal against an
+older release uses the README section, which now points here.
+
 # Astragentic 2.5.3
 
 The owner asked how a project removes this package, and there was no written answer.
