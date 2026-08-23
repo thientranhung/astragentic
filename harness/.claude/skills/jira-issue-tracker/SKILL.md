@@ -5,8 +5,7 @@ description: Operating mechanics for a project whose tracker is Jira — status 
 
 # Tracker adapter: Jira
 
-**Measured on workspace-app-inception, which moved Linear → Jira on 2026-08-21** (project `IN`,
-team-managed). Every trap below cost that project a run or a correction. What the pipeline
+**Measured on a live project that moved Linear → Jira on 2026-08-21**, team-managed. Every trap below cost that project a run or a correction. What the pipeline
 requires of *any* tracker is `.agents/tracker-contract.md`; this file is the HOW for one of them.
 
 **The project half stays in the project.** This adapter carries no site, no `cloudId`, no project
@@ -20,8 +19,8 @@ Reach it through the **Atlassian MCP tools**.
 **`cloudId` appears in no URL a human pastes.** It must be written down in the project half, or
 every session starts by hunting for it (`getAccessibleAtlassianResources`).
 
-**A project key can collide with a JQL keyword — always quote it.** `project = IN` fails to
-parse; `project = "IN"` works. This bites once per session otherwise, and the error does not
+**A project key can collide with a JQL keyword — always quote it.** A two-letter key that is
+also a JQL word makes `project = <KEY>` fail to parse; `project = "<KEY>"` works. This bites once per session otherwise, and the error does not
 say "quote your key".
 
 ## Status is a TRANSITION, taken by a number
@@ -41,10 +40,16 @@ getTransitionsForJiraIssue   →   transitionJiraIssue with an id FROM THAT RESP
 class of bug it prevents. A transition-id table in the project half is a convenience for humans
 reading it, never the thing a session writes from.
 
-**Adding or renaming a state is an OWNER action in the Jira UI** (Project settings → Workflows),
-and a new state is **invisible to the API until the workflow is published**. The MCP tools can
-create, edit, transition and link issues; they cannot touch a workflow. A session that needs a
-state which does not exist is blocked on a human — say so rather than improvising with labels.
+**Adding or renaming a state is an OWNER action in the Jira UI, on both project types**, and the
+MCP tools cannot touch a workflow at all — they create, edit, transition and link issues, nothing
+more. A session that needs a state which does not exist is blocked on a human; say so rather than
+improvising with labels.
+
+*How the UI gets there differs, and only one half is measured.* On **company-managed**, the state
+is added in Project settings → Workflows and is invisible to the API until the workflow is
+**published** — that vocabulary is company-managed's, and this claim is inherited rather than
+measured here. On **team-managed**, a status is added as a board column and there is no publish
+step. **Re-measure before relying on either.**
 
 **Team-managed vs company-managed changes what the board is.** On a **team-managed** (next-gen)
 project the statuses **are** the board — there is no separate status→column mapping to keep in

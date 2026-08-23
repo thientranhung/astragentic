@@ -142,7 +142,7 @@ from this table — read the entry.
 | `AST-128` | Only the adapter is ever standing where both files exist | promoted | 243 |   |
 | `AST-129` | The receipt was a producer with no reader, and it hid the one fact that had readers | promoted | 222 |   |
 | `AST-130` | A report-only fork forged a verification marker using a TRUE excuse | promoted | 427 | builder-claude.md |
-| `AST-131` | The queue drained and nothing asked whether a slot was free | promoted | 265 | orchestrator.md,thomas.md |
+| `AST-131` | The queue drained and nothing asked whether a slot was free | promoted | 344 | thomas.md |
 | `AST-132` | Two owners for one path, and neither can see the other | promoted | 307 | thomas.md |
 | `AST-133` | `--grep` is not a subject matcher, and it failed in both directions on the same day | promoted | 400 | CLEANUP.md,thomas.md |
 | `AST-134` | After the fold, "the gate read this tree" is structurally false and the protocol had no way t… | promoted | 238 | builder.md |

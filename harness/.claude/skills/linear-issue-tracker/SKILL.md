@@ -5,7 +5,7 @@ description: Operating mechanics for a project whose tracker is Linear — nativ
 
 # Tracker adapter: Linear
 
-**Measured on etsy-fulfillment-thanh, which ran Linear until 2026-08-21.** What the pipeline
+**Measured on a live project that ran Linear until 2026-08-21.** What the pipeline
 requires of *any* tracker is `.agents/tracker-contract.md`; this file is the HOW for one of them.
 
 **The project half stays in the project.** Workspace, team key, project id and the ticket prefix

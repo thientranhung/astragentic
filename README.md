@@ -4,10 +4,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.3.23-blue" alt="version">
+  <img src="https://img.shields.io/badge/version-2.6.1-blue" alt="version">
   <img src="https://img.shields.io/badge/license-proprietary-lightgrey" alt="license">
   <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
-  <img src="https://img.shields.io/badge/failure_modes-125_measured-red" alt="failure modes">
+  <img src="https://img.shields.io/badge/failure_modes-134_measured-red" alt="failure modes">
 </p>
 
 <p align="center">
@@ -39,7 +39,7 @@ prove what happened.
 
 # 3. Open your repo in Claude Code and run the adaptive installer
 cd /path/to/your-repo
-claude "Read .astraler/releases/2.3.23/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/2.6.1/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Start the router
 claude --agent thomas

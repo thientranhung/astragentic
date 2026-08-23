@@ -5,7 +5,7 @@ description: Operating mechanics for a project whose tracker is GitHub Issues �
 
 # Tracker adapter: GitHub Issues
 
-**Measured on etsy-fulfillment-thanh, which moved Linear → GitHub on 2026-08-21.** Every trap
+**Measured on a live project that moved Linear → GitHub on 2026-08-21.** Every trap
 below cost that project a run. What the pipeline requires of *any* tracker is
 `.agents/tracker-contract.md`; this file is the HOW for one of them.
 

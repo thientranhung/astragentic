@@ -3369,7 +3369,13 @@ Same shape as AST-057 from the other side — there a step nobody reports is one
 was skipped; here a resource nobody counts is one nobody can tell is idle. The owner found this
 one by asking why the session had stopped picking up tickets.
 
-Bound: `thomas.md`, `.agents/orchestrator.md`.
+**A ledger id must not be cited from an OWNER file.** `.agents/orchestrator.md` is written only
+when absent, so a project that declines the optional row never carries the citation — while the
+generated `INDEX.md` shipped in the payload claims it does, and the index-vs-ledger axis fails on
+day one for a configuration this very entry calls supported. Measured on the first project to
+take 2.6.0. The rule's home is the contract; the owner file carries a value, not a provenance.
+
+Bound: `thomas.md`.
 
 ### AST-132 — Two owners for one path, and neither can see the other · promoted 2026-08-22
 

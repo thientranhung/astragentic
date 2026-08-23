@@ -86,6 +86,20 @@ if [ -f "$LEDGER" ]; then
   fi
 fi
 
+# README badges are hand-maintained numbers in a file every release copies wholesale — the same
+# class as the ledger header above, and it recurred exactly as that comment predicted: a project
+# taking 2.6.0 read a version badge saying 2.3.23 and a failure-mode count 9 entries stale. A
+# number a document states about itself is derived here or it drifts.
+README="$HARNESS_ROOT/README.md"
+if [ -f "$README" ] && [ -f "$LEDGER" ]; then
+  LEDGER_COUNT=$(grep -c '^### AST-' "$LEDGER")
+  BEFORE=$(cat "$README")
+  sed -i '' -E "s|badge/version-[0-9]+\.[0-9]+\.[0-9]+-blue|badge/version-$VERSION-blue|g; \
+                s|badge/failure_modes-[0-9]+_measured-red|badge/failure_modes-${LEDGER_COUNT}_measured-red|g; \
+                s|releases/[0-9]+\.[0-9]+\.[0-9]+/ADAPT-HARNESS\.md|releases/$VERSION/ADAPT-HARNESS.md|g" "$README"
+  [ "$BEFORE" = "$(cat "$README")" ] || echo "README badges auto-updated: version $VERSION, $LEDGER_COUNT failure modes"
+fi
+
 APPLY=0
 PLAN=0
 ARGS=()

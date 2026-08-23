@@ -1,3 +1,51 @@
+# Astragentic 2.6.1
+
+The first project to take 2.6.0 reported three defects in it and corrected one claim. This is
+those four.
+
+## What it found
+
+- **`INDEX.md` bound `AST-131` to `.agents/orchestrator.md`, which is an OWNER file.** An install
+  writes that file only when absent, so a project that declines the optional `builder-target` row
+  never carries the citation — while the generated index shipped in the payload says it does. The
+  index-vs-ledger axis of `docs-staleness-audit.sh` therefore **failed on day one, out of the box,
+  on a configuration 2.3.35 explicitly calls supported.**
+
+  Fixed at the source rather than in the index: **a ledger id must not be cited from an owner
+  file.** The rule's home is the contract; the owner file carries a value, not a provenance. The
+  `builder-target` explanation stays, the `AST-131` citation goes, and the ledger entry now says
+  why.
+
+- **The README version badge read `2.3.23` against `VERSION = 2.6.0`**, and the failure-mode badge
+  was nine entries stale. Both are hand-maintained numbers in a file every release copies
+  wholesale — the exact class `install.sh`'s ledger-header block already exists to fix, recurring
+  three lines away from the comment predicting it. `install.sh` now derives the version badge, the
+  failure-mode count and the `releases/<version>/` example at staging time.
+
+- **The Jira adapter's opening line named a real project.** 2.5.1 scrubbed ticket ids for AST-123
+  and the project name survived the same sweep; the GitHub and Linear adapters carried it too. All
+  three now say "a live project". The JQL keyword-collision example is generalised the same way.
+
+## One claim corrected, and one measurement I would not have got
+
+**Corrected.** The adapter said a new Jira state is *"invisible to the API until the workflow is
+published"* — and `published` is **company-managed vocabulary**, which sits against the adapter's
+own team-managed paragraph one section later. On team-managed, a status is added as a board column
+with no publish step. The claim is now split by project type, with the company-managed half marked
+**inherited rather than measured**. It came from a project doc; both files said it, so it was not a
+regression — it was two files agreeing on something neither had checked.
+
+**Confirmed, and worth more than the fix.** The adapter's `inwardIssue` = blocker /
+`outwardIssue` = blocked table was verified against **all 8 live `Blocks` links** in a real
+project, by reading back the rendered wording rather than the payload sent. The reporting session
+had doubted the table on first read and reported that the doubt was wrong. That is the read-back
+rule in the adapter being used on the adapter.
+
+## Upgrade from 2.6.0
+
+Copy `harness/`, or `./install.sh <target> --apply`. A project already on 2.6.0 has the wrong
+`INDEX.md` row; this release replaces it.
+
 # Astragentic 2.6.0
 
 Removal gets a prompt, not a script — which is the shape this package already had and I had
