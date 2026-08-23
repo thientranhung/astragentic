@@ -293,6 +293,53 @@ install.sh                     staging script
 check-requirements.sh          machine readiness check
 ```
 
+## Removing it
+
+There is no `uninstall.sh`, deliberately: the hard part of removal is deciding which files at
+payload paths the PROJECT wrote, and no script can decide that for you. What the package does
+give you is the evidence to decide with — **the applied release directory is a byte-exact record
+of what shipped**, so `diff` answers the question rather than memory.
+
+Do it in this order. Steps 1 and 5 are the ones people forget, and both leave things running
+after the repo looks clean.
+
+**1. Stop what is running first.** A watchdog outlives the files it watches.
+
+```bash
+scripts/herdr-watchdog.sh stop        # also clears /tmp/herdr-watchdog-<workspace-label>.lock
+git worktree list                     # remove any gate-arm-* or ticket worktree still registered
+```
+
+Kill any `app-server-broker.mjs` whose `--cwd` is one of those worktrees, and stop containers
+scoped to them. `codex-arm` documents that sequence; it is the same one.
+
+**2. Separate yours from the package's**, using the release you actually applied:
+
+```bash
+V=$(cat .astraler/state/applied-version)
+diff -rq .astraler/releases/$V/harness .   # identical = the package's · differs = yours · only-in-. = yours
+```
+
+A project running `check-payload-drift.sh` already has this list — its manifest names exactly the
+files it authored at payload paths.
+
+**3. Delete the package's half.** `.agents/`, `.codex/`, `.opencode/`, and inside `.claude/` and
+`scripts/` only the entries step 2 marked identical. **`.claude/settings.json` and
+`.agents/orchestrator.md` are yours** — the installer never overwrote them and neither should you.
+
+**4. Delete `.astraler/`.** Releases, state, `CANDIDATE`, `PROJECT_NAME`. Do this last: step 2
+reads it.
+
+**5. Clean up outside the repo**, which nothing in the repo will remind you of:
+
+- `${CODEX_HOME:-$HOME/.codex}/<role>.config.toml` — one per role you provisioned
+- the herdr workspace, if it exists only for this project
+
+**What to KEEP.** `docs/agents/issue-tracker.md`, `triage-labels.md` and `domain.md` are written
+by `setup-matt-pocock-skills`, not by this package, and describe your tracker rather than this
+harness. Your ledger is your project's measured history and outlives whatever wrote it. Removing
+the harness is not a reason to lose either.
+
 ## When each script runs
 
 Every script has a moment and an owner. A script with neither is one nobody runs until

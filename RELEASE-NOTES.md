@@ -1,3 +1,37 @@
+# Astragentic 2.5.3
+
+The owner asked how a project removes this package, and there was no written answer.
+
+## What changed
+
+`README.md` gains **"Removing it"** — five steps, in order, with the two that get forgotten named
+as such: the watchdog keeps running after the files are gone, and the Codex profiles under
+`${CODEX_HOME:-$HOME/.codex}` live outside the repo entirely.
+
+**Still no `uninstall.sh`, and now the reason is written down where it can be argued with.** The
+hard part of removal is deciding which files at payload paths the PROJECT authored, and no script
+decides that for you. What the package can do is supply the evidence: the applied release
+directory is a byte-exact record of what shipped, so
+
+```bash
+V=$(cat .astraler/state/applied-version)
+diff -rq .astraler/releases/$V/harness .
+```
+
+answers it — identical is the package's, differing or only-local is yours. A project running
+`check-payload-drift.sh` already has the same list in its manifest. That is the same reader
+whose existence justifies release immutability in `install.sh`; removal is one more use of it,
+not a new mechanism.
+
+The section also names what to **keep**: `docs/agents/issue-tracker.md`, `triage-labels.md` and
+`domain.md` come from `setup-matt-pocock-skills` and describe the project's tracker, not this
+harness; the ledger is the project's own measured history. Removing the harness is not a reason
+to lose either.
+
+## Upgrade from 2.5.2
+
+Copy `harness/`, or `./install.sh <target> --apply`. Documentation only.
+
 # Astragentic 2.5.2
 
 Nine scripts ship and three of them had no moment. The owner asked when they run, and the
