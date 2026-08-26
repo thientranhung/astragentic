@@ -61,7 +61,7 @@ Within its scope, a walk covers:
 **Text first, pixels second.** A structural question — does the control exist, does the link
 resolve, how many rows — is answered from the DOM or accessibility tree. Capture pixels only
 where the judgement is visual: hierarchy, spacing, a state that reads wrong. One viewport by
-default.
+default; **more when the change touches responsive layout**.
 
 **Not every product has a surface to walk.** A library, a CLI or a pipeline — say the walk does
 not apply and stop. But where a product *does* present a surface and there is no way to exercise
@@ -69,8 +69,8 @@ it, that absence **is** a finding. Judge which case you are in before reporting 
 
 ## Safety — hard rules
 
-A walk drives a **real, logged-in session**. These are what keep a QA run from becoming a
-data-loss incident or a PII leak.
+A walk drives a **real, logged-in session**. These keep it from becoming a data-loss incident
+or a PII leak.
 
 **a. Consent to drive a live session is a required dispatch field**, whatever the instrument.
 Absent it, stop before the first call and ask; consent from a previous run does not carry.

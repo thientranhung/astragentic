@@ -69,7 +69,10 @@ The brief carries §1's contents plus five more:
 - **`$VERIFIED_CLEAN_FILE`** — an absolute path outside every checkout, for this walk's
   output, alongside `$GATE_FILE`. QA's cwd is the gate worktree you force-remove at cleanup,
   so a relative path writes the one artifact that is supposed to compound into the thing about
-  to be deleted.
+  to be deleted. **Derive it from the same per-dispatch token `$GATE_FILE` uses, and verify it
+  does not already exist before you dispatch** — a reused path lets a walk that never wrote
+  its list pass a `test -s` on the previous walk's file and overwrite durable coverage with
+  stale coverage. Same reasoning as the gate file's uniqueness, same failure if skipped.
 - **The previous walk's verified-clean list**, its contents packed into the brief from
   `.astraler/state/qa-verified-clean.md` in the BASE checkout. Where there is none, say so —
   QA runs full rather than guessing what was covered.
@@ -96,9 +99,19 @@ it before cleanup**, in the same breath as the report — it is the only artifac
 compounds, and the gate worktree it was written beside is about to be removed:
 
 ```bash
-test -s "$VERIFIED_CLEAN_FILE"                                   # fail closed
-mkdir -p "$(git rev-parse --show-toplevel)/.astraler/state"
-cp "$VERIFIED_CLEAN_FILE" "$(git rev-parse --show-toplevel)/.astraler/state/qa-verified-clean.md"
+# before dispatch — the path must be unique and must NOT already exist
+VERIFIED_CLEAN_FILE="/tmp/qa-verified-clean-<artifact-key>-<short-sha>.md"
+[ -e "$VERIFIED_CLEAN_FILE" ] && { echo "STOP: $VERIFIED_CLEAN_FILE exists — a previous walk's
+  list, or a concurrent walk on the same SHA; take it to the owner"; exit 1; }
+
+# after the pane reports, BEFORE cleanup — all fail-closed
+set -euo pipefail
+test -s "$VERIFIED_CLEAN_FILE"                       # this walk wrote it, not a previous one
+DEST="$(git rev-parse --show-toplevel)/.astraler/state/qa-verified-clean.md"
+mkdir -p "$(dirname "$DEST")"
+cp "$VERIFIED_CLEAN_FILE" "$DEST"
+test -s "$DEST"                                      # MUST pass before cleanup
+rm -f "$VERIFIED_CLEAN_FILE"                         # only this dispatch's unique source
 ```
 
 A walk whose list did not land is a walk whose next incremental run silently re-covers

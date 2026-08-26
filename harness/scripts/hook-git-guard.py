@@ -31,12 +31,12 @@ AMBIGUITY IS NOT A FINDING. A token carrying an unresolved `$VAR` or a substitut
 judged. Those are logged and allowed. A guard that fires on what it cannot resolve trains the
 operator to disable it.
 
-WHAT THIS GUARD CANNOT DO, STATED RATHER THAN DISCOVERED. It matches commands; it is not a
-shell. Two adversarial passes each found a way through and each was closed — regex spellings
-first, then newlines, subshells, substitutions, assignment prefixes and `env`/`xargs`/`find
--exec` wrappers. A third form will exist: a script that writes and runs another script, an
-alias, an interpreter invoked with `-c`. Treat every rule here as a floor that catches the
-ACCIDENTAL case, never a boundary that survives someone routing around it deliberately.
+WHAT THIS GUARD CANNOT DO, STATED RATHER THAN DISCOVERED. It is an accidental-misuse lint, not
+a boundary. Three adversarial gates each found a fresh way through, and the third concluded the
+matcher was not converging; the answer was to shrink its claim rather than grow its rules. It
+now recognises ONE shape — simple commands separated by unquoted operators — and stays silent
+on anything containing a substitution, heredoc, comment, reserved word, wrapper or interpreter.
+Silence there is the design, not a gap: a coverage claim that is not true is worse than none.
 
 That is why the contract is `dispatch-ticket/CLEANUP.md` and this file is a second layer under
 it. A Builder on Codex or opencode has no hook at all and must still get the ordering right,
@@ -86,97 +86,110 @@ def deny(reason, cmd):
     sys.exit(0)
 
 
-# Operators that end a simple command. Split happens on the RAW string, at positions outside
-# any quoting — shlex discards quote context, and a pass proved that letting it classify
-# punctuation denies `printf '%s' ';' git add -A` for containing a quoted semicolon.
+# ---------------------------------------------------------------------------------------
+# SCOPE, AND WHY IT IS THIS SMALL.
+#
+# Three adversarial gates were run over this file. Each one found a fresh way through, and
+# each fix bought one round: regex spellings, then newlines and subshells and wrappers, then
+# quoted substitutions, reserved words, `env -u FOO`, and heredocs read as commands. Gate 3's
+# verdict was that the matcher was not converging and should stop approximating shell grammar.
+#
+# It has stopped. This guard now recognises exactly ONE shape: a line made of simple commands
+# separated by unquoted operators, containing no construct it cannot read with certainty. Meet
+# anything else — a substitution, a heredoc, a comment, a reserved word, a wrapper, an `eval` —
+# and it says NOTHING and records why.
+#
+# That is a deliberate downgrade from "boundary" to **accidental-misuse lint**. It catches the
+# `git add -A` an agent reaches for by habit. It does not stop anyone who is routing around it,
+# and it no longer pretends to. The previous version's wrapper handling was itself wrong
+# (`env -u FOO git add -A` unwrapped to a command that was then allowed), which is the argument
+# against the whole approach: coverage claims that are not true are worse than absent ones.
+#
+# The contract is `dispatch-ticket/CLEANUP.md`, on every runtime. This is a floor under it.
+# ---------------------------------------------------------------------------------------
+
 _OPS = ("|&", "&&", "||", ";;", ";", "|", "&", "\n")
-# Wrappers that run another command. `xargs git add -A` and `find . -exec git add -A {} ;`
-# were both allowed until these were unwrapped.
-_WRAPPERS = {"env", "command", "nohup", "time", "sudo", "nice", "ionice", "stdbuf", "setsid",
-             "xargs", "timeout", "doas"}
+
+# Any of these means the line has structure this guard cannot read. Presence is not suspicion —
+# it is the guard declining to guess, which is the only honest response to a construct whose
+# execution semantics it does not model.
+_UNREADABLE = ("$(", "`", "<<", "#", "(", ")", "{", "}", "&>", ">(", "<(")
+_RESERVED = {"if", "then", "elif", "else", "fi", "while", "until", "for", "do", "done",
+             "case", "esac", "function", "select", "!", "time", "coproc",
+             "eval", "exec", "source", ".", "bash", "sh", "zsh", "env", "xargs", "find",
+             "command", "sudo", "doas", "nohup", "setsid", "timeout", "nice", "ionice",
+             "stdbuf", "watch", "parallel"}
 
 
 def _split_unquoted(cmd):
-    """Split on shell operators that are NOT inside quotes. Returns raw segments."""
+    """Split on operators outside quoting, or return None when the line is unreadable.
+
+    Quote tracking exists so quoted data is never mistaken for syntax; the unreadable check
+    exists because quote tracking alone is not enough — a shell runs `$(...)` inside double
+    quotes, which this scanner would otherwise treat as inert text."""
     segs, buf, i, quote = [], [], 0, None
     while i < len(cmd):
         c = cmd[i]
         if quote:
-            buf.append(c)
             if c == "\\" and quote == '"' and i + 1 < len(cmd):
-                buf.append(cmd[i + 1]); i += 2; continue
+                buf.append(c); buf.append(cmd[i + 1]); i += 2; continue
             if c == quote:
                 quote = None
-            i += 1
-            continue
+            buf.append(c); i += 1; continue
         if c in ("'", '"'):
             quote = c; buf.append(c); i += 1; continue
         if c == "\\" and i + 1 < len(cmd):
             buf.append(c); buf.append(cmd[i + 1]); i += 2; continue
-        # Grouping constructs and substitutions: treat their contents as commands too, so
-        # `(git add -A)` and `$(git add -A)` are not a way through.
-        if c in "(){}":
-            segs.append("".join(buf)); buf = []; i += 1; continue
-        if c == "$" and i + 1 < len(cmd) and cmd[i + 1] == "(":
-            segs.append("".join(buf)); buf = []; i += 2; continue
-        if c == "`":
-            segs.append("".join(buf)); buf = []; i += 1; continue
-        matched = None
-        for op in _OPS:
-            if cmd.startswith(op, i):
-                matched = op; break
+        matched = next((op for op in _OPS if cmd.startswith(op, i)), None)
         if matched:
             segs.append("".join(buf)); buf = []; i += len(matched); continue
         buf.append(c); i += 1
+    if quote:
+        return None                      # unterminated quote: unreadable
     segs.append("".join(buf))
     return [x for x in (seg.strip() for seg in segs) if x]
 
 
-def _unwrap(argv):
-    """Strip env-assignment prefixes and command wrappers, returning the inner argv.
+def readable(cmd):
+    """True only when every construct in the line is one this guard models."""
+    depth_free = cmd
+    for tok in _UNREADABLE:
+        if tok in depth_free:
+            return False
+    return True
 
-    `FOO=bar git add -A`, `env git add -A`, `xargs git add -A` and
-    `find . -exec git add -A {} ;` all reached the repository unchallenged before this."""
-    out = list(argv)
-    guard = 0
-    while out and guard < 8:
-        guard += 1
-        head = posixpath.basename(out[0])
-        # VAR=value prefixes
-        if "=" in out[0] and not out[0].startswith("=") and "/" not in out[0].split("=", 1)[0]:
-            out = out[1:]; continue
-        if head == "find":
-            if "-exec" in out:
-                out = out[out.index("-exec") + 1:]
-                out = [t for t in out if t not in ("{}", ";", "\\;", "+")]
-                continue
-            break
-        if head in _WRAPPERS:
-            rest = out[1:]
-            # skip the wrapper's own flags and, for xargs/timeout, their operands
-            while rest and rest[0].startswith("-"):
-                rest = rest[1:]
-            if head == "timeout" and rest:
-                rest = rest[1:]
-            out = rest
-            continue
-        break
-    return out
+
+OUT_OF_SCOPE = []          # set by simple_commands, read by main for the log line
 
 
 def simple_commands(cmd):
-    """Every simple command in the line, argv-split, wrappers unwrapped."""
+    """Top-level simple commands, or [] when the line is outside this guard's scope."""
+    OUT_OF_SCOPE.clear()
+    if not readable(cmd):
+        OUT_OF_SCOPE.append("unreadable-construct")
+        return []
+    segs = _split_unquoted(cmd)
+    if segs is None:
+        OUT_OF_SCOPE.append("unterminated-quote")
+        return []
     out = []
-    for seg in _split_unquoted(cmd):
+    for seg in segs:
         try:
             lex = shlex.shlex(seg, posix=True)
             lex.whitespace_split = True
             argv = list(lex)
         except ValueError:
+            OUT_OF_SCOPE.append("untokenizable")
+            return []                    # no opinion about the whole line
+        if not argv:
             continue
-        argv = _unwrap(argv)
-        if argv:
-            out.append(argv)
+        head = posixpath.basename(argv[0])
+        # A reserved word, an interpreter or a wrapper means the real command is nested
+        # somewhere this guard does not follow. Modelling that was tried and was wrong.
+        if head in _RESERVED or argv[0] in _RESERVED or "=" in argv[0].split("/")[-1][:1]:
+            OUT_OF_SCOPE.append("reserved-or-wrapper:" + head)
+            return []
+        out.append(argv)
     return out
 
 
@@ -258,7 +271,14 @@ def main():
         except OSError:
             pass
 
-    for argv in simple_commands(cmd):
+    cmds = simple_commands(cmd)
+    if OUT_OF_SCOPE:
+        # NOT the same as approving it. A reader of this log must be able to tell a line this
+        # guard examined from one it declined to have an opinion about.
+        log("no-opinion(%s)" % OUT_OF_SCOPE[0], cmd)
+        sys.exit(0)
+
+    for argv in cmds:
         exe = posixpath.basename(argv[0]) if argv else ""
 
         # -- rm -rf on a worktree path (AST-096) -----------------------------------------
