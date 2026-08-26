@@ -140,11 +140,12 @@ base with `git log <base> --oneline --grep '<ticket-id>'`, then `-D` and record 
 as the reason. `-D` without that confirmation is for an explicitly owner-approved abandonment
 only.
 
-**On a Claude root, `scripts/hook-git-guard.py` performs steps 1 and 2's preconditions
-automatically** — it refuses a removal that would destroy uncommitted work or kill a live
-process, and it stops the resources first. It is a `PreToolUse` hook, so it does not exist on a
-Codex or opencode root: the steps above are the contract, and the hook is a second layer under
-it, never a replacement for it.
+**On a Claude root `scripts/hook-git-guard.py` **refuses a removal while any of the above is
+still true** — a dirty tree, a live process, a bound broker, a running container. **It does not
+stop anything.** A `PreToolUse` hook runs while permission is still being decided, so acting
+there would be a side effect of a command that may yet be refused. The stopping is yours, in
+the order above, on every runtime; the hook only declines to let you skip it, and only on a
+Claude root.
 
 Close only what this dispatch created. Cleanup is complete when the Herdr tab and the Git
 worktree and branch are all retired **and the verification in step 3 shows them gone**, or an

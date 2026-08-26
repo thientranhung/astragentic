@@ -385,11 +385,24 @@ else
       miss "scripts/hook-git-guard.py is missing after adaptation" \
         "the PreToolUse hook allows every command when the script is absent; re-run the payload install"
     fi
-    if grep -q 'hook-git-guard' "$TARGET/.claude/settings.json" 2>/dev/null; then
-      ok ".claude/settings.json registers the git guard"
+    # A SUBSTRING MATCH CERTIFIES A DEAD HOOK. An upgraded project keeps its owner-owned
+    # settings.json, and a previous release registered `hook-git-guard.sh` — a name this
+    # release no longer ships. Grepping for `hook-git-guard` passes on that file while the
+    # hook searches for a script that is gone and permits every command. So: require the
+    # registered command to name the file that exists, then RUN it against a payload that
+    # must be denied. A registration that cannot deny is not enforcement.
+    if grep -q 'hook-git-guard\.py' "$TARGET/.claude/settings.json" 2>/dev/null; then
+      ok ".claude/settings.json registers hook-git-guard.py"
+      SMOKE='{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git add -A"}}'
+      if printf '%s' "$SMOKE" | python3 "$TARGET/scripts/hook-git-guard.py" 2>/dev/null | grep -q '"permissionDecision": *"deny"'; then
+        ok "the registered guard actually denies (smoke-tested with git add -A)"
+      else
+        miss "the registered guard did not deny a command it must deny" \
+          "the hook is installed and inert; run scripts/hook-git-guard.py by hand against the same payload to see why"
+      fi
     else
-      miss ".claude/settings.json does not register hook-git-guard" \
-        "settings.json is owner-kept, so an upgrade never adds it; merge the PreToolUse block from the release's harness/.claude/settings.json"
+      miss ".claude/settings.json does not register hook-git-guard.py" \
+        "settings.json is owner-kept so an upgrade never rewrites it — and a settings file naming the older hook-git-guard.sh passes a substring check while the hook is dead. Merge the PreToolUse block from the release's harness/.claude/settings.json"
     fi
   fi
 

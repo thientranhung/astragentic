@@ -66,9 +66,13 @@ The brief carries §1's contents plus five more:
   it exists to find.
 - **The design guidelines**, by path. Without them a finding is an observation rather than a
   violation, and QA will say so.
-- **The previous walk's verified-clean list**, read from
-  `.astraler/state/qa-verified-clean.md`, so coverage accumulates instead of resetting. Where
-  there is no file, say so — QA runs full rather than guessing what was covered.
+- **`$VERIFIED_CLEAN_FILE`** — an absolute path outside every checkout, for this walk's
+  output, alongside `$GATE_FILE`. QA's cwd is the gate worktree you force-remove at cleanup,
+  so a relative path writes the one artifact that is supposed to compound into the thing about
+  to be deleted.
+- **The previous walk's verified-clean list**, its contents packed into the brief from
+  `.astraler/state/qa-verified-clean.md` in the BASE checkout. Where there is none, say so —
+  QA runs full rather than guessing what was covered.
 - **Browser consent, and every authorized mutation, named exactly.** `qa.md` calls this a
   required dispatch field and this list is where it becomes one: a rule a careful operator
   forgets within the hour needs a slot that blocks the launch, not a sentence elsewhere
@@ -87,8 +91,18 @@ archive as every other gate's, so "why did we merge this SHA" has one place to l
 it** — the findings become your work orders and the COVERAGE GAPS section tells you what the
 walk did not cover, which is the half a green verdict hides.
 
-**The verified-clean list is written separately**, by QA, to
-`.astraler/state/qa-verified-clean.md`, and you pack it into the next walk's brief.
+**The verified-clean list is written separately**, by QA, to `$VERIFIED_CLEAN_FILE`. **Collect
+it before cleanup**, in the same breath as the report — it is the only artifact of a walk that
+compounds, and the gate worktree it was written beside is about to be removed:
+
+```bash
+test -s "$VERIFIED_CLEAN_FILE"                                   # fail closed
+mkdir -p "$(git rev-parse --show-toplevel)/.astraler/state"
+cp "$VERIFIED_CLEAN_FILE" "$(git rev-parse --show-toplevel)/.astraler/state/qa-verified-clean.md"
+```
+
+A walk whose list did not land is a walk whose next incremental run silently re-covers
+everything, or skips on coverage it cannot prove.
 
 ## 5. Cleanup — ordered, and different from every other gate's
 
@@ -115,7 +129,8 @@ git worktree prune
 container every live Builder was standing on (AST-115). Scope by the compose label this worktree
 produced, or stop nothing.
 
-On a Claude root `scripts/hook-git-guard.py` performs the broker and container half before it
-lets the removal through. It is a `PreToolUse` hook and does not exist on Codex or opencode, so
-the block above is the contract on every runtime.
+On a Claude root `scripts/hook-git-guard.py` **refuses the removal while the broker or the
+containers are still up** — it does not stop them for you, because a `PreToolUse` hook acting
+would be a side effect of a command that has not been permitted yet. The block above is the
+contract on every runtime; the hook only declines to let you skip it.
 

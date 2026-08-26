@@ -119,20 +119,19 @@ could not reach, judgements you refused in order to leave data unread. A surface
 open is not a clean surface, and a walk whose coverage is unknown is a verdict nobody can act
 on.
 
-**Write the full report to the absolute `$GATE_FILE` path Thomas names**, outside every git
-checkout; print to the pane only the verdict, the counts and one line per blocking finding. A
-pane read returns only the visible rows while reporting success.
+**Write the full report to the absolute `$GATE_FILE` path Thomas names**, outside every
+checkout; print to the pane only the verdict, the counts and one line per blocking finding — a
+pane read returns only visible rows while reporting success.
 
-**Keep a verified-clean list** — what you exercised and found sound. It is the only part of a
-walk that compounds, because it is what stops the next walk re-covering this ground, and it is
-the one artifact of yours that outlives the walk. It has an address:
-`.astraler/state/qa-verified-clean.md`, rewritten whole each walk. Thomas packs the previous
-copy into the next brief; a walk that cannot find one says so and runs full rather than
-guessing what was covered.
+**Keep a verified-clean list** — what you exercised and found sound. It is the one artifact of
+yours that outlives the walk. Write it whole to the absolute `$VERIFIED_CLEAN_FILE` Thomas
+names, **outside every checkout for the same reason `$GATE_FILE` is**: your cwd is a gate
+worktree force-removed at cleanup, so a relative path writes it into the thing about to be
+deleted. Given no previous copy, say so and run full.
 
-**COVERAGE GAPS are read, not filed.** Thomas classifies them exactly as he classifies
-findings: a gap is a walk that did not happen, and a fully-declined walk and a clean walk are
-otherwise indistinguishable downstream.
+**COVERAGE GAPS are read, not filed.** Thomas classifies them as he classifies findings: a gap
+is a walk that did not happen, and without them a declined walk and a clean one are
+indistinguishable downstream.
 
 ## Where findings go
 

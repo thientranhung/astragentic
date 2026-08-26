@@ -31,6 +31,18 @@ AMBIGUITY IS NOT A FINDING. A token carrying an unresolved `$VAR` or a substitut
 judged. Those are logged and allowed. A guard that fires on what it cannot resolve trains the
 operator to disable it.
 
+WHAT THIS GUARD CANNOT DO, STATED RATHER THAN DISCOVERED. It matches commands; it is not a
+shell. Two adversarial passes each found a way through and each was closed — regex spellings
+first, then newlines, subshells, substitutions, assignment prefixes and `env`/`xargs`/`find
+-exec` wrappers. A third form will exist: a script that writes and runs another script, an
+alias, an interpreter invoked with `-c`. Treat every rule here as a floor that catches the
+ACCIDENTAL case, never a boundary that survives someone routing around it deliberately.
+
+That is why the contract is `dispatch-ticket/CLEANUP.md` and this file is a second layer under
+it. A Builder on Codex or opencode has no hook at all and must still get the ordering right,
+so a rule that lives only here is a rule that does not exist on two of three runtimes. If a
+rule matters, it belongs in the contract first and here second.
+
 CONTRACT (verified against the Claude Code hooks documentation, 2026-08-26):
   - settings.json `matcher` matches the TOOL NAME and is a string; filtering the command is
     this script's job.
@@ -74,24 +86,97 @@ def deny(reason, cmd):
     sys.exit(0)
 
 
+# Operators that end a simple command. Split happens on the RAW string, at positions outside
+# any quoting — shlex discards quote context, and a pass proved that letting it classify
+# punctuation denies `printf '%s' ';' git add -A` for containing a quoted semicolon.
+_OPS = ("|&", "&&", "||", ";;", ";", "|", "&", "\n")
+# Wrappers that run another command. `xargs git add -A` and `find . -exec git add -A {} ;`
+# were both allowed until these were unwrapped.
+_WRAPPERS = {"env", "command", "nohup", "time", "sudo", "nice", "ionice", "stdbuf", "setsid",
+             "xargs", "timeout", "doas"}
+
+
+def _split_unquoted(cmd):
+    """Split on shell operators that are NOT inside quotes. Returns raw segments."""
+    segs, buf, i, quote = [], [], 0, None
+    while i < len(cmd):
+        c = cmd[i]
+        if quote:
+            buf.append(c)
+            if c == "\\" and quote == '"' and i + 1 < len(cmd):
+                buf.append(cmd[i + 1]); i += 2; continue
+            if c == quote:
+                quote = None
+            i += 1
+            continue
+        if c in ("'", '"'):
+            quote = c; buf.append(c); i += 1; continue
+        if c == "\\" and i + 1 < len(cmd):
+            buf.append(c); buf.append(cmd[i + 1]); i += 2; continue
+        # Grouping constructs and substitutions: treat their contents as commands too, so
+        # `(git add -A)` and `$(git add -A)` are not a way through.
+        if c in "(){}":
+            segs.append("".join(buf)); buf = []; i += 1; continue
+        if c == "$" and i + 1 < len(cmd) and cmd[i + 1] == "(":
+            segs.append("".join(buf)); buf = []; i += 2; continue
+        if c == "`":
+            segs.append("".join(buf)); buf = []; i += 1; continue
+        matched = None
+        for op in _OPS:
+            if cmd.startswith(op, i):
+                matched = op; break
+        if matched:
+            segs.append("".join(buf)); buf = []; i += len(matched); continue
+        buf.append(c); i += 1
+    segs.append("".join(buf))
+    return [x for x in (seg.strip() for seg in segs) if x]
+
+
+def _unwrap(argv):
+    """Strip env-assignment prefixes and command wrappers, returning the inner argv.
+
+    `FOO=bar git add -A`, `env git add -A`, `xargs git add -A` and
+    `find . -exec git add -A {} ;` all reached the repository unchallenged before this."""
+    out = list(argv)
+    guard = 0
+    while out and guard < 8:
+        guard += 1
+        head = posixpath.basename(out[0])
+        # VAR=value prefixes
+        if "=" in out[0] and not out[0].startswith("=") and "/" not in out[0].split("=", 1)[0]:
+            out = out[1:]; continue
+        if head == "find":
+            if "-exec" in out:
+                out = out[out.index("-exec") + 1:]
+                out = [t for t in out if t not in ("{}", ";", "\\;", "+")]
+                continue
+            break
+        if head in _WRAPPERS:
+            rest = out[1:]
+            # skip the wrapper's own flags and, for xargs/timeout, their operands
+            while rest and rest[0].startswith("-"):
+                rest = rest[1:]
+            if head == "timeout" and rest:
+                rest = rest[1:]
+            out = rest
+            continue
+        break
+    return out
+
+
 def simple_commands(cmd):
-    """Split a command line into argv lists, one per simple command."""
-    try:
-        lex = shlex.shlex(cmd, posix=True, punctuation_chars=True)
-        lex.whitespace_split = True
-        toks = list(lex)
-    except ValueError:
-        return []
-    out, cur = [], []
-    for t in toks:
-        if t in (";", "&&", "||", "|", "&", "\n"):
-            if cur:
-                out.append(cur)
-                cur = []
-        else:
-            cur.append(t)
-    if cur:
-        out.append(cur)
+    """Every simple command in the line, argv-split, wrappers unwrapped."""
+    out = []
+    for seg in _split_unquoted(cmd):
+        try:
+            lex = shlex.shlex(seg, posix=True)
+            lex.whitespace_split = True
+            argv = list(lex)
+        except ValueError:
+            continue
+        argv = _unwrap(argv)
+        if argv:
+            out.append(argv)
     return out
 
 

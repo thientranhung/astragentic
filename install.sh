@@ -84,12 +84,20 @@ for claude_file in "$PAYLOAD/.claude/skills"/*/*; do
     SKILL_SYNC_FAIL=1
   fi
 done
-# An allowlist entry that no longer diverges is a dead exemption. Fail on it.
+# VALIDATE EVERY ALLOWLISTED PAIR BEFORE EXEMPTING IT. Both sync loops skip an allowlisted
+# pair before asking whether its twin exists, so deleting either copy left the check green —
+# the exemption hiding exactly the missing-twin case the reverse loop was added to catch.
+# A pair must EXIST on both sides and must ACTUALLY differ, or the exemption is a defect.
 for pair in $DIVERGENT_ALLOWLIST; do
   a="$PAYLOAD/.agents/skills/$pair"
   c="$PAYLOAD/.claude/skills/$pair"
   skill_name="$pair"
-  [ -f "$a" ] && [ -f "$c" ] || continue
+  if [ ! -f "$a" ] || [ ! -f "$c" ]; then
+    echo "ERROR: allowlisted pair '$pair' is missing on one side" >&2
+    echo "  An exemption may not stand in for a file that is not there." >&2
+    SKILL_SYNC_FAIL=1
+    continue
+  fi
   if diff -q "$a" "$c" >/dev/null 2>&1; then
     echo "ERROR: '$skill_name' is in DIVERGENT_ALLOWLIST but the copies are identical" >&2
     echo "  Remove it from the allowlist — it is masking future drift in this pair." >&2
