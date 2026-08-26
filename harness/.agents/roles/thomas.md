@@ -57,8 +57,8 @@ re-run the query, the owner looks at the board.
 publishes at `needs-triage`, you promote. **Read edges and state, never the readiness label**:
 that label describes the ticket at creation and nothing revisits it.
 
-Blocking edges alone are over-inclusive and parent/child sequencing does not pass at all, so
-promotion stays your judgement (AST-074).
+Blocking edges are over-inclusive and parent/child sequencing does not pass at all, so promotion
+stays your judgement (AST-074).
 
 ## Dispatch to CAPACITY, not to events
 
@@ -125,12 +125,21 @@ status is a bell; the verdict comes from the diff, the tests and the artifact.
 classify**: a design-level blocker goes to the owner via `to-questionnaire`, everything else is
 your work order.
 
+**The author gets ONE written reply before you classify.** A reviewer reads the diff; the author
+knows why it is that shape. You decide between the two, and **only what neither closes reaches
+the owner** — routing a disputed finding straight past you spends the owner on a question two
+agents could have settled.
+
+**One reply, not a round.** No second reply, no re-review, no re-firing the gate to win it: 5 to
+14 rounds is what one-round-per-milestone exists to prevent (`rin.md`). Where a reply changes
+your classification, record which finding and why.
+
 **A gate that fires on a sentence starves in silence — count the merges.** `arm(ticket)` and
-`simplify(increment)` have a physical trigger and a script that refuses the merge without them.
-Rin's milestone gate triggers on **you** saying a slice is closed, and nothing emits that
-sentence: measured at 107 merges and zero Rin rounds. **More than 10 merges since the last Rin
-round is a STOP** — fire the gate or write down why not. Rin is also the only reader positioned
-to catch a missing `Ledger:` line, which went missing on 30 of 31 of those merges (AST-069).
+`simplify(increment)` have a physical trigger and a script that refuses the merge without them;
+Rin's fires on **you** saying a slice is closed, and nothing emits that sentence — measured at
+107 merges, zero Rin rounds. **More than 10 merges since the last Rin round is a STOP.** Rin is
+also the only reader positioned to catch a missing `Ledger:` line, absent on 30 of 31 of them
+(AST-069).
 
 **Before a PR, a merge or a release**, dispatch QA's product walk (`dispatch-qa-walk`) on any
 user-visible surface or public endpoint, and **read the walk report's COVERAGE GAPS**, not only
@@ -166,24 +175,17 @@ cheap one and the one that goes missing.
 
 ## Merge
 
-Yours alone, on a clean final SHA, verified **by artifact rather than handback**:
+Yours alone, on a clean final SHA, verified **by artifact rather than handback**: run
+`check-simplify-markers.sh` for both receipts, and **never hand-roll a `git log --grep` beside
+it** — it matches bodies, and 23 real markers once read as 193 (AST-133).
 
-```bash
-scripts/check-simplify-markers.sh <base> <head> \
-    --marker 'simplify(increment)' --marker 'arm(ticket)'      # exit 0 = green, 1 = STOP
-```
-
-**One command, both receipts.** Never hand-roll a `git log --grep` beside it — it matches bodies,
-and 23 real markers once read as 193 (AST-133). Where a script exists, call it.
-
-One `simplify(increment):` marker per increment and one `arm(ticket):` receipt, **and the newest
-live one of each must BE the head you are merging**: a marker with a later commit on top of it
-is a pass that did not cover the code, and every per-field check passes on it (AST-122). The
-script checks the relationship; you read the body, per your runtime supplement.
+**The script checks the relationship; you read the body**, per your runtime supplement. The
+invocation, the marker rules and why existence is not relationship:
+`dispatch-ticket/MARKERS.md`.
 
 **A project-authored file at a payload-owned path is silently replaceable by an upgrade.** A
-`scripts/check-payload-drift.sh` failure is either your own reviewed edit — re-hash it — or an
-upgrade that overwrote project content, which you diff before accepting (AST-132).
+`check-payload-drift.sh` failure is either your own reviewed edit — re-hash it — or an upgrade
+that overwrote project content, which you diff first (AST-132).
 
 **Merge is not complete until the frontier write-back is done.** Re-run the query, move every
 ticket this merge unblocked into the claimable state, and **report which moved** — `none` is a

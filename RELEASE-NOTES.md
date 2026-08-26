@@ -1,3 +1,158 @@
+# Astragentic 2.7.0
+
+An audit of this harness against its own ledger, and the eight commits it produced. The finding
+that organised everything else: of the nine git-failure mechanisms the ledger records, **the one
+that does not recur is the one with a script behind it**, and the eight that do recur are
+defended by prose. So this release moves the recurring ones onto mechanism, and where a rule
+could not be mechanised it says so rather than asking more firmly.
+
+Four cross-vendor gates ran over it. They found 5, 6, 7 and 5 defects — every one of them in
+work done during this release, and all folded. What the fourth gate confirmed is in *What the
+gates cost*, below, because it is the most useful part of this release to read.
+
+## Rules that asked nicely now refuse
+
+**`scripts/hook-git-guard.py` (new)** — a `PreToolUse` guard. It refuses `git add -A` (AST-054),
+`rm -rf` on a worktree path (AST-096), a relative or output-suppressed `git worktree add`
+(AST-028), and a removal that would destroy uncommitted work, kill a live process, or orphan a
+broker or container (AST-092, AST-097, AST-100, AST-101).
+
+It replaces an inline shell body crammed into `settings.json` that could not be read, run by
+hand or tested, and that had sat dormant across releases while looking installed. **The
+`WorktreeRemove` event is real; it fires only for worktrees Claude Code itself manages, never
+for `git worktree remove` in Bash** — which is why AST-102 measured it silent, and why the
+manual cleanup it was supposed to make redundant is permanently required.
+
+**Read `WHAT THIS GUARD CANNOT DO` in that file before relying on it.** It is an
+accidental-misuse lint, not a boundary, and it says so.
+
+**Two staging gates and a doctor mode.** `install.sh` now runs `check-reachability`,
+`docs-staleness-audit`, `ledger-index --check` and `ledger-rules --check` at staging and refuses
+to ship on any failure — the one moment where the cadence belongs, which is why commit 54c85c2's
+argument for keeping them out of contracts still holds. `check-requirements.sh --adapted` makes
+the three `docs/agents/*.md` files required rather than expected-absent, and requires the guard
+to be installed AND registered under `PreToolUse`/`Bash` AND to actually deny a payload it must
+deny. A registration that cannot deny is not enforcement.
+
+## The durable state nothing defined
+
+`thomas.md` named **the dispatch record** beside the tracker and the frontier, and nothing
+defined it — no path, no shape, no owner — while four rules read it: the write-set overlap
+check, cleanup's exact IDs, a later session finishing a dispatch, and the Builder identity on
+every tracker whose assignee cannot hold one. It is now
+`.astraler/state/dispatch-record.json`, with a schema, a lifecycle and a registry row.
+
+`<gate-history-dir>` was a literal placeholder inside a runnable `mkdir`.
+
+## Requirement 3 is met by no tracker, and two adapters said otherwise
+
+No tracker's assignee field can hold `builder/<ticket-id>`. Linear said so and shipped a
+substitute. **GitHub claimed "Requirement 3 is met natively" while its only assign command
+writes `@me` — one login for every dispatcher.** Jira's adapter did not contain the word
+`assignee` at all, so the claim protocol ran there with nothing behind it.
+
+All three now carry the same paragraph, and `thomas.md` says what is true: **one atomic
+interlock plus an advisory readback**, with branch creation deciding the race.
+
+**Migration:** nothing to do, but if you have been reading the GitHub adapter's claim as a
+safety guarantee for more than a couple of concurrent Builders, it was not one. The fix at that
+scale is one account per Builder identity, not a looser protocol.
+
+## A gate QA never had
+
+QA fires on a judgement about your own workload, which is the shape Rin's gate was given a
+counter for. The same failure is in the ledger three times across three designs — most recently
+nine fold rounds and one merge in half a day with QA never dispatched at all. It gets the merge
+counter, its report and its verified-clean list get addresses, browser consent becomes a brief
+FIELD rather than a sentence elsewhere, and cleanup gets the container step and the `--force`
+that a running app always required.
+
+## Compaction, and where a rule should live
+
+Role contracts enter a session as tool results, and a tool result is the first thing compaction
+summarises away. The tier that survives — the body of `.claude/agents/<role>.md` — held about
+120 words of identity boilerplate. **Each role now carries a short `Survives compaction` block
+there**: three or four invariants whose cost is paid before anyone notices they are gone.
+
+This does not reopen AST-024. That entry is about `.claude/rules/`, an always-on GLOBAL tier
+that bled one role's rules into every session. An agent definition is per-agent and cannot
+reach another role. The old fix was right about the cause and went one tier too far.
+
+**`RULES.md` (new)**, generated by `scripts/ledger-rules.sh`: every entry's rule without its
+narrative, 7.4k words against the ledger's 38k. `grep -A40` returns roughly a quarter rule and
+three quarters incident, entry size having inflated about fifteen-fold across this package's
+life. Nothing was deleted; the ledger stays append-only and stays the truth.
+
+## One reply, not a round
+
+Every disagreement in this harness terminated at the owner: `builder.md` said a dispute "is a
+decision for the owner", `thomas.md` said Rin advises and you classify. **The author now gets
+one written reply before Thomas classifies, and only what neither of them can close reaches the
+owner.** One reply — not a round, not a re-fired gate. 5 to 14 rounds is what
+one-round-per-milestone exists to prevent.
+
+## What the gates cost, and what they were worth
+
+Gate 1 found the guard was simultaneously bypassable and over-broad. Gate 2 found six more
+bypasses in the rewrite. Gate 3 found four more and concluded the matcher **was not converging**
+— that a command-matching guard cannot be made complete, and its claim should shrink rather than
+its rules multiply. That was accepted, and gate 4 found no bypass at all.
+
+Gate 4 also caught the two worth naming here. **`RULES.md` was misreporting**, cutting rules
+mid-clause and labelling superseded entries `promoted`, at the moment four contracts had been
+told to read it before the ledger. And **the new staging gate refused correct installs** — a
+repository path containing a space field-split every check. A gate that blocks valid work
+teaches its operator to route around it, which is the same lesson the guard learned about false
+positives arriving through a different door.
+
+**And the one that matters most:** compressing contracts to fit word budgets **lost a rule**.
+`qa.md`'s "one viewport by default" had carried ", more only when the change touches responsive
+layout", and word-golf took the exception with the sentence. Restored. Every bold rule in all
+five compressed contracts was then checked against the previous release **by meaning rather than
+by string**; nothing else is missing.
+
+## Migration
+
+1. **Merge the `PreToolUse` block** from `harness/.claude/settings.json` into your project's
+   `.claude/settings.json`. That file is owner-owned, so an upgrade will not do it for you — and
+   a settings file naming the older `hook-git-guard.sh` passes a substring check while the hook
+   is dead. `check-requirements.sh . --adapted` tells you which state you are in.
+2. **Populate `.agents/payload-drift-manifest.json` and install the pre-commit hook**, or record
+   that the project declines it. The script exits 0 when the manifest is absent, so a hook
+   installed first watches nothing. Do not overwrite an existing `pre-commit`.
+3. **Run `python3 scripts/check-reachability.sh .`** — not `bash`; it is Python behind a `.sh`
+   name, and `bash -n` on it exits 2.
+4. Nothing else. Contracts, skills and scripts are payload; `orchestrator.md`,
+   `.claude/settings.json` and `.codex/profiles/` remain yours.
+
+## Also
+
+- `check-reachability` check 4 could not SEE `docs/…` or `tools/…` paths, and never scanned the
+  tracker contract or the orchestrator at all. Both fixed; the project-side exclusion is now
+  named in the verdict instead of hidden in a regex.
+- `ledger-index` omitted `scripts/`, so 14 entries whose rule had become code read as uncited —
+  the index calling its own most matured entries dead. Uncited entries: 65 of 134, not 87.
+- `docs-staleness-audit` resolved its payload from the caller's cwd, so a run from one repo
+  measured another's files while reporting on the first.
+- The skill mirror check compared `SKILL.md` only, skipped a file present in one tree and absent
+  from the other, and allowlisted `review-with-rin`, which diffs zero lines — a dead exemption
+  masking future drift in the pair it names. Allowlisting is by exact file pair now.
+- `install.sh` stamped `applied-version` before the conflict report, telling the next upgrade and
+  `check-reachability`'s ownership manifest that a partial apply had landed clean. It now refuses
+  to stamp over conflicts and exits 3 — distinct from 1, so pending arbitration is
+  machine-separable from failure.
+- `bootstrap-glossary` wrote `CONTEXT.md` in a format its reader does not use, and marked terms
+  `UNREVIEWED` — a word that appears nowhere in the plugin, while nine plugin skills load that
+  file. Every one of them was reading unconfirmed extractions as confirmed vocabulary.
+- `tracker-contract.md`'s Per-tracker section restated ten facts the adapters already carry, in
+  799 words, and had drifted twice doing it. Cut to a pointer table.
+- The watchdog looked Thomas up by pane title only — AST-084's own fix had been applied twelve
+  lines below and not there — so one overwritten title silenced every pane alert that poll. Its
+  watcher probe also defaulted to "present" when `pgrep` raised, so a failed liveness check
+  reassured.
+- SPEC named `code-scout` in the present tense; 1.6.1 deleted it for having zero readers. SPEC
+  now says at the top that it is a historical build spec.
+
 # Astragentic 2.6.1
 
 The first project to take 2.6.0 reported three defects in it and corrected one claim. This is

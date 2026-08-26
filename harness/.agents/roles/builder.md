@@ -86,9 +86,10 @@ pass:
   catch.
 - **Spec** — does this match what the ticket asked for?
 
-Fix the findings you agree with; report the ones you disagree with to Thomas with your
-reasoning. There is no second round — the milestone gate is Rin's, and a design-level
-disagreement is a decision for the owner.
+Fix the findings you agree with. **A finding you dispute gets one reply, in writing, to
+Thomas** — he decides between it and the finding, and only what neither of you can close goes to
+the owner. One reply: there is no second round, and re-firing the gate to win an argument is the
+loop this method removed.
 
 ## Work you cannot read in a diff
 
