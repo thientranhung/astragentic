@@ -21,7 +21,48 @@ import os
 import re
 import sys
 
-WORDS = 38  # of body per entry: enough for the rule, short of the story
+# A rule is a SENTENCE, not a word count. The first version took 38 words and cut AST-011 at
+# "Codex end-of-p" and AST-012 at "The surviving core:" — precisely where the rule began. A
+# digest four contracts consult BEFORE the ledger cannot end mid-clause, and its freshness
+# check cannot see that, because byte-freshness says nothing about semantic completeness.
+MAX_CHARS = 320
+_SENT = re.compile(r"(?<=[.!?])\s+")
+
+# Status modifiers, strongest last: an entry whose body says it was superseded is superseded,
+# whatever the header's first word says. Two entries were reading `promoted` while their own
+# text began "Superseded by".
+_STATUSES = ("open", "proposed", "promoted", "closed", "reverted", "superseded", "withdrawn")
+
+
+def summarise(body):
+    """Whole sentences up to a budget. Returns (text, truncated)."""
+    sentences = _SENT.split(body)
+    out, n = [], 0
+    for sent in sentences:
+        sent = sent.strip()
+        if not sent:
+            continue
+        if out and n + len(sent) > MAX_CHARS:
+            return " ".join(out), True
+        out.append(sent)
+        n += len(sent) + 1
+        if n >= MAX_CHARS:
+            return " ".join(out), len(sentences) > len(out)
+    return " ".join(out), False
+
+
+def status_of(header, body):
+    """Every modifier the entry carries, superseded/reverted winning over promoted."""
+    found = [w for w in _STATUSES if re.search(r"\b%s\b" % w, header, re.I)]
+    for strong in ("superseded", "reverted", "withdrawn"):
+        if re.search(r"\b%s\b" % strong, body[:400], re.I) and strong not in found:
+            found.append(strong)
+    if not found:
+        return ""
+    for strong in ("withdrawn", "reverted", "superseded"):
+        if strong in found:
+            return strong
+    return found[-1]
 
 
 def locate(root):
@@ -34,15 +75,20 @@ def locate(root):
 
 def render(ledger_text):
     blocks = re.split(r"(?m)^(?=### AST-)", ledger_text)
-    rows = []
+    rows, truncated = [], []
     for blk in blocks[1:]:
-        m = re.match(r"### (AST-\d+) — ([^·\n]+)(?:·\s*([a-z]+))?", blk)
+        header = blk.split("\n", 1)[0]
+        m = re.match(r"### (AST-\d+) — ([^·\n]+)", header)
         if not m:
             continue
-        aid, title, status = m.group(1), m.group(2).strip(), (m.group(3) or "").strip()
+        aid, title = m.group(1), m.group(2).strip()
         body = re.sub(r"\s+", " ", " ".join(blk.split("\n")[1:])).strip()
         body = re.sub(r"Bound:.*$", "", body).strip()
-        rows.append((aid, title, status, " ".join(body.split()[:WORDS])))
+        rule, cut = summarise(body)
+        if cut:
+            rule += " …"
+            truncated.append(aid)
+        rows.append((aid, title, status_of(header, body), rule))
 
     out = ["# Ledger — rules only", "",
            "**Generated from `recurring-failure-modes.md`; do not hand-edit, rerun "
@@ -60,6 +106,10 @@ def render(ledger_text):
     for aid, title, status, rule in rows:
         out.append("| `%s` | %s | %s | %s |"
                    % (aid, title.replace("|", "\\|"), status, rule.replace("|", "\\|")))
+    if truncated:
+        out.append("")
+        out.append("*Entries whose rule did not fit and end with `…`: %s. Read those in the "
+                   "ledger.*" % ", ".join("`%s`" % t for t in truncated))
     return "\n".join(out) + "\n", len(rows)
 
 

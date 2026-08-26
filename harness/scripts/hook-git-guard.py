@@ -56,6 +56,7 @@ CONTRACT (verified against the Claude Code hooks documentation, 2026-08-26):
 import json
 import os
 import posixpath
+import re
 import shlex
 import subprocess
 import sys
@@ -186,7 +187,13 @@ def simple_commands(cmd):
         head = posixpath.basename(argv[0])
         # A reserved word, an interpreter or a wrapper means the real command is nested
         # somewhere this guard does not follow. Modelling that was tried and was wrong.
-        if head in _RESERVED or argv[0] in _RESERVED or "=" in argv[0].split("/")[-1][:1]:
+        # An assignment prefix (`FOO=bar git add -A`) hides the real command one token along.
+        # The first version tested only argv[0][:1], which never matched, so these reached the
+        # final `allow` log — recorded as examined-and-approved when nothing had been examined.
+        if re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", argv[0]):
+            OUT_OF_SCOPE.append("assignment-prefix")
+            return []
+        if head in _RESERVED or argv[0] in _RESERVED:
             OUT_OF_SCOPE.append("reserved-or-wrapper:" + head)
             return []
         out.append(argv)

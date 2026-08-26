@@ -323,19 +323,20 @@ Run checks proportional to what changed:
   that every path, agent and profile a contract or skill names actually exists. A contract
   naming a file that does not exist is how the prior package failed, so this is a hard
   failure rather than a warning;
-- **Install the payload-drift pre-commit hook, or record that this project declines it.**
-  `scripts/check-payload-drift.sh` is documented as running at pre-commit and nothing in this
-  pipeline ever makes that true: `.git/hooks/` is empty in a fresh clone, this prompt never
-  named the script, and `thomas.md` hedges with "where this project runs it". A mechanism whose
-  only pointer is a load-on-demand doc is the shape this package keeps paying for. Either:
+- **Populate the payload-drift manifest, then install the hook without destroying what is
+  there.** Two failures were possible in the version of this step that named only a `>` write.
+  `check-payload-drift.sh` exits 0 when `.agents/payload-drift-manifest.json` is absent, so a
+  hook installed before the manifest exists watches nothing while looking installed — record
+  every project-authored file at a payload-owned path FIRST, and prove the hook rejects a known
+  drift before believing it. And a bare `>` replaces whatever `.git/hooks/pre-commit` the
+  project already had: its linting, its secret scanning. Read the file before writing it, chain
+  rather than overwrite, and where the project uses a hook manager (husky, lefthook, pre-commit)
+  add an entry there instead of touching `.git/hooks` at all.
 
-  ```bash
-  printf '#!/bin/sh\nexec scripts/check-payload-drift.sh\n' > .git/hooks/pre-commit
-  chmod +x .git/hooks/pre-commit
-  ```
+  `.git/hooks` is not committable, so whatever you install repeats on every fresh clone. Say so
+  in the project's entry doc. A project that declines the mechanism records that instead — an
+  honest decline beats a hook that watches an empty manifest;
 
-  ...or write in the project's entry doc that it runs the check manually, and when. `.git/hooks`
-  is not committable, so this step repeats on every fresh clone — say that too;
 - **A project that gitignores `.astraler/` must say so here.** `check-reachability.sh` reads
   its ownership manifest from the staged release and hard-fails at check 0 when that
   directory is absent — so on a fresh clone of such a project the gate can never pass. Either

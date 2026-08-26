@@ -23,8 +23,8 @@ from this table — read the entry.
 | `AST-008` | Docs cited a retired skill collection | promoted | 15 |   |
 | `AST-009` | No UI-prototype phase before Build | promoted | 17 |   |
 | `AST-010` | Worktree delegation hygiene undocumented | promoted | 16 |   |
-| `AST-011` | Gate was per-PR only, not per-step | promoted | 49 |   |
-| `AST-012` | Two review rounds not stated as both-mandatory | promoted | 53 |   |
+| `AST-011` | Gate was per-PR only, not per-step | promoted | 49 | ledger-rules.sh |
+| `AST-012` | Two review rounds not stated as both-mandatory | promoted | 53 | ledger-rules.sh |
 | `AST-013` | Ad-hoc build delegation; false tooling-gap assumed | superseded | 22 |   |
 | `AST-014` | Multi-slice rebuild needs a gated integration branch | promoted | 22 |   |
 | `AST-015` | Export step committed live secrets + buyer PII | promoted | 35 | review-with-rin |

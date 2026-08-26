@@ -265,17 +265,22 @@ find "$STAGING_DIR" -name '.DS_Store' -delete
 # belongs: the release. This script already refuses to stage on a bad RELEASE-NOTES heading
 # and on skill-sync drift; it ran none of the three checks written to catch the rest.
 SELFCHECK_FAIL=0
-for _c in "check-reachability:python3 $HARNESS_ROOT/harness/scripts/check-reachability.sh $HARNESS_ROOT" \
-          "docs-staleness:bash $HARNESS_ROOT/harness/scripts/docs-staleness-audit.sh $HARNESS_ROOT" \
-          "ledger-index:bash $HARNESS_ROOT/harness/scripts/ledger-index.sh --check" \
-          "ledger-rules:python3 $HARNESS_ROOT/harness/scripts/ledger-rules.sh $HARNESS_ROOT --check"; do
-  _name="${_c%%:*}"; _cmd="${_c#*:}"
-  if ! _out="$($_cmd 2>&1)"; then
-    echo "ERROR: $_name failed — the release does not ship until it passes" >&2
+# Invoke each check DIRECTLY with quoted arguments. Storing them as strings and running an
+# unquoted "$cmd" field-splits a root like `/tmp/Astraler Repo` into two arguments, and all
+# four checks then fail on a perfectly valid checkout — a gate that refuses correct installs
+# teaches its operator to bypass it.
+run_selfcheck() {  # $1 = label, rest = argv
+  _label="$1"; shift
+  if ! _out="$("$@" 2>&1)"; then
+    echo "ERROR: $_label failed — the release does not ship until it passes" >&2
     printf '%s\n' "$_out" | sed 's/^/    /' >&2
     SELFCHECK_FAIL=1
   fi
-done
+}
+run_selfcheck check-reachability python3 "$HARNESS_ROOT/harness/scripts/check-reachability.sh" "$HARNESS_ROOT"
+run_selfcheck docs-staleness     bash    "$HARNESS_ROOT/harness/scripts/docs-staleness-audit.sh" "$HARNESS_ROOT"
+run_selfcheck ledger-index       bash    "$HARNESS_ROOT/harness/scripts/ledger-index.sh" --check
+run_selfcheck ledger-rules       python3 "$HARNESS_ROOT/harness/scripts/ledger-rules.sh" "$HARNESS_ROOT" --check
 [ "$SELFCHECK_FAIL" -eq 0 ] || {
   echo >&2
   echo "Three checks, run together on purpose: they catch different classes, and a release" >&2

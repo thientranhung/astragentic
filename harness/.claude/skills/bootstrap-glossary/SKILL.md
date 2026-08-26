@@ -31,25 +31,38 @@ name is core vocabulary. A term appearing once in a private helper is not.
 For each term, write what the code shows it to be — its shape, what it relates to, what
 changes it. Then attach the evidence:
 
-**Write the entry in the reader's format, not a format of our own.** `CONTEXT.md` is consumed
-by `domain-modeling` and by eight other plugin skills, and its shape is fixed by that skill's
-`CONTEXT-FORMAT.md`: terms live under `## Language`, each as `**Term**:` with one or two
-sentences, and **implementation detail does not belong there** — that file says the document
-should be "totally devoid" of it. A `### Term` heading with `read from:` citations is a
-different document wearing the same filename, and every reader would have taken it as
-confirmed vocabulary.
+**Write the entry in the reader's format, not a format of our own.** `CONTEXT.md` is consumed by
+`domain-modeling` and eight other plugin skills, and its shape is fixed by that skill's
+`CONTEXT-FORMAT.md`. Read that file and follow it whole — the parts below are the ones a
+code-seeded pass gets wrong, not a replacement for it.
+
+- Terms live under `## Language` as `**Term**:`, one or two sentences, defining what it **is**
+  rather than what it does.
+- **Every term carries `_Avoid_`.** Where the code uses several words for one concept, pick the
+  best and list the rest — that choice is most of this file's value, and a pass reading code
+  sees the synonyms more clearly than anyone.
+- **Implementation detail does not belong.** `domain-modeling` wants `CONTEXT.md` "totally
+  devoid" of it, which is exactly what a code-seeded pass will otherwise fill it with.
+- **General programming concepts do not belong**, however often the code uses them.
+- **Check the layout before writing.** One context → one `CONTEXT.md` at the repo root. Several
+  → one `CONTEXT-MAP.md` at the root listing them, and a `CONTEXT.md` inside each. Seeding one
+  root file across a multi-context repo merges unrelated vocabularies into a document every
+  reader treats as authoritative, and it is the brownfield repos most likely to be multi-context.
 
 So the definition goes in `CONTEXT.md`:
 
 ```markdown
 ## Language
 
-**Ledger entry**: An immutable record of one balance change, belonging to exactly one Account
-and carrying the Transaction that caused it. Never updated after write.
+**Ledger entry**:
+An immutable record of one balance change, belonging to exactly one Account and carrying the
+Transaction that caused it.
+_Avoid_: Posting, journal line
 ```
 
-...and the evidence, the citations and the review state go in a **sibling** file,
-`CONTEXT-review.md`, which is this pass's audit trail and not vocabulary:
+...and the evidence, the citations and the review state go in **one** file,
+`docs/agents/CONTEXT-review.md` — this pass's audit trail, not vocabulary, and one path
+regardless of how many contexts the repo has:
 
 ```markdown
 ### Ledger entry — UNREVIEWED
