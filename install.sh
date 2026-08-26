@@ -348,9 +348,24 @@ if [ "$APPLY" -eq 1 ]; then
   # staged release below this one: it is what the project was last given, whatever integrated it.
   PREV_VERSION="$(cat "$APPLIED_FILE" 2>/dev/null || true)"
   if [ -z "$PREV_VERSION" ] || [ ! -d "$RELEASES_DIR/$PREV_VERSION/harness" ]; then
+    # `|| true` because grep exits 1 when nothing survives the filter, and under
+    # `set -euo pipefail` that status reaches the assignment and kills the script — silently,
+    # mid-run, with no diagnostic. The state that triggers it is ordinary: a project whose
+    # applied-version names a release it no longer has staged, and no older one staged either,
+    # which is every project that prunes or gitignores `.astraler/releases/`. Measured on a
+    # 2.6.1 project taking 2.7.0: `--apply` printed its header, wrote nothing, and exited 1
+    # without a word. An operator reads that as done.
     PREV_VERSION="$(ls "$RELEASES_DIR" 2>/dev/null | grep -v "^$VERSION\$" \
-      | sort -t. -k1,1n -k2,2n -k3,3n | tail -1)"
-    [ -n "$PREV_VERSION" ] && echo "  (no applied-version marker — comparing against staged $PREV_VERSION)" && echo
+      | sort -t. -k1,1n -k2,2n -k3,3n | tail -1 || true)"
+    if [ -n "$PREV_VERSION" ]; then
+      echo "  (applied-version names a release that is not staged — comparing against $PREV_VERSION)"
+      echo
+    else
+      echo "  NO BASELINE: no staged release to compare against, so every project file that"
+      echo "  differs from this one is a CONFLICT rather than an update. That is the safe"
+      echo "  reading and it is noisy on purpose — nothing is overwritten without you saying so."
+      echo
+    fi
   fi
   PREV_DIR="$RELEASES_DIR/$PREV_VERSION/harness"
   [ -n "$PREV_VERSION" ] && [ -d "$PREV_DIR" ] || PREV_DIR=""

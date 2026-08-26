@@ -371,7 +371,16 @@ for src, text in sorted(sources.items()):
     for ref in sorted(set(re.findall(r"(?m)^\s*(?:bash\s+|sh\s+|python3\s+)?((?:scripts|tools)/[A-Za-z0-9_./-]+\.(?:sh|py))\b", text))):
         if not os.path.exists(os.path.join(PAYLOAD, ref)):
             fail("4", f"{src} invokes {ref}, which does not exist in the payload")
-    # 4b. skill-shaped tokens
+    # 4b. skill-shaped tokens.
+    #
+    # NOT ON THE ORCHESTRATOR. That file is a CONFIG table whose values the project chooses:
+    # `workspace-label` is a lowercase hyphenated name in backticks, which is character-for-
+    # character the shape of a skill reference. Scanning it here fired on a project called
+    # `legacy-proj` the moment it upgraded — AST-038's exact shape, a checker that cannot tell
+    # project content from package content firing on every adopted repo. 4a still runs over it,
+    # because a wrong PATH there is a real defect and paths are not ambiguous this way.
+    if src == "document orchestrator.md":
+        continue
     for tok in sorted(set(re.findall(r"`([a-z][a-z0-9:]*(?:-[a-z0-9]+)+)`", text))):
         tok = unqualify(tok)
         if tok in KNOWN or tok in NOT_A_SKILL:
