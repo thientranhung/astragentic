@@ -108,12 +108,21 @@ command that writes to disk — the arm already does, one detached worktree per 
 ## The watchdog must be RUNNING before the first dispatch
 
 ```bash
-pgrep -f 'herdr-watchdog.sh' >/dev/null \
-  || echo "STOP: watchdog is not running — start it before dispatching"
+# Scoped to THIS workspace, and by the same identity test the watchdog uses on itself: a bare
+# `pgrep -f herdr-watchdog.sh` matches `tail -f herdr-watchdog.sh` and matches another
+# project's watchdog, which satisfies this gate while nothing watches these panes.
+LOCK="/tmp/herdr-watchdog-<workspace-label>.lock"
+if [ -f "$LOCK" ] && kill -0 "$(cat "$LOCK")" 2>/dev/null; then
+  echo "watchdog: running for this workspace"
+else
+  echo "STOP: no watchdog for this workspace — start it before dispatching"; exit 1
+fi
 ```
 
-**A dispatch with no watchdog is not permitted.** Start it if it is not up (`thomas.md`
-§Watchdog has the invocation), then dispatch.
+**A dispatch with no watchdog is not permitted**, and the `exit 1` is the point: the previous
+form was an `echo`, while `thomas.md` described it as a refusal. A gate that prints and returns
+zero is advice wearing a gate's name. Start the watchdog if it is not up (`WATCHING.md` has the
+invocation), then dispatch.
 
 A gate rather than advice because **an unwatched pane and a quiet healthy pane produce
 identical evidence: nothing** (AST-124). With the watchdog up, a missed re-arm costs latency;
@@ -141,7 +150,7 @@ Confirm it the only way that answers the question, before the first dispatch of 
 
 ```bash
 git worktree add --detach /tmp/harness-check HEAD
-test -f /tmp/harness-check/.agents/roles/builder.md && echo OK || echo "PAYLOAD NOT VISIBLE"
+test -f /tmp/harness-check/.agents/roles/builder.md || { echo "PAYLOAD NOT VISIBLE"; exit 1; }
 git worktree remove --force /tmp/harness-check
 ```
 
@@ -389,6 +398,8 @@ background work:
    These are invisible to `pgrep`.
 
 **Disagreement between the two sources is itself a signal — read the pane** (AST-097): a
+
+**Compare the row count to `scroll.viewport_rows` before you decide anything from a pane read.** A read returns only what is on screen and reports success, so a transcript that looks like a complete answer may be its last 60 lines. This decision ends in a worktree removal; a truncated read is not evidence for one.
 `pgrep`-quiet pane whose status line still names a monitor may be parked permanently on a
 notification that will never arrive.
 

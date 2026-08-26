@@ -564,6 +564,14 @@ ARTIFACTS = [
                                                               "dispatch-qa-walk", ["thomas"]),
     ("qa verified-clean list",      r"qa-verified-clean\.md|verified-clean",
                                                               "qa",              ["dispatch-qa-walk"]),
+    # `untangle` wrote to "where this project keeps its architecture notes" — no path, no
+    # reader, invisible to check 8 precisely because it had no path (the AST-071 shape).
+    ("untangle boundaries",         r"docs/agents/boundaries\.md|boundaries this pass",
+                                                              "untangle",        ["shaper"]),
+    # The review state was invisible to every reader of CONTEXT.md, including nine plugin
+    # skills that load it. It now has its own file, and a named reader: the owner, via Thomas.
+    ("glossary review state",       r"docs/agents/CONTEXT-review\.md|UNREVIEWED",
+                                                              "bootstrap-glossary", ["thomas"]),
     # A produced DOCUMENT is an artifact too, and this row is the one that survived the
     # 1.6.1 cull: three sibling skills wrote files that no contract and no plugin skill was
     # told to read, and every check here went green because each was NAMED. `CONTEXT.md`

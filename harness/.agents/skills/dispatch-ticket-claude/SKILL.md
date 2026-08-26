@@ -27,10 +27,10 @@ Detail for each is below.
 ## Launcher matrix — Claude rows
 
 ```text
-builder  → claude --dangerously-skip-permissions --agent builder --model <row: Model> --effort <row: Effort>
-shaper   → claude --dangerously-skip-permissions --agent shaper --model <row: Model> --effort <row: Effort>
-rin      → claude --agent rin --model <row: Model> --effort <row: Effort>
-qa       → claude --agent qa --model <row: Model> --effort <row: Effort>
+builder  → claude --dangerously-skip-permissions --agent builder --model <row: Model> <--effort only when the row sets one>
+shaper   → claude --dangerously-skip-permissions --agent shaper --model <row: Model> <--effort only when the row sets one>
+rin      → claude --agent rin --model <row: Model> <--effort only when the row sets one>
+qa       → claude --agent qa --model <row: Model> <--effort only when the row sets one>
 ```
 
 Model and effort come from the role's `orchestrator.md` row, never from memory.
@@ -113,14 +113,14 @@ For **builder** and **shaper** (write roles):
 
 ```bash
 herdr agent start "<role>-<ticket-id>" --kind claude --pane <pane-id> --timeout 60000 \
-  -- --dangerously-skip-permissions --agent <role> --model <row: Model> --effort <row: Effort>
+  -- --dangerously-skip-permissions --agent <role> --model <row: Model> <--effort only when the row sets one>
 ```
 
 For **rin** and **qa** (review roles — no `--dangerously-skip-permissions`):
 
 ```bash
 herdr agent start "<role>-<artifact-key>" --kind claude --pane <pane-id> --timeout 60000 \
-  -- --agent <role> --model <row: Model> --effort <row: Effort>
+  -- --agent <role> --model <row: Model> <--effort only when the row sets one>
 ```
 
 ## Watching — Monitor delivers, the watcher script decides

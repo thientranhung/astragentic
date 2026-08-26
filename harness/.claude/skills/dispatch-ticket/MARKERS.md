@@ -47,3 +47,21 @@ Zero markers means the pass was skipped. **A step that does not self-check is a 
 silently skipped** (AST-094, the same shape as AST-092). The Builder runs the script above
 before returning; Thomas runs it again at merge, because the mechanism that causes the skip also
 displaces the self-check.
+
+## The `arm(ticket):` receipt
+
+The receipt is an **empty** commit at your head, so its parent is the tree the gate read.
+`check-simplify-markers.sh` owns the rules; this is the shape:
+
+```
+arm(ticket): <ticket-id> — <verdict>, <n> passes
+
+Range: <n> commits, <m> files (<base>..<head>)
+Reviewed: <sha of the tree the gate read>
+Vendor: <vendor>   Tests: RAN|NOT RUN <prose>   Pass: <n>
+Unreviewed-delta: <from>..<to> — <n> lines, <m> files: <what changed, why it is safe>
+```
+
+**`Reviewed:` is this commit's parent, OR `Unreviewed-delta:` declares the gap. Never neither**
+(AST-134): a fold moves the tree past what any pass read, so the equality is legitimately false
+and the omission is the failure.

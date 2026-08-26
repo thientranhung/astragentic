@@ -29,7 +29,11 @@ The builder's runtime comes from `orchestrator.md`.
 | Cross-vendor arm | — | spec, every ticket before merge, slice close — Thomas fires it |
 
 `mode=code-review` is a gate mode, distinct from `mattpocock-skills:code-review`, the plugin
-skill the Builder runs per increment.
+skill the Builder runs per increment — **but it reads the same three-dot range**, and only the
+plugin carries the smell baseline. A milestone gate blinder than the per-ticket gate beneath it
+inverts the point of having one, so run the plugin skill's two axes inside the round and add
+what a milestone can see that a ticket cannot: drift across the slice, and the intent in your
+brief.
 
 **One round per milestone.** You review, you report, the artifact moves on. The prior package
 looped here and measured 5 to 14 rounds, a large share of them repairing its own earlier rounds.

@@ -31,14 +31,31 @@ name is core vocabulary. A term appearing once in a private helper is not.
 For each term, write what the code shows it to be — its shape, what it relates to, what
 changes it. Then attach the evidence:
 
-```markdown
-### Ledger entry
-An immutable record of one balance change, belonging to exactly one Account and carrying
-the Transaction that caused it. Created only by the posting path; never updated after write.
+**Write the entry in the reader's format, not a format of our own.** `CONTEXT.md` is consumed
+by `domain-modeling` and by eight other plugin skills, and its shape is fixed by that skill's
+`CONTEXT-FORMAT.md`: terms live under `## Language`, each as `**Term**:` with one or two
+sentences, and **implementation detail does not belong there** — that file says the document
+should be "totally devoid" of it. A `### Term` heading with `read from:` citations is a
+different document wearing the same filename, and every reader would have taken it as
+confirmed vocabulary.
 
+So the definition goes in `CONTEXT.md`:
+
+```markdown
+## Language
+
+**Ledger entry**: An immutable record of one balance change, belonging to exactly one Account
+and carrying the Transaction that caused it. Never updated after write.
+```
+
+...and the evidence, the citations and the review state go in a **sibling** file,
+`CONTEXT-review.md`, which is this pass's audit trail and not vocabulary:
+
+```markdown
+### Ledger entry — UNREVIEWED
 - read from: `src/ledger/entry.ts:12` (type), `db/schema/ledger_entries.sql` (table)
 - also used in: `src/posting/post.ts`, `src/reports/balance.ts`
-- status: UNREVIEWED
+- note: created only by the posting path
 ```
 
 **A definition that the citations do not support is the failure mode.** Where the code uses a
@@ -60,6 +77,20 @@ Seeded from code 2026-08-10 · 23 terms · 0 CONFIRMED · 21 UNREVIEWED · 2 AMB
 Status: UNREVIEWED — extracted from usage, not yet confirmed by the owner.
 Terms below describe what the code does today, which may differ from what it should do.
 ```
+
+**`UNREVIEWED` must be visible to a reader that has never heard of it.** The status field lived
+only in this skill's own vocabulary: it appears nowhere in the plugin, and nine plugin skills
+load `CONTEXT.md` without knowing the field exists — so every one of them read unconfirmed
+extractions as confirmed domain language, which is the "confident-sounding lore" this pass
+exists to prevent. Keeping the review state OUT of `CONTEXT.md` is half the fix; the other half
+is the header below, which is prose any reader sees.
+
+## 4. Write `docs/agents/CONTEXT-review.md`
+
+The citations, the ambiguities, the `UNKNOWN` definitions and the per-term review state.
+**The owner reads it** — that is what "ends on owner review, not on the artifact" means, and
+until now the review had no address to be pointed at. A term moves out of this file by being
+confirmed, and the header count in `CONTEXT.md` is derived from it.
 
 Where `CONTEXT.md` already exists, **add to it and leave existing entries alone.** An entry a
 human wrote outranks an entry read from code; where the code contradicts one, record that

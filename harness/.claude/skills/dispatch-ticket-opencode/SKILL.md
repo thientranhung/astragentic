@@ -79,3 +79,15 @@ Re-measured on herdr 0.8.0 and opencode 1.18.11:
    `ProviderModelNotFoundError`. The correct form is `-m opencode-go/deepseek-v4-flash`.
    The `orchestrator.md` Model column for opencode rows must carry the full
    `<provider>/<model>` string. Measured on opencode 1.18.18.
+
+## The two-source background check degrades here, and you must say so
+
+`dispatch-ticket` requires BOTH sources before calling a pane finished: the process check and
+the status line the transcript carries. On opencode the transcript read returns the input box
+and the footer and nothing else, so the second source produces nothing — and the gate silently
+becomes `pgrep` alone, which is the source that answered wrong in the field (AST-097).
+
+**Treat a single-source answer on opencode as a degradation and report it**, the same way a
+runtime fallback is reported. Where the decision that follows is a worktree removal, get the
+second source another way — ask the pane directly and wait for a reply — or hand back rather
+than remove.

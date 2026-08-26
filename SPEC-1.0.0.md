@@ -1,3 +1,9 @@
+> **HISTORICAL BUILD SPEC.** This describes the 1.0.0 rebuild from an empty repo; its
+> `Carry over` table names paths in the PRIOR package, not this one. Two items it promises
+> — standards extraction and boundary enforcement — were built and then removed in 1.6.1
+> for having zero readers (`RELEASE-NOTES.md:3007`), and `code-scout` went with them. It is
+> not staged into an adapted project and no agent reads it.
+
 # Astraler Harness 1.0.0 — build spec
 
 You are building a fresh package from an empty repo. Everything you need is in this file plus
@@ -99,8 +105,7 @@ untestable; its brownfield notes live on its docs site for human readers. Build 
 5. **Batch triage** of an inherited backlog.
 6. **Boundary enforcement** for the module design `codebase-design` describes.
 
-The rule for all six: **extract, never invent.** `code-scout`, the codemaps and the staleness
-audit are the reading layer.
+The rule for all six: **extract, never invent.** The staleness audit is the reading layer.
 
 ## Writing rules
 

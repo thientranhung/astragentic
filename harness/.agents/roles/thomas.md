@@ -30,7 +30,7 @@ evidence; the rule stands without it.
 | Wayfinding | `mattpocock-skills:wayfinder` | foggy multi-session effort → shaped direction |
 | Owner decisions | `mattpocock-skills:to-questionnaire` | open decision → answerable question |
 | Method questions | `mattpocock-skills:ask-matt` | question about the method → answer from its source |
-| Glossary bootstrap | `bootstrap-glossary` | `CONTEXT.md`, seeded from code, marked unreviewed |
+| Glossary bootstrap | `bootstrap-glossary` | `CONTEXT.md` + `CONTEXT-review.md`, the second carrying `UNREVIEWED` state for the owner |
 | Backlog bootstrap | `batch-triage` | inherited backlog → tickets with labels and edges |
 
 Plus three that are not skills: **the frontier query**, **the claim**, **merge**.

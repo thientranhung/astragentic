@@ -111,7 +111,7 @@ only describes.
 
 The bootstrap principle is **extract, never invent** — upstream warns that "an unreviewed,
 agent-authored glossary is worse than none: it becomes confident-sounding lore that later
-sessions treat as truth." `code-scout`, the codemaps and the staleness audit already do this
+sessions treat as truth." the staleness audit already does this
 reading; they become the brownfield entry rather than incidental tooling.
 
 Two upstream mechanics carry into legacy work unchanged: `to-tickets`' expand–contract path

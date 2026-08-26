@@ -93,88 +93,23 @@ That is the whole difference between the three. Everything below follows from it
 
 ## Per tracker
 
-### Jira — the status is a transition, and the transition has a number
+**The mechanics live in the adapters, and nowhere else.** This section used to restate them —
+799 words repeating ten facts the three adapter skills already carry — and it drifted twice
+while doing so: it retracted its own board-mapping claim as wrong for one project, and it
+prescribed a script path this package does not ship, which no check could see because this
+file was outside every checker's scope. `SPEC-1.0.0.md` forbids exactly this: **one home per
+rule, everywhere else links.**
 
-You do not assign a status. You ask which transitions are available from where the issue is
-*now*, and take one:
+| Tracker | Adapter | What it charges you for, in one line |
+|---|---|---|
+| GitHub Issues | `Skill(skill: "github-issue-tracker")` | status is labels, so every state change is two writes; the board is a second write forever, and it takes part in no query |
+| Jira | `Skill(skill: "jira-issue-tracker")` | status is a numbered transition, not a value; `description` is replaced whole; link direction is silently invertible |
+| Linear | `Skill(skill: "linear-issue-tracker")` | native states and relations, and a free-tier issue ceiling that stops a pipeline rather than degrading it |
 
-```
-getTransitionsForJiraIssue   → what is reachable from HERE
-transitionJiraIssue          → take one, BY ITS NUMERIC ID
-```
-
-**Never remember a transition id.** They are project- and workflow-specific and **not
-sequential**: three of inception's were added at migration and took low ids, so id order does
-not follow state order. A hardcoded or remembered id is a **valid write to the wrong state** —
-it succeeds, nothing errors, no query flags it. That is the structural twin of GitHub's skipped
-second write: in both trackers the damaging failure is a **wrong-but-legal write**, not a
-rejected one. Read the transitions every time; the extra call *is* the guard.
-
-**Adding a state is an OWNER action, not an agent's.** New statuses are created in the Jira UI
-and stay invisible to the API until the workflow is published — the MCP tools create, edit,
-transition and link issues and cannot touch a workflow. A session that needs a state which does
-not exist is **blocked on a human**, and must ask rather than improvise with labels. This is the
-part of Jira's setup cost that matters to a contract; the older claim in this file — that a
-status must be separately mapped to a board column — is a **company-managed** trait and was
-wrong for inception's team-managed project, where the statuses *are* the board. What is real in
-both flavours is which STATUS a ticket sits in: `Backlog` is not on the surface the owner reads,
-`To Do` is.
-
-Three more that cost a run each, all measured:
-
-- **Link direction is silently invertible.** `createIssueLink`'s `inwardIssue`/`outwardIssue`
-  order is genuinely confusing, and a backwards `Blocks` link corrupts the frontier without an
-  error. **Create it, then read the issue back and check the rendered wording** — the payload
-  you sent will not tell you.
-- **`editJiraIssue` replaces `description` WHOLE.** There is no partial update; anything you do
-  not send back is deleted. Read it, substitute, send the whole thing. An agent recomposing
-  prose from memory drops words silently.
-- **Build non-ASCII payloads programmatically.** Hand-typed JSON escapes corrupted `Ưu tiên`
-  into `Ư u tiên`. This owner writes Vietnamese and the tickets are bilingual, so it is not an
-  edge case. A plain-markdown GitHub body has no equivalent failure surface.
-
-Duplication is carried as a **link**, not a status — strictly better, because it names *which*
-ticket absorbed this one.
-
-### GitHub — two fields, no sync, every time
-
-**GitHub Issues has no status field at all.** Labels are the status, so the harness owns an
-invariant the tracker will not enforce: **exactly one of `backlog` / `todo` / `in-progress`,
-and changing status means removing the old label as well as adding the new one.**
-
-It is not true that GitHub has no columns — GitHub *Projects* has a `Status` column and this
-repo uses it. What is true, and costs more than the missing field, is that **nothing connects
-the two.** Editing a label does not move the card; moving the card does not edit the label. So
-every status write is two writes:
-
-```bash
-gh issue edit <n> --remove-label todo --add-label in-progress
-.agents/skills/github-issue-tracker/project-status-sync.sh --apply   # the second half; skipping it is invisible
-```
-
-Skipping the second half fails **silently and in the owner's direction** — the queries stay
-right, and only the human sees the lie. The board field also needs the `project`
-OAuth scope, absent from `gh`'s default set, and without it `--json projectItems` returns `[]`
-rather than an error — an emptiness that reads exactly like "this issue is on no board".
-
-Dependencies are native and real, keyed by the blocker's numeric **database id** (not `#number`,
-not `node_id`), and the read-back **lies for about two seconds** after the write. There is no
-query language, so the frontier is a list call plus one API call per candidate. Full mechanics:
-the `github-issue-tracker` skill.
-
-### Linear — the shape the other two are approximating
-
-Native workflow states, a first-class status field, the board following it with no second write,
-native relations, native assignee. All five requirements met by the product, and the adapter is
-thin.
-
-**Both projects still had to leave it.** The free tier stopped accepting new issues —
-`"You've exceeded the free issue limit"` — which does not degrade a pipeline, it **stops** one:
-a harness that cannot cut a ticket cannot dispatch one.
-
-The lesson generalises past Linear: **requirements 1–5 are about a tracker's model, but a
-tracker also has to accept a write.** Check the ceiling of the tier you are on before building a
-pipeline whose first step is `create`.
+**Requirement 3 is met natively by none of them.** No tracker's assignee field can hold
+`builder/<ticket-id>`, so on all three the readback interlock is advisory and `git worktree add
+-b` is what decides a race. Each adapter carries that paragraph; the pipeline's safety claim is
+stated honestly in `thomas.md`.
 
 ## Choosing one
 

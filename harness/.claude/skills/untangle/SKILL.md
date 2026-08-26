@@ -43,8 +43,8 @@ Each ticket does exactly this, and each ships on its own:
 1. **Characterise** the behaviour crossing the boundary you are about to draw
    (`legacy-testing`), so the refactor has a net.
 2. **Expand** — add the new front door beside the old paths. Nothing breaks; both work.
-3. **Migrate** callers to it, in batches sized by blast radius. `to-tickets` has the
-   expand–contract path and batches this way already.
+3. **Migrate** callers to it, in batches sized by blast radius. the expand–contract path belongs to `to-tickets`, which is **user-invoked**: you
+   cannot reach it. Hand the shape back and name it — the Shaper drives it (AST-051).
 4. **Contract** — remove the old paths once nothing calls them, verified by search rather
    than by belief.
 
@@ -77,3 +77,13 @@ The last one means the graph you extracted is stale — re-read before continuin
 
 Record the boundaries as they land, where this project keeps its architecture notes, so the
 next session does not re-derive them from scratch.
+
+## 4. Write `docs/agents/boundaries.md`
+
+The boundaries this pass established, and the seams it deliberately left. Previously this said
+"where this project keeps its architecture notes" — no path, no filename, no named reader, and
+therefore invisible to the check written for exactly that defect.
+
+**The Shaper reads it** when scoping the next refactor on the same code: a boundary already
+drawn is a boundary not to re-derive, and a seam deliberately left is the one place a later
+pass will otherwise waste itself.

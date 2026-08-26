@@ -27,8 +27,8 @@ stands without it.
 
 | Phase | Skill | Ends when |
 |---|---|---|
-| Build | `mattpocock-skills:implement` | the ticket's acceptance criteria pass and the build is green |
-| Increment review | `mattpocock-skills:code-review` | both axes have run once over the increment |
+| Build | `mattpocock-skills:implement` | the build is green — **then YOU check the acceptance criteria**, one by one |
+| Increment review | `mattpocock-skills:code-review <Base>` | both axes have run once over that range |
 | Simplify | see runtime supplement | a `simplify(increment):` commit exists whose body names the pass that ran |
 | Cross-vendor arm | `codex-arm` / `codex-claude-arm` | an `arm(ticket):` receipt at your head |
 | Visual verification | — | every changed user-visible surface has browser evidence, or the skip is named |
@@ -36,6 +36,15 @@ stands without it.
 **Commit and push at every phase boundary**, not only at handback — the table above is the
 cadence. Measured: four unpushed commits at stand-down; 49 minutes, 17 modified files, zero
 commits.
+
+**`implement` knows nothing about acceptance criteria** — it implements, runs typechecks and
+tests, and commits. Checking the ticket's criteria is yours, after it returns. It also points you at
+`/tdd` and `/code-review` <!-- addr-ok: quoting the plugin's own wrong form --> — the **human's**
+slash form, which you have no keyboard for. Reach the model-invocable ones through the Skill
+tool (AST-051).
+
+**Pass `code-review` the `Base:` your brief carries** — "the increment" is not a git ref, and
+the skill asks for one when missing, into a pane with nobody in it.
 
 `implement` is **user-invoked**: drive it by name. The craft layer is model-invoked and needs no
 wiring — `tdd`, `mattpocock-skills:code-review`, `codebase-design`, `domain-modeling`,
@@ -84,8 +93,8 @@ disagreement is a decision for the owner.
 ## Work you cannot read in a diff
 
 **A ticket that changes what a user sees is not done when the diff is right.** A rendering
-catches what a diff cannot: a button technically correct and visually subordinate, a selected
-state that reads as unselected, a value pushed outside the viewport.
+catches what a diff cannot: a control technically correct and visually subordinate, a selected
+state that reads as unselected, a value outside the viewport.
 
 The tool is the project's and its design guidelines are the standard — this contract requires
 the evidence, not a way of getting it. Per changed surface capture **what you looked at, at what
@@ -100,30 +109,18 @@ is **your change rendering correctly** — whether the product still coheres is 
 **One closed loop, one handback:** `implement` → `code-review` → simplify → **arm pass 1** →
 [fold → **pass 2**] → `arm(ticket):` receipt → handback.
 
-**The head under review is yours**, so the range is correct without you resolving it. Isolation
-has a per-runtime answer — take it from the arm skill for your runtime.
+**The head under review is yours**, so the range is correct without resolving it. Isolation has
+a per-runtime answer — take it from the arm skill.
 
 **The standard is `rin.md`'s** — the two-pass cap, when pass 2 is mandatory, and what makes a
-fresh gate legitimate rather than laundered. One rule, one home: restating gate law in several
-places is how the prior package's drifted apart.
+fresh gate legitimate rather than laundered.
 
-**Fold what is real, by class and not by instance, and say what you leave.**
+**Fold by class, not by instance, and say what you leave.**
 
 The receipt is an **empty** commit at your head, so its parent is the tree the gate read.
-`check-simplify-markers.sh` owns the rules; this is the shape:
+Its shape, its `Reviewed:`/`Unreviewed-delta:` rule and the rest of the marker mechanics:
+`dispatch-ticket/MARKERS.md`.
 
-```
-arm(ticket): <ticket-id> — <verdict>, <n> passes
-
-Range: <n> commits, <m> files (<base>..<head>)
-Reviewed: <sha of the tree the gate read>
-Vendor: <vendor>   Tests: RAN|NOT RUN <prose>   Pass: <n>
-Unreviewed-delta: <from>..<to> — <n> lines, <m> files: <what changed, why it is safe>
-```
-
-**`Reviewed:` is this commit's parent, OR `Unreviewed-delta:` declares the gap. Never neither**
-(AST-134): a fold moves the tree past what any pass read, so the equality is legitimately false
-and the omission is the failure.
 
 **`Unreviewed-delta:` is for a FOLD. Code from a phase that had not run yet owes a FRESH GATE.**
 Simplify firing after the arm is not a delta to declare — the arm read a tree simplify then moved
@@ -133,7 +130,7 @@ extra gate round.
 ## Handing back
 
 **Run every machine that can answer before you hand back** — typecheck, linters, tests, build.
-A surface that stays green when it should not have is the more important half.
+A surface staying green when it should not have is the more important half.
 
 **Never infer blast radius from a diff's paths, least of all from file extensions.** "No JS or
 TS changed, so the JS suite is unaffected" reads careful and is not: a generated manifest is

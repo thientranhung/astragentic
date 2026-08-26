@@ -63,7 +63,7 @@ from this table — read the entry.
 | `AST-048` | A rule not present where it must be remembered does not exist | promoted | 276 |   |
 | `AST-049` | Checks 1–4 asked whether things were consistent, never whether a role could START | promoted | 169 |   |
 | `AST-050` | Qualify a plugin command always, not once it is known to collide | promoted | 217 | check-reachability.sh,dispatch-ticket,docs-staleness-audit.sh |
-| `AST-051` | An address the caller cannot use produces a substitute, not an error | promoted | 319 | builder-claude.md,check-reachability.sh,dispatch-ticket,docs-staleness-audit.sh,thomas-claude.md |
+| `AST-051` | An address the caller cannot use produces a substitute, not an error | promoted | 319 | builder-claude.md,builder.md,check-reachability.sh,dispatch-ticket,docs-staleness-audit.sh,thomas-claude.md,untangle |
 | `AST-052` | The word-budget audit ran its loop zero times and reported all clean | promoted | 227 | docs-staleness-audit.sh |
 | `AST-053` | An axis read the run's verdict instead of its own, and went mute | promoted | 226 |   |
 | `AST-054` | `git add -A` committed two releases nobody ever applied | promoted | 146 | hook-git-guard.py |
@@ -82,7 +82,7 @@ from this table — read the entry.
 | `AST-068` | A lesson closed at instance level reopens at class level | promoted | 259 |   |
 | `AST-069` | An instruction with no moment attached measures zero | promoted | 272 | check-reachability.sh,thomas.md |
 | `AST-070` | A bounded exception nobody asked for is a contradiction carried on speculation | promoted | 275 | dispatch-ticket |
-| `AST-071` | Every check asked whether a thing was NAMED, none asked whether anything READ it | promoted | 312 |   |
+| `AST-071` | Every check asked whether a thing was NAMED, none asked whether anything READ it | promoted | 312 | check-reachability.sh |
 | `AST-072` | Self-monitoring shipped without proof it cannot harm what it monitors | promoted | 345 | herdr-watchdog.sh |
 | `AST-073` | A global script is only shared if something keeps it updated | promoted | 200 |   |
 | `AST-074` | A tracker measured only against itself cannot detect its own drift | promoted | 484 | thomas.md |
@@ -108,7 +108,7 @@ from this table — read the entry.
 | `AST-094` | Builder commits and pushes correctly but silently skips the simplify pass | promoted | 426 | CLEANUP.md,MARKERS.md,builder.md,check-simplify-markers.sh |
 | `AST-095` | The cross-vendor companion exits 0 on configuration failure and caches state that survives a… | promoted | 335 | codex-arm |
 | `AST-096` | rm -rf on a worktree directory leaves git's registration behind; the next add at that path re… | promoted | 296 | CLEANUP.md,codex-arm,dispatch-ticket,hook-git-guard.py,review-with-rin,thomas.md |
-| `AST-097` | TERMINAL:done means the turn ended, not that the work finished | promoted | 831 | builder-claude.md,dispatch-ticket,dispatch-ticket-claude,hook-git-guard.py |
+| `AST-097` | TERMINAL:done means the turn ended, not that the work finished | promoted | 831 | builder-claude.md,dispatch-ticket,dispatch-ticket-claude,dispatch-ticket-opencode,hook-git-guard.py |
 | `AST-098` | Fork sub-agents return the coordinator's own narration instead of doing their assigned task | promoted | 385 | builder-claude.md |
 | `AST-099` | Simplify marker exists without skill provenance — the subject is self-applied, only the Pass:… | promoted | 685 | CLEANUP.md,check-simplify-markers.sh |
 | `AST-100` | Codex companion broker leaks one process per arm pass, accumulating silently | promoted | 201 | CLEANUP.md,codex-arm,dispatch-qa-walk,hook-git-guard.py |
@@ -145,5 +145,5 @@ from this table — read the entry.
 | `AST-131` | The queue drained and nothing asked whether a slot was free | promoted | 344 | thomas.md |
 | `AST-132` | Two owners for one path, and neither can see the other | promoted | 307 | check-payload-drift.sh,thomas.md |
 | `AST-133` | `--grep` is not a subject matcher, and it failed in both directions on the same day | promoted | 400 | CLEANUP.md,thomas.md |
-| `AST-134` | After the fold, "the gate read this tree" is structurally false and the protocol had no way t… | promoted | 238 | builder.md,check-simplify-markers.sh |
+| `AST-134` | After the fold, "the gate read this tree" is structurally false and the protocol had no way t… | promoted | 238 | MARKERS.md,check-simplify-markers.sh |
 | `AST-135` | The verifier's queue was invisible to itself, and the fire point had to follow the artifact | promoted | 363 | dispatch-qa-walk,thomas.md |
