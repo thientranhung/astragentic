@@ -373,6 +373,26 @@ else
       TARGET_READY=0
     fi
   done
+  # The guard is enforcement, and enforcement that is absent fails OPEN: the hook command
+  # allows every Bash call when it cannot find the script, and `.claude/settings.json` is
+  # owner-kept, so an upgraded project can carry an old settings file that never invokes it.
+  # Neither state announces itself at runtime. It is caught here instead, where a doctor is
+  # supposed to answer "is this install complete".
+  if [ "$ADAPTED" = "1" ]; then
+    if [ -f "$TARGET/scripts/hook-git-guard.py" ]; then
+      ok "scripts/hook-git-guard.py present"
+    else
+      miss "scripts/hook-git-guard.py is missing after adaptation" \
+        "the PreToolUse hook allows every command when the script is absent; re-run the payload install"
+    fi
+    if grep -q 'hook-git-guard' "$TARGET/.claude/settings.json" 2>/dev/null; then
+      ok ".claude/settings.json registers the git guard"
+    else
+      miss ".claude/settings.json does not register hook-git-guard" \
+        "settings.json is owner-kept, so an upgrade never adds it; merge the PreToolUse block from the release's harness/.claude/settings.json"
+    fi
+  fi
+
   if git -C "$TARGET" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     ok "target is a git work tree (worktree isolation available)"
     # AST-036: a worktree carries CONTENT AT HEAD only, so an uncommitted payload is

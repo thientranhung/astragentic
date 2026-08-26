@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "d=\"${CLAUDE_PROJECT_DIR:-$PWD}\"; s=\"$d/scripts/hook-git-guard.sh\"; [ -f \"$s\" ] || s=\"$d/harness/scripts/hook-git-guard.sh\"; if [ -f \"$s\" ]; then exec bash \"$s\"; else cat >/dev/null; echo \"hook-git-guard: NOT FOUND under $d — the git guard is not running\" >&2; echo \"$(date -u +%FT%TZ) hook-git-guard MISSING under $d\" >> /tmp/harness-hook-events.log; fi"
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-$PWD}\"; s=\"$d/scripts/hook-git-guard.py\"; [ -f \"$s\" ] || s=\"$d/harness/scripts/hook-git-guard.py\"; if [ -f \"$s\" ]; then exec python3 \"$s\"; else cat >/dev/null; echo \"hook-git-guard: NOT FOUND under $d — the git guard is not running\" >&2; echo \"$(date -u +%FT%TZ) hook-git-guard MISSING under $d\" >> /tmp/harness-hook-events.log; fi"
           }
         ]
       }

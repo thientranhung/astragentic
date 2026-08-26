@@ -115,7 +115,7 @@ git worktree prune
 container every live Builder was standing on (AST-115). Scope by the compose label this worktree
 produced, or stop nothing.
 
-On a Claude root `scripts/hook-git-guard.sh` performs the broker and container half before it
+On a Claude root `scripts/hook-git-guard.py` performs the broker and container half before it
 lets the removal through. It is a `PreToolUse` hook and does not exist on Codex or opencode, so
 the block above is the contract on every runtime.
 

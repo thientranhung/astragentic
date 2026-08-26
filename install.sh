@@ -46,7 +46,11 @@ SKILL_SYNC_FAIL=0
 # root. `review-with-rin` was allowlisted too and diffs zero lines — a dead exemption that
 # masks any future drift in exactly the pair it names. An allowlist entry that no longer
 # describes a real difference is worse than no allowlist, so an unused one now fails here.
-DIVERGENT_ALLOWLIST="codex-arm"
+# EXACT FILE PAIRS, not skill directories. Exempting a directory skipped every file under
+# it, so an auxiliary runtime file could sit missing or drifted in one tree indefinitely while
+# the two SKILL.md files stayed legitimately different — the exemption covering more than the
+# difference it was granted for.
+DIVERGENT_ALLOWLIST="codex-arm/SKILL.md"
 # EVERY FILE, not just SKILL.md. WATCHING.md, CLEANUP.md and project-status-sync.sh are all
 # loaded at runtime and none of them was compared.
 for agents_file in "$PAYLOAD/.agents/skills"/*/*; do
@@ -54,7 +58,7 @@ for agents_file in "$PAYLOAD/.agents/skills"/*/*; do
   skill_name="$(basename "$(dirname "$agents_file")")"
   base_name="$(basename "$agents_file")"
   claude_file="$PAYLOAD/.claude/skills/$skill_name/$base_name"
-  case " $DIVERGENT_ALLOWLIST " in *" $skill_name "*) continue ;; esac
+  case " $DIVERGENT_ALLOWLIST " in *" $skill_name/$base_name "*) continue ;; esac
   if [ ! -f "$claude_file" ]; then
     echo "ERROR: .agents/skills/$skill_name/$base_name has no .claude/ twin" >&2
     echo "  A file present in one tree and absent from the other is unreachable on the" >&2
@@ -74,16 +78,17 @@ for claude_file in "$PAYLOAD/.claude/skills"/*/*; do
   [ -f "$claude_file" ] || continue
   skill_name="$(basename "$(dirname "$claude_file")")"
   base_name="$(basename "$claude_file")"
-  case " $DIVERGENT_ALLOWLIST " in *" $skill_name "*) continue ;; esac
+  case " $DIVERGENT_ALLOWLIST " in *" $skill_name/$base_name "*) continue ;; esac
   if [ ! -f "$PAYLOAD/.agents/skills/$skill_name/$base_name" ]; then
     echo "ERROR: .claude/skills/$skill_name/$base_name has no .agents/ twin" >&2
     SKILL_SYNC_FAIL=1
   fi
 done
 # An allowlist entry that no longer diverges is a dead exemption. Fail on it.
-for skill_name in $DIVERGENT_ALLOWLIST; do
-  a="$PAYLOAD/.agents/skills/$skill_name/SKILL.md"
-  c="$PAYLOAD/.claude/skills/$skill_name/SKILL.md"
+for pair in $DIVERGENT_ALLOWLIST; do
+  a="$PAYLOAD/.agents/skills/$pair"
+  c="$PAYLOAD/.claude/skills/$pair"
+  skill_name="$pair"
   [ -f "$a" ] && [ -f "$c" ] || continue
   if diff -q "$a" "$c" >/dev/null 2>&1; then
     echo "ERROR: '$skill_name' is in DIVERGENT_ALLOWLIST but the copies are identical" >&2
@@ -423,6 +428,18 @@ if [ "$APPLY" -eq 1 ]; then
   if [ "$PLAN" -eq 1 ]; then
     echo "Nothing written. Rerun with --apply to write it."
     exit 0
+  fi
+  if [ "$N_CONFLICT" -gt 0 ]; then
+    # PARTIALLY applied, and it must not read as success. The non-conflicting files are
+    # already on disk while `applied-version` still names the previous release, so ownership
+    # checks run against the old manifest over a hybrid payload. Exit 3 — distinct from 1 so
+    # automation can tell "pending arbitration" from "this run failed".
+    echo "Payload PARTIALLY applied — $N_CONFLICT conflict(s) outstanding."
+    echo "The non-conflicting files are written; applied-version still names the previous"
+    echo "release, so this checkout is a hybrid until each conflict above is decided."
+    echo "Resolve them, then re-run --apply. Where you deliberately keep the project's"
+    echo "version, stamp $VERSION into .astraler/state/applied-version by hand and say why."
+    exit 3
   fi
   echo "Payload applied. ADAPT-HARNESS.md still owns the semantic half — the project entry doc,"
   echo "the ledger namespace, and anything above listed as CONFLICT."

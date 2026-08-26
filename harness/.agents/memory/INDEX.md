@@ -40,7 +40,7 @@ from this table — read the entry.
 | `AST-025` | Gate-able conventions parked in the always-on rule tier tax every loop | proposed | 157 |   |
 | `AST-026` | Named-persona harness: Thomas / Dan / Rin | promoted | 151 |   |
 | `AST-027` | TWO ROOT sessions shared the main checkout; one switched branches under the other | promoted | 175 | dispatch-ticket |
-| `AST-028` | Relative worktree path + unverified pane cwd → worktree born in the wrong place, hour-long mi… | promoted | 189 | dispatch-ticket,hook-git-guard.sh,review-with-rin |
+| `AST-028` | Relative worktree path + unverified pane cwd → worktree born in the wrong place, hour-long mi… | promoted | 189 | dispatch-ticket,hook-git-guard.py,review-with-rin |
 | `AST-029` | Slice finished but Dan tabs survived; `/clear` blurred context and checkout lifecycle | promoted | 207 |   |
 | `AST-030` | Orchestrator row named a runtime with no dispatch path for the role; Rin went undispatchable | promoted | 215 | dispatch-ticket,review-with-rin |
 | `AST-031` | A prose instruction telling an agent to suppress its tool's own default is not a boundary | promoted | 227 | dispatch-ticket |
@@ -66,7 +66,7 @@ from this table — read the entry.
 | `AST-051` | An address the caller cannot use produces a substitute, not an error | promoted | 319 | builder-claude.md,check-reachability.sh,dispatch-ticket,docs-staleness-audit.sh,thomas-claude.md |
 | `AST-052` | The word-budget audit ran its loop zero times and reported all clean | promoted | 227 | docs-staleness-audit.sh |
 | `AST-053` | An axis read the run's verdict instead of its own, and went mute | promoted | 226 |   |
-| `AST-054` | `git add -A` committed two releases nobody ever applied | promoted | 146 | hook-git-guard.sh |
+| `AST-054` | `git add -A` committed two releases nobody ever applied | promoted | 146 | hook-git-guard.py |
 | `AST-055` | A gate that reads the subject cannot see which pass wrote it | promoted | 325 | builder-claude.md,builder-codex.md,builder-opencode.md,check-reachability.sh,dispatch-ticket-claude,rin-claude.md,rin-codex.md,rin-opencode.md,rin.md,shaper.md,thomas-claude.md |
 | `AST-056` | A blocking edge expresses order, not exclusion | promoted | 329 | dispatch-qa-walk,dispatch-ticket,thomas.md |
 | `AST-057` | A frontier that is only computed is invisible to the one person who cannot compute | promoted | 689 | check-reachability.sh,dispatch-qa-walk,reconcile-tracker,thomas.md |
@@ -103,17 +103,17 @@ from this table — read the entry.
 | `AST-089` | A fork-fallback inside `simplify` read as a substitute because only the `Pass:` line's wordin… | promoted | 366 | builder-claude.md,thomas-claude.md |
 | `AST-090` | The Pass: literal had a two-in-three miss rate among Builders who ran the pass correctly | promoted | 221 | builder-claude.md |
 | `AST-091` | install.sh overwrites PROJECT_NAME on re-staging without --project-name | promoted | 107 |   |
-| `AST-092` | Builder stops after writing code but before committing — pane reads done, cleanup deletes the… | promoted | 308 | CLEANUP.md,MARKERS.md,builder.md,hook-git-guard.sh |
+| `AST-092` | Builder stops after writing code but before committing — pane reads done, cleanup deletes the… | promoted | 308 | CLEANUP.md,MARKERS.md,builder.md,hook-git-guard.py |
 | `AST-093` | A fix landing in .agents/skills/ but not .claude/skills/ is unreachable on the runtime that l… | promoted | 186 |   |
 | `AST-094` | Builder commits and pushes correctly but silently skips the simplify pass | promoted | 426 | CLEANUP.md,MARKERS.md,builder.md,check-simplify-markers.sh |
 | `AST-095` | The cross-vendor companion exits 0 on configuration failure and caches state that survives a… | promoted | 335 | codex-arm |
-| `AST-096` | rm -rf on a worktree directory leaves git's registration behind; the next add at that path re… | promoted | 296 | CLEANUP.md,codex-arm,dispatch-ticket,hook-git-guard.sh,review-with-rin,thomas.md |
-| `AST-097` | TERMINAL:done means the turn ended, not that the work finished | promoted | 831 | builder-claude.md,dispatch-ticket,dispatch-ticket-claude,hook-git-guard.sh |
+| `AST-096` | rm -rf on a worktree directory leaves git's registration behind; the next add at that path re… | promoted | 296 | CLEANUP.md,codex-arm,dispatch-ticket,hook-git-guard.py,review-with-rin,thomas.md |
+| `AST-097` | TERMINAL:done means the turn ended, not that the work finished | promoted | 831 | builder-claude.md,dispatch-ticket,dispatch-ticket-claude,hook-git-guard.py |
 | `AST-098` | Fork sub-agents return the coordinator's own narration instead of doing their assigned task | promoted | 385 | builder-claude.md |
 | `AST-099` | Simplify marker exists without skill provenance — the subject is self-applied, only the Pass:… | promoted | 685 | CLEANUP.md,check-simplify-markers.sh |
-| `AST-100` | Codex companion broker leaks one process per arm pass, accumulating silently | promoted | 201 | CLEANUP.md,codex-arm,dispatch-qa-walk,hook-git-guard.sh |
-| `AST-101` | Gate worktree removal leaks database containers, not just broker processes | promoted | 182 | CLEANUP.md,dispatch-qa-walk,hook-git-guard.sh |
-| `AST-102` | WorktreeRemove hook does not fire, but documentation declares manual cleanup redundant | promoted | 418 | hook-git-guard.sh,thomas.md |
+| `AST-100` | Codex companion broker leaks one process per arm pass, accumulating silently | promoted | 201 | CLEANUP.md,codex-arm,dispatch-qa-walk,hook-git-guard.py |
+| `AST-101` | Gate worktree removal leaks database containers, not just broker processes | promoted | 182 | CLEANUP.md,dispatch-qa-walk,hook-git-guard.py |
+| `AST-102` | WorktreeRemove hook does not fire, but documentation declares manual cleanup redundant | promoted | 418 | hook-git-guard.py,thomas.md |
 | `AST-103` | Cross-vendor arm silently reviews a zero-commit range and returns clean | promoted | 206 | codex-arm |
 | `AST-104` | herdr agent start rejects uppercase in agent names, but dispatch convention generates them | promoted | 87 |   |
 | `AST-105` | Pipe after a command swallows exit code, turning a failed gate into exit 0 | promoted | 182 | WATCHING.md |
@@ -126,7 +126,7 @@ from this table — read the entry.
 | `AST-112` | SendMessage is not a user turn, so the brief's slash command never fires | promoted | 443 | dispatch-ticket-claude,shaper.md |
 | `AST-113` | An audit that always screams is an audit nobody reads | promoted | 290 | docs-staleness-audit.sh |
 | `AST-114` | Splitting submission into two steps left the watch armed against the wrong one | promoted | 207 |   |
-| `AST-115` | Two correct changes composed into a live one, and the repair is what armed it | promoted | 447 | CLEANUP.md,check-reachability.sh,codex-arm,dispatch-qa-walk,hook-git-guard.sh |
+| `AST-115` | Two correct changes composed into a live one, and the repair is what armed it | promoted | 447 | CLEANUP.md,check-reachability.sh,codex-arm,dispatch-qa-walk,hook-git-guard.py |
 | `AST-116` | A local fix that never goes upstream is a defect every fresh install re-buys | promoted | 335 | check-reachability.sh,docs-staleness-audit.sh |
 | `AST-117` | A worktree isolates git, not a tool that writes to a fixed path | promoted | 329 |   |
 | `AST-118` | A fallback that changes what the verdict MEANS, while keeping the same exit code | promoted | 373 | check-reachability.sh |

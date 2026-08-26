@@ -165,7 +165,7 @@ herdr workspace list
 **`prune` comes first, and the `add` runs with its output visible.** A previous removal can
 leave `.git/worktrees/<name>/` registered; `add` then refuses — and a redirected `>/dev/null`
 throws away the one line that says so, leaving a dispatch that looks launched (AST-096). On a
-Claude root `scripts/hook-git-guard.sh` runs the prune for you and refuses a relative path or a
+Claude root `scripts/hook-git-guard.py` runs the prune for you and refuses a relative path or a
 redirected add; it is a `PreToolUse` hook and does not exist on Codex or opencode, so the two
 rules above are the contract on every runtime.
 

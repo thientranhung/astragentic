@@ -140,7 +140,7 @@ base with `git log <base> --oneline --grep '<ticket-id>'`, then `-D` and record 
 as the reason. `-D` without that confirmation is for an explicitly owner-approved abandonment
 only.
 
-**On a Claude root, `scripts/hook-git-guard.sh` performs steps 1 and 2's preconditions
+**On a Claude root, `scripts/hook-git-guard.py` performs steps 1 and 2's preconditions
 automatically** — it refuses a removal that would destroy uncommitted work or kill a live
 process, and it stops the resources first. It is a `PreToolUse` hook, so it does not exist on a
 Codex or opencode root: the steps above are the contract, and the hook is a second layer under
