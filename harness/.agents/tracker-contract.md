@@ -152,6 +152,17 @@ Four things to expect, each of them measured:
   withholds a ticket from the frontier and nothing ever reports it. Never create an edge you have
   not verified against the source.
 
+**And nothing checks edges.** `reconcile-tracker` measures tracker state against git; no oracle
+anywhere reads the blocking graph and asks whether it is TRUE. That gap is stated here rather
+than left to be discovered, because the failure it produces is the confident kind: a ticket
+reading READY to every query while the thing it waits on is not an issue at all, and nothing on
+the board contradicting it.
+
+**The cheapest partial oracle is the owner's eye, once per slice.** Print the frontier and the
+blocking graph side by side at a slice close and read them together — an edge that surprises you
+is the finding. It is not a check and this file does not pretend it is; it is the one review
+that has ever caught this class.
+
 ## The one rule that outlives whichever tracker you pick
 
 Inception's harness put it best, and it covers both projects' worst bug:

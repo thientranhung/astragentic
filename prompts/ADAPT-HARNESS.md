@@ -323,12 +323,30 @@ Run checks proportional to what changed:
   that every path, agent and profile a contract or skill names actually exists. A contract
   naming a file that does not exist is how the prior package failed, so this is a hard
   failure rather than a warning;
+- **Install the payload-drift pre-commit hook, or record that this project declines it.**
+  `scripts/check-payload-drift.sh` is documented as running at pre-commit and nothing in this
+  pipeline ever makes that true: `.git/hooks/` is empty in a fresh clone, this prompt never
+  named the script, and `thomas.md` hedges with "where this project runs it". A mechanism whose
+  only pointer is a load-on-demand doc is the shape this package keeps paying for. Either:
+
+  ```bash
+  printf '#!/bin/sh\nexec scripts/check-payload-drift.sh\n' > .git/hooks/pre-commit
+  chmod +x .git/hooks/pre-commit
+  ```
+
+  ...or write in the project's entry doc that it runs the check manually, and when. `.git/hooks`
+  is not committable, so this step repeats on every fresh clone — say that too;
 - **A project that gitignores `.astraler/` must say so here.** `check-reachability.sh` reads
   its ownership manifest from the staged release and hard-fails at check 0 when that
   directory is absent — so on a fresh clone of such a project the gate can never pass. Either
   commit `.astraler/state/applied-version` (it is one line and names no secret), or record in
   the project's entry doc that reachability runs only where the release is on disk. Leaving
   both unstated is the state that fails silently on someone else's machine;
+- **`.astraler/CANDIDATE` and `.astraler/state/applied-version` agree**, or the difference is
+  stated. CANDIDATE is written on every stage and applied-version only on a completed apply,
+  and nothing compares them — so a staged-but-unapplied release, or an apply that stopped on
+  conflicts, looks identical to a clean install from the outside. `cat` both; where they differ
+  the project is mid-upgrade and must say which release its contracts actually are;
 - **`scripts/docs-staleness-audit.sh` and `scripts/ledger-index.sh`**, in the same breath as
   the check above, whenever this run edited a contract, a skill or the ledger. The first
   measures word budgets and re-derives every number a document states about itself; the

@@ -13,7 +13,7 @@ from this table — read the entry.
 
 | ID | Lesson | Status | Words | Cited by |
 |---|---|---|---|---|
-| `AST-001` | Gate wired to a fix tool, not a review tool | promoted | 17 | docs-staleness-audit.sh |
+| `AST-001` | Gate wired to a fix tool, not a review tool | promoted | 17 | docs-staleness-audit.sh,ledger-rules.sh |
 | `AST-002` | A prose link does not guarantee load | promoted | 20 |   |
 | `AST-003` | No lessons ledger existed | promoted | 12 |   |
 | `AST-004` | Process decisions routed to ADRs | promoted | 15 |   |
@@ -81,7 +81,7 @@ from this table — read the entry.
 | `AST-066` | A review bound to the wrong checkout returns clean without reading anything | promoted | 255 |   |
 | `AST-068` | A lesson closed at instance level reopens at class level | promoted | 259 |   |
 | `AST-069` | An instruction with no moment attached measures zero | promoted | 272 | check-reachability.sh,thomas.md |
-| `AST-070` | A bounded exception nobody asked for is a contradiction carried on speculation | promoted | 275 | dispatch-ticket |
+| `AST-070` | A bounded exception nobody asked for is a contradiction carried on speculation | promoted | 275 | dispatch-ticket,ledger-rules.sh |
 | `AST-071` | Every check asked whether a thing was NAMED, none asked whether anything READ it | promoted | 312 | check-reachability.sh |
 | `AST-072` | Self-monitoring shipped without proof it cannot harm what it monitors | promoted | 345 | herdr-watchdog.sh |
 | `AST-073` | A global script is only shared if something keeps it updated | promoted | 200 |   |

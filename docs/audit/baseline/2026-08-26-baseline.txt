@@ -1,0 +1,48 @@
+=== 2026-08-26T09:31:03Z · HEAD a573803 ===
+
+--- reachability ---
+Reachability check — package layout, payload at harness
+  5 contracts · 16 harness skills · 11 owned phases · 25 plugin skills known
+  invocability from: plugin frontmatter (35 skills read)
+
+  [OK] 1 every phase the method names is owned by the contract it names
+  [OK] 2 every declared phase is declared exactly once
+  [OK] 3 every HARNESS skill is NAMED by something — which is not evidence any of them has ever run
+  [OK] 4 every path and skill referenced BY THE SCANNED FILES exists
+  [OK] 5 every role has a launcher and a dispatcher that names it
+  [OK] 6 every skill is addressed in the form its caller can actually use
+  [OK] 7 every gate artifact has both a producer and a verifier
+  [OK] 8 every document a skill declares it writes is in the artifact registry (2 write heading(s) read)
+
+All reachability checks passed. Scope: 5 contracts, 16 skills, the adaptation prompt and the README role table.
+Not scanned, and check 4 does not speak for it: the failure-mode ledger's historical `Bound:` provenance. A live project measured five citations there to a file that had been deleted, while check 4 reported clean — the scope line is part of the verdict, not a footnote to it.
+
+--- staleness (working tree) ---
+=== 1. always-on word budgets (these surfaces bill every session) ===
+OVER: roles/thomas.md = 2095 words (budget 1970)
+ok: roles/shaper.md = 882/1200 words
+OVER: roles/builder.md = 1832 words (budget 1500)
+ok: roles/rin.md = 1252/1350 words
+ok: roles/qa.md = 1271/1300 words
+ok: .agents/orchestrator.md = 809/950 words
+  (5 contracts measured)
+
+=== 2. self-reported counts vs the thing counted ===
+(clean)
+
+=== 3. documented signal strings vs what the emitter actually prints ===
+(clean)
+
+=== 4. payload names no real project, ticket or host ===
+(clean)
+
+=== 5. ledger index vs the ledger ===
+  STOP: INDEX.md is stale — run scripts/ledger-index.sh
+
+RESULT: findings above — verify each against code/truth-model before editing.
+
+--- git ---
+/Users/tranthien/Documents/2.DEV/2.PRIVATE/astragentic  a573803 [main]
+* main                 a573803 [origin/main: ahead 10] 2.6.1 - the first project to take 2.6.0 found three defects in it
+  trim-proportionality b7c6f58 2.3.27 - the receipt was a producer with no reader
+hooks: 0 active

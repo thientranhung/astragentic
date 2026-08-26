@@ -87,6 +87,12 @@ is not drift — that is a healthy in-flight ticket. Do not report it.
 
 ## Report only — nothing here writes
 
+**What this skill cannot see at all**, stated because a clean report is read as a clean
+tracker: a ticket whose id never reached a commit subject (real work reading phantom-absent), a
+ticket that has never merged and therefore never appears in the list, board-vs-label divergence
+on GitHub, a wrong or missing blocking edge, and a branch that merged but was never deleted —
+which suppresses the stale-claim class, since that class keys on "assignee set, no branch".
+
 **Thomas applies each fix by hand**, and the join key stays approximate no matter how many
 drift classes get added.
 

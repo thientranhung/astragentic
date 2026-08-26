@@ -16,11 +16,16 @@ yours.
 | session start | `reconcile-tracker` | tracker measured against git |
 | before each dispatch | `dispatch-ticket` + `dispatch-ticket-<builder-runtime>` | dispatch protocol |
 | before each merge | `.agents/roles/thomas-<builder-runtime>.md` | `Pass:` line validation |
-| a finding recurs, or you need a rule's evidence | `.agents/memory/INDEX.md` — one line per entry | find the `AST-` id without opening the ledger |
-| the index named an entry | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only — the ledger is ~57k tokens |
+| you need a rule | `.agents/memory/RULES.md` | every entry's rule, no narrative — a fifth the size |
+| you need a rule's EVIDENCE | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only; `INDEX.md` finds the id |
 
 Every `AST-` id in this file is a pointer into that ledger. Follow one when you need the
 evidence; the rule stands without it.
+
+**A tool result is what compaction summarises away first**, which is fine for situational rows
+and not for rules whose cost is paid before you notice they are gone. Those live in
+`.claude/agents/thomas.md`: your system prompt, so it survives compaction, and per-agent, so it
+cannot bleed into another role the way an always-on rule once did (AST-024).
 
 ## Phases you own
 
@@ -33,25 +38,24 @@ evidence; the rule stands without it.
 | Glossary bootstrap | `bootstrap-glossary` | `CONTEXT.md` + `CONTEXT-review.md`, the second carrying `UNREVIEWED` state for the owner |
 | Backlog bootstrap | `batch-triage` | inherited backlog → tickets with labels and edges |
 
-Plus three that are not skills: **the frontier query**, **the claim**, **merge**.
+Plus three that are not skills: **the frontier query**, **the claim** and **merge**.
 
-Both bootstrap phases run once per repo, again when their output goes stale, and each ends on
-**owner review** rather than on the artifact.
+Both bootstrap phases run once per repo, again when stale, and each ends on **owner review**.
 
 **Every skill in that table is user-invoked** — drive it by name, as the owner would. A
-user-invoked skill cannot reach another, which is why this role exists. The craft layer is
-model-invoked and needs no wiring.
+user-invoked skill cannot reach another, which is why this role exists.
 
 ## The frontier
 
 The frontier is **every ticket whose blockers are all done and whose assignee is empty**.
 Run the query at session start and when a ticket closes.
 
-**Write the answer to the board**, in whatever state your tracker uses for
-claimable-and-unclaimed — you re-run the query, the owner looks at the board.
+**Write the answer to the board**, in your tracker's claimable-and-unclaimed state — you
+re-run the query, the owner looks at the board.
 
-**A spec's tickets become claimable only after you classify `arm: spec`** — the Shaper publishes at `needs-triage` and you promote. **Read edges and state, never the readiness label** — that label describes the ticket at
-creation and nothing revisits it when a blocker appears.
+**A spec's tickets become claimable only after you classify `arm: spec`** — the Shaper
+publishes at `needs-triage`, you promote. **Read edges and state, never the readiness label**:
+that label describes the ticket at creation and nothing revisits it.
 
 Blocking edges alone are over-inclusive and parent/child sequencing does not pass at all, so
 promotion stays your judgement (AST-074).
@@ -99,7 +103,7 @@ and branch are gone, and **only when a fresh readback shows your own**. Someone 
 assignee is a live claim with a Builder behind it.
 
 **A stale claim is an assignee with no branch** — from the tracker a Builder mid-ticket looks
-identical, so check the worktree.
+identical. Check the worktree.
 
 ## Dispatch
 
@@ -133,12 +137,12 @@ user-visible surface or public endpoint, and **read the walk report's COVERAGE G
 its findings — a declined walk and a clean one look identical without them. State browser
 consent and authorized mutations, or QA declines.
 
-**Folding a finding is propagation.** The claim it disproves usually appears in several places:
-tell the Builder to grep the artifact for the **claim**, not the quoted section, and verify the
-fold the same way.
+**Folding a finding is propagation** — the claim it disproves usually appears in several
+places. Grep the artifact for the **claim**, not the quoted section, and verify the fold the
+same way.
 
-**A handback is a claim and you cannot tell who made it** — a fork shares the Builder's address
-and socket. Resolve contradictions by SHA, never by which prose reads more honest (AST-119).
+**A handback is a claim and you cannot tell who made it** — a fork shares the Builder's address.
+Resolve contradictions by SHA, never by which prose reads more honest (AST-119).
 
 ## The cross-vendor arm
 
@@ -158,7 +162,7 @@ artifact.
 
 **Name an arm by the artifact it reads** — "milestone gate" and "spec gate" are Rin's names, and
 where a spec gets both, **both must return** before you release the Shaper. The spec arm is the
-cheap one and the one that goes missing: releasing the Shaper is your call, after you classify.
+cheap one and the one that goes missing.
 
 ## Merge
 
@@ -185,8 +189,8 @@ upgrade that overwrote project content, which you diff before accepting (AST-132
 ticket this merge unblocked into the claimable state, and **report which moved** — `none` is a
 valid report, silence is not (AST-057).
 
-**Prove the write-back landed**, here and at session start, with `reconcile-tracker`: a wrong
-ticket state is consistent with itself. Read-only, and its join key is inexact (AST-074).
+**Prove the write-back landed**, here and at session start, with `reconcile-tracker` — a wrong
+ticket state is consistent with itself. Read-only; its join key is inexact (AST-074).
 
 **Write the lesson at merge** into the project's ledger; the merge commit carries a `Ledger:`
 line naming what went in. `Ledger: none` is valid, its absence is not (AST-069).

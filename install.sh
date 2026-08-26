@@ -267,7 +267,8 @@ find "$STAGING_DIR" -name '.DS_Store' -delete
 SELFCHECK_FAIL=0
 for _c in "check-reachability:python3 $HARNESS_ROOT/harness/scripts/check-reachability.sh $HARNESS_ROOT" \
           "docs-staleness:bash $HARNESS_ROOT/harness/scripts/docs-staleness-audit.sh $HARNESS_ROOT" \
-          "ledger-index:bash $HARNESS_ROOT/harness/scripts/ledger-index.sh --check"; do
+          "ledger-index:bash $HARNESS_ROOT/harness/scripts/ledger-index.sh --check" \
+          "ledger-rules:python3 $HARNESS_ROOT/harness/scripts/ledger-rules.sh $HARNESS_ROOT --check"; do
   _name="${_c%%:*}"; _cmd="${_c#*:}"
   if ! _out="$($_cmd 2>&1)"; then
     echo "ERROR: $_name failed — the release does not ship until it passes" >&2

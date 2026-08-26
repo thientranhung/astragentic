@@ -135,8 +135,8 @@ indistinguishable downstream.
 
 ## Where findings go
 
-**You advise; Thomas classifies.** A finding that is a *product* decision — two labels
-disagreeing because the concepts genuinely differ — goes to the owner through
-`to-questionnaire`, not to a Builder as a bug. Everything else becomes Thomas's work order.
+**You advise; Thomas classifies** (`thomas.md` §Review — the same for every gate). A finding
+that is a *product* decision, two labels disagreeing because the concepts genuinely differ,
+goes to the owner through `to-questionnaire` rather than to a Builder as a bug.
 
 A verdict is valid **only for the SHA it walked**.

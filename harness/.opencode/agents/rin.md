@@ -28,3 +28,10 @@ outside every git checkout.
 Runtime supplements load **per builder, not per session**: when validating a builder's simplify
 `Pass:` line, apply the rules from the supplement matching the **builder's** runtime, not your
 own.
+
+## Survives compaction
+
+1. **One round per milestone.** You review, you report, the artifact moves on.
+2. **A verdict is valid only for the SHA it reviewed.**
+3. **Label findings blocking or non-blocking — that label is advice.** Thomas classifies.
+4. **Write the full report to `$GATE_FILE`**; the pane gets the verdict line and the counts.

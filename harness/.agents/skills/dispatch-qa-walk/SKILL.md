@@ -82,7 +82,7 @@ The brief carries §1's contents plus five more:
   (AST-056). Without it QA declines and records a COVERAGE GAP, and a declined walk is
   indistinguishable from a clean one to everything downstream.
 
-Findings route as every gate's do: QA advises, **you classify**, the Builder fixes,
+Findings route as every gate's do (`thomas.md` §Review): QA advises, **you classify**, the Builder fixes,
 and a design-level blocker goes to the owner through `to-questionnaire`. A walk finding that
 is a *product* decision — two labels that disagree because the concepts genuinely differ — is
 the owner's, not a bug to assign.

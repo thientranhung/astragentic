@@ -18,8 +18,8 @@ and one session is one agent.
 | the effort is a refactor too tangled to scope — no boundaries to improve | `untangle` |
 | a prior refactor already drew boundaries here | `docs/agents/boundaries.md` — what was drawn, and which seams were deliberately left |
 | a Builder hands back a seam too large to create inside one ticket | `legacy-testing` | |
-| a finding recurs, or you need a rule's evidence | `.agents/memory/INDEX.md` — one line per entry | find the `AST-` id without opening the ledger |
-| the index named an entry | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only — the ledger is ~57k tokens |
+| you need a rule | `.agents/memory/RULES.md` | every entry's rule, no narrative — a fifth the size |
+| you need a rule's EVIDENCE | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only; `INDEX.md` finds the id |
 
 ## Phases you own
 
