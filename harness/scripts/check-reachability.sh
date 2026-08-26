@@ -75,6 +75,11 @@ def unqualify(name):
             return name[len(pre):]
     return name
 
+# Paths the project authors during adaptation. The harness references them and does not ship
+# them, so their absence in this package is correct. Named, not hidden in a regex — and
+# check-requirements.sh is what verifies them in an adapted project.
+PROJECT_SIDE_PREFIXES = ("docs/agents/", "docs/adr/")
+
 findings = []
 def fail(check, msg, detail=""):
     findings.append((check, msg, detail))
@@ -202,6 +207,15 @@ KNOWN = set(all_skills) | PLUGIN | USER_SKILLS
 # it appears in backticks and looks like a skill name; the list stays short on purpose,
 # because a long one would mean this check has stopped discriminating.
 NOT_A_SKILL = {
+    # Vocabulary from the two payload documents added to `sources`: the projects the tracker
+    # contract cites as its evidence base, and an orchestrator config key. Skill-shaped, and
+    # none of them is a skill.
+    "etsy-fulfillment-thanh", "workspace-app-inception", "builder-target",
+    # Triage labels. Skill-shaped, and the vocabulary lives in docs/agents/triage-labels.md.
+    "needs-triage", "ready-for-agent",
+    # A project make target, cited as the AST-115 example.
+    "db-down",
+
     "no-secrets-in-exports", "expand-contract", "recent-unwrapped", "code-map",
     "agent-not-idle", "agent-not-found", "agent-prompt-stalled", "read-only",
     "cross-vendor", "single-provider", "gate-arm", "wontfix-with-a-recorded-reason",
@@ -322,16 +336,41 @@ sources = {f"contract {r}": t for r, t in roles.items()}
 sources.update({f"supplement {r}": t for r, t in role_supplements.items()})
 sources.update({f"skill {n}": t for n, (_, t) in skills.items()})
 # Project-owned skills are the project's to maintain; this checker verifies the harness.
+# Payload documents that are neither a role nor a skill were scanned by nothing: the tracker
+# contract and the orchestrator both name paths, and a wrong one there is as dead as a wrong
+# one in a contract. Measured: tracker-contract.md prescribed `tools/project-status-sync.sh`,
+# a directory this package does not have, while check 4 reported clean.
+for _doc in ("tracker-contract.md", "orchestrator.md"):
+    _p = os.path.join(PAYLOAD, ".agents", _doc)
+    if os.path.isfile(_p):
+        sources[f"document {_doc}"] = read(_p)
 
 for src, text in sorted(sources.items()):
     # 4a. payload-relative paths
-    for ref in sorted(set(re.findall(r"`((?:\.agents|\.claude|\.opencode|\.codex|scripts)/[A-Za-z0-9_./-]+)`", text))):
-        if ref.endswith("/"):
+    # SCOPE, stated rather than implied. This matches PAYLOAD-SHAPED paths only. Widening it
+    # to every backticked `a/b` token was tried and reverted: it fired on model ids
+    # (`opencode-go/deepseek-v4-flash`), on placeholders (`provider/model`), on API fragments
+    # and on the worked examples inside bootstrap-glossary — eleven findings, one real. A
+    # checker that cries wolf is read past, which is the failure this package keeps paying for.
+    # `tools` is in the list because a contract prescribed `tools/project-status-sync.sh`, a
+    # directory this package does not have, and nothing saw it.
+    for ref in sorted(set(re.findall(
+            r"`((?:\.agents|\.claude|\.opencode|\.codex|scripts|tools|docs)/[A-Za-z0-9_./-]+)`", text))):
+        if ref.endswith("/") or "<" in ref or ref.count("*"):
             continue
-        if "<" in ref or ref.count("*"):
+        # PROJECT-SIDE, by design: authored during adaptation, not shipped, so absence here is
+        # correct. Named, not hidden in a regex — an unstated exclusion reads as a passed check.
+        if ref.startswith(PROJECT_SIDE_PREFIXES):
             continue
         if not os.path.exists(os.path.join(PAYLOAD, ref)):
             fail("4", f"{src} references {ref}, which does not exist in the payload")
+
+    # 4a-bis. Script invocations inside fenced blocks. A path a contract tells someone to RUN
+    # is not always backticked — the one that was wrong sat in a ```bash fence, where 4a has
+    # never looked.
+    for ref in sorted(set(re.findall(r"(?m)^\s*(?:bash\s+|sh\s+|python3\s+)?((?:scripts|tools)/[A-Za-z0-9_./-]+\.(?:sh|py))\b", text))):
+        if not os.path.exists(os.path.join(PAYLOAD, ref)):
+            fail("4", f"{src} invokes {ref}, which does not exist in the payload")
     # 4b. skill-shaped tokens
     for tok in sorted(set(re.findall(r"`([a-z][a-z0-9:]*(?:-[a-z0-9]+)+)`", text))):
         tok = unqualify(tok)
@@ -512,6 +551,19 @@ ARTIFACTS = [
     ("browser evidence",            r"browser evidence",      "builder", ["rin"]),
     ("gate file",                   r"GATE_FILE",             "rin",     ["review-with-rin"]),
     ("ledger line",                 r"`Ledger:`",             "thomas",  ["rin"]),
+    # The dispatch record was named as durable state by `thomas.md` and defined by nothing —
+    # no path, no shape, no owner — while four rules read it: the write-set overlap check,
+    # cleanup's exact IDs, a later session finishing a dispatch, and the Builder identity on
+    # every tracker whose assignee cannot hold one. Registered so a producer that goes quiet
+    # fails here rather than at the next collision.
+    ("dispatch record",             r"\.astraler/state/dispatch-record\.json|dispatch record",
+                                                              "dispatch-ticket", ["thomas"]),
+    # A walk that never ran and a walk that found nothing are the same silence downstream.
+    # Registering both halves means a producer going quiet fails here (AST-045/057/135).
+    ("qa walk report",              r"\.astraler/state/gate-history/walk-<artifact-key>-<short-sha>\.md|walk report|COVERAGE GAPS",
+                                                              "dispatch-qa-walk", ["thomas"]),
+    ("qa verified-clean list",      r"qa-verified-clean\.md|verified-clean",
+                                                              "qa",              ["dispatch-qa-walk"]),
     # A produced DOCUMENT is an artifact too, and this row is the one that survived the
     # 1.6.1 cull: three sibling skills wrote files that no contract and no plugin skill was
     # told to read, and every check here went green because each was NAMED. `CONTEXT.md`
@@ -617,7 +669,13 @@ if not findings:
               + ", ".join(sorted(set(PLUGIN_UNREAD)))
               + " — install the plugin to check them")
     print(f"\nAll reachability checks passed. Scope: {len(roles)} contracts, "
-          f"{len(skills)} skills, the adaptation prompt and the README role table.")
+          f"{len(skills)} skills, the tracker contract, the orchestrator, "
+          f"the adaptation prompt and the README role table.")
+    # Named in the verdict rather than left to the regex. Paths under these prefixes are
+    # authored by the project during adaptation; their absence HERE is correct, and
+    # check-requirements.sh is what answers for them in an adapted repo.
+    print("  Not checked, by design: " + ", ".join(PROJECT_SIDE_PREFIXES)
+          + " — project-authored, verified by check-requirements.sh instead.")
     if PROJECT_OWNED:
         # Named inside the verdict, not above it. A project skill this run never opened is
         # exactly what a reader takes the green to cover, and a new skill lands here on the

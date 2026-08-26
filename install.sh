@@ -41,19 +41,53 @@ fi
 # in one copy but not the other is invisible to the runtime that loads the other — measured
 # three times across two skills, each found in the field rather than at staging (AST-093).
 SKILL_SYNC_FAIL=0
-DIVERGENT_ALLOWLIST="codex-arm review-with-rin"
-for agents_skill in "$PAYLOAD/.agents/skills"/*/SKILL.md; do
-  [ -f "$agents_skill" ] || continue
-  skill_name="$(basename "$(dirname "$agents_skill")")"
-  claude_skill="$PAYLOAD/.claude/skills/$skill_name/SKILL.md"
-  [ -f "$claude_skill" ] || continue
-  # Skip known-divergent pairs
+# ALLOWLIST ONE PAIR, AND ONLY WHILE IT ACTUALLY DIVERGES. `codex-arm` diverges on purpose:
+# the .claude copy drops the `codex exec review` fallback, which exists only for a non-Claude
+# root. `review-with-rin` was allowlisted too and diffs zero lines — a dead exemption that
+# masks any future drift in exactly the pair it names. An allowlist entry that no longer
+# describes a real difference is worse than no allowlist, so an unused one now fails here.
+DIVERGENT_ALLOWLIST="codex-arm"
+# EVERY FILE, not just SKILL.md. WATCHING.md, CLEANUP.md and project-status-sync.sh are all
+# loaded at runtime and none of them was compared.
+for agents_file in "$PAYLOAD/.agents/skills"/*/*; do
+  [ -f "$agents_file" ] || continue
+  skill_name="$(basename "$(dirname "$agents_file")")"
+  base_name="$(basename "$agents_file")"
+  claude_file="$PAYLOAD/.claude/skills/$skill_name/$base_name"
   case " $DIVERGENT_ALLOWLIST " in *" $skill_name "*) continue ;; esac
-  if ! diff -q "$agents_skill" "$claude_skill" >/dev/null 2>&1; then
-    echo "ERROR: .agents/skills/$skill_name/SKILL.md differs from .claude/skills/$skill_name/SKILL.md" >&2
-    echo "  These copies must be identical (not in the divergent allowlist)." >&2
-    echo "  Diff:" >&2
-    diff "$agents_skill" "$claude_skill" | sed 's/^/    /' >&2
+  if [ ! -f "$claude_file" ]; then
+    echo "ERROR: .agents/skills/$skill_name/$base_name has no .claude/ twin" >&2
+    echo "  A file present in one tree and absent from the other is unreachable on the" >&2
+    echo "  runtime that loads the other tree, and the old check skipped it silently." >&2
+    SKILL_SYNC_FAIL=1
+    continue
+  fi
+  if ! diff -q "$agents_file" "$claude_file" >/dev/null 2>&1; then
+    echo "ERROR: .agents/skills/$skill_name/$base_name differs from its .claude/ twin" >&2
+    diff "$agents_file" "$claude_file" | sed 's/^/    /' >&2
+    SKILL_SYNC_FAIL=1
+  fi
+done
+# The reverse direction: a skill or file that exists only under .claude/ was invisible,
+# because the loop above never iterated that tree.
+for claude_file in "$PAYLOAD/.claude/skills"/*/*; do
+  [ -f "$claude_file" ] || continue
+  skill_name="$(basename "$(dirname "$claude_file")")"
+  base_name="$(basename "$claude_file")"
+  case " $DIVERGENT_ALLOWLIST " in *" $skill_name "*) continue ;; esac
+  if [ ! -f "$PAYLOAD/.agents/skills/$skill_name/$base_name" ]; then
+    echo "ERROR: .claude/skills/$skill_name/$base_name has no .agents/ twin" >&2
+    SKILL_SYNC_FAIL=1
+  fi
+done
+# An allowlist entry that no longer diverges is a dead exemption. Fail on it.
+for skill_name in $DIVERGENT_ALLOWLIST; do
+  a="$PAYLOAD/.agents/skills/$skill_name/SKILL.md"
+  c="$PAYLOAD/.claude/skills/$skill_name/SKILL.md"
+  [ -f "$a" ] && [ -f "$c" ] || continue
+  if diff -q "$a" "$c" >/dev/null 2>&1; then
+    echo "ERROR: '$skill_name' is in DIVERGENT_ALLOWLIST but the copies are identical" >&2
+    echo "  Remove it from the allowlist — it is masking future drift in this pair." >&2
     SKILL_SYNC_FAIL=1
   fi
 done
@@ -212,6 +246,29 @@ cp "$HARNESS_ROOT/VERSION"            "$STAGING_DIR/VERSION"
 [ -d "$HARNESS_ROOT/templates" ] && cp -R "$HARNESS_ROOT/templates" "$STAGING_DIR/templates"
 find "$STAGING_DIR" -name '.DS_Store' -delete
 
+# THE SELF-CHECKS RUN HERE, at staging. Commit 54c85c2 kept them out of role contracts on
+# purpose — a rule in a contract is read every time a role starts, and most projects never
+# edit the harness. That argument holds, and it leaves exactly one moment where the cadence
+# belongs: the release. This script already refuses to stage on a bad RELEASE-NOTES heading
+# and on skill-sync drift; it ran none of the three checks written to catch the rest.
+SELFCHECK_FAIL=0
+for _c in "check-reachability:python3 $HARNESS_ROOT/harness/scripts/check-reachability.sh $HARNESS_ROOT" \
+          "docs-staleness:bash $HARNESS_ROOT/harness/scripts/docs-staleness-audit.sh $HARNESS_ROOT" \
+          "ledger-index:bash $HARNESS_ROOT/harness/scripts/ledger-index.sh --check"; do
+  _name="${_c%%:*}"; _cmd="${_c#*:}"
+  if ! _out="$($_cmd 2>&1)"; then
+    echo "ERROR: $_name failed — the release does not ship until it passes" >&2
+    printf '%s\n' "$_out" | sed 's/^/    /' >&2
+    SELFCHECK_FAIL=1
+  fi
+done
+[ "$SELFCHECK_FAIL" -eq 0 ] || {
+  echo >&2
+  echo "Three checks, run together on purpose: they catch different classes, and a release" >&2
+  echo "that ran only one shipped defects of the other two." >&2
+  exit 1
+}
+
 if [ -d "$RELEASE_DIR" ]; then
   if diff -qr "$STAGING_DIR" "$RELEASE_DIR" >/dev/null 2>&1; then
     echo "Astraler release $VERSION is already staged and unchanged."
@@ -262,7 +319,10 @@ if [ "$APPLY" -eq 1 ]; then
   fi
   echo
 
-  OWNER_PATHS=".agents/orchestrator.md .claude/settings.json"
+  # Scaffold: written once, never overwritten. `.codex/profiles/` is named as scaffold by
+  # ADAPT-HARNESS alongside orchestrator.md and was surviving only because arbitration
+  # happened to land on kept/CONFLICT — incidental, not declared.
+  OWNER_PATHS=".agents/orchestrator.md .claude/settings.json .codex/profiles"
   # The arbiter for "did the project change this, or did the package?" is the release the
   # project last received. `state/applied-version` records it — but a project may predate
   # project adapted before that has a full harness and no marker. Fall back to the newest
@@ -285,7 +345,11 @@ if [ "$APPLY" -eq 1 ]; then
 
     # owner files: only when absent
     OWNED=0
-    for o in $OWNER_PATHS; do [ "$REL" = "$o" ] && OWNED=1; done
+    # Exact match OR directory prefix: an entry naming a directory (.codex/profiles) has to
+    # own every file under it, or the scaffold rule protects the name and not the contents.
+    for o in $OWNER_PATHS; do
+      case "$REL" in "$o"|"$o"/*) OWNED=1 ;; esac
+    done
     if [ "$OWNED" -eq 1 ]; then
       if [ -e "$DST" ]; then
         echo "  owner   $REL (kept — yours)"; N_OWNER=$((N_OWNER+1))
@@ -329,7 +393,20 @@ if [ "$APPLY" -eq 1 ]; then
   echo
   echo "  new $N_NEW · updated $N_UPD · unchanged $N_SAME · kept $N_KEPT · owner-kept $N_OWNER · conflicts $N_CONFLICT"
   # --apply lands the payload; ADAPT-HARNESS section 7 still owns the semantic half.
-  [ "$PLAN" -eq 1 ] || { mkdir -p "$(dirname "$APPLIED_FILE")"; printf '%s\n' "$VERSION" > "$APPLIED_FILE"; }
+  #
+  # DO NOT STAMP OVER OUTSTANDING CONFLICTS. `applied-version` is the arbiter for the NEXT
+  # upgrade and the ownership manifest `check-reachability.sh` reads. Stamping it while files
+  # are unreconciled tells both consumers a release landed cleanly when it did not, and the
+  # lie is silent. A run with conflicts leaves the previous marker in place; re-run once the
+  # conflicts are resolved, or stamp by hand having decided.
+  if [ "$PLAN" -eq 0 ]; then
+    if [ "$N_CONFLICT" -gt 0 ]; then
+      echo "  NOTE: applied-version NOT stamped — $N_CONFLICT conflict(s) outstanding."
+      echo "        Resolve them, then re-run, or write $VERSION into $APPLIED_FILE by hand."
+    else
+      mkdir -p "$(dirname "$APPLIED_FILE")"; printf '%s\n' "$VERSION" > "$APPLIED_FILE"
+    fi
+  fi
 
   if [ "$N_CONFLICT" -gt 0 ]; then
     echo

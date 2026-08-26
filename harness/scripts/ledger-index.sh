@@ -25,8 +25,11 @@ INDEX="$(dirname "$LEDGER")/INDEX.md"
 
 # Surfaces a citation must appear in to count an entry LIVE.
 CITE_DIRS=()
+# `scripts/` is a citation surface like any other: an entry whose rule became code is the
+# most-matured kind there is, and leaving the directory out reported 14 such entries as
+# uncited — the index calling its own best entries dead.
 for d in "$ROOT/.agents/roles" "$ROOT/.agents/skills" \
-         "$ROOT/.claude/agents" "$ROOT/.claude/skills"; do
+         "$ROOT/.claude/agents" "$ROOT/.claude/skills" "$ROOT/scripts"; do
   [[ -d "$d" ]] && CITE_DIRS+=("$d")
 done
 ORCH="$ROOT/.agents/orchestrator.md"

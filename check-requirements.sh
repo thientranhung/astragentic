@@ -11,12 +11,20 @@ set -uo pipefail
 
 TARGET=""
 CHECK_OPTIONAL=0
+# Two questions, two strictness levels. Before adaptation the three docs/agents files are
+# EXPECTED to be absent, so their absence is a warning. After adaptation their absence is a
+# broken install — and until this flag existed the run said "All required checks passed" on a
+# repo containing no harness at all, because every TARGET finding was a warn.
+ADAPTED=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --optional-too) CHECK_OPTIONAL=1; shift ;;
+    --adapted) ADAPTED=1; shift ;;
     -h|--help)
-      echo "Usage: $0 [target-repo-path] [--optional-too]"
+      echo "Usage: $0 [target-repo-path] [--optional-too] [--adapted]"
+      echo "  --adapted   the target has finished adapting: the docs/agents files are"
+      echo "              REQUIRED, not expected-absent. ADAPT-HARNESS runs this form."
       exit 0 ;;
     -*) echo "Unknown option: $1" >&2; exit 2 ;;
     *)
@@ -355,8 +363,13 @@ else
     if [ -f "$TARGET/docs/agents/${DOC}.md" ]; then
       ok "docs/agents/${DOC}.md"
     else
-      warn "docs/agents/${DOC}.md not present yet" \
-        "the OWNER types /setup-matt-pocock-skills in that repo (no model can invoke it) during adaptation; expected to be absent before then"
+      if [ "$ADAPTED" = "1" ]; then
+        miss "docs/agents/${DOC}.md is missing after adaptation" \
+          "thomas.md reads it at session start; the OWNER types /setup-matt-pocock-skills in that repo (no model can invoke it)"
+      else
+        warn "docs/agents/${DOC}.md not present yet" \
+          "the OWNER types /setup-matt-pocock-skills in that repo (no model can invoke it) during adaptation; expected to be absent before then"
+      fi
       TARGET_READY=0
     fi
   done
@@ -370,7 +383,10 @@ else
     # reported OK for a payload with three new files and one edited file, none of
     # them yet committed). Walk every payload file actually on disk instead of a
     # sample, and check content against HEAD, not just presence in the index.
-    if [ "$TARGET_READY" = "1" ]; then
+    # AST-036 does not depend on the docs. Gating it on TARGET_READY meant three missing
+    # markdown files suppressed the check that Builder worktrees can see the contracts at
+    # all — the weaker finding silencing the stronger. Run it always.
+    if true; then
       if ! git -C "$TARGET" rev-parse --verify --quiet HEAD >/dev/null; then
         miss "target repo has no commits yet" \
           "every payload file is uncommitted by definition; commit at least once before dispatching a Builder"

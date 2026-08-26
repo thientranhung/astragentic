@@ -22,9 +22,16 @@
 # stated rather than discovered later.
 set -uo pipefail
 
-ROOT="."
-PAYLOAD="harness"
-[[ -d "$PAYLOAD/.agents/roles" ]] || PAYLOAD="."
+# Self-locate rather than trust the caller's cwd. Run from a dirty repo against a clean
+# worktree, a CWD-relative root measured the WRONG TREE while reporting on the right one —
+# which is how this audit's own first measurement came out wrong. `ledger-index.sh` already
+# resolves its root this way; two scripts documented to run in the same breath must not
+# resolve it by different rules.
+ROOT="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+# Derive the payload from ROOT, not from the caller's cwd. A bare relative `harness` here was
+# the real CWD dependency: every axis below resolves through $PAYLOAD.
+PAYLOAD="$ROOT/harness"
+[[ -d "$PAYLOAD/.agents/roles" ]] || PAYLOAD="$ROOT"
 FOUND=0
 
 echo "=== 1. always-on word budgets (these surfaces bill every session) ==="

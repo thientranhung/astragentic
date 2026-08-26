@@ -452,8 +452,14 @@ if os.path.exists(os.path.join(project_root, ".agents", ".paused")):
     sys.exit(0)
 
 # Find Thomas in this workspace (title may have spinner prefix like "◑ thomas")
+# Match the herdr agent NAME first, title second. AST-084 measured Claude overwriting the pane
+# title, and its fix was applied to is_dispatched() twelve lines below and not here — so one
+# overwritten title reached the sys.exit(0) underneath and silenced every pane alert that poll.
 thomas = next((a for a in ws_agents
-               if (a.get("terminal_title_stripped") or "").endswith("thomas")), None)
+               if (a.get("name") or "").lower().endswith("thomas")), None)
+if thomas is None:
+    thomas = next((a for a in ws_agents
+                   if (a.get("terminal_title_stripped") or "").endswith("thomas")), None)
 
 if not thomas:
     try:
@@ -520,8 +526,9 @@ for d in dispatched:
             ["pgrep", "-f", f"herdr-watch-terminal.sh {dpane}"],
             capture_output=True, timeout=5).returncode == 0
     except Exception:
-        has_w = True
-
+        # Fail CLOSED. A pgrep that raised told us nothing, and defaulting to True turned an
+        # unanswered question into an all-clear — the AST-032 shape inside the watchdog itself.
+        has_w = False
     if dstatus == "blocked":
         print(f"BLOCKED|{dpane}_blocked|workspace={ws_label} thomas={tpane}({tstatus}) {dname}={dpane}(blocked) — builder asking a question, read pane and answer")
     elif dstatus in ("idle", "done") and not has_w and not any_working and not thomas_busy:
