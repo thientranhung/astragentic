@@ -9,9 +9,24 @@ Role contract: `.agents/roles/qa.md`. The gate-file setup, the pane form and the
 checks are identical to `review-with-rin` §2–3 and are **not restated here** — that skill is
 their one home. This skill owns only what a walk needs and the other gates do not.
 
+## When it fires — count, do not judge
+
+**Before a PR, a merge or a release**, on anything with a user-visible surface or a public
+endpoint. That is a judgement about your own workload, and a gate that fires on a judgement
+starves exactly as one that fires on a sentence does. It has been measured three times, on
+three designs: a browser walker shipped across releases and **never ran once** (AST-045,
+AST-057), and nine fold rounds with one merge in half a day where **QA was never dispatched at
+all** (AST-135).
+
+So carry the same counter Rin's gate carries: **more than 10 merges touching a user-visible
+surface since the last walk is a STOP** — dispatch the walk, or write down why not. `none
+touched a surface` is a valid answer; not having counted is not.
+
 ## The sequence
 
-1. **Create `gate-walk-<artifact-key>`** at the reviewed SHA — never the Builder's checkout.
+1. **Create the gate worktree** at the reviewed SHA — never the Builder's checkout. The
+   command is `review-with-rin` §2, which names it `gate-<artifact-key>`; this skill used to
+   call it `gate-walk-…`, and the skill that owns the command wins.
 2. **Start the app there** with the project's own command.
 3. **Pack the brief** — `review-with-rin` §1 plus the five below.
 4. **Dispatch as a gate pane** and collect the report — mechanics are `review-with-rin` §2–3.
@@ -51,13 +66,56 @@ The brief carries §1's contents plus five more:
   it exists to find.
 - **The design guidelines**, by path. Without them a finding is an observation rather than a
   violation, and QA will say so.
-- **The previous walk's verified-clean list**, so coverage accumulates instead of resetting.
+- **The previous walk's verified-clean list**, read from
+  `.astraler/state/qa-verified-clean.md`, so coverage accumulates instead of resetting. Where
+  there is no file, say so — QA runs full rather than guessing what was covered.
+- **Browser consent, and every authorized mutation, named exactly.** `qa.md` calls this a
+  required dispatch field and this list is where it becomes one: a rule a careful operator
+  forgets within the hour needs a slot that blocks the launch, not a sentence elsewhere
+  (AST-056). Without it QA declines and records a COVERAGE GAP, and a declined walk is
+  indistinguishable from a clean one to everything downstream.
 
 Findings route as every gate's do: QA advises, **you classify**, the Builder fixes,
 and a design-level blocker goes to the owner through `to-questionnaire`. A walk finding that
 is a *product* decision — two labels that disagree because the concepts genuinely differ — is
 the owner's, not a bug to assign.
 
-Cleanup adds step 5 before the worktree removal: stop the app you started, and confirm the
-port is free.
+## 4. Write `.astraler/state/gate-history/walk-<artifact-key>-<short-sha>.md`
+
+The walk report, copied out of `$GATE_FILE` by `review-with-rin` §3 before any cleanup. Same
+archive as every other gate's, so "why did we merge this SHA" has one place to look. **You read
+it** — the findings become your work orders and the COVERAGE GAPS section tells you what the
+walk did not cover, which is the half a green verdict hides.
+
+**The verified-clean list is written separately**, by QA, to
+`.astraler/state/qa-verified-clean.md`, and you pack it into the next walk's brief.
+
+## 5. Cleanup — ordered, and different from every other gate's
+
+A walk is the most resource-bearing operation in the harness: it starts an app. `review-with-rin`
+removes its worktree with a plain `git worktree remove` and explains why that succeeds — *"Rin
+writes nothing inside the gate worktree"*. **That reasoning does not transfer.** A running app
+writes caches, logs and local state, so the plain form refuses on untracked files, and the
+refusal is this gate's NORMAL outcome rather than a signal.
+
+Order matters, and the reason is that a resource bound by `--cwd` or by a compose label derived
+from the directory cannot be matched once the directory is gone (AST-100, AST-101):
+
+```bash
+kill "$APP_PID"                                     # the pid you captured at step 2
+lsof -ti :"$APP_PORT" | xargs -r kill               # confirm the port is actually free
+proj=$(basename "$GATE_WORKTREE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]//g')
+ids=$(docker ps -q --filter "label=com.docker.compose.project=$proj")
+[ -n "$ids" ] && docker stop $ids                   # THIS worktree's containers only
+git worktree remove --force "$GATE_WORKTREE"        # --force: the app dirtied the tree
+git worktree prune
+```
+
+**Never a blanket `docker compose down`.** One scoped-looking `db-down` stopped the shared test
+container every live Builder was standing on (AST-115). Scope by the compose label this worktree
+produced, or stop nothing.
+
+On a Claude root `scripts/hook-git-guard.sh` performs the broker and container half before it
+lets the removal through. It is a `PreToolUse` hook and does not exist on Codex or opencode, so
+the block above is the contract on every runtime.
 

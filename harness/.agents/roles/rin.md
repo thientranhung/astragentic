@@ -112,7 +112,12 @@ owns the standard regardless of who holds the trigger:
   blocking finding — a step, not a judgement call.** It reviews the **full artifact**, never
   only the findings, because what it catches is the defect the FIX introduced, which by
   definition nobody has looked at yet. Left to discretion, every reason to skip is true and the
-  measured outcome was a deadlock living inside the repair.
+  measured outcome was a deadlock living inside the repair. The cap bounds passes **inside** a
+  gate and nothing bounds opening new ones, so a fresh gate must earn the name: the inter-gate
+  change was structural rather than a patch, the marker body declares the prior gates and their
+  output files, and it converges. Absent those, `fold → fresh gate` repeated is a laundered
+  final gate, and every per-field check passes on it honestly. Code from a phase that **had not
+  run yet** owes a fresh gate; `Unreviewed-delta:` is for a fold.
 - **Findings route by artifact**, exactly as above — the arm is not an exception.
 - **An unavailable vendor is recorded, not substituted**: `cross-vendor arm: NOT RUN —
   <reason>`. Only the **owner** may accept proceeding without it — releasing the Shaper to cut

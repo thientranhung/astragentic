@@ -151,8 +151,9 @@ production measurements and code, so `no-secrets-in-exports` binds them — henc
 # after the pane reports, BEFORE any cleanup — all fail-closed
 set -euo pipefail
 test -s "$GATE_FILE"                                          # exists and non-empty
-mkdir -p <gate-history-dir>
-DEST="<gate-history-dir>/<artifact-key>-<short-sha>.md"
+GATE_HISTORY="$(git rev-parse --show-toplevel)/.astraler/state/gate-history"
+mkdir -p "$GATE_HISTORY"
+DEST="$GATE_HISTORY/<artifact-key>-<short-sha>.md"
 [ -e "$DEST" ] && { echo "STOP: $DEST exists — concurrent gate on the same artifact AND
   SHA; take it to the owner"; exit 1; }
 cp "$GATE_FILE" "$DEST"

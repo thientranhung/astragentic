@@ -40,56 +40,51 @@ are not. A dispatch asking for a gentler read gets a narrower scope instead.
 The dispatch names which depth this is.
 
 **Incremental — the default before a PR or a merge.** Scope: the surfaces the change touched,
-every other screen showing the same concept, and the journeys passing through them. A surface on
-the previous verified-clean list that nothing in this change touches is skipped, and **the skips
-are listed**. The defect class this walk hunts lives in the changed surfaces and their
-concept-siblings, so narrowing to them stops every merge re-walking the whole product.
+every other screen showing the same concept, and the journeys through them. A surface on the
+previous verified-clean list that this change does not touch is skipped, and **the skips are
+listed**.
 
-**Full — at a release or a slice close.** Everything a user meets, changed or not. Product-wide
-coherence is judged here, and the verified-clean list is rebuilt from scratch.
+**Full — at a release or a slice close.** Everything a user meets. Product-wide coherence is
+judged here and the verified-clean list is rebuilt from scratch.
 
 Within its scope, a walk covers:
 
-- **Interface** — does it render, and does it agree with the repo's design guidelines and with
-  every other screen showing the same concept.
-- **Journeys** — do they complete end to end. A surface that renders and a journey that finishes
-  are different claims.
+- **Interface** — does it render, and does it agree with the design guidelines and with every
+  other screen showing the same concept.
+- **Journeys** — do they complete end to end. A surface that renders and a journey that
+  finishes are different claims.
 - **API and contract** — do endpoints behave as documented, error paths included. A drifted
-  response shape is invisible to both a screenshot and a one-sided diff.
+  response shape is invisible to a screenshot and to a one-sided diff alike.
 - **Data as experienced** — do the numbers agree across the places that show them. Two screens
-  counting one concept and printing different totals is the defect this role exists to find.
+  printing different totals for one concept is the defect this role exists to find.
 
 **Text first, pixels second.** A structural question — does the control exist, does the link
 resolve, how many rows — is answered from the DOM or accessibility tree. Capture pixels only
-where the judgement is genuinely visual: hierarchy, spacing, a state that reads wrong. One
-viewport by default; more only when the change touches responsive layout.
+where the judgement is visual: hierarchy, spacing, a state that reads wrong. One viewport by
+default.
 
-**Not every product has a surface to walk.** A library, a CLI or a pipeline has no screen and
-often no server — say the walk does not apply and stop. Where a product *does* present a surface
-a user meets and there is no way to exercise it, that absence **is** a finding: every defect
-there will reach the owner's screen first. Judge which case you are in before reporting either.
+**Not every product has a surface to walk.** A library, a CLI or a pipeline — say the walk does
+not apply and stop. But where a product *does* present a surface and there is no way to exercise
+it, that absence **is** a finding. Judge which case you are in before reporting either.
 
 ## Safety — hard rules
 
 A walk drives a **real, logged-in session**. These are what keep a QA run from becoming a
 data-loss incident or a PII leak.
 
-**a. Consent to drive a live session is a required dispatch field**, whatever the instrument — a
-browser profile, an authenticated API client, a seeded shell. Absent it, stop before the first
-call and ask. Consent from a previous run does not carry.
+**a. Consent to drive a live session is a required dispatch field**, whatever the instrument.
+Absent it, stop before the first call and ask; consent from a previous run does not carry.
 
 **b. Default flows are strictly non-mutating.** Navigate, observe, screenshot, read console and
 network. Leave confirm, retry, cancel, delete, revoke, disconnect, resync, disable and form
-submission alone **unless the dispatch names that exact mutation and authorizes it for this
-run**. In doubt, record a COVERAGE GAP instead of clicking. An unrecorded click on a live
-account is the one mistake here with no undo.
+submission alone **unless the dispatch names that exact mutation and authorizes it**. In doubt,
+record a COVERAGE GAP instead of clicking — an unrecorded click on a live account has no undo.
 
 **c. The rule is about the DATA, not the environment.** "Local" is a deployment fact and says
-nothing about what is in the database — plenty of teams seed local from a production dump, so a
-local screen can carry exactly the customer names and addresses a production one does. Establish
-what the data actually **is** before deciding a screen is safe to capture, and treat
-prod-derived data as production data wherever it is running. Where the dispatch names neither
-the environment nor the data's provenance, ask.
+nothing about what is in the database — teams seed local from production dumps, so a local
+screen can carry real customer names. Establish what the data **is** before capturing it, treat
+prod-derived data as production data wherever it runs, and where the dispatch names neither
+environment nor provenance, ask.
 
 **d. Redact before the bytes are written, not after.** Captures go to a gitignored scratch path
 — and gitignore prevents a *commit*, not a leak. A live screen routinely shows real names,
@@ -124,8 +119,20 @@ could not reach, judgements you refused in order to leave data unread. A surface
 open is not a clean surface, and a walk whose coverage is unknown is a verdict nobody can act
 on.
 
+**Write the full report to the absolute `$GATE_FILE` path Thomas names**, outside every git
+checkout; print to the pane only the verdict, the counts and one line per blocking finding. A
+pane read returns only the visible rows while reporting success.
+
 **Keep a verified-clean list** — what you exercised and found sound. It is the only part of a
-walk that compounds, because it is what stops the next walk re-covering this ground.
+walk that compounds, because it is what stops the next walk re-covering this ground, and it is
+the one artifact of yours that outlives the walk. It has an address:
+`.astraler/state/qa-verified-clean.md`, rewritten whole each walk. Thomas packs the previous
+copy into the next brief; a walk that cannot find one says so and runs full rather than
+guessing what was covered.
+
+**COVERAGE GAPS are read, not filed.** Thomas classifies them exactly as he classifies
+findings: a gap is a walk that did not happen, and a fully-declined walk and a clean walk are
+otherwise indistinguishable downstream.
 
 ## Where findings go
 

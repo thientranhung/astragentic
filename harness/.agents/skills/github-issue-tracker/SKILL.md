@@ -37,8 +37,25 @@ Exactly one of `backlog` / `todo` / `in-progress` at a time, so a status change 
 gh issue edit <n> --remove-label todo --add-label in-progress
 ```
 
-**Assigning is the claim**, written before the worktree exists, so two sessions picking from one
-frontier see each other. Requirement 3 is met natively.
+## The claim protocol is WEAKER here, and git is what carries it
+
+**Assigning is the claim**, written before the worktree exists. But `gh issue edit <n>
+--add-assignee @me` writes a real GitHub login, and **a login is one identity for every
+dispatcher** — the method's `builder/<ticket-id>` is not a login and cannot be stored. So
+requirement 3 is **not** met natively, and a readback here cannot tell whose claim it read.
+
+- **The claim** is `--add-assignee @me`. That is what removes the ticket from the frontier.
+- **The Builder identity** goes in the dispatch record
+  (`.astraler/state/dispatch-record.json`), since no field holds it.
+- **The readback interlock is weakened; the git one is not.** `git worktree add -b
+  <ticket-branch>` failing is the *only* thing that decides a same-second race. Losing it
+  means leaving the assignee exactly as you found it.
+- **Releasing a claim**: "clear only when a fresh readback shows your own" cannot be evaluated
+  here. Confirm the branch and worktree are gone instead — the worktree, not the tracker, is
+  what says a Builder is still live.
+
+**So concurrency on one login rests entirely on git.** If it grows past a couple of panes, the
+fix is one GitHub account per Builder identity, not a looser protocol.
 
 **GitHub has no priority field.** Urgency belongs in the body and in the router's ordering. Do
 not simulate it with labels — a label nobody sorts by is noise.

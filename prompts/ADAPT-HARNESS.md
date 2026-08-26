@@ -10,8 +10,11 @@ owner rather than resolving it with an overwrite.
 ## 1. Resolve the installation state
 
 1. Read `.astraler/CANDIDATE` — call its value `<candidate>`.
-2. Read `.astraler/releases/<candidate>/RELEASE-NOTES.md` **first**: it owns this release's
-   semantic intent, breaking changes and migration guidance. Then its `VERSION`, `README.md`,
+2. Read `.astraler/releases/<candidate>/RELEASE-NOTES.md` **first — but only this release's
+   section**: the file is ~34k words and 111 version headings, and reading it whole costs
+   ~50k tokens of history that no role contract ever reads. `sed -n '/^## <candidate>/,/^## /p'`
+   gets the section that owns this release's semantic intent, breaking changes and migration
+   guidance. Read further back only when this release's notes send you there. Then its `VERSION`, `README.md`,
    the role contracts under `harness/.agents/roles/`, and the skills the contracts name.
    Load a skill's body when you need its contract, rather than preloading all of them.
 3. Read `.astraler/state/applied-version` when present. A named `<previous>` makes this an
@@ -309,13 +312,23 @@ counts go to the owner in your handback; they have no later reader and do not ne
 Run checks proportional to what changed:
 
 - `git diff` — confirm unrelated project work is untouched;
-- `bash -n` on shell scripts, and parse any Codex TOML;
-- `./check-requirements.sh .` passes both axes;
+- `bash -n` on shell scripts, and parse any Codex TOML. **`scripts/check-reachability.sh` is
+  Python despite its extension** — `bash -n` on it exits 2 with `import: command not found`;
+  run `python3 scripts/check-reachability.sh .` instead;
+- **`./check-requirements.sh . --adapted` passes both axes.** The `--adapted` flag is what
+  makes the three `docs/agents/*.md` files REQUIRED rather than expected-absent; without it a
+  repo with no harness at all still reports "All required checks passed";
 - **`scripts/check-reachability.sh` exits 0.** It enforces that every phase the method names
   is owned by exactly one contract, that every shipped skill is reached by something, and
   that every path, agent and profile a contract or skill names actually exists. A contract
   naming a file that does not exist is how the prior package failed, so this is a hard
   failure rather than a warning;
+- **A project that gitignores `.astraler/` must say so here.** `check-reachability.sh` reads
+  its ownership manifest from the staged release and hard-fails at check 0 when that
+  directory is absent — so on a fresh clone of such a project the gate can never pass. Either
+  commit `.astraler/state/applied-version` (it is one line and names no secret), or record in
+  the project's entry doc that reachability runs only where the release is on disk. Leaving
+  both unstated is the state that fails silently on someone else's machine;
 - **`scripts/docs-staleness-audit.sh` and `scripts/ledger-index.sh`**, in the same breath as
   the check above, whenever this run edited a contract, a skill or the ledger. The first
   measures word budgets and re-derives every number a document states about itself; the

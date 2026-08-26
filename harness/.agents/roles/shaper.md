@@ -14,7 +14,9 @@ and one session is one agent.
 | deciding where a seam goes | `codebase-design` | this is the only session that can see the whole picture |
 | the effort introduces or sharpens domain terms | `domain-modeling` | |
 | an Align answer needs a source | `research`, `prototype` | |
-| the effort is a refactor too tangled to scope | `untangle` | |
+| the effort is a refactor and the code HAS module boundaries | `improve-codebase-architecture` |
+| the effort is a refactor too tangled to scope — no boundaries to improve | `untangle` |
+| a Builder hands back a seam too large to create inside one ticket | `legacy-testing` | |
 | a finding recurs, or you need a rule's evidence | `.agents/memory/INDEX.md` — one line per entry | find the `AST-` id without opening the ledger |
 | the index named an entry | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only — the ledger is ~57k tokens |
 
@@ -37,6 +39,12 @@ produces something shaped like a spec that nothing downstream can tell from the 
 ## STOP after Spec
 
 `arm: spec` fires between Spec and Tickets.
+
+**Publish the spec at `needs-triage`, not at `ready-for-agent`.** `to-spec` applies
+`ready-for-agent` at publish, and that is the label Thomas's frontier query treats as
+claimable — so an unreviewed spec's tickets sit on the frontier while `arm: spec` has not yet
+run. Downgrade the label in the same turn `to-spec` closes; Thomas promotes it after he
+classifies the arm's findings.
 
 **When `to-spec` closes, hand the spec back to Thomas and wait.** Thomas fires the
 cross-vendor **`arm: spec`**, classifies what it returns, and only then tells you to cut the

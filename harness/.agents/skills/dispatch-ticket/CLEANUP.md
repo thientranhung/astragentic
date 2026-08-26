@@ -106,15 +106,46 @@ self-check (`builder.md`), but the mechanism that causes the skip also displaces
 self-check, so Thomas verifies independently.
 
 **Only when both checks pass** — `git status` empty AND `markers == wellformed + superseded`
-with every named SHA verified — is
-removal safe:
+with every named SHA verified — is removal safe.
+
+**Kill the worktree's resources BEFORE removing it.** A broker is bound by `--cwd` and a
+container by a compose label derived from the directory name; once the directory is gone
+neither can be matched, so a kill ordered after the removal finds nothing and reports success
+(AST-100, AST-101). Scope both to THIS worktree — a blanket `docker compose down` once stopped
+the shared test container every live Builder was standing on (AST-115).
 
 ```bash
+# 1. resources first, matched by this worktree's path — never `pkill -f` by name
+ps -eo pid=,command= | grep app-server-broker | grep -F -- "<worktree-path>" | awk '{print $1}' | xargs -r kill
+proj=$(basename "<worktree-path>" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]//g')
+ids=$(docker ps -q --filter "label=com.docker.compose.project=$proj"); [ -n "$ids" ] && docker stop $ids
+
+# 2. then the worktree, then the branch
 git worktree remove <worktree-path>
 git branch -d <ticket-branch>
+
+# 3. prune, and verify — this is the post-condition, not a formality
 git worktree prune
+git worktree list; git branch --list '<ticket-branch>'   # both must be gone
 ```
 
-`-D` is for an explicitly owner-approved abandonment. Close only what this dispatch created.
-Cleanup is complete when the Herdr tab and the Git worktree and branch are all retired, or
-an exact retained-state reason is recorded for each survivor.
+`git worktree prune` clears the registration that a removal leaves behind. It matters for the
+**next** `add`, not for this remove: a stale `.git/worktrees/<name>/` makes the next add refuse,
+silently whenever its output was redirected (AST-096). Never `rm -rf` a worktree — that removes
+the directory and leaves the registration.
+
+**`git branch -d` refuses after a squash merge**, because the branch's commits are not
+ancestors of the merge. That refusal is expected, not an anomaly: confirm the work is on the
+base with `git log <base> --oneline --grep '<ticket-id>'`, then `-D` and record the ticket id
+as the reason. `-D` without that confirmation is for an explicitly owner-approved abandonment
+only.
+
+**On a Claude root, `scripts/hook-git-guard.sh` performs steps 1 and 2's preconditions
+automatically** — it refuses a removal that would destroy uncommitted work or kill a live
+process, and it stops the resources first. It is a `PreToolUse` hook, so it does not exist on a
+Codex or opencode root: the steps above are the contract, and the hook is a second layer under
+it, never a replacement for it.
+
+Close only what this dispatch created. Cleanup is complete when the Herdr tab and the Git
+worktree and branch are all retired **and the verification in step 3 shows them gone**, or an
+exact retained-state reason is recorded for each survivor.

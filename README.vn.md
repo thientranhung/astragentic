@@ -193,6 +193,41 @@ thành lore mà phiên sau coi như sự thật — nguy hiểm hơn là không 
 
 ---
 
+## Greenfield — phiên đầu tiên
+
+Repo trống thì **bỏ qua `bootstrap-glossary` và `batch-triage`** — cả hai đọc thứ chưa tồn
+tại. Glossary sẽ do `grill-with-docs` sinh ra ở bước 2.
+
+Gõ những câu sau vào tab `thomas`, theo thứ tự. Mỗi bước chờ artifact của bước trước.
+
+**1. Xác nhận nền**
+> Đọc `docs/agents/issue-tracker.md`. Báo tôi: tracker nào, prefix ticket là gì, project id
+> đã có chưa. Repo chưa có code — đừng suy ra gì từ code.
+
+**2. Đưa ý tưởng vào**
+> Ý tưởng: `<mô tả 3-5 câu>`. Nếu nó lớn hơn một session và còn mù mờ thì chạy
+> `/mattpocock-skills:wayfinder`. Nếu đích đã rõ thì dispatch Shaper với brief mở đầu bằng
+> `/mattpocock-skills:grill-with-docs`.
+
+**3. Trả lời grill.** Phần tốn công nhất và không né được. Repo trống nghĩa là **anh là nguồn
+duy nhất** — mọi câu Shaper không hỏi sẽ thành thứ nó tự bịa.
+
+**4. Bắt Thomas bắn `arm: spec`**
+> Spec xong chưa? Bắn `arm: spec` trước khi cho Shaper cắt ticket, rồi báo tôi findings.
+
+Trên greenfield không có code hiện hữu để mâu thuẫn lại một seam sai. Spec là artifact duy
+nhất, nên đây là cửa chặn thật chứ không phải thủ tục.
+
+**5. Ticket đầu tiên là tracer bullet, không phải feature**
+> Ticket #1 phải chạy được end-to-end xuyên mọi tầng, dù mỏng. Nếu `to-tickets` cắt ra một
+> ticket chỉ dựng một tầng thì báo tôi.
+
+**6. Chỉ bật `/loop` khi đã có 3-4 ticket không phụ thuộc nhau.** Vài slice đầu frontier là
+một chuỗi thẳng, `builder-target` không chạm tới được — đó là frontier nói thật, không phải
+Thomas lười.
+
+---
+
 ## Bắt đầu nhanh
 
 ### Yêu cầu

@@ -156,11 +156,18 @@ gitignored (AST-028). A relative path once resolved through a stale shell cwd to
 unexpected location, which is why the absolute form is fixed here.
 
 ```bash
-git worktree list
-git worktree add -b <ticket-branch> <worktree-path> <base>   # ABSOLUTE
+git worktree prune                                           # FIRST — see below
+git worktree add -b <ticket-branch> <worktree-path> <base>   # ABSOLUTE, output visible
 git worktree list   # verify the new entry is exactly <worktree-path>
 herdr workspace list
 ```
+
+**`prune` comes first, and the `add` runs with its output visible.** A previous removal can
+leave `.git/worktrees/<name>/` registered; `add` then refuses — and a redirected `>/dev/null`
+throws away the one line that says so, leaving a dispatch that looks launched (AST-096). On a
+Claude root `scripts/hook-git-guard.sh` runs the prune for you and refuses a relative path or a
+redirected add; it is a `PreToolUse` hook and does not exist on Codex or opencode, so the two
+rules above are the contract on every runtime.
 
 Resolve the project workspace from `herdr workspace list` by matching the `workspace-label`
 field in `orchestrator.md`.
@@ -192,7 +199,7 @@ actually being dispatched** — tab `ticket:<id>`/pane `builder:<id>` for a Buil
 AND pane both `spec:<id>` for a Shaper, `qa:<id>` for QA, `rin:<id>` for Rin — per the table
 right after them. This same skill dispatches a Shaper too (`thomas.md`: "same mechanics as
 any dispatch"). An invented prefix — `shaper:<id>` — is one the watchdog's
-`DISPATCH_PREFIXES` does not recognize, so that pane dispatches unmonitored, silently.
+`TITLE_PREFIXES` does not recognize, so that pane dispatches unmonitored, silently.
 
 A new workspace already owns an initial tab and root pane. Read the create response, then
 `herdr tab list` / `herdr pane list`, and rename that initial tab and pane for the first
@@ -214,10 +221,13 @@ herdr tab create --workspace <workspace-id> --label "ticket:<ticket-id>" \
 herdr pane rename <returned-root-pane-id> "builder:<ticket-id>"
 ```
 
-Tab AND pane label follow the convention in `orchestrator.md` § Workspace identity —
-`ticket:<id>` for builders, `spec:<id>` for shapers, `qa:<id>` for QA, `rin:<id>` for Rin —
-for BOTH commands above, not the tab alone: a Shaper's pane is `spec:<id>`, never
-`shaper:<id>` or `builder:<id>`.
+Both commands above carry a label, and **for a Builder the two DIFFER**: tab `ticket:<id>`,
+pane `builder:<id>`, exactly as written. `orchestrator.md` § Workspace identity is a **tab**
+table — it does not name pane labels. For a Shaper, QA and Rin the two coincide, and the
+substitution applies to BOTH commands, not the tab alone: a Shaper's pane is `spec:<id>`, never
+`shaper:<id>`. `builder:` and `ticket:` are both in the watchdog's `TITLE_PREFIXES`, so the
+Builder's two labels differing is safe; `shaper:` is not in it, which is the whole finding
+(AST-082).
 
 **Mandatory cwd gate before launch.** `--cwd` on create is not guaranteed to stick, and
 agent resolution depends on cwd — launched from `$HOME` it errors "agent not found" or runs
@@ -443,6 +453,52 @@ the current diff. Runtime auto-compaction carries the same re-grounding requirem
 `/clear` starts a fresh chat and discards the working thread, so it belongs between tickets
 rather than inside one — and a new ticket takes a fresh pane and worktree anyway. It is not
 cwd, branch, worktree, process or lifecycle cleanup.
+
+## 10. Write `.astraler/state/dispatch-record.json`
+
+**The durable half of a dispatch.** `thomas.md` names this record beside the tracker and the
+frontier and nothing defined it: no path, no shape, no owner. Four rules read it and could
+not — the write-set overlap check above, cleanup's exact IDs, a later session finishing a
+dispatch this one started, and, on every tracker whose `assignee` cannot hold
+`builder/<ticket-id>`, the Builder identity itself.
+
+**Path:** `<repo-root>/.astraler/state/dispatch-record.json`. Operational state, not payload:
+it names machine-local pane and tab ids, so it is not committed and a project that gitignores
+`.astraler/` is correct to.
+
+**Shape** — one object per live ticket, keyed by ticket id:
+
+```json
+{
+  "TRA-129": {
+    "branch":    "builder/TRA-129",
+    "worktree":  "/abs/path/.claude/worktrees/builder-TRA-129",
+    "workspace": "my-project",
+    "tab":       "ticket:TRA-129",
+    "pane":      "pane_01H…",
+    "runtime":   "claude",
+    "identity":  "builder/TRA-129",
+    "write_set": ["src/posting/post.ts", "docs/agents/CONTEXT.md"],
+    "claimed_at": "2026-08-26T09:41:00Z"
+  }
+}
+```
+
+**Written at step 6 of the claim**, before the brief is submitted — a dispatch the record does
+not know about is one no later session can finish or clean up.
+**Read** whenever another dispatch is live, to collect the other tickets' `write_set` values.
+**The entry is deleted during cleanup**, after the worktree and branch are gone and before the
+assignee is released.
+
+**`identity` is load-bearing where the tracker cannot hold it.** Linear's `assignee` resolves
+to a real workspace member, and GitHub's `--add-assignee @me` is one login for every
+dispatcher, so on both the readback interlock cannot tell whose claim it read. This field is
+where `builder/<ticket-id>` actually lives, and it is what a later session matches to decide
+whether a claim is its own.
+
+**A stale entry is an entry whose branch is gone.** That is the readable form of a stale claim,
+and it is checkable without the tracker: `git rev-parse --verify <branch>` failing while an
+entry survives means the dispatch ended and cleanup did not finish.
 
 ## Cleanup
 

@@ -49,6 +49,11 @@ say so and stop (AST-119).
 share your git identity, so no script can attribute a commit; this one is yours to ask
 before you hand back (AST-130).
 
+**Judge a fork by its artifact, not its activity.** One burned 286k tokens over eight minutes
+"confirming a return shape" the Builder had already answered itself by reading the source. A
+question you can settle with a `grep` is not a fan-out; a fork still running is not a fork
+working.
+
 **Copy the `Pass:` line exactly** — Thomas verifies mechanically (AST-055, AST-090).
 
 ```bash
@@ -76,6 +81,11 @@ Pass: Skill(skill: "simplify")'
 
 **Run gates in the foreground.** Background is for work someone else consumes; a turn that
 ends while waiting on a result YOU need becomes PARKED, and Thomas must rescue it (AST-097).
+
+**A backgrounded block's completion notice reports its LAST command.** `make test …; grep …`
+arrives as *"exit code 0"* on a red suite — measured twice in one day, both times at a merge
+gate. Take the status inside the block (`cmd > /tmp/out.log 2>&1; status=$?`) and read the log;
+never the notice's number. `dispatch-ticket/WATCHING.md` § pipes carries the full rule.
 
 **If `ScheduleWakeup` errors, do not park** — the notification will never arrive. Read the
 result directly, retry, or report to Thomas (AST-097).

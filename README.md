@@ -188,6 +188,42 @@ term nobody confirmed, becomes confident-sounding lore that later agents treat a
 
 ---
 
+## Greenfield — the first session
+
+An empty repo **skips `bootstrap-glossary` and `batch-triage`** — both read something that
+does not exist yet. The glossary arrives from `grill-with-docs` in step 2 instead.
+
+Type these into the `thomas` tab, in order. Each step waits on the previous one's artifact.
+
+**1. Confirm the ground**
+> Read `docs/agents/issue-tracker.md`. Tell me which tracker, the ticket prefix, and whether
+> the project id is set. There is no code in this repo — infer nothing from it.
+
+**2. Bring the idea in**
+> The idea: `<3-5 sentences>`. If it is bigger than one session and still foggy, run
+> `/mattpocock-skills:wayfinder`. If the destination is clear, dispatch a Shaper whose brief
+> opens with `/mattpocock-skills:grill-with-docs`.
+
+**3. Answer the grill.** The expensive step, and the one that cannot be skipped. An empty repo
+makes **you the only source** — every question the Shaper does not ask becomes something it
+invents.
+
+**4. Make Thomas fire `arm: spec`**
+> Is the spec done? Fire `arm: spec` before the Shaper cuts tickets, then report the findings.
+
+On greenfield there is no existing code to contradict a wrong seam. The spec is the only
+artifact, so this is a real gate rather than a formality.
+
+**5. Ticket #1 is a tracer bullet, not a feature**
+> Ticket #1 must run end to end through every layer, however thin. If `to-tickets` produces a
+> ticket that builds one layer only, tell me.
+
+**6. Only start `/loop` once 3-4 independent tickets exist.** For the first few slices the
+frontier is a straight chain and `builder-target` cannot be reached — that is the frontier
+telling the truth, not Thomas idling.
+
+---
+
 ## Tech stack
 
 ### Required

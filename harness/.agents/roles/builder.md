@@ -11,6 +11,7 @@ at once.
 
 | When | Read | For |
 |---|---|---|
+| the ticket edits a `SKILL.md`, `AGENTS.md`, `CLAUDE.md` or a role contract | `writing-for-agents` | how a document that agents READ has to be written (`SPEC` requires it of every document produced) |
 | session start | `.agents/roles/builder-<runtime>.md` | simplify invocation, context management |
 | build starts | the ticket, its spec, the owner intent in your brief | what to build |
 | no seam to test through | `legacy-testing` | characterise → seam → TDD, in that order |
@@ -31,6 +32,10 @@ stands without it.
 | Simplify | see runtime supplement | a `simplify(increment):` commit exists whose body names the pass that ran |
 | Cross-vendor arm | `codex-arm` / `codex-claude-arm` | an `arm(ticket):` receipt at your head |
 | Visual verification | — | every changed user-visible surface has browser evidence, or the skip is named |
+
+**Commit and push at every phase boundary**, not only at handback — the table above is the
+cadence. Measured: four unpushed commits at stand-down; 49 minutes, 17 modified files, zero
+commits.
 
 `implement` is **user-invoked**: drive it by name. The craft layer is model-invoked and needs no
 wiring — `tdd`, `mattpocock-skills:code-review`, `codebase-design`, `domain-modeling`,
@@ -78,38 +83,34 @@ disagreement is a decision for the owner.
 
 ## Work you cannot read in a diff
 
-**A ticket that changes what a user sees is not done when the diff is right.** A diff review and
-a rendering are different instruments, and the second catches what the first cannot: a button
-technically correct and visually subordinate, a selected state that reads as unselected, a value
-pushed outside the viewport.
+**A ticket that changes what a user sees is not done when the diff is right.** A rendering
+catches what a diff cannot: a button technically correct and visually subordinate, a selected
+state that reads as unselected, a value pushed outside the viewport.
 
-The tool is the project's and the repo's design guidelines are the standard — this contract
-requires the evidence, not a particular way of getting it. Per changed surface, capture **what
-you looked at, at what viewport, and what you saw**; a screenshot with a one-line reading beats
-a paragraph asserting it looks right. Where the repo offers no way to render the change, say so
-to Thomas rather than reporting the ticket complete — an unverifiable surface is a finding about
-the repo.
+The tool is the project's and its design guidelines are the standard — this contract requires
+the evidence, not a way of getting it. Per changed surface capture **what you looked at, at what
+viewport, and what you saw**. Where the repo offers no way to render the change, say so rather
+than reporting the ticket complete: an unverifiable surface is a finding about the repo.
 
-Tickets that touch no user-visible surface skip this, and the skip is named in the handback.
-This is **your change rendering correctly**, narrower than whether the product still coheres,
-which is QA's walk.
+Tickets touching no user-visible surface skip this, and the skip is named in the handback. This
+is **your change rendering correctly** — whether the product still coheres is QA's walk.
 
 ## The cross-vendor arm — yours to fire, and it closes your loop
 
 **One closed loop, one handback:** `implement` → `code-review` → simplify → **arm pass 1** →
-[fold → **arm pass 2**] → `arm(ticket):` receipt → handback.
+[fold → **pass 2**] → `arm(ticket):` receipt → handback.
 
 **The head under review is yours**, so the range is correct without you resolving it. Isolation
-is a separate question with a per-runtime answer — take it from the arm skill for your runtime.
+has a per-runtime answer — take it from the arm skill for your runtime.
 
-**Two passes per gate invocation at most**, and pass 2 is mandatory whenever pass 1 returned a
-blocking finding: it reads the full artifact, because what it catches is the defect the FIX
-introduced. A fresh gate after a later fold is a new invocation, not a third pass.
+**The standard is `rin.md`'s** — the two-pass cap, when pass 2 is mandatory, and what makes a
+fresh gate legitimate rather than laundered. One rule, one home: restating gate law in several
+places is how the prior package's drifted apart.
 
 **Fold what is real, by class and not by instance, and say what you leave.**
 
-The receipt is an **empty** commit at your head — empty, so its parent is the tree the gate
-read. `scripts/check-simplify-markers.sh` owns the rules; this is the shape:
+The receipt is an **empty** commit at your head, so its parent is the tree the gate read.
+`check-simplify-markers.sh` owns the rules; this is the shape:
 
 ```
 arm(ticket): <ticket-id> — <verdict>, <n> passes
@@ -122,16 +123,28 @@ Unreviewed-delta: <from>..<to> — <n> lines, <m> files: <what changed, why it i
 
 **`Reviewed:` is this commit's parent, OR `Unreviewed-delta:` declares the gap. Never neither**
 (AST-134): a fold moves the tree past what any pass read, so the equality is legitimately false
-and the omission is the failure. Small and boring is the expected shape.
+and the omission is the failure.
+
+**`Unreviewed-delta:` is for a FOLD. Code from a phase that had not run yet owes a FRESH GATE.**
+Simplify firing after the arm is not a delta to declare — the arm read a tree simplify then moved
+past. Run the phases in order and the question does not arise; one inverted ticket paid a full
+extra gate round.
 
 ## Handing back
 
 **Run every machine that can answer before you hand back** — typecheck, linters, tests, build.
-A surface that stays green when it should not have is the more important half of that result.
+A surface that stays green when it should not have is the more important half.
+
+**Never infer blast radius from a diff's paths, least of all from file extensions.** "No JS or
+TS changed, so the JS suite is unaffected" reads careful and is not: a generated manifest is
+neither, and a dashboard test reads its routes out of it.
+
+**Declare context exhaustion at 60%, not 95%.** The marker and the handback are the only
+artifacts that let Thomas merge, so that is what the remaining context is for.
 
 **Commit, push, then return to Thomas** — three actions in your last turn, not a description of
-a desired end state. Uncommitted work does not exist in git, and Thomas's cleanup removes the
-worktree (AST-092).
+an end state. Uncommitted work does not exist in git, and cleanup removes the worktree
+(AST-092).
 
 ```bash
 git add <your-files>
@@ -139,31 +152,23 @@ git commit -m '<ticket-id>: <what this does>'
 git push origin <ticket-branch>
 ```
 
-**Verify your own phases before returning:**
+**Verify your own phases before returning**, with the script — zero markers means the pass was
+skipped, and **a marker that is not your head is a pass that did not cover the code** (AST-094,
+AST-122):
 
 ```bash
 scripts/check-simplify-markers.sh <base> HEAD \
     --marker 'simplify(increment)' --marker 'arm(ticket)'
 ```
 
-Zero markers means you skipped the pass — go back and run it. A step that does not
-self-check is a step that can be silently skipped (AST-094, same shape as AST-092).
+Writing, retracting (`Supersedes:`) and reading markers: `dispatch-ticket/MARKERS.md`, the one
+home for those mechanics.
 
-**A marker that is not your head is the same finding wearing a green shirt.** Commits on top
-of it are code the pass never read, and every per-field check passes on them (AST-122). Re-run
-the pass over the current head and commit a fresh marker; an empty one is valid, so this costs
-one commit — which is why it is cheaper than arguing that the fold was small.
+Then return to Thomas: the branch, the final SHA, which acceptance criteria pass, the validation
+commands and their output, the `simplify(increment):` marker, browser evidence for any surface
+you changed (or the named skip), and anything you reported rather than changed.
 
-**If a marker you already committed is wrong, retract it in the open** — a new marker carrying
-the real pass plus `Supersedes: <sha>`. That is a green state on Thomas's side, and deliberately
-cheaper than rewriting history: **the record showing you were wrong is worth more than a record
-that looks clean** (AST-121).
-
-Then return to Thomas: the branch, the final SHA, which acceptance criteria pass, the exact
-validation commands and their output, the `simplify(increment):` marker, the browser evidence
-for any surface you changed (or the named skip), and anything you reported rather than changed.
-
-**Evidence travels as files and commits; the pane carries the pointer.** A pane read returns
+**Evidence travels as files and commits; the pane carries the pointer** — a pane read returns
 only what is on screen and reports success while truncating.
 
 Thomas verifies the diff, dispatches Rin's gate at a milestone, and decides merge. Cleanup of

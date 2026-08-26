@@ -35,8 +35,8 @@ evidence; the rule stands without it.
 
 Plus three that are not skills: **the frontier query**, **the claim**, **merge**.
 
-Both bootstrap phases run once per repo, again when their output goes stale. Each ends on
-**owner review**, not on the artifact.
+Both bootstrap phases run once per repo, again when their output goes stale, and each ends on
+**owner review** rather than on the artifact.
 
 **Every skill in that table is user-invoked** — drive it by name, as the owner would. A
 user-invoked skill cannot reach another, which is why this role exists. The craft layer is
@@ -48,13 +48,13 @@ The frontier is **every ticket whose blockers are all done and whose assignee is
 Run the query at session start and when a ticket closes.
 
 **Write the answer to the board**, in whatever state your tracker uses for
-claimable-and-unclaimed. You re-run the query; the owner opens the board and looks.
+claimable-and-unclaimed — you re-run the query, the owner looks at the board.
 
-**Read edges and state, never the readiness label** — that label describes the ticket at
+**A spec's tickets become claimable only after you classify `arm: spec`** — the Shaper publishes at `needs-triage` and you promote. **Read edges and state, never the readiness label** — that label describes the ticket at
 creation and nothing revisits it when a blocker appears.
 
-Blocking edges alone are over-inclusive — epics, unstarted phases and deferred tickets all
-pass; parent/child sequencing does not. Promotion stays your judgement (AST-074).
+Blocking edges alone are over-inclusive and parent/child sequencing does not pass at all, so
+promotion stays your judgement (AST-074).
 
 ## Dispatch to CAPACITY, not to events
 
@@ -63,17 +63,16 @@ merge, every handback and every report to the owner, and top up to the target fr
 frontier.** The default is **4**; `.agents/orchestrator.md` carries the override where the
 owner has set one, and the default applies when it has no row.
 
-Nothing else here asks whether a slot is free, and a queue with a trigger and no top-up rule
-drains and never refills: measured at **two of four slots idle against twelve claimable
-tickets**, every step performed correctly (AST-131).
-
-**Reporting is not a stopping point.** A report is something you emit while working, and the
-turn that emits it is also a turn that counts panes.
+A queue with a trigger and no top-up rule drains and never refills: measured at **two of four
+slots idle against twelve claimable tickets**, every step performed correctly (AST-131).
+**Reporting is not a stopping point** — the turn that emits one is also a turn that counts panes.
 
 ## The claim protocol
 
-**Assigning a ticket is the claim, and it happens before its worktree exists.** Two
-independent atomic interlocks are what keep concurrent Builders apart.
+**Assigning a ticket is the claim, and it happens before its worktree exists.** One atomic
+interlock plus an advisory readback are what keep concurrent Builders apart — **no tracker
+holds `builder/<ticket-id>`**, so the readback cannot tell whose claim it read (see the
+adapter). Branch creation is the half that decides.
 
 1. **Query** the frontier. Take the first ticket.
 2. **Write** the assignee: `builder/<ticket-id>`.
@@ -84,7 +83,7 @@ independent atomic interlocks are what keep concurrent Builders apart.
    refuses an existing branch. This is the interlock that decides a same-second race: step 3
    passes for *both* dispatchers when A's readback completes before B's write exists.
 5. **Branch creation failing means you lost.** Take the next ticket, leave the assignee as you
-   found it, remove any worktree directory your attempt created.
+   found it, and `git worktree remove` — never `rm -rf` — any worktree it created (AST-096).
 6. **Record** ticket → branch → worktree → workspace → tab → pane → **write-set** in the
    dispatch record. Cleanup needs the exact IDs; a durable record lets a later session finish
    a dispatch this one started.
@@ -99,41 +98,47 @@ Release on merge or owner abandonment: clear the assignee during cleanup, after 
 and branch are gone, and **only when a fresh readback shows your own**. Someone else's
 assignee is a live claim with a Builder behind it.
 
-**A stale claim is an assignee with no branch.** Check the worktree first — from the tracker,
-a Builder mid-ticket looks identical. You resolve these because you alone see both sides.
+**A stale claim is an assignee with no branch** — from the tracker a Builder mid-ticket looks
+identical, so check the worktree.
 
 ## Dispatch
 
 **Shaping is dispatched, not assumed.** When `wayfinder` has shaped a direction, or an effort
 fits one session, start a Shaper: one unbroken session running `grill-with-docs` → `to-spec` →
-`to-tickets`, handing back tickets with their blocking edges. Own worktree, no ticket branch.
-Its brief **opens with `/mattpocock-skills:grill-with-docs`** — a brief that merely describes
-the work gets prose back. Give it the whole effort at once; its session must not be compacted.
-*A phase no contract dispatches does not run: ADR 0001.*
+`to-tickets`, handing back tickets with their edges. Own worktree, no ticket branch. Its brief
+**opens with `/mattpocock-skills:grill-with-docs`** — a brief that merely describes the work
+gets prose back. Give it the whole effort at once; it must not be compacted.
 
-**Dispatch** a claimed ticket through `dispatch-ticket` and `dispatch-ticket-<runtime>`. One
-ticket becomes one Builder in one pane over one worktree; several run at once on the frontier.
+**Dispatch** a claimed ticket through `dispatch-ticket` and `dispatch-ticket-<runtime>`: one
+ticket, one Builder, one pane, one worktree; several run at once on the frontier.
 
-**Steer** the Builder directly — Claude via SendMessage, Codex/OpenCode via Herdr pane. A
-pane's status is a bell; the verdict comes from the diff, the tests and the artifact.
+**Steer** the Builder directly — Claude via SendMessage, Codex/OpenCode via Herdr pane. A pane's
+status is a bell; the verdict comes from the diff, the tests and the artifact.
 
 ## Review
 
 **At a milestone**, dispatch Rin's gate through `review-with-rin`. Rin advises and **you
-classify**: a design-level blocker goes to the owner through `to-questionnaire`; everything
-else is your work order.
+classify**: a design-level blocker goes to the owner via `to-questionnaire`, everything else is
+your work order.
 
-**Before a PR, a merge or a release**, dispatch QA's product walk (`dispatch-qa-walk`) on
-anything with a user-visible surface or a public endpoint. State browser consent and any
-authorized mutation — without them QA declines and records a gap.
+**A gate that fires on a sentence starves in silence — count the merges.** `arm(ticket)` and
+`simplify(increment)` have a physical trigger and a script that refuses the merge without them.
+Rin's milestone gate triggers on **you** saying a slice is closed, and nothing emits that
+sentence: measured at 107 merges and zero Rin rounds. **More than 10 merges since the last Rin
+round is a STOP** — fire the gate or write down why not. Rin is also the only reader positioned
+to catch a missing `Ledger:` line, which went missing on 30 of 31 of those merges (AST-069).
 
-**Folding a finding is propagation.** A finding names one place; the claim it disproves usually
-appears in several. Tell the Builder to grep the artifact for the **claim**, not the quoted
-section — and verify the fold the same way.
+**Before a PR, a merge or a release**, dispatch QA's product walk (`dispatch-qa-walk`) on any
+user-visible surface or public endpoint, and **read the walk report's COVERAGE GAPS**, not only
+its findings — a declined walk and a clean one look identical without them. State browser
+consent and authorized mutations, or QA declines.
 
-**A handback is a claim, and you cannot tell who made it** — a fork inside the Builder's
-session shares its address and socket. Contradictions are normal: resolve by SHA, never by
-which prose reads more honest (AST-119).
+**Folding a finding is propagation.** The claim it disproves usually appears in several places:
+tell the Builder to grep the artifact for the **claim**, not the quoted section, and verify the
+fold the same way.
+
+**A handback is a claim and you cannot tell who made it** — a fork shares the Builder's address
+and socket. Resolve contradictions by SHA, never by which prose reads more honest (AST-119).
 
 ## The cross-vendor arm
 
@@ -147,17 +152,13 @@ Standard is Rin's contract; invocation is `codex-arm` (Claude root) or `codex-cl
 | **arm: slice** | **once**, when the slice closes | the whole slice on the base branch | you |
 
 **No ticket merges without one**, and none batch to phase end — a payload that outgrows a
-reviewer is where a hollow test survives.
+reviewer is where a hollow test survives. **The ticket arm is the Builder's**, which keeps the
+gate off your turn and puts it in the tree it reads (AST-135); you verify it at merge by
+artifact.
 
-**The ticket arm is the Builder's**, which keeps the gate off your turn and puts it in the tree
-it reads. You verify it at merge by artifact, which you were doing anyway (AST-135).
-
-**Name an arm by the artifact it reads.** "Milestone gate" and "spec gate" are Rin's names.
-Where a spec gets both, **both must return** before you release the Shaper.
-
-**The spec arm is the cheap one and the one that goes missing** — a wrong seam costs a paragraph
-there and a slice once it reaches code. Releasing the Shaper to cut tickets is your call, after
-you classify the findings.
+**Name an arm by the artifact it reads** — "milestone gate" and "spec gate" are Rin's names, and
+where a spec gets both, **both must return** before you release the Shaper. The spec arm is the
+cheap one and the one that goes missing: releasing the Shaper is your call, after you classify.
 
 ## Merge
 
@@ -168,61 +169,44 @@ scripts/check-simplify-markers.sh <base> <head> \
     --marker 'simplify(increment)' --marker 'arm(ticket)'      # exit 0 = green, 1 = STOP
 ```
 
-**One command, both receipts.** Do not hand-roll a `git log --grep` beside it: that searches the
-whole message and `^` anchors to any line in it, so every squash commit quoting a marker subject
-counts as carrying one — 23 real markers read as 193 downstream (AST-133). Where a script exists
-for a marker question, call it.
+**One command, both receipts.** Never hand-roll a `git log --grep` beside it — it matches bodies,
+and 23 real markers once read as 193 (AST-133). Where a script exists, call it.
 
 One `simplify(increment):` marker per increment and one `arm(ticket):` receipt, **and the newest
-live one of each must BE the head you are merging** —
-a marker with a later commit sitting on top of it is a pass that did not cover the code, and
-every per-field check passes on it (AST-122). The script checks the relationship; you read
-the body, because your runtime supplement carries the `Pass:` validation rules for the
-builder's runtime.
+live one of each must BE the head you are merging**: a marker with a later commit on top of it
+is a pass that did not cover the code, and every per-field check passes on it (AST-122). The
+script checks the relationship; you read the body, per your runtime supplement.
 
-**A project-authored file at a payload-owned path is silently replaceable by an upgrade.**
-Where this project runs `scripts/check-payload-drift.sh`, a pre-commit failure from it is
-either your own reviewed edit — re-hash it — or a release adaptation that overwrote something
-the project wrote, which you diff before accepting (AST-132).
+**A project-authored file at a payload-owned path is silently replaceable by an upgrade.** A
+`scripts/check-payload-drift.sh` failure is either your own reviewed edit — re-hash it — or an
+upgrade that overwrote project content, which you diff before accepting (AST-132).
 
 **Merge is not complete until the frontier write-back is done.** Re-run the query, move every
-ticket this merge unblocked into the claimable state, and **report which ones moved**. `none`
-is a valid report; silence is not (AST-057).
+ticket this merge unblocked into the claimable state, and **report which moved** — `none` is a
+valid report, silence is not (AST-057).
 
-**Prove the write-back landed**, here and at session start, with `reconcile-tracker` — a wrong
-ticket state is consistent with itself. Read-only; the join key is a commit-subject ticket id,
-not exact (AST-074).
+**Prove the write-back landed**, here and at session start, with `reconcile-tracker`: a wrong
+ticket state is consistent with itself. Read-only, and its join key is inexact (AST-074).
 
-**Write the lesson at merge**, into the project's ledger; the merge commit carries a `Ledger:`
-line naming what went in. `Ledger: none` is valid; its absence is not (AST-069).
+**Write the lesson at merge** into the project's ledger; the merge commit carries a `Ledger:`
+line naming what went in. `Ledger: none` is valid, its absence is not (AST-069).
 
 ## Watchdog
 
-**REQUIRED — `dispatch-ticket` refuses to dispatch without it.** A per-turn watcher covers one
-turn and exits; an unwatched pane and a quiet healthy one both emit nothing (AST-124).
+**REQUIRED — no dispatch without it.** A per-turn watcher covers one turn and exits; an
+unwatched pane and a quiet healthy one both emit nothing (AST-124). Invocation, the alert table
+and what each alert asks of you: `dispatch-ticket/WATCHING.md`.
 
-```bash
-nohup scripts/herdr-watchdog.sh 300 900 6 &   # interval, cooldown, max-alerts/hr
-scripts/herdr-watchdog.sh stop
-```
+**`STUCK` cannot fire while any pane is working**, so a Builder that finishes beside a busy
+sibling pings nothing. With several Builders in flight that is the ordinary state, not an edge:
+count panes yourself rather than waiting to be told.
 
-Reads `workspace-label` from `.agents/orchestrator.md`; `stop` verifies the PID first.
-PID: `/tmp/herdr-watchdog-<workspace-label>.lock`.
-
-| Alert | Action |
-|---|---|
-| `BLOCKED` | Pane asking a question — read, answer, restart the watch (Monitor on Claude, watcher script on Codex/OpenCode) |
-| `WATCHER_LOST` | Pane working, nobody watching — re-arm the watch now |
-| `STUCK` | No pane working — inspect, handback or re-dispatch |
-| `THOMAS_CRASHED` | Your runtime process is gone — desktop notification substitutes |
-
-**Manual broker/container cleanup on every worktree removal is required on all runtimes** —
-the `WorktreeRemove` hook is confirmed dormant. It logs to `/tmp/harness-hook-events.log`
-(AST-102).
+**Manual broker/container cleanup on every worktree removal is required on all runtimes**, in
+the order `CLEANUP.md` gives. The `WorktreeRemove` hook never fires for it (AST-102).
 
 ## Answers carry a source
 
 Resolve open questions rather than routing every one to the owner — that is the point of this
-harness. Answer from the codebase, a prior ADR, `research`, `prototype` or a second opinion,
-and **record which**; an unsourced answer leaves the question open. Where a question is
-genuinely the owner's, `to-questionnaire` beats a confident guess.
+harness. Answer from the codebase, a prior ADR, `research`, `prototype` or a second opinion, and
+**record which**; an unsourced answer leaves the question open. Where a question is genuinely
+the owner's, `to-questionnaire` beats a guess.

@@ -149,7 +149,7 @@ every status write is two writes:
 
 ```bash
 gh issue edit <n> --remove-label todo --add-label in-progress
-tools/project-status-sync.sh --apply      # the second half; skipping it is invisible
+.agents/skills/github-issue-tracker/project-status-sync.sh --apply   # the second half; skipping it is invisible
 ```
 
 Skipping the second half fails **silently and in the owner's direction** — the queries stay

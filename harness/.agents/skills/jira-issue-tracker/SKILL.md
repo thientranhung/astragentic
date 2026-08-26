@@ -61,6 +61,26 @@ which one the project is before reasoning about its board.
 strictly better than a status because it names *which* ticket absorbed this one: move the
 absorbed ticket to the cancelled state, link it, comment on both.
 
+## The claim protocol, which this adapter never carried
+
+`thomas.md` writes the assignee as `builder/<ticket-id>`. **Jira's `assignee` takes an
+accountId**, so it cannot hold that either — the same position GitHub and Linear are in, and
+until now this file said nothing at all, so the protocol ran here with no adapter behind it.
+
+- **The claim** is setting `assignee` to your own accountId (`lookupJiraAccountId` resolves it
+  once; the project's `issue-tracker.md` carries it thereafter).
+- **The frontier query** is JQL: `project = <KEY> AND assignee IS EMPTY AND statusCategory !=
+  Done`, minus anything with an unfinished `is blocked by` link.
+- **The Builder identity** goes in the dispatch record
+  (`.astraler/state/dispatch-record.json`), since no field holds it.
+- **The readback interlock is weakened; the git one is not.** A readback cannot tell whose
+  claim it read, so `git worktree add -b <ticket-branch>` failing is the *only* thing that
+  decides a same-second race. Losing it means leaving the assignee exactly as you found it.
+- **Releasing a claim**: confirm the branch and worktree are gone, rather than reading the
+  assignee back.
+
+**So concurrency on one Jira account rests entirely on git**, exactly as on the other two.
+
 ## Dependencies are links, and the direction is silently invertible
 
 | Relationship | Link type | How |
