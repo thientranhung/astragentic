@@ -1,3 +1,118 @@
+# Astragentic 2.7.1
+
+2.7.0 went into a live project the day it was cut. That project — on 2.3.34, skipping three
+minor lines to get here — reported **eight defects in a day**. Four were introduced by 2.7.0's
+own audit pass, three were older, and one it caught in itself while installing a guard against
+that very class. This release is those, plus the thing their absence made obvious: **nothing
+here could answer whether an upgrade had actually integrated.**
+
+## The release did not ship its own installer
+
+Every "Upgrade from" note and every line of ADAPT-HARNESS tell an operator to run
+`./install.sh <target> --apply`. The staged release contained ADAPT, check-requirements,
+`harness/`, README, RELEASE-NOTES, UNINSTALL and VERSION — **and no installer**. That project
+computed arbitration by hand because there was nothing to run, which also means 2.7.0's
+`set -euo pipefail` fix, real and tested, was unreachable from the only place its own
+instructions point.
+
+## Two scripts could not run in any adapted project
+
+2.7.0 replaced a CWD-relative root with `$(dirname "${BASH_SOURCE[0]}")/../..`. That is right
+under `harness/scripts/` and **one level too high** under an adapted project's `scripts/`, so
+`docs-staleness-audit.sh` reported "NO ROLE CONTRACTS FOUND" and `ledger-rules.sh` said the
+ledger did not exist — both pointing at the repo's parent directory, both exiting 1 on a
+correct install. `ADAPT` §6 tells adapters to run all three in the same breath; two could not.
+
+They walk up to the payload now. The comment claiming `ledger-index.sh` resolved the same way
+was also wrong about the file it named — that one resolves from the ledger path.
+
+## The recipe written to save 50k tokens returned nothing
+
+`sed -n '/^## <candidate>/,/^## /p'`. The headings are level one. The instruction added to stop
+an agent reading 34k words of history handed it an **empty section**, and the natural recovery
+is reading the whole file. Replaced with a working `awk` range — and with the rule it should
+have carried from the start: **skipping releases means collecting migrations from every heading
+in between.** Reading only the candidate's section is correct for a single-step upgrade and
+wrong for a jump, which is what that project was doing.
+
+## Two contracts shipped with one word of margin
+
+`role_budget()` carries a comment block that exists to forbid exactly this: budgets hold ~150
+words of headroom because an adapted project MUST add its own content, and it names 32/23/51-word
+margins as the failure — "less headroom than a single sentence". 2.7.0's compression produced
+**1499/1500 and 1969/1970**, and the check called both `ok`. That project added one paragraph to
+`builder.md` and was 215 over.
+
+The defect was the check, not the numbers. `budget_check` compared against a ceiling while the
+comment above it described a margin, so 99.9% full read as fine. **It reports the margin now**,
+and under 100 words is a finding. Budgets raised with reasons recorded in the same commit;
+every contract ships with 141–211 words of room.
+
+## Three things that project had measured and this package had not
+
+**The broker matcher never worked.** `ps | grep -- '--cwd <path>'` reported nothing while a live
+broker rooted in a removed worktree had run three hours. 2.7.1 does not ship a better one-liner
+— it **adopts that project's `reap-worktree-processes.sh`**, which was written after a
+`boundary.test` binary spun 18h18m at 85% of a core, reparented to PID 1, ignoring SIGTERM.
+
+Worth reading its header before touching it. Its own first version matched the worktree root
+exactly and **could not have found the process that motivated it**, because Go test binaries run
+with cwd in their own package directory. It matches by path prefix with a `/` boundary, and
+`realpath`s both sides because `lsof` reports resolved paths and a literal `/tmp/...` never
+matches `/private/tmp/...`. The one-liner 2.7.0 shipped carried both of those bugs and had never
+been run. Scope is deliberate and narrow: **one worktree, named on the command line.** Killing
+processes on a box other Builders share is not something to widen.
+
+**`check-payload-drift.sh --update` could not write a `symlinks` row.** `[ -f ]` follows a link
+and rejects a link to a directory — precisely the dual-homed skill arrangement the verify half's
+SYMLINK rows exist for. The only projects that section was written for could not populate it
+except by hand.
+
+**`ADAPT` named husky, lefthook and pre-commit — and not `git config core.hooksPath`**, the
+redirect git itself ships, which overrides `.git/hooks` entirely. That project's agent checked
+the three named managers, agreed no hook existed, installed one, **proved it rejected drift**,
+and had installed a hook git would never run. AST-102 reproduced while installing the guard
+against it; its real hook then refused the commit, which is the only reason anyone noticed. The
+prompt checks `core.hooksPath` first now, and says to adopt a project's `tools/` layout rather
+than add a second mechanism: a drift watcher living at a payload-owned path can be replaced by
+the adaptations it exists to detect.
+
+## "Integrated" is now a question a script answers
+
+That project reached `applied-version 2.7.0` with every presence check green while two shipped
+scripts could not run there at all. **Presence and integration are different questions**, and
+only one was being asked. `check-requirements.sh <target> --adapted` now answers four:
+
+1. `applied-version` matches the release actually staged — a mismatch means a half-landed payload
+2. every shipped script **RUNS** here, invoked bare from the repo root, because bare is what broke
+3. every payload file matches the release, is owner-owned, is generated per project, **or is named
+   in `.astraler/state/ADAPTATION-REPORT.md`** — a difference is not a defect, an unrecorded one is
+4. the guard actually denies
+
+**Done is that command exiting 0.** Not a marker file, and not anyone's report.
+
+## A note this release would rather not include
+
+Three checks added across 2.7.0 and 2.7.1 fired on **correct work** before they were right: the
+git guard denied `printf '%s' "rm -rf ..."` for containing the words; the staging gate refused
+any repository path containing a space; and the integration check demanded
+`.agents/roles/builder.md` while the adapter had recorded all eighteen of its decisions as
+`roles/builder.md`, the form anyone writes in prose.
+
+A gate that blocks correct work teaches its operator to route around it, and a list with noise
+in it teaches them to skim. Both are worse than the gap the check was closing. It keeps arriving
+through a different door, so it is written here rather than left in three commit messages.
+
+## Migration from 2.7.0
+
+Nothing beyond 2.7.0's steps. If you are on 2.7.0 and its audit scripts appeared to work, check
+again from the repo root with no arguments — that is the invocation that was broken.
+
+## Migration from anything older
+
+All of 2.7.0's steps still apply, and **read every release heading between your version and this
+one**. Migration items accumulate; the single-section recipe is for single-step upgrades.
+
 # Astragentic 2.7.0
 
 An audit of this harness against its own ledger, and the eight commits it produced. The finding
