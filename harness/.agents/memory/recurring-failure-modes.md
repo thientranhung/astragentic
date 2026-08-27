@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 135 entries (AST-001 … AST-136, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 136 entries (AST-001 … AST-137, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -3536,3 +3536,42 @@ does not exercise the exact pattern the production call builds is not a test of 
 here, one substitution apart, and the difference was the whole defect.
 
 Bound: `harness/scripts/check-simplify-markers.sh`.
+
+### AST-137 — Every defect a live project found lived between a tested invocation and a real one · promoted 2026-08-27
+
+Eleven defects came back from one downstream upgrade in three days, seven of them introduced by
+the audit pass that had just been reviewed by four cross-vendor gates. The obvious reading is
+that a repository with history sees what a diff cannot. **That reading is wrong, and the project
+that made the measurement said so first.**
+
+Every one of the eleven lived in the same gap:
+
+| tested as | actually invoked as |
+|---|---|
+| `harness/scripts/…` (package layout) | `scripts/…` (adapted project) |
+| `install.sh` from a package root | `install.sh` from inside a staged release, where `prompts/` is flattened |
+| index generated from the source tree | index validated against the staged tree, which has one injected file the source lacks |
+| `--check` as `$1` | `--check` as `$2`, where it silently rewrote what it was asked about |
+| a branch name (`main`, 4 chars) | a resolved merge-base SHA (40 chars) |
+| `.git/hooks/pre-commit` | `core.hooksPath`, which overrides it entirely |
+| a repository path with no spaces | `/tmp/Astraler Repo` |
+| a marker kind matched by other means | `--grep` with a parenthesis, in BASIC regex (AST-136) |
+
+**None of these needed history.** They needed a caller that invokes things differently than the
+author does — a different cwd, a different layout, a different argument position, a different
+shell, a different ref form. That is far cheaper to reproduce than "a real project", and it is
+the half of this lesson that generalises.
+
+**The rule: a test that does not build the exact call the production path builds is not a test
+of that path.** Where a script takes a root, run it bare AND with an explicit root AND from an
+unrelated cwd. Where it takes a ref, pass a 40-character SHA, not a branch name. Where it ships
+into two layouts, run it in both. Where a check has a flag, put the flag in every position.
+
+**And the counter-lesson, which the same project supplied against its own interest:** three of
+the eleven were findable only because checks shipped in the same cycle asked the question —
+check 3's "no record says why" exposed an incomplete receipt, the staging gate surfaced a stale
+index, and the margin report made a budget overflow legible instead of a number to shrug at.
+Gates and field use are not two independent detectors; the gates are what make a repository
+legible enough to be searched.
+
+Bound: `harness/scripts/check-requirements.sh` (the integration checks this produced).

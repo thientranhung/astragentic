@@ -1,3 +1,66 @@
+# Astragentic 2.7.5
+
+A correction to 2.7.4's closing paragraph, and the ledger entry the correction produced.
+
+## The arithmetic in 2.7.4 flattered the wrong side
+
+2.7.4 closed by saying four cross-vendor gates found what lives in a diff and one live project
+found what lives in a repository. The project that made the measurement objected, against its
+own interest, and it is right:
+
+> three of my eleven were only findable because your own checks caught them or asked the
+> question — check 3's "no record says why" is what exposed my incomplete receipt, the staging
+> gate is what surfaced the stale INDEX, and the margin report is what made the budget overflow
+> legible instead of a number I would have shrugged at
+
+So the split is not two independent detectors. **The gates are what made the repository legible
+enough to be searched.** A check that says "these eight files differ and nothing records why" is
+not competing with field use; it is what turns a working install into a question someone can
+answer. Stated the other way round, it flatters this package's method and understates what its
+own checks did.
+
+## AST-137 — the reusable half
+
+The same project supplied the narrower finding, and it survives where the arithmetic did not.
+**Every one of the eleven defects lived in the gap between a tested invocation and a real one:**
+
+| tested as | actually invoked as |
+|---|---|
+| `harness/scripts/…` | `scripts/…` in an adapted project |
+| `install.sh` from a package root | `install.sh` from inside a staged release, where `prompts/` is flattened |
+| index generated from the source tree | index validated against the staged tree, which carries one injected file the source lacks |
+| `--check` as `$1` | `--check` as `$2`, where it silently rewrote what it was asked about |
+| a branch name, 4 characters | a resolved merge-base SHA, 40 |
+| `.git/hooks/pre-commit` | `core.hooksPath`, which overrides it entirely |
+| a path with no spaces | `/tmp/Astraler Repo` |
+
+**None of these needed a repository with history.** They needed a caller that invokes things
+differently than the author does — a different cwd, layout, argument position, shell, or ref
+form. That is far cheaper to reproduce than "a real project", and it is the half that
+generalises to anyone shipping a payload into somebody else's tree.
+
+**The rule: a test that does not build the exact call the production path builds is not a test
+of that path.** Where a script takes a root, run it bare AND with an explicit root AND from an
+unrelated cwd. Where it takes a ref, pass a 40-character SHA. Where it ships into two layouts,
+run it in both. Where a check has a flag, put the flag in every position.
+
+## Also
+
+The `never recorded` advisory line is 126 characters on a repository that has never run the
+gate. The project that reported the 114-character wrap explicitly did **not** call this one a
+defect — *"it is the line that prints at every merge until the first round, and of all the lines
+in this system it is the one with the best claim to being long"* — and I agree. Left as is.
+
+A live confirmation of 2.7.2's fix, worth recording because it is visible: `AST-137` reads
+**uncited** in the source tree and **cited by `check-requirements.sh`** in the staged payload,
+because `install.sh` injects that file into `harness/scripts/`. Derived files are regenerated
+against the staged tree, so what ships is right even though the tree it was built from is not.
+That divergence was defect 10; this is the fix working where it can be watched.
+
+## Migration
+
+None.
+
 # Astragentic 2.7.4
 
 Two small things and one ledger entry that has been earned three times.

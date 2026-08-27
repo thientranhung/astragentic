@@ -450,7 +450,10 @@ PYEOF
   #
   # Four conditions, each answerable:
   #   1. the marker matches the release that is actually staged
-  #   2. every shipped script RUNS here — not exists, runs
+  #   2. every shipped script RUNS here — not exists, runs. AST-137: every defect a live
+  #      upgrade returned lived between a TESTED invocation and a REAL one — a package layout
+  #      vs an adapted one, `--check` first vs second, a branch name vs a 40-char SHA. None of
+  #      them needed history; they needed a caller that invokes differently than the author.
   #   3. every payload file matches the release, is owner-owned, or has a recorded decision
   #   4. the mechanisms the release adds actually fire (the guard smoke test above)
   if [ "$ADAPTED" = "1" ]; then
