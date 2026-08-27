@@ -147,3 +147,4 @@ from this table — read the entry.
 | `AST-133` | `--grep` is not a subject matcher, and it failed in both directions on the same day | promoted | 400 | CLEANUP.md,thomas.md |
 | `AST-134` | After the fold, "the gate read this tree" is structurally false and the protocol had no way t… | promoted | 238 | MARKERS.md,check-simplify-markers.sh |
 | `AST-135` | The verifier's queue was invisible to itself, and the fire point had to follow the artifact | promoted | 363 | dispatch-qa-walk,thomas.md |
+| `AST-136` | `--grep` is BASIC regex, and every marker kind in this system contains parentheses | promoted | 287 | check-simplify-markers.sh |

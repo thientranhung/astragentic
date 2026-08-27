@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 134 entries (AST-001 … AST-135, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 135 entries (AST-001 … AST-136, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -3506,3 +3506,33 @@ Residual, and it is the same one AST-130 names: the receipt is a commit written 
 being verified. That is the trade the queue is worth, and it is stated rather than implied.
 
 Bound: `builder.md`, `thomas.md`, `rin.md`, `codex-arm/SKILL.md`, `codex-claude-arm/SKILL.md`.
+
+### AST-136 — `--grep` is BASIC regex, and every marker kind in this system contains parentheses · promoted 2026-08-27
+
+Third occurrence of one mistake, each time wearing a different fault. `git log --grep` and
+`git log --grep` inside a pipeline both default to BASIC regular expressions, where `\(` is a
+GROUP rather than a literal parenthesis — and every marker kind this package defines is named
+`something(scope)`.
+
+- **2.3.35** put `re.escape(kind)` into `--grep`. The escaped name matched nothing, and the
+  script reported a confident STOP naming the wrong cause.
+- **2.3.36** searched whole messages rather than subjects: 23 real markers read as 193.
+  `AST-133` is that one, and its lesson — *"`--grep` is not a subject matcher"* — is the
+  broader half.
+- **2.7.2** did it again in the new advisory path: `--grep=^rin\(gate\):` matched nothing, so a
+  marker sitting on the base branch reported `never recorded`. The span fix that shipped
+  alongside it would have looked correct forever, because the count it printed was zero either
+  way. Caught by the downstream project that had asked for the span fix, reproducing both forms
+  side by side.
+
+**The narrow rule, which `AST-133` does not state: pass `-E` whenever the pattern contains a
+kind name.** Any marker kind added later hits this, because the naming convention guarantees a
+parenthesis. Where a match must be literal, `-F` is the other correct answer; what is never
+correct is an escaped pattern against the default dialect.
+
+The general lesson is about tests rather than regex: the scratch case that validated the 2.7.2
+path passed a branch name and a kind that happened to be found by other means. **A test that
+does not exercise the exact pattern the production call builds is not a test of that call** —
+here, one substitution apart, and the difference was the whole defect.
+
+Bound: `harness/scripts/check-simplify-markers.sh`.

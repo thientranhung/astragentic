@@ -1,3 +1,51 @@
+# Astragentic 2.7.4
+
+Two small things and one ledger entry that has been earned three times.
+
+**The advisory line wrapped on the invocation that actually happens.** 2.7.3 shortened the
+marker SHA and left the caller's `base` ref verbatim. The scratch test that validated it passed
+`main`, four characters; **Thomas passes a resolved merge-base at merge time**, forty. The line
+went to 114 characters and wrapped, on the path nobody had run.
+
+The downstream project that found it named the shape better than this note can:
+
+> the tested path and the real path differ by one substitution
+
+That is the third time this release cycle has produced exactly that defect — a guard tested on
+the cases its author thought of, a staging gate tested from a path without spaces, and now an
+advisory tested with a branch name. Both refs are shortened now; the line is 83 characters.
+
+**AST-136 — `--grep` is BASIC regex, and every marker kind in this system contains
+parentheses.** Third occurrence of one mistake, each wearing a different fault:
+
+- **2.3.35** put `re.escape(kind)` into `--grep`; the escaped name matched nothing and the
+  script reported a confident STOP naming the wrong cause.
+- **2.3.36** searched whole messages rather than subjects: 23 real markers read as 193. That is
+  `AST-133`, whose lesson — *"`--grep` is not a subject matcher"* — is the broader half.
+- **2.7.2** did it again in the new advisory path, so a marker sitting on the base branch
+  reported `never recorded`. The span fix shipped beside it **would have looked correct
+  forever**, because the count printed zero either way.
+
+The narrow rule `AST-133` does not state: **pass `-E` whenever the pattern contains a kind
+name.** The naming convention guarantees a parenthesis, so every kind added later hits this.
+
+Its general lesson is about tests rather than regex, and it is the same one as the wrapping
+line above: a test that does not exercise the exact pattern the production call builds is not a
+test of that call.
+
+## What this cycle looks like from here
+
+2.7.0 was cut after four cross-vendor gates found 23 defects. A live project on 2.3.34 then
+found **eleven more in three days**, of which seven were introduced by the audit that produced
+2.7.0. Four releases later the arithmetic is worth stating plainly: **the gates found the
+defects that live in the diff, and the project found the ones that live in the difference
+between a diff and a repository.** Neither substitutes for the other, and only one of them was
+in this package's method.
+
+## Migration
+
+None.
+
 # Astragentic 2.7.3
 
 One defect, and it is in the fix 2.7.2 shipped for the finding 2.7.1 could not see. The gate

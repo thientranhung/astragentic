@@ -93,18 +93,26 @@ def advisory_on_base(kind, base):
     # `--grep` is BASIC regex by default, where `\(` is a GROUP — `re.escape("rin(gate)")`
     # produced `rin\(gate\)` and matched nothing, so a marker sitting on the base branch read
     # as "never recorded". `-E` makes an escaped paren a literal one.
+    # `-E` below is AST-136: `--grep` is BASIC regex, `\(` is a GROUP, and every marker kind
+    # here is named `something(scope)`. Third occurrence of that one mistake in this codebase.
+    #
+    # SHORTEN THE REF THE CALLER GAVE, not just the SHA we found. The scratch test that
+    # validated this passed `main`; Thomas passes a RESOLVED merge-base at merge time, and the
+    # line went to 114 characters — the tested path and the real path differing by exactly one
+    # substitution, which is the shape this whole release cycle keeps turning up.
+    base_label = base if len(base) < 12 or not re.fullmatch(r"[0-9a-f]{7,40}", base) else base[:9]
     last = git("log", base, "-E", "--format=%H",
                "--grep=^" + re.escape(kind) + ":", "-n", "1").strip()
     if not last:
         total = git("rev-list", "--count", "--merges", base).strip() or "?"
         print("[%s] never recorded on %s — %s merge(s) of history, no round. This gate leaves "
-              "no other machine-readable trace." % (kind, base, total))
+              "no other machine-readable trace." % (kind, base_label, total))
         return
     last = last.splitlines()[0]
     since = git("rev-list", "--count", "--merges", last + ".." + base).strip() or "?"
     when = git("log", "-1", "--format=%ad", "--date=short", last).strip()
     print("[%s] last on %s: %s (%s) — %s merge(s) since (advisory)"
-          % (kind, base, last[:9], when, since))
+          % (kind, base_label, last[:9], when, since))
 
 
 
