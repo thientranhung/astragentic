@@ -1,3 +1,59 @@
+# Astragentic 2.7.8
+
+**A rename left a fossil in every adapted repo, and `install.sh` structurally could not see it.**
+
+2.7.6 renamed `ledger-rules.sh` to `.py`. An `--apply` wrote the new name and **left the old
+one**, so the project carried two byte-identical copies of one script under two names — the
+third instance of that shape in a single upgrade, after the two `project-status-sync.sh` and
+the two payload-drift watchers.
+
+`install.sh` iterates the CANDIDATE's files. **It has no concept of a path the PREVIOUS release
+carried and this one does not**, so a rename is invisible to it as a deletion. Nothing
+downstream catches it either: `check-payload-drift` does not watch it, and the integration
+check cannot, because a file the release does not ship is not a file that *differs* from the
+release. Left alone, **every rename this package ever makes leaves a fossil in every adapted
+repo, permanently.**
+
+`--plan` and `--apply` now derive `previous-release − candidate` and report it:
+
+```
+DELETED by this release — 2.7.6 shipped these, 2.7.7 does not, and they are
+still in the project. Usually a rename; check for the new name before removing.
+  scripts/ledger-rules.sh
+  (not removed automatically: a project may have adopted one of these on purpose)
+
+  new 0 · updated 0 · unchanged 81 · kept 0 · owner-kept 7 · conflicts 0 · deleted-upstream 1
+```
+
+**Reported, never removed.** A project may have adopted the old path deliberately, and deleting
+files during an upgrade is precisely how an upgrade destroys work. Owner paths are excluded
+outright.
+
+Also: `ledger-rules.py`'s module docstring still opened with the old `.sh` name.
+
+## And a process note that outranks the defect
+
+The owner authorised a merge in a downstream project and asked me to relay the instruction. I
+did. **The receiving agent refused it and asked the owner directly**, on the grounds that its
+standing instruction was not to merge, and a peer reporting that the owner said otherwise is
+indistinguishable from a peer inventing it. Its own words:
+
+> it cost one question and it is the only thing standing between "the owner approved" and
+> anyone being able to say so
+
+The authority was genuine and the relay was still the wrong shape: I built the exact pattern a
+mistaken or compromised peer would use, which makes a correct refusal indistinguishable from
+obstruction. **Relay context freely — findings, ordering, what must be verified first. Never
+relay permission.**
+
+That refusal is the single most valuable thing to come out of this deployment, and it came from
+the agent being instructed rather than from any check in this package.
+
+## Migration
+
+Run `install.sh <target> --plan` once. If it reports `deleted-upstream`, those are almost
+certainly renames from a release you already took; check for the new name, then remove.
+
 # Astragentic 2.7.7
 
 2.7.6 fixed one of three places that made the same mistake, and shipped.

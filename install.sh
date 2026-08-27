@@ -450,8 +450,37 @@ if [ "$APPLY" -eq 1 ]; then
     fi
   done < <(find "$RELEASE_DIR/harness" -type f ! -name '.DS_Store' | sort)
 
+  # DELETIONS. The loop above iterates the CANDIDATE's files and therefore has no concept of a
+  # path the PREVIOUS release carried and this one does not. A RENAME is invisible to it as a
+  # deletion: 2.7.6 renamed `ledger-rules.sh` to `.py`, an apply wrote the new name and left
+  # the old, and the adapted project carried two byte-identical copies of one script under two
+  # names. Nothing downstream catches it either — `check-payload-drift` does not watch it, and
+  # the integration check cannot, because a file the release does not ship is not a file that
+  # DIFFERS from the release. Left alone, every rename this package ever makes leaves a fossil
+  # in every adapted repo, forever.
+  #
+  # Reported, not removed: a project may have adopted the old path on purpose, and deleting
+  # files during an upgrade is how an upgrade destroys work. The operator decides.
+  N_GONE=0; GONE=""
+  if [ -n "$PREV_DIR" ] && [ -d "$PREV_DIR" ]; then
+    while IFS= read -r OLDREL; do
+      [ -n "$OLDREL" ] || continue
+      [ -e "$RELEASE_DIR/harness/$OLDREL" ] && continue      # still shipped
+      [ -e "$TARGET/$OLDREL" ] || continue                    # already gone from the project
+      case "$OLDREL" in .agents/orchestrator.md|.claude/settings.json|.codex/profiles/*) continue ;; esac
+      GONE="$GONE  $OLDREL"$'\n'; N_GONE=$((N_GONE+1))
+    done < <(cd "$PREV_DIR" && find . -type f ! -name '.DS_Store' | sed 's|^\./||' | sort)
+  fi
+  if [ "$N_GONE" -gt 0 ]; then
+    echo
+    echo "DELETED by this release — $PREV_VERSION shipped these, $VERSION does not, and they are"
+    echo "still in the project. Usually a rename; check for the new name before removing."
+    printf '%s' "$GONE"
+    echo "  (not removed automatically: a project may have adopted one of these on purpose)"
+  fi
+
   echo
-  echo "  new $N_NEW · updated $N_UPD · unchanged $N_SAME · kept $N_KEPT · owner-kept $N_OWNER · conflicts $N_CONFLICT"
+  echo "  new $N_NEW · updated $N_UPD · unchanged $N_SAME · kept $N_KEPT · owner-kept $N_OWNER · conflicts $N_CONFLICT · deleted-upstream $N_GONE"
   # --apply lands the payload; ADAPT-HARNESS section 7 still owns the semantic half.
   #
   # DO NOT STAMP OVER OUTSTANDING CONFLICTS. `applied-version` is the arbiter for the NEXT

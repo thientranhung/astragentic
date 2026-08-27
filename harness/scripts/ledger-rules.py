@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ledger-rules.sh — derive RULES.md, the rule half of the ledger, from the ledger itself.
+"""ledger-rules.py — derive RULES.md, the rule half of the ledger, from the ledger itself.
 
 WHY THIS EXISTS. Every role is told to reach the ledger through `INDEX.md` and then
 `grep -A40 '^### AST-0NN'`. That protocol is right — it keeps a 51k-token file out of every
