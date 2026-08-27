@@ -12,9 +12,13 @@ owner rather than resolving it with an overwrite.
 1. Read `.astraler/CANDIDATE` — call its value `<candidate>`.
 2. Read `.astraler/releases/<candidate>/RELEASE-NOTES.md` **first — but only this release's
    section**: the file is ~34k words and 111 version headings, and reading it whole costs
-   ~50k tokens of history that no role contract ever reads. `sed -n '/^## <candidate>/,/^## /p'`
+   ~50k tokens of history that no role contract ever reads. `awk '/^# Astragentic <candidate>$/{f=1} f&&/^# Astragentic /&&!/<candidate>/{exit} f'`
    gets the section that owns this release's semantic intent, breaking changes and migration
-   guidance. Read further back only when this release's notes send you there. Then its `VERSION`, `README.md`,
+   guidance — headings are LEVEL ONE (`# Astragentic 2.7.0`), which an earlier `## ` recipe
+   here matched zero times, handing the agent an empty section and sending it back to the whole
+   file. **Read further back whenever you are skipping releases**: migration steps accumulate,
+   so an upgrade from 2.3.x to 2.7.0 must collect them from every heading in between. Only a
+   single-step upgrade can stop at one section. Then its `VERSION`, `README.md`,
    the role contracts under `harness/.agents/roles/`, and the skills the contracts name.
    Load a skill's body when you need its contract, rather than preloading all of them.
 3. Read `.astraler/state/applied-version` when present. A named `<previous>` makes this an
@@ -332,6 +336,20 @@ Run checks proportional to what changed:
   project already had: its linting, its secret scanning. Read the file before writing it, chain
   rather than overwrite, and where the project uses a hook manager (husky, lefthook, pre-commit)
   add an entry there instead of touching `.git/hooks` at all.
+
+  **CHECK `git config core.hooksPath` FIRST — before husky, before lefthook, before anything.**
+  It is the redirect git itself ships, it overrides `.git/hooks` ENTIRELY, and naming three
+  third-party managers while omitting it is how a downstream agent installed a hook, proved it
+  rejected drift, and had installed one git would never run. The project's real hook then
+  refused the commit, which is the only reason anyone noticed. That is AST-102's shape —
+  a mechanism that looks installed and is unreached — committed while installing the guard
+  against it.
+
+  **And where the project put its drift watcher somewhere the payload does not own, leave it
+  there.** This payload keeps the watcher at `scripts/` and the manifest at `.agents/`, both
+  payload-owned paths, so a release adaptation can replace the very mechanism that detects
+  release adaptations overwriting things. One project moved both to `tools/` for exactly that
+  reason and was right to. Adopt its layout rather than adding a second mechanism beside it.
 
   `.git/hooks` is not committable, so whatever you install repeats on every fresh clone. Say so
   in the project's entry doc. A project that declines the mechanism records that instead — an

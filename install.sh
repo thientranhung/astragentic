@@ -253,6 +253,13 @@ cp "$HARNESS_ROOT/check-requirements.sh" "$STAGING_DIR/check-requirements.sh"
 # here, copied to two destinations; the package keeps a single home for it.
 cp "$HARNESS_ROOT/check-requirements.sh" "$STAGING_DIR/harness/scripts/check-requirements.sh"
 cp "$HARNESS_ROOT/VERSION"            "$STAGING_DIR/VERSION"
+# STAGE THE INSTALLER ITSELF. Every "Upgrade from" note and ADAPT-HARNESS tell an operator to
+# run `./install.sh <target> --apply`, and the staged release did not contain one — so the
+# arbitration logic, the owner-path rules and any fix to them were unreachable from the only
+# place the instructions point at. A downstream project reported it after computing arbitration
+# BY HAND because there was nothing to run. An instruction that names a file the release does
+# not ship is the class commit 037c847 was written to close, arriving one directory over.
+cp "$HARNESS_ROOT/install.sh"         "$STAGING_DIR/install.sh"
 # Templates are optional: 1.0.0 ships none, because the adaptation agent derives project
 # docs from the repo itself rather than scaffolding them. Staged when a later version adds
 # them, so this line needs no revisit then.

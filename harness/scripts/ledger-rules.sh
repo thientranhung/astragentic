@@ -116,8 +116,19 @@ def render(ledger_text):
 def main():
     args = [a for a in sys.argv[1:] if a != "--check"]
     check = "--check" in sys.argv[1:]
-    root = args[0] if args else os.path.abspath(
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
+    # Walk up to the payload rather than assuming a depth: `../..` is right under
+    # `harness/scripts/` and one level too high in an adapted project, where this printed
+    # "ledger not found" pointing at the repo's parent directory.
+    if args:
+        root = args[0]
+    else:
+        root = os.path.dirname(os.path.abspath(__file__))
+        while root != "/":
+            if locate(root):
+                break
+            root = os.path.dirname(root)
+        else:
+            root = os.getcwd()
     mem = locate(root)
     if not mem:
         print("STOP: ledger not found under %s" % root)

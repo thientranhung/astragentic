@@ -68,6 +68,31 @@ JSON
     echo "created $MANIFEST"
   fi
   for p in "$@"; do
+    # A SYMLINK IS A THING THIS MANIFEST TRACKS, so --update has to be able to write one.
+    # `[ -f ]` follows a link and rejects a link to a DIRECTORY, which is exactly the
+    # dual-homed skill arrangement the verify half's SYMLINK rows exist for — so the only
+    # projects that section was written for could not populate it except by hand. A downstream
+    # project's own copy of this script does write them; this is that behaviour brought back.
+    if [ -L "$p" ]; then
+      t=$(readlink "$p")
+      MANIFEST="$MANIFEST" LINK="$p" TARGET="$t" python3 -c '
+import json, os
+mp, link, target = os.environ["MANIFEST"], os.environ["LINK"], os.environ["TARGET"]
+with open(mp) as fh:
+    m = json.load(fh)
+m.setdefault("symlinks", [])
+for e in m["symlinks"]:
+    if e.get("link") == link:
+        e["target"] = target
+        break
+else:
+    m["symlinks"].append({"link": link, "target": target})
+with open(mp, "w") as fh:
+    json.dump(m, fh, indent=2); fh.write("\n")
+'
+      echo "recorded symlink $p -> $t"
+      continue
+    fi
     [ -f "$p" ] || { echo "FAIL: $p does not exist, cannot record a hash for it" >&2; exit 1; }
     h=$(sha "$p")
     python3 - "$MANIFEST" "$p" "$h" <<'PY'

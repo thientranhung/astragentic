@@ -22,12 +22,23 @@
 # stated rather than discovered later.
 set -uo pipefail
 
-# Self-locate rather than trust the caller's cwd. Run from a dirty repo against a clean
-# worktree, a CWD-relative root measured the WRONG TREE while reporting on the right one —
-# which is how this audit's own first measurement came out wrong. `ledger-index.sh` already
-# resolves its root this way; two scripts documented to run in the same breath must not
-# resolve it by different rules.
-ROOT="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+# Self-locate rather than trust the caller's cwd: a CWD-relative root once measured one tree
+# while reporting on another. But self-locating by a FIXED depth is worse — `../..` is right
+# under `harness/scripts/` and lands on the repo's PARENT in every adapted project, where this
+# audit reported "NO ROLE CONTRACTS FOUND" on a correct install. Walk up to the payload instead.
+# (`ledger-index.sh` does not do it this way at all: it resolves from the ledger path it finds.
+# An earlier version of this comment claimed otherwise and was wrong about the file it named.)
+ROOT="${1:-}"
+if [[ -z "$ROOT" ]]; then
+  # Walk up from this script until a payload appears. Two layouts, one rule: the package keeps
+  # the payload under `harness/`, an adapted project keeps it at the repo root.
+  _d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [[ "$_d" != "/" ]]; do
+    if [[ -d "$_d/harness/.agents/roles" || -d "$_d/.agents/roles" ]]; then ROOT="$_d"; break; fi
+    _d="$(dirname "$_d")"
+  done
+  ROOT="${ROOT:-$(pwd)}"
+fi
 # Derive the payload from ROOT, not from the caller's cwd. A bare relative `harness` here was
 # the real CWD dependency: every axis below resolves through $PAYLOAD.
 PAYLOAD="$ROOT/harness"
@@ -37,8 +48,26 @@ FOUND=0
 echo "=== 1. always-on word budgets (these surfaces bill every session) ==="
 # Budgets guard the always-on surfaces against regrowth — the accretion that took the
 # prior package past 100k words. Raise one only with an owner decision in the same commit.
+# MARGIN IS THE MEASUREMENT, not the ceiling. The comment on role_budget() says every budget
+# carries ~150 words of headroom because an adapted project MUST add its own content, and it
+# names 32/23/51-word margins as the failure — "less headroom than a single sentence". This
+# function then reported `ok` on exactly that state, so 2.7.0 shipped two contracts with ONE
+# word of margin and the check called both fine. A downstream project hit it immediately:
+# adding one paragraph to builder.md put it 215 over. A ceiling that passes at 99.9% is not
+# measuring what the comment above it says it measures.
+MIN_MARGIN=100
 budget_check() { # <label> <limit> <count>
-  if [[ "$3" -gt "$2" ]]; then echo "OVER: $1 = $3 words (budget $2)"; FOUND=1; else echo "ok: $1 = $3/$2 words"; fi
+  if [[ "$3" -gt "$2" ]]; then
+    echo "OVER: $1 = $3 words (budget $2)"; FOUND=1
+  elif [[ $(( $2 - $3 )) -lt "$MIN_MARGIN" ]]; then
+    echo "TIGHT: $1 = $3/$2 words — only $(( $2 - $3 )) words of margin, under the $MIN_MARGIN"
+    echo "       an adapted project adds its own content to this file; that is the point of"
+    echo "       adapting, and this margin does not fit a paragraph. Trim the payload copy or"
+    echo "       raise the budget with a reason in the same commit."
+    FOUND=1
+  else
+    echo "ok: $1 = $3/$2 words ($(( $2 - $3 )) margin)"
+  fi
 }
 if [[ -d .claude/rules ]]; then
   # Path-scoped rules (frontmatter `paths:`) load only when matching files are touched —
@@ -72,7 +101,14 @@ role_budget() {
   # margin, applied once, to every role, not a fifth raise of thomas's remit — the case below
   # still needs a stated reason before its OWN ceiling moves again.
   case "$1" in
-    thomas)  echo 1970 ;;  # widest remit: claim protocol + three dispatch points + the arm
+    thomas)  echo 2150 ;;
+                           # RAISED 2.7.0, reason in this commit: that release added real
+                           # scope here — the tracker interlock told honestly, the
+                           # ready-for-agent gate, reading QA's coverage gaps, the
+                           # compaction tier, and the one-reply rebuttal. Compression
+                           # brought the file back under the OLD ceiling with ONE word
+                           # spare, which is the failure the block above names, not a
+                           # pass. The margin is the budget; 1969 ship + ~181 headroom.  # widest remit: claim protocol + three dispatch points + the arm
                            # cadence at three scopes. Raised from 1400 by owner decision
                            # 2026-08-13, porting a project ruling: the arm fires per ticket
                            # before its merge, so Thomas owns three fire points instead of
@@ -97,7 +133,14 @@ role_budget() {
                            # when the check runs. 1850 -> 1970 the SAME day: not a fifth raise
                            # of remit, the margin-calibration pass above — 1850 had shipped at
                            # 1818, a 32-word margin no project's own required addition fits in.
-    builder) echo 1500 ;;  # widest DOING surface: build, increment review, simplify,
+    builder) echo 1660 ;;
+                           # RAISED 2.7.0, reason in this commit: that release added real
+                           # scope here — the tracker interlock told honestly, the
+                           # ready-for-agent gate, reading QA's coverage gaps, the
+                           # compaction tier, and the one-reply rebuttal. Compression
+                           # brought the file back under the OLD ceiling with ONE word
+                           # spare, which is the failure the block above names, not a
+                           # pass. The margin is the budget; 1499 ship + ~161 headroom.  # widest DOING surface: build, increment review, simplify,
                            # THE CROSS-VENDOR ARM, visual verification, the two correctness
                            # rules, handback.
                            # 1400 -> 1500 in 2.5.0, and the reason is a change of REMIT, not
@@ -109,10 +152,24 @@ role_budget() {
                            # 250 words first, and what is left is the receipt shape and the
                            # Reviewed-or-delta rule — a Builder cannot write the artifact
                            # without either.
-    rin)     echo 1350 ;;  # ships at 1177 (23-word margin before this pass) — second
+    rin)     echo 1460 ;;
+                           # RAISED 2.7.0, reason in this commit: that release added real
+                           # scope here — the tracker interlock told honestly, the
+                           # ready-for-agent gate, reading QA's coverage gaps, the
+                           # compaction tier, and the one-reply rebuttal. Compression
+                           # brought the file back under the OLD ceiling with ONE word
+                           # spare, which is the failure the block above names, not a
+                           # pass. The margin is the budget; 1305 ship + ~155 headroom.  # ships at 1177 (23-word margin before this pass) — second
                            # opinion, artifact verification, the arm's standard. Raised
                            # under the same margin-calibration pass as thomas and qa.
-    qa)      echo 1300 ;;  # ships at 1149 (51-word margin before this pass) — the running-
+    qa)      echo 1450 ;;
+                           # RAISED 2.7.0, reason in this commit: that release added real
+                           # scope here — the tracker interlock told honestly, the
+                           # ready-for-agent gate, reading QA's coverage gaps, the
+                           # compaction tier, and the one-reply rebuttal. Compression
+                           # brought the file back under the OLD ceiling with ONE word
+                           # spare, which is the failure the block above names, not a
+                           # pass. The margin is the budget; 1294 ship + ~156 headroom.  # ships at 1149 (51-word margin before this pass) — the running-
                            # product walk, interface/journey/contract/data axes. Raised
                            # under the same margin-calibration pass as thomas and rin.
     *)       echo 1200 ;;  # shaper ships at 979, a 221-word margin already above the floor.

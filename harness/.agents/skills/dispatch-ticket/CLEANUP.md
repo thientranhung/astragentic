@@ -115,7 +115,14 @@ neither can be matched, so a kill ordered after the removal finds nothing and re
 the shared test container every live Builder was standing on (AST-115).
 
 ```bash
-# 1. resources first, matched by this worktree's path — never `pkill -f` by name
+# 1. resources first, matched by this worktree's path — never `pkill -f` by name.
+#    MATCH ON THE PROCESS'S CWD, NOT ITS ARGV. A downstream project measured
+#    `ps -eo command= | grep -- "--cwd <path>"` reporting NOTHING while a live broker rooted in
+#    that worktree had been running three hours: the flag is not always in argv, and a process
+#    that chdir'd carries no trace of it there. `lsof -a -d cwd` asks the kernel where the
+#    process actually IS, and found it immediately (TRA-310).
+lsof -a -d cwd -F pn 2>/dev/null | awk -v w="<worktree-path>" '/^p/{p=substr($0,2)} /^n/{if (index(substr($0,2), w)==1) print p}' | sort -u | xargs -r kill
+#    Keep the argv match as a second pass; neither alone has been enough.
 ps -eo pid=,command= | grep app-server-broker | grep -F -- "<worktree-path>" | awk '{print $1}' | xargs -r kill
 proj=$(basename "<worktree-path>" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]//g')
 ids=$(docker ps -q --filter "label=com.docker.compose.project=$proj"); [ -n "$ids" ] && docker stop $ids
