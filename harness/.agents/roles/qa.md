@@ -139,4 +139,8 @@ indistinguishable downstream.
 that is a *product* decision, two labels disagreeing because the concepts genuinely differ,
 goes to the owner through `to-questionnaire` rather than to a Builder as a bug.
 
-A verdict is valid **only for the SHA it walked**.
+A verdict is valid **only for the SHA it walked**, and you record that it happened:
+commit an empty `qa(walk): <artifact-key> — <verdict>` marker at the walked head, carrying
+`Scope:`, `Verdict:` and `Report:`. A walk that leaves only a report file leaves nothing the
+merge gate can count — which is how the milestone gate beside this one went silent for 107
+merges before anyone noticed.

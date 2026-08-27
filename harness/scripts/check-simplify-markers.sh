@@ -91,6 +91,49 @@ KINDS = {
         "economy": False,
         "reviewed": True,
     },
+    # ── rin(gate) and qa(walk) ────────────────────────────────────────────────────────────
+    # WHY THESE EXIST, and it is the sharpest thing a downstream project has told this package.
+    #
+    # It counted, in one repo over 200 commits: 35 `arm(ticket):`, 22 `simplify(increment):`,
+    # and ZERO Rin rounds across 107 merges and 33 tickets. Then it asked what separates the
+    # gates that fire from the one that does not, and the answer is not the trigger sentence
+    # and not the counter:
+    #
+    #   the gates that fire are the ones with a PHYSICAL ARTIFACT that a script the router
+    #   already runs REFUSES TO PROCEED WITHOUT.
+    #
+    # `arm(ticket)` and `simplify(increment)` each commit a marker, and this script sits in the
+    # merge gate and exits 1. Nobody remembers those gates; they cannot merge without them.
+    # Rin's gate had a report file at a path outside every checkout, no marker in the range,
+    # and no reader in the gating script — so ">10 merges since the last Rin round is a STOP"
+    # was a quantity NOTHING COMPUTED, judged by a resident session whose context compacts,
+    # about an event with no machine-detectable trace. That project had to invent a
+    # commit-subject grep to get any number at all, and the best match for "the last Rin round"
+    # turned out to be the ledger entry recording that the gate had gone quiet.
+    #
+    # The counter was answering "the router did not know the number". The measured problem was
+    # "nothing was ever going to tell it". Necessary, and not sufficient: it needed an emitter.
+    #
+    # `qa(walk)` is here for the same reason and BEFORE the same evidence arrives. QA was given
+    # that counter too, has a report file, and has no marker and no reader — the identical
+    # shape. The prediction is that it goes quiet the same way and a project measures it after
+    # the fact. Shipping the emitter now is cheaper than being right about that later.
+    #
+    # Both are ADVISORY by scope: milestone gates do not fire per ticket, so `--marker` on them
+    # reports the count and the distance rather than blocking a merge. The number existing at
+    # the moment of merging is the whole point; today it does not exist at all.
+    "rin(gate)": {
+        "required": ["Scope:", "Verdict:", "Report:"],
+        "tokens": {"Verdict:": ("PASS", "BLOCKING", "NON-BLOCKING")},
+        "scope": "advisory",
+        "economy": False,
+    },
+    "qa(walk)": {
+        "required": ["Scope:", "Verdict:", "Report:"],
+        "tokens": {"Verdict:": ("PASS", "BLOCKING", "NON-BLOCKING")},
+        "scope": "advisory",
+        "economy": False,
+    },
 }
 
 # Do not parse a field's interior. `Range:` occurs as both `15 commits, 7 files (a..b)` and
@@ -198,8 +241,17 @@ for kind in kinds:
     shas = [sha for sha, _ in marks]
     bodies = dict(marks)
 
-    # ABSENCE IS A FINDING. A range with no markers is AST-094, not a quiet pass.
+    # ABSENCE IS A FINDING. A range with no markers is AST-094, not a quiet pass — but for an
+    # ADVISORY kind it is a finding to REPORT, not to block on: a milestone gate does not fire
+    # per ticket, and a per-merge STOP would be wrong. Reporting it is still the whole point,
+    # because the measured failure was that the number did not exist anywhere.
     if not shas:
+        if spec["scope"] == "advisory":
+            since = git("rev-list", "--count", f"{base}..{head_sha}").strip() or "?"
+            print(f"[{kind}] NONE in range — {since} commit(s) on {base}..{head} carry no "
+                  f"{kind} marker. This gate leaves no other machine-readable trace: if it has "
+                  f"run, it ran unrecorded; if it has not, nothing else here will say so.")
+            continue
         print(f"[{kind}] markers=0 — STOP: no marker on {base}..{head} (AST-094)")
         exit_code = 1
         continue
@@ -230,6 +282,28 @@ for kind in kinds:
 
     # `git log` lists newest first, so the first live marker is the newest one.
     live = [s for s in shas if s not in superseded_by]
+
+    # ADVISORY SCOPE: report the count and the distance, never block. A milestone gate does not
+    # fire per ticket, so a per-merge STOP would be wrong — but the NUMBER has to exist and has
+    # to be in front of whoever is merging, because the measured failure was that nothing
+    # computed it at all. Absence is the loudest case and gets said first.
+    if spec["scope"] == "advisory":
+        if not shas:
+            since = git("rev-list", "--count", f"{base}..{head_sha}").strip() or "?"
+            print(f"[{kind}] NONE in range — {since} commit(s) since {base_sha[:9]} carry no "
+                  f"{kind} marker. This gate leaves no other trace; if it has run, it has run "
+                  f"unrecorded, and if it has not, nothing else here will say so.")
+        else:
+            newest = live[0] if live else shas[0]
+            ahead = git("rev-list", "--count", f"{newest}..{head_sha}").strip() or "?"
+            bad_a = [x for x in ([newest] if not well[newest] else [])]
+            print(f"[{kind}] markers={len(shas)} live={len(live)} newest={newest[:9]} "
+                  f"({ahead} commit(s) since) not-well-formed={len(bad_a)} (advisory)")
+            for x in bad_a:
+                for m in missing[x]:
+                    print(f"  NOTE: {x[:9]}: {m}")
+        continue
+
     checked = live if spec["scope"] == "live" else live[:1]
     bad = [s for s in checked if not well[s]]
     print(f"[{kind}] markers={len(shas)} superseded={len(superseded_by)} live={len(live)} "

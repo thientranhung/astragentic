@@ -65,3 +65,44 @@ Unreviewed-delta: <from>..<to> — <n> lines, <m> files: <what changed, why it i
 **`Reviewed:` is this commit's parent, OR `Unreviewed-delta:` declares the gap. Never neither**
 (AST-134): a fold moves the tree past what any pass read, so the equality is legitimately false
 and the omission is the failure.
+
+## `rin(gate)` and `qa(walk)` — the milestone receipts
+
+**Why these exist, and it is the sharpest thing a downstream project has told this package.**
+It counted, over 200 commits in one repo: 35 `arm(ticket):`, 22 `simplify(increment):`, and
+**zero Rin rounds across 107 merges and 33 tickets**. Then it asked what separates the gates
+that fire from the one that does not, and the answer is neither the trigger sentence nor the
+counter:
+
+> the gates that fire are the ones with a **physical artifact** that a script the router
+> **already runs** refuses to proceed without.
+
+Nobody remembers `arm(ticket)` or `simplify(increment)`; nobody can merge without them. Rin's
+gate had a report file at a path outside every checkout, no marker in the merge range, and no
+reader in the gating script — so *"more than 10 merges since the last Rin round is a STOP"* was
+a quantity **nothing computed**, judged by a resident session whose context compacts, about an
+event with no machine-detectable trace. That project had to invent a commit-subject grep to get
+any number at all, and the closest match for "the last Rin round" turned out to be the ledger
+entry recording that the gate had gone quiet.
+
+The counter answered *"the router did not know the number."* The measured problem was
+*"nothing was ever going to tell it."* Keep the counter; this is its emitter.
+
+`qa(walk)` is here for the same reason and **before** the same evidence arrives: QA was given
+that counter too, has a report file, and had no marker and no reader — the identical shape.
+
+**Shape** — an empty commit at the reviewed or walked head:
+
+```
+rin(gate): <artifact-key> — <verdict>
+
+Scope: <spec | ticket | slice> <what>
+Verdict: PASS | BLOCKING | NON-BLOCKING (<n> blocking, <m> non-blocking)
+Report: <absolute $GATE_FILE path, and its archived copy>
+```
+
+`qa(walk):` is identical in shape and carries the walk's verdict and report.
+
+**Both are ADVISORY.** `--marker 'rin(gate)'` reports the count and the distance and does not
+block, because a milestone gate does not fire per ticket. Absence prints loudest, because
+absence is the case that went unmeasured for a week.

@@ -1,3 +1,78 @@
+# Astragentic 2.7.2
+
+Three more defects from the same live project, and the one finding this release cycle has
+produced that changes the method rather than repairing it.
+
+**2.7.1 could not be applied by its own installer.** Two reasons, both only visible from inside
+a staged release:
+
+- `install.sh` resolved `$HARNESS_ROOT/prompts/ADAPT-HARNESS.md`, and staging FLATTENS prompts
+  to the release root. The copy that ships inside `.astraler/releases/<v>/` — added in 2.7.1
+  precisely so nobody has to compute arbitration by hand again — died on its own layout. The
+  fix was inert in the one place it was shipped to reach.
+- The staged payload failed the staging gate 2.7.1 itself added. `install.sh` INJECTS
+  `check-requirements.sh` into `harness/scripts/` at stage time — a file the source tree does
+  not have at that path, and one that cites ledger entries. So `INDEX.md`, generated against
+  the source, was stale for the payload by exactly those five citations. The immutability rule
+  then correctly refused an in-place repair, leaving `--plan` and `--apply` both unreachable.
+  **Derived files are now regenerated against the staged tree**, and the gate checks what
+  ships rather than what it was built from.
+
+**`ledger-index.sh --check` was position-dependent, and the wrong position silently WROTE.**
+`ledger-index.sh . --check` and `--check .` both exited 0 and rewrote the index — a check that
+cannot fail, inside the one script whose entire job is a staleness claim. It bit because the
+three scripts ADAPT tells adapters to run in the same breath took three different conventions.
+One convention now: flags anywhere, first non-flag argument is the root.
+
+## The gates that fire, and the one that did not
+
+A downstream project counted, over 200 commits in one repo: **35 `arm(ticket):`, 22
+`simplify(increment):`, and zero Rin rounds across 107 merges and 33 tickets.** Then it asked
+what separates them, and the answer is neither the trigger sentence nor the counter this
+package added in 2.7.0:
+
+> The gates that fire are the ones with a **physical artifact** that a script the router
+> **already runs** refuses to proceed without.
+
+Nobody remembers `arm(ticket)` or `simplify(increment)`. Nobody can merge without them.
+
+Rin's gate had a report file at a path outside every checkout, no marker in the merge range,
+and no reader in the gating script. So *"more than 10 merges since the last Rin round is a
+STOP"* was a quantity **nothing computed**, evaluated by a resident session whose context
+compacts, about an event with no machine-detectable trace. That project had to invent a
+commit-subject grep to get any number at all, and the closest match for "the last Rin round"
+turned out to be **the ledger entry recording that the gate had gone quiet**.
+
+2.7.0's counter answered *"the router did not know the number."* The measured problem was
+*"nothing was ever going to tell it."* The counter was necessary and not sufficient; it needed
+an emitter.
+
+**`rin(gate)` and `qa(walk)` are marker kinds now.** Rin commits one at the reviewed head, QA at
+the walked head, and `check-simplify-markers.sh` — already in the merge gate, already parsing
+subjects over a range — reports them. Both are **advisory**: a milestone gate does not fire per
+ticket, so they print the count and the distance rather than blocking. Absence prints loudest,
+because absence is the case that went unmeasured for a week.
+
+`qa(walk)` ships **before** the evidence for it arrives. QA got 2.7.0's counter, has a report
+file, and had no marker and no reader — the identical shape. The prediction was that it goes
+quiet the same way and a project measures it after the fact. Shipping the emitter now is
+cheaper than being right about that later.
+
+## Migration
+
+Nothing to do. `rin(gate)` and `qa(walk)` are advisory, so a project with no such markers gets
+a line telling it so rather than a refused merge. Add them to your merge command when you want
+the number:
+
+```bash
+scripts/check-simplify-markers.sh <base> <head> \
+    --marker 'simplify(increment)' --marker 'arm(ticket)' \
+    --marker 'rin(gate)' --marker 'qa(walk)'
+```
+
+If you are on 2.7.1 and its staged installer refused to run, that is the first defect above and
+this release is the fix.
+
 # Astragentic 2.7.1
 
 2.7.0 went into a live project the day it was cut. That project — on 2.3.34, skipping three

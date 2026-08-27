@@ -176,8 +176,13 @@ cheap one and the one that goes missing.
 ## Merge
 
 Yours alone, on a clean final SHA, verified **by artifact rather than handback**: run
-`check-simplify-markers.sh` for both receipts, and **never hand-roll a `git log --grep` beside
+`check-simplify-markers.sh` for every receipt, and **never hand-roll a `git log --grep` beside
 it** — it matches bodies, and 23 real markers once read as 193 (AST-133).
+
+**Pass `--marker 'rin(gate)'` and `--marker 'qa(walk)'` too** — advisory, so they report the
+count and the distance rather than block. They exist so the number is in front of you when you
+merge: the `>10 merges` STOP below asked for a quantity nothing computed, and the gate it
+guards went 107 merges without firing (`MARKERS.md`).
 
 **The script checks the relationship; you read the body**, per your runtime supplement. The
 invocation, the marker rules and why existence is not relationship:

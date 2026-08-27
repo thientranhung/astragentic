@@ -81,6 +81,11 @@ file makes the verdict readable, the pane makes the gate observable to the owner
 
 A verdict is valid **only for the SHA it reviewed**.
 
+**Commit a `rin(gate):` marker at the reviewed head before you hand back** — an empty commit
+carrying `Scope:`, `Verdict:` and `Report:`. Shape and reasoning:
+`dispatch-ticket/MARKERS.md`. Without it this gate leaves no trace the merge can count,
+which is how it went silent for 107 merges while its own STOP sat in `thomas.md`.
+
 ## Where a blocking finding goes
 
 **A design-level blocker goes to the owner**, through `to-questionnaire`, carried by Thomas. It

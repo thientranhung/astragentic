@@ -18,8 +18,17 @@ set -euo pipefail
 
 HARNESS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PAYLOAD="$HARNESS_ROOT/harness"
-ADAPT_PROMPT="$HARNESS_ROOT/prompts/ADAPT-HARNESS.md"
-UNINSTALL_PROMPT="$HARNESS_ROOT/prompts/UNINSTALL-HARNESS.md"
+# TWO LAYOUTS, because this script now ships INSIDE a release. The package keeps its prompts
+# under `prompts/`; staging flattens them to the release root, so the copy that lands in
+# `.astraler/releases/<v>/` finds `ADAPT-HARNESS.md` beside itself and no `prompts/` at all.
+# Shipping the installer without teaching it that made the fix inert exactly where it was sent.
+if [ -f "$HARNESS_ROOT/prompts/ADAPT-HARNESS.md" ]; then
+  ADAPT_PROMPT="$HARNESS_ROOT/prompts/ADAPT-HARNESS.md"
+  UNINSTALL_PROMPT="$HARNESS_ROOT/prompts/UNINSTALL-HARNESS.md"
+else
+  ADAPT_PROMPT="$HARNESS_ROOT/ADAPT-HARNESS.md"
+  UNINSTALL_PROMPT="$HARNESS_ROOT/UNINSTALL-HARNESS.md"
+fi
 RELEASE_NOTES="$HARNESS_ROOT/RELEASE-NOTES.md"
 VERSION="$(cat "$HARNESS_ROOT/VERSION")"
 
@@ -252,6 +261,14 @@ cp "$HARNESS_ROOT/check-requirements.sh" "$STAGING_DIR/check-requirements.sh"
 # so deleting that directory took the repo's own doctor with it (AST-059). One source file
 # here, copied to two destinations; the package keeps a single home for it.
 cp "$HARNESS_ROOT/check-requirements.sh" "$STAGING_DIR/harness/scripts/check-requirements.sh"
+# REGENERATE THE DERIVED FILES AGAINST THE STAGED TREE, not the source tree. The line above
+# INJECTS a file the source does not have at that path, and it cites ledger entries — so an
+# index generated from the source is stale for the payload by exactly those citations, and the
+# staging gate below then refuses the release. Measured downstream: five rows short, and the
+# immutability rule correctly refused an in-place repair, leaving `--plan` and `--apply` both
+# unreachable for the release that shipped it. Derived files are derived from what SHIPS.
+bash "$STAGING_DIR/harness/scripts/ledger-index.sh" >/dev/null 2>&1 || true
+python3 "$STAGING_DIR/harness/scripts/ledger-rules.sh" "$STAGING_DIR" >/dev/null 2>&1 || true
 cp "$HARNESS_ROOT/VERSION"            "$STAGING_DIR/VERSION"
 # STAGE THE INSTALLER ITSELF. Every "Upgrade from" note and ADAPT-HARNESS tell an operator to
 # run `./install.sh <target> --apply`, and the staged release did not contain one — so the
@@ -286,8 +303,10 @@ run_selfcheck() {  # $1 = label, rest = argv
 }
 run_selfcheck check-reachability python3 "$HARNESS_ROOT/harness/scripts/check-reachability.sh" "$HARNESS_ROOT"
 run_selfcheck docs-staleness     bash    "$HARNESS_ROOT/harness/scripts/docs-staleness-audit.sh" "$HARNESS_ROOT"
-run_selfcheck ledger-index       bash    "$HARNESS_ROOT/harness/scripts/ledger-index.sh" --check
-run_selfcheck ledger-rules       python3 "$HARNESS_ROOT/harness/scripts/ledger-rules.sh" "$HARNESS_ROOT" --check
+# These two run against the STAGED tree: it is what a project receives, and it differs from the
+# source by the injected check-requirements.sh above.
+run_selfcheck ledger-index       bash    "$STAGING_DIR/harness/scripts/ledger-index.sh" --check
+run_selfcheck ledger-rules       python3 "$STAGING_DIR/harness/scripts/ledger-rules.sh" "$STAGING_DIR" --check
 [ "$SELFCHECK_FAIL" -eq 0 ] || {
   echo >&2
   echo "Three checks, run together on purpose: they catch different classes, and a release" >&2

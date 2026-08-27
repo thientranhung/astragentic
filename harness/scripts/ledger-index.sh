@@ -5,6 +5,27 @@
 #   --check   exit 1 if INDEX.md differs from what this run would write
 set -euo pipefail
 
+
+# ARGUMENT ORDER MUST NOT DECIDE WHETHER A CHECK CAN FAIL. This read `$1` only, so
+# `ledger-index.sh . --check` and `ledger-index.sh --check .` both exited 0 AND REWROTE the
+# index — a staleness check that silently repairs the thing it was asked about, inside the one
+# script whose entire job is that claim. It bit because the three scripts ADAPT tells adapters
+# to run together took three conventions: `docs-staleness-audit.sh <root>`,
+# `ledger-rules.sh <root> --check`, and this one's positional `--check`. Anyone generalising
+# from the first two got a green that meant nothing, which is a plausible path to shipping a
+# stale index. One convention now: flags anywhere, first non-flag argument is the root.
+CHECK_ONLY=0
+ARGS=()
+for a in "$@"; do
+  case "$a" in
+    --check) CHECK_ONLY=1 ;;
+    -*)      echo "unknown option: $a" >&2; exit 2 ;;
+    *)       ARGS+=("$a") ;;
+  esac
+done
+set -- "${ARGS[@]+"${ARGS[@]}"}"
+
+
 # Two layouts, and the script ships into both. In the PACKAGE it sits at harness/scripts/;
 # in an ADAPTED PROJECT adaptation lands it at scripts/. Deriving the root by a fixed number
 # of `..` hops picks one and silently misses the other — measured: `../..` from an adapted
@@ -86,7 +107,7 @@ while IFS= read -r line; do
   printf '%s\n' "$line"
 done < "$TMP" > "$TMP.2"
 
-if [[ "${1:-}" == "--check" ]]; then
+if [[ "$CHECK_ONLY" == "1" ]]; then
   if ! diff -q "$TMP.2" "$INDEX" >/dev/null 2>&1; then
     echo "STOP: INDEX.md is stale — run scripts/ledger-index.sh"; rm -f "$TMP" "$TMP.2"; exit 1
   fi
