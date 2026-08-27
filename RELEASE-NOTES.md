@@ -1,3 +1,32 @@
+# Astragentic 2.7.7
+
+2.7.6 fixed one of three places that made the same mistake, and shipped.
+
+The defect 2.7.6 closed was that comparing `applied-version` against `CANDIDATE` turned a
+healthy project's own gate red the moment somebody upstream staged a release. **Checks 2 and 3
+were still comparing against the staged release one line below the fix.** A project sitting
+correctly at 2.7.5 with 2.7.6 staged failed on files it has no reason to carry yet, and on
+`ledger-rules.py` — a script the newer release had renamed and the older one, correctly, does
+not have.
+
+Both now measure against the release that is APPLIED, falling back to the candidate only when
+no applied release is staged. The script list comes from the applied release too, so a rename
+in a release you have not taken is not a missing file.
+
+Ninth instance of `AST-137`, and this one is worth naming for a different reason than the other
+eight: it was not a tested-versus-real gap at all. **It was fixing one of three call sites that
+share a comparison and shipping without checking the other two.** The entry's rule generalises
+one step further than it was written: after correcting a comparison, grep for the value being
+compared, not for the symptom.
+
+Verified on the project that reported the original: EXIT 0, with the advisory reading
+*"applied-version (2.7.5) is landed and clean — release 2.7.6 is staged and not started"*,
+which is the true statement about that repository.
+
+## Migration
+
+None.
+
 # Astragentic 2.7.6
 
 Two defects, both self-inflicted, and one of them arrived because I said "nothing queued".

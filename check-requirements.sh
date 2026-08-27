@@ -493,9 +493,13 @@ PYEOF
 
     # 2. RUNS, not exists. Each script is invoked exactly as ADAPT tells an adapter to invoke
     #    it — bare, from the repo root — because that is the invocation that was broken.
-    for SC in docs-staleness-audit.sh ledger-index.sh ledger-rules.py check-reachability.sh; do
+    # The script list comes from the APPLIED release too: a newer staged release may rename or
+    # add scripts, and a project that has not applied it is not missing anything.
+    APPLIED_REL="$TARGET/.astraler/releases/${APPL:-$CAND}/harness"
+    [ -d "$APPLIED_REL" ] || APPLIED_REL="$TARGET/.astraler/releases/$CAND/harness"
+    for SC in $( (cd "$APPLIED_REL/scripts" 2>/dev/null && ls *.sh *.py 2>/dev/null) | grep -E '^(docs-staleness-audit|ledger-index|ledger-rules|check-reachability)\.(sh|py)$'); do
       SP="$TARGET/scripts/$SC"
-      [ -f "$SP" ] || { miss "scripts/$SC is missing" "the release ships it; re-run the payload install"; continue; }
+      [ -f "$SP" ] || { miss "scripts/$SC is missing" "the release you have applied ships it; re-run the payload install"; continue; }
       if head -1 "$SP" | grep -q python; then
         OUT="$(cd "$TARGET" && python3 "scripts/$SC" 2>&1 || true)"
       else
@@ -512,7 +516,14 @@ PYEOF
     # 3. Payload files that differ, minus the ones allowed to. A difference is not a defect —
     #    an adapted project SHOULD carry its own content — but an UNRECORDED one is, because
     #    then nobody can tell a deliberate merge from a half-applied release.
-    REL="$TARGET/.astraler/releases/$CAND/harness"
+    # MEASURE AGAINST WHAT IS APPLIED, NOT WHAT IS STAGED. Check 1 was fixed to stop calling a
+    # healthy project broken the moment someone upstream staged a release; checks 2 and 3 were
+    # left comparing against $CAND and did exactly the same thing one line down — a project
+    # sitting correctly at 2.7.5 with 2.7.6 staged failed on files it has no reason to carry
+    # yet, and on a script the newer release renamed. Ninth instance of AST-137, created by
+    # fixing one of the three places that compare.
+    REL="$TARGET/.astraler/releases/${APPL:-$CAND}/harness"
+    [ -d "$REL" ] || REL="$TARGET/.astraler/releases/$CAND/harness"
     REPORT="$TARGET/.astraler/state/ADAPTATION-REPORT.md"
     if [ -d "$REL" ]; then
       UNDECLARED=""
