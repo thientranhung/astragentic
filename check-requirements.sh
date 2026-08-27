@@ -441,7 +441,93 @@ PYEOF
     # reported OK for a payload with three new files and one edited file, none of
     # them yet committed). Walk every payload file actually on disk instead of a
     # sample, and check content against HEAD, not just presence in the index.
-    # AST-036 does not depend on the docs. Gating it on TARGET_READY meant three missing
+    # ---------------------------------------------------------------------------------------
+  # INTEGRATION, NOT INSTALLATION. Everything above asks whether files are PRESENT. A live
+  # upgrade showed that is not the same question: two shipped scripts resolved their root one
+  # level too high and could not run at all in an adapted layout, while every presence check
+  # passed and `applied-version` read 2.7.0. A marker is a claim, and this package has spent
+  # four releases learning that a claim nothing tests is a claim that goes wrong quietly.
+  #
+  # Four conditions, each answerable:
+  #   1. the marker matches the release that is actually staged
+  #   2. every shipped script RUNS here — not exists, runs
+  #   3. every payload file matches the release, is owner-owned, or has a recorded decision
+  #   4. the mechanisms the release adds actually fire (the guard smoke test above)
+  if [ "$ADAPTED" = "1" ]; then
+    echo
+    echo "INTEGRATION $TARGET:"
+
+    CAND="$(cat "$TARGET/.astraler/CANDIDATE" 2>/dev/null || true)"
+    APPL="$(cat "$TARGET/.astraler/state/applied-version" 2>/dev/null || true)"
+    if [ -n "$APPL" ] && [ "$APPL" = "$CAND" ]; then
+      ok "applied-version ($APPL) matches CANDIDATE"
+    else
+      miss "applied-version '$APPL' does not match CANDIDATE '$CAND'" \
+        "the project is mid-upgrade, or an apply stopped on conflicts; nothing else here speaks for a payload that is half-landed"
+    fi
+
+    # 2. RUNS, not exists. Each script is invoked exactly as ADAPT tells an adapter to invoke
+    #    it — bare, from the repo root — because that is the invocation that was broken.
+    for SC in docs-staleness-audit.sh ledger-index.sh ledger-rules.sh check-reachability.sh; do
+      SP="$TARGET/scripts/$SC"
+      [ -f "$SP" ] || { miss "scripts/$SC is missing" "the release ships it; re-run the payload install"; continue; }
+      if head -1 "$SP" | grep -q python; then
+        OUT="$(cd "$TARGET" && python3 "scripts/$SC" 2>&1 || true)"
+      else
+        OUT="$(cd "$TARGET" && bash "scripts/$SC" 2>&1 || true)"
+      fi
+      case "$OUT" in
+        *"not found"*|*"NOT FOUND"*|*"NO ROLE CONTRACTS"*|*"measured nothing"*|*"cannot"*)
+          miss "scripts/$SC does not run in this project's layout" \
+            "$(printf '%s' "$OUT" | grep -m1 -iE 'not found|no role contracts|measured nothing|cannot' | sed 's/^ *//')" ;;
+        *) ok "scripts/$SC runs here" ;;
+      esac
+    done
+
+    # 3. Payload files that differ, minus the ones allowed to. A difference is not a defect —
+    #    an adapted project SHOULD carry its own content — but an UNRECORDED one is, because
+    #    then nobody can tell a deliberate merge from a half-applied release.
+    REL="$TARGET/.astraler/releases/$CAND/harness"
+    REPORT="$TARGET/.astraler/state/ADAPTATION-REPORT.md"
+    if [ -d "$REL" ]; then
+      UNDECLARED=""
+      while IFS= read -r f; do
+        case "$f" in
+          # OWNER-OWNED: the project's, never written by an upgrade.
+          .agents/orchestrator.md|.claude/settings.json|.codex/profiles/*) continue ;;
+          # GENERATED PER PROJECT: INDEX.md and RULES.md are derived from the ledger, and an
+          # adapted project's ledger carries its own citations — so these differ from the
+          # release by construction and will differ forever. Flagging them would train the
+          # reader to skim this list, which is the one thing it cannot afford.
+          .agents/memory/INDEX.md|.agents/memory/RULES.md) continue ;;
+        esac
+        [ -f "$TARGET/$f" ] || { UNDECLARED="$UNDECLARED  $f (absent)\n"; continue; }
+        diff -q "$REL/$f" "$TARGET/$f" >/dev/null 2>&1 && continue
+        # MATCH THE WAY A HUMAN WRITES IT, not the way find prints it. An adapter recorded
+        # all eighteen of its decisions as `roles/builder.md` and `dispatch-ticket/CLEANUP.md`
+        # — the payload-relative form with the tree prefix dropped, which is how anyone refers
+        # to these files in prose. Demanding `.agents/roles/builder.md` reported a diligent
+        # adapter as non-compliant, which is the third time in this release cycle a new check
+        # fired on correct work. Accept the prefixed form, the unprefixed form, and the
+        # skill-plus-file form.
+        F_NOPREFIX="${f#.agents/}"; F_NOPREFIX="${F_NOPREFIX#.claude/}"
+        F_NOPREFIX="${F_NOPREFIX#skills/}"
+        if grep -qF -- "$f" "$REPORT" 2>/dev/null \
+           || grep -qF -- "$F_NOPREFIX" "$REPORT" 2>/dev/null; then
+          continue
+        fi
+        UNDECLARED="$UNDECLARED  $f\n"
+      done < <(cd "$REL" && find . -type f | sed 's|^\./||' | sort)
+      if [ -z "$UNDECLARED" ]; then
+        ok "every payload file matches the release, is owner-owned, or is named in ADAPTATION-REPORT.md"
+      else
+        miss "payload files differ from the release and no record says why" \
+          "$(printf "%b" "$UNDECLARED" | head -8 | tr '\n' ' ')— record each in .astraler/state/ADAPTATION-REPORT.md as a kept-on-purpose decision, or re-apply"
+      fi
+    fi
+  fi
+
+  # AST-036 does not depend on the docs. Gating it on TARGET_READY meant three missing
     # markdown files suppressed the check that Builder worktrees can see the contracts at
     # all — the weaker finding silencing the stronger. Run it always.
     if true; then
