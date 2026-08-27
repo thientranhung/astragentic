@@ -74,13 +74,32 @@ in a handback — subject-only matching returned exactly the genuine set. The sc
 does this; the rule is recorded here because anyone re-deriving the check by hand reaches for
 a body grep first. Use `\b` so a shorter id never matches inside a longer one.
 
-## The three drift classes
+## The four drift classes
 
 | Class | Signal | Meaning |
 |---|---|---|
 | **Lagging** | `subject_commits > 0`, no branch, tracker state not completed | merged but never written back. The common case, and the harmless-looking one. |
 | **Phantom done** | tracker state completed, `subject_commits = 0` | **the dangerous direction.** The tracker says shipped; nothing shipped. Investigate before touching anything. |
 | **Stale claim** | assignee set, no branch, no worktree | a claim with no Builder behind it. This blocks the ticket from ever being re-dispatched, because a live assignee must never be cleared by someone who does not own it. |
+| **Unclaimed in-progress** | tracker state is the WORKING state, assignee EMPTY | the inverse of a stale claim, and it was missing from this list until a live project found five at once. |
+
+**The fourth class is the one that corrupts the frontier**, and it is worth its own paragraph
+because the other three do not do this. The frontier is *"every ticket whose blockers are done
+and whose assignee is empty"* — so a ticket sitting in the working state with no assignee is
+**excluded from the claimable set while nothing is working it.** It is not merely mis-recorded;
+it is invisible to the query that decides what gets built, and it stays that way indefinitely
+because nothing revisits a label.
+
+On a tracker where **the assignee IS the claim** — GitHub, where the only assign command writes
+one login for every dispatcher — this state means one of two things and you cannot tell which
+from the tracker: a claim that was never made, or a label nobody cleared after the work ended.
+Check the branch. A branch with unmerged commits and no assignee is a dispatch whose claim step
+was skipped; no branch at all is a label left behind.
+
+Measured on a live project: **five tickets in the working state, zero assignees, none of them
+being worked.** Found by reading the board rather than by running anything, which is the useful
+half — a gate nobody fires and a label nobody clears are the same failure in different clothes,
+and only one of them has a script watching for it.
 
 A ticket with `subject_commits = 0` **and** a branch with unmerged commits **and** a worktree
 is not drift — that is a healthy in-flight ticket. Do not report it.

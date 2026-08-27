@@ -16,6 +16,17 @@
 # ADDING A CASE: when a defect turns out to be an invocation-shape defect — and they nearly all
 # are — add the shape here in the same commit as the fix. A case that reproduces the bug before
 # the fix and passes after is worth more than the fix's own comment.
+#
+# AND THE OPERATIONAL RULE `AST-137` DOES NOT STATE, which the project that found the entry
+# supplied afterwards: **every instance of it was caught by making the thing fail on purpose,
+# and none by reading.** Restoring a real fossil into a tree and re-running. Passing a
+# 40-character SHA instead of a branch name. Editing a payload file and watching the check stay
+# green. Building an actual dual-homed symlink. In every case the code had already been read,
+# by both of us, and read as correct.
+#
+# So a case here does not earn its place by asserting the right answer. It earns it by having
+# been watched to FAIL first. If you add one that passed on the first run, you have written a
+# test for the invocation you already believed in — which is the defect, not the check for it.
 
 set -uo pipefail
 VERBOSE=0; [ "${1:-}" = "-v" ] && VERBOSE=1

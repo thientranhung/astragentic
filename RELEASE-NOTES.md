@@ -1,3 +1,67 @@
+# Astragentic 2.7.12
+
+The last release of this cycle. One drift class the tracker layer was missing, and one
+operational rule that turns out to matter more than the entry it belongs to.
+
+## A fourth drift class, found by reading a board rather than running anything
+
+`reconcile-tracker` listed three: lagging, phantom done, stale claim. **Stale claim keys on
+"assignee set, no branch". Nothing watched the inverse.**
+
+A live project reported five tickets at once in the working state with **zero assignees** —
+`in-progress` labels with no claim behind them. On the GitHub adapter, where the assignee *is*
+the claim, that means either a claim never made or a label nobody cleared, and the tracker
+cannot tell you which.
+
+**It is the class that corrupts the frontier**, which none of the other three do. The frontier
+is *"every ticket whose blockers are done and whose assignee is empty"* — so a ticket in the
+working state with no assignee is **excluded from the claimable set while nothing is working
+it**, indefinitely, because nothing revisits a label. Five tickets invisible to the query that
+decides what gets built.
+
+Added, with the branch check that distinguishes the two causes: unmerged commits and no
+assignee is a dispatch whose claim step was skipped; no branch at all is a label left behind.
+
+## The rule `AST-137` does not state
+
+The project that produced that entry supplied its operational half afterwards, and it survives
+better than the entry's own wording:
+
+> every instance of `AST-137` we have found was caught by **making the thing fail on purpose**,
+> and none by reading
+
+True of all of them. Restoring a real fossil into a tree and re-running. Passing a 40-character
+SHA instead of a branch name. Editing a payload file and watching the check stay green. Building
+an actual dual-homed symlink. **In every case the code had already been read, by both parties,
+and read as correct.**
+
+It is recorded in `selftest.sh`'s header rather than appended to the entry, because the ledger
+is append-only and because that file is where the rule has to be obeyed:
+
+> a case here does not earn its place by asserting the right answer. It earns it by having been
+> watched to FAIL first. If you add one that passed on the first run, you have written a test
+> for the invocation you already believed in — which is the defect, not the check for it.
+
+## Where this cycle ends, stated plainly
+
+Thirteen releases in three days. Twenty-three defects found by four cross-vendor gates before
+2.7.0 shipped, and **fifteen more found by one live project afterwards** — seven of those
+introduced by the audit that produced 2.7.0, and several introduced by the fixes for the
+earlier ones.
+
+**Every check in this package now proves the tooling is correct. Nothing in it proves the loop
+works.** No ticket has gone through dispatch → build → `code-review` → simplify → `arm(ticket)`
+→ merge with the gates firing on live work in this cycle. Those are different claims, and the
+gap between them is real, unmeasured, and not closable by any check either side can write.
+
+That gap is left open on purpose rather than papered over, and the five unclaimed `in-progress`
+tickets above are a small piece of evidence for it: **a gate nobody fires and a label nobody
+clears are the same failure in different clothes, and only one of them had a script watching.**
+
+## Migration
+
+None.
+
 # Astragentic 2.7.11
 
 **This package had no self-test.** Sixteen defects across eleven releases, every one of them an
