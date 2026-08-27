@@ -268,7 +268,7 @@ cp "$HARNESS_ROOT/check-requirements.sh" "$STAGING_DIR/harness/scripts/check-req
 # immutability rule correctly refused an in-place repair, leaving `--plan` and `--apply` both
 # unreachable for the release that shipped it. Derived files are derived from what SHIPS.
 bash "$STAGING_DIR/harness/scripts/ledger-index.sh" >/dev/null 2>&1 || true
-python3 "$STAGING_DIR/harness/scripts/ledger-rules.sh" "$STAGING_DIR" >/dev/null 2>&1 || true
+python3 "$STAGING_DIR/harness/scripts/ledger-rules.py" "$STAGING_DIR" >/dev/null 2>&1 || true
 cp "$HARNESS_ROOT/VERSION"            "$STAGING_DIR/VERSION"
 # STAGE THE INSTALLER ITSELF. Every "Upgrade from" note and ADAPT-HARNESS tell an operator to
 # run `./install.sh <target> --apply`, and the staged release did not contain one — so the
@@ -306,7 +306,7 @@ run_selfcheck docs-staleness     bash    "$HARNESS_ROOT/harness/scripts/docs-sta
 # These two run against the STAGED tree: it is what a project receives, and it differs from the
 # source by the injected check-requirements.sh above.
 run_selfcheck ledger-index       bash    "$STAGING_DIR/harness/scripts/ledger-index.sh" --check
-run_selfcheck ledger-rules       python3 "$STAGING_DIR/harness/scripts/ledger-rules.sh" "$STAGING_DIR" --check
+run_selfcheck ledger-rules       python3 "$STAGING_DIR/harness/scripts/ledger-rules.py" "$STAGING_DIR" --check
 [ "$SELFCHECK_FAIL" -eq 0 ] || {
   echo >&2
   echo "Three checks, run together on purpose: they catch different classes, and a release" >&2
@@ -484,7 +484,16 @@ if [ "$APPLY" -eq 1 ]; then
     echo "Nothing written. Rerun with --apply to write it."
     exit 0
   fi
+  PENDING_FILE="$TARGET/.astraler/state/apply-incomplete"
   if [ "$N_CONFLICT" -gt 0 ]; then
+    # LEAVE A DURABLE TRACE, because exit 3 does not survive the moment. A later check has to
+    # tell "an apply stopped here" from "a newer release is staged and nobody has started it" —
+    # two states that look identical when all you compare is applied-version against CANDIDATE.
+    # Collapsing them turned a healthy project's own acceptance gate red the instant someone
+    # upstream ran `install.sh`, with no action by that project and nothing wrong with it.
+    mkdir -p "$(dirname "$PENDING_FILE")"
+    { echo "version: $VERSION"; echo "at: $(date -u +%FT%TZ)"; echo "conflicts:";
+      printf '%s' "$CONFLICTS" | sed 's|^|  |'; } > "$PENDING_FILE"
     # PARTIALLY applied, and it must not read as success. The non-conflicting files are
     # already on disk while `applied-version` still names the previous release, so ownership
     # checks run against the old manifest over a hybrid payload. Exit 3 — distinct from 1 so
@@ -496,6 +505,7 @@ if [ "$APPLY" -eq 1 ]; then
     echo "version, stamp $VERSION into .astraler/state/applied-version by hand and say why."
     exit 3
   fi
+  rm -f "$PENDING_FILE"
   echo "Payload applied. ADAPT-HARNESS.md still owns the semantic half — the project entry doc,"
   echo "the ledger namespace, and anything above listed as CONFLICT."
   exit 0

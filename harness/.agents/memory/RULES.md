@@ -1,6 +1,6 @@
 # Ledger — rules only
 
-**Generated from `recurring-failure-modes.md`; do not hand-edit, rerun `scripts/ledger-rules.sh`.**
+**Generated from `recurring-failure-modes.md`; do not hand-edit, rerun `scripts/ledger-rules.py`.**
 
 One line per entry: the id, the lesson, and the opening of its body — the rule, without the incident
 that produced it. A `grep -A40` into the full ledger returns roughly a quarter rule and three

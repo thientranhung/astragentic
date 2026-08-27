@@ -13,8 +13,8 @@ WHAT IT DOES NOT DO. It does not edit, reorder or remove anything. The ledger st
 and stays the source of truth; this output is derived and disposable, and says so at the top.
 Where the two disagree the ledger is right and this file needs regenerating.
 
-Usage:  python3 scripts/ledger-rules.sh [repo-root]
-        python3 scripts/ledger-rules.sh --check    # non-zero when RULES.md is stale
+Usage:  python3 scripts/ledger-rules.py [repo-root]
+        python3 scripts/ledger-rules.py --check    # non-zero when RULES.md is stale
 """
 
 import os
@@ -92,7 +92,7 @@ def render(ledger_text):
 
     out = ["# Ledger — rules only", "",
            "**Generated from `recurring-failure-modes.md`; do not hand-edit, rerun "
-           "`scripts/ledger-rules.sh`.**", "",
+           "`scripts/ledger-rules.py`.**", "",
            "One line per entry: the id, the lesson, and the opening of its body — the rule, "
            "without the incident", "that produced it. A `grep -A40` into the full ledger "
            "returns roughly a quarter rule and three", "quarters narrative, which is the right "
@@ -143,10 +143,10 @@ def main():
             with open(dest, encoding="utf-8") as fh:
                 current = fh.read()
         except OSError:
-            print("STOP: RULES.md is missing — run scripts/ledger-rules.sh")
+            print("STOP: RULES.md is missing — run scripts/ledger-rules.py")
             return 1
         if current != text:
-            print("STOP: RULES.md is stale — run scripts/ledger-rules.sh")
+            print("STOP: RULES.md is stale — run scripts/ledger-rules.py")
             return 1
         print("ok: RULES.md current (%d entries)" % n)
         return 0

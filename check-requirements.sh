@@ -462,16 +462,38 @@ PYEOF
 
     CAND="$(cat "$TARGET/.astraler/CANDIDATE" 2>/dev/null || true)"
     APPL="$(cat "$TARGET/.astraler/state/applied-version" 2>/dev/null || true)"
+    # THREE STATES, NOT TWO. Comparing applied-version against CANDIDATE collapses "an apply
+    # stopped on conflicts" — this project's problem — with "somebody upstream staged a newer
+    # release and nobody here has started it", which is not a failure at all. The second turned
+    # a fully-applied, healthy project's own acceptance gate RED remotely, with no action by
+    # that project: anything running this on a schedule reported a failure whose entire cause
+    # was an event outside the repository. The honest reading of that red is "a release is
+    # available", and that is not the same message as "this project is broken".
+    #
+    # install.sh already distinguishes them — it exits 3 and stamps nothing when conflicts
+    # remain — but an exit code does not survive the moment, so it now also leaves
+    # `.astraler/state/apply-incomplete`. That file is the signal; the version strings are not.
+    PENDING="$TARGET/.astraler/state/apply-incomplete"
     if [ -n "$APPL" ] && [ "$APPL" = "$CAND" ]; then
       ok "applied-version ($APPL) matches CANDIDATE"
+    elif [ -f "$PENDING" ]; then
+      miss "an apply stopped part-way: $(grep -m1 '^version:' "$PENDING" | cut -d' ' -f2-)" \
+        "conflicts are unreconciled and the payload is a hybrid; see $PENDING, resolve each, then re-run --apply"
+    elif [ -n "$APPL" ]; then
+      # ADVISORY, and deliberately not a finding — the same reasoning as the milestone markers.
+      # A state that is true whenever someone upstream is working is not a defect, and printing
+      # it as one trains the reader to skip the check.
+      ok "applied-version ($APPL) is landed and clean"
+      echo "         → note: release $CAND is staged and not started. Not a finding; run"
+      echo "           install.sh --plan when you want it."
     else
-      miss "applied-version '$APPL' does not match CANDIDATE '$CAND'" \
-        "the project is mid-upgrade, or an apply stopped on conflicts; nothing else here speaks for a payload that is half-landed"
+      miss "no applied-version marker" \
+        "nothing records which release this project actually carries"
     fi
 
     # 2. RUNS, not exists. Each script is invoked exactly as ADAPT tells an adapter to invoke
     #    it — bare, from the repo root — because that is the invocation that was broken.
-    for SC in docs-staleness-audit.sh ledger-index.sh ledger-rules.sh check-reachability.sh; do
+    for SC in docs-staleness-audit.sh ledger-index.sh ledger-rules.py check-reachability.sh; do
       SP="$TARGET/scripts/$SC"
       [ -f "$SP" ] || { miss "scripts/$SC is missing" "the release ships it; re-run the payload install"; continue; }
       if head -1 "$SP" | grep -q python; then

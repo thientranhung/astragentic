@@ -1,3 +1,69 @@
+# Astragentic 2.7.6
+
+Two defects, both self-inflicted, and one of them arrived because I said "nothing queued".
+
+## Staging a release turned a healthy project's gate red, remotely
+
+Running `install.sh <target>` writes `.astraler/CANDIDATE`. Nothing else in that project
+changes — no payload file, no contract, no decision by anyone there. But `--adapted` compared
+`applied-version` against `CANDIDATE`, so a **fully applied, healthy project** went from EXIT 0
+to:
+
+```
+[MISS] applied-version '2.7.4' does not match CANDIDATE '2.7.5'
+```
+
+Anything running that check on a schedule — CI, a session-start hook, a pre-merge gate —
+reported a failure whose entire cause was an event **outside the repository**. The honest
+reading of that red is *"a release is available"*, and that is not the same message as *"this
+project is broken"*.
+
+**Two different states were collapsed into one `[MISS]`:** an apply that stopped on conflicts,
+which is the project's problem and correctly red; and a newer release staged and never started,
+which is not a failure at all.
+
+The signal to tell them apart already existed one layer down — `install.sh` exits 3 and stamps
+nothing when conflicts remain — but an exit code does not survive the moment. It now also
+writes `.astraler/state/apply-incomplete`, carrying the version and the conflict list, and
+removes it on a clean apply. **That file is the signal; the version strings are not.** Three
+states now:
+
+- versions match → `[OK]`
+- `apply-incomplete` present → `[MISS]`, with the version and a pointer to the conflict list
+- versions differ, no marker → `[OK]`, plus an advisory note that a release is available
+
+The advisory reasoning is the same one the milestone markers got two releases ago: **a state
+that is true whenever someone upstream is working is not a finding, and printing it as one
+trains the reader to skip the check.**
+
+The project that reported it called it the eighth instance of `AST-137`, and the first neither
+side went looking for: the check was tested where CANDIDATE and applied-version move together,
+and the real path is a project sitting still while somebody else stages. Tested invocation,
+real invocation, one substitution.
+
+## `ledger-rules.sh` was Python behind a `.sh` name
+
+2.7.0 renamed `hook-git-guard.sh` to `.py` and put the reason in the file: *"`check-reachability.sh`
+is Python behind a `.sh` name, and the cost of that showed up as an adaptation step telling
+operators to run `bash -n` on it. **One such file is enough.**"*
+
+The same release then shipped a second one. `ledger-rules.sh` is now `ledger-rules.py`.
+
+`check-reachability.sh` keeps its name **deliberately**: it is referenced by the README, the
+adaptation prompt, `install.sh` and every adapted project, and renaming it is a migration for
+every downstream repo in exchange for a naming preference. `ADAPT` §6 already carries the
+correct instruction — run it with `python3`, not `bash -n` — which is the part that actually
+cost something.
+
+Historical release notes were briefly rewritten to say `.py` while making this change, and
+restored. Releases 2.7.0 through 2.7.5 shipped a file called `ledger-rules.sh`, and their notes
+say so.
+
+## Migration
+
+If you have automation calling `scripts/ledger-rules.sh`, it is `scripts/ledger-rules.py` now.
+Nothing else.
+
 # Astragentic 2.7.5
 
 A correction to 2.7.4's closing paragraph, and the ledger entry the correction produced.

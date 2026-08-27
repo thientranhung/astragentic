@@ -11,7 +11,7 @@ set -euo pipefail
 # index — a staleness check that silently repairs the thing it was asked about, inside the one
 # script whose entire job is that claim. It bit because the three scripts ADAPT tells adapters
 # to run together took three conventions: `docs-staleness-audit.sh <root>`,
-# `ledger-rules.sh <root> --check`, and this one's positional `--check`. Anyone generalising
+# `ledger-rules.py <root> --check`, and this one's positional `--check`. Anyone generalising
 # from the first two got a green that meant nothing, which is a plausible path to shipping a
 # stale index. One convention now: flags anywhere, first non-flag argument is the root.
 CHECK_ONLY=0
