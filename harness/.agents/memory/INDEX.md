@@ -40,7 +40,7 @@ from this table — read the entry.
 | `AST-025` | Gate-able conventions parked in the always-on rule tier tax every loop | proposed | 157 |   |
 | `AST-026` | Named-persona harness: Thomas / Dan / Rin | promoted | 151 |   |
 | `AST-027` | TWO ROOT sessions shared the main checkout; one switched branches under the other | promoted | 175 | dispatch-ticket |
-| `AST-028` | Relative worktree path + unverified pane cwd → worktree born in the wrong place, hour-long mi… | promoted | 189 | dispatch-ticket,hook-git-guard.py,review-with-rin |
+| `AST-028` | Relative worktree path + unverified pane cwd → worktree born in the wrong place, hour-long mi… | promoted | 189 | dispatch-ticket,hook-git-guard.py,review-with-rin,selftest.sh |
 | `AST-029` | Slice finished but Dan tabs survived; `/clear` blurred context and checkout lifecycle | promoted | 207 |   |
 | `AST-030` | Orchestrator row named a runtime with no dispatch path for the role; Rin went undispatchable | promoted | 215 | dispatch-ticket,review-with-rin |
 | `AST-031` | A prose instruction telling an agent to suppress its tool's own default is not a boundary | promoted | 227 | dispatch-ticket |
@@ -147,5 +147,5 @@ from this table — read the entry.
 | `AST-133` | `--grep` is not a subject matcher, and it failed in both directions on the same day | promoted | 400 | CLEANUP.md,thomas.md |
 | `AST-134` | After the fold, "the gate read this tree" is structurally false and the protocol had no way t… | promoted | 238 | MARKERS.md,check-simplify-markers.sh |
 | `AST-135` | The verifier's queue was invisible to itself, and the fire point had to follow the artifact | promoted | 363 | dispatch-qa-walk,thomas.md |
-| `AST-136` | `--grep` is BASIC regex, and every marker kind in this system contains parentheses | promoted | 287 | check-simplify-markers.sh |
-| `AST-137` | Every defect a live project found lived between a tested invocation and a real one | promoted | 418 |   |
+| `AST-136` | `--grep` is BASIC regex, and every marker kind in this system contains parentheses | promoted | 287 | check-simplify-markers.sh,selftest.sh |
+| `AST-137` | Every defect a live project found lived between a tested invocation and a real one | promoted | 418 | selftest.sh |

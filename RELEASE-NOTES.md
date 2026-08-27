@@ -1,3 +1,58 @@
+# Astragentic 2.7.11
+
+**This package had no self-test.** Sixteen defects across eleven releases, every one of them an
+invocation-shape defect, and nothing in the repository could reproduce a single one. A
+downstream project ships a 17k self-test for its worktree reaper and a 10k one for its marker
+checker; the package they came from shipped none.
+
+`scripts/selftest.sh` is that, built the only way `AST-137` allows: **a list of invocation
+shapes, one per defect actually shipped**, each labelled with the release that shipped it.
+
+```
+hook-git-guard — accidental misuse it must catch          7 cases
+hook-git-guard — correct work it must NOT block           7 cases
+hook-git-guard — out of scope: silent by design           6 cases
+argument conventions — flag position must not matter      3 cases
+root resolution — bare, explicit root, unrelated cwd      6 cases
+marker gate — advisory span, regex dialect, line width    3 cases
+install.sh — package root, staged release, spaced path    3 cases
+
+selftest: 34 passed, 0 failed.
+```
+
+Half of the guard cases are commands it must **not** touch, because three of this cycle's
+defects were checks firing on correct work — and a suite that only tests the catching half
+would have passed on every one of them.
+
+The `install.sh` cases are the ones no unit test would have written: staging from a package
+root, staging from **inside a staged release** where `prompts/` is flattened, and staging from
+`/tmp/Astraler Repo`. Each was a shipped defect. Each is one substitution away from the shape
+that was tested.
+
+## The self-test's own defect, fixed before it shipped
+
+The first version edited the repository's real `INDEX.md` and restored it afterwards. That is
+fine until a case fails, the script exits early, and the restore never runs — leaving the tree
+dirty and the next staging gate red for a reason unrelated to the payload. It happened on the
+first run.
+
+**A self-test that can damage what it inspects is worse than no self-test.** It works on a
+throwaway copy now, and running it leaves the tree exactly as it found it.
+
+## And a near-miss worth more than the fix
+
+While closing 2.7.10's `.claude/` false positive in the package's own repo, I derived the
+payload list from `harness/` and dropped the path prefix. `[ -e ]` then failed on every entry,
+so the payload-committed check **examined nothing and printed OK** — a check that cannot fail,
+inside a release fixing checks that cannot fail.
+
+Caught by editing a payload file and watching it stay green. That is the only way this class is
+ever caught, and it is now a case in the suite.
+
+## Migration
+
+None. `scripts/selftest.sh` ships in the payload; run it after editing any script.
+
 # Astragentic 2.7.10
 
 **2.7.9's fix for a false positive was a regression that made the gate unpassable on a layout

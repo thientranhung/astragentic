@@ -307,6 +307,13 @@ run_selfcheck docs-staleness     bash    "$HARNESS_ROOT/harness/scripts/docs-sta
 # source by the injected check-requirements.sh above.
 run_selfcheck ledger-index       bash    "$STAGING_DIR/harness/scripts/ledger-index.sh" --check
 run_selfcheck ledger-rules       python3 "$STAGING_DIR/harness/scripts/ledger-rules.py" "$STAGING_DIR" --check
+# The suite reproduces every invocation-shape defect this package has shipped — INCLUDING three
+# that stage releases, so it invokes this script. Without the guard below that is unbounded
+# recursion, which is what the first attempt did: install.sh -> selftest -> install.sh, until a
+# timeout. The comment warning about nesting was already written when I wrote the bug.
+if [ -z "${ASTRALER_IN_SELFTEST:-}" ]; then
+  ASTRALER_IN_SELFTEST=1 run_selfcheck selftest bash "$HARNESS_ROOT/harness/scripts/selftest.sh"
+fi
 [ "$SELFCHECK_FAIL" -eq 0 ] || {
   echo >&2
   echo "Three checks, run together on purpose: they catch different classes, and a release" >&2
