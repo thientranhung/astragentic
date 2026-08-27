@@ -1,3 +1,58 @@
+# Astragentic 2.7.9
+
+Three defects, and the first one is the code disobeying a comment two lines above it.
+
+## A stale `apply-incomplete` marker was ignored when applied == candidate
+
+2.7.6 added the marker and this comment: **"That file is the signal; the version strings are
+not."** The code then tested the version strings first, with the marker's `[MISS]` behind an
+`elif`. So a project with an unreconciled conflict recorded on disk read
+`[OK] matches CANDIDATE` for as long as nothing new was staged.
+
+**The false green appears exactly when the project looks most settled**, and the state is not
+exotic — `install.sh` instructs an operator into it: *"stamp the version by hand and say why"*
+leaves applied == candidate with the marker still there. Measured downstream on a project's
+`main`, at rest, with a conflict named in the file.
+
+The marker is tested first now, and `install.sh`'s own instruction says to delete it when you
+stamp by hand, because a stamp alone leaves a file asserting the opposite of what you meant.
+
+## `deleted-upstream` could not see a rename from a skipped release
+
+2.7.8's deletion detection compared the **applied** release against the candidate. A rename is
+only visible on the single upgrade step that performs it, so a project that **skips** the
+release doing the rename never sees the fossil — which is the situation of every multi-version
+upgrade, and the premise of this whole cycle.
+
+The project that reported it did not infer this: it restored the real fossil into `scripts/`,
+re-ran `--plan`, and got `deleted-upstream 0`. The baseline is now the union of every staged
+release older than the candidate, which costs one extra walk of directories already on disk.
+
+## `.claude/` is not all payload
+
+The payload-committed check walked `.agents/`, `.claude/` and `.codex/` wholesale. An owner's
+own operating notes for their Thomas tab sat at `.claude/loop-snippets.md`, and the check
+reported it as *"harness payload untracked"* — a `[MISS]` about a file this harness does not
+own and has never shipped. The list now comes from the staged release, with the directory walk
+as a fallback for a project that has pruned `.astraler/releases/`.
+
+## And twice I claimed a release was staged when it was not
+
+2.7.7 was cut, committed and pushed, and never staged into the downstream project. I said it
+was. The project caught it, I acknowledged it, and then **it happened again** — the same
+release, the same claim, the same omission. It was only ever visible because someone else
+looked.
+
+Nothing in this package checks that. Staging is per-target and voluntary, so there is no state
+to compare against; the failure is entirely in the reporting, and the honest fix is that a
+release is staged when `.astraler/releases/<v>/` exists in that project and not when I say so.
+
+## Migration
+
+Run `install.sh <target> --plan` once. `deleted-upstream` now looks across every older staged
+release, so it may name fossils from renames in releases you skipped. They are reported, never
+removed.
+
 # Astragentic 2.7.8
 
 **A rename left a fossil in every adapted repo, and `install.sh` structurally could not see it.**

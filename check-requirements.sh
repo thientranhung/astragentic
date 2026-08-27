@@ -474,11 +474,18 @@ PYEOF
     # remain — but an exit code does not survive the moment, so it now also leaves
     # `.astraler/state/apply-incomplete`. That file is the signal; the version strings are not.
     PENDING="$TARGET/.astraler/state/apply-incomplete"
-    if [ -n "$APPL" ] && [ "$APPL" = "$CAND" ]; then
-      ok "applied-version ($APPL) matches CANDIDATE"
-    elif [ -f "$PENDING" ]; then
+    # THE MARKER IS TESTED FIRST, because the comment above is what this code has to obey:
+    # the file is the signal and the version strings are not. Ordering them the other way put a
+    # `[MISS]` behind an `elif`, so a project with an unreconciled conflict recorded on disk
+    # read `[OK] matches CANDIDATE` for as long as nothing new was staged — the false green
+    # appearing exactly when the project looks most settled. And the state is not exotic:
+    # `install.sh` INSTRUCTS an operator into it ("stamp the version by hand and say why"),
+    # which leaves applied == candidate with the marker still there.
+    if [ -f "$PENDING" ]; then
       miss "an apply stopped part-way: $(grep -m1 '^version:' "$PENDING" | cut -d' ' -f2-)" \
-        "conflicts are unreconciled and the payload is a hybrid; see $PENDING, resolve each, then re-run --apply"
+        "conflicts are unreconciled; see $PENDING. If you resolved them and stamped applied-version by hand, delete that file — it is what says the work is finished, not the version string"
+    elif [ -n "$APPL" ] && [ "$APPL" = "$CAND" ]; then
+      ok "applied-version ($APPL) matches CANDIDATE"
     elif [ -n "$APPL" ]; then
       # ADVISORY, and deliberately not a finding — the same reasoning as the milestone markers.
       # A state that is true whenever someone upstream is working is not a defect, and printing
@@ -573,13 +580,31 @@ PYEOF
       else
         UNTRACKED_PAYLOAD=0
         STALE_PAYLOAD=0
+        # PAYLOAD IS WHAT THE RELEASE SHIPS, not everything under .agents/.claude/.codex. A
+        # project keeps its own files in those directories — an owner's operating notes for
+        # their Thomas tab lived at `.claude/loop-snippets.md` and this check counted it as
+        # "harness payload untracked", a MISS about a file the harness does not own and never
+        # shipped. Where a staged release is on disk, derive the list from it; the directory
+        # walk is the fallback for a project that has pruned `.astraler/releases/`.
         PAYLOAD_PATHS=()
-        for D in .agents .claude .codex; do
-          [ -d "$TARGET/$D" ] || continue
-          while IFS= read -r -d '' F; do
-            PAYLOAD_PATHS+=("${F#"$TARGET"/}")
-          done < <(find "$TARGET/$D" -type f -print0)
+        _RELSRC=""
+        for _v in "$(cat "$TARGET/.astraler/state/applied-version" 2>/dev/null)" \
+                  "$(cat "$TARGET/.astraler/CANDIDATE" 2>/dev/null)"; do
+          [ -n "$_v" ] && [ -d "$TARGET/.astraler/releases/$_v/harness" ] \
+            && { _RELSRC="$TARGET/.astraler/releases/$_v/harness"; break; }
         done
+        if [ -n "$_RELSRC" ]; then
+          while IFS= read -r F; do
+            [ -n "$F" ] && [ -e "$TARGET/$F" ] && PAYLOAD_PATHS+=("$F")
+          done < <(cd "$_RELSRC" && find . -type f ! -name '.DS_Store' | sed 's|^\./||' | sort)
+        else
+          for D in .agents .claude .codex; do
+            [ -d "$TARGET/$D" ] || continue
+            while IFS= read -r -d '' F; do
+              PAYLOAD_PATHS+=("${F#"$TARGET"/}")
+            done < <(find "$TARGET/$D" -type f -print0)
+          done
+        fi
         # The set of harness-owned scripts install.sh stages into a project's scripts/ —
         # derived from the package's own harness/scripts/*.sh, plus this file (staged
         # separately from the package ROOT; see install.sh), rather than a hand-written

@@ -461,19 +461,35 @@ if [ "$APPLY" -eq 1 ]; then
   #
   # Reported, not removed: a project may have adopted the old path on purpose, and deleting
   # files during an upgrade is how an upgrade destroys work. The operator decides.
+  # BASELINE IS EVERY OLDER RELEASE ON DISK, not just the applied one. A rename is only visible
+  # on the single upgrade step that performs it, so comparing `applied - candidate` misses it
+  # for ANY project that skips a release — which is the case this package exists to serve, and
+  # was the situation of the project that found this. Verified downstream by restoring the real
+  # fossil and re-running: the applied-only baseline still answered 0.
+  #
+  # The union of every staged release older than the candidate is what a project may actually
+  # be carrying, and it costs one extra walk of directories already on disk.
   N_GONE=0; GONE=""
-  if [ -n "$PREV_DIR" ] && [ -d "$PREV_DIR" ]; then
+  BASELINE_DIRS=""
+  for _d in "$RELEASES_DIR"/*/harness; do
+    [ -d "$_d" ] || continue
+    _v="$(basename "$(dirname "$_d")")"
+    [ "$_v" = "$VERSION" ] && continue
+    BASELINE_DIRS="$BASELINE_DIRS $_d"
+  done
+  [ -n "$BASELINE_DIRS" ] || BASELINE_DIRS="$PREV_DIR"
+  if [ -n "$BASELINE_DIRS" ]; then
     while IFS= read -r OLDREL; do
       [ -n "$OLDREL" ] || continue
       [ -e "$RELEASE_DIR/harness/$OLDREL" ] && continue      # still shipped
       [ -e "$TARGET/$OLDREL" ] || continue                    # already gone from the project
       case "$OLDREL" in .agents/orchestrator.md|.claude/settings.json|.codex/profiles/*) continue ;; esac
       GONE="$GONE  $OLDREL"$'\n'; N_GONE=$((N_GONE+1))
-    done < <(cd "$PREV_DIR" && find . -type f ! -name '.DS_Store' | sed 's|^\./||' | sort)
+    done < <(for _d in $BASELINE_DIRS; do (cd "$_d" && find . -type f ! -name '.DS_Store' | sed 's|^\./||'); done | sort -u)
   fi
   if [ "$N_GONE" -gt 0 ]; then
     echo
-    echo "DELETED by this release — $PREV_VERSION shipped these, $VERSION does not, and they are"
+    echo "DELETED upstream — an earlier release shipped these, $VERSION does not, and they are"
     echo "still in the project. Usually a rename; check for the new name before removing."
     printf '%s' "$GONE"
     echo "  (not removed automatically: a project may have adopted one of these on purpose)"
@@ -531,7 +547,9 @@ if [ "$APPLY" -eq 1 ]; then
     echo "The non-conflicting files are written; applied-version still names the previous"
     echo "release, so this checkout is a hybrid until each conflict above is decided."
     echo "Resolve them, then re-run --apply. Where you deliberately keep the project's"
-    echo "version, stamp $VERSION into .astraler/state/applied-version by hand and say why."
+    echo "version, stamp $VERSION into .astraler/state/applied-version by hand, say why, AND"
+    echo "delete .astraler/state/apply-incomplete — that file is what says the work is not"
+    echo "finished, and a stamp alone leaves it behind asserting the opposite."
     exit 3
   fi
   rm -f "$PENDING_FILE"
