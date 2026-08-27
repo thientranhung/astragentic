@@ -1,3 +1,58 @@
+# Astragentic 2.7.3
+
+One defect, and it is in the fix 2.7.2 shipped for the finding 2.7.1 could not see. The gate
+emitter was right; **the span was wrong**, and the wrong span made it noise.
+
+## A line that is always right is wallpaper
+
+2.7.2 gave Rin's gate a marker and had `check-simplify-markers.sh` report its absence in the
+merge range. Run against real history in a live project, over its last eight ticket merges:
+
+```
+merge 6da76b40  rin(gate): NONE (6 commits)   qa(walk): NONE
+merge 8f56fb6b  rin(gate): NONE (9 commits)   qa(walk): NONE
+… eight merges, sixteen NONE lines
+```
+
+**Every one of those is structurally guaranteed.** `rin(gate)` is a MILESTONE marker; a merge
+range is a TICKET branch; a milestone marker can never appear in one. So the line was true at
+100% of merges by construction — wallpaper inside a week, and then worse than wallpaper,
+because it teaches its reader that absence is the normal state. That is exactly the
+desensitisation that makes the one meaningful absence invisible.
+
+**Loud-and-always is the same as silent**, which is the failure this marker kind was added to
+leave behind. Tuning the wording would not have fixed it.
+
+## The number the counter was always asking for
+
+`thomas.md` says *"more than 10 merges since the last Rin round is a STOP"*. The quantity that
+sentence names is **merges on the base since the last marker of that kind** — not commits in a
+ticket range. That number:
+
+- is computable only because the marker now exists — the 2.7.2 emitter doing its job;
+- **changes over time**, so it can cross a threshold, which `NONE in range` never could;
+- returns to zero when a round runs;
+- is silent where absence is definitional.
+
+```
+[rin(gate)] last on main: e479de492 (2026-08-27) — 5 merge(s) since (advisory)
+[rin(gate)] never recorded on main — 42 merge(s) of history, no round
+```
+
+A rising integer beside a stated threshold argues for itself. It needs no message tuned to be
+loud, which is the property the previous version was trying to buy with volume.
+
+Also fixed, and it would have hidden the whole thing: `git log --grep` is BASIC regex by
+default, where `\(` is a GROUP. The escaped kind name `rin\(gate\)` matched nothing, so a
+marker sitting on the base branch reported as "never recorded". `-E` makes an escaped paren a
+literal one. Verified by committing a marker, merging five times, watching the count reach 5,
+committing a second marker, and watching it return to 0.
+
+## Migration
+
+None. If you took 2.7.2, the advisory lines change shape and stop appearing per merge range.
+Nothing blocks either way.
+
 # Astragentic 2.7.2
 
 Three more defects from the same live project, and the one finding this release cycle has

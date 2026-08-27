@@ -103,6 +103,20 @@ Report: <absolute $GATE_FILE path, and its archived copy>
 
 `qa(walk):` is identical in shape and carries the walk's verdict and report.
 
-**Both are ADVISORY.** `--marker 'rin(gate)'` reports the count and the distance and does not
-block, because a milestone gate does not fire per ticket. Absence prints loudest, because
-absence is the case that went unmeasured for a week.
+**Both are ADVISORY, and both are measured ON THE BASE — not in the merge range.** A milestone
+marker cannot appear in a ticket branch, so "none in this range" is true by construction at
+every merge. A project measured sixteen such lines across eight merges, every one structurally
+guaranteed, and named the cost exactly: a line that is always right is wallpaper within a week,
+and then it teaches its reader that absence is normal — which is what makes the one meaningful
+absence invisible. **Loud-and-always is the same as silent.**
+
+So the number reported is **merges on the base since the last marker of that kind**:
+
+```
+[rin(gate)] last on main: e479de492 (2026-08-27) — 5 merge(s) since (advisory)
+[rin(gate)] never recorded on main — 42 merge(s) of history, no round
+```
+
+That figure rises with every merge and returns to zero when a round runs, so it can **cross a
+threshold** — which `NONE in range` never could. It is what `thomas.md`'s "more than 10 merges
+since the last Rin round" was asking for and nothing computed.

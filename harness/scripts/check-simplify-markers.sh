@@ -74,6 +74,40 @@ import re, subprocess, sys
 # the question is asked of the receipt instead of the history: the router merges one tree on one
 # receipt, and whatever ends up at the head IS that receipt. Everything below it is narration.
 # There is nothing to launder when exactly one commit is asserted against.
+def advisory_on_base(kind, base):
+    """Distance on the BASE branch since the last marker of this kind.
+
+    THE SPAN, NOT THE MESSAGE, WAS WRONG. `rin(gate)` is a MILESTONE marker and a merge range
+    is a TICKET branch, so its absence in-range is true BY CONSTRUCTION at every merge — a
+    downstream project measured sixteen NONE lines across eight merges, every one structurally
+    guaranteed. A line that is always right is wallpaper inside a week, and then it is worse
+    than wallpaper: it teaches the reader that NONE is normal, which is what makes the one
+    meaningful NONE invisible. Loud-and-always is the same as silent, which is the failure
+    this marker kind exists to leave behind.
+
+    What `thomas.md` actually asks for is distance ON THE BASE since the last round. That
+    number is computable only because the marker now exists — the emitter doing its job — it
+    CHANGES OVER TIME so it can cross a threshold, and it is silent where absence is
+    definitional. A rising integer beside a stated threshold argues for itself.
+    """
+    # `--grep` is BASIC regex by default, where `\(` is a GROUP — `re.escape("rin(gate)")`
+    # produced `rin\(gate\)` and matched nothing, so a marker sitting on the base branch read
+    # as "never recorded". `-E` makes an escaped paren a literal one.
+    last = git("log", base, "-E", "--format=%H",
+               "--grep=^" + re.escape(kind) + ":", "-n", "1").strip()
+    if not last:
+        total = git("rev-list", "--count", "--merges", base).strip() or "?"
+        print("[%s] never recorded on %s — %s merge(s) of history, no round. This gate leaves "
+              "no other machine-readable trace." % (kind, base, total))
+        return
+    last = last.splitlines()[0]
+    since = git("rev-list", "--count", "--merges", last + ".." + base).strip() or "?"
+    when = git("log", "-1", "--format=%ad", "--date=short", last).strip()
+    print("[%s] last on %s: %s (%s) — %s merge(s) since (advisory)"
+          % (kind, base, last[:9], when, since))
+
+
+
 KINDS = {
     "simplify(increment)": {
         "required": ['Pass: Skill(skill: "simplify")'],
@@ -236,22 +270,20 @@ def shortfalls(kind, sha, body):
 
 for kind in kinds:
     spec = KINDS[kind]
+    # A milestone marker cannot appear in a ticket range, so measure it where it means
+    # something and say nothing here.
+    if spec["scope"] == "advisory":
+        advisory_on_base(kind, base)
+        continue
+
     prefix = kind + ":"
     marks = [(sha, body) for sha, subject, body in commits if subject.startswith(prefix)]
     shas = [sha for sha, _ in marks]
     bodies = dict(marks)
 
     # ABSENCE IS A FINDING. A range with no markers is AST-094, not a quiet pass — but for an
-    # ADVISORY kind it is a finding to REPORT, not to block on: a milestone gate does not fire
-    # per ticket, and a per-merge STOP would be wrong. Reporting it is still the whole point,
-    # because the measured failure was that the number did not exist anywhere.
+    # ABSENCE IS A FINDING. A range with no markers is AST-094, not a quiet pass.
     if not shas:
-        if spec["scope"] == "advisory":
-            since = git("rev-list", "--count", f"{base}..{head_sha}").strip() or "?"
-            print(f"[{kind}] NONE in range — {since} commit(s) on {base}..{head} carry no "
-                  f"{kind} marker. This gate leaves no other machine-readable trace: if it has "
-                  f"run, it ran unrecorded; if it has not, nothing else here will say so.")
-            continue
         print(f"[{kind}] markers=0 — STOP: no marker on {base}..{head} (AST-094)")
         exit_code = 1
         continue
@@ -283,26 +315,6 @@ for kind in kinds:
     # `git log` lists newest first, so the first live marker is the newest one.
     live = [s for s in shas if s not in superseded_by]
 
-    # ADVISORY SCOPE: report the count and the distance, never block. A milestone gate does not
-    # fire per ticket, so a per-merge STOP would be wrong — but the NUMBER has to exist and has
-    # to be in front of whoever is merging, because the measured failure was that nothing
-    # computed it at all. Absence is the loudest case and gets said first.
-    if spec["scope"] == "advisory":
-        if not shas:
-            since = git("rev-list", "--count", f"{base}..{head_sha}").strip() or "?"
-            print(f"[{kind}] NONE in range — {since} commit(s) since {base_sha[:9]} carry no "
-                  f"{kind} marker. This gate leaves no other trace; if it has run, it has run "
-                  f"unrecorded, and if it has not, nothing else here will say so.")
-        else:
-            newest = live[0] if live else shas[0]
-            ahead = git("rev-list", "--count", f"{newest}..{head_sha}").strip() or "?"
-            bad_a = [x for x in ([newest] if not well[newest] else [])]
-            print(f"[{kind}] markers={len(shas)} live={len(live)} newest={newest[:9]} "
-                  f"({ahead} commit(s) since) not-well-formed={len(bad_a)} (advisory)")
-            for x in bad_a:
-                for m in missing[x]:
-                    print(f"  NOTE: {x[:9]}: {m}")
-        continue
 
     checked = live if spec["scope"] == "live" else live[:1]
     bad = [s for s in checked if not well[s]]
