@@ -1,3 +1,54 @@
+# Astragentic 2.7.10
+
+**2.7.9's fix for a false positive was a regression that made the gate unpassable on a layout
+this package documents as supported.** That is a worse trade than the defect it closed, and the
+project that reported both said so first.
+
+## A payload path through a symlinked parent is not untracked
+
+2.7.9 stopped treating everything under `.claude/` as payload and began deriving the list from
+the staged release, then asking git about each **literal path**. A project may **dual-home** a
+skill: real content at `.agents/skills/<name>/`, with `.claude/skills/<name>/` a symlink to it.
+Git tracks the **link**; paths *through* it are correctly absent from the index. So three files
+that are tracked, at their real home, on the same inode, were reported untracked:
+
+```
+2.7.8  check-requirements.sh . --adapted  ->  EXIT 0
+2.7.9  check-requirements.sh . --adapted  ->  EXIT 1
+```
+
+Same commit, clean tree, nothing else different. `git status` reported nothing untracked there.
+
+**And this package already blesses the arrangement.** `check-payload-drift.sh`'s own header:
+*"A project may dual-home a skill… Both arrangements are legal in a project, and this watches
+whichever one it is told about."* It ships `SYMLINK` manifest rows for exactly this. **One
+shipped script called the layout legal while another refused it.**
+
+A path that looks untracked is now resolved through its symlinked parents and asked again. The
+realpath is computed only for paths that already failed the first lookup, so the common case
+costs nothing, and a genuinely untracked file still reports untracked — both directions
+verified.
+
+Also: the release ships `check-requirements.sh` at two paths, so it appeared twice in the list
+and was counted twice in the verdict. Deduplicated.
+
+## The shape, for the third release running
+
+I fixed a false positive against a project whose `.claude/` holds real files. The project that
+reported it holds symlinks there. **Tested path, real path, one substitution** — `AST-137`,
+arriving through the door I opened while closing another.
+
+The reporter's own reading is the one to keep: *"my minor was worth less than the regression it
+bought"*. A check that fails a correct project is worse than a check that occasionally names a
+file it does not own, and if this fix had not been cheap the right answer would have been to
+revert 2.7.9's entirely and let the false positive stand.
+
+## Migration
+
+If you held a payload file to keep `--adapted` green under 2.7.9 — the reporter held
+`scripts/check-requirements.sh` at 2.7.8 and named it in `ADAPTATION-REPORT.md` — **that hold
+can be released now.** Take 2.7.10's copy and remove the entry.
+
 # Astragentic 2.7.9
 
 Three defects, and the first one is the code disobeying a comment two lines above it.

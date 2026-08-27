@@ -593,9 +593,20 @@ PYEOF
           [ -n "$_v" ] && [ -d "$TARGET/.astraler/releases/$_v/harness" ] \
             && { _RELSRC="$TARGET/.astraler/releases/$_v/harness"; break; }
         done
+        # PACKAGE LAYOUT has its own authoritative list: the payload IS `harness/`. Falling
+        # through to the directory walk here reported the owner's `.claude/loop-snippets.md` as
+        # untracked harness payload in the package repo itself — the same false positive this
+        # check was just fixed for downstream, surviving upstream because no release is staged.
+        # PACKAGE LAYOUT: the payload is `harness/`, and the paths it yields need that prefix
+        # back or `[ -e ]` fails on every one and the check silently examines NOTHING. A first
+        # attempt at this omitted the prefix and turned the payload-committed check into a
+        # check that cannot fail — caught by editing a payload file and watching it stay green,
+        # which is the only way that class is ever caught.
+        _PREFIX=""
+        [ -n "$_RELSRC" ] || { [ -d "$TARGET/harness/.agents/roles" ] && { _RELSRC="$TARGET/harness"; _PREFIX="harness/"; }; }
         if [ -n "$_RELSRC" ]; then
           while IFS= read -r F; do
-            [ -n "$F" ] && [ -e "$TARGET/$F" ] && PAYLOAD_PATHS+=("$F")
+            [ -n "$F" ] && [ -e "$TARGET/$_PREFIX$F" ] && PAYLOAD_PATHS+=("$_PREFIX$F")
           done < <(cd "$_RELSRC" && find . -type f ! -name '.DS_Store' | sed 's|^\./||' | sort)
         else
           for D in .agents .claude .codex; do
@@ -639,14 +650,42 @@ check-requirements.sh'
         while IFS= read -r S; do
           [ -n "$S" ] && [ -f "$TARGET/scripts/$S" ] && PAYLOAD_PATHS+=("scripts/$S")
         done <<< "$NAMED_SCRIPTS"
+        # DEDUPE. The release ships check-requirements.sh at two paths, so it appeared twice in
+        # the list and was counted twice in the verdict.
+        if [ "${#PAYLOAD_PATHS[@]}" -gt 0 ]; then
+          IFS=$'\n' PAYLOAD_PATHS=($(printf '%s\n' "${PAYLOAD_PATHS[@]}" | sort -u)); unset IFS
+        fi
         for PATHNAME in "${PAYLOAD_PATHS[@]}"; do
           # A deliberately gitignored file under .claude/ or .codex/ (settings.local.json,
           # a machine-local codex config) is not payload going stale — it was never meant
           # to be committed at all, so flagging it here is a MISS nothing can resolve.
           git -C "$TARGET" check-ignore -q -- "$PATHNAME" 2>/dev/null && continue
+          # RESOLVE A SYMLINKED PARENT BEFORE BELIEVING "untracked". A project may DUAL-HOME a
+          # skill — real content at `.agents/skills/<name>/`, `.claude/skills/<name>/` a symlink
+          # to it — an arrangement `check-payload-drift.sh` documents as supported and ships
+          # SYMLINK manifest rows for. Git tracks the LINK; paths *through* it are correctly
+          # absent from the index, so a literal-path lookup calls three tracked files untracked
+          # and fails a project for doing something this package blesses. One shipped script
+          # cannot call an arrangement legal while another refuses it.
+          #
+          # The realpath is only computed for paths that already look untracked, so the common
+          # case costs nothing.
           if ! git -C "$TARGET" ls-files --error-unmatch -- "$PATHNAME" >/dev/null 2>&1; then
-            printf '         · untracked: %s\n' "$PATHNAME"; UNTRACKED_PAYLOAD=$((UNTRACKED_PAYLOAD + 1))
-          elif ! git -C "$TARGET" diff --quiet HEAD -- "$PATHNAME" 2>/dev/null; then
+            REALREL="$(cd "$TARGET" && python3 -c '
+import os, sys
+try:
+    print(os.path.relpath(os.path.realpath(sys.argv[1]), os.path.realpath(".")))
+except Exception:
+    pass' "$PATHNAME" 2>/dev/null)"
+            if [ -n "$REALREL" ] && [ "$REALREL" != "$PATHNAME" ] \
+               && git -C "$TARGET" ls-files --error-unmatch -- "$REALREL" >/dev/null 2>&1; then
+              PATHNAME="$REALREL"      # tracked at its real home; fall through to the diff check
+            else
+              printf '         · untracked: %s\n' "$PATHNAME"; UNTRACKED_PAYLOAD=$((UNTRACKED_PAYLOAD + 1))
+              continue
+            fi
+          fi
+          if ! git -C "$TARGET" diff --quiet HEAD -- "$PATHNAME" 2>/dev/null; then
             printf '         · uncommitted change: %s\n' "$PATHNAME"; STALE_PAYLOAD=$((STALE_PAYLOAD + 1))
           fi
         done
