@@ -1,6 +1,6 @@
 ---
 name: dispatch-ticket-codex
-description: "Codex-specific launcher and verification for dispatch-ticket. Covers the launcher matrix, machine-local profile verification, herdr agent start template, and Codex-specific runtime facts (effort in TOML, --yolo stale). Read dispatch-ticket for the shared protocol."
+description: "Codex-specific launcher and verification for dispatch-ticket. Covers the launcher matrix, machine-local launch profiles, project-local custom agents and hooks, herdr agent start template, and Codex-specific runtime facts. Read dispatch-ticket for the shared protocol."
 ---
 
 # Dispatch a ticket — Codex runtime
@@ -25,9 +25,20 @@ no `--effort` CLI flag.
 
 ## Pre-dispatch verification
 
-Codex profiles are **machine-local only** at `${CODEX_HOME:-$HOME/.codex}/<role>.config.toml`.
-They are NOT project-tracked (Codex does not load project-level config). The harness ships
-templates in `.codex/profiles/<role>.config.toml` — these are the source of truth.
+The profiles used by `codex --profile <role>` are **machine-local launch profiles** at
+`${CODEX_HOME:-$HOME/.codex}/<role>.config.toml`. The harness ships owner-scoped templates in
+`.codex/profiles/<role>.config.toml`; those templates are the source of truth for pane launch.
+
+Do not confuse them with `.codex/agents/*.toml`. Those are project-local **custom subagent
+types** that a running Codex session may spawn. They do not make `--profile builder` resolve,
+do not allocate a branch or worktree, and do not replace a visible Herdr role pane. Astragentic
+ships only read-only-intent helpers there; lifecycle roles still use the launcher below.
+
+`sandbox_mode = "read-only"` in a custom-agent file is a requested default, not Astragentic's
+isolation boundary. Codex reapplies a parent's live permission overrides to children, so a
+parent launched with bypass can weaken that default. The instructions still forbid writes,
+but worktree/branch allocation and a visible Herdr pane remain the only accepted boundary for
+write-heavy role work.
 
 Before dispatch, verify:
 
@@ -63,8 +74,9 @@ own title, which beats scraping. `working` and `blocked` are OBSERVED. `idle` is
 via `osc_title`, making it the most reliable of the three runtimes for terminal-state
 detection. Still verify by artifact.
 
-**`AGENTS.md` is the project-level instruction mechanism.** Codex does NOT load
-project-level config TOML — profiles live only at `${CODEX_HOME:-$HOME/.codex}/`.
-Project-level instructions go through `AGENTS.md` at the repo root, which Codex loads as a
-user-role message. The profile's `developer_instructions` field carries the role identity and
-the pointer to `.agents/roles/<role>.md`.
+**Three Codex configuration surfaces have three different jobs.** `AGENTS.md` carries project
+instructions. `.codex/agents/*.toml` defines spawnable custom subagents, and
+`.codex/hooks.json` registers project-local lifecycle hooks. The machine-local profile selected
+by `--profile` carries the top-level pane's role identity, model and effort. Never route a
+Builder through a custom subagent merely because both surfaces use TOML: the custom subagent
+shares the parent session topology and has no Astragentic worktree allocation.

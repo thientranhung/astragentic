@@ -1,3 +1,97 @@
+# Astragentic 2.7.13
+
+The guard shipped for three runtimes and was registered on one. Plus the three Codex
+configuration surfaces this package had been treating as one.
+
+## A second layer that existed on paper and nowhere else
+
+`hook-git-guard.py` describes itself as a second layer under `dispatch-ticket/CLEANUP.md`.
+It was registered in `.claude/settings.json`, which **Codex does not read**. A Builder
+dispatched to a Codex pane ran with the contract above it and nothing underneath.
+
+The file had already written the finding down, in a sentence that was true when written and
+then stopped being a description and became a defect:
+
+> a rule that lives only here is a rule that does not exist on two of three runtimes
+
+Read as correct by both parties, repeatedly, for eleven releases. `AST-137` again.
+
+`.codex/hooks.json` now registers the **same script**. The safety rule is runtime-neutral;
+registration stays native to each runtime. The command resolves the guard from either an
+adapted-project layout (`scripts/`) or this package (`harness/scripts/`), and when it finds
+neither it says so on stderr and logs it rather than failing open in silence.
+
+**Registration is not enforcement.** Codex reviews project-local hook definitions by hash, and
+an absent trust decision means the guard is installed and skipped. `check-requirements.sh`
+checks the registration; only the operator can confirm trust, with `/hooks` in the Codex CLI.
+The check reports what it can see and names what it cannot, rather than implying coverage.
+
+## Three surfaces, three jobs, one file extension
+
+Codex has four places a role can be configured, and this package had documentation for one:
+
+| Surface | Job |
+|---|---|
+| `AGENTS.md` | project instructions, loaded as a user-role message |
+| `${CODEX_HOME}/<role>.config.toml` | **machine-local launch profile** — the pane's role identity, model, effort |
+| `.codex/agents/*.toml` | project-local **custom subagent types** a running session may spawn |
+| `.codex/hooks.json` | project-local lifecycle hook registration |
+
+Two of those are TOML under a `.codex/` directory, which is the whole trap. A custom subagent
+does not make `--profile builder` resolve, does not allocate a branch or a worktree, and does
+not produce a visible Herdr pane — it **shares the parent session's topology**. Routing a
+Builder through one because both surfaces use TOML gets you write-heavy work with no isolation
+boundary and no pane to watch it in.
+
+`sandbox_mode = "read-only"` is a **requested default, not a boundary**. Codex reapplies a
+parent's live permission overrides to children, so a parent launched with bypass can weaken it.
+The instructions in each helper forbid writes as well, but worktree and branch allocation
+behind a visible pane stays the only accepted boundary for a lifecycle role.
+
+Two read-only-intent helpers ship: `astragentic_explorer` for mapping code paths and gathering
+evidence, `astragentic_reviewer` for a second read over a diff. Neither may claim a ticket,
+cut a branch, dispatch, or present its result as a gate verdict.
+
+## Payload or scaffold, and why the answer differs inside one directory
+
+`.codex/profiles/` carries the owner's model and effort choices, so it stays **scaffold**:
+written when absent, never overwritten (AST-041).
+
+`.codex/hooks.json` and `.codex/agents/` carry no model choice and are **payload**. Classifying
+them as scaffold would have been the quiet failure: a safety fix to the guard registration
+would ship into the release and never reach a project that already had the file.
+
+## Two cases, both shaped by the rule 2.7.12 recorded
+
+`selftest.sh` gains the Codex pair, and neither asserts the answer it wanted:
+
+- The hook case builds an adapted-project layout, extracts the command **as registered**, and
+  pipes a real `PreToolUse` event at it. Parsing `hooks.json` proves the JSON is well-formed;
+  running the script directly proves the script works. Neither proves the registered command
+  resolves the installed path or that stdin reaches the guard, which is the only thing that
+  matters at 3am on a Codex pane.
+- The custom-agent case parses the shipped TOML and asserts `read-only` and non-empty
+  instructions, so the helpers cannot silently lose the property they are described by.
+
+`check-requirements.sh` gains the matching pair on the doctor side, and reports missing
+`tomllib` as a warning rather than a pass.
+
+## The fossil 2.7.12 left
+
+2.7.12 bumped `VERSION` and `RELEASE-NOTES.md` and left the README badge reading 2.7.11 — the
+class 2.7.8 exists to describe, shipped in the release that closed the cycle it described.
+
+## Migration
+
+An adapted project needs the two new payload paths and one manual step:
+
+1. Re-run the payload install to receive `.codex/hooks.json` and `.codex/agents/`.
+2. In the Codex CLI, run `/hooks` and confirm trust for the project hook definition.
+   Until that happens the guard is installed and skipped, and `check-requirements.sh`
+   cannot tell you so.
+
+Projects that do not dispatch to Codex are unaffected.
+
 # Astragentic 2.7.12
 
 The last release of this cycle. One drift class the tracker layer was missing, and one

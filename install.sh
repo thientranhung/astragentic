@@ -356,8 +356,10 @@ printf '%s\n' "$PROJECT_NAME" > "$PROJECT_NAME_FILE"
 #
 # What it will NOT do, and why:
 #   - OWNER FILES are never overwritten. `.agents/orchestrator.md` carries the owner's runtime
-#     and model rows (AST-041); `.claude/settings.json` carries project hooks. Written only
-#     when absent.
+#     and model rows (AST-041); `.claude/settings.json` carries owner-tuned Claude hooks; and
+#     `.codex/profiles/` carries machine-profile templates. Written only when absent.
+#     `.codex/hooks.json` and `.codex/agents/` are payload: they contain no model choice and
+#     must receive safety fixes on upgrade.
 #   - A payload path the PROJECT has diverged on is reported, never overwritten. A project can
 #     author a file at a path the payload only starts shipping later, and overwriting it is
 #     silent data loss (ADAPT-HARNESS §4).

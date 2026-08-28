@@ -429,6 +429,82 @@ PYEOF
         miss ".claude/settings.json could not be parsed ($GUARD_REG)" \
           "the registration cannot be confirmed, so enforcement cannot be assumed" ;;
     esac
+
+    # Codex has a separate project-local hook surface. It deliberately points at the SAME
+    # guard script: the safety rule is runtime-neutral, while registration stays native to
+    # each runtime. Presence alone is not enough; parse the exact event/matcher/handler path.
+    CODEX_GUARD_REG=$(python3 - "$TARGET" <<'PYEOF'
+import json, sys, os
+path = os.path.join(sys.argv[1], ".codex", "hooks.json")
+try:
+    with open(path, encoding="utf-8") as fh:
+        cfg = json.load(fh)
+except FileNotFoundError:
+    print("absent"); raise SystemExit
+except Exception as exc:
+    print("unparseable: %s" % exc); raise SystemExit
+for e in ((cfg.get("hooks") or {}).get("PreToolUse") or []):
+    if "Bash" not in str(e.get("matcher", "")):
+        continue
+    for h in (e.get("hooks") or []):
+        if h.get("type") == "command" and "hook-git-guard.py" in (h.get("command") or ""):
+            print("ok"); raise SystemExit
+print("absent")
+PYEOF
+)
+    case "$CODEX_GUARD_REG" in
+      ok)
+        ok ".codex/hooks.json has a PreToolUse/Bash command hook naming hook-git-guard.py" ;;
+      absent)
+        miss ".codex/hooks.json has no PreToolUse/Bash hook naming hook-git-guard.py" \
+          "Codex does not read .claude/settings.json; install the project-local Codex hook adapter" ;;
+      *)
+        miss ".codex/hooks.json could not be parsed ($CODEX_GUARD_REG)" \
+          "Codex will skip an invalid project hook registration" ;;
+    esac
+
+    # Project custom agents are not launcher profiles. These two request read-only mode and
+    # forbid writes in their instructions; parent live permission overrides can still win,
+    # so they must never become an alternate path for a Builder or Rin gate.
+    CODEX_AGENTS_REG=$(python3 - "$TARGET" <<'PYEOF'
+import os, sys
+try:
+    import tomllib
+except Exception:
+    print("tomllib-unavailable"); raise SystemExit
+root = os.path.join(sys.argv[1], ".codex", "agents")
+expected = {
+    "astragentic-explorer.toml": "astragentic_explorer",
+    "astragentic-reviewer.toml": "astragentic_reviewer",
+}
+for filename, name in expected.items():
+    path = os.path.join(root, filename)
+    try:
+        with open(path, "rb") as fh:
+            cfg = tomllib.load(fh)
+    except FileNotFoundError:
+        print("missing:%s" % filename); raise SystemExit
+    except Exception as exc:
+        print("unparseable:%s:%s" % (filename, exc)); raise SystemExit
+    if cfg.get("name") != name or cfg.get("sandbox_mode") != "read-only" \
+            or not cfg.get("description") or not cfg.get("developer_instructions"):
+        print("invalid:%s" % filename); raise SystemExit
+print("ok")
+PYEOF
+)
+    case "$CODEX_AGENTS_REG" in
+      ok)
+        ok ".codex/agents has the two read-only-intent Astragentic helpers" ;;
+      tomllib-unavailable)
+        warn "cannot parse project Codex custom agents (python3 has no tomllib)" \
+          "use Python 3.11+ or ask Codex 0.150+ to load the project and inspect startup diagnostics" ;;
+      missing:*)
+        miss "project Codex custom agent is missing (${CODEX_AGENTS_REG#missing:})" \
+          "re-run the payload install; .codex/agents is payload, not owner scaffold" ;;
+      *)
+        miss "project Codex custom agents are invalid ($CODEX_AGENTS_REG)" \
+          "each helper needs name, description, developer_instructions and sandbox_mode = read-only" ;;
+    esac
   fi
 
   if git -C "$TARGET" rev-parse --is-inside-work-tree >/dev/null 2>&1; then

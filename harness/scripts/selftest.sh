@@ -93,6 +93,46 @@ else
   bad "guard no-opinion logging" "expected a no-opinion entry in the fire log"
 fi
 
+# Codex registration is a separate runtime surface. Exercise the command AS REGISTERED from
+# an adapted-project layout; parsing hooks.json or running the script directly proves neither
+# that the registration resolves the installed path nor that stdin reaches the guard.
+echo "codex hooks — registered command reaches the shared guard"
+CT="$TMP/codex-hook-target"; mkdir -p "$CT/.codex" "$CT/scripts"
+cp "$ROOT/harness/.codex/hooks.json" "$CT/.codex/hooks.json"
+cp "$S/hook-git-guard.py" "$CT/scripts/hook-git-guard.py"
+HOOK_CMD="$(python3 - "$CT/.codex/hooks.json" <<'PY'
+import json, sys
+cfg = json.load(open(sys.argv[1], encoding="utf-8"))
+print(cfg["hooks"]["PreToolUse"][0]["hooks"][0]["command"])
+PY
+)"
+SMOKE='{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git add -A"}}'
+out="$(cd "$CT" && printf '%s' "$SMOKE" | HARNESS_HOOK_LOG="$TMP/codex-hook.log" bash -c "$HOOK_CMD" 2>/dev/null)"
+case "$out" in
+  *'"permissionDecision": "deny"'*) ok "Codex hooks.json invokes the guard from adapted layout" ;;
+  *) bad "Codex hook registration" "registered command did not deny git add -A: $out" ;;
+esac
+
+echo "codex custom agents — project TOML requests read-only mode and is parseable"
+if python3 - "$ROOT/harness/.codex/agents" <<'PY'
+import os, sys, tomllib
+expected = {
+    "astragentic-explorer.toml": "astragentic_explorer",
+    "astragentic-reviewer.toml": "astragentic_reviewer",
+}
+for filename, name in expected.items():
+    with open(os.path.join(sys.argv[1], filename), "rb") as fh:
+        cfg = tomllib.load(fh)
+    assert cfg["name"] == name
+    assert cfg["sandbox_mode"] == "read-only"
+    assert cfg["description"] and cfg["developer_instructions"]
+PY
+then
+  ok "project custom-agent TOML parses and requests read-only mode"
+else
+  bad "Codex custom-agent TOML" "missing, invalid, or not read-only"
+fi
+
 # ---------------------------------------------------------------------------------------------
 # Argument conventions — 2.7.2's `--check` was positional, and the wrong position exited 0 AND
 # REWROTE the file it was asked about. Three scripts, one convention.

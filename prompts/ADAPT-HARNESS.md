@@ -109,10 +109,12 @@ Classify candidate material before editing anything:
 - **Project-owned truth** — `AGENTS.md`, `CLAUDE.md`, `docs/` content, domain docs, ops
   skills, environment and deployment instructions. These stay the project's; wire them to
   harness context with a small marked reference where one is needed.
-- **Runtime-specific** — Claude Markdown/YAML agents and skills stay Claude-native; Codex
-  TOML profiles and skills stay Codex-native; opencode adapters (`.opencode/agents/*.md`)
-  stay opencode-native. Translate mechanics by reading each runtime's contract, rather than
-  by analogy from another.
+- **Runtime-specific** — Claude Markdown/YAML agents and skills stay Claude-native. Codex
+  machine-local launch-profile templates stay under `.codex/profiles/`; project-local custom
+  subagents stay under `.codex/agents/`; project hooks stay in `.codex/hooks.json`. These are
+  three different surfaces and are not interchangeable. OpenCode adapters
+  (`.opencode/agents/*.md`) stay OpenCode-native. Translate mechanics by reading each
+  runtime's contract, rather than by analogy from another.
 - **Scaffold — written once, never overwritten.** `.agents/orchestrator.md` and
   `.codex/profiles/*.config.toml` carry the owner's runtime and model choices. Write them on
   a FRESH install only. On an upgrade, leave the values alone and report any change in the

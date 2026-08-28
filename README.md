@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.7.11-blue" alt="version">
+  <img src="https://img.shields.io/badge/version-2.7.13-blue" alt="version">
   <img src="https://img.shields.io/badge/license-proprietary-lightgrey" alt="license">
   <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
   <img src="https://img.shields.io/badge/failure_modes-136_measured-red" alt="failure modes">
@@ -39,7 +39,7 @@ prove what happened.
 
 # 3. Open your repo in Claude Code and run the adaptive installer
 cd /path/to/your-repo
-claude "Read .astraler/releases/2.7.11/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/2.7.13/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Start the router
 claude --agent thomas
@@ -321,7 +321,9 @@ harness/
     agents/           Claude adapters (--agent <role>)
     skills/           Claude-discovered skills
   .opencode/agents/   OpenCode adapters
-  .codex/profiles/    Codex role profiles
+  .codex/profiles/    machine-local Codex pane-launch profile templates
+  .codex/agents/      project-local, read-only-intent Codex helper agents
+  .codex/hooks.json   project-local Codex safety hook registration
   scripts/                     see "When each script runs" below
 docs/adr/                      architectural decision records
 prompts/ADAPT-HARNESS.md       the semantic installer

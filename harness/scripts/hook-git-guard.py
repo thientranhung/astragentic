@@ -25,7 +25,7 @@ being decided, so anything it changes is a side effect of a command that may yet
 The first version ran `git worktree prune` and killed brokers from here. It no longer does:
 every rule below either denies with the exact command to run, or says nothing. The doing lives
 in `dispatch-ticket/CLEANUP.md`, which is the contract on every runtime; this file is a second
-layer under it, and only on a Claude root.
+layer under it on Claude and Codex roots.
 
 AMBIGUITY IS NOT A FINDING. A token carrying an unresolved `$VAR` or a substitution cannot be
 judged. Those are logged and allowed. A guard that fires on what it cannot resolve trains the
@@ -39,11 +39,11 @@ on anything containing a substitution, heredoc, comment, reserved word, wrapper 
 Silence there is the design, not a gap: a coverage claim that is not true is worse than none.
 
 That is why the contract is `dispatch-ticket/CLEANUP.md` and this file is a second layer under
-it. A Builder on Codex or opencode has no hook at all and must still get the ordering right,
-so a rule that lives only here is a rule that does not exist on two of three runtimes. If a
-rule matters, it belongs in the contract first and here second.
+it. An OpenCode Builder has no equivalent hook, and either Claude or Codex may run with hooks
+disabled or untrusted, so every Builder must still get the ordering right. If a rule matters,
+it belongs in the contract first and here second.
 
-CONTRACT (verified against the Claude Code hooks documentation, 2026-08-26):
+CONTRACT (verified against Claude Code and Codex hooks documentation, 2026-08-28):
   - settings.json `matcher` matches the TOOL NAME and is a string; filtering the command is
     this script's job.
   - The event arrives as JSON on STDIN, carrying `tool_name` and `tool_input.command`.
@@ -51,6 +51,10 @@ CONTRACT (verified against the Claude Code hooks documentation, 2026-08-26):
       {"hookSpecificOutput":{"hookEventName":"PreToolUse",
        "permissionDecision":"deny","permissionDecisionReason":"..."}}
   - Printing nothing and exiting 0 means "no decision": the normal permission flow runs.
+
+Codex registration lives at `.codex/hooks.json`. Codex reviews project-local hook definitions
+by hash; an absent trust decision means this guard is installed but skipped, so the doctor
+checks registration and the operator confirms trust with `/hooks` in the Codex CLI.
 """
 
 import json
