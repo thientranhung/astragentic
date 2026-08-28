@@ -5,7 +5,6 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/version-2.3.23-blue" alt="version">
-  <img src="https://img.shields.io/badge/license-proprietary-lightgrey" alt="license">
   <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
   <img src="https://img.shields.io/badge/failure_modes-125_measured-red" alt="failure modes">
 </p>
