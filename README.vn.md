@@ -74,7 +74,7 @@ lớp điều phối và mở rộng cho brownfield.
 
 ### 2. Nhìn thấy được — không phải black box chạy ngầm
 
-Mỗi agent là một terminal pane trong [herdr](https://github.com/AstralEr/herdr) workspace.
+Mỗi agent là một terminal pane trong [herdr](https://github.com/herdrdev/herdr) workspace.
 Bạn mở ra thấy ngay:
 
 ```
@@ -235,7 +235,7 @@ Thomas lười.
 |---|---|
 | [**Claude Code CLI**](https://docs.anthropic.com/en/docs/claude-code) | Runtime gốc — mọi vai trò đều chạy được ở đây |
 | **Git** (hỗ trợ worktree) | Ranh giới cách ly — mỗi Builder một worktree |
-| [**herdr**](https://github.com/AstralEr/herdr) >= 0.8.0 | Quản lý terminal workspace — agent pane, prompt/wait/read |
+| [**herdr**](https://github.com/herdrdev/herdr) >= 0.8.0 | Quản lý terminal workspace — agent pane, prompt/wait/read |
 | [**mattpocock-skills**](https://github.com/mattpocock/skills) >= 1.2.3 | Phương pháp kĩ thuật — wayfinder, grill, spec, ticket, implement, review |
 
 Tuỳ chọn: **Codex CLI** (cross-vendor review), **OpenCode CLI** (runtime thứ ba)
