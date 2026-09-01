@@ -1,3 +1,83 @@
+# Astragentic 2.7.14
+
+A role's operating contract does not survive compaction, and nothing re-armed it. Measured
+downstream, on a session that had read the contract at start and then stopped following it
+for hours without noticing.
+
+## The four rules that survived, and everything that did not
+
+A role contract is read with the Read tool, so it lives in the conversation as a tool result,
+and tool results are the first thing compaction summarises away. What survives is
+`.claude/agents/<role>.md` — the system prompt — carrying four rules.
+
+Measured on one long autonomous session in a downstream project that compacted once:
+
+- **The four rules in the system prompt: obeyed, every time, all session.**
+- **Every rule outside it: violated, and none noticed until the owner asked.** A ticket
+  dispatched as an in-process subagent instead of a visible pane. Worktrees branched off a
+  stale local `main`. Roughly twelve label writes with zero board syncs. Twenty-six merges
+  past a gate that stops at ten.
+
+The correlation is total, which is what makes it a design report rather than an incident
+report. Nothing inside the surviving list was forgotten and nothing outside it was remembered.
+That is the split behaving exactly as built.
+
+## The word that does not survive is "now"
+
+The system prompt already says **"Read `.agents/roles/<role>.md` now"**, and that line comes
+through compaction untouched — it is the system prompt. What does not come through is the
+moment. A compacted agent reads its own summary, sees work underway, concludes it is
+mid-session, and never re-reads. `AST-069`: an instruction with no moment attached measures
+zero.
+
+Growing the surviving list is not the fix either. It is a fixed budget of four because
+system-prompt space is not free, and moving the whole contract in defeats the separation.
+
+So supply the moment instead. `SessionStart` fires with `source: compact`, and its
+`hookSpecificOutput.additionalContext` reaches the agent before it acts. `scripts/hook-contract-reload.py`
+names the exact contract when the payload carries `agent_type`, and otherwise says enough that
+the agent resolves the path from its own system prompt.
+
+**`compact` only, and that is deliberate.** After `/clear` an agent faces an empty context and
+reads its contract unprompted; after compaction it faces a summary insisting work is underway,
+and does not. That asymmetry is the entire defect. Firing on `clear`, `startup`, `resume` or
+`fork` would spend context re-arming a session that is already armed.
+
+**Claude Code only, and that is also deliberate — this is not `AST-137` again.** 2.7.13 shipped
+a guard for three runtimes and registered it on one, which was a defect because the rule was
+runtime-neutral. This one is not: Codex and OpenCode have no compaction, so there is no moment
+to hook and nothing to re-arm. Those runtimes already carry the matching instruction in their
+contracts — write a durable checkpoint, because context grows until the session ends.
+
+## The half that would have shipped and never arrived
+
+`.claude/settings.json` is an owner file: `install.sh` writes it only when absent. So a hook
+added to the payload reaches a fresh install and **never reaches a project that already has
+one**. Verified against a live 2.7.10 project: it carried the three hook events it was
+installed with, `--apply` printed `owner (kept — yours)`, and nothing anywhere said an event
+was missing.
+
+`ADAPT-HARNESS.md` already had the right rule for `orchestrator.md` — keep the owner's values,
+report the shape change for the owner to merge — and simply did not name `settings.json`. It
+does now, with the distinction the rule needs: **owner tuning is theirs, the hook set is
+safety machinery the release ships.** Preserve every owner key and every hook they added;
+merge in any hook event the release ships that they have no entry for.
+
+`install.sh` now names the specific missing events instead of printing `kept — yours` and
+moving on. **It reports and does not merge**, because nothing mechanical distinguishes an
+owner's deliberate removal from a stale copy, and merging over the first is the silent
+overwrite `AST-041` exists to forbid.
+
+## What is measured here, and what is not
+
+Measured: the hook fires on `compact` and stays silent on `startup`, an unknown role falls
+back rather than inventing a path, malformed stdin produces nothing rather than a traceback,
+the gap detector correctly reports `SessionStart` missing against a real project's
+`settings.json`.
+
+Not measured: that a re-armed agent behaves differently after a real compaction. That needs a
+long session to compact on its own, and it has not happened yet under this release.
+
 # Astragentic 2.7.13
 
 The guard shipped for three runtimes and was registered on one. Plus the three Codex

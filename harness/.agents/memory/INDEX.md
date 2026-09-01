@@ -80,7 +80,7 @@ from this table — read the entry.
 | `AST-065` | Two reviewers sharing one name, each in the other's contract | promoted | 189 |   |
 | `AST-066` | A review bound to the wrong checkout returns clean without reading anything | promoted | 255 |   |
 | `AST-068` | A lesson closed at instance level reopens at class level | promoted | 259 |   |
-| `AST-069` | An instruction with no moment attached measures zero | promoted | 272 | check-reachability.sh,thomas.md |
+| `AST-069` | An instruction with no moment attached measures zero | promoted | 272 | check-reachability.sh,hook-contract-reload.py,thomas.md |
 | `AST-070` | A bounded exception nobody asked for is a contradiction carried on speculation | promoted | 275 | dispatch-ticket,ledger-rules.py |
 | `AST-071` | Every check asked whether a thing was NAMED, none asked whether anything READ it | promoted | 312 | check-reachability.sh |
 | `AST-072` | Self-monitoring shipped without proof it cannot harm what it monitors | promoted | 345 | herdr-watchdog.sh |
