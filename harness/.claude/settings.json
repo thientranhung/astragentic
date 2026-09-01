@@ -22,6 +22,17 @@
         ]
       }
     ],
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-$PWD}\"; s=\"$d/scripts/hook-contract-reload.py\"; [ -f \"$s\" ] || s=\"$d/harness/scripts/hook-contract-reload.py\"; if [ -f \"$s\" ]; then exec python3 \"$s\"; else cat >/dev/null; echo \"hook-contract-reload: NOT FOUND under $d — role contracts are not re-armed after compaction\" >&2; echo \"$(date -u +%FT%TZ) hook-contract-reload MISSING under $d\" >> /tmp/harness-hook-events.log; fi"
+          }
+        ]
+      }
+    ],
     "SubagentStop": [
       {
         "matcher": "",

@@ -121,6 +121,16 @@ Classify candidate material before editing anything:
   table's shape for the owner to merge. A release that overwrites them silently reverts
   tuning the owner made deliberately, and the first sign is a dispatch failing on a model id
   they never chose (AST-041).
+- **`.claude/settings.json` — owner-owned, but its HOOK SET is not tuning.** `install.sh`
+  writes this file only when absent, because it carries owner-tuned Claude settings. The
+  hooks inside it are a different thing: they are safety machinery the release ships, and a
+  project that keeps its own copy silently keeps the hook set it had on the day it was
+  installed. Measured 2026-09-02 on a 2.7.10 project: the release shipped four hook events,
+  the project had three, `install.sh` printed `owner (kept — yours)`, and nothing anywhere
+  said a hook was missing. So on an upgrade: **preserve every owner key and every hook the
+  project added, and merge in any hook EVENT the release ships that the project has no entry
+  for.** Report each one merged in the receipt. Never replace the file wholesale — that is
+  how the owner's `enabledPlugins` and permission tuning would be reverted.
 - **Role contracts and their adapters** — `harness/.agents/roles/{thomas,shaper,builder,rin}.md`
   are runtime-neutral and are the single home for each role's phases. Role →
   runtime/model/effort lives in the owner-editable `.agents/orchestrator.md`; contracts carry

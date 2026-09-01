@@ -422,6 +422,31 @@ if [ "$APPLY" -eq 1 ]; then
     if [ "$OWNED" -eq 1 ]; then
       if [ -e "$DST" ]; then
         echo "  owner   $REL (kept — yours)"; N_OWNER=$((N_OWNER+1))
+        # Keeping the owner's file is right for their TUNING and wrong for the HOOK SET: hooks
+        # are safety machinery the release ships, so a project that keeps its copy keeps the
+        # hooks it had on install day and is told nothing. Measured on a 2.7.10 project: the
+        # release carried a hook event the project lacked, this branch printed "kept — yours",
+        # and the missing hook was invisible. Report the gap; merging is ADAPT-HARNESS §4's job,
+        # because only a reader can tell an owner's deliberate removal from a stale copy.
+        if [ "$REL" = ".claude/settings.json" ]; then
+          MISSING_HOOKS="$(python3 - "$SRC" "$DST" <<'PY' 2>/dev/null || true
+import json, sys
+def events(p):
+    try:
+        with open(p) as f: return set(json.load(f).get("hooks", {}))
+    except Exception: return None
+ship, proj = events(sys.argv[1]), events(sys.argv[2])
+# None means unreadable/unparseable — say nothing rather than claim every hook is missing.
+if ship is not None and proj is not None:
+    print(" ".join(sorted(ship - proj)))
+PY
+)"
+          if [ -n "$MISSING_HOOKS" ]; then
+            echo "          ACTION: this release ships hook event(s) your copy has no entry for:"
+            echo "          $MISSING_HOOKS"
+            echo "          Merge them in, keeping your own keys and hooks (ADAPT-HARNESS §4)."
+          fi
+        fi
       else
         [ "$PLAN" -eq 1 ] || { mkdir -p "$(dirname "$DST")"; cp "$SRC" "$DST"; }
         echo "  NEW     $REL (owner file, scaffolded — fill its <set-me> rows)"; N_NEW=$((N_NEW+1))
