@@ -1,3 +1,108 @@
+# Astragentic 2.7.15
+
+The payload is a chipset: it states an obligation, the moment it falls due, and the question
+the project must answer. The answer — which stack, which tool, which label — is the project's,
+at a path no release writes. `SPEC-1.0.0.md` has carried the invariant since 1.0.0: *no project
+or product noun appears anywhere in the payload.* This release is what a full scan of the
+payload against that invariant found, and the two defects underneath it.
+
+## The guard on the invariant never ran
+
+`docs-staleness-audit.sh` axis 4 exists to catch a real ticket or project name leaking into the
+scaffold. It compared an absolute path to the bare word `harness`, so the comparison could never
+be true, and the axis printed `(skipped — this axis is about the scaffold …)` on every run, in
+every layout, since it shipped. Verified by running it. A check that always takes the
+reassuring branch is AST-051 wearing a comment.
+
+It runs now, scoped to the scaffold (`.agents/memory/` is the record and cites downstream
+measurements by id on purpose), and it blocks a release: `install.sh` refused to stage this very
+version until the selftest's own planted id was assembled at runtime instead of written
+literally. Two selftest cases were watched to fail against the shipped condition before the fix.
+
+## One project's stack, hardwired at five call sites
+
+What it had let through: a compose label and a companion-broker process name — one downstream
+project's answer to "what does a worktree hold?" — written into `.claude/settings.json`'s
+`WorktreeRemove` hook, `hook-git-guard.py`, `codex-arm`, `dispatch-ticket/CLEANUP.md` and
+`UNINSTALL-HARNESS.md`. A project on any other stack read "cleanup exists" and released nothing.
+Measured downstream in one night: 43 orphaned processes, 3,405 leftover databases (25 GB), load
+average 123, one Builder killed by the OS. Meanwhile the one generic tool the package ships,
+`reap-worktree-processes.sh`, had no call site at all.
+
+## The socket
+
+`scripts/release-worktree-resources.sh <worktree>` is the one call, made before every worktree
+removal on every runtime. It reaps processes rooted in the worktree by real cwd — the harness's
+own part, the companion broker included — and then runs the project's plug:
+
+```
+.astraler/project/cleanup-worktree.sh <worktree-path>
+```
+
+`.astraler/project/` is project-owned and tracked in git. `install.sh` never writes there, so an
+upgrade cannot overwrite the answer. `ADAPT-HARNESS.md` §3 now asks the question — *what does a
+worktree allocate in this project beyond git, and what releases it?* — and §7 records the
+answer in the receipt. An absent plug is reported as an empty socket, not a clean one; a plug
+that fails fails the call; nothing is `|| true`d (AST-057). Four selftest cases cover the
+socket's outcomes.
+
+**And the call is enforced, not remembered.** A clean run stamps the resolved path under
+`/tmp/harness-released/`, and `hook-git-guard.py` — loaded by the Claude and Codex hook sets —
+refuses `git worktree remove <path>` for any path without a stamp, `--force` included. Until now
+the only call site for the reap was prose at the end of `CLEANUP.md`, and prose at the end of a
+ticket is exactly what gets skipped. The owner's rule, applied to the thing that carries it: a
+tool nobody calls does not exist. `check-reachability.sh` gains check 9 for the same rule —
+every shipped script must be named from session context, a skill, a runtime hook, the
+installer, or a script one of those calls — measured on this package: 14 scripts, 0 orphans,
+where a hand count a week earlier found one.
+
+The enforcement case found a second defect on its first run, a real one: the guard's broker
+check was a `bash -c "ps | grep app-server-broker | grep <path>"` pipeline, and that shell's own
+argv carried both strings, so the grep matched itself and refused every removal of an existing
+directory as "a broker is still bound". Nothing had ever exercised the guard against a real
+directory. It now filters `ps` output in Python (AST-133's shape, in a script that cites it).
+
+The five call sites now make that call. The git guard keeps refusing a removal while a process
+or the harness's own broker is bound to the tree, and no longer pretends to know the project's
+containers. `codex-arm`'s cleanup lost the project-level `make` target it used as a
+counter-example; the lesson it carried (a project-level teardown stopped the shared container
+every live Builder stood on, AST-115) is kept as the rule the plug must obey: scope to this
+worktree, or release nothing.
+
+## Gate on the committed SHA
+
+`thomas.md` § Merge now states the order: commit the merge, then gate on the committed SHA. The
+contract said "clean final SHA" and never said *when* to commit relative to the gate; a project
+read it as `merge --no-commit → gate → commit`, under which every check that reads git history
+reads the history before the merge and certifies it. Measured: `Gate PASSED` on a tree the
+re-derivation had not seen, base red for 90 minutes.
+
+## Examples no longer borrow a downstream prefix
+
+`tracker-contract.md` named the two projects it was measured on; both are now "a live project".
+`orchestrator.md`, `dispatch-ticket`, `ticket-git-facts.sh` and `reap-worktree-processes.sh`
+used one project's real ticket ids as their examples, kept alive by an allowance in the very
+check meant to catch them. All are the generic `ABC-nnn` series now, and the allowance is gone.
+`check-reachability.sh`'s vocabulary list loses the two project names and the `make` target.
+
+## What did not change, on purpose
+
+- **Skill names stay.** `mattpocock-skills:implement`, `grill-with-docs`, `/tdd` and the rest
+  are named as rules across the role contracts. The scan flagged them; they are not a
+  project's answer, they are the method the chipset runs — a declared dependency, which
+  `ADAPT-HARNESS.md` §2 already verifies.
+- **The tracker write-back after merge is unchanged.** It is a remembered obligation at the
+  same moment as cleanup, and it drifted the same night for the same reason. Decoupling
+  frontier correctness from it is a contract change and belongs to 2.8 with the rest of the
+  plug convention.
+
+## Upgrading
+
+Write `.astraler/project/cleanup-worktree.sh` (executable, takes the worktree path, releases
+what THIS worktree allocated, prints what it released). A project whose worktrees allocate
+nothing beyond git writes one that says so. Until it exists, every worktree removal prints the
+empty-socket `NOTE:` line — that line is the upgrade's to-do, not noise. Selftest: 46 cases.
+
 # Astragentic 2.7.14
 
 A role's operating contract does not survive compaction, and nothing re-armed it. Measured
