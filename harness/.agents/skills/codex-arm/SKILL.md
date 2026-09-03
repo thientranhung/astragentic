@@ -117,62 +117,45 @@ cleanup, but also the mid-ticket removal between pass 1 and pass 2. Removing
 the pass-1 worktree to create the `-p2` worktree orphans the pass-1 broker
 (AST-100, measured: every two-pass ticket leaked one process this way).
 
-**The `WorktreeRemove` hook in `.claude/settings.json` is intended to automate steps 1-2,
-but field testing (2.3.0) showed it does not fire on `git worktree remove` or
-`ExitWorktree` — confirmed by A/B test with control (SubagentStop fires from the same
-file, same minute). Until the hook is proven live by probe, treat steps 1-3 below as
-required on ALL runtimes.**
+**The `WorktreeRemove` hook in `.claude/settings.json` calls `scripts/release-worktree-resources.sh`
+for you, but field testing (2.3.0) showed the event does not fire on `git worktree remove` or
+`ExitWorktree` — confirmed by A/B test with control (SubagentStop fires from the same file, same
+minute). Until a probe proves it live, make the call yourself, on ALL runtimes, before every gate
+worktree removal — including the mid-ticket removal between pass 1 and pass 2, which orphaned one
+broker per two-pass ticket when it was skipped (AST-100).**
 
 In this order, every time you remove a gate worktree:
 
-1. Kill the companion's broker process. Find it by verifying each PID's `--cwd`
-   matches the gate worktree path — **never `pkill -f` by name**, which kills
-   every project's brokers on the machine (34 were live the night this was
-   measured, including other projects'):
+1. Release what the worktree holds — one call, before the directory is gone:
    ```bash
-   broker_pid=$(ps -eo pid=,command= | grep "app-server-broker.mjs" \
-     | grep -- "--cwd $GATE_WORKTREE" | awk '{print $1}')
-   [ -n "$broker_pid" ] && kill "$broker_pid" 2>/dev/null
+   scripts/release-worktree-resources.sh "$GATE_WORKTREE"
    ```
-2. Stop the gate worktree's database container, if the project uses one.
-   Same rule: stop only the container whose compose project matches this
-   worktree, not a blanket `docker compose down`:
-   ```bash
-   proj=$(basename "$GATE_WORKTREE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]//g')
-   ids=$(docker ps -q --filter "label=com.docker.compose.project=$proj" 2>/dev/null)
-   if [ -n "$ids" ]; then
-     docker stop $ids || echo "WARN: docker stop failed for compose project $proj"
-   else
-     echo "NOTE: no container labelled com.docker.compose.project=$proj — this gate started none"
-   fi
-   ```
+   A clean run stamps the path; `hook-git-guard.py` refuses step 2 for an unstamped path, so
+   this is enforced, not remembered.
+   It reaps every process rooted in the worktree by REAL cwd — the companion's broker
+   included, which is why a hand-typed `ps | grep -- '--cwd …'` is not a substitute: that grep
+   reported nothing while a live broker had run three hours — and then runs the project's own
+   plug, `.astraler/project/cleanup-worktree.sh`, for whatever this project's worktrees
+   allocate beyond git. **Never `pkill -f` by name** — it kills every project's brokers on the
+   machine (34 were live the night this was measured, including other projects').
 
-   **NEVER run the project's own `make db-down` here, and never any project-level target.**
-   Its blast radius is defined by the project, not by this worktree. Measured 2026-08-19: the
-   documented `make -C <dir> db-down` resolved correctly, ran correctly, and stopped
-   the project's SHARED test-database container — the one every live Builder was
-   standing on, because the project had that day migrated to one shared server across
-   worktrees. A Builder mid-ticket survived on timing alone: it had finished its test run four
-   minutes earlier and was reading source when the container went away (AST-115).
+   **The plug must scope to THIS worktree and never delegate to a project-level target.**
+   Measured 2026-08-19: a documented project teardown target resolved correctly, ran
+   correctly, and stopped the project's SHARED test-database container — the one every live
+   Builder was standing on, because the project had that day moved to one shared server
+   across worktrees. A Builder mid-ticket survived on timing alone (AST-115). When scoping is
+   uncertain, release NOTHING — that is the correct direction to fail in; the project-level
+   form failed the other way, uncertain about scope and stopping everything it could name.
 
-   Match by the **compose project label derived from this worktree's own path** — the same
-   verified-scope rule as the broker above, which the `make` form violated by delegating to a
-   target that matches by name.
+   **Three outcomes, all spoken, none silent**: released (named by the plug), nothing
+   declared (the script's `NOTE:` line — an empty socket, which is not a clean one), or a
+   failure (`WARN:`). Do not `|| true` any of them.
 
-   **Three outcomes, all distinguishable, none silent**: containers stopped (named by
-   `docker stop`), nothing scoped to this worktree (the `NOTE:` line), or a stop that failed
-   (the `WARN:` line). Do not `|| true` any of them.
-
-   **When scoping is uncertain, stop NOTHING.** If the project sets its own
-   `COMPOSE_PROJECT_NAME`, the filter finds nothing and the step does nothing — correct, and
-   the correct direction to fail in. The `make` form failed the other way: uncertain about
-   scope, it stopped everything the Makefile could name.
-
-   Measured earlier: three surviving Postgres containers took a machine to seven
-   instances; a gate returned `signal: killed` on four packages with
-   `FAIL = 0` — resource exhaustion wearing the costume of a test failure.
-   Stopping one container turned the same command into `EXIT=0, 40 ok`.
-3. Remove the worktree: `git worktree remove --force <path>`.
+   Measured earlier: three surviving database containers took a machine to seven instances;
+   a gate returned `signal: killed` on four packages with `FAIL = 0` — resource exhaustion
+   wearing the costume of a test failure. Releasing one turned the same command into
+   `EXIT=0, 40 ok`.
+2. Remove the worktree: `git worktree remove --force <path>`.
 
 The arm never removes the Builder's worktree.
 

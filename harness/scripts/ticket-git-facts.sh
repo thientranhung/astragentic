@@ -17,7 +17,7 @@
 # grep returning commits that only cited a ticket in a handback; subject-only
 # matching returned exactly the genuine set. This relies on a real, consistent
 # convention in the commit history — the ticket id appears in the subject line,
-# e.g. `feat(scope): summary (TRA-124)` or `docs(TRA-130): handback`.
+# e.g. `feat(scope): summary (ABC-124)` or `docs(ABC-130): handback`.
 #
 # THE KEY IS STILL NOT EXACT, WHICH IS WHY NOTHING HERE WRITES. A commit naming
 # a ticket is not proof the ticket is complete — a partial fix, a revert, or a
@@ -26,8 +26,8 @@
 # strictly worse than one that is wrong and visibly messy.
 #
 # Usage:
-#   TICKET_PREFIX=TRA scripts/ticket-git-facts.sh              # every ticket named on base
-#   TICKET_PREFIX=TRA scripts/ticket-git-facts.sh TRA-130 TRA-126  # only these
+#   TICKET_PREFIX=ABC scripts/ticket-git-facts.sh              # every ticket named on base
+#   TICKET_PREFIX=ABC scripts/ticket-git-facts.sh ABC-130 ABC-126  # only these
 #
 # Output: TSV with a header. Columns:
 #   ticket            the id
@@ -43,7 +43,7 @@ set -uo pipefail
 # carries as noise that is not a tracker ticket — a live project's first run
 # returned a third noise on exactly this mistake. Guessing a prefix produces
 # a confident wrong answer; an unset value is a STOP.
-PREFIX="${TICKET_PREFIX:?TICKET_PREFIX must be set to the tracker prefix this project uses, e.g. TRA}"
+PREFIX="${TICKET_PREFIX:?TICKET_PREFIX must be set to the tracker prefix this project uses, e.g. ABC}"
 # A literal prefix only — no regex metacharacters, since PREFIX is interpolated
 # straight into grep -E patterns below. Rejects the unset-but-truthy footgun too
 # (a prefix of "." or "*" would match everything).

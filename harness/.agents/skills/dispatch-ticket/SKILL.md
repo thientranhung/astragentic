@@ -247,7 +247,7 @@ an unintended default. Confirm the pane's `foreground_cwd` equals `<worktree-pat
 **Agent names and pane labels are different strings.** `herdr agent start` accepts lowercase
 letters, digits, `-` and `_` — no `:`, no uppercase — while pane labels take `:`. So the
 agent is `builder-<ticket-id-lowercased>` while the pane is `builder:<ticket-id>`.
-**Lowercase the ticket ID in the agent name** (`TRA-123` → `builder-tra-123`); passing
+**Lowercase the ticket ID in the agent name** (`ABC-123` → `builder-abc-123`); passing
 uppercase or a pane label as an agent name fails the dispatch silently.
 
 Print the resolved dispatch before launching:
@@ -298,7 +298,7 @@ Worktree: … · Branch: … · Base: …
 Acceptance criteria: …
 Owner intent: …
 Validation: …
-Owned elsewhere: TRA-127 owns docs/…/WIRE-CONTRACT.md — do not edit it; report what you
+Owned elsewhere: ABC-127 owns docs/…/WIRE-CONTRACT.md — do not edit it; report what you
 would have changed.
 Source of truth: the codebase, not this ticket — verify every claim against the actual code.
 ```
@@ -481,14 +481,14 @@ it names machine-local pane and tab ids, so it is not committed and a project th
 
 ```json
 {
-  "TRA-129": {
-    "branch":    "builder/TRA-129",
-    "worktree":  "/abs/path/.claude/worktrees/builder-TRA-129",
+  "ABC-129": {
+    "branch":    "builder/ABC-129",
+    "worktree":  "/abs/path/.claude/worktrees/builder-ABC-129",
     "workspace": "my-project",
-    "tab":       "ticket:TRA-129",
+    "tab":       "ticket:ABC-129",
     "pane":      "pane_01H…",
     "runtime":   "claude",
-    "identity":  "builder/TRA-129",
+    "identity":  "builder/ABC-129",
     "write_set": ["src/posting/post.ts", "docs/agents/CONTEXT.md"],
     "claimed_at": "2026-08-26T09:41:00Z"
   }

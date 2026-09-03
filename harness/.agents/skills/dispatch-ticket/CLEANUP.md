@@ -108,11 +108,18 @@ self-check, so Thomas verifies independently.
 **Only when both checks pass** — `git status` empty AND `markers == wellformed + superseded`
 with every named SHA verified — is removal safe.
 
-**Kill the worktree's resources BEFORE removing it.** A broker is bound by `--cwd` and a
-container by a compose label derived from the directory name; once the directory is gone
-neither can be matched, so a kill ordered after the removal finds nothing and reports success
-(AST-100, AST-101). Scope both to THIS worktree — a blanket `docker compose down` once stopped
-the shared test container every live Builder was standing on (AST-115).
+**Release the worktree's resources BEFORE removing it.** Anything bound to the directory — a
+process by cwd, a resource by a name derived from the path — cannot be matched once the
+directory is gone, so a release ordered after the removal finds nothing and reports success
+(AST-100, AST-101). Scope everything to THIS worktree — a project-level teardown target once
+stopped the shared test container every live Builder was standing on (AST-115).
+
+**What a worktree allocates beyond git is the project's to know, not this file's.** Until
+2.7.15 this step hardwired one project's stack (a compose label) and a project on any other
+stack read it as "cleanup exists" and released nothing — measured in one night: 43 orphaned
+processes and 3,405 leftover databases. The project declares its own release step at
+`.astraler/project/cleanup-worktree.sh` (ADAPT-HARNESS.md §3 asks for it); the one call below
+reaps processes and then runs that plug, and says so when the plug is absent.
 
 ```bash
 # 1. processes first — one command, and it is a script rather than a snippet for a reason.
@@ -123,9 +130,10 @@ the shared test container every live Builder was standing on (AST-115).
 #    its OWN package directory several levels down, so the match must be a path PREFIX with a
 #    `/` boundary rather than an exact path; and `lsof` reports resolved paths, so on macOS a
 #    literal `/tmp/...` never matches `/private/tmp/...` and the reap silently finds nothing.
-scripts/reap-worktree-processes.sh <worktree-path>
-proj=$(basename "<worktree-path>" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]//g')
-ids=$(docker ps -q --filter "label=com.docker.compose.project=$proj"); [ -n "$ids" ] && docker stop $ids
+scripts/release-worktree-resources.sh <worktree-path>
+#    It stamps the path on a clean run, and hook-git-guard.py REFUSES `git worktree remove`
+#    for any path without a stamp — on every runtime whose hooks load the guard. Skipping
+#    this step blocks step 2; it no longer leaks.
 
 # 2. then the worktree, then the branch
 git worktree remove <worktree-path>
@@ -148,8 +156,7 @@ as the reason. `-D` without that confirmation is for an explicitly owner-approve
 only.
 
 **On a Claude root `scripts/hook-git-guard.py` **refuses a removal while any of the above is
-still true** — a dirty tree, a live process, a bound broker, a running container. **It does not
-stop anything.** A `PreToolUse` hook runs while permission is still being decided, so acting
+still true** — a dirty tree, a live process, a bound broker. **It does not release anything.** A `PreToolUse` hook runs while permission is still being decided, so acting
 there would be a side effect of a command that may yet be refused. The stopping is yours, in
 the order above, on every runtime; the hook only declines to let you skip it, and only on a
 Claude root.

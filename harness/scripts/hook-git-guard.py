@@ -57,6 +57,7 @@ by hash; an absent trust decision means this guard is installed but skipped, so 
 checks registration and the operator confirms trust with `/hooks` in the Codex CLI.
 """
 
+import hashlib
 import json
 import os
 import posixpath
@@ -356,6 +357,20 @@ def main():
                 continue
             forced = "--force" in args or "-f" in args
 
+            # Were the worktree's resources released? `scripts/release-worktree-resources.sh`
+            # stamps the resolved path after a clean run; no stamp means the reap and the
+            # project's plug never ran for it. Until 2.7.15 the only call site for that release
+            # was prose at the end of CLEANUP.md — and prose at the end of a ticket is what gets
+            # skipped (AST-057). This turns it into a refusal. `--force` does not bypass it:
+            # force is about uncommitted files, not about a database left running.
+            key = hashlib.sha256(os.path.realpath(wt).encode()).hexdigest()[:16]
+            if not os.path.exists(os.path.join("/tmp/harness-released", key)):
+                deny("nothing has released this worktree's resources. Run "
+                     "`scripts/release-worktree-resources.sh %s` first — it reaps processes "
+                     "rooted there, runs the project's plug (.astraler/project/"
+                     "cleanup-worktree.sh) and stamps the path so this guard admits the "
+                     "removal (AST-100, AST-101)." % wt, cmd)
+
             # Uncommitted work dies with the worktree. --force means that was already decided.
             if not forced:
                 rc, out = run(["git", "-C", wt, "status", "--short"])
@@ -371,29 +386,30 @@ def main():
                      "not finished work (AST-097). Stop them, then remove."
                      % (wt, " ".join(out.split()[:3])), cmd)
 
-            # Resources bound by --cwd or by a compose label cannot be found once the
-            # directory is gone, so they must be stopped FIRST (AST-100, AST-101). This guard
-            # does not stop them — it refuses the removal until they are, because acting here
-            # would be a side effect of a command that has not been permitted yet.
-            rc, out = run(["bash", "-c",
-                           "ps -eo pid=,command= | grep app-server-broker | grep -F -- "
-                           + shlex.quote(wt) + " | awk '{print $1}'"])
-            if rc == 0 and out:
+            # A resource bound to the directory cannot be found once the directory is gone, so
+            # it must be released FIRST (AST-100, AST-101). This guard does not release anything
+            # — it refuses the removal until that is done, because acting here would be a side
+            # effect of a command that has not been permitted yet. It checks the one resource
+            # the HARNESS owns (the cross-vendor companion broker). What the PROJECT's worktrees
+            # allocate is the project's to declare and release — `.astraler/project/
+            # cleanup-worktree.sh`, run by `scripts/release-worktree-resources.sh` — and a guard
+            # that hardwired one project's stack (a compose label, until 2.7.15) read as
+            # coverage to every project on a different one.
+            # Filter in Python, not in a `bash -c "ps | grep …"` pipeline: that pipeline's own
+            # shell carried both the process name and the path in ITS argv, so the grep matched
+            # itself and every removal of an existing directory was refused as "a broker is
+            # still bound". Found by the 2.7.15 selftest case for a stamped removal — the check
+            # had never been exercised against a real directory before (AST-133's shape: a
+            # textual match reading its own pattern).
+            rc, out = run(["ps", "-eo", "pid=,command="])
+            bound = [l.split(None, 1)[0] for l in (out.splitlines() if rc == 0 else [])
+                     if "app-server-broker" in l and wt in l
+                     and "hook-git-guard" not in l and "grep" not in l]
+            if bound:
                 deny("a broker is still bound to '%s' (pid %s). It is matched by --cwd, so "
-                     "once the directory is gone it cannot be found at all (AST-100). Run the "
-                     "ordered cleanup in dispatch-ticket/CLEANUP.md — resources first, then "
-                     "the worktree — then remove." % (wt, out.split()[0]), cmd)
-
-            proj = "".join(c for c in os.path.basename(wt).lower()
-                           if c.isalnum() or c in "_-")
-            rc, out = run(["docker", "ps", "-q", "--filter",
-                           "label=com.docker.compose.project=" + proj])
-            if rc == 0 and out:
-                deny("containers for compose project '%s' are still up, and after removal the "
-                     "label cannot be derived from a directory that no longer exists "
-                     "(AST-101). Stop THOSE containers only — never a blanket `docker compose "
-                     "down`, which once stopped the shared test container every live Builder "
-                     "was standing on (AST-115). CLEANUP.md has the block." % proj, cmd)
+                     "once the directory is gone it cannot be found at all (AST-100). Run "
+                     "`scripts/release-worktree-resources.sh <worktree>` — resources first, "
+                     "then the worktree — then remove." % (wt, bound[0]), cmd)
             continue
 
     log("allow", cmd)

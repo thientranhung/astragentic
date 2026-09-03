@@ -427,18 +427,32 @@ A7=0
 # The axis does not belong downstream at all.
 #
 # Skipped is not clean: say which, so a reader knows this run made no claim.
-if [[ "$PAYLOAD" != "harness" ]]; then
+#
+# 2.7.15: compare against the RESOLVED package path. $PAYLOAD is absolute (line 44), so the
+# bare `!= "harness"` it shipped with could never be false — this axis printed "(skipped)" on
+# every run in every layout since it was written, and the only guard on the SPEC invariant
+# "no project noun in the payload" measured nothing. Found by a full-payload scan, verified by
+# running it. A check that always reports the reassuring branch is AST-051 wearing a comment.
+# "Package layout" is a fact about the PACKAGE, not about which directory the caller named:
+# invoked bare from the repo root, self-location resolves ROOT to `harness/` itself (it is the
+# first ancestor carrying `.agents/roles`), so a `$ROOT/harness` compare skips there too. The
+# package is the tree whose payload dir is literally `harness` with `install.sh` beside it.
+if [[ "$(basename "$PAYLOAD")" != "harness" || ! -f "$PAYLOAD/../install.sh" ]]; then
   echo "(skipped — this axis is about the scaffold, and an adapted project names its own tickets)"
 else
 # SHAPE, not "any uppercase token with a dash". The first draft matched SHA-1, BSD-3, AFL-2 and
 # UTF-8, walked node_modules, and matched its own pattern string — 19 findings, every one noise,
 # which is AST-113 reproduced inside the release that cites it. Three letters and two digits is
-# the ticket shape; ledger ids and the generic example series are allowed by name.
-ALLOW='AST-[0-9]+|TRA-1[23][0-9]|ABC-123'
+# the ticket shape; ledger ids and the generic example series `ABC-nnn` are allowed by name.
+# No downstream prefix is: 2.7.15 retired a `TRA-1[23][0-9]` allowance that had let one
+# project's ids serve as the payload's examples for four releases.
+ALLOW='AST-[0-9]+|ABC-[0-9]+'
 while IFS= read -r hit; do
   [[ -n "$hit" ]] || continue
   echo "  ${hit#$ROOT/} — payload must not name a real ticket (AST-123)"
   A7=1; FOUND=1
+# `.agents/memory/` is excluded: the ledger is the RECORD, and it cites downstream measurements
+# by ticket id on purpose. The scaffold — roles, skills, scripts, hooks — is what must not.
 # SCOPE BY SUBDIRECTORY, never by $PAYLOAD alone. In package layout $PAYLOAD is `harness`;
 # in an ADAPTED PROJECT it is `.` — the repo root — so a bare $PAYLOAD grep walks the whole
 # project. Measured downstream: 4,443 findings, including the project's own lessons file whose
@@ -447,8 +461,9 @@ while IFS= read -r hit; do
 # (AST-126). Axis 3 already scoped this way; axis 4 shipped without it.
 done < <( { grep -rnoE '\b[A-Z]{3,5}-[0-9]{2,}\b' \
               "$PAYLOAD/.agents" "$PAYLOAD/.claude" "$PAYLOAD/scripts" \
-              --include='*.md' --include='*.sh' --include='*.json' \
-              --exclude-dir=node_modules --exclude='docs-staleness-audit.sh' 2>/dev/null || true; } \
+              --include='*.md' --include='*.sh' --include='*.json' --include='*.py' \
+              --exclude-dir=node_modules --exclude-dir=memory \
+              --exclude='docs-staleness-audit.sh' 2>/dev/null || true; } \
           | grep -vE "$ALLOW" )
 [[ $A7 -eq 1 ]] || echo "(clean)"
 fi

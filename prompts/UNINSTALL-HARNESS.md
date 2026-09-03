@@ -35,10 +35,15 @@ scripts/herdr-watchdog.sh stop        # clears /tmp/herdr-watchdog-<workspace-la
 git worktree list                     # every gate-arm-* and ticket worktree still registered
 ```
 
-Remove those worktrees, and for each one kill the `app-server-broker.mjs` whose `--cwd` matches
-it and stop only the containers labelled with that worktree's compose project. `codex-arm`
-documents the sequence and the reasons; follow it rather than a blanket kill. **Never `pkill -f`
-by name** — it reaches every project on the machine.
+For each of those worktrees run `scripts/release-worktree-resources.sh <path>` BEFORE removing
+it — it reaps the processes rooted there and runs the project's own plug,
+`.astraler/project/cleanup-worktree.sh`, for whatever else this project's worktrees allocate.
+`codex-arm` documents the order and the reasons. **Never `pkill -f` by name** — it reaches every
+project on the machine.
+
+`.astraler/project/` is the project's, not the release's: leave it in place. It holds the
+project's answers (its cleanup plug, and from 2.8 the rest), and removing the harness does not
+remove what the project knows about itself.
 
 Report any Builder pane still working. **A live Builder is a stop, not a cleanup step.**
 

@@ -262,6 +262,81 @@ fi
 fi
 
 # ---------------------------------------------------------------------------------------------
+# docs-staleness axis 4 — the only guard on "the payload names no project" compared an absolute
+# path to the bare word "harness" and printed "(skipped)" on every run for four releases
+# (2.7.15). Both cases here were watched to FAIL against the shipped condition before the fix.
+# ---------------------------------------------------------------------------------------------
+echo "docs-staleness axis 4 — the project-noun guard runs in package layout, and catches (2.7.15)"
+for inv in "bare" "explicit"; do
+  case "$inv" in
+    bare)     out="$( (cd "$ROOT" && bash "$S/docs-staleness-audit.sh" 2>&1) )" ;;
+    explicit) out="$( bash "$S/docs-staleness-audit.sh" "$ROOT" 2>&1 )" ;;
+  esac
+  case "$out" in
+    *"this axis is about the scaffold"*) bad "axis-4 runs ($inv)" "printed (skipped) in package layout" ;;
+    *) ok "axis-4 runs ($inv)" ;;
+  esac
+done
+PKG="$TMP/pkg"; mkdir -p "$PKG/harness/.agents/roles" "$PKG/harness/scripts"
+cp "$ROOT/harness/.agents/roles/"*.md "$PKG/harness/.agents/roles/"
+cp "$S/"*.sh "$PKG/harness/scripts/"; touch "$PKG/install.sh"
+# The planted id is ASSEMBLED, not written literally — this file is inside axis 4's scan scope,
+# and a literal here would be reported as the leak it exists to detect.
+LEAK="QQQ-$((120+3))"
+echo "leak $LEAK" > "$PKG/harness/.agents/roles/leak.md"
+out="$( bash "$S/docs-staleness-audit.sh" "$PKG" 2>&1 )"
+case "$out" in
+  *"$LEAK"*) ok "axis-4 flags a planted id" ;;
+  *) bad "axis-4 flags a planted id" "$LEAK not reported" ;;
+esac
+
+# ---------------------------------------------------------------------------------------------
+# release-worktree-resources — the cleanup SOCKET (2.7.15). An empty socket must say so and
+# succeed; a present plug must run and its failure must propagate; a plug that exists but
+# cannot run is a STOP, not a silent skip. The silent version of each is how 43 orphaned
+# processes and 3,405 leftover databases accumulated downstream in one night.
+# ---------------------------------------------------------------------------------------------
+echo "release-worktree-resources — empty socket speaks, plug runs, plug failure propagates (2.7.15)"
+R="$TMP/rwr"; mkdir -p "$R/wt"; (cd "$R" && git init -q . 2>/dev/null)
+out="$( (cd "$R" && bash "$S/release-worktree-resources.sh" "$R/wt" 2>&1); echo "rc=$?" )"
+case "$out" in
+  *"no project cleanup declared"*"rc=0"*) ok "rwr empty socket: NOTE + exit 0" ;;
+  *) bad "rwr empty socket" "$out" ;;
+esac
+mkdir -p "$R/.astraler/project"
+printf '#!/bin/sh\necho "plug released: $1"\n' > "$R/.astraler/project/cleanup-worktree.sh"
+out="$( (cd "$R" && bash "$S/release-worktree-resources.sh" "$R/wt" 2>&1); echo "rc=$?" )"
+case "$out" in
+  *"not executable"*"rc=1"*) ok "rwr non-executable plug: STOP + exit 1" ;;
+  *) bad "rwr non-executable plug" "$out" ;;
+esac
+chmod +x "$R/.astraler/project/cleanup-worktree.sh"
+out="$( (cd "$R" && bash "$S/release-worktree-resources.sh" "$R/wt" 2>&1); echo "rc=$?" )"
+case "$out" in
+  *"plug released: $R/wt"*"rc=0"*) ok "rwr plug runs with the worktree path" ;;
+  *) bad "rwr plug runs" "$out" ;;
+esac
+printf '#!/bin/sh\nexit 3\n' > "$R/.astraler/project/cleanup-worktree.sh"
+out="$( (cd "$R" && bash "$S/release-worktree-resources.sh" "$R/wt" 2>&1); echo "rc=$?" )"
+case "$out" in
+  *"WARN project plug exited 3"*"rc=1"*) ok "rwr plug failure propagates" ;;
+  *) bad "rwr plug failure propagates" "$out" ;;
+esac
+
+
+# The release is ENFORCED by the git guard (2.7.15): an unstamped path is refused, a stamped
+# one admitted. Watched to fail before the stamp existed — the guard allowed the removal.
+# The stamped case then failed a SECOND way, and that one was real: the broker check's
+# `bash -c "ps | grep …"` matched its own shell and refused every removal of an existing
+# directory. Nothing had ever run this guard against a real directory before this case.
+W="$TMP/wt-stamp"; mkdir -p "$W"
+guard deny  "git worktree remove $W"
+rm -f "$R/.astraler/project/cleanup-worktree.sh"   # the failing plug above must not stamp; an empty socket does
+( cd "$R" && bash "$S/release-worktree-resources.sh" "$W" ) >/dev/null 2>&1
+guard allow "git worktree remove $W"
+mkdir -p "$TMP/wt-never-released"
+guard deny  "git worktree remove --force $TMP/wt-never-released"   # --force is not a bypass
+# ---------------------------------------------------------------------------------------------
 echo
 if [ "$FAIL" -eq 0 ]; then
   echo "selftest: $PASS passed, 0 failed."

@@ -207,14 +207,12 @@ KNOWN = set(all_skills) | PLUGIN | USER_SKILLS
 # it appears in backticks and looks like a skill name; the list stays short on purpose,
 # because a long one would mean this check has stopped discriminating.
 NOT_A_SKILL = {
-    # Vocabulary from the two payload documents added to `sources`: the projects the tracker
-    # contract cites as its evidence base, and an orchestrator config key. Skill-shaped, and
-    # none of them is a skill.
-    "etsy-fulfillment-thanh", "workspace-app-inception", "builder-target",
+    # An orchestrator config key. Skill-shaped, and not a skill. (Two downstream project names
+    # sat here until 2.7.15, because tracker-contract.md named them — the payload names no
+    # project, so both the citation and this allowance are gone.)
+    "builder-target",
     # Triage labels. Skill-shaped, and the vocabulary lives in docs/agents/triage-labels.md.
     "needs-triage", "ready-for-agent",
-    # A project make target, cited as the AST-115 example.
-    "db-down",
 
     "no-secrets-in-exports", "expand-contract", "recent-unwrapped", "code-map",
     "agent-not-idle", "agent-not-found", "agent-prompt-stalled", "read-only",
@@ -228,7 +226,7 @@ NOT_A_SKILL = {
     # Dispatch naming convention, not a skill. It has shipped in dispatch-ticket since 2.3.2
     # and this check has been red upstream ever since — papered over by a local edit
     # downstream that never came back (AST-116).
-    "builder-tra-123",
+    "builder-abc-123",
     # Frontmatter keys quoted in prose about how skills are reached.
     "disable-model-invocation",
     # A triage LABEL that to-tickets writes at creation. Named in the frontier audit precisely
@@ -661,6 +659,64 @@ for sname in sorted(skills):
                  "a document with a producer and no named reader is the defect 1.6.1 "
                  "removed three skills for; add a row naming who reads it, or stop writing it")
 
+# --- 9. SHIPPED -> CALLED ------------------------------------------------------------------
+# The owner's acceptance rule (2026-09-03): a tool nobody calls does not exist, and enriching it
+# is meaningless. "Called" means named from one of the surfaces that actually reach a session —
+# session context (a role contract, a skill and its companion files, a subagent definition on
+# any runtime, the orchestrator, the tracker contract, a prompt, the README), a runtime hook,
+# the installer, or transitively a script one of those calls.
+# Measured before this axis existed: `reap-worktree-processes.sh` shipped four releases with no
+# call site at all, while the hook that fired at the right moment ran a hardcoded docker line
+# instead. Every check above asks whether a SKILL is reachable; none asked it of a SCRIPT.
+#
+# Package layout only: in an adapted project `scripts/` also holds the project's own tooling,
+# wired in ways this payload cannot see, and flagging those would be exactly the over-claim
+# check 8's scope note warns about.
+scripts_seen = 0
+if LAYOUT != "project":
+    pkg_root = os.path.normpath(os.path.join(PAYLOAD, ".."))
+    script_files = sorted(glob.glob(os.path.join(PAYLOAD, "scripts", "*.sh")) +
+                          glob.glob(os.path.join(PAYLOAD, "scripts", "*.py")))
+    scripts_txt = {os.path.basename(q): read(q) for q in script_files}
+    scripts_seen = len(scripts_txt)
+    surfaces = {}
+    for q in (glob.glob(os.path.join(PAYLOAD, ".agents", "roles", "*.md")) +
+              glob.glob(os.path.join(PAYLOAD, ".agents", "skills", "*", "*.md")) +
+              [os.path.join(PAYLOAD, ".agents", "orchestrator.md"),
+               os.path.join(PAYLOAD, ".agents", "tracker-contract.md")] +
+              glob.glob(os.path.join(pkg_root, "prompts", "*.md")) +
+              [os.path.join(pkg_root, "README.md")]):
+        surfaces["context " + os.path.relpath(q, pkg_root)] = read(q)
+    for q in ([os.path.join(PAYLOAD, ".claude", "settings.json"),
+               os.path.join(PAYLOAD, ".codex", "hooks.json")] +
+              glob.glob(os.path.join(PAYLOAD, ".claude", "agents", "*")) +
+              glob.glob(os.path.join(PAYLOAD, ".codex", "agents", "*")) +
+              glob.glob(os.path.join(PAYLOAD, ".opencode", "agents", "*"))):
+        surfaces["hook " + os.path.relpath(q, pkg_root)] = read(q)
+    surfaces["installer install.sh"] = read(os.path.join(pkg_root, "install.sh"))
+    wired = {}
+    for name in scripts_txt:
+        for label, text in surfaces.items():
+            if name in text:
+                wired[name] = label
+                break
+    grew = True
+    while grew:                      # transitive: called by a script that is itself called
+        grew = False
+        for name, text in scripts_txt.items():
+            if name in wired:
+                continue
+            for w in list(wired):
+                if w != name and name in scripts_txt[w]:
+                    wired[name] = f"script {w} (itself via {wired[w]})"
+                    grew = True
+                    break
+    for name in scripts_txt:
+        if name not in wired:
+            fail("9", f"scripts/{name} is shipped and nothing calls it",
+                 "name its call site — a role contract, a skill, a runtime hook, a VCS hook, "
+                 "the installer, or a script one of those calls — in the same commit, or "
+                 "delete it: an orphan is not improved by being documented (2.7.15)")
 # --- report -----------------------------------------------------------------------------
 print(f"Reachability check — {LAYOUT} layout, payload at {os.path.normpath(PAYLOAD)}")
 print(f"  {len(roles)} contracts · {len(skills)} harness skills · "
@@ -681,6 +737,11 @@ if not findings:
     print("  [OK] 7 every gate artifact has both a producer and a verifier")
     print(f"  [OK] 8 every document a skill declares it writes is in the artifact registry"
           f" ({writes_seen} write heading(s) read)")
+    if LAYOUT != "project":
+        print(f"  [OK] 9 every shipped script is called from session context, a skill, a runtime"
+              f" hook, the installer, or a wired script ({scripts_seen} scripts, 0 orphans)")
+    else:
+        print("  [--] 9 shipped-script call sites: package layout only; a project's scripts/ is its own")
     if PLUGIN_UNREAD:
         print("  verifier(s) outside this payload and NOT read this run: "
               + ", ".join(sorted(set(PLUGIN_UNREAD)))

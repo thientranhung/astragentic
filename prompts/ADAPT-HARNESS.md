@@ -109,6 +109,18 @@ Classify candidate material before editing anything:
 - **Project-owned truth** — `AGENTS.md`, `CLAUDE.md`, `docs/` content, domain docs, ops
   skills, environment and deployment instructions. These stay the project's; wire them to
   harness context with a small marked reference where one is needed.
+- **Project plugs — the project's answers, at a path no release writes.** `.astraler/project/`
+  is project-owned and tracked in git; `install.sh` never touches it, so an upgrade cannot
+  overwrite what the project declared. The harness states an obligation and the moment; the
+  plug is the project's answer. One plug is asked for now:
+  - **`cleanup-worktree.sh <worktree-path>`** — *what does a worktree allocate in this project
+    beyond git, and what releases it?* A database, a port registration, a container, a broker,
+    a lease on something shared. Write the release for THIS worktree only, never a
+    project-level teardown (AST-115), and print what was released. A project whose worktrees
+    allocate nothing writes one that says exactly that — an absent plug is reported as an
+    empty socket by `scripts/release-worktree-resources.sh`, and an empty socket on a project
+    that does allocate is the gap that produced 43 orphaned processes and 3,405 leftover
+    databases in one night downstream. Make it executable. Record the answer in the receipt.
 - **Runtime-specific** — Claude Markdown/YAML agents and skills stay Claude-native. Codex
   machine-local launch-profile templates stay under `.codex/profiles/`; project-local custom
   subagents stay under `.codex/agents/`; project hooks stay in `.codex/hooks.json`. These are
@@ -247,7 +259,7 @@ So add paths, and know which release you are keeping:
 
 ```bash
 CAND="$(cat .astraler/CANDIDATE)"
-git add .agents .claude .codex .opencode scripts .astraler/state .astraler/CANDIDATE
+git add .agents .claude .codex .opencode scripts .astraler/state .astraler/CANDIDATE .astraler/project
 git add ".astraler/releases/$CAND" || true          # may be refused; the next line decides
 git diff --cached --name-only -- ".astraler/releases/$CAND" | wc -l
 ```
@@ -403,6 +415,9 @@ Only after validation succeeds:
    accretes forever and one measured project reached 3,000 lines nobody read (AST-129).
    It records **exceptions only** — each `DIFFERS` path and its decision, every `PENDING`
    and why, ownership conflicts, defects found in the candidate, and validation failures.
+   And one line on the project plug: `.astraler/project/cleanup-worktree.sh` written (what it
+   releases), or declined (why nothing is allocated) — an unrecorded plug is an empty socket
+   the next session cannot tell from a considered one.
    A clean upgrade produces a receipt of a few lines, and that is the correct output, not a
    thin one. What has a recurring reader — the ticket prefix, the standards pointer, the
    rendering path, the project ledger path — goes in the project's entry doc (steps 2.4, 3

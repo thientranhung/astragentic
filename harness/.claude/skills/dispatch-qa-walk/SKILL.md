@@ -125,22 +125,20 @@ writes nothing inside the gate worktree"*. **That reasoning does not transfer.**
 writes caches, logs and local state, so the plain form refuses on untracked files, and the
 refusal is this gate's NORMAL outcome rather than a signal.
 
-Order matters, and the reason is that a resource bound by `--cwd` or by a compose label derived
-from the directory cannot be matched once the directory is gone (AST-100, AST-101):
+Order matters, and the reason is that a resource bound to the directory — by cwd, or by a name
+derived from the path — cannot be matched once the directory is gone (AST-100, AST-101):
 
 ```bash
 kill "$APP_PID"                                     # the pid you captured at step 2
 lsof -ti :"$APP_PORT" | xargs -r kill               # confirm the port is actually free
-proj=$(basename "$GATE_WORKTREE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]//g')
-ids=$(docker ps -q --filter "label=com.docker.compose.project=$proj")
-[ -n "$ids" ] && docker stop $ids                   # THIS worktree's containers only
+scripts/release-worktree-resources.sh "$GATE_WORKTREE"  # processes, then the project's own plug
 git worktree remove --force "$GATE_WORKTREE"        # --force: the app dirtied the tree
 git worktree prune
 ```
 
-**Never a blanket `docker compose down`.** One scoped-looking `db-down` stopped the shared test
-container every live Builder was standing on (AST-115). Scope by the compose label this worktree
-produced, or stop nothing.
+**The project's plug must scope to this worktree, never to a project-level target.** One
+scoped-looking teardown target stopped the shared test container every live Builder was standing
+on (AST-115). Release what this worktree allocated, or release nothing.
 
 On a Claude root `scripts/hook-git-guard.py` **refuses the removal while the broker or the
 containers are still up** — it does not stop them for you, because a `PreToolUse` hook acting

@@ -175,17 +175,19 @@ cheap one and the one that goes missing.
 
 ## Merge
 
+**Commit the merge, then gate on the committed SHA.** Gating an uncommitted merge certifies
+the tree *before* it — measured: `Gate PASSED`, base red 90 minutes.
+
 Yours alone, on a clean final SHA, verified **by artifact rather than handback**: run
 `check-simplify-markers.sh` for every receipt, and **never hand-roll a `git log --grep` beside
 it** — it matches bodies, and 23 real markers once read as 193 (AST-133).
 
 **Pass `--marker 'rin(gate)'` and `--marker 'qa(walk)'` too.** Advisory: they print **merges on
-the base since the last round of that kind** and never block. That figure is the one the
+the base since the last round of that kind** and never block. That figure is what the
 `>10 merges` STOP below asks for and nothing used to compute — it rises with every merge and
-returns to zero when a round runs, so it can actually cross the threshold (`MARKERS.md`).
+resets when a round runs, so it can cross the threshold (`MARKERS.md`).
 
-**The script checks the relationship; you read the body**, per your runtime supplement. The
-invocation, the marker rules and why existence is not relationship:
+**The script checks the relationship; you read the body.** The invocation, the marker rules and why existence is not relationship:
 `dispatch-ticket/MARKERS.md`.
 
 **A project-authored file at a payload-owned path is silently replaceable by an upgrade.** A
@@ -212,8 +214,9 @@ and what each alert asks of you: `dispatch-ticket/WATCHING.md`.
 sibling pings nothing. With several Builders in flight that is the ordinary state, not an edge:
 count panes yourself rather than waiting to be told.
 
-**Manual broker/container cleanup on every worktree removal is required on all runtimes**, in
-the order `CLEANUP.md` gives. The `WorktreeRemove` hook never fires for it (AST-102).
+**Run `scripts/release-worktree-resources.sh <worktree>` before every worktree removal, all
+runtimes** — processes, then the project's plug (`CLEANUP.md`). The `WorktreeRemove` hook never
+fires (AST-102).
 
 ## Answers carry a source
 

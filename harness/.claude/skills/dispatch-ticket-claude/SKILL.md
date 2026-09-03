@@ -73,7 +73,7 @@ SendMessage({
 **Step 2 — the bare slash command, TYPED into the pane as real input:**
 
 ```bash
-herdr pane run <pane-id> '/mattpocock-skills:implement TRA-123'
+herdr pane run <pane-id> '/mattpocock-skills:implement ABC-123'
 herdr pane send-keys <pane-id> Enter
 ```
 

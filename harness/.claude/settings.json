@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "GATE_WORKTREE=\"$WORKTREE_PATH\"; echo \"HOOK: WorktreeRemove — path=${GATE_WORKTREE:-unset} at $(date -u +%FT%TZ)\" >> /tmp/harness-hook-events.log; broker_pid=$(ps -eo pid=,command= | grep 'app-server-broker.mjs' | grep -- \"--cwd $GATE_WORKTREE\" | awk '{print $1}'); [ -n \"$broker_pid\" ] && kill \"$broker_pid\" 2>/dev/null; proj=$(basename \"$GATE_WORKTREE\" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]//g'); ids=$(docker ps -q --filter \"label=com.docker.compose.project=$proj\" 2>/dev/null); if [ -n \"$ids\" ]; then docker stop $ids || echo \"WARN: docker stop failed for compose project $proj\"; else echo \"NOTE: no container labelled com.docker.compose.project=$proj — this worktree started none\"; fi"
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-$PWD}\"; s=\"$d/scripts/release-worktree-resources.sh\"; [ -f \"$s\" ] || s=\"$d/harness/scripts/release-worktree-resources.sh\"; echo \"HOOK: WorktreeRemove — path=${WORKTREE_PATH:-unset} at $(date -u +%FT%TZ)\" >> /tmp/harness-hook-events.log; if [ -f \"$s\" ]; then bash \"$s\" \"$WORKTREE_PATH\"; else echo \"release-worktree-resources: NOT FOUND under $d — nothing was released for ${WORKTREE_PATH:-unset}\" >&2; echo \"$(date -u +%FT%TZ) release-worktree-resources MISSING under $d\" >> /tmp/harness-hook-events.log; fi"
           }
         ]
       }

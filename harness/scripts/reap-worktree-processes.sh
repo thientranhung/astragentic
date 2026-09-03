@@ -6,8 +6,8 @@
 # one-liner carried TWO of the bugs documented below — exact-path matching, and no realpath on
 # either side, so on macOS it compared `/tmp/...` against lsof's `/private/tmp/...` and matched
 # nothing, ever. It was never run before shipping. This is the version that was.
-# Downstream ticket ids (TRA-, PROJ-) are kept as the citation for measurements this package
-# did not make, the way `tracker-contract.md` cites the projects its tracker facts come from.
+# Measurements this package did not make are cited by their ledger entry, never by a downstream
+# ticket id or project name — the payload names no project (SPEC invariant, AST-123).
 #
 #   scripts/reap-worktree-processes.sh <worktree-path>
 #
@@ -20,7 +20,7 @@
 # than a bash snippet re-typed by hand each time.
 #
 # SCOPE, ON PURPOSE: exactly ONE worktree, named explicitly on the command line. This is a
-# process killer running on a box other Builders' live work shares — TRA-322, gate worktrees
+# process killer running on a box other Builders' live work shares — another ticket's worktree, gate worktrees
 # under /tmp, unrelated projects. It never widens to "all worktrees" or "all orphans"; that is
 # the *standing sweep* in herdr-watchdog.sh, which only ALERTS and never kills. See CLEANUP.md
 # for why the two are split.
@@ -56,10 +56,10 @@
 # `lsof` reports the resolved form) can't defeat the match or the boundary, including for the
 # documented "after removal" call in CLEANUP.md, once the worktree directory itself is gone.
 #
-# Self-test: `tools/reap-worktree-processes-selftest.sh` — nested cwd, prefix-sharing sibling,
+# Self-test (a project-side script; the package ships none) — nested cwd, prefix-sharing sibling,
 # unrelated worktree, a mid-loop race, and a post-removal /tmp-aliased path, each as a real
 # spawned process, not a read of this file. Run it after touching the matching logic; a manual
-# one-time check described in a commit message cannot be re-run by the next person (PROJ-073).
+# one-time check described in a commit message cannot be re-run by the next person.
 set -euo pipefail
 
 WORKTREE_ARG="${1:-}"

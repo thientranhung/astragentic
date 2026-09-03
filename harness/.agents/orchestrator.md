@@ -34,10 +34,10 @@ evidence.
 | Tab creator | Pattern | Example |
 |---|---|---|
 | Thomas | `thomas` | `thomas` |
-| Builder | `ticket:<id>` | `ticket:TRA-129` |
-| Shaper | `spec:<id>` | `spec:TRA-128` |
-| QA | `qa:<id>` | `qa:TRA-130` |
-| Rin | `rin:<id>` | `rin:TRA-130` |
+| Builder | `ticket:<id>` | `ticket:ABC-129` |
+| Shaper | `spec:<id>` | `spec:ABC-128` |
+| QA | `qa:<id>` | `qa:ABC-130` |
+| Rin | `rin:<id>` | `rin:ABC-130` |
 | Owner (manual) | anything | `deploy` |
 
 **Owner tabs are not yours** — always create a fresh tab rather than splitting, renaming or

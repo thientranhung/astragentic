@@ -23,10 +23,10 @@ Three adapters ship. Load the one this project's `issue-tracker.md` names, and o
 A project writing tracker mechanics into its own `issue-tracker.md` is paying, alone, for a
 trap another project already paid for. Two projects did exactly that on the same day.
 
-> **Evidence.** GitHub is measured on **`etsy-fulfillment-thanh`**, which moved Linear → GitHub
-> on 2026-08-21. Jira is measured on **`workspace-app-inception`**, which moved Linear → Jira
-> (project `IN`) the same day. Linear is measured on `etsy-fulfillment-thanh`'s own pre-migration
-> history. Where a claim is inference rather than measurement it says so inline.
+> **Evidence.** GitHub is measured on a live project that moved Linear → GitHub on 2026-08-21.
+> Jira is measured on a second live project that moved Linear → Jira the same day. Linear is
+> measured on the first project's own pre-migration history. Where a claim is inference rather
+> than measurement it says so inline. Neither project is named here: the payload names no project.
 
 ## The five things the pipeline requires
 

@@ -69,7 +69,7 @@ from this table — read the entry.
 | `AST-054` | `git add -A` committed two releases nobody ever applied | promoted | 146 | hook-git-guard.py |
 | `AST-055` | A gate that reads the subject cannot see which pass wrote it | promoted | 325 | builder-claude.md,builder-codex.md,builder-opencode.md,check-reachability.sh,dispatch-ticket-claude,rin-claude.md,rin-codex.md,rin-opencode.md,rin.md,shaper.md,thomas-claude.md |
 | `AST-056` | A blocking edge expresses order, not exclusion | promoted | 329 | dispatch-qa-walk,dispatch-ticket,thomas.md |
-| `AST-057` | A frontier that is only computed is invisible to the one person who cannot compute | promoted | 689 | check-reachability.sh,dispatch-qa-walk,reconcile-tracker,thomas.md |
+| `AST-057` | A frontier that is only computed is invisible to the one person who cannot compute | promoted | 689 | check-reachability.sh,dispatch-qa-walk,hook-git-guard.py,reconcile-tracker,release-worktree-resources.sh,thomas.md |
 | `AST-058` | The check after the step reported clean when the step was impossible | promoted | 271 |   |
 | `AST-059` | The repo kept one self-check and lost the other to a directory it may ignore | promoted | 193 |   |
 | `AST-060` | Check 3 printed green about the skills it had not opened | promoted | 170 |   |
@@ -111,8 +111,8 @@ from this table — read the entry.
 | `AST-097` | TERMINAL:done means the turn ended, not that the work finished | promoted | 831 | builder-claude.md,dispatch-ticket,dispatch-ticket-claude,dispatch-ticket-opencode,hook-git-guard.py |
 | `AST-098` | Fork sub-agents return the coordinator's own narration instead of doing their assigned task | promoted | 385 | builder-claude.md |
 | `AST-099` | Simplify marker exists without skill provenance — the subject is self-applied, only the Pass:… | promoted | 685 | CLEANUP.md,check-simplify-markers.sh |
-| `AST-100` | Codex companion broker leaks one process per arm pass, accumulating silently | promoted | 201 | CLEANUP.md,codex-arm,dispatch-qa-walk,hook-git-guard.py |
-| `AST-101` | Gate worktree removal leaks database containers, not just broker processes | promoted | 182 | CLEANUP.md,dispatch-qa-walk,hook-git-guard.py |
+| `AST-100` | Codex companion broker leaks one process per arm pass, accumulating silently | promoted | 201 | CLEANUP.md,codex-arm,dispatch-qa-walk,hook-git-guard.py,release-worktree-resources.sh |
+| `AST-101` | Gate worktree removal leaks database containers, not just broker processes | promoted | 182 | CLEANUP.md,dispatch-qa-walk,hook-git-guard.py,release-worktree-resources.sh |
 | `AST-102` | WorktreeRemove hook does not fire, but documentation declares manual cleanup redundant | promoted | 418 | hook-git-guard.py,thomas.md |
 | `AST-103` | Cross-vendor arm silently reviews a zero-commit range and returns clean | promoted | 206 | codex-arm |
 | `AST-104` | herdr agent start rejects uppercase in agent names, but dispatch convention generates them | promoted | 87 |   |
@@ -126,7 +126,7 @@ from this table — read the entry.
 | `AST-112` | SendMessage is not a user turn, so the brief's slash command never fires | promoted | 443 | dispatch-ticket-claude,shaper.md |
 | `AST-113` | An audit that always screams is an audit nobody reads | promoted | 290 | docs-staleness-audit.sh |
 | `AST-114` | Splitting submission into two steps left the watch armed against the wrong one | promoted | 207 |   |
-| `AST-115` | Two correct changes composed into a live one, and the repair is what armed it | promoted | 447 | CLEANUP.md,check-reachability.sh,codex-arm,dispatch-qa-walk,hook-git-guard.py |
+| `AST-115` | Two correct changes composed into a live one, and the repair is what armed it | promoted | 447 | CLEANUP.md,codex-arm,dispatch-qa-walk,hook-git-guard.py,release-worktree-resources.sh |
 | `AST-116` | A local fix that never goes upstream is a defect every fresh install re-buys | promoted | 335 | check-reachability.sh,docs-staleness-audit.sh |
 | `AST-117` | A worktree isolates git, not a tool that writes to a fixed path | promoted | 329 |   |
 | `AST-118` | A fallback that changes what the verdict MEANS, while keeping the same exit code | promoted | 373 | check-reachability.sh |
@@ -134,7 +134,7 @@ from this table — read the entry.
 | `AST-120` | A verification that fired twice on immutable input and disagreed with itself, cause unknown | promoted | 520 |   |
 | `AST-121` | The check had no vocabulary for being obeyed, so honesty registered as failure | promoted | 463 | CLEANUP.md,MARKERS.md,check-simplify-markers.sh |
 | `AST-122` | Existence is not relationship: a verified pointer that proves nothing about what it points at | promoted | 481 | CLEANUP.md,MARKERS.md,builder.md,check-payload-drift.sh,check-simplify-markers.sh,rin.md |
-| `AST-123` | The scaffold accumulated the identity of whoever last measured a lesson | promoted | 341 | docs-staleness-audit.sh |
+| `AST-123` | The scaffold accumulated the identity of whoever last measured a lesson | promoted | 341 | docs-staleness-audit.sh,reap-worktree-processes.sh |
 | `AST-124` | The watcher covers one turn; the protocol never said who covers the next one | promoted | 512 | dispatch-ticket,thomas.md |
 | `AST-125` | The alert for the failure existed, and was suppressed by the state that defines the failure | promoted | 396 | herdr-watchdog.sh |
 | `AST-126` | The check was scoped by a variable that means two different things | promoted | 326 | docs-staleness-audit.sh |
@@ -144,7 +144,7 @@ from this table — read the entry.
 | `AST-130` | A report-only fork forged a verification marker using a TRUE excuse | promoted | 427 | builder-claude.md,check-simplify-markers.sh |
 | `AST-131` | The queue drained and nothing asked whether a slot was free | promoted | 344 | thomas.md |
 | `AST-132` | Two owners for one path, and neither can see the other | promoted | 307 | check-payload-drift.sh,thomas.md |
-| `AST-133` | `--grep` is not a subject matcher, and it failed in both directions on the same day | promoted | 400 | CLEANUP.md,thomas.md |
+| `AST-133` | `--grep` is not a subject matcher, and it failed in both directions on the same day | promoted | 400 | CLEANUP.md,hook-git-guard.py,thomas.md |
 | `AST-134` | After the fold, "the gate read this tree" is structurally false and the protocol had no way t… | promoted | 238 | MARKERS.md,check-simplify-markers.sh |
 | `AST-135` | The verifier's queue was invisible to itself, and the fire point had to follow the artifact | promoted | 363 | dispatch-qa-walk,thomas.md |
 | `AST-136` | `--grep` is BASIC regex, and every marker kind in this system contains parentheses | promoted | 287 | check-simplify-markers.sh,selftest.sh |
