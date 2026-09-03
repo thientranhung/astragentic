@@ -256,12 +256,142 @@ def first_operand(args, after):
     return None
 
 
+# Where the two release scripts leave their stamps. Overridable so nested selftests do not
+# share evidence; production leaves it at /tmp, machine-local like the hook-events log.
+STAMP_ROOT = os.environ.get("HARNESS_STAMP_ROOT", "/tmp")
+
+
 def run(cmd_argv, cwd=None):
     try:
         r = subprocess.run(cmd_argv, cwd=cwd, capture_output=True, text=True, timeout=10)
         return r.returncode, r.stdout.strip()
     except (OSError, subprocess.SubprocessError):
         return 1, ""
+
+
+# --- residency by REAL cwd (2.8) ------------------------------------------------------------
+# ADOPTED FROM A DOWNSTREAM PROJECT, which measured the defect, wrote this, and caught two
+# regressions of its own fix in review before it reached here. The rule is the one
+# reap-worktree-processes.sh already carries: argv is a proxy for a working directory, not the
+# working directory. A `ps | grep -- '--cwd <path>'` reported "none" for a real broker that
+# had run three hours, while `lsof -a -d cwd` found it immediately; and the argv form
+# mis-attributed processes to the wrong Builder the night it was replaced. `ps` has no cwd
+# column at all. The three traps this closes, each found by a review pass downstream:
+#   - lsof lists ITSELF, with cwd equal to this guard's cwd, which can legitimately be the
+#     worktree under test — excluded by exact child pid, never by command name (a name filter
+#     also hides every unrelated `lsof` someone left running in the worktree).
+#   - lsof's columnar output splits on whitespace, so a cwd containing a space collapses and a
+#     real resident silently drops out — `-F pcn` field mode is newline-delimited.
+#   - dropping one malformed record yields a plausible table missing the one process that
+#     mattered, indistinguishable from a clean listing — any malformed record rejects the
+#     WHOLE listing, and the caller fails CLOSED on that.
+
+def resolve_path(p):
+    """Resolve symlink aliases (macOS `/tmp` is `/private/tmp`; lsof reports the resolved
+    form). `os.path.realpath` keeps unresolvable components literally, so this works for a
+    worktree mid-removal too."""
+    if not p:
+        return None
+    try:
+        return os.path.realpath(p)
+    except OSError:
+        return None
+
+
+def cwd_matches(cwd, wt):
+    """True iff `cwd` is `wt` or nested under it, with a '/' boundary — a substring test lets
+    a sibling ("wt-2") match a prefix of "wt"."""
+    if not cwd or not wt:
+        return False
+    return cwd == wt or cwd.startswith(wt.rstrip("/") + "/")
+
+
+def _run_lsof_cwd():
+    """`lsof -a -d cwd -F pcn` via Popen, so the child's OWN pid is known and can be excluded
+    exactly. Returns (returncode, stdout, child_pid), or (1, "", None) if it could not launch."""
+    try:
+        proc = subprocess.Popen(["lsof", "-a", "-d", "cwd", "-F", "pcn"],
+                                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+    except OSError:
+        return 1, "", None
+    child_pid = str(proc.pid)
+    try:
+        out, _ = proc.communicate(timeout=10)
+    except subprocess.SubprocessError:
+        proc.kill()
+        proc.communicate()
+        return 1, "", child_pid
+    return proc.returncode, out, child_pid
+
+
+def lsof_cwd_table():
+    """{pid: resolved_cwd} for every process lsof can see holding a cwd fd, or None on any
+    enumeration failure. None is NOT "no processes": callers fail closed on it rather than
+    fall back to argv matching. A near-empty listing is a partial one, not a quiet box."""
+    rc, out, lsof_pid = _run_lsof_cwd()
+    if rc != 0 or not out.strip():
+        return None
+    lines = out.splitlines()
+    if sum(1 for l in lines if l.startswith("p")) < 10:
+        return None
+    return _parse_lsof_pcn(lines, lsof_pid)
+
+
+def _parse_lsof_pcn(lines, exclude_pid):
+    """Decode `-F pcn` lines into {pid: resolved_cwd}, excluding the enumerator's own pid, or
+    None if any record is not exactly well-formed. Pure, so it can be asserted on hand-built
+    input. First completed record per pid wins; realpath is cached per raw cwd."""
+    table = {}
+    resolved_cache = {}
+    pid = cwd_val = None
+    have_c = have_n = False
+    for line in lines:
+        if not line:
+            continue
+        tag, val = line[0], line[1:]
+        if tag == "p":
+            if pid is not None and not (have_c and have_n):
+                return None
+            if not val.isdigit():
+                return None
+            pid, cwd_val, have_c, have_n = val, None, False, False
+        elif tag == "c":
+            if pid is None:
+                return None
+            have_c = True
+        elif tag == "n":
+            if pid is None:
+                return None
+            cwd_val, have_n = val, True
+        elif tag == "f":
+            if pid is None:
+                return None
+        else:
+            return None
+        if have_c and have_n and pid != exclude_pid and pid not in table:
+            if cwd_val not in resolved_cache:
+                resolved_cache[cwd_val] = resolve_path(cwd_val)
+            table[pid] = resolved_cache[cwd_val]
+    if pid is not None and not (have_c and have_n):
+        return None
+    return table
+
+
+def find_broker_pid(resident):
+    """Among `resident` [(pid, cwd)] — already filtered to REAL cwd inside the worktree —
+    return the pid that is the cross-vendor companion broker, or None. `pgrep -f` answers only
+    the TYPE question here (a broker's argv reliably carries its program name; lsof's COMMAND
+    column says `node`), never the WHERE question."""
+    resident_pids = {pid for pid, _ in resident}
+    if not resident_pids:
+        return None
+    rc, out = run(["pgrep", "-f", "app-server-broker"])
+    if rc != 0 or not out:
+        return None
+    for pid in out.split():
+        if pid in resident_pids:
+            return pid
+    return None
 
 
 def main():
@@ -373,44 +503,42 @@ def main():
             # skipped (AST-057). This turns it into a refusal. `--force` does not bypass it:
             # force is about uncommitted files, not about a database left running.
             key = hashlib.sha256(os.path.realpath(wt).encode()).hexdigest()[:16]
-            if not os.path.exists(os.path.join("/tmp/harness-released", key)):
+            if not os.path.exists(os.path.join(STAMP_ROOT, "harness-released", key)):
                 deny("nothing has released this worktree's resources. Run "
                      "`scripts/release-worktree-resources.sh %s` first — it reaps processes "
                      "rooted there, runs the project's plug (.astraler/project/"
                      "cleanup-worktree.sh) and stamps the path so this guard admits the "
                      "removal (AST-100, AST-101)." % wt, cmd)
 
-            # A live process in the tree means a turn ended, not that work finished (AST-097).
-            rc, out = run(["pgrep", "-f", wt])
-            if rc == 0 and out:
-                deny("processes are still running inside '%s' (pids: %s). A finished turn is "
-                     "not finished work (AST-097). Stop them, then remove."
-                     % (wt, " ".join(out.split()[:3])), cmd)
+            # Residency by REAL cwd (lsof), never argv — see the helpers above. Fails CLOSED
+            # when lsof cannot enumerate: an unanswered question is not an all-clear.
+            wt_r = resolve_path(wt)
+            cwd_table = lsof_cwd_table()
+            if cwd_table is None:
+                deny("cannot verify no process is still rooted inside '%s': `lsof -a -d cwd` "
+                     "produced no usable process listing (missing binary, broken PATH, no "
+                     "permission, or garbled output). This guard fails closed rather than fall "
+                     "back to argv matching — that substitution missed a live broker for three "
+                     "hours. Fix lsof, or verify by hand with `lsof -a -d cwd` and re-run." % wt, cmd)
+            self_pid = str(os.getpid())
+            resident = [(pid, cwd) for pid, cwd in cwd_table.items()
+                        if pid != self_pid and cwd_matches(cwd, wt_r)]
 
-            # A resource bound to the directory cannot be found once the directory is gone, so
-            # it must be released FIRST (AST-100, AST-101). This guard does not release anything
-            # — it refuses the removal until that is done, because acting here would be a side
-            # effect of a command that has not been permitted yet. It checks the one resource
-            # the HARNESS owns (the cross-vendor companion broker). What the PROJECT's worktrees
-            # allocate is the project's to declare and release — `.astraler/project/
-            # cleanup-worktree.sh`, run by `scripts/release-worktree-resources.sh` — and a guard
-            # that hardwired one project's stack (a compose label, until 2.7.15) read as
-            # coverage to every project on a different one.
-            # Filter in Python, not in a `bash -c "ps | grep …"` pipeline: that pipeline's own
-            # shell carried both the process name and the path in ITS argv, so the grep matched
-            # itself and every removal of an existing directory was refused as "a broker is
-            # still bound". Found by the 2.7.15 selftest case for a stamped removal — the check
-            # had never been exercised against a real directory before (AST-133's shape: a
-            # textual match reading its own pattern).
-            rc, out = run(["ps", "-eo", "pid=,command="])
-            bound = [l.split(None, 1)[0] for l in (out.splitlines() if rc == 0 else [])
-                     if "app-server-broker" in l and wt in l
-                     and "hook-git-guard" not in l and "grep" not in l]
-            if bound:
-                deny("a broker is still bound to '%s' (pid %s). It is matched by --cwd, so "
-                     "once the directory is gone it cannot be found at all (AST-100). Run "
+            # Broker first: it is a subset of `resident`, so the generic check would shadow
+            # the specific guidance (AST-100).
+            broker_pid = find_broker_pid(resident)
+            if broker_pid:
+                deny("a broker is still bound to '%s' (pid %s), by its REAL cwd (lsof), not by "
+                     "argv. Once the directory is gone it cannot be found at all (AST-100). Run "
                      "`scripts/release-worktree-resources.sh <worktree>` — resources first, "
-                     "then the worktree — then remove." % (wt, bound[0]), cmd)
+                     "then the worktree — then remove." % (wt, broker_pid), cmd)
+
+            # A live process in the tree means a turn ended, not that work finished (AST-097).
+            if resident:
+                pids = " ".join(pid for pid, _ in resident[:3])
+                deny("processes are still running inside '%s' (pids: %s), by REAL cwd (lsof), "
+                     "not by argv. A finished turn is not finished work (AST-097). Stop them, "
+                     "then remove." % (wt, pids), cmd)
             continue
 
         # -- git push of the BASE branch (2.8): a merge is not done until the ticket is -----
@@ -447,7 +575,7 @@ def main():
                         # downstream lead with it: `Merge ABC-490: …` and git's default
                         # `Merge remote-tracking branch 'origin/builder/ABC-467'`.
                         m = re.search(r"\b([A-Z][A-Z0-9]*-[0-9]+)\b", subj)
-                        if m and not os.path.exists(os.path.join("/tmp/harness-ticket-done", m.group(1))):
+                        if m and not os.path.exists(os.path.join(STAMP_ROOT, "harness-ticket-done", m.group(1))):
                             if m.group(1) not in missing:
                                 missing.append(m.group(1))
                     if missing:

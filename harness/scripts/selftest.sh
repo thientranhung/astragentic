@@ -56,6 +56,9 @@ have() { command -v "$1" >/dev/null 2>&1; }
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
+# Evidence stamps go under this run's own TMP: install.sh runs this suite INSIDE this suite, and
+# two runs sharing /tmp deleted each other's stamps mid-run (measured as a flaky "spaced path").
+export HARNESS_STAMP_ROOT="$TMP/stamps"
 
 # ---------------------------------------------------------------------------------------------
 # hook-git-guard — 2.7.0 through 2.7.2 shipped three matchers, each bypassable and over-broad in
@@ -380,7 +383,6 @@ print(json.dumps({"hook_event_name":"PreToolUse","tool_name":"Bash","cwd":sys.ar
   if [ -n "$out" ]; then got=deny; else got=allow; fi
   [ "$want" = "$got" ] && ok "guard $want: $1" || bad "guard $1" "expected $want, got $got"
 }
-rm -rf /tmp/harness-ticket-done
 TD="$TMP/td"; mkdir -p "$TD"; ( cd "$TD" && git init -q -b main . && git config user.email t@t && git config user.name t \
   && git commit -q --allow-empty -m init \
   && git remote add origin "$TD" && git update-ref refs/remotes/origin/main HEAD \
@@ -405,7 +407,45 @@ guard_in "$TD" allow "git push origin main"
 ( cd "$TD" && bash "$S/ticket-done.sh" ABC-9 ) >/dev/null 2>&1 \
   && bad "ticket-done unmerged" "stamped a ticket with nothing on the base" \
   || ok "ticket-done refuses a ticket with nothing on the base"
-rm -rf /tmp/harness-ticket-done
+
+# ---------------------------------------------------------------------------------------------
+# Residency by REAL cwd (2.8, adopted from a downstream project's ten-case proof). Real
+# fabricated processes with real cwds, never a mock of lsof. Cases 1 and 2 are the two the
+# argv form got WRONG in opposite directions: a resident whose argv never names the path, and
+# a non-resident whose argv does. Watched to fail against the `pgrep -f <path>` guard.
+# ---------------------------------------------------------------------------------------------
+echo "worktree residency — by real cwd, fails closed without lsof (2.8)"
+if have lsof; then
+  RW="$TMP/resident-wt"; mkdir -p "$RW"; R2="$TMP/rwr"
+  ( cd "$R2" && bash "$S/release-worktree-resources.sh" "$RW" ) >/dev/null 2>&1   # stamp it, so residency is the only question
+  ( cd "$RW" && exec -a app-server-broker sleep 60 ) & BK=$!                          # cwd inside, argv silent about the path
+  sleep 0.3
+  guard deny  "git worktree remove $RW"
+  kill "$BK" >/dev/null 2>&1; wait "$BK" 2>/dev/null; sleep 0.3
+  ( cd "$TMP" && exec sh -c "sleep 60 # $RW" ) & NB=$!                               # cwd elsewhere, argv names the path
+  sleep 0.3
+  guard allow "git worktree remove $RW"
+  kill "$NB" >/dev/null 2>&1; wait "$NB" 2>/dev/null
+  # lsof unreachable → fail closed
+  PY3="$(command -v python3)"; NOPATH="$TMP/nopath"; mkdir -p "$NOPATH"; ln -sf "$PY3" "$NOPATH/python3"
+  out="$(printf '%s' "git worktree remove $RW" | python3 -c '
+import sys, json
+print(json.dumps({"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":sys.stdin.read()}}))' \
+    | PATH="$NOPATH" HARNESS_HOOK_LOG="$TMP/hook.log" "$PY3" "$S/hook-git-guard.py" 2>/dev/null)"
+  case "$out" in *"cannot verify"*) ok "guard fails closed when lsof is unreachable" ;; *) bad "guard without lsof" "did not fail closed: ${out:-allowed}" ;; esac
+  # the pure parser rejects a malformed listing outright
+  # importlib would write scripts/__pycache__/*.pyc into the tree under test, and the ledger
+  # index scans that directory for citations — a stale INDEX verdict from a test artefact.
+  PYTHONDONTWRITEBYTECODE=1 "$PY3" - "$S/hook-git-guard.py" <<'PYT' && ok "malformed lsof listing rejects the whole table" || bad "lsof parser" "accepted a malformed listing"
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("g", sys.argv[1]); g = importlib.util.module_from_spec(spec); spec.loader.exec_module(g)
+assert g._parse_lsof_pcn(["p1","cx","n/a","p2","cy"], "0") is None          # trailing record missing n
+assert g._parse_lsof_pcn(["p1","cx","n/a","zz"], "0") is None               # unknown tag
+assert g._parse_lsof_pcn(["p1","cx","n/a","p2","cy","n/b"], "2") == {"1": g.resolve_path("/a")}
+PYT
+else
+  echo "  skip worktree residency — lsof not installed on this machine"
+fi
 
 # ---------------------------------------------------------------------------------------------
 echo

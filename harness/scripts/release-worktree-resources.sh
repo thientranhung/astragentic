@@ -71,7 +71,9 @@ fi
 #    macOS's /tmp → /private/tmp alias cannot split the pair. /tmp, not the repo: this is
 #    machine-local evidence, and the hook-events log already lives there.
 if [ "$rc" -eq 0 ]; then
-  STAMP_DIR=/tmp/harness-released; mkdir -p "$STAMP_DIR"
+  # HARNESS_STAMP_ROOT overrides /tmp so nested or parallel selftests never share (or delete)
+  # each other's evidence; production leaves it unset.
+  STAMP_DIR="${HARNESS_STAMP_ROOT:-/tmp}/harness-released"; mkdir -p "$STAMP_DIR"
   real="$(cd "$WT" 2>/dev/null && pwd -P || printf '%s' "$WT")"
   key="$(printf '%s' "$real" | shasum -a 256 | cut -c1-16)"
   printf '%s %s\n' "$(date -u +%FT%TZ)" "$real" > "$STAMP_DIR/$key"

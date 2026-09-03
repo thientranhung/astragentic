@@ -89,7 +89,7 @@ fi
 
 # 4. evidence — only on a clean run
 if [ "$rc" -eq 0 ]; then
-  D=/tmp/harness-ticket-done; mkdir -p "$D"
+  D="${HARNESS_STAMP_ROOT:-/tmp}/harness-ticket-done"; mkdir -p "$D"
   { printf '%s %s base=%s moved=%s\n' "$(date -u +%FT%TZ)" "$ID" "$BASE" "${MOVED:-unreported}"; printf '  %s\n' "${notes[@]}"; } > "$D/$ID"
   [ -n "$MOVED" ] || echo "ticket-done: NOTE — --moved not given; the frontier write-back report is 'unreported' in the stamp (AST-057: none is a report, silence is not)"
   echo "ticket-done: stamped $D/$ID — the git guard now admits pushing $BASE with $ID's merge"
