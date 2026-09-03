@@ -1,3 +1,65 @@
+# Astragentic 2.8.0
+
+2.7.15 made the payload a chipset and shipped its first socket. 2.8.0 ships the second pin —
+the one the first upgrade receipt measured the binding point for — and adopts the guard the
+same project wrote when it found ours matching argv instead of reality. Three plugs are now
+asked for at adaptation; the rest of the plug set follows in 2.8.x.
+
+## A merge is not done until the push proves it
+
+Every ticket merged-and-pushed in one turn was written back to the tracker; every ticket
+merged-and-held for a gate was not, and nothing reported the omission (AST-057). The first
+project to take 2.7.15 measured where a merge actually passes through git: twelve of twelve
+recent merges were a local `git merge --no-ff` followed by `git push origin main`. So the push
+of the base branch is where the obligation can refuse instead of being remembered.
+
+`scripts/ticket-done.sh <id> --moved "<ids the write-back promoted, or none>"` is the call
+Thomas makes after the write-back. It verifies the git half by ancestry (a subject match only
+when the branch is gone), asks the project's plug for the tracker half, runs the project's own
+after-close step, and stamps the id. `hook-git-guard.py` refuses `git push` of the base while a
+merge commit in the pushed range leads with a ticket id that has no stamp; other branches are
+untouched; squash merges carry no merge commit and are stated as unseen.
+
+**On the first push after upgrading**, any merge already on your local base and not yet pushed
+will be refused until it is stamped. That is the pin working on the exact backlog it was built
+for — stamp each, then push.
+
+Two plugs come with it, both asked for in `ADAPT-HARNESS.md` §3:
+
+- **`tracker-state.sh <id>`** prints `<state> <assignee-or-dash>` — how *this* project reads
+  its tracker from a shell (`gh issue view` on GitHub; a CLI or token elsewhere). Absent, the
+  tracker half is stated as UNVERIFIED in the stamp and the push is admitted with that said,
+  because refusing every project that has not yet written the plug would block the upgrade
+  that asks for it. Present and saying `open`, the stamp is refused: the ticket is not done.
+- **`ticket-done.sh <id>`** — what the project owes at close: a deploy trigger, a changelog
+  line, a notification. Nothing, written down, is an answer.
+
+## Residency by real cwd, adopted downstream-first
+
+2.7.15's guard filtered `ps` output for a broker bound to the worktree. The project that took
+it kept its own check instead and sent the block back: `lsof -a -d cwd -F pcn`, parsed in
+Python, lsof's own pid excluded exactly, any malformed record rejecting the whole listing,
+and the guard failing CLOSED when lsof cannot enumerate. Argv is a proxy for a working
+directory, not the working directory — the same rule `reap-worktree-processes.sh` was adopted
+for. Its two decisive cases are in the selftest: a resident whose argv never names the path
+(argv matching said "none"), and a non-resident whose argv does (argv matching refused it).
+
+## Also in this release
+
+- The release-stamp check in the guard now runs after the uncommitted-changes check, so a
+  human hears about data loss first.
+- `selftest.sh` resolves its root by layout and names the package-only sections it skips in
+  an adapted project — reported by two receipts before it was fixed.
+- `reconcile-tracker` names `tracker-state.sh` as the scriptable tracker half.
+- Selftest: 46 → 58 cases.
+
+## Not yet in 2.8.0, and next
+
+The remaining plugs from the chipset design — `setup-worktree.sh`, `gate.sh`, `run-app.sh`,
+the judgement-label mapping that decouples `backlog` from the frontier, the ledger-prefix
+socket, and moving project tooling out of the shared `scripts/` namespace — are 2.8.x. Each
+ships with its call site and its refusal in the same commit, or check 9 stays red.
+
 # Astragentic 2.7.15
 
 The payload is a chipset: it states an obligation, the moment it falls due, and the question
