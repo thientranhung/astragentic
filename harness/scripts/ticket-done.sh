@@ -80,7 +80,9 @@ fi
 # 3. the project's own after-close step
 TD="$ROOT/.astraler/project/ticket-done.sh"
 if [ -x "$TD" ]; then
-  "$TD" "$ID" && notes+=("project plug: ran") || { echo "ticket-done: WARN project plug exited $? for $ID" >&2; rc=1; }
+  plug_out="$("$TD" "$ID" 2>&1 | tee /dev/stderr | tail -1)"; plug_rc=${PIPESTATUS[0]}
+  if [ "$plug_rc" -eq 0 ]; then notes+=("project plug: ran — ${plug_out:-(printed nothing)}")   # its last line is the evidence
+  else echo "ticket-done: WARN project plug exited $plug_rc for $ID" >&2; rc=1; fi
 elif [ -e "$TD" ]; then
   echo "ticket-done: STOP — $TD exists but is not executable" >&2; exit 1
 else

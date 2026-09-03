@@ -562,7 +562,15 @@ def main():
                 src, dst = (cur, cur) if rc == 0 else (None, None)
             rc, head = run(["git", "symbolic-ref", "--quiet", "--short",
                             "refs/remotes/%s/HEAD" % remote])
-            base = head.split("/", 1)[1] if rc == 0 and "/" in head else "main"
+            if rc == 0 and "/" in head:
+                base = head.split("/", 1)[1]
+            else:
+                # No remote HEAD (a clone that never ran `git remote set-head`): "main" is a
+                # GUESS, and a project on master/develop would have the wrong branch guarded
+                # with no message. Say so — a guess that is silent reads as a fact.
+                base = "main"
+                log("base-guessed(main: no refs/remotes/%s/HEAD; run `git remote set-head %s -a`)"
+                    % (remote, remote), cmd)
             if dst and dst.replace("refs/heads/", "") == base and src:
                 rc, up = run(["git", "rev-parse", "--verify", "--quiet",
                               "refs/remotes/%s/%s" % (remote, base)])
