@@ -194,12 +194,11 @@ resets when a round runs, so it can cross the threshold (`MARKERS.md`).
 `check-payload-drift.sh` failure is either your own reviewed edit — re-hash it — or an upgrade
 that overwrote project content, which you diff first (AST-132).
 
-**Merge is not complete until the frontier write-back is done.** Re-run the query, move every
-ticket this merge unblocked into the claimable state, and **report which moved** — `none` is a
-valid report, silence is not (AST-057).
-
-**Prove the write-back landed**, here and at session start, with `reconcile-tracker` — a wrong
-ticket state is consistent with itself. Read-only; its join key is inexact (AST-074).
+**Merge is not complete until the frontier write-back is done, and the push proves it.** Re-run
+the query, promote every ticket this merge unblocked, then `scripts/ticket-done.sh <id> --moved
+"<ids or none>"` — it checks the work is on the base and the tracker plug says closed and
+released, then stamps it; the guard refuses pushing the base until every
+merged ticket is stamped (AST-057).
 
 **Write the lesson at merge** into the project's ledger; the merge commit carries a `Ledger:`
 line naming what went in. `Ledger: none` is valid, its absence is not (AST-069).

@@ -40,8 +40,10 @@ Neither half can do this alone, and pretending otherwise is how it breaks:
    Emits TSV: subject-matched commit count on the base branch, newest such subject, local
    branch, unmerged commit count, worktree path.
 2. **Tracker state** — pulled by the agent through the tracker's own read tools (per
-   `docs/agents/issue-tracker.md`). Where the tracker has no token in the shell, this half
-   genuinely cannot be scripted — say so explicitly rather than let the next session try.
+   `docs/agents/issue-tracker.md`), or, per ticket, through the project's plug
+   `.astraler/project/tracker-state.sh <id>` — the same plug `scripts/ticket-done.sh` asks at
+   merge. Where nothing in the shell can reach the tracker, that plug prints `unreachable -`
+   and this half stays the agent's — say so explicitly rather than let the next session try.
 
 You join them. The skill owns the join because the join needs judgement.
 

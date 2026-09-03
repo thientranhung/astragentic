@@ -112,7 +112,7 @@ Classify candidate material before editing anything:
 - **Project plugs — the project's answers, at a path no release writes.** `.astraler/project/`
   is project-owned and tracked in git; `install.sh` never touches it, so an upgrade cannot
   overwrite what the project declared. The harness states an obligation and the moment; the
-  plug is the project's answer. One plug is asked for now:
+  plug is the project's answer. Three plugs are asked for:
   - **`cleanup-worktree.sh <worktree-path>`** — *what does a worktree allocate in this project
     beyond git, and what releases it?* A database, a port registration, a container, a broker,
     a lease on something shared. Write the release for THIS worktree only, never a
@@ -121,6 +121,17 @@ Classify candidate material before editing anything:
     empty socket by `scripts/release-worktree-resources.sh`, and an empty socket on a project
     that does allocate is the gap that produced 43 orphaned processes and 3,405 leftover
     databases in one night downstream. Make it executable. Record the answer in the receipt.
+  - **`tracker-state.sh <ticket-id>`** — *how is this project's tracker read from a shell?*
+    Print one line, `<state> <assignee-or-dash>` (e.g. `closed -`), using whatever reaches
+    the tracker here: `gh issue view --json state,assignees` on GitHub, a Jira or Linear CLI
+    or API token elsewhere. This is the tracker half of `scripts/ticket-done.sh`; without it
+    the write-back after a merge is on the agent's word alone, which is exactly the half that
+    drifted downstream (two tickets merged, still open, still assigned — found only because
+    the owner asked). Where nothing in the shell can reach the tracker, write one that prints
+    `unreachable -` and say so in the receipt.
+  - **`ticket-done.sh <ticket-id>`** — *what does this project owe when a ticket closes?* A
+    deploy trigger, a changelog line, a notification, a cache to invalidate. Nothing is a
+    valid answer, written down. Runs from `scripts/ticket-done.sh` after the two checks above.
 - **Runtime-specific** — Claude Markdown/YAML agents and skills stay Claude-native. Codex
   machine-local launch-profile templates stay under `.codex/profiles/`; project-local custom
   subagents stay under `.codex/agents/`; project hooks stay in `.codex/hooks.json`. These are
@@ -415,9 +426,9 @@ Only after validation succeeds:
    accretes forever and one measured project reached 3,000 lines nobody read (AST-129).
    It records **exceptions only** — each `DIFFERS` path and its decision, every `PENDING`
    and why, ownership conflicts, defects found in the candidate, and validation failures.
-   And one line on the project plug: `.astraler/project/cleanup-worktree.sh` written (what it
-   releases), or declined (why nothing is allocated) — an unrecorded plug is an empty socket
-   the next session cannot tell from a considered one.
+   And one line per project plug under `.astraler/project/` — `cleanup-worktree.sh`,
+   `tracker-state.sh`, `ticket-done.sh` — written (what it does) or declined (why) — an
+   unrecorded plug is an empty socket the next session cannot tell from a considered one.
    A clean upgrade produces a receipt of a few lines, and that is the correct output, not a
    thin one. What has a recurring reader — the ticket prefix, the standards pointer, the
    rendering path, the project ledger path — goes in the project's entry doc (steps 2.4, 3

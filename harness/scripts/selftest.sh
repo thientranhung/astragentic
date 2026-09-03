@@ -363,6 +363,51 @@ guard allow "git worktree remove $W"
 mkdir -p "$TMP/wt-never-released"
 guard deny  "git worktree remove --force $TMP/wt-never-released"   # --force is not a bypass
 # ---------------------------------------------------------------------------------------------
+# ticket-done — the SECOND enforced pin (2.8). A push of the base branch carrying a merge that
+# names a ticket is refused until `ticket-done.sh <id>` has verified and stamped it; a push of
+# any other branch is untouched; a tracker plug saying "open" blocks the stamp. Every case was
+# watched to fail before the push block existed — the guard allowed all of them.
+# ---------------------------------------------------------------------------------------------
+echo "ticket-done — base push refused without the stamp, admitted with it, tracker plug decides (2.8)"
+guard_in() { # <cwd> <expected deny|allow> <command>
+  local cwd="$1" want="$2"; shift 2
+  local out got
+  out="$(printf '%s' "$1" | python3 -c '
+import sys, json
+print(json.dumps({"hook_event_name":"PreToolUse","tool_name":"Bash","cwd":sys.argv[1],
+                  "tool_input":{"command":sys.stdin.read()}}))' "$cwd" \
+    | HARNESS_HOOK_LOG="$TMP/hook.log" python3 "$S/hook-git-guard.py" 2>/dev/null)"
+  if [ -n "$out" ]; then got=deny; else got=allow; fi
+  [ "$want" = "$got" ] && ok "guard $want: $1" || bad "guard $1" "expected $want, got $got"
+}
+rm -rf /tmp/harness-ticket-done
+TD="$TMP/td"; mkdir -p "$TD"; ( cd "$TD" && git init -q -b main . && git config user.email t@t && git config user.name t \
+  && git commit -q --allow-empty -m init \
+  && git remote add origin "$TD" && git update-ref refs/remotes/origin/main HEAD \
+  && git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main \
+  && git checkout -qb builder/ABC-7 && git commit -q --allow-empty -m "feat: x" \
+  && git checkout -q main && git merge -q --no-ff builder/ABC-7 -m "Merge ABC-7: x (AST-069)" \
+  && git checkout -qb feature/other && git commit -q --allow-empty -m "wip" && git checkout -q main ) >/dev/null 2>&1
+guard_in "$TD" deny  "git push origin main"                       # merge for ABC-7, no stamp
+guard_in "$TD" deny  "git push"                                   # bare push of the base
+guard_in "$TD" allow "git push origin feature/other"              # not the base branch
+mkdir -p "$TD/.astraler/project"
+printf '#!/bin/sh\necho "open alice"\n' > "$TD/.astraler/project/tracker-state.sh"; chmod +x "$TD/.astraler/project/tracker-state.sh"
+( cd "$TD" && bash "$S/ticket-done.sh" ABC-7 --moved none ) >/dev/null 2>&1 \
+  && bad "ticket-done open ticket" "stamped a ticket the tracker says is open" \
+  || ok "ticket-done refuses while the tracker says open"
+guard_in "$TD" deny  "git push origin main"                       # still no stamp
+printf '#!/bin/sh\necho "closed -"\n' > "$TD/.astraler/project/tracker-state.sh"
+( cd "$TD" && bash "$S/ticket-done.sh" ABC-7 --moved none ) >/dev/null 2>&1 \
+  && ok "ticket-done stamps a merged, closed, released ticket" \
+  || bad "ticket-done closed ticket" "did not stamp"
+guard_in "$TD" allow "git push origin main"
+( cd "$TD" && bash "$S/ticket-done.sh" ABC-9 ) >/dev/null 2>&1 \
+  && bad "ticket-done unmerged" "stamped a ticket with nothing on the base" \
+  || ok "ticket-done refuses a ticket with nothing on the base"
+rm -rf /tmp/harness-ticket-done
+
+# ---------------------------------------------------------------------------------------------
 echo
 if [ "$FAIL" -eq 0 ]; then
   echo "selftest: $PASS passed, 0 failed ($LAYOUT layout, $SKIPPED package-only section(s) skipped)."

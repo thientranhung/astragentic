@@ -69,7 +69,7 @@ from this table — read the entry.
 | `AST-054` | `git add -A` committed two releases nobody ever applied | promoted | 146 | hook-git-guard.py |
 | `AST-055` | A gate that reads the subject cannot see which pass wrote it | promoted | 325 | builder-claude.md,builder-codex.md,builder-opencode.md,check-reachability.sh,dispatch-ticket-claude,rin-claude.md,rin-codex.md,rin-opencode.md,rin.md,shaper.md,thomas-claude.md |
 | `AST-056` | A blocking edge expresses order, not exclusion | promoted | 329 | dispatch-qa-walk,dispatch-ticket,thomas.md |
-| `AST-057` | A frontier that is only computed is invisible to the one person who cannot compute | promoted | 689 | check-reachability.sh,dispatch-qa-walk,hook-git-guard.py,reconcile-tracker,release-worktree-resources.sh,thomas.md |
+| `AST-057` | A frontier that is only computed is invisible to the one person who cannot compute | promoted | 689 | check-reachability.sh,dispatch-qa-walk,hook-git-guard.py,reconcile-tracker,release-worktree-resources.sh,thomas.md,ticket-done.sh |
 | `AST-058` | The check after the step reported clean when the step was impossible | promoted | 271 |   |
 | `AST-059` | The repo kept one self-check and lost the other to a directory it may ignore | promoted | 193 |   |
 | `AST-060` | Check 3 printed green about the skills it had not opened | promoted | 170 |   |
@@ -80,7 +80,7 @@ from this table — read the entry.
 | `AST-065` | Two reviewers sharing one name, each in the other's contract | promoted | 189 |   |
 | `AST-066` | A review bound to the wrong checkout returns clean without reading anything | promoted | 255 |   |
 | `AST-068` | A lesson closed at instance level reopens at class level | promoted | 259 |   |
-| `AST-069` | An instruction with no moment attached measures zero | promoted | 272 | check-reachability.sh,hook-contract-reload.py,thomas.md |
+| `AST-069` | An instruction with no moment attached measures zero | promoted | 272 | check-reachability.sh,hook-contract-reload.py,hook-git-guard.py,selftest.sh,thomas.md |
 | `AST-070` | A bounded exception nobody asked for is a contradiction carried on speculation | promoted | 275 | dispatch-ticket,ledger-rules.py |
 | `AST-071` | Every check asked whether a thing was NAMED, none asked whether anything READ it | promoted | 312 | check-reachability.sh |
 | `AST-072` | Self-monitoring shipped without proof it cannot harm what it monitors | promoted | 345 | herdr-watchdog.sh |
@@ -144,7 +144,7 @@ from this table — read the entry.
 | `AST-130` | A report-only fork forged a verification marker using a TRUE excuse | promoted | 427 | builder-claude.md,check-simplify-markers.sh |
 | `AST-131` | The queue drained and nothing asked whether a slot was free | promoted | 344 | thomas.md |
 | `AST-132` | Two owners for one path, and neither can see the other | promoted | 307 | check-payload-drift.sh,thomas.md |
-| `AST-133` | `--grep` is not a subject matcher, and it failed in both directions on the same day | promoted | 400 | CLEANUP.md,hook-git-guard.py,thomas.md |
+| `AST-133` | `--grep` is not a subject matcher, and it failed in both directions on the same day | promoted | 400 | CLEANUP.md,hook-git-guard.py,thomas.md,ticket-done.sh |
 | `AST-134` | After the fold, "the gate read this tree" is structurally false and the protocol had no way t… | promoted | 238 | MARKERS.md,check-simplify-markers.sh |
 | `AST-135` | The verifier's queue was invisible to itself, and the fire point had to follow the artifact | promoted | 363 | dispatch-qa-walk,thomas.md |
 | `AST-136` | `--grep` is BASIC regex, and every marker kind in this system contains parentheses | promoted | 287 | check-simplify-markers.sh,selftest.sh |

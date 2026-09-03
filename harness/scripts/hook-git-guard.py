@@ -413,6 +413,54 @@ def main():
                      "then the worktree — then remove." % (wt, bound[0]), cmd)
             continue
 
+        # -- git push of the BASE branch (2.8): a merge is not done until the ticket is -----
+        # A live project measured the split exactly: every ticket merged-and-pushed in one
+        # turn was written back to the tracker; every ticket merged-and-held for a gate was
+        # not, and nothing reported the omission (AST-057). The push of the base branch is the
+        # one git command every local merge passes through (measured: 12 of 12 recent merges,
+        # `git merge --no-ff` then `git push origin main`), so it is where the obligation can
+        # REFUSE instead of being remembered. `scripts/ticket-done.sh <id>` verifies the git
+        # half, asks the project's plug for the tracker half, runs the project's after-close
+        # step and stamps /tmp/harness-ticket-done/<id>; this block asks for the stamp.
+        # Squash merges carry no merge commit and are not seen here — stated, not hidden.
+        if args[:1] == ["push"]:
+            ops = [a for a in args[1:] if not a.startswith("-")]
+            remote = ops[0] if ops else "origin"
+            spec = ops[1] if len(ops) > 1 else None
+            rc, cur = run(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+            if spec:
+                src, dst = (spec.split(":", 1) + [None])[:2] if ":" in spec else (spec, spec)
+            else:
+                src, dst = (cur, cur) if rc == 0 else (None, None)
+            rc, head = run(["git", "symbolic-ref", "--quiet", "--short",
+                            "refs/remotes/%s/HEAD" % remote])
+            base = head.split("/", 1)[1] if rc == 0 and "/" in head else "main"
+            if dst and dst.replace("refs/heads/", "") == base and src:
+                rc, up = run(["git", "rev-parse", "--verify", "--quiet",
+                              "refs/remotes/%s/%s" % (remote, base)])
+                if rc == 0 and up:
+                    rc, out = run(["git", "log", "--merges", "--format=%s", "%s..%s" % (up, src)])
+                    missing = []
+                    for subj in (out.splitlines() if rc == 0 else []):
+                        # The FIRST ticket-shaped id in a merge subject is the ticket; later
+                        # ones are citations (`… (AST-069)`). Both real merge shapes measured
+                        # downstream lead with it: `Merge ABC-490: …` and git's default
+                        # `Merge remote-tracking branch 'origin/builder/ABC-467'`.
+                        m = re.search(r"\b([A-Z][A-Z0-9]*-[0-9]+)\b", subj)
+                        if m and not os.path.exists(os.path.join("/tmp/harness-ticket-done", m.group(1))):
+                            if m.group(1) not in missing:
+                                missing.append(m.group(1))
+                    if missing:
+                        deny("this push lands merge(s) for %s on '%s' with no ticket-done "
+                             "evidence. For each: `scripts/ticket-done.sh <id> --moved "
+                             "\"<ids the write-back promoted, or none>\"` — it verifies the "
+                             "work is on the base, asks the project's tracker plug that the "
+                             "ticket is closed and released, runs the project's after-close "
+                             "step, and stamps the id. Merge-and-hold is where the write-back "
+                             "was skipped every time it was measured (AST-057); this is the "
+                             "refusal that replaces remembering it." % (", ".join(missing), base), cmd)
+            continue
+
     log("allow", cmd)
     sys.exit(0)
 
