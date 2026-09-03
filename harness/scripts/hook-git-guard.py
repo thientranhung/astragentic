@@ -357,7 +357,16 @@ def main():
                 continue
             forced = "--force" in args or "-f" in args
 
-            # Were the worktree's resources released? `scripts/release-worktree-resources.sh`
+            # Uncommitted work dies with the worktree. --force means that was already decided.
+            if not forced:
+                rc, out = run(["git", "-C", wt, "status", "--short"])
+                if rc == 0 and out:
+                    deny("worktree '%s' has uncommitted changes and removing it destroys "
+                         "them (AST-092):\n%s\nCommit, stash, or re-run with --force once you "
+                         "have decided." % (wt, "\n".join(out.splitlines()[:5])), cmd)
+
+            # After the data-loss check on purpose: a human who has not committed should hear
+            # that first (measured downstream on the 2.7.15 upgrade). Were the resources released? `scripts/release-worktree-resources.sh`
             # stamps the resolved path after a clean run; no stamp means the reap and the
             # project's plug never ran for it. Until 2.7.15 the only call site for that release
             # was prose at the end of CLEANUP.md — and prose at the end of a ticket is what gets
@@ -370,14 +379,6 @@ def main():
                      "rooted there, runs the project's plug (.astraler/project/"
                      "cleanup-worktree.sh) and stamps the path so this guard admits the "
                      "removal (AST-100, AST-101)." % wt, cmd)
-
-            # Uncommitted work dies with the worktree. --force means that was already decided.
-            if not forced:
-                rc, out = run(["git", "-C", wt, "status", "--short"])
-                if rc == 0 and out:
-                    deny("worktree '%s' has uncommitted changes and removing it destroys "
-                         "them (AST-092):\n%s\nCommit, stash, or re-run with --force once you "
-                         "have decided." % (wt, "\n".join(out.splitlines()[:5])), cmd)
 
             # A live process in the tree means a turn ended, not that work finished (AST-097).
             rc, out = run(["pgrep", "-f", wt])

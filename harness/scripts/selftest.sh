@@ -31,8 +31,23 @@
 set -uo pipefail
 VERBOSE=0; [ "${1:-}" = "-v" ] && VERBOSE=1
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-S="$ROOT/harness/scripts"
+# LAYOUT-AWARE ROOT (2.7.16). A fixed `../..` is right under harness/scripts/ and lands on the
+# repo's PARENT in every adapted project, where scripts/ sits at the root — two upgrade receipts
+# in a row reported "46 cases cannot be run downstream". Resolve from where this file IS: the
+# package is the tree whose scripts dir is `harness/scripts` with `install.sh` two levels up;
+# anything else is an adapted project, where the package-only cases (installer, payload
+# fixtures) are SKIPPED BY NAME rather than failing on a path that does not exist.
+S="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ "$(basename "$(dirname "$S")")" = harness ] && [ -f "$S/../../install.sh" ]; then
+  LAYOUT=package; ROOT="$(cd "$S/../.." && pwd)"
+else
+  LAYOUT=project; ROOT="$(cd "$S/.." && pwd)"
+fi
+SKIPPED=0
+pkg_only() { # <section name> — true in package layout; otherwise say so and skip
+  [ "$LAYOUT" = package ] && return 0
+  SKIPPED=$((SKIPPED+1)); echo "  skip $1 — package layout only, not applicable in an adapted project"; return 1
+}
 PASS=0; FAIL=0; FAILED=""
 
 ok()   { PASS=$((PASS+1)); [ "$VERBOSE" = 1 ] && printf '  ok   %s\n' "$1"; return 0; }
@@ -96,6 +111,7 @@ fi
 # Codex registration is a separate runtime surface. Exercise the command AS REGISTERED from
 # an adapted-project layout; parsing hooks.json or running the script directly proves neither
 # that the registration resolves the installed path nor that stdin reaches the guard.
+if pkg_only "codex hooks, codex agents, argument conventions"; then
 echo "codex hooks — registered command reaches the shared guard"
 CT="$TMP/codex-hook-target"; mkdir -p "$CT/.codex" "$CT/scripts"
 cp "$ROOT/harness/.codex/hooks.json" "$CT/.codex/hooks.json"
@@ -161,6 +177,8 @@ if [ -f "$IDX" ]; then
   done
 fi
 
+fi
+
 # ---------------------------------------------------------------------------------------------
 # Root resolution — 2.7.0 assumed a fixed depth, which is right under harness/scripts/ and one
 # level too high in an adapted project; 2.7.4 then depended on the caller's cwd.
@@ -189,7 +207,9 @@ for inv in "bare" "explicit"; do
 done
 
 # The one that cost an adaptation step: this file is Python behind a `.sh` name.
-if head -1 "$S/check-reachability.sh" | grep -q python; then
+# In an adapted project this check needs the staged release manifest; without one it hard-
+# fails at check 0 by design, which is not the invocation shape this case is about.
+if head -1 "$S/check-reachability.sh" | grep -q python && { [ "$LAYOUT" = package ] || [ -d "$ROOT/.astraler/releases" ]; }; then
   python3 "$S/check-reachability.sh" "$ROOT" >/dev/null 2>&1 \
     && ok "check-reachability runs under python3 (never bash -n)" \
     || bad "check-reachability" "python3 invocation failed"
@@ -230,6 +250,7 @@ esac
 # ---------------------------------------------------------------------------------------------
 # When install.sh is running THIS suite as a staging gate, these cases would stage again from
 # inside a stage. Skipped there and exercised on a direct run, which is where they matter.
+if pkg_only "install.sh layouts"; then
 if [ -n "${ASTRALER_IN_SELFTEST:-}" ]; then
   echo "install.sh — layout cases skipped (running as install.sh's own staging gate)"
 else
@@ -261,11 +282,14 @@ else
 fi
 fi
 
+fi
+
 # ---------------------------------------------------------------------------------------------
 # docs-staleness axis 4 — the only guard on "the payload names no project" compared an absolute
 # path to the bare word "harness" and printed "(skipped)" on every run for four releases
 # (2.7.15). Both cases here were watched to FAIL against the shipped condition before the fix.
 # ---------------------------------------------------------------------------------------------
+if pkg_only "docs-staleness axis 4"; then
 echo "docs-staleness axis 4 — the project-noun guard runs in package layout, and catches (2.7.15)"
 for inv in "bare" "explicit"; do
   case "$inv" in
@@ -289,6 +313,8 @@ case "$out" in
   *"$LEAK"*) ok "axis-4 flags a planted id" ;;
   *) bad "axis-4 flags a planted id" "$LEAK not reported" ;;
 esac
+
+fi
 
 # ---------------------------------------------------------------------------------------------
 # release-worktree-resources — the cleanup SOCKET (2.7.15). An empty socket must say so and
@@ -339,10 +365,10 @@ guard deny  "git worktree remove --force $TMP/wt-never-released"   # --force is 
 # ---------------------------------------------------------------------------------------------
 echo
 if [ "$FAIL" -eq 0 ]; then
-  echo "selftest: $PASS passed, 0 failed."
+  echo "selftest: $PASS passed, 0 failed ($LAYOUT layout, $SKIPPED package-only section(s) skipped)."
   exit 0
 fi
-echo "selftest: $PASS passed, $FAIL FAILED"
+echo "selftest: $PASS passed, $FAIL FAILED ($LAYOUT layout, $SKIPPED package-only section(s) skipped)"
 printf '%b' "$FAILED"
 echo
 echo "Each case above is an invocation shape this package has shipped a defect in. A failure"
