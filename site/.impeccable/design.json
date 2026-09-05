@@ -319,7 +319,7 @@
     "shadows": [
       {
         "name": "island",
-        "value": "0 1px 2px rgba(20, 22, 26, 0.06), 0 12px 40px rgba(120, 40, 30, 0.16)",
+        "value": "0 1px 2px rgba(20, 22, 26, 0.06), 0 12px 40px rgba(60, 10, 6, 0.32)",
         "purpose": "The page island floating over the graph-paper desk. The only large shadow on the site, used exactly once per page."
       },
       {

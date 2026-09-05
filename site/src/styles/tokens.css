@@ -9,10 +9,10 @@
   --brand-on-primary: #FFFFFF;
 
   --canvas: #F2F3F6;
-  --grid-a: #FDF1EE;
-  --grid-b: #F5C9C1;
-  --grid-c: #E9968B;
-  --grid-line: rgba(255, 255, 255, 0.6);
+  --grid-a: #F0574A;
+  --grid-b: #E53625;
+  --grid-c: #B8271B;
+  --grid-line: rgba(255, 255, 255, 0.28);
 
   --surface: #FFFFFF;
   --surface-2: #F7F8FA;
@@ -106,7 +106,7 @@
   --radius-island: 14px;
 
   --shadow-raised: 0 1px 2px rgba(20, 22, 26, 0.08);
-  --shadow-island: 0 1px 2px rgba(20, 22, 26, 0.06), 0 12px 40px rgba(120, 40, 30, 0.16);
+  --shadow-island: 0 1px 2px rgba(20, 22, 26, 0.06), 0 12px 40px rgba(60, 10, 6, 0.32);
 
   --motion-hover: 120ms;
   --motion-drawer: 150ms;
