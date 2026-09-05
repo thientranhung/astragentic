@@ -44,7 +44,7 @@ const evidenceRoute = ROUTES.evidence[lang];
 >
   <div class="skill-grid">
     <div class="skill-main">
-      {data.diagram && <Diagram slug={data.diagram} lang={lang} frame={500} title={name} />}
+      {data.diagram && <Diagram slug={data.diagram} lang={lang} frame={640} title={name} />}
       {
         Content ? (
           <article class="prose read-body">
@@ -157,13 +157,12 @@ const evidenceRoute = ROUTES.evidence[lang];
   }
 
   .read-body :global(h2) {
-    font-size: 22px;
     margin-top: var(--section-gap);
     margin-bottom: 0.5rem;
   }
   .read-body :global(p),
   .read-body :global(li) {
-    max-width: 68ch;
+    max-width: 66ch;
   }
   .read-body :global(table) {
     width: 100%;

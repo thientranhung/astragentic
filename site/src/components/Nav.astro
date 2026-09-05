@@ -47,9 +47,11 @@ const { lang, page, alternate } = Astro.props;
 <style>
   /* 56px, sticky: the two rails in Read mode hang off the bottom of this bar, so its
      height is a measurement, not a taste (design spec 5 §2). */
+  /* aihero's header is white and the ground under the page is not: the bar is the top
+     edge of the reading surface, not another band of canvas. */
   .nav-bar {
-    border-bottom: 1px solid var(--rule);
-    background: var(--paper);
+    border-bottom: 1px solid var(--ink-10);
+    background: var(--surface);
     position: sticky;
     top: 0;
     z-index: 5;

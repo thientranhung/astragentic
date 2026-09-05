@@ -36,7 +36,7 @@ const FIGURE: Record<string, string> = {
 
   <div class="figure" data-toc-skip>
     {/* The whole stack at once, before the nine sections take it apart. */}
-    <Diagram slug="layer-map" lang={lang} frame={720} />
+    <Diagram slug="layer-map" lang={lang} frame={860} />
   </div>
 
   {
@@ -49,7 +49,7 @@ const FIGURE: Record<string, string> = {
         ) : (
           <p class="line">{item.line[lang]}</p>
         )}
-        {FIGURE[item.id] && <Diagram slug={FIGURE[item.id]} lang={lang} frame={720} />}
+        {FIGURE[item.id] && <Diagram slug={FIGURE[item.id]} lang={lang} frame={860} />}
       </section>
     ))
   }

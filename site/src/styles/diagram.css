@@ -2,6 +2,21 @@
    Shared by Diagram.astro and InteractiveDiagram.astro so one diagram cannot drift
    from the other. Every selector is scoped to .diagram-svg, which only those two emit. */
 
+/* Spec 6 §5: the drawing sits in a framed pane. The pane is always one step off the
+   ground it lands on — white on the canvas, faint grey on a white section or inside the
+   Read-mode card — because a white pane on white ground has a hairline and no depth,
+   which is the exact thing spec 6 was written to fix. The nodes inside stay white
+   either way, so the picture keeps the same white-on-grey reading as the page. */
+.diagram-svg {
+  background: var(--surface);
+  border: 1px solid var(--ink-10);
+  border-radius: 8px;
+  padding: 0.9rem 1.1rem;
+}
+.screen--surface .diagram-svg,
+.docs-main .diagram-svg {
+  background: var(--canvas);
+}
 .diagram-svg svg {
   width: 100%;
   height: auto;
@@ -14,36 +29,36 @@
 .diagram-svg .c-cloud,
 .diagram-svg .c-external,
 .diagram-svg .c-messagebus {
-  fill: var(--paper);
-  stroke: var(--ink);
+  fill: var(--surface);
+  stroke: var(--ink-35);
   stroke-width: 1;
 }
 .diagram-svg .c-security {
-  fill: var(--paper);
+  fill: var(--surface);
   stroke: var(--defect);
 }
+/* A band that groups nodes is a wash of ink, not a named grey: the pane behind it is
+   white in one place and canvas in another, and a wash darkens both by the same step. */
 .diagram-svg .c-region {
-  fill: var(--paper-sunk);
-  stroke: var(--rule);
+  fill: var(--ink-05);
+  stroke: var(--ink-10);
   stroke-dasharray: 9 4;
 }
 /* archify wraps a decision cluster in `.c-<type>-group`. Unmapped, an SVG rect with a
    class falls back to a solid black fill, which is how a whole band of the hooks
    diagram came out as a black box. Any `-group` band reads as a faint region. */
 .diagram-svg [class$='-group'] {
-  fill: var(--paper-sunk);
-  fill-opacity: 0.55;
-  stroke: var(--rule);
+  fill: var(--ink-05);
+  stroke: var(--ink-10);
   stroke-dasharray: 7 3;
 }
 .diagram-svg .c-security-group {
-  fill: color-mix(in srgb, var(--defect) 6%, var(--paper));
-  stroke: color-mix(in srgb, var(--defect) 45%, transparent);
+  fill: color-mix(in srgb, var(--defect) 5%, transparent);
+  stroke: color-mix(in srgb, var(--defect) 40%, transparent);
 }
 .diagram-svg .c-lane {
-  fill: var(--paper-sunk);
-  fill-opacity: 0.6;
-  stroke: var(--rule);
+  fill: var(--ink-05);
+  stroke: var(--ink-10);
   stroke-dasharray: 7 3;
 }
 .diagram-svg rect:not([class]),
@@ -55,12 +70,12 @@
   stroke: none;
 }
 .diagram-svg .c-mask {
-  fill: var(--paper);
+  fill: var(--surface);
   stroke: none;
 }
 .diagram-svg .a-default,
 .diagram-svg .a-dashed {
-  stroke: var(--ink-muted);
+  stroke: var(--ink-35);
   fill: none;
 }
 .diagram-svg .a-dashed {
@@ -68,8 +83,8 @@
 }
 .diagram-svg .m-default,
 .diagram-svg .m-dashed {
-  fill: var(--ink-muted);
-  stroke: var(--ink-muted);
+  fill: var(--ink-35);
+  stroke: var(--ink-35);
 }
 .diagram-svg .a-emphasis {
   stroke: var(--pass);
@@ -99,21 +114,20 @@
 .diagram-svg .t-external,
 .diagram-svg .t-messagebus,
 .diagram-svg .t-database {
-  fill: var(--ink-muted);
+  fill: var(--ink-70);
 }
 .diagram-svg .t-security {
   fill: var(--defect);
 }
 .diagram-svg .t-dim {
-  fill: var(--ink-muted);
-  opacity: 0.7;
+  fill: var(--ink-62);
 }
 .diagram-svg .s-backend,
 .diagram-svg .s-frontend,
 .diagram-svg .s-cloud,
 .diagram-svg .s-external,
 .diagram-svg .s-database {
-  color: var(--ink-muted);
+  color: var(--ink-22);
 }
 .diagram-svg .s-security {
   color: var(--defect);
@@ -123,10 +137,10 @@
 }
 .diagram-svg .c-grid {
   fill: none;
-  stroke: var(--rule);
+  stroke: var(--ink-05);
 }
 .diagram-svg svg {
-  background: var(--paper);
+  background: none;
 }
 
 /* ── Interactive nodes (landing spec §5) ──────────────────────────────────────
@@ -135,20 +149,24 @@
 .diagram-svg g.is-link {
   cursor: pointer;
 }
+/* Spec 6 §3: the node you picked keeps the white fill and says so with the accent
+   stroke and a shadow that has an offset — no pastel wash. */
 .diagram-svg g.is-link:hover > rect:not(.c-mask),
 .diagram-svg g.is-link:focus-visible > rect:not(.c-mask),
 .diagram-svg g.is-link.is-hover > rect:not(.c-mask) {
   stroke: var(--accent);
   stroke-width: 2;
-  fill: var(--accent-soft);
+  fill: var(--surface);
+  filter: drop-shadow(0 1px 2px rgba(20, 22, 26, 0.08));
 }
 .diagram-svg g.is-link:focus-visible {
   outline: none;
 }
 .diagram-svg g.is-active > rect:not(.c-mask) {
   stroke: var(--accent);
-  stroke-width: 2.5;
-  fill: var(--accent-soft);
+  stroke-width: 2;
+  fill: var(--surface);
+  filter: drop-shadow(0 1px 2px rgba(20, 22, 26, 0.08));
 }
 .diagram-svg g.is-active > text.t-primary,
 .diagram-svg g.is-link:hover > text.t-primary {
@@ -170,41 +188,72 @@
    has no way to read the viewBox, and every diagram scales differently. */
 
 
-/* ── Colour that means something (design spec 5 §3) ──────────────────────────
-   Five hues, five roles, and nothing else on the site borrows them. A node is
-   tinted by the role that occupies it, so `Rin` is the same red in the five-roles
-   figure, in the pane hub, in the sidebar and on its own badge. Every other node in
-   every diagram stays neutral — the colour is a claim, and it is only made where
-   there is a role to name.
+/* ── Colour that means something (spec 5 §3, re-spent by spec 6 §3) ──────────
+   Five hues, five roles, and nothing else on the site borrows them. Spec 6 kept the
+   hues and took away the fill: a role node is white like every other node, and says
+   which role it is with a 1.5px stroke and the little sigil archify already draws in
+   its corner. Five pastel blocks in one picture was most of what made the page read
+   as muddy; at stroke and sigil size the same five hues still name the same five
+   roles, in the same order, next to the same names.
 
    Selecting a node still turns it `--accent`: the rule above wins on specificity,
    because one accent means "the thing you picked" everywhere on this site. */
 
 .diagram-svg [data-node-id='thomas'] > rect:not(.c-mask),
 .diagram-svg [data-node-id='roles'] > rect:not(.c-mask) {
-  fill: var(--role-thomas-soft);
   stroke: var(--role-thomas);
+}
+.diagram-svg [data-node-id='thomas'] .semantic-sigil,
+.diagram-svg [data-node-id='roles'] .semantic-sigil {
+  color: var(--role-thomas);
 }
 .diagram-svg [data-node-id='shaper'] > rect:not(.c-mask),
 .diagram-svg [data-node-id='spec87'] > rect:not(.c-mask) {
-  fill: var(--role-shaper-soft);
   stroke: var(--role-shaper);
+}
+.diagram-svg [data-node-id='shaper'] .semantic-sigil,
+.diagram-svg [data-node-id='spec87'] .semantic-sigil {
+  color: var(--role-shaper);
 }
 .diagram-svg [data-node-id='builder'] > rect:not(.c-mask),
 .diagram-svg [data-node-id='tra139'] > rect:not(.c-mask),
 .diagram-svg [data-node-id='tra142'] > rect:not(.c-mask) {
-  fill: var(--role-builder-soft);
   stroke: var(--role-builder);
+}
+.diagram-svg [data-node-id='builder'] .semantic-sigil,
+.diagram-svg [data-node-id='tra139'] .semantic-sigil,
+.diagram-svg [data-node-id='tra142'] .semantic-sigil {
+  color: var(--role-builder);
 }
 .diagram-svg [data-node-id='rin'] > rect:not(.c-mask),
 .diagram-svg [data-node-id='rin125'] > rect:not(.c-mask) {
-  fill: var(--role-rin-soft);
   stroke: var(--role-rin);
+}
+.diagram-svg [data-node-id='rin'] .semantic-sigil,
+.diagram-svg [data-node-id='rin125'] .semantic-sigil {
+  color: var(--role-rin);
 }
 .diagram-svg [data-node-id='qa'] > rect:not(.c-mask),
 .diagram-svg [data-node-id='qa125'] > rect:not(.c-mask) {
-  fill: var(--role-qa-soft);
   stroke: var(--role-qa);
+}
+.diagram-svg [data-node-id='qa'] .semantic-sigil,
+.diagram-svg [data-node-id='qa125'] .semantic-sigil {
+  color: var(--role-qa);
+}
+.diagram-svg [data-node-id='thomas'] > rect:not(.c-mask),
+.diagram-svg [data-node-id='roles'] > rect:not(.c-mask),
+.diagram-svg [data-node-id='shaper'] > rect:not(.c-mask),
+.diagram-svg [data-node-id='spec87'] > rect:not(.c-mask),
+.diagram-svg [data-node-id='builder'] > rect:not(.c-mask),
+.diagram-svg [data-node-id='tra139'] > rect:not(.c-mask),
+.diagram-svg [data-node-id='tra142'] > rect:not(.c-mask),
+.diagram-svg [data-node-id='rin'] > rect:not(.c-mask),
+.diagram-svg [data-node-id='rin125'] > rect:not(.c-mask),
+.diagram-svg [data-node-id='qa'] > rect:not(.c-mask),
+.diagram-svg [data-node-id='qa125'] > rect:not(.c-mask) {
+  fill: var(--surface);
+  stroke-width: 1.5;
 }
 
 /* A tinted node reads its title at full ink; the sublabel stays muted. */

@@ -40,13 +40,20 @@ const script = adopt.commands.join('\n');
         data-payload={script}
       >{UI.copy[lang]}</button>
     </div>
-    <ol class="cmds">
+    <ol class="cmds codeframe">
       {
-        adopt.commands.map((command) => (
-          <li>
-            <pre class="mono" lang="en">{command}</pre>
-          </li>
-        ))
+        adopt.commands.map((command) => {
+          // The runner is the word the reader types; what follows is the thing being
+          // installed. Colouring the second half is the only syntax this site has.
+          const cut = command.indexOf(' ');
+          const head = cut === -1 ? command : command.slice(0, cut);
+          const rest = cut === -1 ? '' : command.slice(cut);
+          return (
+            <li>
+              <pre class="mono" lang="en">{head}<span class="cmd-key">{rest}</span></pre>
+            </li>
+          );
+        })
       }
     </ol>
   </div>
@@ -81,8 +88,8 @@ const script = adopt.commands.join('\n');
     gap: 2.25rem;
     margin-block: 2.5rem 0;
     padding: 1.75rem 1.9rem;
-    background: var(--paper);
-    border: 1px solid var(--rule);
+    background: var(--surface);
+    border: 1px solid var(--ink-10);
     border-radius: 2px;
   }
   .label {
@@ -152,30 +159,32 @@ const script = adopt.commands.join('\n');
   .cmds {
     list-style: none;
     counter-reset: step;
-    margin: 0;
-    padding: 0;
+    margin: 0.85rem 0 0;
   }
   .cmds li {
     counter-increment: step;
     position: relative;
-    padding-left: 2rem;
-    margin: 0 0 0.5rem;
+    padding-left: 3.1rem;
+    margin: 0;
+  }
+  .cmds li + li {
+    border-top: 1px solid var(--ink-05);
   }
   .cmds li::before {
     content: counter(step, decimal-leading-zero);
     position: absolute;
-    left: 0;
-    top: 0.85rem;
+    left: 1.1rem;
+    top: 0.55rem;
     font-family: var(--font-mono);
     font-size: 10px;
-    color: var(--ink-muted);
+    color: var(--ink-62);
   }
   .cmds pre {
-    margin: 0;
     font-size: 12.5px;
-    padding: 0.7rem 0.85rem;
+    padding: 0.45rem 1.1rem 0.45rem 0;
     white-space: pre-wrap;
     word-break: break-word;
+    overflow-x: visible;
   }
 
   @media (max-width: 760px) {

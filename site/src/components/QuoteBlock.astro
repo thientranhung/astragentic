@@ -24,14 +24,18 @@ const { source, href, size = 'lg', label } = Astro.props;
   .quote {
     margin: 0 0 2.25rem;
     padding-left: 1.5rem;
-    border-left: 2px solid var(--ink);
+    border-left: 1px solid var(--ink-22);
   }
+  /* Spec 6 §4 keeps the serif for titles only; a pulled quote is body voice, said
+     larger. */
   .quote blockquote {
     margin: 0;
-    font-family: var(--font-serif);
-    letter-spacing: -0.012em;
-    line-height: 1.28;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    letter-spacing: -0.018em;
+    line-height: 1.3;
     text-wrap: balance;
+    color: var(--ink);
   }
   .quote--lg blockquote {
     font-size: clamp(24px, 2.6vw, 32px);

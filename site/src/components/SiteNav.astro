@@ -175,10 +175,10 @@ const tree = await getNavTree(lang);
     display: none;
   }
   .top:hover {
-    background: var(--rule-faint);
+    background: var(--surface-2);
   }
   a.top.on {
-    background: var(--accent-soft);
+    background: var(--surface-2);
     color: var(--accent);
     box-shadow: inset 2px 0 0 var(--accent);
   }
@@ -203,8 +203,8 @@ const tree = await getNavTree(lang);
     align-items: center;
     gap: 0.45rem;
     padding: 0.34rem 0.55rem;
-    border-radius: 2px;
-    font-family: var(--font-serif);
+    border-radius: 3px;
+    font-family: var(--font-sans);
     font-size: 14px;
     line-height: 1.35;
     color: var(--ink-muted);
@@ -226,22 +226,22 @@ const tree = await getNavTree(lang);
     min-width: 0;
   }
   .leaf:hover {
-    background: var(--rule-faint);
+    background: var(--surface-2);
     color: var(--ink);
   }
   /* The 2px bar is a navigation indicator, not card decoration: it says "you are
      here", which is the one thing a 40-item tree has to say at a glance. */
   .leaf.on {
-    background: var(--accent-soft);
+    background: var(--surface-2);
     color: var(--accent);
     box-shadow: inset 2px 0 0 var(--accent);
   }
-  /* A role or group leaf keeps its own colour when it is the one you are on, so the
-     colour that means "Builder" everywhere else still means it here. */
+  /* A role or group leaf keeps its own colour in the bar when it is the one you are
+     on, so the colour that means "Builder" everywhere else still means it here. Spec 6
+     §3 took the tinted ground away; the 2px bar carries the hue on its own. */
   .leaf.on[data-role],
   .leaf.on[data-group] {
-    background: var(--tone-soft);
-    color: var(--tone-ink);
+    color: var(--ink);
     box-shadow: inset 2px 0 0 var(--tone);
   }
 
@@ -262,9 +262,9 @@ const tree = await getNavTree(lang);
 
   @media (max-width: 900px) {
     .rail-shell {
-      border: 1px solid var(--rule);
-      border-radius: 2px;
-      background: var(--paper-sunk);
+      border: 1px solid var(--ink-10);
+      border-radius: 8px;
+      background: var(--surface);
       margin-bottom: 1.5rem;
     }
     .rail-summary {

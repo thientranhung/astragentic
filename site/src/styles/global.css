@@ -1,81 +1,83 @@
 @import 'tailwindcss';
+@import '@fontsource-variable/inter';
 @import '@fontsource-variable/source-serif-4';
 @import '@fontsource-variable/jetbrains-mono';
 
 :root {
-  /* Design spec 5 §1: docs light, one electric accent. The variable names are the
-     ones pass 2 used, so the palette moves without touching every component. */
-  --paper: #fbfaf7;
-  --paper-sunk: #f1efe9;
-  --ink: #16181d;
-  --ink-muted: rgba(22, 24, 29, 0.7);
-  --rule: rgba(22, 24, 29, 0.1);
-  --rule-faint: rgba(22, 24, 29, 0.05);
+  /* Design spec 6 §3, measured off aihero.dev: depth comes from white on cool grey,
+     hierarchy from one ink at several alphas, colour from one place at a time. The
+     variable names spec 5 introduced are kept as aliases at the bottom of this block,
+     so the palette moved without touching every component. */
+  --canvas: #f2f3f6;
+  --surface: #ffffff;
+  --surface-2: #f7f8fa;
 
-  /* One accent, spent on the same four things everywhere: a link, the nav item you
-     are on, the node you picked, the primary button. 5.99:1 on --paper. */
-  --accent: #0b6e4f;
-  --accent-soft: #e3f1eb;
-  /* `--pass` is what pass 2 called the accent; kept as an alias so old rules hold. */
-  --pass: var(--accent);
+  --ink: #14161a;
+  --ink-88: rgba(20, 22, 26, 0.88);
+  --ink-70: rgba(20, 22, 26, 0.7);
+  --ink-62: rgba(20, 22, 26, 0.62);
+  --ink-35: rgba(20, 22, 26, 0.35);
+  --ink-22: rgba(20, 22, 26, 0.22);
+  --ink-10: rgba(20, 22, 26, 0.1);
+  --ink-05: rgba(20, 22, 26, 0.05);
+
+  /* One accent: code keyword, nav active, the node you picked, a mono link. 6.5:1 on
+     white. One warm colour: the primary button, and nothing else on the site. */
+  --accent: #0f6b52;
+  --cta: #f5c451;
   --defect: #b4462f;
 
-  /* Role colours. Used in three places and nowhere else: the diagram node, the role
-     badge, and the row belonging to that role. */
+  /* Role hues. Spec 6 §3 changed how they are spent, not how many there are: an 8px
+     dot, a 1.5px node stroke, a sigil inside a white node. No pastel fills. */
   --role-thomas: #2f5da8;
-  --role-thomas-soft: #e6eef9;
   --role-shaper: #7a4fbf;
-  --role-shaper-soft: #efe8f8;
   --role-builder: #0b6e4f;
-  --role-builder-soft: #e3f1eb;
   --role-rin: #b4462f;
-  --role-rin-soft: #f6e7e3;
-  --role-qa: #b07a16;
-  --role-qa-soft: #f7eedd;
-  /* #B07A16 reads 3.2:1 on its own soft ground — fine for an 8px dot or a 1px
-     stroke, short of 4.5:1 for the 11px badge label. The label takes this darker
-     companion (4.9:1); every other role's label uses the role colour itself. */
-  --role-qa-ink: #8a5f10;
+  --role-qa: #8a5f10;
 
-  /* Skill-group colours, same five hues plus two neutrals. */
+  /* Skill groups: the same five hues plus two neutrals, now only ever a 6px dot. */
   --group-entry: var(--role-thomas);
-  --group-entry-soft: var(--role-thomas-soft);
   --group-main-flow: var(--role-builder);
-  --group-main-flow-soft: var(--role-builder-soft);
   --group-shaping: var(--role-shaper);
-  --group-shaping-soft: var(--role-shaper-soft);
   --group-gate: var(--role-rin);
-  --group-gate-soft: var(--role-rin-soft);
   --group-brownfield: var(--role-qa);
-  --group-brownfield-soft: var(--role-qa-soft);
-  --group-brownfield-ink: var(--role-qa-ink);
   --group-upkeep: #4a4f57;
-  --group-upkeep-soft: #ececec;
   --group-adapter: #2b6777;
-  --group-adapter-soft: #e8f0f2;
 
+  /* Aliases so pass-2 and pass-3 rules keep working (spec 6 §3). */
+  --paper: var(--canvas);
+  --paper-sunk: var(--surface-2);
+  --ink-muted: var(--ink-70);
+  --rule: var(--ink-10);
+  --rule-faint: var(--ink-05);
+  --pass: var(--accent);
+
+  /* Serif is down to the two places that carry the site's voice: the h1 of a page and
+     the hero headline. Everything else is the sans. */
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
   --font-serif: 'Source Serif 4 Variable', ui-serif, Georgia, serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', monospace;
 
   /* one page frame, one reading column, one breakout width */
   --frame: 1200px;
-  /* Read mode needs 240 + 720 + 200 and two gutters between them; the landing keeps
-     the narrower frame so its bands stay the width they were composed at. */
-  --frame-docs: 1320px;
+  /* Read mode: the rails were trimmed and the gutters tightened so the content column
+     — and with it every diagram — reaches ~920px at 1440 (spec 6 §5). */
+  --frame-docs: 1440px;
   --column: 680px;
   --column-wide: 1040px;
   --diagram: 1120px;
   --gutter: clamp(1.25rem, 4vw, 3rem);
 
-  /* Read mode measurements (§2). */
   --header-h: 56px;
-  --side-w: 240px;
-  --read-w: 720px;
-  --toc-w: 200px;
+  --side-w: 232px;
+  --read-w: 960px;
+  --toc-w: 180px;
   --section-gap: 3rem;
 }
 
 @theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
   --color-paper: var(--paper);
   --color-paper-sunk: var(--paper-sunk);
   --color-ink: var(--ink);
@@ -83,7 +85,9 @@
   --color-rule: var(--rule);
   --color-pass: var(--pass);
   --color-accent: var(--accent);
+  --color-cta: var(--cta);
   --color-defect: var(--defect);
+  --font-sans: var(--font-sans);
   --font-serif: var(--font-serif);
   --font-mono: var(--font-mono);
 }
@@ -93,65 +97,74 @@
 }
 
 html {
-  background: var(--paper);
+  background: var(--canvas);
   -webkit-font-smoothing: antialiased;
+}
+
+/* The browser surfaces we did not draw still belong to the palette. */
+::selection {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--ink);
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 body {
   margin: 0;
-  color: var(--ink);
-  font-family: var(--font-serif);
-  font-size: 16px;
-  line-height: 1.6;
-  background: var(--paper);
+  color: var(--ink-88);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.55;
+  background: var(--canvas);
+  /* Inter's default figures are proportional; a ledger of ids and counts wants them
+     to line up. */
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'cv05' 1;
 }
 
-/* The page frame: a bounded sheet with hairline edges. The worktree texture lives
-   inside the frame so its lines land on the frame, not across the reader's screen. */
+/* The page frame: a bounded sheet on the canvas. */
 .page {
   position: relative;
   max-width: var(--frame);
   margin-inline: auto;
   min-height: 100vh;
   border-inline: 1px solid var(--rule);
-  background-color: var(--paper);
-  background-image: repeating-linear-gradient(
-    90deg,
-    var(--rule-faint) 0,
-    var(--rule-faint) 1px,
-    transparent 1px,
-    transparent 220px
-  );
+  background-color: var(--canvas);
 }
 
 h1,
 h2,
 h3 {
-  font-family: var(--font-serif);
-  font-weight: 600;
-  line-height: 1.08;
-  letter-spacing: -0.015em;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.018em;
+  color: var(--ink);
   margin: 0;
   text-wrap: balance;
 }
 
-/* Design spec 5 §1. A content page has no hero: 30 / 22 / 18, and the picture is
-   still the biggest thing on it because the type stopped competing. */
+/* Spec 6 §4: the serif survives in one place per page — the title — because that is
+   where the site still has to sound like itself. */
 h1 {
+  font-family: var(--font-serif);
+  font-weight: 600;
   margin-bottom: 0.75rem;
-  font-size: 30px;
-  line-height: 1.15;
-  letter-spacing: -0.018em;
+  font-size: 32px;
+  line-height: 1.14;
+  letter-spacing: -0.02em;
 }
 
 h2 {
-  font-size: 22px;
-  line-height: 1.25;
+  font-size: 26px;
+  line-height: 1.22;
   margin-bottom: 0.6rem;
 }
 
 h3 {
-  font-size: 18px;
+  font-size: 19px;
   line-height: 1.3;
   margin-top: 1.75rem;
   margin-bottom: 0.4rem;
@@ -168,28 +181,64 @@ a {
 code {
   font-family: var(--font-mono);
   font-size: 0.86em;
-  background: var(--paper-sunk);
-  padding: 0.05em 0.3em;
-  border-radius: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--ink-10);
+  color: var(--ink-88);
+  padding: 0.05em 0.32em;
+  border-radius: 3px;
 }
 
+/* Spec 6 §5: code is a white pane on the canvas, hairline, 8px. */
 pre {
   font-family: var(--font-mono);
   font-size: 13px;
   line-height: 1.6;
-  background: var(--paper-sunk);
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  padding: 1rem 1.25rem;
+  color: var(--ink-88);
+  background: var(--surface);
+  border: 1px solid var(--ink-10);
+  border-radius: 8px;
+  padding: 0.85rem 1.1rem;
   overflow-x: auto;
   margin: 1.25rem 0 1.5rem;
 }
 pre code {
   background: none;
+  border: 0;
   padding: 0;
   font-size: inherit;
+  color: inherit;
 }
 
+/* A pane of commands wears aihero's window bar: three grey dots on a strip. The strip
+   is painted as background layers, not a pseudo-element, so it stays where it is when
+   a long command scrolls sideways inside the same box. */
+.codeframe {
+  position: relative;
+  border: 1px solid var(--ink-10);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(circle 3.5px at 17px 15px, var(--ink-22) 98%, transparent 100%),
+    radial-gradient(circle 3.5px at 31px 15px, var(--ink-22) 98%, transparent 100%),
+    radial-gradient(circle 3.5px at 45px 15px, var(--ink-22) 98%, transparent 100%),
+    linear-gradient(var(--ink-10), var(--ink-10)),
+    linear-gradient(var(--surface-2), var(--surface-2));
+  background-repeat: no-repeat;
+  background-size: 100% 30px, 100% 30px, 100% 30px, 100% 1px, 100% 30px;
+  background-position: 0 0, 0 0, 0 0, 0 29px, 0 0;
+  padding: calc(30px + 0.85rem) 0 0.9rem;
+}
+.codeframe pre {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+}
+/* The verb the reader is meant to run, in the one green the site uses for code. */
+.cmd-key {
+  color: var(--accent);
+}
 ul,
 ol {
   padding-left: 1.25rem;
@@ -245,7 +294,9 @@ hr {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--ink-muted);
+  /* .35 is the ramp's caption step and it measures 2.2:1 on white — under the floor
+     for anything that is words. The eyebrow is words, so it takes the link step. */
+  color: var(--ink-62);
   margin: 0 0 1.1rem;
 }
 
@@ -277,7 +328,7 @@ hr {
   margin: 0.6rem 0 0;
 }
 
-/* the one sub-line a section is allowed under its heading: 18px, muted (PRD §5) */
+/* the one sub-line a section is allowed under its heading (PRD §5) */
 .sub {
   font-size: 18px;
   line-height: 1.55;
@@ -296,21 +347,23 @@ hr {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Rebuild pass 2. A screen is a full-width band inside the 1200 frame; the
-   eye reads a boundary from the alternating ground, not from a rule.
+   A screen is a full-width band inside the 1200 frame. Spec 6 §5 turns the
+   alternation into the site's depth rule: grey canvas, then white surface,
+   so the page has a floor and things standing on it. `--paper` / `--sunk`
+   keep their pass-2 names; only the two grounds changed.
    ───────────────────────────────────────────────────────────────────────── */
 
 .screen {
   padding-block: 3.5rem;
   border-top: 1px solid transparent;
 }
-.screen--paper {
-  background: var(--paper);
+.screen--canvas {
+  background: var(--canvas);
 }
-.screen--sunk {
-  background: var(--paper-sunk);
-  border-top-color: var(--rule);
-  border-bottom: 1px solid var(--rule);
+.screen--surface {
+  background: var(--surface);
+  border-top-color: var(--ink-10);
+  border-bottom: 1px solid var(--ink-10);
 }
 
 /* Prose written by the writer, injected as HTML from one markdown section. */
@@ -320,15 +373,22 @@ hr {
 .prose p {
   margin: 0 0 1.1rem;
 }
+/* Spec 6 §1: a link inside a paragraph has no colour of its own. It is the same ink
+   one step darker than the sentence around it, underlined faintly, and it goes to full
+   ink on hover — so the green is left free to mean "the thing you are on". */
 .prose a {
-  color: var(--accent);
+  color: var(--ink-62);
   text-decoration: underline;
   text-decoration-thickness: 1px;
-  text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  text-decoration-color: var(--ink-22);
   text-underline-offset: 3px;
 }
 .prose a:hover {
-  text-decoration-color: var(--accent);
+  color: var(--ink);
+  text-decoration-color: var(--ink-62);
+}
+.prose code {
+  color: var(--accent);
 }
 .prose ul,
 .prose ol {
@@ -346,11 +406,12 @@ hr {
   color: var(--ink-muted);
 }
 .prose h3 {
-  font-size: 20px;
+  font-size: 19px;
 }
 .prose-lead p:first-child {
-  font-size: 19px;
+  font-size: 18px;
   line-height: 1.6;
+  color: var(--ink-70);
 }
 
 /* The one arrow on the page: it says "keep scrolling", nothing else. */
@@ -401,24 +462,22 @@ hr {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Read mode (design spec 5 §2). Sidebar 240 · content 720 · TOC 200, the two
-   rails sticky under a 56px header. Every page that is mostly text uses it;
-   the landing does not.
+   Read mode (spec 5 §2, re-grounded by spec 6 §5). The sidebar and the TOC sit
+   directly on the canvas, as aihero's do; the content column is a white surface
+   between them, which is where the page gets its depth from.
    ───────────────────────────────────────────────────────────────────────── */
 
 .page--docs {
   max-width: var(--frame-docs);
-  /* The worktree texture is a landing-page gesture; behind 720px of prose it is five
-     grey verticals running through the paragraph. */
-  background-image: none;
+  border-inline: 0;
 }
 
 .docs {
   display: grid;
   grid-template-columns: var(--side-w) minmax(0, 1fr) var(--toc-w);
-  column-gap: 2.5rem;
+  column-gap: 1.75rem;
   align-items: start;
-  padding-inline: 2rem;
+  padding-inline: 1.5rem;
   padding-block: 1.25rem 5rem;
 }
 
@@ -432,10 +491,20 @@ hr {
   padding-block: 1.5rem 2.5rem;
 }
 
+/* Spec 6 §5 asks the figure to break out to about 960px. Two ways were on the table:
+   overlap the sticky TOC, or take the width in the column itself. Overlapping loses —
+   a sticky panel is wherever the reader last scrolled to, so a figure crossing it
+   either hides live navigation or is hidden by it, and no CSS makes that collision
+   deterministic. So the width is taken honestly: the rails were trimmed (232 / 180)
+   and the gutters tightened, which puts the content column at about 920px at 1440.
+   Prose keeps its 66ch measure inside it; only the figure spends the whole width. */
 .docs-main {
   max-width: var(--read-w);
   min-width: 0;
-  padding-block: 0.75rem 0;
+  background: var(--surface);
+  border: 1px solid var(--ink-10);
+  border-radius: 8px;
+  padding: 2rem 2rem 2.5rem;
 }
 
 /* The one heading block a content page gets: label, title, one sentence. No hero. */
@@ -446,9 +515,9 @@ hr {
   margin-bottom: 0.5rem;
 }
 .read-head .lede {
-  font-size: 16px;
-  line-height: 1.5;
-  color: var(--ink-muted);
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ink-70);
   max-width: 62ch;
   margin: 0;
 }
@@ -469,20 +538,49 @@ hr {
   border-top: 0;
 }
 
+/* Spec 6 §4: 66ch, measured on the sans. The column around it is wider than the
+   measure so a figure or a table has somewhere to go. */
 .read-body p,
 .read-body li {
-  max-width: 68ch;
+  max-width: 66ch;
+}
+.read-body p,
+.read-body li,
+.prose p,
+.prose li {
+  color: var(--ink-88);
 }
 .read-body > :last-child {
   margin-bottom: 0;
 }
 
-/* A diagram is the one thing allowed to use the whole column. */
+/* A diagram uses the whole column. `.figure` — the wrapper the page bodies already put
+   round a full-width picture — is the one thing allowed through the surface padding as
+   well, so the drawing is as wide as the card holding it and the text is not. */
 .docs-main .diagram,
 .docs-main .idiagram {
   width: 100%;
   margin-inline: 0;
-  margin-block: 1.25rem 1.5rem;
+  margin-block: 1.5rem 1.75rem;
+}
+/* The landing's breakout widths mean nothing inside the Read-mode card: they are
+   measured against the 1200 frame, so a block reaching for 1040px simply walks out
+   through both sides of a 924px card. Inside the card, the card is the wide column. */
+.docs-main .breakout,
+.docs-main .band {
+  width: 100%;
+  margin-left: 0;
+}
+
+/* Out through half the surface padding: flush with the card's own border would put
+   two hairlines on the same pixel and read as the card coming apart. */
+.docs-main .figure {
+  width: calc(100% + 2rem);
+  margin-inline: -1rem;
+}
+.docs-main .figure .diagram-caption,
+.docs-main .figure .cap {
+  padding-inline: 1rem;
 }
 
 @media (max-width: 1180px) {
@@ -496,7 +594,7 @@ hr {
 @media (max-width: 900px) {
   .docs {
     grid-template-columns: minmax(0, 1fr);
-    padding-inline: var(--gutter);
+    padding-inline: 1rem;
     padding-block: 1rem 3.5rem;
   }
   .docs-rail {
@@ -507,28 +605,53 @@ hr {
   }
   .docs-main {
     max-width: none;
-    padding-block: 1.25rem 0;
+    padding: 1.25rem 1.15rem 2rem;
+  }
+  .docs-main .figure {
+    width: calc(100% + 1.15rem);
+    margin-inline: -0.575rem;
+  }
+  .docs-main .figure .diagram-caption,
+  .docs-main .figure .cap {
+    padding-inline: 0.575rem;
   }
 }
 
 /* ── badges: a role, and a skill group ──────────────────────────────────── */
 
+/* Spec 6 §3: a badge is an outline and a dot, never a tinted block. Seven pastel
+   grounds in one table was most of what made the page look muddy; the hue survives at
+   dot size, where it still tells you which group you are looking at. */
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.4em;
+  gap: 0.45em;
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   line-height: 1;
-  padding: 0.32em 0.55em;
-  border-radius: 2px;
+  padding: 0.34em 0.6em;
+  border: 1px solid var(--ink-10);
+  border-radius: 3px;
   white-space: nowrap;
-  background: var(--tone-soft, var(--paper-sunk));
-  color: var(--tone-ink, var(--ink-muted));
+  background: var(--surface);
+  color: var(--ink-70);
   justify-self: start;
+}
+.badge::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--tone, var(--ink-35));
+}
+/* A badge that already draws its own dot in markup does not need a second one. */
+.badge:has(> .dot)::before {
+  display: none;
 }
 .dot {
   display: inline-block;
@@ -539,61 +662,68 @@ hr {
   background: var(--tone, var(--ink-muted));
 }
 
-/* One declaration per role and per group; `--tone*` is what every coloured thing on
-   the site reads, so a badge, a dot and a table row cannot drift apart. */
-[data-role='thomas'] { --tone: var(--role-thomas); --tone-soft: var(--role-thomas-soft); --tone-ink: var(--role-thomas); }
-[data-role='shaper'] { --tone: var(--role-shaper); --tone-soft: var(--role-shaper-soft); --tone-ink: var(--role-shaper); }
-[data-role='builder'] { --tone: var(--role-builder); --tone-soft: var(--role-builder-soft); --tone-ink: var(--role-builder); }
-[data-role='rin'] { --tone: var(--role-rin); --tone-soft: var(--role-rin-soft); --tone-ink: var(--role-rin); }
-[data-role='qa'] { --tone: var(--role-qa); --tone-soft: var(--role-qa-soft); --tone-ink: var(--role-qa-ink); }
+/* One declaration per role and per group. `--tone` is the only thing a coloured
+   element reads now, so a badge, a dot, a sidebar row and a diagram node cannot drift
+   apart — and there is no second, softer variable to tint a whole block with. */
+[data-role='thomas'] { --tone: var(--role-thomas); }
+[data-role='shaper'] { --tone: var(--role-shaper); }
+[data-role='builder'] { --tone: var(--role-builder); }
+[data-role='rin'] { --tone: var(--role-rin); }
+[data-role='qa'] { --tone: var(--role-qa); }
 
-[data-group='entry'] { --tone: var(--group-entry); --tone-soft: var(--group-entry-soft); --tone-ink: var(--group-entry); }
-[data-group='shaping'] { --tone: var(--group-shaping); --tone-soft: var(--group-shaping-soft); --tone-ink: var(--group-shaping); }
-[data-group='main-flow'] { --tone: var(--group-main-flow); --tone-soft: var(--group-main-flow-soft); --tone-ink: var(--group-main-flow); }
-[data-group='gate'] { --tone: var(--group-gate); --tone-soft: var(--group-gate-soft); --tone-ink: var(--group-gate); }
-[data-group='brownfield'] { --tone: var(--group-brownfield); --tone-soft: var(--group-brownfield-soft); --tone-ink: var(--group-brownfield-ink); }
-[data-group='upkeep'] { --tone: var(--group-upkeep); --tone-soft: var(--group-upkeep-soft); --tone-ink: var(--group-upkeep); }
-[data-group='adapter'] { --tone: var(--group-adapter); --tone-soft: var(--group-adapter-soft); --tone-ink: var(--group-adapter); }
+[data-group='entry'] { --tone: var(--group-entry); }
+[data-group='shaping'] { --tone: var(--group-shaping); }
+[data-group='main-flow'] { --tone: var(--group-main-flow); }
+[data-group='gate'] { --tone: var(--group-gate); }
+[data-group='brownfield'] { --tone: var(--group-brownfield); }
+[data-group='upkeep'] { --tone: var(--group-upkeep); }
+[data-group='adapter'] { --tone: var(--group-adapter); }
 
-/* ── buttons: one filled, one outlined ──────────────────────────────────── */
+/* ── buttons: one filled, one outlined ───────────────────────────────────
+   Spec 6 §3 spends the one warm colour here and nowhere else: the primary button is
+   --cta with ink on it, 11.1:1, and the moment a second yellow thing appears on a
+   page this stops working. */
 
 .btn {
-  display: inline-block;
-  padding: 0.6rem 1.05rem;
-  border-radius: 2px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 1.15rem;
+  border-radius: 6px;
   font-size: 14px;
-  letter-spacing: 0.02em;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   text-decoration: none;
   border: 1px solid transparent;
 }
 .btn--primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+  background: var(--cta);
+  border-color: color-mix(in srgb, var(--cta) 80%, var(--ink));
+  color: var(--ink);
 }
 .btn--primary:hover {
-  background: color-mix(in srgb, var(--accent) 82%, var(--ink));
-  border-color: color-mix(in srgb, var(--accent) 82%, var(--ink));
+  background: color-mix(in srgb, var(--cta) 88%, var(--ink));
 }
 .btn--ghost {
-  background: none;
+  background: var(--surface);
   color: var(--ink);
-  border-color: var(--rule);
+  border-color: var(--ink-10);
   font-family: var(--font-mono);
   font-size: 12.5px;
+  font-weight: 500;
   letter-spacing: 0.06em;
 }
 .btn--ghost:hover {
-  border-color: var(--ink);
+  border-color: var(--ink-22);
 }
 
 /* The header bar follows whichever frame the page is using. */
 .page--docs .nav {
   max-width: none;
-  padding-inline: 2rem;
+  padding-inline: 1.5rem;
 }
 @media (max-width: 900px) {
   .page--docs .nav {
-    padding-inline: var(--gutter);
+    padding-inline: 1rem;
   }
 }
