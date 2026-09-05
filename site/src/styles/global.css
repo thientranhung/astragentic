@@ -101,6 +101,19 @@ html {
   -webkit-font-smoothing: antialiased;
 }
 
+/* The canvas is graph paper: a cool gradient under a white grid. Everything the reader
+   uses sits on one raised island above it, so the grid is texture, never a reading
+   surface. Colours live here only; the island keeps the neutral system. */
+:root {
+  --grid-a: #dbf1f9;
+  --grid-b: #a9b6ea;
+  --grid-c: #8f9be3;
+  --grid-line: rgba(255, 255, 255, 0.55);
+  --grid-step: 44px;
+  --island-radius: 14px;
+  --island-shadow: 0 1px 2px rgba(20, 22, 26, 0.06), 0 12px 40px rgba(40, 52, 110, 0.18);
+}
+
 /* The browser surfaces we did not draw still belong to the palette. */
 ::selection {
   background: color-mix(in srgb, var(--accent) 18%, transparent);
@@ -117,7 +130,12 @@ body {
   font-family: var(--font-sans);
   font-size: 17px;
   line-height: 1.55;
-  background: var(--canvas);
+  background-color: var(--grid-b);
+  background-image:
+    repeating-linear-gradient(0deg, var(--grid-line) 0 1px, transparent 1px var(--grid-step)),
+    repeating-linear-gradient(90deg, var(--grid-line) 0 1px, transparent 1px var(--grid-step)),
+    linear-gradient(135deg, var(--grid-a) 0%, var(--grid-b) 55%, var(--grid-c) 100%);
+  background-attachment: fixed;
   /* Inter's default figures are proportional; a ledger of ids and counts wants them
      to line up. */
   font-variant-numeric: tabular-nums;
@@ -128,10 +146,22 @@ body {
 .page {
   position: relative;
   max-width: var(--frame);
-  margin-inline: auto;
-  min-height: 100vh;
-  border-inline: 1px solid var(--rule);
+  margin: 1.5rem auto;
+  min-height: calc(100vh - 3rem);
   background-color: var(--canvas);
+  border-radius: var(--island-radius);
+  box-shadow: var(--island-shadow);
+  overflow: clip;
+}
+@media (max-width: 720px) {
+  .page {
+    margin: 0;
+    min-height: 100vh;
+    border-radius: 0;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  /* fixed attachment is the only "motion" here; drop it where scroll jank shows */
 }
 
 h1,
@@ -469,7 +499,6 @@ hr {
 
 .page--docs {
   max-width: var(--frame-docs);
-  border-inline: 0;
 }
 
 .docs {
