@@ -1,0 +1,844 @@
+{
+  "$description": "Astragentic design tokens. W3C Design Tokens Community Group shape ($type / $value, {group.token} aliases). Dimensions and durations are serialised as CSS strings rather than {value,unit} objects because several of them are clamp() expressions that the object form cannot hold; keeping one representation is worth more here than partial conformance. `$extensions.site.cssVar` pins the custom-property name a token compiles to, so the names components already use survive. Run `pnpm tokens` to regenerate src/styles/tokens.css; never hand-edit that file.",
+  "color": {
+    "$type": "color",
+    "brand": {
+      "$description": "Astraler's logo red, measured off astraler.com (CSS rgb(229,54,37); dominant pixel of the logo PNG #E43424). Astragentic is Astraler's product, so the product site borrows the parent brand's one colour. The red is spent in two steps and the split is a measurement, not a taste: white on #E53625 is 4.30:1, which clears the 3:1 floor for a mark and misses the 4.5:1 floor for words. So `primary` draws marks — bars, strokes, rings, underlines — and `primary-hover` (5.41:1 white-on, 5.41:1 on white) is the step that is allowed to carry text or sit under a label.",
+      "primary": {
+        "$value": "#E53625"
+      },
+      "primary-hover": {
+        "$value": "#C92D1F"
+      },
+      "primary-press": {
+        "$value": "#A82014",
+        "$description": "A filled brand button under the cursor. 7.29:1 with white on it."
+      },
+      "primary-soft": {
+        "$value": "#FBE9E6"
+      },
+      "on-primary": {
+        "$value": "#FFFFFF"
+      }
+    },
+    "canvas": {
+      "$description": "The graph-paper desk the page island sits on. Pass 7 first cooled it to a neutral blue-grey; the site owner asked for the brand to reach the desk too, so the three stops are a warm ramp out of the Astraler red instead. The island and everything on it stay neutral — the red is the room, not the paper.",
+      "base": {
+        "$value": "#F2F3F6",
+        "$extensions": {
+          "site": {
+            "cssVar": "--canvas"
+          }
+        }
+      },
+      "grid-a": {
+        "$value": "#FDF1EE",
+        "$extensions": {
+          "site": {
+            "cssVar": "--grid-a"
+          }
+        }
+      },
+      "grid-b": {
+        "$value": "#F5C9C1",
+        "$extensions": {
+          "site": {
+            "cssVar": "--grid-b"
+          }
+        }
+      },
+      "grid-c": {
+        "$value": "#E9968B",
+        "$extensions": {
+          "site": {
+            "cssVar": "--grid-c"
+          }
+        }
+      },
+      "grid-line": {
+        "$value": "rgba(255, 255, 255, 0.6)",
+        "$extensions": {
+          "site": {
+            "cssVar": "--grid-line"
+          }
+        }
+      }
+    },
+    "surface": {
+      "$description": "Reading surfaces. Depth is white-on-cool-grey, measured off aihero.dev.",
+      "base": {
+        "$value": "#FFFFFF",
+        "$extensions": {
+          "site": {
+            "cssVar": "--surface"
+          }
+        }
+      },
+      "raised": {
+        "$value": "#F7F8FA",
+        "$extensions": {
+          "site": {
+            "cssVar": "--surface-2"
+          }
+        }
+      }
+    },
+    "ink": {
+      "$description": "One ink at seven alphas. Hierarchy is opacity, not hue.",
+      "100": {
+        "$value": "#14161A",
+        "$extensions": {
+          "site": {
+            "cssVar": "--ink"
+          }
+        }
+      },
+      "88": {
+        "$value": "rgba(20, 22, 26, 0.88)",
+        "$extensions": {
+          "site": {
+            "cssVar": "--ink-88"
+          }
+        }
+      },
+      "70": {
+        "$value": "rgba(20, 22, 26, 0.7)",
+        "$extensions": {
+          "site": {
+            "cssVar": "--ink-70"
+          }
+        }
+      },
+      "62": {
+        "$value": "rgba(20, 22, 26, 0.62)",
+        "$extensions": {
+          "site": {
+            "cssVar": "--ink-62"
+          }
+        }
+      },
+      "35": {
+        "$value": "rgba(20, 22, 26, 0.35)",
+        "$extensions": {
+          "site": {
+            "cssVar": "--ink-35"
+          }
+        }
+      },
+      "22": {
+        "$value": "rgba(20, 22, 26, 0.22)",
+        "$extensions": {
+          "site": {
+            "cssVar": "--ink-22"
+          }
+        }
+      },
+      "10": {
+        "$value": "rgba(20, 22, 26, 0.1)",
+        "$extensions": {
+          "site": {
+            "cssVar": "--ink-10"
+          }
+        }
+      },
+      "05": {
+        "$value": "rgba(20, 22, 26, 0.05)",
+        "$extensions": {
+          "site": {
+            "cssVar": "--ink-05"
+          }
+        }
+      }
+    },
+    "semantic": {
+      "defect": {
+        "$value": "#8C2F1F",
+        "$description": "Darker and browner than brand, so a measured failure never reads as an invitation. AST codes and DefectCard borders only; never a button.",
+        "$extensions": {
+          "site": {
+            "cssVar": "--defect"
+          }
+        }
+      },
+      "code": {
+        "$value": "{color.ink.88}",
+        "$description": "Code has no colour of its own. The keyword gets weight 600, not a hue.",
+        "$extensions": {
+          "site": {
+            "cssVar": "--code-ink"
+          }
+        }
+      },
+      "focus": {
+        "$value": "{color.brand.primary}",
+        "$extensions": {
+          "site": {
+            "cssVar": "--focus"
+          }
+        }
+      }
+    },
+    "role": {
+      "$description": "Five people, five hues, spent at stroke and dot size only.",
+      "thomas": {
+        "$value": "#2F5DA8",
+        "$extensions": {
+          "site": {
+            "cssVar": "--role-thomas"
+          }
+        }
+      },
+      "shaper": {
+        "$value": "#7A4FBF",
+        "$extensions": {
+          "site": {
+            "cssVar": "--role-shaper"
+          }
+        }
+      },
+      "builder": {
+        "$value": "#0B6E4F",
+        "$extensions": {
+          "site": {
+            "cssVar": "--role-builder"
+          }
+        }
+      },
+      "rin": {
+        "$value": "#0E7C86",
+        "$description": "Teal, not the old red: Rin used to sit one hue away from the brand red and read as an error.",
+        "$extensions": {
+          "site": {
+            "cssVar": "--role-rin"
+          }
+        }
+      },
+      "qa": {
+        "$value": "#B7791F",
+        "$extensions": {
+          "site": {
+            "cssVar": "--role-qa"
+          }
+        }
+      }
+    },
+    "group": {
+      "$description": "Skill groups: the five role hues plus two neutrals, only ever a 6px dot.",
+      "entry": {
+        "$value": "{color.role.thomas}",
+        "$extensions": {
+          "site": {
+            "cssVar": "--group-entry"
+          }
+        }
+      },
+      "shaping": {
+        "$value": "{color.role.shaper}",
+        "$extensions": {
+          "site": {
+            "cssVar": "--group-shaping"
+          }
+        }
+      },
+      "main-flow": {
+        "$value": "{color.role.builder}",
+        "$extensions": {
+          "site": {
+            "cssVar": "--group-main-flow"
+          }
+        }
+      },
+      "gate": {
+        "$value": "{color.role.rin}",
+        "$extensions": {
+          "site": {
+            "cssVar": "--group-gate"
+          }
+        }
+      },
+      "brownfield": {
+        "$value": "{color.role.qa}",
+        "$extensions": {
+          "site": {
+            "cssVar": "--group-brownfield"
+          }
+        }
+      },
+      "upkeep": {
+        "$value": "#4A4F57",
+        "$extensions": {
+          "site": {
+            "cssVar": "--group-upkeep"
+          }
+        }
+      },
+      "adapter": {
+        "$value": "#2B6777",
+        "$extensions": {
+          "site": {
+            "cssVar": "--group-adapter"
+          }
+        }
+      }
+    },
+    "legacy": {
+      "$description": "Names earlier passes wrote into components. They are aliases now, so a rename is a one-line change here instead of a sweep through every .astro file.",
+      "paper": {
+        "$value": "{color.canvas.base}",
+        "$extensions": {
+          "site": {
+            "cssVar": "--paper"
+          }
+        }
+      },
+      "paper-sunk": {
+        "$value": "{color.surface.raised}",
+        "$extensions": {
+          "site": {
+            "cssVar": "--paper-sunk"
+          }
+        }
+      },
+      "ink-muted": {
+        "$value": "{color.ink.70}",
+        "$extensions": {
+          "site": {
+            "cssVar": "--ink-muted"
+          }
+        }
+      },
+      "rule": {
+        "$value": "{color.ink.10}",
+        "$extensions": {
+          "site": {
+            "cssVar": "--rule"
+          }
+        }
+      },
+      "rule-faint": {
+        "$value": "{color.ink.05}",
+        "$extensions": {
+          "site": {
+            "cssVar": "--rule-faint"
+          }
+        }
+      },
+      "accent": {
+        "$value": "{color.brand.primary-hover}",
+        "$description": "Pass 2 and pass 3 wrote --accent wherever the red now carries words, so it points at the text-safe step, not at the mark step.",
+        "$extensions": {
+          "site": {
+            "cssVar": "--accent"
+          }
+        }
+      },
+      "pass": {
+        "$value": "{color.brand.primary-hover}",
+        "$extensions": {
+          "site": {
+            "cssVar": "--pass"
+          }
+        }
+      },
+      "cta": {
+        "$value": "{color.brand.primary-hover}",
+        "$extensions": {
+          "site": {
+            "cssVar": "--cta"
+          }
+        }
+      }
+    }
+  },
+  "font": {
+    "family": {
+      "$type": "fontFamily",
+      "sans": {
+        "$value": [
+          "Inter Variable",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif"
+        ],
+        "$extensions": {
+          "site": {
+            "cssVar": "--font-sans"
+          }
+        }
+      },
+      "serif": {
+        "$value": [
+          "Source Serif 4 Variable",
+          "ui-serif",
+          "Georgia",
+          "serif"
+        ],
+        "$extensions": {
+          "site": {
+            "cssVar": "--font-serif"
+          }
+        }
+      },
+      "mono": {
+        "$value": [
+          "JetBrains Mono Variable",
+          "ui-monospace",
+          "SFMono-Regular",
+          "monospace"
+        ],
+        "$extensions": {
+          "site": {
+            "cssVar": "--font-mono"
+          }
+        }
+      }
+    },
+    "leading": {
+      "$type": "number",
+      "body": {
+        "$value": 1.55,
+        "$extensions": {
+          "site": {
+            "cssVar": "--leading-body"
+          }
+        }
+      },
+      "heading": {
+        "$value": 1.15,
+        "$extensions": {
+          "site": {
+            "cssVar": "--leading-heading"
+          }
+        }
+      },
+      "mono": {
+        "$value": 1.4,
+        "$extensions": {
+          "site": {
+            "cssVar": "--leading-mono"
+          }
+        }
+      }
+    },
+    "tracking": {
+      "$type": "dimension",
+      "h1": {
+        "$value": "-0.02em",
+        "$extensions": {
+          "site": {
+            "cssVar": "--tracking-h1"
+          }
+        }
+      },
+      "eyebrow": {
+        "$value": "0.1em",
+        "$extensions": {
+          "site": {
+            "cssVar": "--tracking-eyebrow"
+          }
+        }
+      }
+    }
+  },
+  "size": {
+    "$type": "dimension",
+    "text": {
+      "$description": "Twelve steps and no others. Nine come from the spec's scale; 10, 11 and 48 are here because the shipped site needs them — mono micro-labels live below 12, and a measured number in a stat block lives above 36. Half steps are not on the ramp: a pass that shipped 10.5, 11.5, 12.5 and 13.5 added four sizes nobody could tell from their neighbours, and pass 7 folded them back.",
+      "micro": {
+        "$value": "10px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--text-micro"
+          }
+        }
+      },
+      "label-sm": {
+        "$value": "11px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--text-label-sm"
+          }
+        }
+      },
+      "label": {
+        "$value": "12px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--text-label"
+          }
+        }
+      },
+      "mono": {
+        "$value": "13px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--text-mono"
+          }
+        }
+      },
+      "ui": {
+        "$value": "14px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--text-ui"
+          }
+        }
+      },
+      "body-sm": {
+        "$value": "15px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--text-body-sm"
+          }
+        }
+      },
+      "body": {
+        "$value": "17px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--text-body"
+          }
+        }
+      },
+      "h3": {
+        "$value": "19px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--text-h3"
+          }
+        }
+      },
+      "h2": {
+        "$value": "26px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--text-h2"
+          }
+        }
+      },
+      "h1": {
+        "$value": "30px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--text-h1"
+          }
+        }
+      },
+      "hero": {
+        "$value": "36px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--text-hero"
+          }
+        }
+      },
+      "stat": {
+        "$value": "48px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--text-stat"
+          }
+        }
+      }
+    },
+    "layout": {
+      "$description": "Every width the page can be. Measured against aihero.dev's reading column at 1440.",
+      "frame": {
+        "$value": "1200px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--frame"
+          }
+        }
+      },
+      "frame-docs": {
+        "$value": "1440px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--frame-docs"
+          }
+        }
+      },
+      "column": {
+        "$value": "680px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--column"
+          }
+        }
+      },
+      "column-wide": {
+        "$value": "1040px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--column-wide"
+          }
+        }
+      },
+      "diagram": {
+        "$value": "1120px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--diagram"
+          }
+        }
+      },
+      "read": {
+        "$value": "924px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--read-w"
+          }
+        }
+      },
+      "side": {
+        "$value": "232px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--side-w"
+          }
+        }
+      },
+      "toc": {
+        "$value": "180px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--toc-w"
+          }
+        }
+      },
+      "header": {
+        "$value": "56px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--header-h"
+          }
+        }
+      },
+      "gutter": {
+        "$value": "clamp(20px, 4vw, 48px)",
+        "$extensions": {
+          "site": {
+            "cssVar": "--gutter"
+          }
+        }
+      },
+      "grid-step": {
+        "$value": "44px",
+        "$extensions": {
+          "site": {
+            "cssVar": "--grid-step"
+          }
+        }
+      }
+    }
+  },
+  "space": {
+    "$type": "dimension",
+    "$description": "An eight-step scale on a 4px base, plus the three rhythms the page actually repeats.",
+    "1": {
+      "$value": "4px",
+      "$extensions": {
+        "site": {
+          "cssVar": "--space-1"
+        }
+      }
+    },
+    "2": {
+      "$value": "8px",
+      "$extensions": {
+        "site": {
+          "cssVar": "--space-2"
+        }
+      }
+    },
+    "3": {
+      "$value": "12px",
+      "$extensions": {
+        "site": {
+          "cssVar": "--space-3"
+        }
+      }
+    },
+    "4": {
+      "$value": "16px",
+      "$extensions": {
+        "site": {
+          "cssVar": "--space-4"
+        }
+      }
+    },
+    "5": {
+      "$value": "24px",
+      "$extensions": {
+        "site": {
+          "cssVar": "--space-5"
+        }
+      }
+    },
+    "6": {
+      "$value": "32px",
+      "$extensions": {
+        "site": {
+          "cssVar": "--space-6"
+        }
+      }
+    },
+    "7": {
+      "$value": "48px",
+      "$extensions": {
+        "site": {
+          "cssVar": "--space-7"
+        }
+      }
+    },
+    "8": {
+      "$value": "64px",
+      "$extensions": {
+        "site": {
+          "cssVar": "--space-8"
+        }
+      }
+    },
+    "section-gap": {
+      "$value": "{space.7}",
+      "$extensions": {
+        "site": {
+          "cssVar": "--section-gap"
+        }
+      }
+    },
+    "row-h": {
+      "$value": "44px",
+      "$description": "The floor for anything a thumb has to hit.",
+      "$extensions": {
+        "site": {
+          "cssVar": "--row-h"
+        }
+      }
+    }
+  },
+  "radius": {
+    "$type": "dimension",
+    "badge": {
+      "$value": "2px",
+      "$extensions": {
+        "site": {
+          "cssVar": "--radius-badge"
+        }
+      }
+    },
+    "control": {
+      "$value": "6px",
+      "$extensions": {
+        "site": {
+          "cssVar": "--radius-control"
+        }
+      }
+    },
+    "card": {
+      "$value": "8px",
+      "$extensions": {
+        "site": {
+          "cssVar": "--radius-card"
+        }
+      }
+    },
+    "island": {
+      "$value": "14px",
+      "$extensions": {
+        "site": {
+          "cssVar": "--radius-island"
+        }
+      }
+    }
+  },
+  "shadow": {
+    "$type": "shadow",
+    "raised": {
+      "$description": "One hairline of contact shadow. A card that is merely on the page, not above it.",
+      "$value": {
+        "color": "rgba(20, 22, 26, 0.08)",
+        "offsetX": "0",
+        "offsetY": "1px",
+        "blur": "2px",
+        "spread": "0"
+      },
+      "$extensions": {
+        "site": {
+          "cssVar": "--shadow-raised"
+        }
+      }
+    },
+    "island": {
+      "$description": "The page island floating over the graph paper. The only large shadow on the site.",
+      "$value": [
+        {
+          "color": "rgba(20, 22, 26, 0.06)",
+          "offsetX": "0",
+          "offsetY": "1px",
+          "blur": "2px",
+          "spread": "0"
+        },
+        {
+          "color": "rgba(120, 40, 30, 0.16)",
+          "offsetX": "0",
+          "offsetY": "12px",
+          "blur": "40px",
+          "spread": "0"
+        }
+      ],
+      "$extensions": {
+        "site": {
+          "cssVar": "--shadow-island"
+        }
+      }
+    }
+  },
+  "motion": {
+    "duration": {
+      "$type": "duration",
+      "hover": {
+        "$value": "120ms",
+        "$extensions": {
+          "site": {
+            "cssVar": "--motion-hover"
+          }
+        }
+      },
+      "drawer": {
+        "$value": "150ms",
+        "$extensions": {
+          "site": {
+            "cssVar": "--motion-drawer"
+          }
+        }
+      },
+      "reduced": {
+        "$value": "60ms",
+        "$description": "Under prefers-reduced-motion every transition collapses to this. Not zero: a state change the reader cannot see is a state change they do not trust.",
+        "$extensions": {
+          "site": {
+            "cssVar": "--motion-reduced"
+          }
+        }
+      }
+    },
+    "easing": {
+      "$type": "cubicBezier",
+      "out": {
+        "$value": [
+          0,
+          0,
+          0.58,
+          1
+        ],
+        "$extensions": {
+          "site": {
+            "cssVar": "--ease-out"
+          }
+        }
+      }
+    }
+  }
+}

@@ -75,7 +75,7 @@ const heading = lang === 'vi' ? 'Astragentic gồm bốn lớp' : 'Astragentic i
   }
 
   <section class="read-section" id="good-parts">
-    <h2>{lang === 'vi' ? 'Năm thứ mình sẽ giữ lại' : 'The five parts I would keep'}</h2>
+    <h2>{lang === 'vi' ? 'Năm phần tôi sẽ giữ lại' : 'The five parts I would keep'}</h2>
     {page.sections['good-parts'] && <Prose html={page.sections['good-parts']} class="read-body body" />}
     <ul class="parts" data-toc-skip>
       {
@@ -111,20 +111,20 @@ const heading = lang === 'vi' ? 'Astragentic gồm bốn lớp' : 'Astragentic i
   }
   .hint {
     margin-top: 0.6rem;
-    font-size: 11px;
+    font-size: var(--text-label-sm);
     letter-spacing: 0.07em;
     text-transform: uppercase;
     color: var(--ink-muted);
   }
   .parts-label {
-    font-size: 10px;
+    font-size: var(--text-micro);
     letter-spacing: 0.11em;
     text-transform: uppercase;
     color: var(--ink-muted);
     margin: 0 0 0.3rem;
   }
   .line {
-    font-size: 17px;
+    font-size: var(--text-body);
     line-height: 1.55;
     color: var(--ink-muted);
     max-width: 64ch;
@@ -152,11 +152,11 @@ const heading = lang === 'vi' ? 'Astragentic gồm bốn lớp' : 'Astragentic i
   }
   .parts h3 {
     margin: 0 0 0.35rem;
-    font-size: 16px;
+    font-size: var(--text-body-sm);
   }
   .parts p {
     margin: 0;
-    font-size: 14px;
+    font-size: var(--text-ui);
     line-height: 1.45;
     color: var(--ink-muted);
   }
@@ -173,7 +173,7 @@ const heading = lang === 'vi' ? 'Astragentic gồm bốn lớp' : 'Astragentic i
   }
   .count-big {
     display: block;
-    font-size: 30px;
+    font-size: var(--text-h1);
     line-height: 1;
     color: var(--ink);
     letter-spacing: -0.02em;
@@ -184,14 +184,14 @@ const heading = lang === 'vi' ? 'Astragentic gồm bốn lớp' : 'Astragentic i
   .count-label {
     display: block;
     margin-top: 0.4rem;
-    font-size: 10px;
+    font-size: var(--text-micro);
     text-transform: uppercase;
     letter-spacing: 0.1em;
   }
   .count-link {
     display: inline-block;
     margin-top: 0.7rem;
-    font-size: 12px;
+    font-size: var(--text-label);
     color: var(--accent);
     text-decoration: none;
     border-bottom: 1px solid currentColor;

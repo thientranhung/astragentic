@@ -14,7 +14,10 @@ interface Props {
 }
 const { lang } = Astro.props;
 const page = await getPage(lang, 'tech-stack');
-const heading = lang === 'vi' ? 'Chín thứ, và vì sao là chúng' : 'Nine pieces, and why these';
+const heading =
+  lang === 'vi'
+    ? 'Chín thành phần của stack, và vì sao là chúng'
+    : 'Nine components in the stack, and why these';
 
 /** Two of the nine pieces are shapes, not products: herdr is a hub with one pane per
  *  spoke, and git worktree is a set of parallel lanes. Both drawings already exist. */
@@ -60,18 +63,18 @@ const FIGURE: Record<string, string> = {
     margin-block: 1.5rem 0;
   }
   .need {
-    font-size: 10px;
+    font-size: var(--text-micro);
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--ink-muted);
     margin: 0 0 0.3rem;
   }
   .item-name {
-    font-size: 20px;
+    font-size: var(--text-h3);
     letter-spacing: -0.005em;
   }
   .line {
-    font-size: 17px;
+    font-size: var(--text-body);
     line-height: 1.55;
     color: var(--ink-muted);
     max-width: 64ch;

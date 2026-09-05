@@ -56,7 +56,7 @@ export const GROUPS: Record<
     title: { vi: 'Lúc gặp code cũ', en: 'When the code is old' },
     short: { vi: 'Code cũ', en: 'Legacy' },
     line: {
-      vi: 'Code đã sống lâu: không test, không ranh giới module.',
+      vi: 'Code có sẵn đã chạy lâu: không test, không ranh giới module.',
       en: 'Code that has lived a while: no tests, no module boundaries.',
     },
   },
@@ -102,11 +102,11 @@ const VERB: Record<string, Record<Lang, string>> = {
     en: 'Seed CONTEXT.md with the terms the code already uses.',
   },
   'codex-arm': {
-    vi: 'Bắn một lượt Codex đọc lại artifact trước khi nó merge.',
+    vi: 'Chạy một lượt Codex đọc lại artifact trước khi nó merge.',
     en: 'Fire a Codex pass over a finished artifact before it merges.',
   },
   'codex-claude-arm': {
-    vi: 'Bắn một lượt Claude đọc lại artifact khi gốc là Codex.',
+    vi: 'Chạy một lượt Claude đọc lại artifact khi runtime gốc là Codex.',
     en: 'Fire the Claude pass when the root runtime is Codex.',
   },
   'dispatch-ticket': {
@@ -114,15 +114,15 @@ const VERB: Record<string, Record<Lang, string>> = {
     en: 'Dispatch one claimed ticket as a visible pane.',
   },
   'dispatch-ticket-claude': {
-    vi: 'Phóng và kiểm một Builder chạy trên Claude Code.',
+    vi: 'Khởi chạy và xác nhận một Builder trên Claude Code.',
     en: 'Launch and verify a Builder on Claude Code.',
   },
   'dispatch-ticket-codex': {
-    vi: 'Phóng và kiểm một Builder chạy trên Codex.',
+    vi: 'Khởi chạy và xác nhận một Builder trên Codex.',
     en: 'Launch and verify a Builder on Codex.',
   },
   'dispatch-ticket-opencode': {
-    vi: 'Phóng và kiểm một Builder chạy trên OpenCode.',
+    vi: 'Khởi chạy và xác nhận một Builder trên OpenCode.',
     en: 'Launch and verify a Builder on OpenCode.',
   },
   'dispatch-qa-walk': {
@@ -130,7 +130,7 @@ const VERB: Record<string, Record<Lang, string>> = {
     en: 'Dispatch QA on a walk through the running product.',
   },
   'review-with-rin': {
-    vi: 'Mở gate milestone của Rin thành một pane quan sát được.',
+    vi: 'Chạy gate milestone của Rin trong một pane quan sát được.',
     en: "Run Rin's milestone gate as an observable pane.",
   },
   'github-issue-tracker': {
@@ -146,7 +146,7 @@ const VERB: Record<string, Record<Lang, string>> = {
     en: 'Operate the tracker when the board is Linear.',
   },
   'legacy-testing': {
-    vi: 'Kéo code chưa có test vào lưới test đặc tả hành vi.',
+    vi: 'Đưa code chưa có test vào lưới characterisation test.',
     en: 'Get untested code under characterisation tests.',
   },
   untangle: {
@@ -154,7 +154,7 @@ const VERB: Record<string, Record<Lang, string>> = {
     en: 'Untangle code too knotted for a straight refactor.',
   },
   'reconcile-tracker': {
-    vi: 'Đối chiếu tracker với git để bắt trạng thái nói dối.',
+    vi: 'Đối chiếu tracker với git để phát hiện trạng thái sai lệch.',
     en: 'Reconcile the tracker against what actually merged.',
   },
 };

@@ -13,23 +13,23 @@ updated: 2026-09-04
 
 ## Nó làm gì
 
-`dispatch-ticket` là chuỗi thao tác Thomas chạy mỗi lần một ticket đi từ "claim được" sang
-"đang có Builder làm thật": claim nó trên tracker, cắt branch và worktree, mở tab với pane
-trong Herdr, in ra bản dispatch đã resolve, đưa brief, rồi arm watcher trước khi đi tiếp. Chín
-bước, luôn theo đúng thứ tự đó. Bước nào không ai kiểm là bước bị bỏ trong im lặng, và harness
-này chạy song song vài cái như vậy cùng lúc, nên "im lặng" ở đây nghĩa là một Builder ngồi
-không trong pane không ai nhìn. <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
+`dispatch-ticket` là chuỗi thao tác Thomas chạy mỗi lần một ticket đi từ "claim được" sang "đang
+có Builder làm thật": claim nó trên tracker, cắt branch và worktree, mở tab kèm pane trong Herdr,
+in ra bản dispatch đã resolve, giao brief, rồi arm watcher trước khi đi tiếp. Chín bước, luôn theo
+đúng thứ tự đó. Bước nào không ai kiểm là bước bị bỏ trong im lặng, và harness này chạy song song
+vài chuỗi như vậy cùng lúc, nên im lặng ở đây nghĩa là một Builder ngồi không trong một pane không
+ai nhìn. <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
 
-Điểm khác của nó nằm ở chỗ đặt ranh giới: **claim xảy ra trước khi worktree tồn tại.** Ticket
-được gán trên tracker trước, nên hai phiên Thomas cùng nhặt trên frontier sẽ thấy claim của
-nhau thay vì đua nhau tạo cùng một branch. Cái rắc rối sinh ra chuyện này là hai phiên dùng
-chung một checkout và mất commit trong im lặng vì một lệnh `git switch` chạy song song. Mỗi
-phiên một worktree là cách chữa, và sự cô lập đó phủ mọi lệnh có ghi xuống đĩa, không riêng
-git. <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
+Điểm khác của nó nằm ở chỗ đặt ranh giới: **claim xảy ra trước khi worktree tồn tại.** Ticket được
+gán trên tracker trước, nên hai phiên Thomas cùng nhặt trên frontier sẽ thấy claim của nhau thay vì
+đua nhau tạo cùng một branch. Vấn đề sinh ra luật này là hai phiên dùng chung một checkout và mất
+commit trong im lặng vì một lệnh `git switch` chạy song song. Mỗi phiên một worktree là cách chữa,
+và sự cô lập đó phủ mọi lệnh có ghi xuống đĩa, không riêng git.
+<!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
 
 ## Khi nào Thomas gọi nó
 
-| Trước mặt anh em là gì | Gọi cái nào |
+| Tình huống trước mặt bạn | Gọi cái nào |
 |---|---|
 | Một ticket trên frontier, ô assignee còn trống | `dispatch-ticket` (claim trước, worktree sau) |
 | Chính cú dispatch, sau khi đã claim | `dispatch-ticket` cộng skill đi kèm theo runtime (`dispatch-ticket-claude`, `-codex`, `-opencode`) |
@@ -41,12 +41,12 @@ git. <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
 
 ## Cần sẵn gì
 
-- Watchdog của workspace đang chạy cho project này. Dispatch mà không có watchdog là dừng
-  hẳn, không phải cảnh báo (`exit 1`, không phải `echo`).
+- Watchdog của workspace đang chạy cho project này. Dispatch mà không có watchdog là dừng hẳn,
+  không phải cảnh báo (`exit 1`, không phải `echo`).
   <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
 - Payload harness đã được commit, không phải chỉ được allow-list qua mặt `.gitignore`. Worktree
   chỉ chứa nội dung đã tracked, nên một file `.agents/roles/builder.md` còn untracked nghĩa là
-  Builder khởi động mà không có hợp đồng nào cả.
+  Builder khởi động mà không có hợp đồng nào.
   <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
 - `.agents/orchestrator.md` có một dòng thật (runtime, model, effort) cho vai sắp dispatch. Một
   dòng ghi `<set-me>` nghĩa là chưa quyết, và chưa quyết là dừng ngay tại lúc dispatch.
@@ -57,7 +57,7 @@ git. <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
 
 ## Nó để lại gì
 
-| Chuyện gì xảy ra | Nó nằm lại ở đâu |
+| Kết quả | Nơi nó nằm lại |
 |---|---|
 | Cú claim | Ô assignee trên tracker: `builder/<ticket-id>` |
 | Chính bản dispatch | `.astraler/state/dispatch-record.json`, khoá theo ticket id: branch, worktree, workspace, tab, pane, runtime, write-set |
@@ -95,7 +95,7 @@ thái `promoted`: đã sửa và đã nằm trong hợp đồng mà trang này m
 - Watchdog được xác nhận đang chạy trước cú dispatch đầu tiên của phiên, không phải mặc định là có.
 - `.astraler/state/dispatch-record.json` có một entry cho mọi ticket đang sống, kèm write-set.
 - Mọi brief đã gửi đều có watcher arm ngay trong cùng hành động đó, không phải một bước riêng
-  làm "sau".
+  làm sau.
 - Nhãn tab và nhãn pane khớp với vai đã dispatch (`builder:<id>` so với `spec:<id>`,
   `qa:<id>`, `rin:<id>`), vì tiền tố sai thì watchdog không nhìn thấy.
 - Cleanup chỉ gỡ worktree sau khi `git status --short` trống và `check-simplify-markers.sh` xanh.

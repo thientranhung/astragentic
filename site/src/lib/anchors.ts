@@ -96,7 +96,7 @@ export const STACK: StackItem[] = [
     id: 'codex',
     name: 'Codex CLI',
     line: {
-      vi: 'Cánh tay cross-vendor: một bên khác đọc lại diff trước khi nó merge.',
+      vi: 'Cánh tay cross-vendor: một vendor khác đọc lại diff trước khi nó merge.',
       en: 'The cross-vendor arm: a different vendor re-reads the diff before it merges.',
     },
     required: false,
@@ -105,8 +105,8 @@ export const STACK: StackItem[] = [
     id: 'opencode',
     name: 'OpenCode CLI',
     line: {
-      vi: 'Runtime thứ ba để dispatch vai, khi anh em không muốn khoá vào một hãng.',
-      en: 'A third runtime for role dispatch, when you would rather not be locked to one vendor.',
+      vi: 'Runtime thứ ba để dispatch vai, dùng khi bạn không muốn khoá vào một vendor.',
+      en: 'A third runtime for role dispatch, for when you would rather not be locked to one vendor.',
     },
     required: false,
   },
@@ -132,7 +132,7 @@ export const STACK: StackItem[] = [
     id: 'mattpocock-skills',
     name: 'mattpocock-skills',
     line: {
-      vi: 'Phương pháp kỹ thuật đi mượn: wayfinder, grill, spec, ticket, implement, review.',
+      vi: 'Phương pháp kỹ thuật tôi đi thuê: wayfinder, grill, spec, ticket, implement, review.',
       en: 'The engineering method, rented: wayfinder, grill, spec, tickets, implement, review.',
     },
     required: true,
@@ -159,8 +159,8 @@ export const STACK: StackItem[] = [
     id: 'archify',
     name: 'archify',
     line: {
-      vi: 'Mọi diagram trên site này. Hình sinh từ JSON, nên sửa được và không vẽ tay.',
-      en: 'Every diagram on this site. Generated from JSON, so it can be corrected instead of redrawn.',
+      vi: 'Mọi diagram trên site này sinh từ JSON, nên sửa được bằng cách sửa dữ liệu, không vẽ lại tay.',
+      en: 'Every diagram on this site is generated from JSON, so it is corrected by editing data, not redrawn by hand.',
     },
     required: false,
   },
@@ -196,7 +196,7 @@ export const WHY: WhyCard[] = [
       en: 'Why mattpocock-skills and not Superpowers?',
     },
     answer: {
-      vi: 'mattpocock-skills là phương pháp kỹ thuật mình đi mượn: wayfinder, grill, spec, ticket, implement, review. Astragentic không viết lại phần đó, nó chỉ thêm lớp điều phối bên trên.',
+      vi: 'mattpocock-skills là phương pháp kỹ thuật tôi đi thuê: wayfinder, grill, spec, ticket, implement, review. Astragentic không viết lại phần đó, nó chỉ thêm lớp điều phối bên trên.',
       en: 'mattpocock-skills is the engineering method I rent: wayfinder, grill, spec, tickets, implement, review. Astragentic does not rewrite that part; it adds the orchestration above it.',
     },
   },
@@ -259,8 +259,8 @@ export const LAYERS: Layer[] = [
     id: 'harness',
     title: { vi: 'Harness', en: 'Harness' },
     line: {
-      vi: 'Phần mình viết: vai, skill, hook, và cuốn sổ ledger giữ lại mọi lần hỏng.',
-      en: 'The part I wrote: the roles, the skills, the hooks, and the ledger that keeps every failure.',
+      vi: 'Phần tôi viết: vai, skill, hook, và ledger giữ lại mọi lần hỏng đo được.',
+      en: 'The part I wrote: the roles, the skills, the hooks, and the ledger that keeps every measured failure.',
     },
     parts: 'Roles: 5 · Skills: 16 · Hooks: 4 · Ledger',
   },
@@ -275,7 +275,7 @@ export const LAYERS: Layer[] = [
   },
   {
     id: 'project',
-    title: { vi: 'Project của anh em', en: 'Your project' },
+    title: { vi: 'Project của bạn', en: 'Your project' },
     line: {
       vi: 'Repo thật. Harness không viết vào đây ngoài những file project tự khai.',
       en: 'The real repo. The harness writes nothing here beyond the files the project declares itself.',
@@ -293,9 +293,9 @@ export interface GoodPart {
 export const GOOD_PARTS: GoodPart[] = [
   {
     id: 'ledger',
-    title: { vi: 'Cuốn sổ', en: 'The ledger' },
+    title: { vi: 'Ledger', en: 'The ledger' },
     line: {
-      vi: 'Mỗi luật trong harness đến từ một lần hỏng đo được, và dòng ledger vẫn còn đó để đọc lại.',
+      vi: 'Mỗi luật trong harness đến từ một lần hỏng đo được, và dòng ledger tương ứng vẫn đọc lại được.',
       en: 'Every rule in the harness came from a measured failure, and the ledger line is still there to read.',
     },
   },

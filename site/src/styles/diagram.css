@@ -10,7 +10,7 @@
 .diagram-svg {
   background: var(--surface);
   border: 1px solid var(--ink-10);
-  border-radius: 8px;
+  border-radius: var(--radius-card);
   padding: 0.9rem 1.1rem;
 }
 .screen--surface .diagram-svg,
@@ -86,14 +86,17 @@
   fill: var(--ink-35);
   stroke: var(--ink-35);
 }
+/* An emphasised arrow is the same ink, drawn heavier. Pass 7 took its colour away:
+   inside a diagram the brand red means "the node you picked" and nothing else, so a
+   coloured arrow would put two claims on the same picture. */
 .diagram-svg .a-emphasis {
-  stroke: var(--pass);
+  stroke: var(--ink);
   fill: none;
   stroke-width: 1.5;
 }
 .diagram-svg .m-emphasis {
-  fill: var(--pass);
-  stroke: var(--pass);
+  fill: var(--ink);
+  stroke: var(--ink);
 }
 .diagram-svg .a-security {
   stroke: var(--defect);
@@ -149,24 +152,25 @@
 .diagram-svg g.is-link {
   cursor: pointer;
 }
-/* Spec 6 §3: the node you picked keeps the white fill and says so with the accent
-   stroke and a shadow that has an offset — no pastel wash. */
+/* The node you picked keeps the white fill and says so with a 2px brand stroke and a
+   shadow that has an offset — no pastel wash. This is the only place the brand red is
+   allowed inside a drawing. */
 .diagram-svg g.is-link:hover > rect:not(.c-mask),
 .diagram-svg g.is-link:focus-visible > rect:not(.c-mask),
 .diagram-svg g.is-link.is-hover > rect:not(.c-mask) {
-  stroke: var(--accent);
+  stroke: var(--brand-primary);
   stroke-width: 2;
   fill: var(--surface);
-  filter: drop-shadow(0 1px 2px rgba(20, 22, 26, 0.08));
+  filter: drop-shadow(var(--shadow-raised));
 }
 .diagram-svg g.is-link:focus-visible {
   outline: none;
 }
 .diagram-svg g.is-active > rect:not(.c-mask) {
-  stroke: var(--accent);
+  stroke: var(--brand-primary);
   stroke-width: 2;
   fill: var(--surface);
-  filter: drop-shadow(0 1px 2px rgba(20, 22, 26, 0.08));
+  filter: drop-shadow(var(--shadow-raised));
 }
 .diagram-svg g.is-active > text.t-primary,
 .diagram-svg g.is-link:hover > text.t-primary {
@@ -196,8 +200,8 @@
    as muddy; at stroke and sigil size the same five hues still name the same five
    roles, in the same order, next to the same names.
 
-   Selecting a node still turns it `--accent`: the rule above wins on specificity,
-   because one accent means "the thing you picked" everywhere on this site. */
+   Selecting a node still turns it brand red: the rule above wins on specificity,
+   because one colour means "the thing you picked" everywhere on this site. */
 
 .diagram-svg [data-node-id='thomas'] > rect:not(.c-mask),
 .diagram-svg [data-node-id='roles'] > rect:not(.c-mask) {
@@ -269,4 +273,67 @@
 .diagram-svg [data-node-id='rin125'] > text.t-primary,
 .diagram-svg [data-node-id='qa125'] > text.t-primary {
   fill: var(--ink);
+}
+
+/* ── The gate is Rin's, and Rin is teal ──────────────────────────────────────
+   archify has one semantic for "a gate": `security`. This site spends it on two
+   different things. On the hooks pictures it is a hook refusing a command, which is a
+   block and stays the dark defect red. On the pictures where the gate is a person —
+   the five roles, the herdr workspace, the review ladder — it is Rin, and pass 7 moved
+   Rin to teal so a review would stop reading as an error next to the brand red.
+
+   The split is per-figure because the SVGs are not ours to edit: `data-diagram` on the
+   <figure> is the only handle either component gives us, and it is enough. */
+.diagram[data-diagram='five-roles'] .diagram-svg .c-security,
+.diagram[data-diagram='hub-and-spokes'] .diagram-svg .c-security,
+.diagram[data-diagram='ticket-lifecycle'] .diagram-svg .c-security,
+.idiagram[data-diagram='five-roles'] .diagram-svg .c-security,
+.idiagram[data-diagram='hub-and-spokes'] .diagram-svg .c-security,
+.idiagram[data-diagram='ticket-lifecycle'] .diagram-svg .c-security {
+  stroke: var(--role-rin);
+}
+.diagram[data-diagram='five-roles'] .diagram-svg .a-security,
+.diagram[data-diagram='hub-and-spokes'] .diagram-svg .a-security,
+.diagram[data-diagram='ticket-lifecycle'] .diagram-svg .a-security,
+.idiagram[data-diagram='five-roles'] .diagram-svg .a-security,
+.idiagram[data-diagram='hub-and-spokes'] .diagram-svg .a-security,
+.idiagram[data-diagram='ticket-lifecycle'] .diagram-svg .a-security {
+  stroke: var(--role-rin);
+}
+.diagram[data-diagram='five-roles'] .diagram-svg .m-security,
+.diagram[data-diagram='hub-and-spokes'] .diagram-svg .m-security,
+.diagram[data-diagram='ticket-lifecycle'] .diagram-svg .m-security,
+.idiagram[data-diagram='five-roles'] .diagram-svg .m-security,
+.idiagram[data-diagram='hub-and-spokes'] .diagram-svg .m-security,
+.idiagram[data-diagram='ticket-lifecycle'] .diagram-svg .m-security {
+  fill: var(--role-rin);
+  stroke: var(--role-rin);
+}
+.diagram[data-diagram='five-roles'] .diagram-svg .t-security,
+.diagram[data-diagram='hub-and-spokes'] .diagram-svg .t-security,
+.diagram[data-diagram='ticket-lifecycle'] .diagram-svg .t-security,
+.idiagram[data-diagram='five-roles'] .diagram-svg .t-security,
+.idiagram[data-diagram='hub-and-spokes'] .diagram-svg .t-security,
+.idiagram[data-diagram='ticket-lifecycle'] .diagram-svg .t-security {
+  fill: var(--role-rin);
+}
+.diagram[data-diagram='five-roles'] .diagram-svg .s-security,
+.diagram[data-diagram='hub-and-spokes'] .diagram-svg .s-security,
+.diagram[data-diagram='ticket-lifecycle'] .diagram-svg .s-security,
+.idiagram[data-diagram='five-roles'] .diagram-svg .s-security,
+.idiagram[data-diagram='hub-and-spokes'] .diagram-svg .s-security,
+.idiagram[data-diagram='ticket-lifecycle'] .diagram-svg .s-security {
+  color: var(--role-rin);
+}
+
+/* Re-asserted after the per-figure gate rules above, which are a class heavier than
+   the interaction rules and would otherwise leave a picked Rin node teal. Whatever a
+   node's semantic hue is, "the one you picked" outranks it. */
+.idiagram .diagram-svg g.is-link:hover > rect:not(.c-mask),
+.idiagram .diagram-svg g.is-link:focus-visible > rect:not(.c-mask),
+.idiagram .diagram-svg g.is-link.is-hover > rect:not(.c-mask),
+.idiagram .diagram-svg g.is-active > rect:not(.c-mask) {
+  stroke: var(--brand-primary);
+  stroke-width: 2;
+  fill: var(--surface);
 }

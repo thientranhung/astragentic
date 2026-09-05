@@ -67,7 +67,7 @@ const { lang, page, alternate } = Astro.props;
   }
   .wordmark {
     font-family: var(--font-mono);
-    font-size: 14px;
+    font-size: var(--text-ui);
     letter-spacing: 0.09em;
     text-transform: uppercase;
     text-decoration: none;
@@ -87,23 +87,25 @@ const { lang, page, alternate } = Astro.props;
   }
   .items a {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: var(--text-label);
     letter-spacing: 0.09em;
     text-transform: uppercase;
     color: var(--ink-muted);
     text-decoration: none;
     display: inline-block;
     padding: 0.55rem 0.15rem;
-    min-height: 44px;
+    min-height: var(--row-h);
     line-height: 1.2;
-    border-bottom: 1px solid transparent;
+    border-bottom: 2px solid transparent;
   }
   .items a:hover {
     color: var(--ink);
   }
+  /* Where you are: full ink, and a 2px brand rule under the word. The colour is the
+     mark, the ink is the reading — the label never has to be red to be legible. */
   .items a.on {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
+    color: var(--ink);
+    border-bottom-color: var(--brand-primary);
   }
   .right {
     display: flex;

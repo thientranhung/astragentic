@@ -153,7 +153,7 @@ const label = eyebrow && eyebrow.trim().toLowerCase() !== shown ? eyebrow : unde
     display: none;
   }
   .toc-title {
-    font-size: 10px;
+    font-size: var(--text-micro);
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--ink-muted);
@@ -174,14 +174,14 @@ const label = eyebrow && eyebrow.trim().toLowerCase() !== shown ? eyebrow : unde
     padding: 0.3rem 0.6rem;
     margin-left: -1px;
     border-left: 2px solid transparent;
-    font-size: 13px;
+    font-size: var(--text-mono);
     line-height: 1.35;
     color: var(--ink-muted);
     text-decoration: none;
   }
   .toc-item--sub a {
     padding-left: 1.4rem;
-    font-size: 12.5px;
+    font-size: var(--text-mono);
   }
   .toc-item a:hover {
     color: var(--ink);
@@ -192,7 +192,7 @@ const label = eyebrow && eyebrow.trim().toLowerCase() !== shown ? eyebrow : unde
   }
 
   .h1-mono {
-    font-size: 26px;
+    font-size: var(--text-h2);
     letter-spacing: -0.005em;
   }
 </style>

@@ -103,6 +103,7 @@ const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` 
 
 <figure
   class:list={['idiagram', inert && 'idiagram--inert', !maxWidth && 'idiagram--band', extra]}
+  data-diagram={slug}
   data-hrefs={inert ? undefined : JSON.stringify(hrefMap)}
   style={style}
 >
@@ -195,7 +196,7 @@ const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` 
 
   .cap {
     margin-top: 0.85rem;
-    font-size: 12px;
+    font-size: var(--text-label);
     color: var(--ink-muted);
     display: flex;
     flex-wrap: wrap;
@@ -203,7 +204,7 @@ const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` 
     gap: 0.6rem;
   }
   .cap-note {
-    font-size: 11px;
+    font-size: var(--text-label-sm);
     opacity: 0.8;
   }
   .cap a {
@@ -222,9 +223,9 @@ const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` 
     pointer-events: none;
     background: var(--ink);
     color: var(--surface);
-    font-size: 11px;
+    font-size: var(--text-label-sm);
     letter-spacing: 0.04em;
-    line-height: 1.4;
+    line-height: var(--leading-mono);
     padding: 0.35rem 0.6rem;
     border-radius: 2px;
     white-space: nowrap;
@@ -243,7 +244,7 @@ const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` 
     min-height: 200px;
     border: 1px solid var(--rule);
     color: var(--ink-muted);
-    font-size: 12px;
+    font-size: var(--text-label);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }

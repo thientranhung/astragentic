@@ -13,21 +13,21 @@ updated: 2026-09-04
 ## What it does
 
 `legacy-testing` is the doctrine for the case `tdd` does not cover. `tdd` writes a failing test
-first, and that assumes a **seam** — a place where you can substitute what the code depends on.
+first, and that assumes a **seam**, a place where you can substitute what the code depends on.
 Existing code often has none: the function reaches straight for the clock, the network, the
 database, or a module-level singleton. This skill fixes the order for that case, and it is the
 opposite of greenfield: characterise what the code does now, create a seam, then run `tdd`
 normally with the characterisation tests as the net underneath.
 <!-- source: harness/.agents/skills/legacy-testing/SKILL.md -->
 
-The friction it removes is a Builder stalling on a ticket with nothing to write a test against,
-and the two bad exits from that stall. The first is a characterisation test that quietly asserts
+The problem it removes is a Builder stalling on a ticket with nothing to write a test against,
+along with the two wrong exits from that stall. The first is a characterisation test that asserts
 what the code *should* do: it fails on day one and tells you nothing about what is safe to change.
-The second is worse and quieter — a test that silently blesses a bug as intended, which is how a
-bug becomes a requirement. So the discipline is a comment: assert the surprising value anyway, and
+The second is worse and quieter, because a test that silently blesses a bug as intended is how a
+bug becomes a requirement. The discipline is a comment: assert the surprising value anyway, then
 mark it pinned-but-unjudged with a ticket reference, which keeps both readings alive. This skill
-is also why brownfield is treated here as the default rather than the special case; upstream agent
-skills assume a seam exists, and most repos that arrive do not have one.
+is also why I treat brownfield as the default rather than the special case. Upstream agent skills
+assume a seam exists, and most repos that arrive do not have one.
 <!-- source: harness/.agents/skills/legacy-testing/SKILL.md, README.md -->
 
 ## When Thomas reaches for it
@@ -38,10 +38,10 @@ situation arises, and it needs no wiring at adoption beyond confirming it is sta
 | What is in front of you | Reach for |
 |---|---|
 | The code under a ticket has no seam to test through | `legacy-testing`, from the Builder's own contract |
-| A test would require the whole system to boot | `legacy-testing` — characterise the paths the change touches, seam the rest |
+| A test would require the whole system to boot | `legacy-testing`: characterise the paths the change touches, seam the rest |
 | A seam is too large to create inside one ticket | Hand back to Thomas, who routes it to a Shaper; `codebase-design` is the vocabulary for that conversation |
-| The blast radius keeps growing as you read | Not this. `untangle` is the path when the tangle itself is the problem |
-| A refactor where module boundaries already exist | `mattpocock-skills:improve-codebase-architecture`, which has something to work with |
+| The blast radius keeps growing as you read | Not this one. `untangle` is the path when the tangle itself is the problem |
+| A refactor where module boundaries already exist | `mattpocock-skills:improve-codebase-architecture`, which already has something to work with |
 
 <!-- source: harness/.agents/roles/builder.md, harness/.agents/roles/shaper.md, harness/.agents/skills/legacy-testing/SKILL.md -->
 
@@ -49,12 +49,12 @@ situation arises, and it needs no wiring at adoption beyond confirming it is sta
 
 - Coverage data, before you pick inputs. Characterisation inputs are chosen **by coverage, not by
   intuition**: aim them at the branches the change will touch. Characterising a whole file is
-  rarely worth it; characterising the paths your change can break always is.
+  rarely worth it, and characterising the paths your change can break always is.
 - A ticket id to reference from the pinned comments, since a pinned bug is a ticket later rather
   than a deletion.
-- The knowledge that a large seam is not yours to decide. A parameter added to one function is the
-  Builder's. A new interface several modules will depend on shapes the module boundaries, and that
-  belongs where the whole picture is in context.
+- The knowledge that a large seam is not the Builder's decision. A parameter added to one function
+  is the Builder's. A new interface several modules will depend on shapes the module boundaries,
+  and that belongs where the whole picture is in context.
 
 <!-- source: harness/.agents/skills/legacy-testing/SKILL.md -->
 
@@ -77,7 +77,7 @@ situation arises, and it needs no wiring at adoption beyond confirming it is sta
   and every surprising assertion carries the pinned-but-unjudged comment with a ticket.
 - Seam creation and behaviour change never share a commit. If the tests break, you want to know it
   was the seam.
-- The seam chosen is the smallest one that unblocks the ticket — parameterise before extracting an
+- The seam chosen is the smallest one that unblocks the ticket: parameterise before extracting an
   interface, sprout or wrap before breaking a static dependency.
 - A seam the Builder could not justify inside one ticket was reported to Thomas as a result, not
   forced through under ticket pressure.
@@ -91,7 +91,7 @@ situation arises, and it needs no wiring at adoption beyond confirming it is sta
 The chain inside one ticket is `characterise` → `seam` → `mattpocock-skills:tdd`, and this skill
 owns the first two. It is reached from `builder.md`'s Load table on the row "no seam to test
 through", and its escalation lands in `shaper.md`'s Load table on the row for a seam too large to
-create inside one ticket — that landing row exists because an audit found the escalation pointing
+create inside one ticket. That landing row exists because an audit found the escalation pointing
 at a contract that had no row for it. Beside it sit the other brownfield answers: `untangle` when
 the code is too tangled to scope a refactor at all, and `/skills/bootstrap-glossary` and
 `/skills/batch-triage` for the vocabulary and the backlog an adopted repo brings with it. Whatever

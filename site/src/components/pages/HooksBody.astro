@@ -17,10 +17,13 @@ const { lang } = Astro.props;
 const page = await getPage(lang, 'hooks');
 const evidenceRoute = ROUTES.evidence[lang];
 
-const heading = lang === 'vi' ? 'Bốn khoảnh khắc, bốn cái hook' : 'Four moments, four hooks';
+const heading =
+  lang === 'vi'
+    ? 'Bốn hook chạy ở bốn thời điểm cố định'
+    : 'Four hooks fire at four fixed moments';
 const lede =
   lang === 'vi'
-    ? 'Hook là chỗ duy nhất trong harness chạy mà không cần agent nào nhớ phải chạy nó.'
+    ? 'Hook là phần duy nhất trong harness chạy mà không agent nào phải nhớ gọi nó.'
     : 'A hook is the one part of the harness that runs without an agent remembering to run it.';
 ---
 
@@ -76,29 +79,34 @@ const lede =
     margin-block: 1.5rem 0;
   }
   .event {
-    font-size: 11px;
+    font-size: var(--text-label-sm);
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--ink-muted);
     margin: 0 0 0.3rem;
   }
   .hook-name {
-    font-size: 20px;
+    font-size: var(--text-h3);
     letter-spacing: -0.005em;
   }
+  /* Same row table as the skills catalog, same numbers: a 200px label column, a
+     description capped at 62ch, 24px between them, 12px above and below each row, and
+     the whole thing stopping at 860px. Two pages that draw rows should not draw them
+     to two different rhythms. */
   .facts {
     margin: 1rem 0 0;
     padding: 0;
+    max-width: 860px;
   }
   .facts > div {
     display: grid;
-    grid-template-columns: minmax(0, 8rem) minmax(0, 1fr);
-    gap: 1rem;
-    padding: 0.55rem 0;
+    grid-template-columns: 200px minmax(0, 62ch);
+    column-gap: var(--space-5);
+    padding: var(--space-3) 0;
     border-top: 1px solid var(--rule);
   }
   .facts dt {
-    font-size: 10px;
+    font-size: var(--text-micro);
     text-transform: uppercase;
     letter-spacing: 0.11em;
     color: var(--ink-muted);
@@ -106,7 +114,8 @@ const lede =
   }
   .facts dd {
     margin: 0;
-    font-size: 15px;
+    max-width: 62ch;
+    font-size: var(--text-body-sm);
     line-height: 1.5;
   }
   .body {
@@ -118,7 +127,7 @@ const lede =
     flex-wrap: wrap;
     align-items: baseline;
     gap: 0.9rem;
-    font-size: 11.5px;
+    font-size: var(--text-label);
   }
   .src a:not(.ast) {
     color: var(--ink-muted);
@@ -127,13 +136,13 @@ const lede =
   }
   .src .lesson {
     color: var(--ink-muted);
-    font-size: 11px;
+    font-size: var(--text-label-sm);
   }
 
-  @media (max-width: 620px) {
+  @media (max-width: 880px) {
     .facts > div {
       grid-template-columns: minmax(0, 1fr);
-      gap: 0.25rem;
+      row-gap: var(--space-1);
     }
   }
 </style>

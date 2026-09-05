@@ -1,0 +1,510 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-05T06:00:34Z",
+  "title": "Design System: Astragentic",
+  "extensions": {
+    "colorMeta": {
+      "brand-primary": {
+        "role": "primary",
+        "displayName": "Astraler Red",
+        "canonical": "oklch(60.4% 0.213 30.0)",
+        "tonalRamp": [
+          "oklch(15.0% 0.100 30.0)",
+          "oklch(26.4% 0.166 30.0)",
+          "oklch(37.9% 0.209 30.0)",
+          "oklch(49.3% 0.213 30.0)",
+          "oklch(60.7% 0.213 30.0)",
+          "oklch(72.1% 0.173 30.0)",
+          "oklch(83.6% 0.110 30.0)",
+          "oklch(95.0% 0.031 30.0)"
+        ]
+      },
+      "brand-primary-hover": {
+        "role": "primary",
+        "displayName": "Astraler Red, Spoken",
+        "canonical": "oklch(54.7% 0.194 29.8)",
+        "tonalRamp": [
+          "oklch(15.0% 0.087 29.8)",
+          "oklch(26.4% 0.145 29.8)",
+          "oklch(37.9% 0.182 29.8)",
+          "oklch(49.3% 0.194 29.8)",
+          "oklch(60.7% 0.185 29.8)",
+          "oklch(72.1% 0.151 29.8)",
+          "oklch(83.6% 0.096 29.8)",
+          "oklch(95.0% 0.027 29.8)"
+        ]
+      },
+      "brand-primary-press": {
+        "role": "primary",
+        "displayName": "Astraler Red, Pressed",
+        "canonical": "oklch(47.5% 0.173 29.9)",
+        "tonalRamp": [
+          "oklch(15.0% 0.077 29.9)",
+          "oklch(26.4% 0.128 29.9)",
+          "oklch(37.9% 0.161 29.9)",
+          "oklch(49.3% 0.173 29.9)",
+          "oklch(60.7% 0.164 29.9)",
+          "oklch(72.1% 0.134 29.9)",
+          "oklch(83.6% 0.085 29.9)",
+          "oklch(95.0% 0.024 29.9)"
+        ]
+      },
+      "brand-primary-soft": {
+        "role": "primary",
+        "displayName": "Blush",
+        "canonical": "oklch(94.8% 0.020 28.9)",
+        "tonalRamp": [
+          "oklch(15.0% 0.020 28.9)",
+          "oklch(26.4% 0.020 28.9)",
+          "oklch(37.9% 0.020 28.9)",
+          "oklch(49.3% 0.020 28.9)",
+          "oklch(60.7% 0.020 28.9)",
+          "oklch(72.1% 0.020 28.9)",
+          "oklch(83.6% 0.020 28.9)",
+          "oklch(95.0% 0.019 28.9)"
+        ]
+      },
+      "defect": {
+        "role": "secondary",
+        "displayName": "Ledger Rust",
+        "canonical": "oklch(44.0% 0.130 32.1)",
+        "tonalRamp": [
+          "oklch(15.0% 0.059 32.1)",
+          "oklch(26.4% 0.098 32.1)",
+          "oklch(37.9% 0.123 32.1)",
+          "oklch(49.3% 0.130 32.1)",
+          "oklch(60.7% 0.125 32.1)",
+          "oklch(72.1% 0.102 32.1)",
+          "oklch(83.6% 0.064 32.1)",
+          "oklch(95.0% 0.018 32.1)"
+        ]
+      },
+      "role-thomas": {
+        "role": "tertiary",
+        "displayName": "Router Blue",
+        "canonical": "oklch(48.6% 0.131 259.7)",
+        "tonalRamp": [
+          "oklch(15.0% 0.058 259.7)",
+          "oklch(26.4% 0.097 259.7)",
+          "oklch(37.9% 0.122 259.7)",
+          "oklch(49.3% 0.131 259.7)",
+          "oklch(60.7% 0.124 259.7)",
+          "oklch(72.1% 0.101 259.7)",
+          "oklch(83.6% 0.064 259.7)",
+          "oklch(95.0% 0.018 259.7)"
+        ]
+      },
+      "role-shaper": {
+        "role": "tertiary",
+        "displayName": "Shaper Violet",
+        "canonical": "oklch(53.1% 0.169 298.1)",
+        "tonalRamp": [
+          "oklch(15.0% 0.076 298.1)",
+          "oklch(26.4% 0.126 298.1)",
+          "oklch(37.9% 0.158 298.1)",
+          "oklch(49.3% 0.169 298.1)",
+          "oklch(60.7% 0.161 298.1)",
+          "oklch(72.1% 0.131 298.1)",
+          "oklch(83.6% 0.083 298.1)",
+          "oklch(95.0% 0.023 298.1)"
+        ]
+      },
+      "role-builder": {
+        "role": "tertiary",
+        "displayName": "Builder Green",
+        "canonical": "oklch(47.8% 0.098 164.9)",
+        "tonalRamp": [
+          "oklch(15.0% 0.044 164.9)",
+          "oklch(26.4% 0.072 164.9)",
+          "oklch(37.9% 0.091 164.9)",
+          "oklch(49.3% 0.098 164.9)",
+          "oklch(60.7% 0.092 164.9)",
+          "oklch(72.1% 0.075 164.9)",
+          "oklch(83.6% 0.048 164.9)",
+          "oklch(95.0% 0.013 164.9)"
+        ]
+      },
+      "role-rin": {
+        "role": "tertiary",
+        "displayName": "Review Teal",
+        "canonical": "oklch(53.6% 0.089 205.0)",
+        "tonalRamp": [
+          "oklch(15.0% 0.040 205.0)",
+          "oklch(26.4% 0.066 205.0)",
+          "oklch(37.9% 0.083 205.0)",
+          "oklch(49.3% 0.089 205.0)",
+          "oklch(60.7% 0.084 205.0)",
+          "oklch(72.1% 0.069 205.0)",
+          "oklch(83.6% 0.044 205.0)",
+          "oklch(95.0% 0.012 205.0)"
+        ]
+      },
+      "role-qa": {
+        "role": "tertiary",
+        "displayName": "Walk Amber",
+        "canonical": "oklch(62.6% 0.125 70.4)",
+        "tonalRamp": [
+          "oklch(15.0% 0.060 70.4)",
+          "oklch(26.4% 0.100 70.4)",
+          "oklch(37.9% 0.125 70.4)",
+          "oklch(49.3% 0.125 70.4)",
+          "oklch(60.7% 0.125 70.4)",
+          "oklch(72.1% 0.104 70.4)",
+          "oklch(83.6% 0.066 70.4)",
+          "oklch(95.0% 0.018 70.4)"
+        ]
+      },
+      "group-upkeep": {
+        "role": "tertiary",
+        "displayName": "Upkeep Slate",
+        "canonical": "oklch(42.6% 0.015 259.8)",
+        "tonalRamp": [
+          "oklch(15.0% 0.007 259.8)",
+          "oklch(26.4% 0.011 259.8)",
+          "oklch(37.9% 0.014 259.8)",
+          "oklch(49.3% 0.015 259.8)",
+          "oklch(60.7% 0.014 259.8)",
+          "oklch(72.1% 0.012 259.8)",
+          "oklch(83.6% 0.007 259.8)",
+          "oklch(95.0% 0.002 259.8)"
+        ]
+      },
+      "group-adapter": {
+        "role": "tertiary",
+        "displayName": "Adapter Petrol",
+        "canonical": "oklch(48.1% 0.066 218.1)",
+        "tonalRamp": [
+          "oklch(15.0% 0.030 218.1)",
+          "oklch(26.4% 0.049 218.1)",
+          "oklch(37.9% 0.062 218.1)",
+          "oklch(49.3% 0.066 218.1)",
+          "oklch(60.7% 0.063 218.1)",
+          "oklch(72.1% 0.051 218.1)",
+          "oklch(83.6% 0.032 218.1)",
+          "oklch(95.0% 0.009 218.1)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(20.0% 0.009 264.4)",
+        "tonalRamp": [
+          "oklch(15.0% 0.007 264.4)",
+          "oklch(26.4% 0.009 264.4)",
+          "oklch(37.9% 0.009 264.4)",
+          "oklch(49.3% 0.009 264.4)",
+          "oklch(60.7% 0.009 264.4)",
+          "oklch(72.1% 0.009 264.4)",
+          "oklch(83.6% 0.007 264.4)",
+          "oklch(95.0% 0.002 264.4)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "canonical": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "oklch(15.0% 0.000 89.9)",
+          "oklch(26.4% 0.000 89.9)",
+          "oklch(37.9% 0.000 89.9)",
+          "oklch(49.3% 0.000 89.9)",
+          "oklch(60.7% 0.000 89.9)",
+          "oklch(72.1% 0.000 89.9)",
+          "oklch(83.6% 0.000 89.9)",
+          "oklch(95.0% 0.000 89.9)"
+        ]
+      },
+      "surface-raised": {
+        "role": "neutral",
+        "displayName": "Raised Surface",
+        "canonical": "oklch(97.9% 0.003 264.5)",
+        "tonalRamp": [
+          "oklch(15.0% 0.003 264.5)",
+          "oklch(26.4% 0.003 264.5)",
+          "oklch(37.9% 0.003 264.5)",
+          "oklch(49.3% 0.003 264.5)",
+          "oklch(60.7% 0.003 264.5)",
+          "oklch(72.1% 0.003 264.5)",
+          "oklch(83.6% 0.003 264.5)",
+          "oklch(95.0% 0.003 264.5)"
+        ]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Canvas",
+        "canonical": "oklch(96.4% 0.004 271.4)",
+        "tonalRamp": [
+          "oklch(15.0% 0.004 271.4)",
+          "oklch(26.4% 0.004 271.4)",
+          "oklch(37.9% 0.004 271.4)",
+          "oklch(49.3% 0.004 271.4)",
+          "oklch(60.7% 0.004 271.4)",
+          "oklch(72.1% 0.004 271.4)",
+          "oklch(83.6% 0.004 271.4)",
+          "oklch(95.0% 0.004 271.4)"
+        ]
+      },
+      "canvas-grid-a": {
+        "role": "neutral",
+        "displayName": "Graph Paper, Blush",
+        "canonical": "oklch(96.7% 0.014 34.3)",
+        "tonalRamp": [
+          "oklch(15.0% 0.014 34.3)",
+          "oklch(26.4% 0.014 34.3)",
+          "oklch(37.9% 0.014 34.3)",
+          "oklch(49.3% 0.014 34.3)",
+          "oklch(60.7% 0.014 34.3)",
+          "oklch(72.1% 0.014 34.3)",
+          "oklch(83.6% 0.014 34.3)",
+          "oklch(95.0% 0.014 34.3)"
+        ]
+      },
+      "canvas-grid-b": {
+        "role": "neutral",
+        "displayName": "Graph Paper, Rose",
+        "canonical": "oklch(87.2% 0.051 30.1)",
+        "tonalRamp": [
+          "oklch(15.0% 0.051 30.1)",
+          "oklch(26.4% 0.051 30.1)",
+          "oklch(37.9% 0.051 30.1)",
+          "oklch(49.3% 0.051 30.1)",
+          "oklch(60.7% 0.051 30.1)",
+          "oklch(72.1% 0.051 30.1)",
+          "oklch(83.6% 0.051 30.1)",
+          "oklch(95.0% 0.018 30.1)"
+        ]
+      },
+      "canvas-grid-c": {
+        "role": "neutral",
+        "displayName": "Graph Paper, Coral",
+        "canonical": "oklch(75.4% 0.102 27.9)",
+        "tonalRamp": [
+          "oklch(15.0% 0.065 27.9)",
+          "oklch(26.4% 0.102 27.9)",
+          "oklch(37.9% 0.102 27.9)",
+          "oklch(49.3% 0.102 27.9)",
+          "oklch(60.7% 0.102 27.9)",
+          "oklch(72.1% 0.102 27.9)",
+          "oklch(83.6% 0.071 27.9)",
+          "oklch(95.0% 0.020 27.9)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "hero": {
+        "displayName": "Hero",
+        "purpose": "The landing headline. One per site, set in the serif."
+      },
+      "display": {
+        "displayName": "Display",
+        "purpose": "The h1 of a content page. One per page, set in the serif."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "A section heading, and the lesson line on a large defect card."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "An h3 inside a section."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All prose. Capped at 66ch inside the docs column, 62ch under a heading."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Mono, uppercase, +0.1em. Eyebrows, nav items, badges, skill names, ledger ids — anything the reader would type or grep for."
+      }
+    },
+    "shadows": [
+      {
+        "name": "island",
+        "value": "0 1px 2px rgba(20, 22, 26, 0.06), 0 12px 40px rgba(120, 40, 30, 0.16)",
+        "purpose": "The page island floating over the graph-paper desk. The only large shadow on the site, used exactly once per page."
+      },
+      {
+        "name": "raised",
+        "value": "0 1px 2px rgba(20, 22, 26, 0.08)",
+        "purpose": "A contact shadow under a diagram node the reader has picked, applied as a drop-shadow filter."
+      }
+    ],
+    "motion": [
+      {
+        "name": "hover",
+        "value": "120ms",
+        "purpose": "Any hover state change: a button ground, a link colour."
+      },
+      {
+        "name": "drawer",
+        "value": "150ms",
+        "purpose": "A ledger drawer or a sidebar section opening."
+      },
+      {
+        "name": "reduced",
+        "value": "60ms",
+        "purpose": "Every transition collapses to this under prefers-reduced-motion. Not zero: a state change the reader cannot see is a state change they do not trust."
+      },
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0, 0, 0.58, 1)",
+        "purpose": "The site's only easing curve."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "phone",
+        "value": "720px"
+      },
+      {
+        "name": "nav-stack",
+        "value": "860px"
+      },
+      {
+        "name": "docs-collapse",
+        "value": "900px"
+      },
+      {
+        "name": "toc-drop",
+        "value": "1180px"
+      },
+      {
+        "name": "frame",
+        "value": "1200px"
+      },
+      {
+        "name": "frame-docs",
+        "value": "1440px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one action on a screen. Brand ground, white label, 40px tall.",
+      "html": "<a class=\"ds-btn ds-btn-primary\" href=\"#\">Xem cấu trúc ↓</a>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; min-height: 40px; padding: 0 1.15rem; border-radius: var(--radius-control); font-family: var(--font-sans); font-size: 14px; font-weight: 600; letter-spacing: 0.01em; text-decoration: none; border: 1px solid transparent; } .ds-btn-primary { background: var(--brand-primary-hover); border-color: var(--brand-primary-hover); color: var(--brand-on-primary); transition: background 120ms cubic-bezier(0, 0, 0.58, 1); } .ds-btn-primary:hover { background: var(--brand-primary-press); border-color: var(--brand-primary-press); } .ds-btn-primary:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "The secondary action. White surface, hairline, mono label — no colour at all, so the primary is never ambiguous.",
+      "html": "<a class=\"ds-btn ds-btn-ghost\" href=\"#\">Cài cho repo của anh em →</a>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; min-height: 40px; padding: 0 1.15rem; border-radius: var(--radius-control); text-decoration: none; border: 1px solid transparent; } .ds-btn-ghost { background: var(--surface); color: var(--ink); border-color: var(--ink-10); font-family: var(--font-mono); font-size: 12.5px; font-weight: 500; letter-spacing: 0.06em; transition: border-color 120ms cubic-bezier(0, 0, 0.58, 1); } .ds-btn-ghost:hover { border-color: var(--ink-22); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }"
+    },
+    {
+      "name": "Role Badge",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "A role or skill group. Outline and a dot; there is no filled variant.",
+      "html": "<span class=\"ds-badge\"><span class=\"ds-badge-dot\"></span>RIN · SESSION: PER MILESTONE</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 0.45em; font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.09em; text-transform: uppercase; line-height: 1; padding: 0.34em 0.6em; border: 1px solid var(--ink-10); border-radius: var(--radius-badge); background: var(--surface); color: var(--ink-70); white-space: nowrap; } .ds-badge-dot { width: 6px; height: 6px; border-radius: 50%; flex: none; background: var(--role-rin); }"
+    },
+    {
+      "name": "Nav Item",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "A header link. The current one is full ink with a 2px brand rule under the word.",
+      "html": "<nav class=\"ds-nav\"><a href=\"#\">CẤU TRÚC</a><a href=\"#\" class=\"is-on\">HOOKS</a><a href=\"#\">VÌ SAO</a></nav>",
+      "css": ".ds-nav { display: flex; gap: 1.25rem; background: var(--surface); } .ds-nav a { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-70); text-decoration: none; display: inline-flex; align-items: center; padding: 0.55rem 0.15rem; min-height: 44px; border-bottom: 2px solid transparent; } .ds-nav a:hover { color: var(--ink); } .ds-nav a.is-on { color: var(--ink); border-bottom-color: var(--brand-primary); } .ds-nav a:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }"
+    },
+    {
+      "name": "Sidebar Item",
+      "kind": "nav",
+      "refersTo": "sidebar-item",
+      "description": "A leaf in the read-mode tree. The row you are on takes the blush ground, the spoken red label and a 2px brand bar.",
+      "html": "<div class=\"ds-rail\"><a href=\"#\">Thomas</a><a href=\"#\" class=\"is-on\">Rin</a><a href=\"#\">QA</a></div>",
+      "css": ".ds-rail { display: flex; flex-direction: column; gap: 2px; width: 232px; } .ds-rail a { display: flex; align-items: center; gap: 0.45rem; padding: 0.34rem 0.55rem; border-radius: var(--radius-badge); font-family: var(--font-sans); font-size: 14px; line-height: 1.35; color: var(--ink-70); text-decoration: none; } .ds-rail a:hover { background: var(--surface-2); color: var(--ink); } .ds-rail a.is-on { background: var(--brand-primary-soft); color: var(--brand-primary-hover); box-shadow: inset 2px 0 0 var(--brand-primary); } .ds-rail a:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }"
+    },
+    {
+      "name": "Defect Card",
+      "kind": "card",
+      "refersTo": "card-defect",
+      "description": "A measured failure from the ledger. Outlined in Ledger Rust; the id is mono ink underlined in the same rust.",
+      "html": "<article class=\"ds-defect\"><header class=\"ds-defect-head\"><a class=\"ds-ast\" href=\"#\">AST-097</a><span class=\"ds-defect-meta\">promoted 2026-08-19</span></header><h3 class=\"ds-defect-lesson\">A merge is not done until the push proves it.</h3><blockquote class=\"ds-defect-entry\">67s of idle between \"done\" and the ledger entry.</blockquote></article>",
+      "css": ".ds-defect { border: 1px solid var(--defect); border-radius: var(--radius-control); background: var(--surface); padding: 1.75rem 1.9rem 1.5rem; font-family: var(--font-sans); } .ds-defect-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 0.9rem; } .ds-ast { font-family: var(--font-mono, ui-monospace, monospace); font-size: 15px; letter-spacing: 0.06em; color: var(--ink-88); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--defect) 45%, transparent); } .ds-ast:hover { color: var(--ink); border-bottom-color: var(--defect); } .ds-defect-meta { font-family: var(--font-mono, ui-monospace, monospace); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-70); } .ds-defect-lesson { font-size: 26px; line-height: 1.2; letter-spacing: -0.01em; margin: 0 0 1rem; color: var(--ink); } .ds-defect-entry { margin: 0; padding: 0.95rem 1.1rem; background: var(--surface-2); border: 0; border-left: 2px solid var(--rule); font-family: var(--font-mono, ui-monospace, monospace); font-size: 13.5px; line-height: 1.62; color: var(--ink); }"
+    },
+    {
+      "name": "Command Pane",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "A block of commands wearing a window bar. The bar is painted as background layers, not a pseudo-element, so it stays put when a long command scrolls sideways.",
+      "html": "<div class=\"ds-codeframe\"><pre class=\"ds-cmd\"><span class=\"ds-cmd-key\">pnpm</span> tokens</pre></div>",
+      "css": ".ds-codeframe { position: relative; border: 1px solid var(--ink-10); border-radius: var(--radius-card); overflow: hidden; background-color: var(--surface); background-image: radial-gradient(circle 3.5px at 17px 15px, var(--ink-22) 98%, transparent 100%), radial-gradient(circle 3.5px at 31px 15px, var(--ink-22) 98%, transparent 100%), radial-gradient(circle 3.5px at 45px 15px, var(--ink-22) 98%, transparent 100%), linear-gradient(var(--ink-10), var(--ink-10)), linear-gradient(var(--surface-2), var(--surface-2)); background-repeat: no-repeat; background-size: 100% 30px, 100% 30px, 100% 30px, 100% 1px, 100% 30px; background-position: 0 0, 0 0, 0 0, 0 29px, 0 0; padding: calc(30px + 0.85rem) 1.1rem 0.9rem; } .ds-cmd { font-family: var(--font-mono, ui-monospace, monospace); font-size: 12.5px; line-height: 1.6; color: var(--ink-88); margin: 0; } .ds-cmd-key { color: var(--ink); font-weight: 600; }"
+    },
+    {
+      "name": "Diagram Node",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "One node from an inline archify SVG: white fill, role stroke, and the brand red only when the reader has picked it.",
+      "html": "<svg class=\"ds-diagram\" viewBox=\"0 0 400 96\" width=\"400\" height=\"96\" role=\"img\" aria-label=\"Two diagram nodes, one picked\"><g class=\"ds-node ds-node-role\"><rect x=\"8\" y=\"12\" width=\"170\" height=\"72\" rx=\"6\"/><text x=\"93\" y=\"44\" text-anchor=\"middle\" class=\"ds-node-title\">Rin</text><text x=\"93\" y=\"62\" text-anchor=\"middle\" class=\"ds-node-sub\">verify artifact + trace</text></g><g class=\"ds-node ds-node-active\"><rect x=\"214\" y=\"12\" width=\"170\" height=\"72\" rx=\"6\"/><text x=\"299\" y=\"44\" text-anchor=\"middle\" class=\"ds-node-title\">Builder</text><text x=\"299\" y=\"62\" text-anchor=\"middle\" class=\"ds-node-sub\">worktree riêng</text></g></svg>",
+      "css": ".ds-diagram { display: block; background: var(--surface); border: 1px solid var(--ink-10); border-radius: var(--radius-card); } .ds-diagram text { font-family: var(--font-mono, ui-monospace, monospace); } .ds-node rect { fill: var(--surface); stroke: var(--ink-35); stroke-width: 1; } .ds-node-role rect { stroke: var(--role-rin); stroke-width: 1.5; } .ds-node-active rect { stroke: var(--brand-primary); stroke-width: 2; filter: drop-shadow(0 1px 2px rgba(20,22,26,0.08)); } .ds-node-title { fill: var(--ink); font-size: 13px; font-weight: 700; } .ds-node-sub { fill: var(--ink-70); font-size: 10px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Working Document",
+    "overview": "Astragentic is a coordination layer for several coding agents on one real repository, and the site is written the way the product's own ledger is written: numbers that were measured, entries that were kept, and nothing claimed that nobody checked. The visual system follows from that. The page is a sheet of paper on a drafting table. The table is warm graph paper in the brand red, the sheet is a raised island of white and near-white, and everything the reader actually uses stands on the sheet. Depth comes from white on cool grey, never from a border doing the work of a shadow. That white-on-cool-grey reading and the rhythm of the reading column were measured off aihero.dev.\n\nColour is rationed to the point of severity. There is exactly one hue with a job — Astraler's logo red, sampled from astraler.com as rgb(229, 54, 37) — and it appears only where the site is answering \"what should you press\" or \"where are you\". Astraler is the company; Astragentic is its product, so the product site borrows the parent's one colour rather than inventing a second identity. Everything else is one ink at seven opacities. Five more hues exist for the five roles, but they are spent at dot and stroke size only: the version of this page that filled five nodes with five pastels is the version that read as mud, and it is not coming back.\n\nThe type does the rest. A serif carries the page title and the hero headline, because that is where the site has to sound like a person wrote it; a sans carries every other heading and all the body; a mono carries every label, every skill name and every ledger id, because those are strings the reader will type. Nothing is decorative. If an element cannot say what it is for, it is not on the page.",
+    "keyCharacteristics": [
+      "One accent colour, rationed to state and action.",
+      "One ink at seven alphas; hierarchy is opacity, never a second hue.",
+      "White surfaces on a warm graph-paper ground; one large shadow on the whole page island and nothing else.",
+      "Mono for anything the reader will type; serif for exactly two places per page.",
+      "Role colour is a 6-8px dot or a 1.5px stroke. Never a fill."
+    ],
+    "rules": [
+      {
+        "name": "The Desk-Not-Paper Rule",
+        "body": "The warm ground stops at the island's edge. Nothing is ever set on the graph paper — no text, no control, no card — so its colour never has to clear a contrast floor, and the neutral sheet keeps every reading surface it had.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Job Rule",
+        "body": "The brand red answers exactly two questions — \"what do I press\" and \"where am I\" — and it answers nothing else. It never appears in prose, never grounds a section, and never colours a diagram except on the node the reader picked.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two-Step Red Rule",
+        "body": "#E53625 draws marks; #C92D1F carries words. The split is a measurement, not a preference: white on the logo hex is 4.30:1 and a button label needs 4.5:1.",
+        "section": "colors"
+      },
+      {
+        "name": "The Dot-Size Rule",
+        "body": "A role hue may be a 6-8px dot, a 1.5px node stroke, or a sigil inside a white node. It may never be a fill, a tinted row, or a background.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Serifs Rule",
+        "body": "The serif is allowed exactly two homes: the hero headline and the page title. A third one means someone is decorating.",
+        "section": "typography"
+      },
+      {
+        "name": "The Literal String Rule",
+        "body": "Mono means \"this is a thing you will type or grep for\" — a skill name, a file path, a ledger id, a command. Mono for emphasis is a misuse.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Shadow Rule",
+        "body": "If a second large shadow appears anywhere on a page, the layering has failed and a tonal step is the fix, not another blur.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do take every value from design-tokens.json and regenerate src/styles/tokens.css with `pnpm tokens`. That generated file is the only place a custom property is declared.",
+      "Do use #C92D1F when the red carries words and #E53625 when it draws a mark. The Two-Step Red Rule exists because of a measured 4.30:1.",
+      "Do spend a role hue as a 6-8px dot or a 1.5px stroke, and let the white fill stay white.",
+      "Do give any interactive row at least 44px of height, and any coarse-pointer control at least 44px.",
+      "Do let a code keyword say so with weight 600 and ink .88. Code has no colour of its own.",
+      "Do cap prose at 66ch even when the column around it is wider."
+    ],
+    "donts": [
+      "Don't put the brand red in prose, in a section background, or on more than one button per screen.",
+      "Don't add a second large shadow. If something needs to lift, change the tone of the ground under it.",
+      "Don't tint a table row, a card or a diagram node with a role hue. Five pastel fills in one picture is the failure this system was rewritten to end.",
+      "Don't introduce a third font, or give the serif a third home beyond the hero and the page title.",
+      "Don't use Ledger Rust for anything a reader is meant to act on. It marks a measured failure and it is never a button.",
+      "Don't hand-edit src/styles/tokens.css, and don't declare a custom property in global.css or a component. Two palettes that have to agree is exactly the drift this file was written to end."
+    ]
+  }
+}

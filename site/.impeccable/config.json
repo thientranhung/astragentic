@@ -1,0 +1,6 @@
+{
+  "detector": {
+    "ignoreFiles": [".impeccable/design.json"],
+    "_ignoreFilesReason": "design.json is generated design-system metadata, not shipped UI. Its component snippets are flattened copies of CSS that already lives in src/ and is already scanned there, so every finding here is a double count. Scanned as raw text it also loses the DOM context the rules need: the blockquote rule inside the defect card reads as a card side-tab, and a var() with a fallback reads its closing paren as part of the radius. Regenerate this file with the DESIGN.md pass; scan src/ for the real answer."
+  }
+}

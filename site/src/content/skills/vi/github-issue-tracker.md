@@ -1,6 +1,6 @@
 ---
 title: github-issue-tracker
-oneLiner: "Chạy GitHub Issues làm tracker của harness, nơi trạng thái là một label còn board chỉ là tấm gương không ai lau."
+oneLiner: "Chạy GitHub Issues làm tracker của harness, với trạng thái ở label và board là bản sao phải ghi tay."
 group: adapter
 order: 4
 runtimes: [claude, codex, opencode]
@@ -12,28 +12,27 @@ updated: 2026-09-04
 
 ## Nó làm gì
 
-`github-issue-tracker` là một trong ba adapter tracker. `.agents/tracker-contract.md` nêu những
-gì pipeline đòi ở *bất kỳ* tracker nào — đúng năm thứ, không hơn — còn file này là phần CÁCH LÀM
-cho một trong số đó: trạng thái nằm ở label, cách claim, quan hệ phụ thuộc gốc, vòng lặp tính
-frontier, và tấm gương Status trên Projects. Phần thuộc dự án ở lại trong dự án: `<owner>/<repo>`,
-tiền tố ticket và bảng ánh xạ label sang cột đều nằm trong `docs/agents/issue-tracker.md` của dự
-án đó. Chạm vào nó bằng `gh` CLI chứ không qua MCP server, vì `gh` vốn đã xác thực sẵn ở nơi
-người ta đang đẩy pull request.
+`github-issue-tracker` là một trong ba adapter tracker. `.agents/tracker-contract.md` nêu đúng
+năm thứ mà pipeline đòi ở *bất kỳ* tracker nào, không hơn. File này là phần cách làm cho một
+trong ba: trạng thái nằm ở label, cách claim, quan hệ phụ thuộc gốc, vòng lặp tính frontier, và
+bản sao Status trên Projects. Phần thuộc dự án ở lại trong dự án: `<owner>/<repo>`, tiền tố
+ticket và bảng ánh xạ label sang cột đều nằm trong `docs/agents/issue-tracker.md` của dự án đó.
+Tôi truy cập tracker bằng `gh` CLI thay vì MCP server, vì `gh` đã xác thực sẵn ở nơi pull request
+đang được đẩy lên.
 <!-- source: harness/.agents/skills/github-issue-tracker/SKILL.md -->
 
-Một sự thật định hình mọi thứ còn lại: **GitHub Issues không có trường trạng thái.** Trạng thái
-sống ở hai nơi không đồng bộ với nhau — cái label, vốn là sự thật, và cột `Status` trên Project,
-vốn là tấm gương phải có người ghi. Không có gì trong GitHub đồng bộ hai thứ đó, nên mọi lần đổi
-trạng thái là hai lần ghi, mãi mãi. Đó là chi phí thường trực của cái tracker rẻ nhất để bắt đầu.
-Mọi cái bẫy trên trang này đều đã bị trả giá trên một dự án thật chuyển từ Linear sang GitHub
-ngày 2026-08-21.
+Một sự thật quyết định mọi thứ còn lại: **GitHub Issues không có trường trạng thái.** Trạng thái
+sống ở hai nơi không đồng bộ với nhau. Label là sự thật, còn cột `Status` trên Project là bản sao
+phải có người ghi. GitHub không đồng bộ hai nơi đó, nên mỗi lần đổi trạng thái là hai lần ghi,
+vĩnh viễn. Đó là chi phí thường trực của cái tracker rẻ nhất để bắt đầu. Mọi cái bẫy trên trang
+này đều đã bị trả giá trên một dự án thật chuyển từ Linear sang GitHub ngày 2026-08-21.
 <!-- source: harness/.agents/skills/github-issue-tracker/SKILL.md, harness/.agents/tracker-contract.md -->
 
 ## Khi nào Thomas gọi nó
 
 | Thứ đang ở trước mặt | Gọi cái này |
 |---|---|
-| `issue-tracker.md` của dự án ghi GitHub | `Skill(skill: "github-issue-tracker")`, và chỉ mình nó |
+| `issue-tracker.md` của dự án ghi GitHub | `Skill(skill: "github-issue-tracker")`, và không adapter nào khác |
 | Đang chọn tracker, hoặc đang chuyển từ tracker này sang tracker khác | `.agents/tracker-contract.md` |
 | Một lần đổi trạng thái | Hai lần ghi: label trước, rồi `project-status-sync.sh` cho board |
 | Cần thêm một cạnh chặn | Lấy **database id** dạng số của ticket chặn, không phải `#number` và không phải node id |
@@ -43,15 +42,15 @@ ngày 2026-08-21.
 
 ## Cần sẵn gì
 
-- **`gh` có scope OAuth `project`**, vốn không nằm trong tập mặc định. Thiếu nó,
-  `--json projectItems` trả về `[]` chứ không báo lỗi, và cái đó không phân biệt được với "issue
-  này không nằm trên board nào". Chủ dự án chạy `gh auth refresh -s project` một lần.
+- **`gh` có scope OAuth `project`**, vốn không nằm trong tập mặc định. Thiếu scope này,
+  `--json projectItems` trả về `[]` chứ không báo lỗi, và kết quả đó không phân biệt được với
+  "issue này không nằm trên board nào". Chủ dự án chạy `gh auth refresh -s project` một lần.
 - **`issue-tracker.md` của dự án có tồn tại** và mang repo, tiền tố ticket, bảng ánh xạ label
-  sang cột, tracker cũ là gì, và quyết định coi pull request là mặt tiếp nhận yêu cầu.
+  sang cột, tên tracker cũ, và quyết định coi pull request là mặt tiếp nhận yêu cầu.
 - **Đúng một trong `backlog` / `todo` / `in-progress`** trên mọi issue đang mở, nên đổi trạng
   thái là một lần gỡ cộng một lần thêm.
 - **`GH_PROJECT_OWNER` và `GH_PROJECT_NUMBER` đã đặt** cho `project-status-sync.sh`, vì script
-  này từ chối đoán cả hai.
+  này từ chối đoán cả hai giá trị.
 
 ## Nó để lại gì
 
@@ -70,16 +69,17 @@ ngày 2026-08-21.
 Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Cả hai đều `promoted`.
 
 - **AST-057**: một frontier chỉ được tính ra thì vô hình với đúng người không tính được nó. Agent
-  chạy lại truy vấn bất cứ lúc nào và không bao giờ nhận ra thiếu cái gì; chủ dự án thì mở board
-  ra nhìn. Đo trên một dự án thật: suốt cả đời dự án, không một issue nào từng đi qua trạng thái
-  chưa-bắt-đầu. Đã sửa trong hợp đồng thành hai nửa — ghi kết quả tính được trở lại thành trạng
-  thái, và không bao giờ đọc một label "sẵn sàng" như một cái chặn — cộng thêm một bước ở merge
-  bắt buộc phải báo cáo, trong đó `none` là báo cáo hợp lệ còn im lặng thì không.
+  chạy lại truy vấn bất cứ lúc nào và không bao giờ nhận ra thiếu thứ gì, còn chủ dự án thì mở
+  board ra nhìn. Đo trên một dự án thật: suốt cả đời dự án, không một issue nào từng đi qua trạng
+  thái chưa bắt đầu. Hợp đồng sửa việc này bằng hai nửa. Nửa thứ nhất: ghi kết quả tính được trở
+  lại thành trạng thái. Nửa thứ hai: không bao giờ đọc một label "sẵn sàng" như một cái chặn.
+  Kèm theo là một bước ở merge bắt buộc phải báo cáo, trong đó `none` là báo cáo hợp lệ còn im
+  lặng thì không.
 - **AST-074**: một tracker chỉ được đo bằng chính nó thì không phát hiện được nó đang trôi. Bốn
   ticket nằm nguyên trạng thái đã claim, đang làm, có người nhận, sau khi code của chúng đã merge
-  vào nhánh gốc, cái cũ nhất trễ trọn một ngày, và không có gì báo lỗi. Một trạng thái sai thì
-  hoàn toàn nhất quán với chính nó, nên cái oracle phải độc lập với thứ nó đo. Đã sửa:
-  `reconcile-tracker` cộng `scripts/ticket-git-facts.sh`, chỉ-đọc theo một phán quyết được ghi
+  vào nhánh gốc, cái cũ nhất trễ trọn một ngày, và không có gì báo lỗi. Một trạng thái sai vẫn
+  hoàn toàn nhất quán với chính nó, nên oracle phải độc lập với thứ nó đo. Bản sửa là
+  `reconcile-tracker` cộng `scripts/ticket-git-facts.sh`, chỉ đọc theo một phán quyết được ghi
   lại chứ không phải do bỏ sót.
 
 <!-- source: harness/.agents/memory/recurring-failure-modes.md -->
@@ -102,6 +102,6 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Cả hai đều 
 `thomas.md` đọc `issue-tracker.md` của dự án lúc mở phiên → file đó gọi tên adapter này → truy
 vấn frontier chạy dưới dạng một lệnh liệt kê cộng một vòng lặp N+1, vì GitHub không có ngôn ngữ
 truy vấn → `dispatch-ticket` claim ticket thắng cuộc bằng `--add-assignee @me` → merge đóng issue
-và ghi `todo` cho thứ nó vừa mở khoá, trong cùng một hơi → `reconcile-tracker` đem kết quả ra đo
-với git. Hai adapter anh em là `jira-issue-tracker` và `linear-issue-tracker`, và
+và ghi `todo` cho thứ nó vừa mở khoá, trong cùng một lượt → `reconcile-tracker` đem kết quả ra đo
+với git. Hai adapter cùng nhóm là `jira-issue-tracker` và `linear-issue-tracker`, và
 `.agents/tracker-contract.md` đứng trên cả ba.

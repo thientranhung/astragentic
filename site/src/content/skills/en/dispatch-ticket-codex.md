@@ -1,6 +1,6 @@
 ---
 title: dispatch-ticket-codex
-oneLiner: "Launch a Codex pane from the owner's machine-local profile, after checking the profile is the one the row describes."
+oneLiner: "Launch a Codex pane from the owner's machine-local profile, after checking it matches the configured row."
 group: adapter
 order: 2
 runtimes: [codex]
@@ -16,9 +16,9 @@ updated: 2026-09-04
 identity, input resolution, the worktree law, the brief format, submission, watching, simplify
 and cleanup. This adapter adds three things and no more: the launcher matrix for Codex rows, the
 pre-dispatch profile verification, and the measured facts about how Codex reports its own state.
-It is the thinnest of the three runtime adapters, and that is by design — for Codex the shared
-skill already owns submission and watching, which was verified rather than assumed when a doc
-sweep went looking for stale instructions.
+It is the thinnest of the three runtime adapters, and that is deliberate. For Codex the shared
+skill already owns submission and watching; that was verified rather than assumed, during a doc
+sweep looking for stale instructions.
 <!-- source: harness/.agents/skills/dispatch-ticket-codex/SKILL.md, RELEASE-NOTES.md -->
 
 What is different here is where the configuration lives. On Claude the model and effort ride on
@@ -36,9 +36,9 @@ check is not ceremony: it is the only place the owner's runtime choices and the
 |---|---|
 | A claimed ticket, and `orchestrator.md` says the role runs on Codex | `dispatch-ticket` + `dispatch-ticket-codex` |
 | A Builder, Shaper or QA pane on Codex | `codex --profile <role> --dangerously-bypass-approvals-and-sandbox` |
-| A `rin` row naming Codex | Stop — a Codex root cannot host the gate (`codex-claude-arm`) |
+| A `rin` row naming Codex | Stop. A Codex root cannot host the gate (`codex-claude-arm`) |
 | The profile is missing or has drifted from the template | Hand the owner the exact copy and diff commands; never provision silently |
-| A `.codex/agents/*.toml` file that looks like the answer | It is not — that is a spawnable subagent, not a role pane |
+| A `.codex/agents/*.toml` file that looks like the answer | It is not. That is a spawnable subagent, not a role pane |
 
 <!-- source: harness/.agents/skills/dispatch-ticket-codex/SKILL.md -->
 
@@ -60,14 +60,14 @@ check is not ceremony: it is the only place the owner's runtime choices and the
 | The launch | `herdr agent start "<role>-<ticket-id>" --kind codex`, with the profile flag |
 | The role identity, model and effort | The machine-local profile TOML, not the command line |
 | A drift finding | A report to the owner, with the copy and diff commands, before any dispatch |
-| Everything else — brief, watch, verdict, cleanup | The shared `dispatch-ticket` protocol |
+| Everything else, meaning brief, watch, verdict and cleanup | The shared `dispatch-ticket` protocol |
 
 <!-- source: harness/.agents/skills/dispatch-ticket-codex/SKILL.md -->
 
 ## Known failures
 
 The ledger names no entry against this skill file. The two below are bound to
-`harness/.codex/profiles/*.config.toml` — the templates this skill's pre-dispatch check reads —
+`harness/.codex/profiles/*.config.toml`, the templates this skill's pre-dispatch check reads,
 and both are marked `promoted`.
 
 - **AST-040**: the package shipped `model = "gpt-5.1-codex"` in all four Codex profiles. It
@@ -77,8 +77,8 @@ and both are marked `promoted`.
   `model = ""` plus a comment naming where the real one comes from, and a doctor that misses on
   empty.
 - **AST-041**: a file called "the owner's" that also ships in the payload has two homes, and the
-  shipped one wins. Fixed: the profiles are scaffold, written when absent and never overwritten,
-  which is why this skill reports drift instead of correcting it.
+  shipped one wins. Fixed: the profiles are scaffold, written when absent and never overwritten.
+  That is why this skill reports drift instead of correcting it.
 
 <!-- source: harness/.agents/memory/recurring-failure-modes.md -->
 
@@ -89,7 +89,7 @@ and both are marked `promoted`.
 - The `diff -q` against the shipped template ran, and any drift reached the owner in words.
 - The launcher carried `--dangerously-bypass-approvals-and-sandbox`, never the retired `--yolo`.
 - No effort was passed on the command line, because Codex has no flag for it.
-- No Builder was routed through a `.codex/agents/*.toml` subagent, which shares the parent
+- No Builder was routed through a `.codex/agents/*.toml` subagent, because it shares the parent
   session's topology and gets no worktree allocation.
 
 <!-- source: harness/.agents/skills/dispatch-ticket-codex/SKILL.md -->
@@ -99,5 +99,5 @@ and both are marked `promoted`.
 `dispatch-ticket` claims the ticket and builds the worktree, tab and pane → `dispatch-ticket-codex`
 verifies the profile and launches the runtime → the shared protocol delivers the brief, arms the
 watch and reads the verdict → on a Codex root the cross-vendor pass is `codex-claude-arm`, and
-the gate stays on a Claude root. Its siblings are `dispatch-ticket-claude` and
+the gate stays on a Claude root. Its counterparts are `dispatch-ticket-claude` and
 `dispatch-ticket-opencode`.

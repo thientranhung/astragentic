@@ -32,7 +32,7 @@ const target = (code: Lang) => hrefs?.[code] ?? (page ? ROUTES[page][code] : '#'
   .lang {
     display: inline-flex;
     align-items: stretch;
-    font-size: 11px;
+    font-size: var(--text-label-sm);
     letter-spacing: 0.1em;
     line-height: 1;
     border: 1px solid var(--rule);

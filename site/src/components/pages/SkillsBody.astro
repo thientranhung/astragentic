@@ -17,8 +17,8 @@ const count = groups.reduce((n, group) => n + group.skills.length, 0);
 const title = UI.skillsTitle[lang];
 const lede =
   lang === 'vi'
-    ? 'Skill là quy trình viết sẵn cho một lúc cụ thể. Danh sách dưới đây xếp theo lúc anh em cần đến chúng, không theo cái chúng làm bằng gì.'
-    : 'A skill is a written-down procedure for one moment. The list below is filed by when you need one, not by what it is made of.';
+    ? 'Skill là quy trình viết sẵn cho một tình huống cụ thể. Danh sách dưới đây xếp theo lúc bạn cần dùng, không theo thành phần cấu tạo.'
+    : 'A skill is a written procedure for one situation. The list below is grouped by when you need one, not by what it is made of.';
 ---
 
 <DocsLayout
@@ -56,27 +56,36 @@ const lede =
 </DocsLayout>
 
 <style>
+  /* The vertical rhythm is measured, not eyeballed: 32px between groups, 4px from a
+     group heading to its line, 12px from that line to the first row, 12px above and
+     below every row. The old values were four different fractions of a rem and the
+     table read as if each group had been spaced by hand. */
   .group + .group {
-    margin-top: 1.5rem;
+    margin-top: var(--space-6);
   }
   .group-head {
     display: flex;
     align-items: center;
     gap: 0.55rem;
-    font-size: 17px;
-    margin-bottom: 0.15rem;
+    font-size: var(--text-body);
+    margin-bottom: var(--space-1);
   }
   .group-line {
-    font-size: 14px;
-    line-height: 1.4;
+    font-size: var(--text-ui);
+    line-height: var(--leading-mono);
     color: var(--ink-muted);
-    margin: 0 0 0.4rem;
+    margin: 0 0 var(--space-3);
     max-width: 62ch;
   }
+  /* 200 + 24 + 62ch + 24 + 132 lands just under 860, so the table stops there instead
+     of stretching to the card. The badge is right-aligned inside its own column rather
+     than at the far edge of the page, which is what kept it drifting away from the
+     description it belongs to. */
   .rows {
     list-style: none;
     margin: 0;
     padding: 0;
+    max-width: 860px;
     border-top: 1px solid var(--rule);
   }
   .rows li {
@@ -86,13 +95,13 @@ const lede =
   /* The whole row is the target, not the name inside it. */
   .rows a {
     display: grid;
-    grid-template-columns: 9.5rem minmax(0, 1fr) 6.75rem;
-    gap: 0.9rem;
+    grid-template-columns: 200px minmax(0, 62ch) 132px;
+    column-gap: var(--space-5);
     align-items: center;
-    min-height: 44px;
-    padding: 0.35rem 0.6rem;
+    min-height: var(--row-h);
+    padding: var(--space-3) 0.6rem;
     margin-inline: -0.6rem;
-    border-radius: 2px;
+    border-radius: var(--radius-badge);
     text-decoration: none;
   }
   .rows a:hover {
@@ -105,20 +114,25 @@ const lede =
     justify-self: end;
   }
   .name {
-    font-size: 13px;
+    font-size: var(--text-mono);
     letter-spacing: 0.005em;
     color: var(--ink);
   }
   .line {
-    font-size: 14px;
+    max-width: 62ch;
+    font-size: var(--text-ui);
     line-height: 1.3;
     color: var(--ink-muted);
   }
 
-  @media (max-width: 700px) {
+  /* Below the three-column width the name and the badge share the first line and the
+     description takes the second. The 12px row padding stays: it is the rhythm, not a
+     desktop luxury. */
+  @media (max-width: 880px) {
     .rows a {
       grid-template-columns: minmax(0, 1fr) auto;
-      gap: 0.15rem 0.75rem;
+      column-gap: var(--space-3);
+      row-gap: var(--space-1);
       align-items: baseline;
     }
     .line {

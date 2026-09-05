@@ -10,7 +10,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "data": "node scripts/build-data.mjs"
+    "data": "node scripts/build-data.mjs",
+    "tokens": "node scripts/build-tokens.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.0",

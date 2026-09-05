@@ -37,27 +37,30 @@ const { source, href, size = 'lg', label } = Astro.props;
     text-wrap: balance;
     color: var(--ink);
   }
+  /* Both endpoints of a fluid size have to be steps on the ramp, or the ramp is not a
+     ramp. The medium quote's old range was 19-23px, four pixels of fluidity that never
+     paid for an off-scale endpoint, so it is one step now. */
   .quote--lg blockquote {
-    font-size: clamp(24px, 2.6vw, 32px);
+    font-size: clamp(var(--text-h2), 2.6vw, var(--text-h1));
   }
   .quote--md blockquote {
-    font-size: clamp(19px, 1.8vw, 23px);
+    font-size: var(--text-h3);
   }
   .quote--sm blockquote {
-    font-size: 17px;
+    font-size: var(--text-body);
     line-height: 1.5;
     letter-spacing: 0;
   }
   .vlabel {
     margin: 0 0 0.6rem;
-    font-size: 10px;
+    font-size: var(--text-micro);
     text-transform: uppercase;
     letter-spacing: 0.12em;
     color: var(--ink-muted);
   }
   figcaption {
     margin-top: 1.1rem;
-    font-size: 11.5px;
+    font-size: var(--text-label);
     letter-spacing: 0.06em;
     color: var(--ink-muted);
   }

@@ -44,13 +44,13 @@ const stamp = meta.generatedAt ? meta.generatedAt.slice(0, 10) : null;
   .line,
   .stamp {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: var(--text-label);
     color: var(--ink-muted);
     margin: 0;
   }
   .stamp {
     margin-top: 0.9rem;
-    font-size: 11px;
+    font-size: var(--text-label-sm);
     letter-spacing: 0.04em;
   }
   .links {
@@ -65,7 +65,7 @@ const stamp = meta.generatedAt ? meta.generatedAt.slice(0, 10) : null;
   }
   .links a {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: var(--text-label);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--ink-muted);

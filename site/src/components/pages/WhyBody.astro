@@ -16,7 +16,7 @@ interface Props {
 const { lang } = Astro.props;
 const page = await getPage(lang, 'why');
 const heading =
-  lang === 'vi' ? 'Năm câu mình phải tự trả lời trước' : 'Five questions I had to answer first';
+  lang === 'vi' ? 'Năm câu hỏi tôi phải tự trả lời trước' : 'Five questions I had to answer first';
 
 /** One picture per answer, all of them diagrams that already exist elsewhere on the
  *  site — the same drawing the reader met on the landing page or the structure page,
@@ -64,7 +64,7 @@ const KEYED = new Set(['hub-and-spokes', 'cross-vendor-arm', 'frontier-query', '
 
 <style>
   .answer {
-    font-size: 17px;
+    font-size: var(--text-body);
     line-height: 1.55;
     color: var(--ink-muted);
     max-width: 64ch;

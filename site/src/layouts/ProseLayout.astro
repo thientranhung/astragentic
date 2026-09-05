@@ -81,7 +81,7 @@ const hasMeta = Boolean(sourcePath || (runtimes && runtimes.length) || updated);
     gap: 1rem;
   }
   .meta dt {
-    font-size: 10px;
+    font-size: var(--text-micro);
     text-transform: uppercase;
     letter-spacing: 0.11em;
     color: var(--ink-muted);
@@ -89,7 +89,7 @@ const hasMeta = Boolean(sourcePath || (runtimes && runtimes.length) || updated);
   }
   .meta dd {
     margin: 0;
-    font-size: 12px;
+    font-size: var(--text-label);
     line-height: 1.45;
     overflow-wrap: anywhere;
   }
@@ -102,7 +102,7 @@ const hasMeta = Boolean(sourcePath || (runtimes && runtimes.length) || updated);
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 1.25rem;
-    font-size: 14px;
+    font-size: var(--text-ui);
   }
   .read-body :global(th),
   .read-body :global(td) {

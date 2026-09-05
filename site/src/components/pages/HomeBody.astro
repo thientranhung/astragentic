@@ -330,14 +330,14 @@ const QUOTE =
      Capped again for the wider art column, so the two lines the writer set in the YAML
      stay two lines. */
   .hero h1 {
-    font-size: 36px;
+    font-size: var(--text-hero);
     line-height: 1.08;
     /* The writer sets the two-line break in the YAML; honour it. */
     white-space: pre-line;
     margin-bottom: 1rem;
   }
   .hero-sub {
-    font-size: 17px;
+    font-size: var(--text-body);
     line-height: 1.55;
     color: var(--ink-muted);
     max-width: 44ch;
@@ -354,7 +354,7 @@ const QUOTE =
     margin: 1.5rem 0 0;
     padding-top: 1rem;
     border-top: 1px solid var(--rule);
-    font-size: 11.5px;
+    font-size: var(--text-label);
     letter-spacing: 0.07em;
     text-transform: uppercase;
     color: var(--ink-muted);
@@ -365,11 +365,11 @@ const QUOTE =
   }
 
   .screen h2 {
-    font-size: 26px;
+    font-size: var(--text-h2);
     text-wrap: balance;
   }
   .screen .sub {
-    font-size: 17px;
+    font-size: var(--text-body);
   }
 
   /* ── role cards (also the mobile fallback for the diagram) ── */
@@ -410,14 +410,14 @@ const QUOTE =
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    font-size: 12px;
+    font-size: var(--text-label);
     letter-spacing: 0.06em;
     text-transform: uppercase;
     margin-bottom: 0.4rem;
   }
   .card-line {
     display: block;
-    font-size: 14px;
+    font-size: var(--text-ui);
     line-height: 1.35;
     color: var(--ink-muted);
   }
@@ -442,13 +442,13 @@ const QUOTE =
   }
   .step .n {
     display: block;
-    font-size: 10px;
+    font-size: var(--text-micro);
     letter-spacing: 0.1em;
     color: var(--ink-62);
   }
   .step .stage {
     display: block;
-    font-size: 12px;
+    font-size: var(--text-label);
     letter-spacing: 0.02em;
     color: var(--ink-muted);
     margin-top: 0.1rem;
@@ -460,7 +460,7 @@ const QUOTE =
     color: var(--ink);
   }
   .step-line {
-    font-size: 13px;
+    font-size: var(--text-mono);
     line-height: 1.45;
     margin: 0.5rem 0 0;
     color: var(--ink-muted);
@@ -472,7 +472,7 @@ const QUOTE =
     gap: 0.4rem;
   }
   .hits .ast {
-    font-size: 11px;
+    font-size: var(--text-label-sm);
   }
 
   /* ── diagram beside a mono block ── */
@@ -496,7 +496,7 @@ const QUOTE =
     align-items: baseline;
   }
   .req-label {
-    font-size: 10px;
+    font-size: var(--text-micro);
     text-transform: uppercase;
     letter-spacing: 0.11em;
     color: var(--ink-muted);
@@ -504,12 +504,12 @@ const QUOTE =
   }
   .req-quote {
     margin: 0;
-    font-size: 13px;
+    font-size: var(--text-mono);
     line-height: 1.55;
     color: var(--ink);
   }
   .req-src {
-    font-size: 11px;
+    font-size: var(--text-label-sm);
     color: var(--ink-muted);
     text-decoration: none;
     border-bottom: 1px solid var(--rule);
@@ -543,20 +543,20 @@ const QUOTE =
   }
   .g-name {
     display: block;
-    font-size: 12px;
+    font-size: var(--text-label);
     letter-spacing: 0.02em;
     margin-bottom: 0.35rem;
   }
   .g-when {
     display: block;
-    font-size: 12.5px;
+    font-size: var(--text-mono);
     line-height: 1.35;
     color: var(--ink);
     margin-bottom: 0.3rem;
   }
   .g-line {
     display: block;
-    font-size: 13px;
+    font-size: var(--text-mono);
     line-height: 1.38;
     color: var(--ink-muted);
   }
@@ -579,7 +579,7 @@ const QUOTE =
     margin: 0;
     padding-bottom: 0.55rem;
     border-bottom: 1px solid var(--rule);
-    font-size: 11px;
+    font-size: var(--text-label-sm);
     font-weight: 500;
     letter-spacing: 0.11em;
     text-transform: uppercase;
@@ -611,7 +611,7 @@ const QUOTE =
     color: var(--accent);
   }
   .asks .n {
-    font-size: 11px;
+    font-size: var(--text-label-sm);
     color: var(--ink-62);
     letter-spacing: 0.1em;
   }
@@ -620,18 +620,18 @@ const QUOTE =
   }
   .ask-q {
     display: block;
-    font-size: 19px;
+    font-size: var(--text-h3);
     line-height: 1.3;
   }
   .ask-a {
     display: block;
     margin-top: 0.3rem;
-    font-size: 14px;
+    font-size: var(--text-ui);
     line-height: 1.45;
     color: var(--ink-muted);
   }
   .asks .arrow {
-    font-size: 13px;
+    font-size: var(--text-mono);
     color: var(--ink-muted);
     text-align: right;
   }
@@ -654,7 +654,7 @@ const QUOTE =
     border: 1px solid var(--ink-10);
     border-radius: 6px;
     background: var(--surface);
-    font-size: 12.5px;
+    font-size: var(--text-mono);
     text-decoration: none;
     color: var(--ink-muted);
   }

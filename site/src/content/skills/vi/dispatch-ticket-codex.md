@@ -1,6 +1,6 @@
 ---
 title: dispatch-ticket-codex
-oneLiner: "Khởi chạy một pane Codex từ profile cục bộ của chủ máy, sau khi kiểm profile đúng với dòng cấu hình."
+oneLiner: "Khởi chạy một pane Codex từ profile cục bộ của chủ máy, sau khi kiểm profile khớp dòng cấu hình."
 group: adapter
 order: 2
 runtimes: [codex]
@@ -13,12 +13,12 @@ updated: 2026-09-04
 ## Nó làm gì
 
 `dispatch-ticket-codex` là nửa Codex của `dispatch-ticket`. Skill dùng chung giữ phần định danh,
-chốt input, luật worktree, khuôn brief, cách gửi, cách canh, simplify và dọn dẹp. Adapter này
-thêm đúng ba thứ: bảng lệnh khởi chạy cho các dòng Codex, bước kiểm profile trước khi dispatch,
-và những sự thật đã đo được về cách Codex tự báo trạng thái của nó. Đây là adapter mỏng nhất
-trong ba adapter runtime, và mỏng là có chủ ý — với Codex, skill dùng chung đã sở hữu sẵn phần
-gửi brief và phần canh, điều này được kiểm lại chứ không phải giả định, trong một đợt quét tìm
-hướng dẫn cũ còn sót.
+chốt input, luật worktree, khuôn brief, cách gửi, cách canh, simplify và dọn dẹp. Adapter này thêm
+đúng ba thứ: bảng lệnh khởi chạy cho các dòng Codex, bước kiểm profile trước khi dispatch, và
+những sự thật đã đo được về cách Codex tự báo trạng thái của nó. Đây là adapter mỏng nhất trong ba
+adapter runtime, và mỏng là có chủ đích. Với Codex, skill dùng chung đã sở hữu sẵn phần gửi brief
+và phần canh; điều này được kiểm lại chứ không phải giả định, trong một đợt quét tìm hướng dẫn cũ
+còn sót.
 <!-- source: harness/.agents/skills/dispatch-ticket-codex/SKILL.md, RELEASE-NOTES.md -->
 
 Điểm khác ở đây là chỗ cấu hình nằm. Trên Claude, model và effort đi theo dòng lệnh; trên Codex
@@ -32,13 +32,13 @@ chiếu.
 
 ## Khi nào Thomas gọi nó
 
-| Thứ đang ở trước mặt | Gọi cái này |
+| Tình huống trước mặt bạn | Gọi cái nào |
 |---|---|
 | Một ticket đã claim, và `orchestrator.md` ghi vai này chạy trên Codex | `dispatch-ticket` + `dispatch-ticket-codex` |
 | Một pane Builder, Shaper hoặc QA trên Codex | `codex --profile <role> --dangerously-bypass-approvals-and-sandbox` |
-| Một dòng `rin` ghi Codex | Dừng — phiên gốc Codex không host được gate (`codex-claude-arm`) |
+| Một dòng `rin` ghi Codex | Dừng lại. Phiên gốc Codex không host được gate (`codex-claude-arm`) |
 | Profile thiếu hoặc đã lệch khỏi template | Đưa chủ máy đúng lệnh copy và diff; không bao giờ tự tạo trong im lặng |
-| Một file `.codex/agents/*.toml` trông như đáp án | Không phải — đó là subagent spawn được, không phải pane của một vai |
+| Một file `.codex/agents/*.toml` trông như đáp án | Không phải. Đó là subagent spawn được, không phải pane của một vai |
 
 <!-- source: harness/.agents/skills/dispatch-ticket-codex/SKILL.md -->
 
@@ -54,20 +54,20 @@ chiếu.
 
 ## Nó để lại gì
 
-| Chuyện gì đã xảy ra | Nó nằm lại ở đâu |
+| Kết quả | Nơi nó nằm lại |
 |---|---|
 | Lần khởi chạy | `herdr agent start "<role>-<ticket-id>" --kind codex`, kèm cờ profile |
 | Danh tính vai, model và effort | File TOML cục bộ theo máy, không phải dòng lệnh |
 | Một phát hiện lệch | Một báo cáo cho chủ máy, kèm lệnh copy và diff, trước mọi lần dispatch |
-| Mọi thứ còn lại — brief, watch, phán quyết, dọn dẹp | Giao thức dùng chung `dispatch-ticket` |
+| Mọi thứ còn lại, gồm brief, watch, phán quyết và dọn dẹp | Giao thức dùng chung `dispatch-ticket` |
 
 <!-- source: harness/.agents/skills/dispatch-ticket-codex/SKILL.md -->
 
 ## Lỗi đã biết
 
 Ledger không có entry nào ghi tên file skill này. Hai entry dưới đây gắn với
-`harness/.codex/profiles/*.config.toml` — chính các template mà bước kiểm trước dispatch của
-skill này đọc — và cả hai đều `promoted`.
+`harness/.codex/profiles/*.config.toml`, chính các template mà bước kiểm trước dispatch của skill
+này đọc, và cả hai đều `promoted`.
 
 - **AST-040**: gói này từng ship `model = "gpt-5.1-codex"` trong cả bốn profile Codex. Nó không
   resolve trên bất kỳ tài khoản nào, và nó không fail lúc cài, lúc adapt, hay ở bất kỳ lần chạy
@@ -75,8 +75,8 @@ skill này đọc — và cả hai đều `promoted`.
   đầu tiên, tức cuối phase, và trông y như provider đang sập. Đã sửa: không ship id nào,
   `model = ""` kèm một comment nói id thật lấy từ đâu, và một doctor báo MISS khi trường rỗng.
 - **AST-041**: một file được gọi là "của chủ máy" mà vẫn nằm trong payload thì có hai nhà, và
-  bản được ship thắng. Đã sửa: profile là scaffold, chỉ ghi khi vắng và không bao giờ bị đè —
-  đó là lý do skill này báo lệch thay vì tự sửa.
+  bản được ship thắng. Đã sửa: profile là scaffold, chỉ ghi khi vắng và không bao giờ bị đè. Đó
+  là lý do skill này báo lệch thay vì tự sửa.
 
 <!-- source: harness/.agents/memory/recurring-failure-modes.md -->
 
@@ -88,7 +88,7 @@ skill này đọc — và cả hai đều `promoted`.
 - Lệnh khởi chạy mang `--dangerously-bypass-approvals-and-sandbox`, không bao giờ mang `--yolo`
   đã nghỉ hưu.
 - Không có effort nào truyền qua dòng lệnh, vì Codex không có cờ cho nó.
-- Không Builder nào bị định tuyến qua subagent `.codex/agents/*.toml` — nó dùng chung topology
+- Không Builder nào bị định tuyến qua subagent `.codex/agents/*.toml`, vì nó dùng chung topology
   của phiên cha và không được cấp worktree.
 
 <!-- source: harness/.agents/skills/dispatch-ticket-codex/SKILL.md -->
@@ -98,4 +98,4 @@ skill này đọc — và cả hai đều `promoted`.
 `dispatch-ticket` claim ticket rồi dựng worktree, tab và pane → `dispatch-ticket-codex` kiểm
 profile và khởi chạy runtime → giao thức dùng chung giao brief, arm cái watch và đọc phán quyết
 → trên phiên gốc Codex, lượt cross-vendor là `codex-claude-arm`, còn gate vẫn ở lại trên phiên
-gốc Claude. Hai skill anh em của nó là `dispatch-ticket-claude` và `dispatch-ticket-opencode`.
+gốc Claude. Hai skill song song với nó là `dispatch-ticket-claude` và `dispatch-ticket-opencode`.

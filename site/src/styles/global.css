@@ -1,79 +1,15 @@
 @import 'tailwindcss';
+@import './tokens.css';
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/source-serif-4';
 @import '@fontsource-variable/jetbrains-mono';
 
-:root {
-  /* Design spec 6 §3, measured off aihero.dev: depth comes from white on cool grey,
-     hierarchy from one ink at several alphas, colour from one place at a time. The
-     variable names spec 5 introduced are kept as aliases at the bottom of this block,
-     so the palette moved without touching every component. */
-  --canvas: #f2f3f6;
-  --surface: #ffffff;
-  --surface-2: #f7f8fa;
-
-  --ink: #14161a;
-  --ink-88: rgba(20, 22, 26, 0.88);
-  --ink-70: rgba(20, 22, 26, 0.7);
-  --ink-62: rgba(20, 22, 26, 0.62);
-  --ink-35: rgba(20, 22, 26, 0.35);
-  --ink-22: rgba(20, 22, 26, 0.22);
-  --ink-10: rgba(20, 22, 26, 0.1);
-  --ink-05: rgba(20, 22, 26, 0.05);
-
-  /* One accent: code keyword, nav active, the node you picked, a mono link. 6.5:1 on
-     white. One warm colour: the primary button, and nothing else on the site. */
-  --accent: #0f6b52;
-  --cta: #f5c451;
-  --defect: #b4462f;
-
-  /* Role hues. Spec 6 §3 changed how they are spent, not how many there are: an 8px
-     dot, a 1.5px node stroke, a sigil inside a white node. No pastel fills. */
-  --role-thomas: #2f5da8;
-  --role-shaper: #7a4fbf;
-  --role-builder: #0b6e4f;
-  --role-rin: #b4462f;
-  --role-qa: #8a5f10;
-
-  /* Skill groups: the same five hues plus two neutrals, now only ever a 6px dot. */
-  --group-entry: var(--role-thomas);
-  --group-main-flow: var(--role-builder);
-  --group-shaping: var(--role-shaper);
-  --group-gate: var(--role-rin);
-  --group-brownfield: var(--role-qa);
-  --group-upkeep: #4a4f57;
-  --group-adapter: #2b6777;
-
-  /* Aliases so pass-2 and pass-3 rules keep working (spec 6 §3). */
-  --paper: var(--canvas);
-  --paper-sunk: var(--surface-2);
-  --ink-muted: var(--ink-70);
-  --rule: var(--ink-10);
-  --rule-faint: var(--ink-05);
-  --pass: var(--accent);
-
-  /* Serif is down to the two places that carry the site's voice: the h1 of a page and
-     the hero headline. Everything else is the sans. */
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-serif: 'Source Serif 4 Variable', ui-serif, Georgia, serif;
-  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', monospace;
-
-  /* one page frame, one reading column, one breakout width */
-  --frame: 1200px;
-  /* Read mode: the rails were trimmed and the gutters tightened so the content column
-     — and with it every diagram — reaches ~920px at 1440 (spec 6 §5). */
-  --frame-docs: 1440px;
-  --column: 680px;
-  --column-wide: 1040px;
-  --diagram: 1120px;
-  --gutter: clamp(1.25rem, 4vw, 3rem);
-
-  --header-h: 56px;
-  --side-w: 232px;
-  --read-w: 960px;
-  --toc-w: 180px;
-  --section-gap: 3rem;
-}
+/* Every custom property on this site is generated into ./tokens.css from
+   design-tokens.json by `pnpm tokens`. This file declares none of its own: two
+   palettes that have to agree is the drift design system pass 7 was written to end.
+   The names earlier passes used — --paper, --ink-muted, --rule, --pass, --cta,
+   --accent — survive there as aliases, so no component had to be rewritten to move
+   the palette. */
 
 @theme inline {
   --color-canvas: var(--canvas);
@@ -83,9 +19,9 @@
   --color-ink: var(--ink);
   --color-ink-muted: var(--ink-muted);
   --color-rule: var(--rule);
-  --color-pass: var(--pass);
-  --color-accent: var(--accent);
-  --color-cta: var(--cta);
+  --color-brand: var(--brand-primary);
+  --color-brand-hover: var(--brand-primary-hover);
+  --color-brand-soft: var(--brand-primary-soft);
   --color-defect: var(--defect);
   --font-sans: var(--font-sans);
   --font-serif: var(--font-serif);
@@ -96,31 +32,36 @@
   box-sizing: border-box;
 }
 
+/* The graph paper is painted on <html>, not <body>. The page island's 1.5rem margin
+   collapses out through the body box, so a body background starts 24px down the
+   viewport and leaves a strip of bare canvas along the top and bottom. That was
+   invisible while the ground was the same cool grey as the island; the warm ground
+   made it a grey band across the top of every page. */
 html {
-  background: var(--canvas);
   -webkit-font-smoothing: antialiased;
+  background-color: var(--grid-b);
+  background-image:
+    repeating-linear-gradient(0deg, var(--grid-line) 0 1px, transparent 1px var(--grid-step)),
+    repeating-linear-gradient(90deg, var(--grid-line) 0 1px, transparent 1px var(--grid-step)),
+    linear-gradient(135deg, var(--grid-a) 0%, var(--grid-b) 55%, var(--grid-c) 100%);
+  background-attachment: fixed;
 }
 
-/* The canvas is graph paper: a cool gradient under a white grid. Everything the reader
-   uses sits on one raised island above it, so the grid is texture, never a reading
-   surface. Colours live here only; the island keeps the neutral system. */
-:root {
-  --grid-a: #dbf1f9;
-  --grid-b: #a9b6ea;
-  --grid-c: #8f9be3;
-  --grid-line: rgba(255, 255, 255, 0.55);
-  --grid-step: 44px;
-  --island-radius: 14px;
-  --island-shadow: 0 1px 2px rgba(20, 22, 26, 0.06), 0 12px 40px rgba(40, 52, 110, 0.18);
-}
+/* The canvas is graph paper: a warm gradient under a white grid. The site owner asked
+   for the brand red to reach the desk as well, so the three stops run out of it —
+   blush, then a soft rose, then a pale coral. The island above stays neutral, which is
+   what keeps the red a room the page sits in rather than a colour the page is made of.
+   Nothing but the island is ever drawn on this ground; no text lands here. */
 
 /* The browser surfaces we did not draw still belong to the palette. */
 ::selection {
-  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  background: var(--brand-primary-soft);
   color: var(--ink);
 }
+/* One focus ring, brand, everywhere. A keyboard reader should never have to work out
+   which control they are on from a colour that changed with the component. */
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
@@ -128,14 +69,8 @@ body {
   margin: 0;
   color: var(--ink-88);
   font-family: var(--font-sans);
-  font-size: 17px;
-  line-height: 1.55;
-  background-color: var(--grid-b);
-  background-image:
-    repeating-linear-gradient(0deg, var(--grid-line) 0 1px, transparent 1px var(--grid-step)),
-    repeating-linear-gradient(90deg, var(--grid-line) 0 1px, transparent 1px var(--grid-step)),
-    linear-gradient(135deg, var(--grid-a) 0%, var(--grid-b) 55%, var(--grid-c) 100%);
-  background-attachment: fixed;
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
   /* Inter's default figures are proportional; a ledger of ids and counts wants them
      to line up. */
   font-variant-numeric: tabular-nums;
@@ -149,8 +84,8 @@ body {
   margin: 1.5rem auto;
   min-height: calc(100vh - 3rem);
   background-color: var(--canvas);
-  border-radius: var(--island-radius);
-  box-shadow: var(--island-shadow);
+  border-radius: var(--radius-island);
+  box-shadow: var(--shadow-island);
   overflow: clip;
 }
 @media (max-width: 720px) {
@@ -169,7 +104,7 @@ h2,
 h3 {
   font-family: var(--font-sans);
   font-weight: 700;
-  line-height: 1.15;
+  line-height: var(--leading-heading);
   letter-spacing: -0.018em;
   color: var(--ink);
   margin: 0;
@@ -182,19 +117,19 @@ h1 {
   font-family: var(--font-serif);
   font-weight: 600;
   margin-bottom: 0.75rem;
-  font-size: 32px;
+  font-size: var(--text-h1);
   line-height: 1.14;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--tracking-h1);
 }
 
 h2 {
-  font-size: 26px;
+  font-size: var(--text-h2);
   line-height: 1.22;
   margin-bottom: 0.6rem;
 }
 
 h3 {
-  font-size: 19px;
+  font-size: var(--text-h3);
   line-height: 1.3;
   margin-top: 1.75rem;
   margin-bottom: 0.4rem;
@@ -215,18 +150,18 @@ code {
   border: 1px solid var(--ink-10);
   color: var(--ink-88);
   padding: 0.05em 0.32em;
-  border-radius: 3px;
+  border-radius: var(--radius-badge);
 }
 
 /* Spec 6 §5: code is a white pane on the canvas, hairline, 8px. */
 pre {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--text-mono);
   line-height: 1.6;
   color: var(--ink-88);
   background: var(--surface);
   border: 1px solid var(--ink-10);
-  border-radius: 8px;
+  border-radius: var(--radius-card);
   padding: 0.85rem 1.1rem;
   overflow-x: auto;
   margin: 1.25rem 0 1.5rem;
@@ -245,7 +180,7 @@ pre code {
 .codeframe {
   position: relative;
   border: 1px solid var(--ink-10);
-  border-radius: 8px;
+  border-radius: var(--radius-card);
   overflow: hidden;
   background-color: var(--surface);
   background-image:
@@ -265,9 +200,11 @@ pre code {
   border-radius: 0;
   margin: 0;
 }
-/* The verb the reader is meant to run, in the one green the site uses for code. */
+/* The verb the reader is meant to run. Pass 7 took the green away: code is ink, and a
+   keyword says so with weight, because the one colour on this site is spoken for. */
 .cmd-key {
-  color: var(--accent);
+  color: var(--ink);
+  font-weight: 600;
 }
 ul,
 ol {
@@ -321,9 +258,9 @@ hr {
 
 .eyebrow {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-label);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--tracking-eyebrow);
   /* .35 is the ramp's caption step and it measures 2.2:1 on white — under the floor
      for anything that is words. The eyebrow is words, so it takes the link step. */
   color: var(--ink-62);
@@ -342,7 +279,7 @@ hr {
 
 .stat {
   font-family: var(--font-mono);
-  font-size: clamp(36px, 3.4vw, 48px);
+  font-size: clamp(var(--text-hero), 3.4vw, var(--text-stat));
   font-weight: 500;
   line-height: 1;
   white-space: nowrap;
@@ -351,7 +288,7 @@ hr {
 
 .stat-label {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-label-sm);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--ink-muted);
@@ -360,7 +297,7 @@ hr {
 
 /* the one sub-line a section is allowed under its heading (PRD §5) */
 .sub {
-  font-size: 18px;
+  font-size: var(--text-h3);
   line-height: 1.55;
   color: var(--ink-muted);
   max-width: 62ch;
@@ -372,7 +309,7 @@ hr {
   * {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 60ms !important;
+    transition-duration: var(--motion-reduced) !important;
   }
 }
 
@@ -418,7 +355,7 @@ hr {
   text-decoration-color: var(--ink-62);
 }
 .prose code {
-  color: var(--accent);
+  color: var(--code-ink);
 }
 .prose ul,
 .prose ol {
@@ -436,10 +373,10 @@ hr {
   color: var(--ink-muted);
 }
 .prose h3 {
-  font-size: 19px;
+  font-size: var(--text-h3);
 }
 .prose-lead p:first-child {
-  font-size: 18px;
+  font-size: var(--text-h3);
   line-height: 1.6;
   color: var(--ink-70);
 }
@@ -448,24 +385,28 @@ hr {
 .scroll-cue {
   margin-top: 3.5rem;
   font-family: var(--font-mono);
-  font-size: 20px;
+  font-size: var(--text-h3);
   color: var(--ink-muted);
   text-align: center;
 }
 
+/* A ledger id is a reference, not an alarm. It reads as ink and carries the defect
+   red only in its underline, which is where the site keeps "this was a measured
+   failure" — one step darker and browner than the brand, so the two never trade. */
 .ast {
   font-family: var(--font-mono);
-  color: var(--defect);
+  color: var(--ink-88);
   text-decoration: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--defect) 35%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--defect) 45%, transparent);
 }
 .ast:hover {
+  color: var(--ink);
   border-bottom-color: var(--defect);
 }
 
 .mono-label {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-label-sm);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--ink-muted);
@@ -475,7 +416,7 @@ hr {
   display: inline-block;
   margin-top: 2.25rem;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--text-mono);
   letter-spacing: 0.06em;
   color: var(--pass);
   text-decoration: none;
@@ -525,14 +466,14 @@ hr {
    a sticky panel is wherever the reader last scrolled to, so a figure crossing it
    either hides live navigation or is hidden by it, and no CSS makes that collision
    deterministic. So the width is taken honestly: the rails were trimmed (232 / 180)
-   and the gutters tightened, which puts the content column at about 920px at 1440.
+   and the gutters tightened, which puts the content column at 924px at 1440.
    Prose keeps its 66ch measure inside it; only the figure spends the whole width. */
 .docs-main {
   max-width: var(--read-w);
   min-width: 0;
   background: var(--surface);
   border: 1px solid var(--ink-10);
-  border-radius: 8px;
+  border-radius: var(--radius-card);
   padding: 2rem 2rem 2.5rem;
 }
 
@@ -544,7 +485,7 @@ hr {
   margin-bottom: 0.5rem;
 }
 .read-head .lede {
-  font-size: 17px;
+  font-size: var(--text-body);
   line-height: 1.55;
   color: var(--ink-70);
   max-width: 62ch;
@@ -656,14 +597,14 @@ hr {
   align-items: center;
   gap: 0.45em;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-label-sm);
   font-weight: 500;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   line-height: 1;
   padding: 0.34em 0.6em;
   border: 1px solid var(--ink-10);
-  border-radius: 3px;
+  border-radius: var(--radius-badge);
   white-space: nowrap;
   background: var(--surface);
   color: var(--ink-70);
@@ -709,36 +650,42 @@ hr {
 [data-group='adapter'] { --tone: var(--group-adapter); }
 
 /* ── buttons: one filled, one outlined ───────────────────────────────────
-   Spec 6 §3 spends the one warm colour here and nowhere else: the primary button is
-   --cta with ink on it, 11.1:1, and the moment a second yellow thing appears on a
-   page this stops working. */
+   Pass 7 replaced the yellow with Astraler's logo red. The primary button is the brand
+   with white on it; the secondary is a white surface with a hairline and no colour at
+   all, so there is never a question which of two buttons is the one to press.
+
+   The fill is the red's second step, not the logo hex: white on #E53625 measures
+   4.30:1 and the floor for a button label is 4.5:1. The logo hex still draws every
+   mark on the site, which is where the eye actually reads the brand. */
 
 .btn {
   display: inline-flex;
   align-items: center;
   min-height: 40px;
   padding: 0 1.15rem;
-  border-radius: 6px;
-  font-size: 14px;
+  border-radius: var(--radius-control);
+  font-size: var(--text-ui);
   font-weight: 600;
   letter-spacing: 0.01em;
   text-decoration: none;
   border: 1px solid transparent;
 }
 .btn--primary {
-  background: var(--cta);
-  border-color: color-mix(in srgb, var(--cta) 80%, var(--ink));
-  color: var(--ink);
+  background: var(--brand-primary-hover);
+  border-color: var(--brand-primary-hover);
+  color: var(--brand-on-primary);
+  transition: background var(--motion-hover) var(--ease-out);
 }
 .btn--primary:hover {
-  background: color-mix(in srgb, var(--cta) 88%, var(--ink));
+  background: var(--brand-primary-press);
+  border-color: var(--brand-primary-press);
 }
 .btn--ghost {
   background: var(--surface);
   color: var(--ink);
   border-color: var(--ink-10);
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: var(--text-mono);
   font-weight: 500;
   letter-spacing: 0.06em;
 }

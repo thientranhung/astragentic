@@ -46,7 +46,7 @@ const exploreHref = localised ? `/explore/vi/${slug}.html` : `/explore/${slug}.h
 const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` : undefined;
 ---
 
-<figure class:list={['diagram', extra]}>
+<figure class:list={['diagram', extra]} data-diagram={slug}>
   {
     svg ? (
       <div class="diagram-svg" style={svgStyle} set:html={svg} />
@@ -75,14 +75,14 @@ const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` 
     border: 1px solid var(--rule);
     border-radius: 2px;
     color: var(--ink-muted);
-    font-size: 12px;
+    font-size: var(--text-label);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
 
   .diagram-caption {
     margin-top: 0.85rem;
-    font-size: 12px;
+    font-size: var(--text-label);
     color: var(--ink-muted);
     display: flex;
     flex-wrap: wrap;
@@ -98,7 +98,7 @@ const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` 
     color: var(--ink);
   }
   .note {
-    font-size: 11px;
+    font-size: var(--text-label-sm);
     color: var(--ink-muted);
     opacity: 0.8;
   }

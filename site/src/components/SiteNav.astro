@@ -160,8 +160,8 @@ const tree = await getNavTree(lang);
     gap: 0.5rem;
     width: 100%;
     padding: 0.42rem 0.6rem;
-    border-radius: 2px;
-    font-size: 12px;
+    border-radius: var(--radius-badge);
+    font-size: var(--text-label);
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--ink);
@@ -178,14 +178,14 @@ const tree = await getNavTree(lang);
     background: var(--surface-2);
   }
   a.top.on {
-    background: var(--surface-2);
-    color: var(--accent);
-    box-shadow: inset 2px 0 0 var(--accent);
+    background: var(--brand-primary-soft);
+    color: var(--brand-primary-hover);
+    box-shadow: inset 2px 0 0 var(--brand-primary);
   }
   .chev {
     flex: none;
     color: var(--ink-muted);
-    transition: transform 140ms ease;
+    transition: transform var(--motion-drawer) var(--ease-out);
   }
   details[open] > .top--toggle .chev {
     transform: rotate(90deg);
@@ -203,21 +203,21 @@ const tree = await getNavTree(lang);
     align-items: center;
     gap: 0.45rem;
     padding: 0.34rem 0.55rem;
-    border-radius: 3px;
+    border-radius: var(--radius-badge);
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: var(--text-ui);
     line-height: 1.35;
     color: var(--ink-muted);
     text-decoration: none;
   }
   .leaf--mono {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: var(--text-label);
     letter-spacing: 0.005em;
   }
   .leaf--all {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--text-label-sm);
     letter-spacing: 0.09em;
     text-transform: uppercase;
   }
@@ -232,17 +232,17 @@ const tree = await getNavTree(lang);
   /* The 2px bar is a navigation indicator, not card decoration: it says "you are
      here", which is the one thing a 40-item tree has to say at a glance. */
   .leaf.on {
-    background: var(--surface-2);
-    color: var(--accent);
-    box-shadow: inset 2px 0 0 var(--accent);
+    background: var(--brand-primary-soft);
+    color: var(--brand-primary-hover);
+    box-shadow: inset 2px 0 0 var(--brand-primary);
   }
-  /* A role or group leaf keeps its own colour in the bar when it is the one you are
-     on, so the colour that means "Builder" everywhere else still means it here. Spec 6
-     §3 took the tinted ground away; the 2px bar carries the hue on its own. */
+  /* A role or group leaf used to carry its own hue in the 2px bar. Pass 7 gave the
+     current row a soft brand ground, and a pink row with a teal bar is two claims on
+     one line: the ground already says "you are here". The hue stays on the dot beside
+     the label, which is where the reader looks for "which role is this" anyway. */
   .leaf.on[data-role],
   .leaf.on[data-group] {
-    color: var(--ink);
-    box-shadow: inset 2px 0 0 var(--tone);
+    color: var(--brand-primary-hover);
   }
 
   .skill-group + .skill-group {
@@ -254,7 +254,7 @@ const tree = await getNavTree(lang);
     gap: 0.45rem;
     margin: 0.35rem 0 0.15rem;
     padding-inline: 0.55rem;
-    font-size: 10px;
+    font-size: var(--text-micro);
     letter-spacing: 0.11em;
     text-transform: uppercase;
     color: var(--ink-muted);
@@ -263,14 +263,14 @@ const tree = await getNavTree(lang);
   @media (max-width: 900px) {
     .rail-shell {
       border: 1px solid var(--ink-10);
-      border-radius: 8px;
+      border-radius: var(--radius-card);
       background: var(--surface);
       margin-bottom: 1.5rem;
     }
     .rail-summary {
       display: block;
       padding: 0.7rem 0.9rem;
-      font-size: 11px;
+      font-size: var(--text-label-sm);
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--ink-muted);

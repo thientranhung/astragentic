@@ -53,44 +53,44 @@ const cards = (lang: Lang) => ({
 const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
   vi: {
     hero: {
-      headline: 'Bốn Builder chạy cùng lúc.\nKhông ai giẫm lên việc của ai.',
-      sub: 'Mình dựng lớp điều phối để việc không rơi mất giữa các session.',
+      headline: 'Bốn Builder chạy cùng lúc\ntrên một repo, không giẫm lên nhau.',
+      sub: 'Tôi dựng lớp điều phối này để việc không rơi mất giữa các session.',
       primary: 'Xem cấu trúc',
-      secondary: 'Cài cho repo của anh em',
+      secondary: 'Cài cho repo của bạn',
     },
     sections: {
       structure: {
-        headline: 'Astragentic nằm ở đâu',
-        sub: 'Bốn lớp, từ runtime xuống repo thật. Bấm vào một ô để mở trang của nó.',
+        headline: 'Astragentic nằm ở đâu trong stack',
+        sub: 'Bốn lớp, từ runtime xuống repo thật. Bấm vào một ô để mở trang của lớp đó.',
       },
       roles: {
-        headline: 'Năm vai, năm kiểu session',
-        sub: 'Vai sống bao lâu quyết định nó nhớ được cái gì.',
+        headline: 'Năm vai, năm vòng đời session',
+        sub: 'Vòng đời session quyết định một vai nhớ được gì.',
       },
       lifecycle: {
         headline: 'Một ticket đi qua bảy chặng',
-        sub: 'Bảy cái tên để khi một thứ hỏng, mình có chỗ treo nó vào.',
+        sub: 'Bảy chặng có tên để mỗi lỗi đo được gắn vào đúng một chặng.',
       },
       tracker: {
         headline: 'Thomas hỏi tracker, không nhớ tracker',
-        sub: 'Cái gì sẵn để làm là một câu truy vấn trên board.',
+        sub: 'Ticket nào sẵn sàng là kết quả một truy vấn trên board.',
       },
       skills: {
-        headline: 'Skill có sẵn',
-        sub: 'Mười sáu skill, xếp theo lúc anh em cần đến chúng.',
+        headline: 'Mười sáu skill trong harness',
+        sub: 'Mười sáu skill, xếp theo lúc bạn cần dùng chúng.',
         cta: 'Cả catalog',
       },
       hooks: {
-        headline: 'Bốn hook đứng gác',
-        sub: 'Mỗi hook bắn ở một khoảnh khắc, và chỉ làm đúng một việc.',
+        headline: 'Bốn hook chạy ở bốn thời điểm cố định',
+        sub: 'Mỗi hook bắn ở một thời điểm và chỉ làm đúng một việc.',
       },
       why: {
-        headline: 'Vì sao lại làm vậy',
-        sub: 'Năm câu hỏi mình đã phải tự trả lời trước.',
+        headline: 'Vì sao Astragentic được dựng như vậy',
+        sub: 'Năm câu hỏi tôi đã phải tự trả lời trước.',
       },
       stack: {
-        headline: 'Mình dùng gì',
-        sub: 'Chín thứ, và lý do từng thứ có mặt.',
+        headline: 'Astragentic chạy trên gì',
+        sub: 'Chín thành phần, và lý do từng thành phần có mặt.',
       },
     },
     stages: {
@@ -103,8 +103,8 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
       merge: 'Ledger ghi một dòng, assignee gỡ.',
     },
     roleCards: {
-      thomas: 'Router thường trú, giữ board và pane.',
-      shaper: 'Grill tới khi spec đứng được.',
+      thomas: 'Thomas thường trú, giữ board và pane.',
+      shaper: 'Shaper grill tới khi spec đứng được.',
       builder: 'Một ticket, một worktree, một session.',
       rin: 'Đọc lại artifact và dấu vết.',
       qa: 'Chạy sản phẩm thật, không đọc code.',
@@ -113,44 +113,44 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
   },
   en: {
     hero: {
-      headline: 'Four Builders at once.\nNone of them in each other’s way.',
-      sub: 'I built this layer so work stops falling between sessions.',
+      headline: 'Four Builders at once\non one repo, never in each other’s way.',
+      sub: 'I built this coordination layer so work stops falling between sessions.',
       primary: 'See the structure',
       secondary: 'Install it in your repo',
     },
     sections: {
       structure: {
-        headline: 'Where Astragentic sits',
+        headline: 'Where Astragentic sits in the stack',
         sub: 'Four layers, from the runtime down to the real repo. Click a box to open its page.',
       },
       roles: {
-        headline: 'Five roles, five session lifespans',
-        sub: 'How long a role lives decides what it can remember.',
+        headline: 'Five roles, five session lifetimes',
+        sub: 'Session lifetime decides what a role can remember.',
       },
       lifecycle: {
-        headline: 'One ticket, seven checkpoints',
-        sub: 'Seven names, so a failure has somewhere to hang.',
+        headline: 'A ticket passes through seven named stages',
+        sub: 'The stages are named so every measured failure attaches to one of them.',
       },
       tracker: {
         headline: 'Thomas asks the tracker instead of remembering it',
-        sub: 'What is ready to work on is a query on the board.',
+        sub: 'Which ticket is ready is the result of a query against the board.',
       },
       skills: {
-        headline: 'The skills',
-        sub: 'Sixteen of them, filed by the moment you need one.',
+        headline: 'Sixteen skills in the harness',
+        sub: 'Sixteen skills, grouped by the moment you need one.',
         cta: 'The whole catalog',
       },
       hooks: {
-        headline: 'Four hooks on guard',
-        sub: 'Each one fires at a moment and does exactly one thing.',
+        headline: 'Four hooks fire at four fixed moments',
+        sub: 'Each hook fires at one moment and does exactly one thing.',
       },
       why: {
-        headline: 'Why it is built this way',
+        headline: 'Why Astragentic is built this way',
         sub: 'Five questions I had to answer first.',
       },
       stack: {
         headline: 'What this runs on',
-        sub: 'Nine pieces, and why each one is here.',
+        sub: 'Nine components, and why each one is here.',
       },
     },
     stages: {
@@ -163,8 +163,8 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
       merge: 'One Ledger line written, assignee cleared.',
     },
     roleCards: {
-      thomas: 'Resident router, holds the board and the panes.',
-      shaper: 'Grills until the spec stands up.',
+      thomas: 'Thomas is resident, holding the board and the panes.',
+      shaper: 'The Shaper grills until the spec stands up.',
       builder: 'One ticket, one worktree, one session.',
       rin: 'Re-reads the artifact and the traces.',
       qa: 'Runs the real product, never reads the code.',

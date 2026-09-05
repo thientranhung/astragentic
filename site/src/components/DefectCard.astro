@@ -85,7 +85,7 @@ const promoted = row.promotedOn ? `promoted ${row.promotedOn}` : row.status;
 <style>
   .card {
     border: 1px solid var(--defect);
-    border-radius: 6px;
+    border-radius: var(--radius-control);
     background: var(--surface);
     display: block;
   }
@@ -102,19 +102,19 @@ const promoted = row.promotedOn ? `promoted ${row.promotedOn}` : row.status;
     margin-bottom: 0.9rem;
   }
   .id {
-    font-size: 15px;
+    font-size: var(--text-body-sm);
     letter-spacing: 0.06em;
   }
   .meta {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--text-label-sm);
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--ink-muted);
   }
 
   .lesson {
-    font-size: 26px;
+    font-size: var(--text-h2);
     line-height: 1.2;
     margin: 0 0 1rem;
     letter-spacing: -0.01em;
@@ -126,7 +126,7 @@ const promoted = row.promotedOn ? `promoted ${row.promotedOn}` : row.status;
     background: var(--paper-sunk);
     border: 0;
     border-left: 2px solid var(--rule);
-    font-size: 13.5px;
+    font-size: var(--text-mono);
     line-height: 1.62;
     white-space: pre-wrap;
     color: var(--ink);
@@ -134,14 +134,14 @@ const promoted = row.promotedOn ? `promoted ${row.promotedOn}` : row.status;
 
   .cost {
     font-family: var(--font-mono);
-    font-size: 12.5px;
+    font-size: var(--text-mono);
     line-height: 1.6;
     color: var(--ink-muted);
     margin: 0 0 1.1rem;
   }
 
   .note {
-    font-size: 19px;
+    font-size: var(--text-h3);
     line-height: 1.6;
   }
   .note :global(p) {
@@ -155,7 +155,7 @@ const promoted = row.promotedOn ? `promoted ${row.promotedOn}` : row.status;
     margin-top: 1.35rem;
     padding-top: 0.9rem;
     border-top: 1px solid var(--rule);
-    font-size: 11.5px;
+    font-size: var(--text-label);
     line-height: 1.9;
     color: var(--ink-muted);
   }
@@ -191,20 +191,20 @@ const promoted = row.promotedOn ? `promoted ${row.promotedOn}` : row.status;
   }
   .card--sm .id {
     display: block;
-    font-size: 12.5px;
+    font-size: var(--text-mono);
     margin-bottom: 0.4rem;
     border-bottom: 0;
   }
   .lesson-sm {
     display: block;
-    font-size: 15px;
+    font-size: var(--text-body-sm);
     line-height: 1.35;
     letter-spacing: -0.005em;
     margin-bottom: 0.45rem;
   }
   .excerpt {
     display: block;
-    font-size: 11px;
+    font-size: var(--text-label-sm);
     line-height: 1.55;
     color: var(--ink-muted);
   }

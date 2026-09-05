@@ -1,6 +1,6 @@
 ---
 title: codex-claude-arm
-oneLiner: "Bắn một lượt Claude đọc lại artifact đã xong, khi phiên gốc chạy trên Codex."
+oneLiner: "Chạy một lượt Claude đọc lại artifact đã xong, khi phiên gốc chạy trên Codex."
 group: gate
 order: 3
 runtimes: [codex]
@@ -13,40 +13,40 @@ updated: 2026-09-04
 
 ## Nó làm gì
 
-`codex-claude-arm` chỉ làm đúng một việc: lượt `claude -p` mà một phiên gốc Codex bắn qua một
-artifact đã xong và đã commit. Nó lo cái worktree cách ly, danh sách công cụ chỉ-đọc, thứ tự
-dọn dẹp và chỗ ghi lại kết quả — hết. Bắn lúc nào, và luật tối đa hai lượt, thuộc về `thomas.md`
-và `rin.md`. Bản thân cái gate thuộc về `review-with-rin`. Arm luôn gọi vendor *còn lại*, nên
-trên phiên gốc Codex nó gọi Claude.
+`codex-claude-arm` làm đúng một việc: lượt `claude -p` mà một phiên gốc Codex chạy trên một
+artifact đã xong và đã commit. Nó lo cái worktree cách ly, danh sách công cụ chỉ đọc, thứ tự dọn
+dẹp và chỗ ghi lại kết quả, không gì khác. Thời điểm chạy, và luật tối đa hai lượt, thuộc về
+`thomas.md` và `rin.md`. Bản thân cái gate thuộc về `review-with-rin`. Arm luôn gọi vendor *còn
+lại*, nên trên phiên gốc Codex nó gọi Claude.
 <!-- source: harness/.agents/skills/codex-claude-arm/SKILL.md -->
 
 Thứ cần biết trước tiên là một ranh giới, không phải một bước: **một phiên gốc Codex không host
-được cái gate.** Gate là một pane Herdr chạy trên runtime của provider gốc, và không adapter
-Codex nào host được nó, nên một dòng `rin` trong `orchestrator.md` ghi Codex là dòng cấu hình
-sai — mang lên hỏi chủ dự án, đừng tìm cách lách. Cái một phiên gốc Codex đóng góp được là lượt
-này. Điểm khác thứ hai lặng hơn và đắt hơn: **phạm vi ticket ở đây cố tình không đối xứng với
-`codex-arm`.** Builder bắn arm Codex thì chạy ngay trong worktree của mình, vì `codex exec
-review` chỉ đọc. Builder bắn arm này thì không được, vì `claude -p` là một agent đầy đủ, có Edit
-và Bash. Bắt chước đường đi của Codex ở đây là trao checkout đang sống của Builder cho một
-reviewer biết ghi, tức dựng lại AST-016 trên cơ chế mới nhất.
+được cái gate.** Gate là một pane Herdr chạy trên runtime của provider gốc, và không adapter Codex
+nào host được nó, nên một dòng `rin` trong `orchestrator.md` ghi Codex là một dòng cấu hình sai.
+Hãy mang nó lên hỏi chủ dự án thay vì tìm cách lách. Thứ một phiên gốc Codex đóng góp được là lượt
+này. Điểm khác thứ hai kín đáo hơn và đắt hơn: **phạm vi ticket ở đây cố tình không đối xứng với
+`codex-arm`.** Builder chạy arm Codex thì làm ngay trong worktree của chính nó, vì `codex exec review`
+chỉ đọc. Builder chạy arm này thì không được, vì `claude -p` là một agent đầy đủ, có Edit và Bash.
+Sao chép đường đi của Codex ở đây là trao checkout đang sống của Builder cho một reviewer biết ghi,
+tức dựng lại AST-016 trên cơ chế mới nhất.
 <!-- source: harness/.agents/skills/codex-claude-arm/SKILL.md -->
 
 ## Khi nào Thomas gọi nó
 
-| Thứ đang ở trước mặt | Gọi cái này |
+| Tình huống trước mặt bạn | Gọi cái nào |
 |---|---|
 | Phiên gốc là Codex, artifact đã commit và đã bàn giao | `codex-claude-arm` |
 | Phiên gốc là Claude, arm cần gọi sang Codex | `codex-arm` |
-| Builder trên phiên gốc Codex vừa xong một ticket | Chính Builder bắn `arm: ticket` |
-| Một spec đang tạm dừng, hoặc một slice vừa đóng, trên phiên gốc Codex | Thomas bắn `arm: spec` / `arm: slice` |
-| Gate mốc, người review, bản báo cáo | `review-with-rin` — không bao giờ là skill này |
+| Builder trên phiên gốc Codex vừa xong một ticket | Chính Builder chạy `arm: ticket` |
+| Một spec đang tạm dừng, hoặc một slice vừa đóng, trên phiên gốc Codex | Thomas chạy `arm: spec` / `arm: slice` |
+| Gate mốc, người review, bản báo cáo | `review-with-rin`, không bao giờ là skill này |
 
 <!-- source: harness/.agents/skills/codex-claude-arm/SKILL.md -->
 
 ## Cần sẵn gì
 
-- **Artifact đã xong và đã bàn giao.** Bắn sớm là tiêu một trong hai lượt được phép vào thứ
-  còn đang động đậy.
+- **Artifact đã xong và đã bàn giao.** Chạy sớm là tiêu một trong hai lượt được phép vào thứ
+  còn đang thay đổi.
 - **Artifact đã commit**, đã chốt đúng base ref và SHA head cuối. Một phán quyết cho SHA cũ
   không cho phép merge.
 - **Model id của Claude ghi tường minh.** Alias trần `sonnet` trỏ sang một model khác với
@@ -56,13 +56,13 @@ reviewer biết ghi, tức dựng lại AST-016 trên cơ chế mới nhất.
 
 ## Nó để lại gì
 
-| Chuyện gì đã xảy ra | Nó nằm lại ở đâu |
+| Kết quả | Nơi nó nằm lại |
 |---|---|
 | Checkout cách ly để review | `<repo-root>/.claude/worktrees/gate-arm-<artifact-key>`, tách khỏi `gate-<artifact-key>` của chính reviewer |
 | Vật liệu đem ra review | `GATE-DIFF.patch` và `GATE-LOG.txt`, do người dispatch ghi vào trong worktree gate |
-| Khoảng review, nói ngay từ đầu | Một dòng nêu số commit và số file cho `<base>..<head-sha>` |
+| Khoảng review, nêu ngay từ đầu | Một dòng nêu số commit và số file cho `<base>..<head-sha>` |
 | Phán quyết | Ghi đúng một lần vào decision trail: vendor đã chạy, hoặc `cross-vendor arm: NOT RUN — <reason>` |
-| Những phát hiện bạn xác nhận là thật | Chuyển về người sở hữu artifact — spec về Shaper đang dừng, ticket về Builder của nó |
+| Những phát hiện bạn xác nhận là thật | Chuyển về người sở hữu artifact: spec về Shaper đang dừng, ticket về Builder của nó |
 
 <!-- source: harness/.agents/skills/codex-claude-arm/SKILL.md -->
 
@@ -72,15 +72,15 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Cả ba đều �
 `promoted`.
 
 - **AST-016**: các agent dùng chung một checkout đã dời HEAD dưới chân nhau, kể cả một reviewer
-  chỉ-đọc lỡ `git switch` HEAD của người khác. Đã sửa: cách ly là vô điều kiện với mọi agent
-  được spawn mà có thể chạy lệnh git làm đổi trạng thái — đó là lý do `claude -p` vẫn có
+  chỉ đọc lỡ `git switch` HEAD của người khác. Đã sửa: cách ly là vô điều kiện với mọi agent
+  được spawn mà có thể chạy lệnh git làm đổi trạng thái. Đó là lý do `claude -p` vẫn có
   worktree detached riêng ngay cả khi Builder đang đứng sẵn trong cây được review.
-- **AST-103**: arm lặng lẽ review một khoảng không có commit nào rồi trả về sạch — đo được hai
+- **AST-103**: arm lặng lẽ review một khoảng không có commit nào rồi trả về sạch, đo được hai
   lần trong hai ngày trên cùng một dự án, cả hai lần do người vận hành bắt chứ không phải gate.
   Đã sửa: khối setup thoát khác 0 khi `git rev-list --count` bằng 0, và dòng đầu output nêu
   khoảng review để một lượt review rỗng lộ ra ngay.
-- **AST-135**: điểm bắn phải đi theo artifact. Builder giờ tự bắn `arm: ticket` từ worktree của
-  mình, còn Thomas giữ `arm: spec` và `arm: slice`. Skill này cố tình không bắt chước cú dời đó
+- **AST-135**: điểm chạy phải đi theo artifact. Builder giờ tự chạy `arm: ticket` từ worktree của
+  chính nó, còn Thomas giữ `arm: spec` và `arm: slice`. Skill này cố tình không sao chép cú dời đó
   ở phạm vi ticket, và entry đó nói rõ vì sao.
 
 <!-- source: harness/.agents/memory/recurring-failure-modes.md -->
@@ -101,7 +101,7 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Cả ba đều �
 
 ## Nó nằm ở đâu trong chuỗi
 
-Artifact đã commit và đã bàn giao → `codex-claude-arm` bắn một lượt Claude qua đúng khoảng đã
+Artifact đã commit và đã bàn giao → `codex-claude-arm` chạy một lượt Claude qua đúng khoảng đã
 chốt → bạn phân loại phát hiện nào là thật rồi chuyển về người sở hữu artifact → một phát hiện
 chặn nghĩa là một bản sửa, một SHA mới và lượt 2 theo cùng hợp đồng → lối ra khác nhau theo
 loại artifact, và chỉ lối ra ở ticket mới là merge. `codex-arm` là bản đối xứng của skill này

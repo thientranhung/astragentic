@@ -13,21 +13,21 @@ updated: 2026-09-04
 ## What it does
 
 This is the recipe Thomas runs to get a second opinion at a milestone: a finalized spec, a
-ticket or PR closing, an epic wrapping up. It resolves an artifact key, opens a Herdr pane
-with its own detached worktree at the exact reviewed SHA, packs Rin a brief (mode, spec or
-ticket path, acceptance criteria, one paragraph of owner intent, and, for UI work, the
-design-guidelines pointer plus the Builder's browser evidence), dispatches her, then collects
-whatever she writes to a gate-file before touching anything else.
+ticket or PR closing, an epic wrapping up. It resolves an artifact key, opens a Herdr pane with
+its own detached worktree at the exact reviewed SHA, and packs Rin a brief with the mode, the
+spec or ticket path, the acceptance criteria, one paragraph of owner intent, and, for UI work,
+the design-guidelines pointer plus the Builder's browser evidence. It then dispatches her and
+collects whatever she writes to a gate-file before touching anything else.
 
-What makes this different from a normal PR review is that it deliberately runs only **once
-per milestone**. The friction it's answering is a loop: an earlier version of this method let
-review rounds repeat, and a project running it measured 5 to 14 rounds per milestone, a lot
-of that being the loop re-reviewing its own earlier fixes. So this skill treats Rin's findings
-as advice Thomas classifies once, design-level blockers go to the owner as a decision (never
-a second round), and everything else becomes one work order to whoever owns the artifact. The
-gate-file mechanics exist for a related reason: a pane read in Herdr silently truncates to the
-visible row count while reporting success, and gate reports routinely run 300+ lines, so the
-full report has to land in a file Thomas names and verifies before any cleanup.
+What makes this different from a normal PR review is that it deliberately runs only **once per
+milestone**. The problem it answers is a loop. An earlier version of this method let review
+rounds repeat, and a project running it measured 5 to 14 rounds per milestone, much of that the
+loop re-reviewing its own earlier fixes. So this skill treats Rin's findings as advice Thomas
+classifies once. Design-level blockers go to the owner as a decision, never as a second round,
+and everything else becomes one work order to whoever owns the artifact. The gate-file mechanics
+exist for a related reason: a pane read in Herdr silently truncates to the visible row count
+while reporting success, and gate reports routinely run 300+ lines, so the full report has to
+land in a file Thomas names and verifies before any cleanup.
 <!-- source: harness/.agents/skills/review-with-rin/SKILL.md -->
 
 ## When Thomas reaches for it
@@ -37,18 +37,18 @@ full report has to land in a file Thomas names and verifies before any cleanup.
 | A spec just got committed, finalized | `review-with-rin`, `mode=adversarial` |
 | A ticket or PR is ready to close | `review-with-rin`, `mode=code-review` |
 | An epic just closed | `review-with-rin`, `mode=code-review` (reports to the owner, nothing to merge) |
-| You're reviewing one increment inside an open ticket | not this, that's `mattpocock-skills:code-review` plus the simplify pass, complete on its own |
+| You are reviewing one increment inside an open ticket | Not this one, but `mattpocock-skills:code-review` plus the simplify pass, which is complete on its own |
 <!-- source: harness/.agents/skills/review-with-rin/SKILL.md -->
 
 ## Prerequisites
 
-- You are Thomas: this is a Thomas-only recipe.
-- Herdr is reachable and the workspace is nameable (a live daemon isn't enough proof; if you
-  can't name the workspace, that's a STOP, not a fallback to a subagent).
-- A launcher exists for the `rin` row's runtime in `orchestrator.md`. No adapter for the
-  needed runtime is also a STOP to the owner.
-- `check-requirements.sh` already treats Herdr as hard-required, so this adds no new
-  dependency on top of it.
+- You are Thomas, because this is a Thomas-only recipe.
+- Herdr is reachable and the workspace is nameable. A live daemon is not enough proof, and if you
+  cannot name the workspace, that is a STOP rather than a fallback to a subagent.
+- A launcher exists for the `rin` row's runtime in `orchestrator.md`. No adapter for the needed
+  runtime is also a STOP to the owner.
+- `check-requirements.sh` already treats Herdr as hard-required, so this adds no new dependency on
+  top of it.
 <!-- source: harness/.agents/skills/review-with-rin/SKILL.md -->
 
 ## What it leaves behind
@@ -84,19 +84,19 @@ full report has to land in a file Thomas names and verifies before any cleanup.
   before the gate worktree was removed.
 - A `rin(gate):` marker sits at the reviewed head with `Scope:`, `Verdict:` and `Report:`
   filled in.
-- Thomas has actually overruled or deferred at least one finding across recent gates. A run
-  of zero overrules is a sign he's relaying Rin's labels rather than classifying them.
+- Thomas has actually overruled or deferred at least one finding across recent gates. A run of
+  zero overrules is a sign he is relaying Rin's labels rather than classifying them.
 - Nothing merged before the cross-vendor arm ran on the final SHA.
 <!-- source: harness/.agents/skills/review-with-rin/SKILL.md -->
 
 ## Where it fits
 
-A ticket moves through `/skills/dispatch-ticket`'s worktree, and once it's ready to close,
+A ticket moves through `/skills/dispatch-ticket`'s worktree, and once it is ready to close,
 `review-with-rin` gates it: reading the diff, checking that the simplify marker and the
-`Ledger:` line actually exist, and that browser evidence backs any UI change. What Rin can't
-judge (whether the running product still coheres) is `dispatch-qa-walk`'s job, not hers.
-Once findings are folded and verified, `/skills/codex-arm` takes the final SHA for the
-cross-vendor pass before anything merges. The `rin` role itself lives in `/dictionary/role`
-terms, and the whole thing happens inside a `/dictionary/gate`, on a `/dictionary/worktree`
-nobody but Rin writes to.
+`Ledger:` line actually exist, and that browser evidence backs any UI change. What Rin cannot
+judge, meaning whether the running product still coheres, is `dispatch-qa-walk`'s job. Once
+findings are folded and verified, `/skills/codex-arm` takes the final SHA for the cross-vendor
+pass before anything merges. The `rin` role itself lives in `/dictionary/role` terms, and the
+whole thing happens inside a `/dictionary/gate`, on a `/dictionary/worktree` nobody but Rin
+writes to.
 <!-- source: harness/.agents/skills/review-with-rin/SKILL.md -->

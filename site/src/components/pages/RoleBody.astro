@@ -140,7 +140,7 @@ const sessionTag = `session: ${role.sessionTag.replace(/^session:\s*/i, '')}`;
   }
 
   .gap {
-    font-size: 12.5px;
+    font-size: var(--text-mono);
     color: var(--ink-muted);
     margin: 0;
   }
@@ -159,13 +159,13 @@ const sessionTag = `session: ${role.sessionTag.replace(/^session:\s*/i, '')}`;
   }
   .col :global(p),
   .col :global(li) {
-    font-size: 15px;
+    font-size: var(--text-body-sm);
   }
   .col--not {
     border-color: color-mix(in srgb, var(--defect) 35%, var(--rule));
   }
   .col-head {
-    font-size: 10px;
+    font-size: var(--text-micro);
     text-transform: uppercase;
     letter-spacing: 0.12em;
     color: var(--ink-muted);
@@ -176,7 +176,7 @@ const sessionTag = `session: ${role.sessionTag.replace(/^session:\s*/i, '')}`;
   }
 
   .count {
-    font-size: 11.5px;
+    font-size: var(--text-label);
     letter-spacing: 0.04em;
     color: var(--ink-muted);
     margin: 0.2rem 0 0;
@@ -196,14 +196,14 @@ const sessionTag = `session: ${role.sessionTag.replace(/^session:\s*/i, '')}`;
     margin-top: 0.75rem;
   }
   .foot-label {
-    font-size: 10px;
+    font-size: var(--text-micro);
     text-transform: uppercase;
     letter-spacing: 0.12em;
     color: var(--ink-muted);
     margin: 0 0 0.5rem;
   }
   .foot-a {
-    font-size: 12.5px;
+    font-size: var(--text-mono);
     color: var(--accent);
     text-decoration: none;
     border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);

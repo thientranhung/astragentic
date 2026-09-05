@@ -13,13 +13,13 @@ export type Dict = Record<Lang, string>;
 export const UI = {
   /* ── chrome ── */
   tagline: {
-    vi: 'Astragentic — lớp điều phối cho nhiều agent trên một codebase thật.',
-    en: 'Astragentic — the orchestration layer for coding agents on a real codebase.',
+    vi: 'Astragentic: lớp điều phối cho nhiều coding agent trên một repo thật.',
+    en: 'Astragentic: the coordination layer for coding agents on a real repo.',
   },
   repoLink: { vi: 'GitHub ↗', en: 'GitHub ↗' },
   footerAdopt: { vi: 'Cài', en: 'Adopt' },
   footerVersion: { vi: 'phiên bản', en: 'version' },
-  footerCited: { vi: 'dòng đã buộc vào file', en: 'entries bound to a file' },
+  footerCited: { vi: 'dòng ledger đã buộc vào file', en: 'entries bound to a file' },
   footerGenerated: { vi: 'số liệu sinh ngày', en: 'data generated' },
   skipToContent: { vi: 'Sang phần nội dung', en: 'Skip to content' },
 
@@ -40,8 +40,8 @@ export const UI = {
 
   /* ── hero strip ── */
   heroEyebrow: {
-    vi: 'Lớp điều phối cho nhiều agent trên một codebase thật',
-    en: 'Orchestration layer for coding agents',
+    vi: 'Lớp điều phối cho nhiều coding agent trên một repo thật',
+    en: 'Coordination layer for coding agents',
   },
   statLogged: { vi: 'lỗi đã ghi vào sổ', en: 'failure modes logged' },
   statBound: { vi: 'dòng đã buộc vào một file', en: 'bound to a file' },
@@ -85,7 +85,7 @@ export const UI = {
   wholeTable: { vi: 'Cả bảng, và 65 dòng mồ côi →', en: 'The whole table, and 65 orphan rows →' },
 
   /* ── adopt ── */
-  installIt: { vi: 'Cài cho repo của anh em →', en: 'Install it in your repo →' },
+  installIt: { vi: 'Cài cho repo của bạn →', en: 'Install it in your repo →' },
   copy: { vi: 'Chép', en: 'Copy' },
   copied: { vi: 'Đã chép', en: 'Copied' },
   prerequisites: { vi: 'Cần sẵn', en: 'Prerequisites' },
@@ -106,8 +106,8 @@ export const UI = {
   roleContract: { vi: 'Contract nguyên văn', en: 'The contract, verbatim' },
   roleSkills: { vi: 'Skill liên quan', en: 'Related skills' },
   roleMissing: {
-    vi: 'Trang vai này chưa có prose — bằng chứng bên dưới là thật.',
-    en: 'No prose for this role yet — the evidence below is live.',
+    vi: 'Trang vai này chưa có prose. Bằng chứng bên dưới là dữ liệu thật.',
+    en: 'No prose for this role yet. The evidence below is live data.',
   },
   backHome: { vi: 'Về trang chủ →', en: 'Back to the home page →' },
   seeItRun: { vi: 'Xem nó chạy', en: 'Watch it run' },
@@ -125,12 +125,12 @@ export const UI = {
   skillGroupLabel: { vi: 'Nhóm', en: 'Group' },
   skillBack: { vi: 'Về catalog skill →', en: 'Back to the skill catalog →' },
   skillMissing: {
-    vi: 'Trang skill này chưa có bản tiếng Việt — dữ liệu bên dưới lấy từ catalog.',
-    en: 'This skill page has no prose yet — the data below comes from the catalog.',
+    vi: 'Trang skill này chưa có bản tiếng Việt. Dữ liệu bên dưới lấy từ catalog.',
+    en: 'This skill page has no prose yet. The data below comes from the catalog.',
   },
 
   /* ── hooks ── */
-  hooksTitle: { vi: 'Hook đứng gác', en: 'The hooks on guard' },
+  hooksTitle: { vi: 'Hook trong harness', en: 'The hooks in the harness' },
   hookWhen: { vi: 'Bắn khi', en: 'Fires when' },
   hookScript: { vi: 'Script', en: 'Script' },
   hookEffect: { vi: 'Chặn hay ghi', en: 'Blocks or logs' },
@@ -141,7 +141,7 @@ export const UI = {
   whyAll: { vi: 'Năm câu vì sao →', en: 'All five answers →' },
 
   /* ── tech stack ── */
-  stackTitle: { vi: 'Mình dùng gì', en: 'What this runs on' },
+  stackTitle: { vi: 'Astragentic chạy trên gì', en: 'What this runs on' },
   stackAll: { vi: 'Cả tech stack →', en: 'The whole stack →' },
   stackRequired: { vi: 'bắt buộc', en: 'required' },
   stackOptional: { vi: 'tuỳ chọn', en: 'optional' },
@@ -150,7 +150,7 @@ export const UI = {
   structureTitle: { vi: 'Cấu trúc', en: 'Structure' },
   structureAll: { vi: 'Xem cấu trúc →', en: 'See the structure →' },
   goodParts: { vi: 'Các phần hay', en: 'The good parts' },
-  openLedger: { vi: 'Mở cuốn sổ →', en: 'Open the ledger →' },
+  openLedger: { vi: 'Mở ledger →', en: 'Open the ledger →' },
   layers: { vi: 'Bốn lớp', en: 'Four layers' },
 
   /* ── nav ── */
@@ -161,8 +161,8 @@ export const UI = {
   notFoundCode: { vi: '404', en: '404' },
   notFoundTitle: { vi: 'Không có trang này', en: 'No page here' },
   notFoundLine: {
-    vi: 'Đường dẫn này không trỏ tới trang nào — có thể nó đã đổi tên, có thể mình gõ nhầm.',
-    en: 'This address points at nothing — it may have been renamed, or mistyped.',
+    vi: 'Đường dẫn này không trỏ tới trang nào. Trang có thể đã đổi tên, hoặc địa chỉ bị gõ nhầm.',
+    en: 'This address points at nothing. The page may have been renamed, or the address mistyped.',
   },
   notFoundHome: { vi: 'Về trang chủ', en: 'Back to the home page' },
   notFoundSkills: { vi: 'Xem catalog skill', en: 'See the skill catalog' },

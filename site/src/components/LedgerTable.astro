@@ -232,7 +232,7 @@ const uid = `lt-${Math.random().toString(36).slice(2, 8)}`;
   .filter {
     flex: 1 1 260px;
     max-width: 360px;
-    font-size: 12.5px;
+    font-size: var(--text-mono);
     padding: 0.55rem 0.7rem;
     background: var(--surface);
     border: 1px solid var(--rule);
@@ -244,7 +244,7 @@ const uid = `lt-${Math.random().toString(36).slice(2, 8)}`;
     border-color: var(--ink);
   }
   .count {
-    font-size: 11px;
+    font-size: var(--text-label-sm);
     letter-spacing: 0.06em;
     color: var(--ink-muted);
     margin: 0;
@@ -273,7 +273,7 @@ const uid = `lt-${Math.random().toString(36).slice(2, 8)}`;
     background: var(--surface);
     text-align: left;
     font-weight: 500;
-    font-size: 10.5px;
+    font-size: var(--text-label-sm);
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--ink-muted);
@@ -287,21 +287,21 @@ const uid = `lt-${Math.random().toString(36).slice(2, 8)}`;
   }
   .c-id {
     width: 96px;
-    font-size: 12.5px;
+    font-size: var(--text-mono);
   }
   .c-status {
     width: 110px;
-    font-size: 11.5px;
+    font-size: var(--text-label);
     color: var(--ink-muted);
   }
   .c-cited {
     width: 76px;
-    font-size: 12.5px;
+    font-size: var(--text-mono);
     text-align: right;
     padding-right: 0.25rem;
   }
   .c-lesson {
-    font-size: 16px;
+    font-size: var(--text-body-sm);
     line-height: 1.35;
   }
 
@@ -322,8 +322,10 @@ const uid = `lt-${Math.random().toString(36).slice(2, 8)}`;
     transform: rotate(90deg);
     display: inline-block;
   }
+  /* One per row, forty rows: a count is data, not a signal, so it does not get the
+     brand. The bar down the opened drawer does — that one is "the row you are on". */
   .hit {
-    color: var(--pass);
+    color: var(--ink);
     white-space: nowrap;
   }
   .row--orphan .c-lesson,
@@ -344,10 +346,10 @@ const uid = `lt-${Math.random().toString(36).slice(2, 8)}`;
   }
   .drawer-in {
     padding: 1.15rem 1.25rem 1.25rem;
-    border-left: 2px solid var(--pass);
+    border-left: 2px solid var(--brand-primary);
   }
   .drawer-title {
-    font-size: 12px;
+    font-size: var(--text-label);
     letter-spacing: 0.03em;
     color: var(--ink-muted);
     margin: 0 0 0.65rem;
@@ -356,12 +358,12 @@ const uid = `lt-${Math.random().toString(36).slice(2, 8)}`;
     margin: 0 0 1rem;
     padding: 0;
     border: 0;
-    font-size: 13px;
+    font-size: var(--text-mono);
     line-height: 1.6;
     white-space: pre-wrap;
   }
   .drawer-label {
-    font-size: 10px;
+    font-size: var(--text-micro);
     text-transform: uppercase;
     letter-spacing: 0.12em;
     color: var(--ink-muted);
@@ -379,7 +381,7 @@ const uid = `lt-${Math.random().toString(36).slice(2, 8)}`;
     margin: 0;
   }
   .ref {
-    font-size: 12.5px;
+    font-size: var(--text-mono);
     color: var(--pass);
     text-decoration: none;
     border-bottom: 1px solid color-mix(in srgb, var(--pass) 40%, transparent);
@@ -388,19 +390,19 @@ const uid = `lt-${Math.random().toString(36).slice(2, 8)}`;
     border-bottom-color: var(--pass);
   }
   .ref-dead {
-    font-size: 12.5px;
+    font-size: var(--text-mono);
     color: var(--ink-muted);
   }
   .commit-subject {
     display: block;
-    font-size: 14px;
+    font-size: var(--text-ui);
     color: var(--ink-muted);
     margin-top: 0.15rem;
   }
 
   .drawer-src {
     margin: 0;
-    font-size: 11px;
+    font-size: var(--text-label-sm);
   }
   .drawer-src a {
     color: var(--ink-muted);

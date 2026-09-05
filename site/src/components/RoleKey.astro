@@ -46,7 +46,7 @@ const { lang, link = true, class: extra = '' } = Astro.props;
     margin-top: 0.85rem;
   }
   .rolekey-label {
-    font-size: 10px;
+    font-size: var(--text-micro);
     letter-spacing: 0.11em;
     text-transform: uppercase;
     color: var(--ink-muted);
@@ -66,7 +66,7 @@ const { lang, link = true, class: extra = '' } = Astro.props;
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    font-size: 11.5px;
+    font-size: var(--text-label);
     letter-spacing: 0.05em;
     color: var(--ink-muted);
     text-decoration: none;
