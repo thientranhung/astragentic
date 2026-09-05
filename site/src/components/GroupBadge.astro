@@ -1,0 +1,19 @@
+---
+// A skill group, said in colour (design spec 5 §3): soft ground, label in the same
+// hue. The seven hues are declared once in src/styles/global.css against
+// `[data-group]`, so a badge, a sidebar row and a diagram node cannot disagree.
+import { GROUPS, type GroupId } from '../lib/skills';
+import type { Lang } from '../lib/site';
+
+interface Props {
+  group: GroupId;
+  lang: Lang;
+  /** The short label, for a badge sitting in a table column. */
+  short?: boolean;
+  class?: string;
+}
+const { group, lang, short = false, class: extra = '' } = Astro.props;
+const label = short ? GROUPS[group].short[lang] : GROUPS[group].title[lang];
+---
+
+<span class:list={['badge', extra]} data-group={group}>{label}</span>

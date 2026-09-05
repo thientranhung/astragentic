@@ -1,5 +1,8 @@
 ---
-import BaseLayout from './BaseLayout.astro';
+// /dictionary/<term> — the English-only reference set. Read mode (design spec 5 §2),
+// with the term's own facts in the meta card and the site tree in the left rail, so a
+// dictionary page is not a second site with its own furniture.
+import DocsLayout from './DocsLayout.astro';
 import type { Lang } from '../lib/site';
 
 interface Props {
@@ -14,79 +17,115 @@ interface Props {
   switchTo?: Record<Lang, string>;
 }
 const { title, description, eyebrow, sourcePath, runtimes, updated, switchTo } = Astro.props;
+const hasMeta = Boolean(sourcePath || (runtimes && runtimes.length) || updated);
 ---
 
-<BaseLayout title={title} description={description} lang="en" switchTo={switchTo}>
-  <div class="column-wide pt-16 pb-24">
-    <div class="grid gap-12 md:grid-cols-[minmax(0,720px)_200px] md:justify-between">
-      <article class="prose-body">
-        {eyebrow && <p class="eyebrow mb-3">{eyebrow}</p>}
-        <h1 class="mb-8">{title}</h1>
-        <slot />
-      </article>
-      {
-        (sourcePath || runtimes || updated) && (
-          <aside class="mono text-xs" style="color: var(--ink-muted);">
+<DocsLayout
+  title={title}
+  description={description}
+  lang="en"
+  switchTo={switchTo}
+  eyebrow={eyebrow}
+  lede={description}
+>
+  <div class:list={['term', hasMeta && 'term--meta']}>
+    <article class="prose read-body">
+      <slot />
+    </article>
+
+    {
+      hasMeta && (
+        <aside class="meta" data-toc-skip>
+          <dl>
             {sourcePath && (
-              <p class="mb-4">
-                <span class="block uppercase" style="letter-spacing: 0.06em;">
-                  Source
-                </span>
-                {sourcePath}
-              </p>
+              <div>
+                <dt class="mono">Source</dt>
+                <dd class="mono">{sourcePath}</dd>
+              </div>
             )}
             {runtimes && runtimes.length > 0 && (
-              <p class="mb-4">
-                <span class="block uppercase" style="letter-spacing: 0.06em;">
-                  Runtimes
-                </span>
-                {runtimes.join(', ')}
-              </p>
+              <div>
+                <dt class="mono">Runtimes</dt>
+                <dd class="mono">{runtimes.join(', ')}</dd>
+              </div>
             )}
             {updated && (
-              <p class="mb-4">
-                <span class="block uppercase" style="letter-spacing: 0.06em;">
-                  Updated
-                </span>
-                {updated.toISOString().slice(0, 10)}
-              </p>
+              <div>
+                <dt class="mono">Updated</dt>
+                <dd class="mono">{updated.toISOString().slice(0, 10)}</dd>
+              </div>
             )}
-          </aside>
-        )
-      }
-    </div>
+          </dl>
+        </aside>
+      )
+    }
   </div>
-</BaseLayout>
+</DocsLayout>
 
 <style>
-  /* Same measure and the same 17px body as the rest of the site (PRD §5). Without
-     this the 720px column runs to 85 characters and reads as a second site. */
-  .prose-body :global(p),
-  .prose-body :global(li) {
-    max-width: 68ch;
-    font-size: 17px;
+  .term--meta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 10rem;
+    gap: 2rem;
+    align-items: start;
   }
-  .prose-body :global(h2) {
-    margin-top: 3.25rem;
-    margin-bottom: 0.9rem;
+  .meta {
+    position: sticky;
+    top: calc(var(--header-h) + 1.5rem);
+    padding-left: 1.25rem;
+    border-left: 1px solid var(--rule);
   }
-  .prose-body :global(p) {
-    margin-bottom: 1rem;
+  .meta dl {
+    margin: 0;
+    display: grid;
+    gap: 1rem;
   }
-  .prose-body :global(table) {
+  .meta dt {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--ink-muted);
+    margin-bottom: 0.3rem;
+  }
+  .meta dd {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .read-body :global(h2) {
+    font-size: 22px;
+    margin-top: var(--section-gap);
+    margin-bottom: 0.5rem;
+  }
+  .read-body :global(table) {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
+    font-size: 14px;
   }
-  .prose-body :global(th),
-  .prose-body :global(td) {
+  .read-body :global(th),
+  .read-body :global(td) {
     border-bottom: 1px solid var(--rule);
-    padding: 0.5rem 0.75rem 0.5rem 0;
+    padding: 0.45rem 0.75rem 0.45rem 0;
     text-align: left;
     vertical-align: top;
   }
-  .prose-body :global(a) {
-    text-decoration: underline;
-    text-decoration-color: var(--rule);
+
+  @media (max-width: 760px) {
+    .term--meta {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.25rem;
+    }
+    .meta {
+      order: -1;
+      position: static;
+      padding: 0.9rem 1rem;
+      border-left: 0;
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      background: var(--paper-sunk);
+    }
   }
 </style>

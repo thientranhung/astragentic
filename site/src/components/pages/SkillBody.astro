@@ -2,9 +2,14 @@
 // /skills/<name> · /en/skills/<name> — one skill, in one language. The prose comes from
 // src/content/skills/<lang>/<name>.md; when that file has not landed, the page still
 // stands on the catalog line and says so.
-import BaseLayout from '../../layouts/BaseLayout.astro';
+//
+// Design spec 5 §2: Read mode, with the facts about the skill in a sticky card beside
+// the prose instead of a strip above it. On a phone the card comes first.
+import DocsLayout from '../../layouts/DocsLayout.astro';
 import Diagram from '../Diagram.astro';
-import { catalogLine, GROUPS, skillHref, type GroupId } from '../../lib/skills';
+import GroupBadge from '../GroupBadge.astro';
+import { catalogLine, skillHref, type GroupId } from '../../lib/skills';
+import { ledger } from '../../lib/data';
 import { ROUTES, REPO, UI, type Lang } from '../../lib/site';
 import { render } from 'astro:content';
 
@@ -22,18 +27,50 @@ const source = data.source as string | undefined;
 const runtimes = (data.runtimes ?? []) as string[];
 const updated = data.updated as Date | undefined;
 const alternate = { vi: skillHref('vi', name), en: skillHref('en', name) };
+
+// Ledger rows that name this skill: the failures that shaped the procedure.
+const cited = ledger.filter((row) => (row.citedBy ?? []).includes(name));
+const evidenceRoute = ROUTES.evidence[lang];
 ---
 
-<BaseLayout title={name} description={line} lang={lang} alternate={alternate}>
-  <section class="screen screen--paper">
-    <div class="column">
-      <p class="eyebrow mono">{GROUPS[group].title[lang]}</p>
-      <h1 class="mono name">{name}</h1>
-      <p class="sub">{line}</p>
-      {data.diagram && <Diagram slug={data.diagram} lang={lang} title={name} class="band" />}
+<DocsLayout
+  title={name}
+  description={line}
+  lang={lang}
+  alternate={alternate}
+  heading={name}
+  monoTitle
+  lede={line}
+>
+  <div class="skill-grid">
+    <div class="skill-main">
+      {data.diagram && <Diagram slug={data.diagram} lang={lang} frame={500} title={name} />}
+      {
+        Content ? (
+          <article class="prose read-body">
+            <Content />
+          </article>
+        ) : (
+          <div class="gap">
+            <p class="gap-note mono">{UI.skillMissing[lang]}</p>
+            <p class="gap-line" lang="en">{catalogLine(name)}</p>
+            <p class="gap-src mono">
+              <a href={`${REPO}/tree/main/harness/.agents/skills/${name}`} target="_blank" rel="noreferrer">
+                {`harness/.agents/skills/${name}/SKILL.md ↗`}
+              </a>
+            </p>
+          </div>
+        )
+      }
+      <a class="more-link" href={ROUTES.skills[lang]}>{UI.skillBack[lang]}</a>
     </div>
-    <div class="column facts">
+
+    <aside class="meta" data-toc-skip>
       <dl>
+        <div>
+          <dt class="mono">{UI.skillGroupLabel[lang]}</dt>
+          <dd><GroupBadge group={group} lang={lang} /></dd>
+        </div>
         {
           source && (
             <div>
@@ -58,84 +95,92 @@ const alternate = { vi: skillHref('vi', name), en: skillHref('en', name) };
             </div>
           )
         }
+        {
+          cited.length > 0 && (
+            <div>
+              <dt class="mono">{UI.colCited[lang]}</dt>
+              <dd class="cites">
+                {cited.map((row) => (
+                  <a class="ast" href={`${evidenceRoute}#${row.id.toLowerCase()}`}>{row.id}</a>
+                ))}
+              </dd>
+            </div>
+          )
+        }
       </dl>
-    </div>
-    <div class="column">
-      {
-        Content ? (
-          <article class="prose skill-prose">
-            <Content />
-          </article>
-        ) : (
-          <div class="gap">
-            <p class="gap-note mono">{UI.skillMissing[lang]}</p>
-            <p class="gap-line" lang="en">{catalogLine(name)}</p>
-            <p class="gap-src mono">
-              <a href={`${REPO}/tree/main/harness/.agents/skills/${name}`} target="_blank" rel="noreferrer">
-                {`harness/.agents/skills/${name}/SKILL.md ↗`}
-              </a>
-            </p>
-          </div>
-        )
-      }
-      <a class="more-link" href={ROUTES.skills[lang]}>{UI.skillBack[lang]}</a>
-    </div>
-  </section>
-</BaseLayout>
+    </aside>
+  </div>
+</DocsLayout>
 
 <style>
-  h1.name {
-    font-size: clamp(28px, 2.8vw, 38px);
-    letter-spacing: -0.01em;
-  }
-  .facts dl {
-    display: flex;
-    flex-wrap: wrap;
+  .skill-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 12rem;
     gap: 2rem;
-    margin: 1.75rem 0 0;
-    padding-top: 1.1rem;
-    border-top: 1px solid var(--rule);
+    align-items: start;
   }
-  .facts dt {
+  .skill-main {
+    min-width: 0;
+  }
+  .meta {
+    position: sticky;
+    top: calc(var(--header-h) + 1.5rem);
+    padding-left: 1.25rem;
+    border-left: 1px solid var(--rule);
+  }
+  .meta dl {
+    margin: 0;
+    display: grid;
+    gap: 1rem;
+  }
+  .meta dt {
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.11em;
     color: var(--ink-muted);
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.3rem;
   }
-  .facts dd {
+  .meta dd {
     margin: 0;
     font-size: 12px;
+    line-height: 1.45;
     color: var(--ink);
+    overflow-wrap: anywhere;
   }
-  .skill-prose {
-    margin-top: 2.5rem;
+  .cites {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
   }
-  .skill-prose :global(h2) {
+  .cites .ast {
+    font-size: 11.5px;
+  }
+
+  .read-body :global(h2) {
     font-size: 22px;
-    margin-top: 2.5rem;
-    margin-bottom: 0.6rem;
+    margin-top: var(--section-gap);
+    margin-bottom: 0.5rem;
   }
-  .skill-prose :global(p),
-  .skill-prose :global(li) {
+  .read-body :global(p),
+  .read-body :global(li) {
     max-width: 68ch;
   }
-  .skill-prose :global(table) {
+  .read-body :global(table) {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
     font-size: 14px;
   }
-  .skill-prose :global(th),
-  .skill-prose :global(td) {
+  .read-body :global(th),
+  .read-body :global(td) {
     border-bottom: 1px solid var(--rule);
-    padding: 0.45rem 0.75rem 0.45rem 0;
+    padding: 0.4rem 0.75rem 0.4rem 0;
     text-align: left;
     vertical-align: top;
   }
+
   .gap {
-    margin-top: 2.5rem;
-    padding: 1.25rem 1.4rem;
+    padding: 1.1rem 1.25rem;
     border: 1px solid var(--rule);
     border-radius: 2px;
     background: var(--paper-sunk);
@@ -145,12 +190,12 @@ const alternate = { vi: skillHref('vi', name), en: skillHref('en', name) };
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--ink-muted);
-    margin-bottom: 0.9rem;
+    margin-bottom: 0.7rem;
   }
   .gap-line {
     font-size: 16px;
     line-height: 1.5;
-    margin-bottom: 0.9rem;
+    margin-bottom: 0.7rem;
   }
   .gap-src {
     font-size: 11.5px;
@@ -160,5 +205,24 @@ const alternate = { vi: skillHref('vi', name), en: skillHref('en', name) };
     color: var(--ink-muted);
     text-decoration: none;
     border-bottom: 1px solid var(--rule);
+  }
+
+  @media (max-width: 760px) {
+    .skill-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.5rem;
+    }
+    .meta {
+      order: -1;
+      position: static;
+      padding: 0.9rem 1rem;
+      border-left: 0;
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      background: var(--paper-sunk);
+    }
+    .meta dl {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 </style>

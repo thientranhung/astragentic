@@ -1,8 +1,9 @@
 ---
-// /skills · /en/skills — the catalog, grouped by the moment you reach for one
-// (build spec 4 §3, aihero-style). Each group gets a heading and one sentence; each
-// skill gets one verb line and its own page.
-import BaseLayout from '../../layouts/BaseLayout.astro';
+// /skills · /en/skills — the catalog, filed by the moment you reach for one (PRD §5,
+// aihero-style). Design spec 5 §2: a table, not a page of cards. One row per skill at
+// about 44px, the whole row a link, the group said in colour on the right.
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import GroupBadge from '../GroupBadge.astro';
 import { getSkillGroups } from '../../lib/skills';
 import { UI, type Lang } from '../../lib/site';
 
@@ -20,55 +21,57 @@ const lede =
     : 'A skill is a written-down procedure for one moment. The list below is filed by when you need one, not by what it is made of.';
 ---
 
-<BaseLayout title={title} description={lede} lang={lang} page="skills">
-  <section class="screen screen--paper">
-    <div class="column">
-      <p class="eyebrow mono">{count} {UI.skillsCount[lang]}</p>
-      <h1>{title}</h1>
-      <p class="sub">{lede}</p>
-    </div>
-  </section>
-
-  <section class="screen screen--sunk">
-    <div class="column">
-      {
-        groups.map((group) => (
-          <section class="group" id={group.id}>
-            <h2>{group.title}</h2>
-            <p class="group-line">{group.line}</p>
-            <ul class="rows">
-              {group.skills.map((skill) => (
-                <li>
-                  <a href={skill.href}>
-                    <span class="name mono">{skill.name}</span>
-                    <span class="line">{skill.line}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))
-      }
-    </div>
-  </section>
-</BaseLayout>
+<DocsLayout
+  title={title}
+  description={lede}
+  lang={lang}
+  page="skills"
+  eyebrow={`${count} ${UI.skillsCount[lang]}`}
+  lede={lede}
+>
+  {
+    groups.map((group) => (
+      <section class="group" id={group.id} data-group={group.id}>
+        <h2 class="group-head">
+          <span class="dot" />
+          <span>{group.title}</span>
+        </h2>
+        <p class="group-line">{group.line}</p>
+        <ul class="rows">
+          {group.skills.map((skill) => (
+            <li data-group={group.id}>
+              <a href={skill.href}>
+                <span class="name mono" lang="en">
+                  {skill.name}
+                </span>
+                <span class="line">{skill.line}</span>
+                <GroupBadge group={group.id} lang={lang} short class="row-badge" />
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+</DocsLayout>
 
 <style>
-  .group {
-    margin-bottom: 3.25rem;
+  .group + .group {
+    margin-top: 1.5rem;
   }
-  .group:last-child {
-    margin-bottom: 0;
-  }
-  .group h2 {
-    font-size: 24px;
-    margin-bottom: 0.4rem;
+  .group-head {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 17px;
+    margin-bottom: 0.15rem;
   }
   .group-line {
-    font-size: 15px;
+    font-size: 14px;
+    line-height: 1.4;
     color: var(--ink-muted);
-    margin: 0 0 1rem;
-    max-width: 60ch;
+    margin: 0 0 0.4rem;
+    max-width: 62ch;
   }
   .rows {
     list-style: none;
@@ -80,31 +83,43 @@ const lede =
     margin: 0;
     border-bottom: 1px solid var(--rule);
   }
+  /* The whole row is the target, not the name inside it. */
   .rows a {
     display: grid;
-    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
-    gap: 1.25rem;
-    align-items: baseline;
-    padding: 0.7rem 0.25rem;
+    grid-template-columns: 9.5rem minmax(0, 1fr) 6.75rem;
+    gap: 0.9rem;
+    align-items: center;
+    min-height: 44px;
+    padding: 0.35rem 0.6rem;
+    margin-inline: -0.6rem;
+    border-radius: 2px;
     text-decoration: none;
   }
+  .rows a:hover {
+    background: var(--tone-soft);
+  }
   .rows a:hover .name {
-    color: var(--pass);
+    color: var(--tone-ink);
   }
   .name {
     font-size: 13px;
-    letter-spacing: 0.01em;
+    letter-spacing: 0.005em;
+    color: var(--ink);
   }
   .line {
-    font-size: 15px;
-    line-height: 1.4;
+    font-size: 14px;
+    line-height: 1.3;
     color: var(--ink-muted);
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: 700px) {
     .rows a {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 0.3rem;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.15rem 0.75rem;
+      align-items: baseline;
+    }
+    .line {
+      grid-column: 1 / -1;
     }
   }
 </style>

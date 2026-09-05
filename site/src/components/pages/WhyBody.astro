@@ -1,9 +1,10 @@
 ---
-// /vi-sao · /en/why — five questions, one anchored section each (build spec 4 §3).
-// The writer owns src/content/pages/<lang>/why.md, split by `## why-astragentic`,
-// `## why-mattpocock`, `## why-not-subagents`, `## why-tracker`, `## why-cross-vendor`.
-import BaseLayout from '../../layouts/BaseLayout.astro';
+// /vi-sao · /en/why — five questions, one anchored section each (build spec 4 §3), in
+// Read mode (design spec 5 §2). The list of five that used to open the page is gone:
+// the "On this page" rail is that list, and it stays on screen while you read.
+import DocsLayout from '../../layouts/DocsLayout.astro';
 import Diagram from '../Diagram.astro';
+import RoleKey from '../RoleKey.astro';
 import Prose from '../Prose.astro';
 import { getPage } from '../../lib/pages';
 import { WHY } from '../../lib/anchors';
@@ -27,89 +28,52 @@ const FIGURE: Record<string, string> = {
   'why-tracker': 'frontier-query',
   'why-cross-vendor': 'cross-vendor-arm',
 };
+/** The figures that carry roles get the role key under them (design spec 5 §3). */
+const KEYED = new Set(['hub-and-spokes', 'cross-vendor-arm', 'frontier-query', 'structure']);
 ---
 
-<BaseLayout
+<DocsLayout
   title={page.missing ? UI.whyTitle[lang] : page.title}
   description={page.description}
   lang={lang}
   page="why"
+  eyebrow={UI.whyTitle[lang]}
+  heading={page.missing ? heading : page.title}
 >
-  <section class="screen screen--paper">
-    <div class="column">
-      <p class="eyebrow">{UI.whyTitle[lang]}</p>
-      <h1>{page.missing ? heading : page.title}</h1>
-      {page.intro && <Prose html={page.intro} lead />}
-      <ol class="toc">
-        {
-          WHY.map((why, i) => (
-            <li>
-              <a href={`#${why.id}`}>
-                <span class="n mono">{String(i + 1).padStart(2, '0')}</span>
-                <span>{why.question[lang]}</span>
-              </a>
-            </li>
-          ))
-        }
-      </ol>
-    </div>
-  </section>
+  {page.intro && <Prose slot="lede" html={page.intro} class="lede" />}
 
   {
-    WHY.map((why, i) => (
-      <section class:list={['screen', i % 2 === 0 ? 'screen--sunk' : 'screen--paper']} id={why.id}>
-        <div class="column">
-          <p class="eyebrow mono">{String(i + 1).padStart(2, '0')}</p>
-          <h2>{why.question[lang]}</h2>
-          {FIGURE[why.id] && <Diagram slug={FIGURE[why.id]} lang={lang} class="band" />}
-          {page.sections[why.id] ? (
-            <Prose html={page.sections[why.id]} class="body" />
-          ) : (
-            <p class="answer">{why.answer[lang]}</p>
-          )}
-        </div>
+    WHY.map((why) => (
+      <section class="read-section" id={why.id}>
+        <h2>{why.question[lang]}</h2>
+        {page.sections[why.id] ? (
+          <Prose html={page.sections[why.id]} class="read-body body" />
+        ) : (
+          <p class="answer">{why.answer[lang]}</p>
+        )}
+        {FIGURE[why.id] && (
+          <div class="figure">
+            <Diagram slug={FIGURE[why.id]} lang={lang} frame={720} />
+            {KEYED.has(FIGURE[why.id]) && <RoleKey lang={lang} />}
+          </div>
+        )}
       </section>
     ))
   }
-</BaseLayout>
+</DocsLayout>
 
 <style>
-  .toc {
-    list-style: none;
-    margin: 2rem 0 0;
-    padding: 0;
-    border-top: 1px solid var(--rule);
-  }
-  .toc li {
-    margin: 0;
-    border-bottom: 1px solid var(--rule);
-  }
-  .toc a {
-    display: grid;
-    grid-template-columns: 2.75rem minmax(0, 1fr);
-    gap: 0.5rem;
-    align-items: baseline;
-    padding: 0.7rem 0.25rem;
-    font-size: 17px;
-    text-decoration: none;
-  }
-  .toc a:hover {
-    color: var(--pass);
-  }
-  .toc .n {
-    font-size: 11px;
-    color: var(--rule);
-    letter-spacing: 0.1em;
-  }
   .answer {
-    font-size: 18px;
+    font-size: 17px;
     line-height: 1.55;
     color: var(--ink-muted);
     max-width: 64ch;
     margin: 0;
   }
-  .body :global(p),
-  .body :global(li) {
-    max-width: 68ch;
+  .body {
+    margin-top: 0.5rem;
+  }
+  .figure {
+    margin-top: 1rem;
   }
 </style>

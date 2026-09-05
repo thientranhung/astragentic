@@ -1,0 +1,77 @@
+---
+// The key that replaces archify's own legend under any figure carrying the five roles
+// (design spec 5 §3). archify's key names its node kinds — "Frontend · Backend · …" —
+// which are words this product never uses; these are the five names it does.
+import { ROLE_IDS, ROLE_META, roleHref } from '../lib/roles';
+import { UI, type Lang } from '../lib/site';
+
+interface Props {
+  lang: Lang;
+  /** Link each name to its role page. Off on the role pages themselves. */
+  link?: boolean;
+  class?: string;
+}
+const { lang, link = true, class: extra = '' } = Astro.props;
+---
+
+<div class:list={['rolekey', extra]}>
+  <span class="rolekey-label mono">{UI.roleKey[lang]}</span>
+  <ul class="rolekey-list">
+    {
+      ROLE_IDS.map((id) => (
+        <li data-role={id}>
+          {link ? (
+            <a href={roleHref(lang, id)} class="rolekey-item mono">
+              <span class="dot" />
+              {ROLE_META[id].label}
+            </a>
+          ) : (
+            <span class="rolekey-item mono">
+              <span class="dot" />
+              {ROLE_META[id].label}
+            </span>
+          )}
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  .rolekey {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 1.1rem;
+    margin-top: 0.85rem;
+  }
+  .rolekey-label {
+    font-size: 10px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .rolekey-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .rolekey-list li {
+    margin: 0;
+  }
+  .rolekey-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 11.5px;
+    letter-spacing: 0.05em;
+    color: var(--ink-muted);
+    text-decoration: none;
+  }
+  a.rolekey-item:hover {
+    color: var(--tone);
+  }
+</style>

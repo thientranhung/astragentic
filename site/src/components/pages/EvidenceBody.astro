@@ -1,5 +1,8 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
+// /bang-chung · /en/evidence — the whole ledger, the orphan rows, and the commits that
+// carry a `Ledger:` trailer. Read mode (design spec 5 §2). The confession opens the
+// page, before any count.
+import DocsLayout from '../../layouts/DocsLayout.astro';
 import LedgerTable from '../LedgerTable.astro';
 import QuoteBlock from '../QuoteBlock.astro';
 import Prose from '../Prose.astro';
@@ -21,102 +24,94 @@ const QUOTE =
   'Every check in this package now proves the tooling is correct. Nothing in it proves the loop works.';
 ---
 
-<BaseLayout title={page.title} description={page.description} lang={lang} page="evidence">
-  {/* The confession opens the page, before any count (spec §0 line 4). */}
-  <section class="screen screen--paper">
-    <div class="column">
-      <p class="eyebrow" lang="en">the ledger · {meta.cited} of {meta.total} bound to a file</p>
-      <QuoteBlock source="RELEASE-NOTES.md:393" href={`${REPO}/blob/main/RELEASE-NOTES.md#L393`}>
-        {QUOTE}
-      </QuoteBlock>
-      <h1>{page.title}</h1>
-      <Prose html={page.intro} lead />
-    </div>
-  </section>
+<DocsLayout
+  title={page.title}
+  description={page.description}
+  lang={lang}
+  page="evidence"
+  eyebrow={`the ledger · ${meta.cited} / ${meta.total}`}
+>
+  <Prose slot="lede" html={page.intro} class="lede" />
+
+  <div class="opener" data-toc-skip>
+    <QuoteBlock source="RELEASE-NOTES.md:393" href={`${REPO}/blob/main/RELEASE-NOTES.md#L393`}>
+      {QUOTE}
+    </QuoteBlock>
+  </div>
 
   {
     (home.sections['act-3'] || home.sections['act-4']) && (
-      <section class="screen screen--sunk" id="act-3">
-        <div class="column">
-          {act(home, 'act-3').eyebrow && (
-            <p class="eyebrow" lang="en">{act(home, 'act-3').eyebrow}</p>
-          )}
-          {act(home, 'act-3').headline && <h2>{act(home, 'act-3').headline}</h2>}
-          <Prose html={home.sections['act-3'] ?? ''} lead />
-
-          <div class="act-4" id="act-4">
-            {act(home, 'act-4').eyebrow && (
-              <p class="eyebrow" lang="en">{act(home, 'act-4').eyebrow}</p>
-            )}
-            {act(home, 'act-4').headline && <h2>{act(home, 'act-4').headline}</h2>}
-            <Prose html={home.sections['act-4'] ?? ''} />
-          </div>
+      <section class="read-section" id="act-3">
+        {act(home, 'act-3').headline && <h2>{act(home, 'act-3').headline}</h2>}
+        <Prose html={home.sections['act-3'] ?? ''} lead class="read-body" />
+        <div class="act-4" id="act-4">
+          {act(home, 'act-4').headline && <h2>{act(home, 'act-4').headline}</h2>}
+          <Prose html={home.sections['act-4'] ?? ''} class="read-body" />
         </div>
       </section>
     )
   }
 
-  <section class="screen screen--paper">
-    <div class="column">
-      <LedgerTable rows={ledger} lang={lang} scroll={false} />
-    </div>
+  <section class="read-section" id="table">
+    <h2>{lang === 'vi' ? 'Cả bảng' : 'The whole table'}</h2>
+    <LedgerTable rows={ledger} lang={lang} scroll={false} />
   </section>
 
-  <section class="screen screen--sunk" id="orphan">
-    <div class="column">
-      <p class="eyebrow" lang="en">{meta.orphan} orphan entries</p>
-      <h2>{lang === 'vi' ? `${meta.orphan} dòng chưa buộc vào file nào` : `${meta.orphan} rows bound to nothing`}</h2>
-      <Prose html={page.sections['orphan'] ?? ''} />
-    </div>
+  <section class="read-section" id="orphan">
+    <h2>
+      {lang === 'vi'
+        ? `${meta.orphan} dòng chưa buộc vào file nào`
+        : `${meta.orphan} rows bound to nothing`}
+    </h2>
+    <Prose html={page.sections['orphan'] ?? ''} class="read-body" />
   </section>
 
-  <section class="screen screen--paper">
-    <div class="column">
-      <p class="eyebrow" lang="en">Ledger: trailer · last {commits.length} commits</p>
-      <h2>{UI.commitsHeading[lang]}</h2>
-      <ol class="commits breakout">
-        {
-          commits.map((commit) => (
-            <li class="commit">
-              <a class="sha mono" href={`${REPO}/commit/${commit.sha}`} target="_blank" rel="noreferrer">
-                {commit.sha.slice(0, 7)}
-              </a>
-              <span class="date mono">{commit.date}</span>
-              <span class="subject" lang="en">{commit.subject}</span>
-              <span class="trailer mono" lang="en">{ledgerTrailer(commit.ledger)}</span>
-            </li>
-          ))
-        }
-      </ol>
-    </div>
+  <section class="read-section" id="commits">
+    <h2>{UI.commitsHeading[lang]}</h2>
+    <ol class="commits">
+      {
+        commits.map((commit) => (
+          <li class="commit">
+            <a class="sha mono" href={`${REPO}/commit/${commit.sha}`} target="_blank" rel="noreferrer">
+              {commit.sha.slice(0, 7)}
+            </a>
+            <span class="date mono">{commit.date}</span>
+            <span class="subject" lang="en">{commit.subject}</span>
+            <span class="trailer mono" lang="en">{ledgerTrailer(commit.ledger)}</span>
+          </li>
+        ))
+      }
+    </ol>
   </section>
-</BaseLayout>
+</DocsLayout>
 
 <style>
+  .opener {
+    margin-block: 1.25rem 0;
+  }
   .act-4 {
-    margin-top: 3.5rem;
+    margin-top: 2rem;
   }
 
   .commits {
     list-style: none;
-    /* `margin` shorthand would clobber the margin-left .breakout needs. */
-    margin-block: 2.25rem 0;
+    margin: 1.25rem 0 0;
     padding: 0;
     border-top: 1px solid var(--ink);
   }
   .commit {
     display: grid;
-    grid-template-columns: 76px 96px minmax(0, 1fr);
-    gap: 0.35rem 1rem;
+    grid-template-columns: 70px 90px minmax(0, 1fr);
+    gap: 0.3rem 0.9rem;
     margin: 0;
-    padding: 0.85rem 0;
+    padding: 0.7rem 0;
     border-bottom: 1px solid var(--rule-faint);
   }
   .sha {
     font-size: 12px;
-    color: var(--pass);
+    color: var(--accent);
     text-decoration: none;
-    border-bottom: 1px solid color-mix(in srgb, var(--pass) 40%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
     justify-self: start;
   }
   .date {
@@ -124,7 +119,7 @@ const QUOTE =
     color: var(--ink-muted);
   }
   .subject {
-    font-size: 16px;
+    font-size: 15px;
     line-height: 1.35;
   }
   .trailer {
@@ -134,7 +129,7 @@ const QUOTE =
   }
   @media (max-width: 640px) {
     .commit {
-      grid-template-columns: 76px minmax(0, 1fr);
+      grid-template-columns: 70px minmax(0, 1fr);
     }
     .subject,
     .trailer {

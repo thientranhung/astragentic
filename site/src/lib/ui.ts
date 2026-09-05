@@ -23,6 +23,21 @@ export const UI = {
   footerGenerated: { vi: 'số liệu sinh ngày', en: 'data generated' },
   skipToContent: { vi: 'Sang phần nội dung', en: 'Skip to content' },
 
+  /* ── read mode (design spec 5 §2) ── */
+  onThisPage: { vi: 'Trên trang này', en: 'On this page' },
+  contents: { vi: 'Mục lục', en: 'Contents' },
+  overview: { vi: 'Tổng quan', en: 'Overview' },
+  sideStructure: { vi: 'Cấu trúc', en: 'Structure' },
+  sideRoles: { vi: 'Vai', en: 'Roles' },
+  sideSkills: { vi: 'Skills', en: 'Skills' },
+  sideHooks: { vi: 'Hooks', en: 'Hooks' },
+  sideWhy: { vi: 'Vì sao', en: 'Why' },
+  sideStack: { vi: 'Tech stack', en: 'Tech stack' },
+  sideFailures: { vi: 'Lỗi', en: 'Failures' },
+  sideEvidence: { vi: 'Bằng chứng', en: 'Evidence' },
+  sideAdopt: { vi: 'Cài', en: 'Adopt' },
+  roleKey: { vi: 'Màu vai trong hình', en: 'Role colours in this figure' },
+
   /* ── hero strip ── */
   heroEyebrow: {
     vi: 'Lớp điều phối cho nhiều agent trên một codebase thật',

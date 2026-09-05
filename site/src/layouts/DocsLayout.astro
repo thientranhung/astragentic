@@ -1,0 +1,198 @@
+---
+// Read mode (design spec 5 §2): sidebar 240 · content 720 · TOC 200. Every page that
+// is mostly text renders through here, so they share one measure, one heading block
+// and one set of section rules. The landing does not use it.
+import BaseLayout from './BaseLayout.astro';
+import SiteNav from '../components/SiteNav.astro';
+import { UI, type Lang, type PageKey } from '../lib/site';
+
+interface Props {
+  title: string;
+  description?: string;
+  lang: Lang;
+  page?: PageKey;
+  alternate?: Record<Lang, string>;
+  switchTo?: Record<Lang, string>;
+  /** Small mono label above the title. */
+  eyebrow?: string;
+  /** Rendered heading, when it differs from the document title. */
+  heading?: string;
+  /** One sentence under the title. Prose HTML goes in the `lede` slot instead. */
+  lede?: string;
+  /** Title set in mono — a skill name, a hook script. */
+  monoTitle?: boolean;
+}
+const {
+  title,
+  description,
+  lang,
+  page,
+  alternate,
+  switchTo,
+  eyebrow,
+  heading,
+  lede,
+  monoTitle = false,
+} = Astro.props;
+const path = Astro.url.pathname;
+// An eyebrow that says what the heading already says is a label, not information.
+const shown = (heading ?? title).trim().toLowerCase();
+const label = eyebrow && eyebrow.trim().toLowerCase() !== shown ? eyebrow : undefined;
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  lang={lang}
+  page={page}
+  alternate={alternate}
+  switchTo={switchTo}
+  docs
+>
+  <div class="docs">
+    <aside class="docs-rail">
+      <SiteNav lang={lang} path={path} />
+    </aside>
+
+    <div class="docs-main" id="docs-main">
+      <header class="read-head">
+        {label && <p class="eyebrow mono">{label}</p>}
+        <h1 class:list={[monoTitle && 'mono', monoTitle && 'h1-mono']} lang={monoTitle ? 'en' : undefined}>
+          {heading ?? title}
+        </h1>
+        {lede && <p class="lede">{lede}</p>}
+        <slot name="lede" />
+      </header>
+      <slot />
+    </div>
+
+    <aside class="docs-toc" data-toc hidden>
+      <p class="toc-title mono">{UI.onThisPage[lang]}</p>
+      <nav aria-label={UI.onThisPage[lang]}><ul class="toc-list"></ul></nav>
+    </aside>
+  </div>
+</BaseLayout>
+
+<script>
+  /* One observer drives two things: the "On this page" list on the right, and the
+     anchor links in the left rail that belong to this page. Both are built from the
+     headings actually in the DOM, so a section the writer added shows up without a
+     second table to keep in step. */
+  const main = document.getElementById('docs-main');
+  const panel = document.querySelector<HTMLElement>('[data-toc]');
+  if (main && panel) {
+    const list = panel.querySelector('.toc-list') as HTMLElement;
+
+    // A heading carries its own id when markdown wrote it; a heading the layout wrote
+    // usually sits inside a <section id>. Take whichever exists.
+    const heads = Array.from(main.querySelectorAll<HTMLElement>('h2, h3')).filter((h) => {
+      if (h.closest('[data-toc-skip]')) return false;
+      if (!h.id) {
+        const owner = h.closest<HTMLElement>('[id]');
+        if (owner && owner !== h) h.id = owner.id;
+      }
+      return Boolean(h.id);
+    });
+
+    if (heads.length > 1) {
+      panel.hidden = false;
+      const links = new Map<string, HTMLAnchorElement>();
+      for (const head of heads) {
+        const item = document.createElement('li');
+        item.className = head.tagName === 'H3' ? 'toc-item toc-item--sub' : 'toc-item';
+        const link = document.createElement('a');
+        link.href = `#${head.id}`;
+        link.textContent = (head.textContent || '').trim();
+        item.append(link);
+        list.append(item);
+        links.set(head.id, link);
+      }
+
+      // Also light the rail entry for the section being read: every anchor on a page
+      // shares one pathname, so the server cannot tell them apart.
+      const here = location.pathname.replace(/\/+$/, '');
+      const rail = new Map<string, HTMLAnchorElement>();
+      document.querySelectorAll<HTMLAnchorElement>('[data-anchor]').forEach((a) => {
+        if ((a.dataset.anchorPage || '').replace(/\/+$/, '') === here) {
+          rail.set(a.dataset.anchor!, a);
+        }
+      });
+
+      let current = '';
+      const mark = (id: string) => {
+        if (id === current) return;
+        links.get(current)?.classList.remove('on');
+        rail.get(current)?.classList.remove('on');
+        current = id;
+        links.get(id)?.classList.add('on');
+        rail.get(id)?.classList.add('on');
+      };
+
+      const seen = new Set<string>();
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            const id = (entry.target as HTMLElement).id;
+            if (entry.isIntersecting) seen.add(id);
+            else seen.delete(id);
+          }
+          // The topmost heading still inside the reading band owns the highlight.
+          const first = heads.find((h) => seen.has(h.id));
+          if (first) mark(first.id);
+        },
+        { rootMargin: '-72px 0px -70% 0px', threshold: 0 },
+      );
+      heads.forEach((head) => observer.observe(head));
+      mark(heads[0].id);
+    }
+  }
+</script>
+
+<style is:global>
+  .docs-toc[hidden] {
+    display: none;
+  }
+  .toc-title {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin: 0 0 0.7rem;
+    padding-inline: 0.55rem;
+  }
+  .toc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 1px solid var(--rule);
+  }
+  .toc-item {
+    margin: 0;
+  }
+  .toc-item a {
+    display: block;
+    padding: 0.3rem 0.6rem;
+    margin-left: -1px;
+    border-left: 2px solid transparent;
+    font-size: 13px;
+    line-height: 1.35;
+    color: var(--ink-muted);
+    text-decoration: none;
+  }
+  .toc-item--sub a {
+    padding-left: 1.4rem;
+    font-size: 12.5px;
+  }
+  .toc-item a:hover {
+    color: var(--ink);
+  }
+  .toc-item a.on {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+
+  .h1-mono {
+    font-size: 26px;
+    letter-spacing: -0.005em;
+  }
+</style>

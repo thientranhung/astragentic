@@ -45,19 +45,23 @@ const { lang, page, alternate } = Astro.props;
 </header>
 
 <style>
+  /* 56px, sticky: the two rails in Read mode hang off the bottom of this bar, so its
+     height is a measurement, not a taste (design spec 5 §2). */
   .nav-bar {
     border-bottom: 1px solid var(--rule);
     background: var(--paper);
-    position: relative;
-    z-index: 2;
+    position: sticky;
+    top: 0;
+    z-index: 5;
   }
   .nav {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     justify-content: space-between;
     gap: 1.25rem;
-    padding-block: 1.15rem;
+    height: var(--header-h);
+    padding-block: 0;
   }
   .wordmark {
     font-family: var(--font-mono);
@@ -69,7 +73,9 @@ const { lang, page, alternate } = Astro.props;
   .items {
     display: flex;
     flex-wrap: wrap;
-    gap: 1.6rem;
+    gap: 1.25rem;
+    min-width: 0;
+    overflow: hidden;
     list-style: none;
     margin: 0;
     padding: 0;
@@ -85,7 +91,7 @@ const { lang, page, alternate } = Astro.props;
     color: var(--ink-muted);
     text-decoration: none;
     display: inline-block;
-    padding: 0.75rem 0.15rem;
+    padding: 0.55rem 0.15rem;
     min-height: 44px;
     line-height: 1.2;
     border-bottom: 1px solid transparent;
@@ -94,8 +100,8 @@ const { lang, page, alternate } = Astro.props;
     color: var(--ink);
   }
   .items a.on {
-    color: var(--ink);
-    border-bottom-color: var(--ink);
+    color: var(--accent);
+    border-bottom-color: var(--accent);
   }
   .right {
     display: flex;
@@ -127,7 +133,8 @@ const { lang, page, alternate } = Astro.props;
       row-gap: 0.35rem;
       column-gap: 1rem;
       align-items: center;
-      padding-block: 0.9rem 0.4rem;
+      height: auto;
+      padding-block: 0.6rem 0.3rem;
     }
     .wordmark {
       grid-area: 1 / 1;

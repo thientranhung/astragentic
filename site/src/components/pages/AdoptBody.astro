@@ -1,5 +1,7 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
+// /cai · /en/adopt — install it, then the four skills for a repo that already exists.
+// Read mode (design spec 5 §2).
+import DocsLayout from '../../layouts/DocsLayout.astro';
 import AdoptBlock from '../AdoptBlock.astro';
 import Prose from '../Prose.astro';
 import { getPage } from '../../lib/pages';
@@ -19,39 +21,42 @@ const brownfield = (catalog as { name: string; kind: string; oneLiner: string; g
   .filter((item) => item.kind === 'skill');
 ---
 
-<BaseLayout title={page.title} description={page.description} lang={lang} page="adopt">
-  <section class="screen screen--paper">
-    <div class="column">
-      <p class="eyebrow" lang="en">install · v{meta.version}</p>
-      <h1>{page.title}</h1>
-      <Prose html={page.intro} lead />
-      <AdoptBlock lang={lang} />
-    </div>
-  </section>
+<DocsLayout
+  title={page.title}
+  description={page.description}
+  lang={lang}
+  page="adopt"
+  eyebrow={`install · v${meta.version}`}
+>
+  <Prose slot="lede" html={page.intro} class="lede" />
 
-  <section class="screen screen--sunk" id="brownfield">
-    <div class="column">
-      <p class="eyebrow" lang="en">brownfield</p>
-      <h2>{UI.brownfield[lang]}</h2>
-      <Prose html={page.sections['brownfield'] ?? ''} />
-      <ul class="skills breakout">
-        {
-          brownfield.map((item) => (
-            <li>
-              <p class="name mono" lang="en">{item.name}</p>
-              <p class="one" lang="en">{item.oneLiner}</p>
-            </li>
-          ))
-        }
-      </ul>
-    </div>
+  <div class="install" data-toc-skip>
+    <AdoptBlock lang={lang} />
+  </div>
+
+  <section class="read-section" id="brownfield">
+    <h2>{UI.brownfield[lang]}</h2>
+    <Prose html={page.sections['brownfield'] ?? ''} class="read-body" />
+    <ul class="skills">
+      {
+        brownfield.map((item) => (
+          <li>
+            <p class="name mono" lang="en">{item.name}</p>
+            <p class="one" lang="en">{item.oneLiner}</p>
+          </li>
+        ))
+      }
+    </ul>
   </section>
-</BaseLayout>
+</DocsLayout>
 
 <style>
+  .install {
+    margin-top: 1.25rem;
+  }
   .skills {
     list-style: none;
-    margin-block: 2.25rem 0;
+    margin: 1.25rem 0 0;
     padding: 0;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -61,16 +66,16 @@ const brownfield = (catalog as { name: string; kind: string; oneLiner: string; g
   }
   .skills li {
     margin: 0;
-    padding: 1.25rem 1.35rem;
+    padding: 1rem 1.1rem;
     background: var(--paper);
   }
   .name {
     font-size: 12.5px;
     letter-spacing: 0.04em;
-    margin: 0 0 0.5rem;
+    margin: 0 0 0.4rem;
   }
   .one {
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.45;
     color: var(--ink-muted);
     margin: 0;

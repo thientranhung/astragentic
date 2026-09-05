@@ -1,0 +1,25 @@
+---
+// A role, said in colour (design spec 5 §3). The name is never translated; the dot is
+// the same hue the role wears in every diagram on the site.
+import { ROLE_META, type RoleId } from '../lib/roles';
+
+interface Props {
+  role: RoleId;
+  /** Extra mono text after the name — a session tag, usually. */
+  note?: string;
+  class?: string;
+}
+const { role, note, class: extra = '' } = Astro.props;
+---
+
+<span class:list={['badge', extra]} data-role={role} lang="en">
+  <span class="dot"></span>{ROLE_META[role].label}{note && <span class="note">· {note}</span>}
+</span>
+
+<style>
+  .note {
+    margin-left: 0.4em;
+    opacity: 0.85;
+    letter-spacing: 0.06em;
+  }
+</style>

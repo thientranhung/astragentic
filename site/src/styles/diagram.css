@@ -138,17 +138,17 @@
 .diagram-svg g.is-link:hover > rect:not(.c-mask),
 .diagram-svg g.is-link:focus-visible > rect:not(.c-mask),
 .diagram-svg g.is-link.is-hover > rect:not(.c-mask) {
-  stroke: var(--pass);
+  stroke: var(--accent);
   stroke-width: 2;
-  fill: color-mix(in srgb, var(--pass) 9%, var(--paper));
+  fill: var(--accent-soft);
 }
 .diagram-svg g.is-link:focus-visible {
   outline: none;
 }
 .diagram-svg g.is-active > rect:not(.c-mask) {
-  stroke: var(--pass);
+  stroke: var(--accent);
   stroke-width: 2.5;
-  fill: color-mix(in srgb, var(--pass) 14%, var(--paper));
+  fill: var(--accent-soft);
 }
 .diagram-svg g.is-active > text.t-primary,
 .diagram-svg g.is-link:hover > text.t-primary {
@@ -168,3 +168,56 @@
 /* Label sizes are raised in src/lib/diagram.ts, against each file's own viewBox and
    the width the figure really occupies (PRD §5). It cannot be done here: a CSS rule
    has no way to read the viewBox, and every diagram scales differently. */
+
+
+/* ── Colour that means something (design spec 5 §3) ──────────────────────────
+   Five hues, five roles, and nothing else on the site borrows them. A node is
+   tinted by the role that occupies it, so `Rin` is the same red in the five-roles
+   figure, in the pane hub, in the sidebar and on its own badge. Every other node in
+   every diagram stays neutral — the colour is a claim, and it is only made where
+   there is a role to name.
+
+   Selecting a node still turns it `--accent`: the rule above wins on specificity,
+   because one accent means "the thing you picked" everywhere on this site. */
+
+.diagram-svg [data-node-id='thomas'] > rect:not(.c-mask),
+.diagram-svg [data-node-id='roles'] > rect:not(.c-mask) {
+  fill: var(--role-thomas-soft);
+  stroke: var(--role-thomas);
+}
+.diagram-svg [data-node-id='shaper'] > rect:not(.c-mask),
+.diagram-svg [data-node-id='spec87'] > rect:not(.c-mask) {
+  fill: var(--role-shaper-soft);
+  stroke: var(--role-shaper);
+}
+.diagram-svg [data-node-id='builder'] > rect:not(.c-mask),
+.diagram-svg [data-node-id='tra139'] > rect:not(.c-mask),
+.diagram-svg [data-node-id='tra142'] > rect:not(.c-mask) {
+  fill: var(--role-builder-soft);
+  stroke: var(--role-builder);
+}
+.diagram-svg [data-node-id='rin'] > rect:not(.c-mask),
+.diagram-svg [data-node-id='rin125'] > rect:not(.c-mask) {
+  fill: var(--role-rin-soft);
+  stroke: var(--role-rin);
+}
+.diagram-svg [data-node-id='qa'] > rect:not(.c-mask),
+.diagram-svg [data-node-id='qa125'] > rect:not(.c-mask) {
+  fill: var(--role-qa-soft);
+  stroke: var(--role-qa);
+}
+
+/* A tinted node reads its title at full ink; the sublabel stays muted. */
+.diagram-svg [data-node-id='thomas'] > text.t-primary,
+.diagram-svg [data-node-id='shaper'] > text.t-primary,
+.diagram-svg [data-node-id='builder'] > text.t-primary,
+.diagram-svg [data-node-id='rin'] > text.t-primary,
+.diagram-svg [data-node-id='qa'] > text.t-primary,
+.diagram-svg [data-node-id='roles'] > text.t-primary,
+.diagram-svg [data-node-id='spec87'] > text.t-primary,
+.diagram-svg [data-node-id='tra139'] > text.t-primary,
+.diagram-svg [data-node-id='tra142'] > text.t-primary,
+.diagram-svg [data-node-id='rin125'] > text.t-primary,
+.diagram-svg [data-node-id='qa125'] > text.t-primary {
+  fill: var(--ink);
+}

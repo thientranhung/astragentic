@@ -1,5 +1,8 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
+// /loi · /en/failures — the six measured failures, grouped by the stage they happened
+// at, in Read mode (design spec 5 §2). The two acts of prose that opened the pass-2
+// home page live here (landing spec §2).
+import DocsLayout from '../../layouts/DocsLayout.astro';
 import DefectCard from '../DefectCard.astro';
 import Prose from '../Prose.astro';
 import { getPage, act } from '../../lib/pages';
@@ -11,117 +14,87 @@ interface Props {
 }
 const { lang } = Astro.props;
 const page = await getPage(lang, 'failures');
-
-// Pass 2 opened the home page with these two acts. Pass 3 made the home page a landing
-// page, so the prose moved here and the file stayed where it was (landing spec §2).
 const home = await getPage(lang, 'home');
 
-// The page is now grouped by stage, not by failure, because the home diagram links
-// straight at `#claim`, `#brief`, … Every stage gets an anchor, including the three
-// that carry no measured failure — an empty stage that cannot be linked to reads as
-// an omission rather than as an admission.
+// Grouped by stage, not by failure, because the home diagram links straight at
+// `#claim`, `#brief`, … Every stage gets an anchor, including the three that carry no
+// measured failure — an empty stage that cannot be linked to reads as an omission
+// rather than as an admission.
 const ORDER = ['claim', 'brief', 'build', 'code-review', 'simplify', 'arm', 'merge'];
-const perStage = ORDER.map((stage, i) => ({
+const perStage = ORDER.map((stage) => ({
   stage,
-  number: String(i + 1).padStart(2, '0'),
   items: failures.filter((f) => f.stage === stage),
 }));
 ---
 
-<BaseLayout title={page.title} description={page.description} lang={lang} page="failures">
-  <section class="screen screen--paper">
-    <div class="column">
-      <p class="eyebrow" lang="en">six failures · measured, dated, cited</p>
-      <h1>{page.title}</h1>
-      <Prose html={page.intro} lead />
-    </div>
-  </section>
+<DocsLayout
+  title={page.title}
+  description={page.description}
+  lang={lang}
+  page="failures"
+  eyebrow={lang === 'vi' ? 'sáu lỗi · đo được, có ngày, có trích' : 'six failures · measured, dated, cited'}
+>
+  <Prose slot="lede" html={page.intro} class="lede" />
 
-  {/* Two acts of prose from pass 2, now the opening of this page. */}
   {
     (home.sections['act-1'] || home.sections['act-2']) && (
-      <section class="screen screen--sunk" id="act-1">
-        <div class="column">
-          {act(home, 'act-1').eyebrow && (
-            <p class="eyebrow" lang="en">{act(home, 'act-1').eyebrow}</p>
-          )}
-          {act(home, 'act-1').headline && <h2>{act(home, 'act-1').headline}</h2>}
-          <Prose html={home.sections['act-1'] ?? ''} lead />
-
-          <div class="act-2" id="act-2">
-            {act(home, 'act-2').eyebrow && (
-              <p class="eyebrow" lang="en">{act(home, 'act-2').eyebrow}</p>
-            )}
-            {act(home, 'act-2').headline && <h2>{act(home, 'act-2').headline}</h2>}
-            <Prose html={home.sections['act-2'] ?? ''} />
-          </div>
+      <section class="read-section" id="act-1">
+        {act(home, 'act-1').headline && <h2>{act(home, 'act-1').headline}</h2>}
+        <Prose html={home.sections['act-1'] ?? ''} lead class="read-body" />
+        <div class="act-2" id="act-2">
+          {act(home, 'act-2').headline && <h2>{act(home, 'act-2').headline}</h2>}
+          <Prose html={home.sections['act-2'] ?? ''} class="read-body" />
         </div>
       </section>
     )
   }
 
-  <section class="screen screen--paper">
-    <div class="column">
-      {
-        perStage.map(({ stage, number, items }, i) => (
-          <div class:list={['stage-block', i > 0 && 'stage-block--after']}>
-            <p class="stage mono" id={stage} lang="en">
-              <span class="n">{number}</span>
-              {stage}
-            </p>
+  {
+    perStage.map(({ stage, items }) => (
+      <section class="read-section" id={stage}>
+        <h2 class="mono stage" lang="en">{stage}</h2>
+        {items.length === 0 ? (
+          <p class="empty mono">{UI.emptyStage[lang]}</p>
+        ) : (
+          items.map((failure) => {
+            const row = byId.get(failure.id);
+            const slug = failure.id.toLowerCase();
+            return row ? (
+              <div class="item">
+                <DefectCard
+                  row={row}
+                  lang={lang}
+                  size="lg"
+                  costLine={failure.costLine}
+                  anchorId={slug}
+                  href={`${ROUTES.evidence[lang]}#${slug}`}
+                />
+                <div class="prose-under">
+                  <Prose html={page.sections[slug] ?? ''} class="read-body" />
+                </div>
+              </div>
+            ) : null;
+          })
+        )}
+      </section>
+    ))
+  }
 
-            {items.length === 0 ? (
-              <p class="empty mono">{UI.emptyStage[lang]}</p>
-            ) : (
-              items.map((failure) => {
-                const row = byId.get(failure.id);
-                const slug = failure.id.toLowerCase();
-                return row ? (
-                  <div class="item">
-                    <div class="breakout">
-                      <DefectCard
-                        row={row}
-                        lang={lang}
-                        size="lg"
-                        costLine={failure.costLine}
-                        anchorId={slug}
-                        href={`${ROUTES.evidence[lang]}#${slug}`}
-                      />
-                    </div>
-                    <div class="prose-under">
-                      <Prose html={page.sections[slug] ?? ''} />
-                    </div>
-                  </div>
-                ) : null;
-              })
-            )}
-          </div>
-        ))
-      }
-      <a class="more-link" href={ROUTES.evidence[lang]}>{UI.wholeTable[lang]}</a>
-    </div>
-  </section>
-</BaseLayout>
+  <p class="tail">
+    <a class="more-link" href={ROUTES.evidence[lang]}>{UI.wholeTable[lang]}</a>
+  </p>
+</DocsLayout>
 
 <style>
   .act-2 {
-    margin-top: 3.5rem;
-  }
-  .stage-block--after {
-    margin-top: 4.5rem;
+    margin-top: 2rem;
   }
   .stage {
-    font-size: 11px;
+    font-size: 15px;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    letter-spacing: 0.14em;
     color: var(--ink-muted);
-    margin: 0 0 1.1rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid var(--ink);
-  }
-  .stage .n {
-    color: var(--rule);
-    margin-right: 0.75rem;
+    margin-bottom: 0.9rem;
   }
   .empty {
     font-size: 12px;
@@ -129,9 +102,12 @@ const perStage = ORDER.map((stage, i) => ({
     margin: 0;
   }
   .item + .item {
-    margin-top: 3rem;
+    margin-top: 2rem;
   }
   .prose-under {
-    margin-top: 1.75rem;
+    margin-top: 1.25rem;
+  }
+  .tail {
+    margin: 0;
   }
 </style>

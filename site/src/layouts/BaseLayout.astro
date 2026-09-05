@@ -18,8 +18,10 @@ interface Props {
    *  a Vietnamese reader still has somewhere to go. It gets the switch, not an
    *  hreflang link — the two pages say related things, not the same thing. */
   switchTo?: Record<Lang, string>;
+  /** Read mode: the wider frame the three-column shell needs (design spec 5 §2). */
+  docs?: boolean;
 }
-const { title, description, lang, page, alternate, switchTo } = Astro.props;
+const { title, description, lang, page, alternate, switchTo, docs = false } = Astro.props;
 const site = Astro.site?.toString().replace(/\/$/, '') ?? '';
 ---
 
@@ -39,7 +41,7 @@ const site = Astro.site?.toString().replace(/\/$/, '') ?? '';
     )}
   </head>
   <body>
-    <div class="page">
+    <div class:list={['page', docs && 'page--docs']}>
       <Nav lang={lang} page={page} alternate={alternate ?? switchTo} />
       <main>
         <slot />

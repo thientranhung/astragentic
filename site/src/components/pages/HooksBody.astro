@@ -1,8 +1,8 @@
 ---
-// /hooks · /en/hooks — four hooks, one anchored section each (build spec 4 §3).
-// The writer owns src/content/pages/<lang>/hooks.md, split by `## pre-tool-use`,
-// `## worktree-remove`, `## session-start`, `## subagent-stop`.
-import BaseLayout from '../../layouts/BaseLayout.astro';
+// /hooks · /en/hooks — four hooks, one anchored section each (build spec 4 §3), now in
+// Read mode (design spec 5 §2): the four are 3rem apart under one hairline each, not
+// four full screens of alternating ground.
+import DocsLayout from '../../layouts/DocsLayout.astro';
 import InteractiveDiagram from '../InteractiveDiagram.astro';
 import Prose from '../Prose.astro';
 import { getPage } from '../../lib/pages';
@@ -18,80 +18,85 @@ const page = await getPage(lang, 'hooks');
 const evidenceRoute = ROUTES.evidence[lang];
 
 const hooksMap = Object.fromEntries(HOOKS.map((hook) => [hook.id, `#${hook.id}`]));
-const heading =
-  lang === 'vi' ? 'Bốn khoảnh khắc, bốn cái hook' : 'Four moments, four hooks';
+const heading = lang === 'vi' ? 'Bốn khoảnh khắc, bốn cái hook' : 'Four moments, four hooks';
 const lede =
   lang === 'vi'
     ? 'Hook là chỗ duy nhất trong harness chạy mà không cần agent nào nhớ phải chạy nó.'
     : 'A hook is the one part of the harness that runs without an agent remembering to run it.';
 ---
 
-<BaseLayout
+<DocsLayout
   title={page.missing ? UI.hooksTitle[lang] : page.title}
   description={page.missing ? lede : page.description}
   lang={lang}
   page="hooks"
+  eyebrow={UI.hooksTitle[lang]}
+  heading={page.missing ? heading : page.title}
+  lede={page.intro ? undefined : lede}
 >
-  <section class="screen screen--paper">
-    <div class="column">
-      <p class="eyebrow">{UI.hooksTitle[lang]}</p>
-      <h1>{page.missing ? heading : page.title}</h1>
-      {page.intro ? <Prose html={page.intro} lead /> : <p class="sub">{lede}</p>}
-    </div>
-    <div class="column">
-      <InteractiveDiagram slug="hooks" lang={lang} hrefMap={hooksMap} explore class="band" />
-    </div>
-  </section>
+  {page.intro && <Prose slot="lede" html={page.intro} class="lede" />}
+
+  <div class="figure" data-toc-skip>
+    <InteractiveDiagram slug="hooks" lang={lang} hrefMap={hooksMap} explore maxWidth={720} />
+  </div>
 
   {
-    HOOKS.map((hook, i) => {
+    HOOKS.map((hook) => {
       const row = byId.get(hook.ast);
       return (
-        <section class:list={['screen', i % 2 === 0 ? 'screen--sunk' : 'screen--paper']} id={hook.id}>
-          <div class="column">
-            <p class="eyebrow mono" lang="en">{hook.event}</p>
-            <h2 class="mono hook-name" lang="en">{hook.script ?? 'settings.json'}</h2>
-            <dl class="facts">
-              <div>
-                <dt class="mono">{UI.hookWhen[lang]}</dt>
-                <dd>{hook.when[lang]}</dd>
-              </div>
-              <div>
-                <dt class="mono">{UI.hookEffect[lang]}</dt>
-                <dd>{hook.effect[lang]}</dd>
-              </div>
-            </dl>
-            {page.sections[hook.id] && <Prose html={page.sections[hook.id]} class="body" />}
-            <p class="src mono">
-              {hook.script && (
-                <a href={`${REPO}/blob/main/harness/${hook.script}`} target="_blank" rel="noreferrer">
-                  {`harness/${hook.script} ↗`}
-                </a>
-              )}
-              <a class="ast" href={`${evidenceRoute}#${hook.ast.toLowerCase()}`}>{hook.ast}</a>
-              {row && <span class="lesson" lang="en">{row.lesson}</span>}
-            </p>
-          </div>
+        <section class="read-section" id={hook.id}>
+          <p class="event mono" lang="en">{hook.event}</p>
+          <h2 class="mono hook-name" lang="en">{hook.script ?? 'settings.json'}</h2>
+          <dl class="facts">
+            <div>
+              <dt class="mono">{UI.hookWhen[lang]}</dt>
+              <dd>{hook.when[lang]}</dd>
+            </div>
+            <div>
+              <dt class="mono">{UI.hookEffect[lang]}</dt>
+              <dd>{hook.effect[lang]}</dd>
+            </div>
+          </dl>
+          {page.sections[hook.id] && <Prose html={page.sections[hook.id]} class="read-body body" />}
+          <p class="src mono">
+            {hook.script && (
+              <a href={`${REPO}/blob/main/harness/${hook.script}`} target="_blank" rel="noreferrer">
+                {`harness/${hook.script} ↗`}
+              </a>
+            )}
+            <a class="ast" href={`${evidenceRoute}#${hook.ast.toLowerCase()}`}>{hook.ast}</a>
+            {row && <span class="lesson" lang="en">{row.lesson}</span>}
+          </p>
         </section>
       );
     })
   }
-</BaseLayout>
+</DocsLayout>
 
 <style>
+  .figure {
+    margin-block: 1.5rem 0;
+  }
+  .event {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin: 0 0 0.3rem;
+  }
   .hook-name {
-    font-size: clamp(20px, 2vw, 26px);
+    font-size: 20px;
     letter-spacing: -0.005em;
   }
   .facts {
-    margin: 1.5rem 0 0;
+    margin: 1rem 0 0;
     padding: 0;
   }
   .facts > div {
     display: grid;
-    grid-template-columns: minmax(0, 9rem) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 8rem) minmax(0, 1fr);
     gap: 1rem;
-    padding: 0.7rem 0;
+    padding: 0.55rem 0;
     border-top: 1px solid var(--rule);
   }
   .facts dt {
@@ -99,25 +104,22 @@ const lede =
     text-transform: uppercase;
     letter-spacing: 0.11em;
     color: var(--ink-muted);
-    padding-top: 0.25rem;
+    padding-top: 0.2rem;
   }
   .facts dd {
     margin: 0;
-    font-size: 16px;
+    font-size: 15px;
     line-height: 1.5;
   }
   .body {
-    margin-top: 1.5rem;
-  }
-  .body :global(p) {
-    max-width: 68ch;
+    margin-top: 1rem;
   }
   .src {
-    margin: 1.5rem 0 0;
+    margin: 1rem 0 0;
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 1rem;
+    gap: 0.9rem;
     font-size: 11.5px;
   }
   .src a:not(.ast) {

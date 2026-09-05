@@ -16,9 +16,13 @@ export type GroupId = (typeof GROUP_IDS)[number];
 /** aihero-style catalog: the reader picks a group by *when they need it*, not by what
  *  the skill is made of (PRD §5). Title and the one sentence under it are chrome, so
  *  they are translated; skill names never are. */
-export const GROUPS: Record<GroupId, { title: Record<Lang, string>; line: Record<Lang, string> }> = {
+export const GROUPS: Record<
+  GroupId,
+  { title: Record<Lang, string>; short: Record<Lang, string>; line: Record<Lang, string> }
+> = {
   entry: {
     title: { vi: 'Lúc mới vào repo', en: 'First contact' },
+    short: { vi: 'Mới vào', en: 'First contact' },
     line: {
       vi: 'Lần đầu chạm vào một codebase có sẵn: đọc nó đã, rồi mới sửa.',
       en: 'First contact with an existing codebase: read it before you touch it.',
@@ -26,6 +30,7 @@ export const GROUPS: Record<GroupId, { title: Record<Lang, string>; line: Record
   },
   shaping: {
     title: { vi: 'Lúc nắn việc', en: 'Shaping the work' },
+    short: { vi: 'Nắn việc', en: 'Shaping' },
     line: {
       vi: 'Biến một ý còn mờ thành spec và ticket đứng được.',
       en: 'Turning a vague idea into a spec and tickets that stand up.',
@@ -33,6 +38,7 @@ export const GROUPS: Record<GroupId, { title: Record<Lang, string>; line: Record
   },
   'main-flow': {
     title: { vi: 'Lúc chạy việc', en: 'Running the work' },
+    short: { vi: 'Chạy việc', en: 'Running' },
     line: {
       vi: 'Đường đi thường ngày của một ticket, từ dispatch tới biên nhận.',
       en: 'The everyday path of a ticket, from dispatch to receipt.',
@@ -40,6 +46,7 @@ export const GROUPS: Record<GroupId, { title: Record<Lang, string>; line: Record
   },
   gate: {
     title: { vi: 'Lúc qua cổng', en: 'At the gate' },
+    short: { vi: 'Cổng', en: 'Gate' },
     line: {
       vi: 'Chỗ một người khác đọc lại trước khi thứ gì đó đi tiếp.',
       en: 'Where someone else re-reads before anything moves on.',
@@ -47,6 +54,7 @@ export const GROUPS: Record<GroupId, { title: Record<Lang, string>; line: Record
   },
   brownfield: {
     title: { vi: 'Lúc gặp code cũ', en: 'When the code is old' },
+    short: { vi: 'Code cũ', en: 'Legacy' },
     line: {
       vi: 'Code đã sống lâu: không test, không ranh giới module.',
       en: 'Code that has lived a while: no tests, no module boundaries.',
@@ -54,6 +62,7 @@ export const GROUPS: Record<GroupId, { title: Record<Lang, string>; line: Record
   },
   upkeep: {
     title: { vi: 'Lúc dọn dẹp', en: 'Keeping it honest' },
+    short: { vi: 'Dọn dẹp', en: 'Upkeep' },
     line: {
       vi: 'Việc định kỳ để board và git không kể hai câu chuyện khác nhau.',
       en: 'The recurring work that keeps the board and git telling one story.',
@@ -61,6 +70,7 @@ export const GROUPS: Record<GroupId, { title: Record<Lang, string>; line: Record
   },
   adapter: {
     title: { vi: 'Lúc đổi runtime hoặc tracker', en: 'Same flow, other tooling' },
+    short: { vi: 'Runtime khác', en: 'Adapters' },
     line: {
       vi: 'Cùng một quy trình, chạy trên runtime khác hoặc tracker khác.',
       en: 'The same procedure against a different runtime or a different tracker.',
