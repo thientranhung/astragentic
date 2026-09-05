@@ -1,0 +1,57 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Ghi Log Mọi Lần Subagent Thoát",
+    "output": "hook-subagent-stop.html",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "subagent",
+      "label": "Subagent Thoát"
+    }
+  ],
+  "mainPath": [
+    "SubagentStop",
+    "logstop"
+  ],
+  "nodes": [
+    {
+      "id": "SubagentStop",
+      "lane": "subagent",
+      "col": 0,
+      "type": "backend",
+      "label": "SubagentStop",
+      "sublabel": "bắn mỗi khi agent thoát",
+      "width": 150
+    },
+    {
+      "id": "logstop",
+      "lane": "subagent",
+      "col": 1,
+      "type": "database",
+      "label": "harness-hook-events.log",
+      "sublabel": "ghi lại lần thoát",
+      "width": 180
+    }
+  ],
+  "edges": [
+    {
+      "from": "SubagentStop",
+      "to": "logstop",
+      "label": "ghi thêm một dòng log"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "State Sống Trong Một Log Phẳng",
+      "items": [
+        "Mọi WorktreeRemove, SubagentStop, và sự kiện thiếu script đều vào chung một file",
+        "/tmp/harness-hook-events.log chỉ để chẩn đoán — nó không phải tracker",
+        "Một script hook bị thiếu vẫn log và cảnh báo thay vì lặng lẽ thất bại"
+      ]
+    }
+  ]
+}

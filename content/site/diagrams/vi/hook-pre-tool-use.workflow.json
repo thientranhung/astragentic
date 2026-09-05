@@ -1,0 +1,113 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Cổng Gác Trước Mọi Lệnh Bash",
+    "output": "hook-pre-tool-use.html",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "tool_call",
+      "label": "Mỗi Lệnh Bash"
+    }
+  ],
+  "groups": [
+    {
+      "id": "guard_decision",
+      "label": "quyết định của git guard",
+      "lane": "tool_call",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "security"
+    }
+  ],
+  "mainPath": [
+    "bash_cmd",
+    "PreToolUse",
+    "gitguard",
+    "run"
+  ],
+  "nodes": [
+    {
+      "id": "bash_cmd",
+      "lane": "tool_call",
+      "col": 0,
+      "type": "frontend",
+      "label": "Lệnh Bash",
+      "sublabel": "bất kỳ tool call nào",
+      "width": 150
+    },
+    {
+      "id": "PreToolUse",
+      "lane": "tool_call",
+      "col": 1,
+      "type": "backend",
+      "label": "PreToolUse",
+      "sublabel": "bắn trước khi gọi",
+      "width": 150
+    },
+    {
+      "id": "gitguard",
+      "lane": "tool_call",
+      "col": 2,
+      "type": "security",
+      "label": "hook-git-guard.py",
+      "sublabel": "allow hay block?",
+      "width": 150
+    },
+    {
+      "id": "run",
+      "lane": "tool_call",
+      "col": 3,
+      "type": "backend",
+      "label": "Lệnh chạy",
+      "sublabel": "giữ nguyên",
+      "width": 150
+    },
+    {
+      "id": "block",
+      "lane": "tool_call",
+      "col": 3,
+      "type": "security",
+      "label": "Block",
+      "sublabel": "stderr + đã log, không chạy",
+      "width": 150,
+      "yOffset": 90
+    }
+  ],
+  "edges": [
+    {
+      "from": "bash_cmd",
+      "to": "PreToolUse"
+    },
+    {
+      "from": "PreToolUse",
+      "to": "gitguard",
+      "label": "chạy script guard"
+    },
+    {
+      "from": "gitguard",
+      "to": "run",
+      "label": "sạch"
+    },
+    {
+      "from": "gitguard",
+      "to": "block",
+      "label": "pattern nguy hiểm",
+      "variant": "security",
+      "role": "error"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Guard Chạy Trước, Không Bao Giờ Sau",
+      "items": [
+        "hook-git-guard.py quyết định allow hay block trước khi lệnh thực thi",
+        "Một block ghi ra stderr và thêm một dòng — lệnh không bao giờ chạy",
+        "Không có vòng lặp thử lại: một block kết thúc lần thử, không đẩy vào hàng đợi review"
+      ]
+    }
+  ]
+}

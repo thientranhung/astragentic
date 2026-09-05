@@ -1,0 +1,57 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Dọn Worktree Khi Tháo Gỡ",
+    "output": "hook-worktree-remove.html",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "worktree",
+      "label": "Dọn Worktree"
+    }
+  ],
+  "mainPath": [
+    "WorktreeRemove",
+    "release"
+  ],
+  "nodes": [
+    {
+      "id": "WorktreeRemove",
+      "lane": "worktree",
+      "col": 0,
+      "type": "backend",
+      "label": "WorktreeRemove",
+      "sublabel": "bắn khi tháo worktree",
+      "width": 150
+    },
+    {
+      "id": "release",
+      "lane": "worktree",
+      "col": 1,
+      "type": "backend",
+      "label": "release-worktree-resources.sh",
+      "sublabel": "giải phóng pane + process",
+      "width": 200
+    }
+  ],
+  "edges": [
+    {
+      "from": "WorktreeRemove",
+      "to": "release",
+      "label": "chạy script release"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "State Sống Trong Một Log Phẳng",
+      "items": [
+        "Mọi WorktreeRemove, SubagentStop, và sự kiện thiếu script đều vào chung một file",
+        "/tmp/harness-hook-events.log chỉ để chẩn đoán — nó không phải tracker",
+        "Một script hook bị thiếu vẫn log và cảnh báo thay vì lặng lẽ thất bại"
+      ]
+    }
+  ]
+}

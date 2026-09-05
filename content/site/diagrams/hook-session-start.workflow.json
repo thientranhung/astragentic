@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Session Resume After Compact",
+    "output": "hook-session-start.html",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "session",
+      "label": "Session Resume"
+    }
+  ],
+  "mainPath": [
+    "SessionStart",
+    "reload"
+  ],
+  "nodes": [
+    {
+      "id": "SessionStart",
+      "lane": "session",
+      "col": 0,
+      "type": "backend",
+      "label": "SessionStart",
+      "sublabel": "matcher: compact",
+      "width": 150
+    },
+    {
+      "id": "reload",
+      "lane": "session",
+      "col": 1,
+      "type": "backend",
+      "label": "hook-contract-reload.py",
+      "sublabel": "re-arms the role contract",
+      "width": 180
+    }
+  ],
+  "edges": [
+    {
+      "from": "SessionStart",
+      "to": "reload",
+      "label": "reloads the contract"
+    }
+  ]
+}

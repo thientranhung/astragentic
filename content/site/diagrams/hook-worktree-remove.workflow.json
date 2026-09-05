@@ -1,0 +1,57 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Worktree Cleanup on Teardown",
+    "output": "hook-worktree-remove.html",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "worktree",
+      "label": "Worktree Cleanup"
+    }
+  ],
+  "mainPath": [
+    "WorktreeRemove",
+    "release"
+  ],
+  "nodes": [
+    {
+      "id": "WorktreeRemove",
+      "lane": "worktree",
+      "col": 0,
+      "type": "backend",
+      "label": "WorktreeRemove",
+      "sublabel": "fires on worktree teardown",
+      "width": 150
+    },
+    {
+      "id": "release",
+      "lane": "worktree",
+      "col": 1,
+      "type": "backend",
+      "label": "release-worktree-resources.sh",
+      "sublabel": "frees pane + processes",
+      "width": 200
+    }
+  ],
+  "edges": [
+    {
+      "from": "WorktreeRemove",
+      "to": "release",
+      "label": "runs the release script"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "State Lives in a Flat Log",
+      "items": [
+        "Every WorktreeRemove, SubagentStop, and missing-script event lands in one file",
+        "/tmp/harness-hook-events.log is diagnostic only — it is not the tracker",
+        "A missing hook script still logs and warns instead of failing silently"
+      ]
+    }
+  ]
+}

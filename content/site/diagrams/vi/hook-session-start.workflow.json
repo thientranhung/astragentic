@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Tiếp Tục Session Sau Compact",
+    "output": "hook-session-start.html",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "session",
+      "label": "Tiếp Tục Session"
+    }
+  ],
+  "mainPath": [
+    "SessionStart",
+    "reload"
+  ],
+  "nodes": [
+    {
+      "id": "SessionStart",
+      "lane": "session",
+      "col": 0,
+      "type": "backend",
+      "label": "SessionStart",
+      "sublabel": "matcher: compact",
+      "width": 150
+    },
+    {
+      "id": "reload",
+      "lane": "session",
+      "col": 1,
+      "type": "backend",
+      "label": "hook-contract-reload.py",
+      "sublabel": "nạp lại contract của vai",
+      "width": 180
+    }
+  ],
+  "edges": [
+    {
+      "from": "SessionStart",
+      "to": "reload",
+      "label": "nạp lại contract"
+    }
+  ]
+}

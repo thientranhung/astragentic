@@ -1,0 +1,57 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Logging Every Subagent Exit",
+    "output": "hook-subagent-stop.html",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "subagent",
+      "label": "Subagent Exit"
+    }
+  ],
+  "mainPath": [
+    "SubagentStop",
+    "logstop"
+  ],
+  "nodes": [
+    {
+      "id": "SubagentStop",
+      "lane": "subagent",
+      "col": 0,
+      "type": "backend",
+      "label": "SubagentStop",
+      "sublabel": "fires on every agent exit",
+      "width": 150
+    },
+    {
+      "id": "logstop",
+      "lane": "subagent",
+      "col": 1,
+      "type": "database",
+      "label": "harness-hook-events.log",
+      "sublabel": "records the exit",
+      "width": 180
+    }
+  ],
+  "edges": [
+    {
+      "from": "SubagentStop",
+      "to": "logstop",
+      "label": "appends one log line"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "State Lives in a Flat Log",
+      "items": [
+        "Every WorktreeRemove, SubagentStop, and missing-script event lands in one file",
+        "/tmp/harness-hook-events.log is diagnostic only — it is not the tracker",
+        "A missing hook script still logs and warns instead of failing silently"
+      ]
+    }
+  ]
+}

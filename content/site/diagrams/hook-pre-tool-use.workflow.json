@@ -1,0 +1,113 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "The Gate Before Every Bash Call",
+    "output": "hook-pre-tool-use.html",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "tool_call",
+      "label": "Every Bash Call"
+    }
+  ],
+  "groups": [
+    {
+      "id": "guard_decision",
+      "label": "git guard decision",
+      "lane": "tool_call",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "security"
+    }
+  ],
+  "mainPath": [
+    "bash_cmd",
+    "PreToolUse",
+    "gitguard",
+    "run"
+  ],
+  "nodes": [
+    {
+      "id": "bash_cmd",
+      "lane": "tool_call",
+      "col": 0,
+      "type": "frontend",
+      "label": "Bash command",
+      "sublabel": "any tool call",
+      "width": 150
+    },
+    {
+      "id": "PreToolUse",
+      "lane": "tool_call",
+      "col": 1,
+      "type": "backend",
+      "label": "PreToolUse",
+      "sublabel": "fires before the call",
+      "width": 150
+    },
+    {
+      "id": "gitguard",
+      "lane": "tool_call",
+      "col": 2,
+      "type": "security",
+      "label": "hook-git-guard.py",
+      "sublabel": "allow or block?",
+      "width": 150
+    },
+    {
+      "id": "run",
+      "lane": "tool_call",
+      "col": 3,
+      "type": "backend",
+      "label": "Command runs",
+      "sublabel": "unchanged",
+      "width": 150
+    },
+    {
+      "id": "block",
+      "lane": "tool_call",
+      "col": 3,
+      "type": "security",
+      "label": "Block",
+      "sublabel": "stderr + logged, no run",
+      "width": 150,
+      "yOffset": 90
+    }
+  ],
+  "edges": [
+    {
+      "from": "bash_cmd",
+      "to": "PreToolUse"
+    },
+    {
+      "from": "PreToolUse",
+      "to": "gitguard",
+      "label": "runs the guard script"
+    },
+    {
+      "from": "gitguard",
+      "to": "run",
+      "label": "clean"
+    },
+    {
+      "from": "gitguard",
+      "to": "block",
+      "label": "dangerous pattern",
+      "variant": "security",
+      "role": "error"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "The Guard Runs Before, Never After",
+      "items": [
+        "hook-git-guard.py decides allow or block before the command executes",
+        "A block writes to stderr and appends a line — the command never runs",
+        "There is no retry loop: a block ends the attempt, it does not queue a review"
+      ]
+    }
+  ]
+}
