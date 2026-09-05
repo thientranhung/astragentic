@@ -1,0 +1,139 @@
+---
+// /hooks · /en/hooks — four hooks, one anchored section each (build spec 4 §3).
+// The writer owns src/content/pages/<lang>/hooks.md, split by `## pre-tool-use`,
+// `## worktree-remove`, `## session-start`, `## subagent-stop`.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import InteractiveDiagram from '../InteractiveDiagram.astro';
+import Prose from '../Prose.astro';
+import { getPage } from '../../lib/pages';
+import { HOOKS } from '../../lib/anchors';
+import { byId } from '../../lib/data';
+import { ROUTES, REPO, UI, type Lang } from '../../lib/site';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const page = await getPage(lang, 'hooks');
+const evidenceRoute = ROUTES.evidence[lang];
+
+const hooksMap = Object.fromEntries(HOOKS.map((hook) => [hook.id, `#${hook.id}`]));
+const heading =
+  lang === 'vi' ? 'Bốn khoảnh khắc, bốn cái hook' : 'Four moments, four hooks';
+const lede =
+  lang === 'vi'
+    ? 'Hook là chỗ duy nhất trong harness chạy mà không cần agent nào nhớ phải chạy nó.'
+    : 'A hook is the one part of the harness that runs without an agent remembering to run it.';
+---
+
+<BaseLayout
+  title={page.missing ? UI.hooksTitle[lang] : page.title}
+  description={page.missing ? lede : page.description}
+  lang={lang}
+  page="hooks"
+>
+  <section class="screen screen--paper">
+    <div class="column">
+      <p class="eyebrow">{UI.hooksTitle[lang]}</p>
+      <h1>{page.missing ? heading : page.title}</h1>
+      {page.intro ? <Prose html={page.intro} lead /> : <p class="sub">{lede}</p>}
+    </div>
+    <div class="column">
+      <InteractiveDiagram slug="hooks" lang={lang} hrefMap={hooksMap} explore class="band" />
+    </div>
+  </section>
+
+  {
+    HOOKS.map((hook, i) => {
+      const row = byId.get(hook.ast);
+      return (
+        <section class:list={['screen', i % 2 === 0 ? 'screen--sunk' : 'screen--paper']} id={hook.id}>
+          <div class="column">
+            <p class="eyebrow mono" lang="en">{hook.event}</p>
+            <h2 class="mono hook-name" lang="en">{hook.script ?? 'settings.json'}</h2>
+            <dl class="facts">
+              <div>
+                <dt class="mono">{UI.hookWhen[lang]}</dt>
+                <dd>{hook.when[lang]}</dd>
+              </div>
+              <div>
+                <dt class="mono">{UI.hookEffect[lang]}</dt>
+                <dd>{hook.effect[lang]}</dd>
+              </div>
+            </dl>
+            {page.sections[hook.id] && <Prose html={page.sections[hook.id]} class="body" />}
+            <p class="src mono">
+              {hook.script && (
+                <a href={`${REPO}/blob/main/harness/${hook.script}`} target="_blank" rel="noreferrer">
+                  {`harness/${hook.script} ↗`}
+                </a>
+              )}
+              <a class="ast" href={`${evidenceRoute}#${hook.ast.toLowerCase()}`}>{hook.ast}</a>
+              {row && <span class="lesson" lang="en">{row.lesson}</span>}
+            </p>
+          </div>
+        </section>
+      );
+    })
+  }
+</BaseLayout>
+
+<style>
+  .hook-name {
+    font-size: clamp(20px, 2vw, 26px);
+    letter-spacing: -0.005em;
+  }
+  .facts {
+    margin: 1.5rem 0 0;
+    padding: 0;
+  }
+  .facts > div {
+    display: grid;
+    grid-template-columns: minmax(0, 9rem) minmax(0, 1fr);
+    gap: 1rem;
+    padding: 0.7rem 0;
+    border-top: 1px solid var(--rule);
+  }
+  .facts dt {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--ink-muted);
+    padding-top: 0.25rem;
+  }
+  .facts dd {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  .body {
+    margin-top: 1.5rem;
+  }
+  .body :global(p) {
+    max-width: 68ch;
+  }
+  .src {
+    margin: 1.5rem 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 1rem;
+    font-size: 11.5px;
+  }
+  .src a:not(.ast) {
+    color: var(--ink-muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+  }
+  .src .lesson {
+    color: var(--ink-muted);
+    font-size: 11px;
+  }
+
+  @media (max-width: 620px) {
+    .facts > div {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.25rem;
+    }
+  }
+</style>

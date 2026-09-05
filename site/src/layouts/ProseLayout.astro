@@ -1,0 +1,92 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import type { Lang } from '../lib/site';
+
+interface Props {
+  title: string;
+  description?: string;
+  eyebrow?: string;
+  sourcePath?: string;
+  runtimes?: string[];
+  updated?: Date;
+  /** The Vietnamese page nearest this term, when it has one — not a translation, so
+   *  it drives the language switch only (src/lib/terms.ts). */
+  switchTo?: Record<Lang, string>;
+}
+const { title, description, eyebrow, sourcePath, runtimes, updated, switchTo } = Astro.props;
+---
+
+<BaseLayout title={title} description={description} lang="en" switchTo={switchTo}>
+  <div class="column-wide pt-16 pb-24">
+    <div class="grid gap-12 md:grid-cols-[minmax(0,720px)_200px] md:justify-between">
+      <article class="prose-body">
+        {eyebrow && <p class="eyebrow mb-3">{eyebrow}</p>}
+        <h1 class="mb-8">{title}</h1>
+        <slot />
+      </article>
+      {
+        (sourcePath || runtimes || updated) && (
+          <aside class="mono text-xs" style="color: var(--ink-muted);">
+            {sourcePath && (
+              <p class="mb-4">
+                <span class="block uppercase" style="letter-spacing: 0.06em;">
+                  Source
+                </span>
+                {sourcePath}
+              </p>
+            )}
+            {runtimes && runtimes.length > 0 && (
+              <p class="mb-4">
+                <span class="block uppercase" style="letter-spacing: 0.06em;">
+                  Runtimes
+                </span>
+                {runtimes.join(', ')}
+              </p>
+            )}
+            {updated && (
+              <p class="mb-4">
+                <span class="block uppercase" style="letter-spacing: 0.06em;">
+                  Updated
+                </span>
+                {updated.toISOString().slice(0, 10)}
+              </p>
+            )}
+          </aside>
+        )
+      }
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  /* Same measure and the same 17px body as the rest of the site (PRD §5). Without
+     this the 720px column runs to 85 characters and reads as a second site. */
+  .prose-body :global(p),
+  .prose-body :global(li) {
+    max-width: 68ch;
+    font-size: 17px;
+  }
+  .prose-body :global(h2) {
+    margin-top: 3.25rem;
+    margin-bottom: 0.9rem;
+  }
+  .prose-body :global(p) {
+    margin-bottom: 1rem;
+  }
+  .prose-body :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+  }
+  .prose-body :global(th),
+  .prose-body :global(td) {
+    border-bottom: 1px solid var(--rule);
+    padding: 0.5rem 0.75rem 0.5rem 0;
+    text-align: left;
+    vertical-align: top;
+  }
+  .prose-body :global(a) {
+    text-decoration: underline;
+    text-decoration-color: var(--rule);
+  }
+</style>

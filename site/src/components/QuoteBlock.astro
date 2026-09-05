@@ -1,0 +1,68 @@
+---
+// A verbatim quote from the repo. Never translated (spec §1 rule 3); the source line
+// is a link into the file on GitHub so the reader can check it.
+interface Props {
+  source: string;
+  href?: string;
+  size?: 'lg' | 'md' | 'sm';
+  /** The mono label that marks the block as untranslated source text — on a
+   *  Vietnamese page this reads "nguyên văn · tiếng Anh" (PRD §4). */
+  label?: string;
+}
+const { source, href, size = 'lg', label } = Astro.props;
+---
+
+<figure class:list={['quote', `quote--${size}`]}>
+  {label && <p class="mono vlabel">{label}</p>}
+  <blockquote lang="en"><slot /></blockquote>
+  <figcaption class="mono">
+    {href ? <a href={href} target="_blank" rel="noreferrer">{source} ↗</a> : source}
+  </figcaption>
+</figure>
+
+<style>
+  .quote {
+    margin: 0 0 2.25rem;
+    padding-left: 1.5rem;
+    border-left: 2px solid var(--ink);
+  }
+  .quote blockquote {
+    margin: 0;
+    font-family: var(--font-serif);
+    letter-spacing: -0.012em;
+    line-height: 1.28;
+    text-wrap: balance;
+  }
+  .quote--lg blockquote {
+    font-size: clamp(24px, 2.6vw, 32px);
+  }
+  .quote--md blockquote {
+    font-size: clamp(19px, 1.8vw, 23px);
+  }
+  .quote--sm blockquote {
+    font-size: 17px;
+    line-height: 1.5;
+    letter-spacing: 0;
+  }
+  .vlabel {
+    margin: 0 0 0.6rem;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-muted);
+  }
+  figcaption {
+    margin-top: 1.1rem;
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+    color: var(--ink-muted);
+  }
+  figcaption a {
+    color: var(--ink-muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+  }
+  figcaption a:hover {
+    color: var(--ink);
+  }
+</style>

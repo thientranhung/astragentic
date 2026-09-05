@@ -1,0 +1,196 @@
+---
+// /cau-truc · /en/structure — the four layers, then the parts of the harness worth
+// keeping (build spec 4 §3 and §5). The writer owns the prose in
+// src/content/pages/<lang>/structure.md, split by `## runtime`, `## harness`,
+// `## coordination`, `## project`, `## good-parts`. Until a section lands, the one line
+// from src/lib/anchors.ts stands in its place.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import InteractiveDiagram from '../InteractiveDiagram.astro';
+import Diagram from '../Diagram.astro';
+import Prose from '../Prose.astro';
+import { getPage } from '../../lib/pages';
+import { GOOD_PARTS, LAYERS } from '../../lib/anchors';
+import { meta } from '../../lib/data';
+import { roleHref } from '../../lib/roles';
+import { termHref } from '../../lib/terms';
+import { ROUTES, UI, type Lang } from '../../lib/site';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const page = await getPage(lang, 'structure');
+
+const stackRoute = ROUTES.stack[lang];
+const evidenceRoute = ROUTES.evidence[lang];
+const structureMap: Record<string, string> = {
+  runtime: '#runtime',
+  harness: '#harness',
+  coordination: '#coordination',
+  project: '#project',
+  runtime_claude: `${stackRoute}#claude-code`,
+  runtime_codex: `${stackRoute}#codex`,
+  runtime_opencode: `${stackRoute}#opencode`,
+  roles: roleHref(lang, 'thomas'),
+  skills: ROUTES.skills[lang],
+  hooks: ROUTES.hooks[lang],
+  ledger: evidenceRoute,
+  tracker: termHref(lang, 'tracker'),
+  herdr: `${stackRoute}#herdr`,
+  worktrees: termHref(lang, 'worktree'),
+};
+
+const title = page.missing ? UI.structureTitle[lang] : page.title;
+const heading = lang === 'vi' ? 'Astragentic gồm bốn lớp' : 'Astragentic is four layers';
+---
+
+<BaseLayout title={title} description={page.description} lang={lang} page="structure">
+  <section class="screen screen--paper">
+    <div class="column">
+      <p class="eyebrow">{UI.structureTitle[lang]}</p>
+      <h1>{page.missing ? heading : page.title}</h1>
+      {page.intro && <Prose html={page.intro} lead class="lede" />}
+    </div>
+    <div class="column">
+      <InteractiveDiagram slug="structure" lang={lang} hrefMap={structureMap} explore class="band" />
+      <p class="hint mono">{UI.diagramHint[lang]}</p>
+    </div>
+  </section>
+
+  {
+    LAYERS.map((layer, i) => (
+      <section class:list={['screen', i % 2 === 0 ? 'screen--sunk' : 'screen--paper']} id={layer.id}>
+        <div class="column">
+          <p class="eyebrow mono">{String(i + 1).padStart(2, '0')} · {layer.parts}</p>
+          <h2>{layer.title[lang]}</h2>
+          {page.sections[layer.id] ? (
+            <Prose html={page.sections[layer.id]} class="body" />
+          ) : (
+            <p class="sub">{layer.line[lang]}</p>
+          )}
+        </div>
+      </section>
+    ))
+  }
+
+  <section class="screen screen--paper" id="good-parts">
+    <div class="column">
+      <p class="eyebrow">{UI.goodParts[lang]}</p>
+      <h2>
+        {lang === 'vi' ? 'Năm thứ mình sẽ giữ lại' : 'The five parts I would keep'}
+      </h2>
+      {page.sections['good-parts'] && <Prose html={page.sections['good-parts']} class="body" />}
+    </div>
+    <div class="column">
+      <ul class="parts band">
+        {
+          GOOD_PARTS.map((part) => (
+            <li id={part.id} class:list={[part.id === 'cross-vendor-arm' && 'part--wide']}>
+              <h3>{part.title[lang]}</h3>
+              <p>{part.line[lang]}</p>
+              {part.id === 'cross-vendor-arm' && (
+                <Diagram slug="cross-vendor-arm" lang={lang} svgMaxWidth={880} class="part-figure" />
+              )}
+              {part.id === 'ledger' && (
+                <p class="count">
+                  <span class="count-big mono">
+                    {meta.cited} <span class="slash">/</span> {meta.total}
+                  </span>
+                  <span class="count-label mono">{UI.footerCited[lang]}</span>
+                  <a class="count-link mono" href={evidenceRoute}>{UI.openLedger[lang]}</a>
+                </p>
+              )}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .lede :global(p) {
+    max-width: 62ch;
+  }
+  .body :global(p) {
+    max-width: 68ch;
+  }
+  .hint {
+    margin-top: 0.9rem;
+    font-size: 11px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  .parts {
+    list-style: none;
+    display: grid;
+    /* The cross-vendor card spans both columns; dense packing keeps the single-column
+       cards from leaving a hole beside it. */
+    grid-auto-flow: dense;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-block: 1.75rem 0;
+    padding: 0;
+  }
+  .parts li {
+    margin: 0;
+    padding: 1.1rem 1.2rem 1.2rem;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: var(--paper);
+  }
+  .parts h3 {
+    margin: 0 0 0.5rem;
+    font-size: 18px;
+  }
+  .parts p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--ink-muted);
+  }
+  .part--wide {
+    grid-column: 1 / -1;
+  }
+  .part-figure {
+    margin-block: 1.25rem 0;
+  }
+
+  .count {
+    display: block;
+    margin-top: 1rem !important;
+  }
+  .count-big {
+    display: block;
+    font-size: 40px;
+    line-height: 1;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+  .count-big .slash {
+    color: var(--rule);
+  }
+  .count-label {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .count-link {
+    display: inline-block;
+    margin-top: 0.9rem;
+    font-size: 12px;
+    color: var(--pass);
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+  }
+
+  @media (max-width: 720px) {
+    .parts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

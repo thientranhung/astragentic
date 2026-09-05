@@ -1,0 +1,205 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Every Agent Gets Its Own Pane",
+    "output": "hub-and-spokes.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-hub",
+        "label": "One resident router",
+        "focus": [
+          "thomas"
+        ],
+        "note": "Thomas is the only role still here when a session ends."
+      },
+      {
+        "id": "five-panes",
+        "label": "Same moment, no collision",
+        "focus": [
+          "tra139",
+          "tra142",
+          "spec87",
+          "qa125",
+          "rin125"
+        ],
+        "note": "Each spoke: its own pane, its own worktree, its own branch."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "thomas",
+      "type": "backend",
+      "label": "Thomas",
+      "sublabel": "resident router",
+      "pos": [
+        400,
+        40
+      ],
+      "size": [
+        200,
+        74
+      ]
+    },
+    {
+      "id": "tra139",
+      "type": "backend",
+      "label": "ticket:TRA-139",
+      "sublabel": "Builder",
+      "pos": [
+        40,
+        300
+      ],
+      "size": [
+        180,
+        74
+      ]
+    },
+    {
+      "id": "tra142",
+      "type": "backend",
+      "label": "ticket:TRA-142",
+      "sublabel": "Builder",
+      "pos": [
+        250,
+        300
+      ],
+      "size": [
+        180,
+        74
+      ]
+    },
+    {
+      "id": "spec87",
+      "type": "frontend",
+      "label": "spec:TRA-87",
+      "sublabel": "Shaper",
+      "pos": [
+        460,
+        300
+      ],
+      "size": [
+        180,
+        74
+      ]
+    },
+    {
+      "id": "qa125",
+      "type": "external",
+      "label": "qa:TRA-125",
+      "sublabel": "QA",
+      "pos": [
+        670,
+        300
+      ],
+      "size": [
+        180,
+        74
+      ]
+    },
+    {
+      "id": "rin125",
+      "type": "security",
+      "label": "rin:TRA-125",
+      "sublabel": "Rin",
+      "pos": [
+        880,
+        300
+      ],
+      "size": [
+        180,
+        74
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "HERDR WORKSPACE",
+      "wraps": [
+        "thomas",
+        "tra139",
+        "tra142",
+        "spec87",
+        "qa125",
+        "rin125"
+      ],
+      "pad": 24
+    }
+  ],
+  "connections": [
+    {
+      "from": "thomas",
+      "to": "tra139",
+      "label": "dispatch",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": -40
+    },
+    {
+      "from": "thomas",
+      "to": "tra142",
+      "label": "dispatch",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 0
+    },
+    {
+      "from": "thomas",
+      "to": "spec87",
+      "label": "dispatch",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 40
+    },
+    {
+      "from": "thomas",
+      "to": "qa125",
+      "label": "dispatch-qa",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": -40
+    },
+    {
+      "from": "thomas",
+      "to": "rin125",
+      "label": "review",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 40,
+      "labelDx": 40
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "One Hub, Several Panes",
+      "items": [
+        "Thomas is resident — the only role still here when a session ends",
+        "Every dispatch opens its own terminal pane and its own git worktree",
+        "The tracker, not the pane, is what all five spokes share"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Same Weight, No Dominant Spoke",
+      "items": [
+        "Two Builders, a Shaper, a QA walk, and a Rin gate can run at the same moment",
+        "No single spoke dominates — several agents, same moment, no collision",
+        "Each spoke's branch and worktree are its own, never shared"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Cleanup Is Thomas's",
+      "items": [
+        "A Builder commits, pushes, then returns to Thomas",
+        "Thomas verifies the diff and decides the merge",
+        "Cleanup of a worktree, branch, and pane is his, not the Builder's"
+      ]
+    }
+  ]
+}

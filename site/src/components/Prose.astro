@@ -1,0 +1,12 @@
+---
+// Renders one section of writer markdown, already turned into HTML by the content
+// loader and split out by src/lib/pages.ts. Nothing here is authored by the layout.
+interface Props {
+  html: string;
+  lead?: boolean;
+  class?: string;
+}
+const { html, lead = false, class: extra = '' } = Astro.props;
+---
+
+{html && <div class:list={['prose', lead && 'prose-lead', extra]} set:html={html} />}

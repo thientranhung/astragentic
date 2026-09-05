@@ -1,0 +1,48 @@
+---
+import { getCollection, render } from 'astro:content';
+import ProseLayout from '../../layouts/ProseLayout.astro';
+import Diagram from '../../components/Diagram.astro';
+import { termAlternate } from '../../lib/terms';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('dictionary');
+  return entries.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const alternate = termAlternate(entry.id);
+---
+
+<ProseLayout
+  title={entry.data.term}
+  description={entry.data.oneLiner}
+  eyebrow="DICTIONARY"
+  updated={entry.data.updated}
+  switchTo={alternate}
+>
+  {
+    entry.data.diagram && (
+      <Diagram slug={entry.data.diagram} lang="en" frame={720} title={entry.data.term} />
+    )
+  }
+  <Content />
+  {
+    entry.data.related.length > 0 && (
+      <p class="mono text-xs mt-8" style="color: var(--ink-muted);">
+        Related:{' '}
+        {entry.data.related.map((slug: string, i: number) => (
+          <>
+            {i > 0 && ', '}
+            <a href={`/dictionary/${slug}`} class="underline">
+              {slug}
+            </a>
+          </>
+        ))}
+      </p>
+    )
+  }
+</ProseLayout>

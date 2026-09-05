@@ -1,0 +1,236 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Four Hooks, Four Moments",
+    "output": "hooks.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-gate",
+        "label": "Before every Bash call",
+        "focus": [
+          "PreToolUse",
+          "gitguard",
+          "run",
+          "block"
+        ],
+        "note": "The guard decides allow or block before the command ever runs."
+      },
+      {
+        "id": "cleanup-and-resume",
+        "label": "Cleanup and resume",
+        "focus": [
+          "WorktreeRemove",
+          "release",
+          "SessionStart",
+          "reload"
+        ],
+        "note": "Worktree cleanup and post-compact contract reload fire independently of any tool call."
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "tool_call",
+      "label": "Every Bash Call"
+    },
+    {
+      "id": "worktree",
+      "label": "Worktree Cleanup"
+    },
+    {
+      "id": "session",
+      "label": "Session Resume"
+    },
+    {
+      "id": "subagent",
+      "label": "Subagent Exit"
+    }
+  ],
+  "groups": [
+    {
+      "id": "guard_decision",
+      "label": "git guard decision",
+      "lane": "tool_call",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "security"
+    }
+  ],
+  "mainPath": [
+    "bash_cmd",
+    "PreToolUse",
+    "gitguard",
+    "run"
+  ],
+  "nodes": [
+    {
+      "id": "bash_cmd",
+      "lane": "tool_call",
+      "col": 0,
+      "type": "frontend",
+      "label": "Bash command",
+      "sublabel": "any tool call",
+      "width": 150
+    },
+    {
+      "id": "PreToolUse",
+      "lane": "tool_call",
+      "col": 1,
+      "type": "backend",
+      "label": "PreToolUse",
+      "sublabel": "fires before the call",
+      "width": 150
+    },
+    {
+      "id": "gitguard",
+      "lane": "tool_call",
+      "col": 2,
+      "type": "security",
+      "label": "hook-git-guard.py",
+      "sublabel": "allow or block?",
+      "width": 150
+    },
+    {
+      "id": "run",
+      "lane": "tool_call",
+      "col": 3,
+      "type": "backend",
+      "label": "Command runs",
+      "sublabel": "unchanged",
+      "width": 150
+    },
+    {
+      "id": "block",
+      "lane": "tool_call",
+      "col": 3,
+      "type": "security",
+      "label": "Block",
+      "sublabel": "stderr + logged, no run",
+      "width": 150,
+      "yOffset": 90
+    },
+    {
+      "id": "WorktreeRemove",
+      "lane": "worktree",
+      "col": 0,
+      "type": "backend",
+      "label": "WorktreeRemove",
+      "sublabel": "fires on worktree teardown",
+      "width": 150
+    },
+    {
+      "id": "release",
+      "lane": "worktree",
+      "col": 1,
+      "type": "backend",
+      "label": "release-worktree-resources.sh",
+      "sublabel": "frees pane + processes",
+      "width": 200
+    },
+    {
+      "id": "SessionStart",
+      "lane": "session",
+      "col": 0,
+      "type": "backend",
+      "label": "SessionStart",
+      "sublabel": "matcher: compact",
+      "width": 150
+    },
+    {
+      "id": "reload",
+      "lane": "session",
+      "col": 1,
+      "type": "backend",
+      "label": "hook-contract-reload.py",
+      "sublabel": "re-arms the role contract",
+      "width": 180
+    },
+    {
+      "id": "SubagentStop",
+      "lane": "subagent",
+      "col": 0,
+      "type": "backend",
+      "label": "SubagentStop",
+      "sublabel": "fires on every agent exit",
+      "width": 150
+    },
+    {
+      "id": "logstop",
+      "lane": "subagent",
+      "col": 1,
+      "type": "database",
+      "label": "harness-hook-events.log",
+      "sublabel": "records the exit",
+      "width": 180
+    }
+  ],
+  "edges": [
+    {
+      "from": "bash_cmd",
+      "to": "PreToolUse"
+    },
+    {
+      "from": "PreToolUse",
+      "to": "gitguard",
+      "label": "runs the guard script"
+    },
+    {
+      "from": "gitguard",
+      "to": "run",
+      "label": "clean"
+    },
+    {
+      "from": "gitguard",
+      "to": "block",
+      "label": "dangerous pattern",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "from": "WorktreeRemove",
+      "to": "release",
+      "label": "runs the release script"
+    },
+    {
+      "from": "SessionStart",
+      "to": "reload",
+      "label": "reloads the contract"
+    },
+    {
+      "from": "SubagentStop",
+      "to": "logstop",
+      "label": "appends one log line"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Four Hooks, Four Moments",
+      "items": [
+        "PreToolUse gates every Bash call, before it ever reaches the shell",
+        "WorktreeRemove frees the pane and processes a worktree was holding",
+        "SessionStart(compact) re-arms role contracts lost to compaction; SubagentStop just logs the exit"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "The Guard Runs Before, Never After",
+      "items": [
+        "hook-git-guard.py decides allow or block before the command executes",
+        "A block writes to stderr and appends a line — the command never runs",
+        "There is no retry loop: a block ends the attempt, it does not queue a review"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "State Lives in a Flat Log",
+      "items": [
+        "Every WorktreeRemove, SubagentStop, and missing-script event lands in one file",
+        "/tmp/harness-hook-events.log is diagnostic only — it is not the tracker",
+        "A missing hook script still logs and warns instead of failing silently"
+      ]
+    }
+  ]
+}

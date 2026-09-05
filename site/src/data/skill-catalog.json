@@ -1,0 +1,128 @@
+[
+  {
+    "name": "batch-triage",
+    "kind": "skill",
+    "oneLiner": "Triage an inherited backlog in one pass — many existing issues at once, rather than one new item at a time.",
+    "group": "entry"
+  },
+  {
+    "name": "bootstrap-glossary",
+    "kind": "skill",
+    "oneLiner": "Seed CONTEXT.md with the domain terms the code already uses, each term carrying the file it was read from and marked unreviewed until the owner confirms it.",
+    "group": "entry"
+  },
+  {
+    "name": "codex-arm",
+    "kind": "skill",
+    "oneLiner": "Invocation mechanics for the cross-vendor arm — the Codex pass Thomas fires over a completed artifact.",
+    "group": "main-flow"
+  },
+  {
+    "name": "codex-claude-arm",
+    "kind": "skill",
+    "oneLiner": "ARM ONLY — the Claude pass a Codex root fires over a completed artifact: the Builder fires it per ticket from its own worktree, Thomas fires it at spec and at slice close.",
+    "group": "main-flow"
+  },
+  {
+    "name": "dispatch-qa-walk",
+    "kind": "skill",
+    "oneLiner": "Thomas-only recipe to dispatch QA's product walk — the gate that uses the running system instead of reading the diff.",
+    "group": "gate"
+  },
+  {
+    "name": "dispatch-ticket",
+    "kind": "skill",
+    "oneLiner": "Dispatch one claimed ticket as a visible Herdr pane — one Builder, one worktree, one branch, one pane.",
+    "group": "main-flow"
+  },
+  {
+    "name": "dispatch-ticket-claude",
+    "kind": "skill",
+    "oneLiner": "Claude Code-specific dispatch protocol.",
+    "group": "main-flow"
+  },
+  {
+    "name": "dispatch-ticket-codex",
+    "kind": "skill",
+    "oneLiner": "Codex-specific launcher and verification for dispatch-ticket.",
+    "group": "main-flow"
+  },
+  {
+    "name": "dispatch-ticket-opencode",
+    "kind": "skill",
+    "oneLiner": "OpenCode-specific launcher and verification for dispatch-ticket.",
+    "group": "main-flow"
+  },
+  {
+    "name": "github-issue-tracker",
+    "kind": "skill",
+    "oneLiner": "Operating mechanics for a project whose tracker is GitHub Issues — status as labels, the claim, native dependencies keyed by database id, the frontier loop, and the Projects board mirror.",
+    "group": "upkeep"
+  },
+  {
+    "name": "jira-issue-tracker",
+    "kind": "skill",
+    "oneLiner": "Operating mechanics for a project whose tracker is Jira — status as numbered transitions, cloudId and JQL quoting, issue links and their invertible direction, whole-field description writes, and what only a human can change.",
+    "group": "upkeep"
+  },
+  {
+    "name": "legacy-testing",
+    "kind": "skill",
+    "oneLiner": "How to get existing untested code under test — characterisation tests that pin current behaviour, and creating a seam before TDD can attach.",
+    "group": "brownfield"
+  },
+  {
+    "name": "linear-issue-tracker",
+    "kind": "skill",
+    "oneLiner": "Operating mechanics for a project whose tracker is Linear — native states and relations, the claim protocol where assignee cannot hold a Builder identity, wayfinding primitives, and the free-tier issue ceiling that stops a pipeline outright.",
+    "group": "upkeep"
+  },
+  {
+    "name": "reconcile-tracker",
+    "kind": "skill",
+    "oneLiner": "Reconcile the tracker against git — detect tickets whose recorded state contradicts what actually merged, plus stale claims.",
+    "group": "upkeep"
+  },
+  {
+    "name": "review-with-rin",
+    "kind": "skill",
+    "oneLiner": "Thomas-only recipe to run Rin's milestone gate as an observable Herdr gate pane — brief, dispatch, collect the report, classify.",
+    "group": "gate"
+  },
+  {
+    "name": "untangle",
+    "kind": "skill",
+    "oneLiner": "A refactor path for code too tangled for improve-codebase-architecture — where there are no module boundaries to improve, everything imports everything, and a clean restructure would be one enormous unreviewable change.",
+    "group": "brownfield"
+  },
+  {
+    "name": "builder",
+    "kind": "role",
+    "oneLiner": "Builds one ticket in its own worktree as the sole writer there.",
+    "group": "main-flow"
+  },
+  {
+    "name": "qa",
+    "kind": "role",
+    "oneLiner": "Product-quality walker.",
+    "group": "gate"
+  },
+  {
+    "name": "rin",
+    "kind": "role",
+    "oneLiner": "Milestone reviewer.",
+    "group": "gate"
+  },
+  {
+    "name": "shaper",
+    "kind": "role",
+    "oneLiner": "Shaping session.",
+    "group": "shaping"
+  },
+  {
+    "name": "thomas",
+    "kind": "role",
+    "oneLiner": "Router.",
+    "group": "entry"
+  }
+]

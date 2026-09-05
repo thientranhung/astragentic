@@ -1,0 +1,343 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/source-serif-4';
+@import '@fontsource-variable/jetbrains-mono';
+
+:root {
+  --paper: #f4f2ee;
+  --paper-sunk: #eae7e1;
+  --ink: #1a1d21;
+  --ink-muted: rgba(26, 29, 33, 0.7);
+  --rule: rgba(26, 29, 33, 0.12);
+  --rule-faint: rgba(26, 29, 33, 0.045);
+  --pass: #2f6f5e;
+  --defect: #b4462f;
+
+  --font-serif: 'Source Serif 4 Variable', ui-serif, Georgia, serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', monospace;
+
+  /* one page frame, one reading column, one breakout width */
+  --frame: 1200px;
+  --column: 680px;
+  --column-wide: 1040px;
+  /* The diagram band: wider than the reading column, inside the 1200 frame with a
+     gutter left on each side (PRD §5 — the picture is the big thing on the page). */
+  --diagram: 1120px;
+  --gutter: clamp(1.25rem, 4vw, 3rem);
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-sunk: var(--paper-sunk);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-rule: var(--rule);
+  --color-pass: var(--pass);
+  --color-defect: var(--defect);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 1.6;
+  background: var(--paper);
+}
+
+/* The page frame: a bounded sheet with hairline edges. The worktree texture lives
+   inside the frame so its lines land on the frame, not across the reader's screen. */
+.page {
+  position: relative;
+  max-width: var(--frame);
+  margin-inline: auto;
+  min-height: 100vh;
+  border-inline: 1px solid var(--rule);
+  background-color: var(--paper);
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--rule-faint) 0,
+    var(--rule-faint) 1px,
+    transparent 1px,
+    transparent 220px
+  );
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+/* Sizes are capped so the picture stays the biggest thing on the page (PRD §5). */
+h1 {
+  margin-bottom: 1.1rem;
+  font-size: clamp(34px, 3.6vw, 52px);
+  line-height: 1.05;
+  letter-spacing: -0.022em;
+}
+
+h2 {
+  font-size: clamp(26px, 2.1vw, 30px);
+  margin-bottom: 0.8rem;
+}
+
+h3 {
+  font-size: 20px;
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+p {
+  margin: 0 0 1.1rem;
+}
+
+a {
+  color: inherit;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  background: var(--paper-sunk);
+  padding: 0.05em 0.3em;
+  border-radius: 2px;
+}
+
+pre {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  background: var(--paper-sunk);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  margin: 1.25rem 0 1.5rem;
+}
+pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+ul,
+ol {
+  padding-left: 1.25rem;
+  margin: 0 0 1.25rem;
+}
+li {
+  margin-bottom: 0.4rem;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin: 3rem 0;
+}
+
+.column {
+  max-width: var(--column);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.column-wide {
+  max-width: var(--column-wide);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* As wide as a diagram band: for the hero, where the picture is the point. */
+.column-band {
+  max-width: calc(var(--diagram) + 2rem);
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+/* an element inside .column that wants the wide width, centred on the same axis */
+.breakout {
+  width: min(var(--column-wide), 100vw - 2 * var(--gutter));
+  margin-left: calc((100% - min(var(--column-wide), 100vw - 2 * var(--gutter))) / 2);
+}
+
+/* the diagram band: wider than .breakout, still inside the frame */
+.band {
+  width: min(var(--diagram), 100vw - 2rem);
+  margin-left: calc((100% - min(var(--diagram), 100vw - 2rem)) / 2);
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+  margin: 0 0 1.1rem;
+}
+
+/* Pass 2 removed the eyebrow hairline: screens are separated by ground, not by rules. */
+
+.rule {
+  border-color: var(--rule);
+}
+
+.accent {
+  color: var(--pass);
+}
+
+.stat {
+  font-family: var(--font-mono);
+  font-size: clamp(36px, 3.4vw, 48px);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+  margin: 0.6rem 0 0;
+}
+
+/* the one sub-line a section is allowed under its heading: 18px, muted (PRD §5) */
+.sub {
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--ink-muted);
+  max-width: 62ch;
+  margin-bottom: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* keep state changes visible (hover, focus, drawer) but make them near-instant */
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 60ms !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Rebuild pass 2. A screen is a full-width band inside the 1200 frame; the
+   eye reads a boundary from the alternating ground, not from a rule.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.screen {
+  padding-block: 4.5rem;
+  border-top: 1px solid transparent;
+}
+.screen--paper {
+  background: var(--paper);
+}
+.screen--sunk {
+  background: var(--paper-sunk);
+  border-top-color: var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+/* Prose written by the writer, injected as HTML from one markdown section. */
+.prose > :last-child {
+  margin-bottom: 0;
+}
+.prose p {
+  margin: 0 0 1.1rem;
+}
+.prose a {
+  color: var(--pass);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--pass) 35%, transparent);
+  text-underline-offset: 3px;
+}
+.prose ul,
+.prose ol {
+  margin-bottom: 1.1rem;
+}
+/* Tailwind's preflight drops list markers; the writer's `## may` / `## may-not`
+   sections are lists and read as loose paragraphs without them. */
+.prose ul {
+  list-style: disc;
+}
+.prose ol {
+  list-style: decimal;
+}
+.prose li::marker {
+  color: var(--ink-muted);
+}
+.prose h3 {
+  font-size: 20px;
+}
+.prose-lead p:first-child {
+  font-size: 19px;
+  line-height: 1.6;
+}
+
+/* The one arrow on the page: it says "keep scrolling", nothing else. */
+.scroll-cue {
+  margin-top: 3.5rem;
+  font-family: var(--font-mono);
+  font-size: 20px;
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.ast {
+  font-family: var(--font-mono);
+  color: var(--defect);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--defect) 35%, transparent);
+}
+.ast:hover {
+  border-bottom-color: var(--defect);
+}
+
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+}
+
+.more-link {
+  display: inline-block;
+  margin-top: 2.25rem;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--pass);
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 2px;
+}
+.more-link:hover {
+  opacity: 0.75;
+}
+
+/* An anchored target inside a scrolling page needs air above it. */
+[id] {
+  scroll-margin-top: 5rem;
+}

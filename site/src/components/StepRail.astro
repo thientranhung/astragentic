@@ -1,0 +1,64 @@
+---
+interface UnorderedStep {
+  name: string;
+  cadence: string;
+  detail: string;
+  badge: string;
+  emphasis?: boolean;
+}
+interface OrderedStep {
+  number: number;
+  name: string;
+  artifact: string;
+  actor: string;
+  group?: string;
+}
+interface Props {
+  sequential: boolean;
+  steps: UnorderedStep[] | OrderedStep[];
+}
+const { sequential, steps } = Astro.props;
+---
+
+{
+  sequential ? (
+    <ol class="flex flex-col gap-4" style="list-style: none; padding: 0; margin: 1.5rem 0 2rem;">
+      {(steps as OrderedStep[]).map((step) => (
+        <li class={`flex gap-4 border-b pb-4 ${step.group ? 'pl-3' : ''}`} style={`border-color: var(--rule);${step.group ? ' border-left: 2px solid var(--rule);' : ''}`}>
+          <span class="mono text-sm" style="color: var(--ink-muted);">
+            {String(step.number).padStart(2, '0')}
+          </span>
+          <div>
+            <p class="font-semibold">
+              {step.name}
+              <span class="mono text-xs ml-2" style="color: var(--ink-muted);">
+                {step.actor}
+              </span>
+            </p>
+            <p class="mono text-xs" style="color: var(--ink-muted);">
+              {step.artifact}
+            </p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  ) : (
+    <ul class="breakout grid grid-cols-1 gap-4 md:grid-cols-5" style="list-style: none; padding: 0; margin-block: 1.5rem 2rem;">
+      {(steps as UnorderedStep[]).map((step) => (
+        <li
+          class="p-4"
+          style={`border: 1px solid var(--rule); border-radius: 2px;${step.emphasis ? ' border-width: 2px;' : ''}`}
+        >
+          <p class="mono text-sm font-semibold">{step.name}</p>
+          <p class="mono text-xs mt-1" style="color: var(--ink-muted);">
+            {step.cadence}
+          </p>
+          <p class="text-sm mt-2">{step.detail}</p>
+          <p class="mono text-xs mt-2 uppercase" style="letter-spacing: 0.06em; color: var(--ink-muted);">
+            {step.badge}
+          </p>
+        </li>
+      ))}
+    </ul>
+  )
+}

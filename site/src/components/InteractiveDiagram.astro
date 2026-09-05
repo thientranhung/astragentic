@@ -1,0 +1,260 @@
+---
+// An archify SVG made touchable (landing spec §5). The SVG already ships
+// `id="node-<id>"`, `data-node-id`, `tabindex="0"` and `role="button"` on every node,
+// so this component only has to decide which of them lead somewhere.
+//
+// A node named in `hrefMap` gets `class="is-link"` at build time — hover and focus
+// highlighting are pure CSS and work with JavaScript off. The script adds the two
+// things CSS cannot do: navigation on click/Enter, and the mono tooltip built from
+// `data-node-sublabel` and `data-node-tag`. A node absent from the map is left exactly
+// as the diagrammer drew it.
+//
+// LANGUAGE (PRD §4). A Vietnamese page renders src/assets/diagrams/vi/<slug>.svg. If the
+// diagrammer has not delivered that file yet, the English one renders and the build
+// prints a warning naming the missing file — a visible gap, never a silent mix.
+import '../styles/diagram.css';
+import { UI, type Lang } from '../lib/site';
+import { BAND, prepare, stripFocus } from '../lib/diagram';
+
+interface Props {
+  slug: string;
+  lang?: Lang;
+  /** node id → href. Nodes not listed stay inert. */
+  hrefMap?: Record<string, string>;
+  /** Node lit up on arrival, for the role pages. */
+  activeId?: string;
+  /** Hero art: no pointer, no tooltip, no focus stops. */
+  inert?: boolean;
+  title?: string;
+  /** Caps the rendered width of the whole figure. Unset means the full diagram band. */
+  maxWidth?: number;
+  /** Caps the SVG inside a full-width figure and centres it — for a tall diagram that
+   *  would otherwise leave a third of the band empty. */
+  svgMaxWidth?: number;
+  /** Show the "open the interactive version" caption under the figure. */
+  explore?: boolean;
+  class?: string;
+}
+const {
+  slug,
+  lang = 'vi',
+  hrefMap = {},
+  activeId,
+  inert = false,
+  title,
+  maxWidth,
+  svgMaxWidth,
+  explore = false,
+  class: extra = '',
+} = Astro.props;
+
+const mod = import.meta.glob('/src/assets/diagrams/**/*.svg', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
+const localised = lang === 'vi' ? mod[`/src/assets/diagrams/vi/${slug}.svg`] : undefined;
+const english = mod[`/src/assets/diagrams/${slug}.svg`];
+if (lang === 'vi' && !localised && english) {
+  console.warn(
+    `[diagram] no Vietnamese diagram for "${slug}" — rendering the English one. ` +
+      `Expected src/assets/diagrams/vi/${slug}.svg`,
+  );
+}
+const raw = localised ?? english ?? null;
+const localisedOk = Boolean(localised) || lang === 'en';
+const exploreHref = localisedOk && lang === 'vi' ? `/explore/vi/${slug}.html` : `/explore/${slug}.html`;
+
+/** Add `is-link` / `is-active` to the node groups, and — for a node that leads
+ *  somewhere — replace the semantics archify drew. Its nodes are `role="button"` with
+ *  `aria-label="Focus <name>…"`, which is what they do inside the standalone explore
+ *  page. Here a marked node navigates, so it announces itself as a link that opens a
+ *  page. A node with no href gives back its tab stop instead: nothing happens when it
+ *  is reached, and a keyboard reader should not have to find that out. */
+function mark(svg: string): string {
+  return svg.replace(/<g id="node-([A-Za-z0-9_-]+)"([^>]*)>/g, (whole, id: string, rest: string) => {
+    const links = !inert && Boolean(hrefMap[id]);
+    const classes = [links ? 'is-link' : null, id === activeId ? 'is-active' : null].filter(Boolean);
+
+    let attrs = rest;
+    if (links) {
+      const label = /\sdata-node-label="([^"]*)"/.exec(rest)?.[1] || id;
+      attrs = attrs
+        .replace(/\srole="button"/, ' role="link"')
+        .replace(/\saria-pressed="[^"]*"/, '')
+        .replace(/\saria-label="[^"]*"/, ` aria-label="${label} · ${UI.nodeOpens[lang]}"`);
+    } else {
+      // Not on the map: it goes nowhere, so it does not take a tab stop either.
+      attrs = stripFocus(attrs);
+    }
+    const cls = classes.length ? ` class="${classes.join(' ')}"` : '';
+    return `<g${cls} id="node-${id}"${attrs}>`;
+  });
+}
+
+const frame = maxWidth ?? svgMaxWidth ?? BAND;
+const svg = raw
+  ? prepare(raw, { lang, frame, transform: (s) => (inert ? stripFocus(mark(s)) : mark(s)) }).html
+  : null;
+const style = maxWidth ? `max-width:${maxWidth}px;` : undefined;
+const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` : undefined;
+---
+
+<figure
+  class:list={['idiagram', inert && 'idiagram--inert', !maxWidth && 'idiagram--band', extra]}
+  data-hrefs={inert ? undefined : JSON.stringify(hrefMap)}
+  style={style}
+>
+  {
+    svg ? (
+      <div class="diagram-svg" style={svgStyle} set:html={svg} />
+    ) : (
+      <div class="diagram-placeholder mono">{title ?? slug}</div>
+    )
+  }
+  {!inert && <div class="tip mono" role="status" hidden />}
+  {
+    explore && (
+      <figcaption class="mono cap">
+        <a href={exploreHref} target="_blank" rel="noreferrer">{UI.explore[lang]}</a>
+        <span class="cap-note">{UI.exploreNote[lang]}</span>
+      </figcaption>
+    )
+  }
+</figure>
+
+<script>
+  type Tip = HTMLElement | null;
+
+  document.querySelectorAll<HTMLElement>('.idiagram[data-hrefs]').forEach((figure) => {
+    let hrefs: Record<string, string> = {};
+    try {
+      hrefs = JSON.parse(figure.dataset.hrefs || '{}');
+    } catch {
+      return;
+    }
+    const tip: Tip = figure.querySelector('.tip');
+
+    const show = (node: SVGGElement) => {
+      if (!tip) return;
+      const bits = [node.dataset.nodeSublabel, node.dataset.nodeTag].filter(Boolean);
+      const label = node.dataset.nodeLabel || node.dataset.nodeId || '';
+      tip.textContent = bits.length ? `${label} · ${bits.join(' · ')}` : label;
+      const box = node.getBoundingClientRect();
+      const frame = figure.getBoundingClientRect();
+      tip.hidden = false;
+      const half = tip.offsetWidth / 2;
+      const left = box.left - frame.left + box.width / 2;
+      tip.style.left = `${Math.min(Math.max(left, half + 4), frame.width - half - 4)}px`;
+      tip.style.top = `${Math.max(box.top - frame.top - tip.offsetHeight - 8, 2)}px`;
+    };
+    const hide = () => {
+      if (tip) tip.hidden = true;
+    };
+
+    Object.keys(hrefs).forEach((id) => {
+      const node = figure.querySelector<SVGGElement>(`[data-node-id="${id}"]`);
+      if (!node) return;
+      const href = hrefs[id];
+
+      node.addEventListener('mouseenter', () => show(node));
+      node.addEventListener('focus', () => show(node));
+      node.addEventListener('mouseleave', hide);
+      node.addEventListener('blur', hide);
+      node.addEventListener('click', () => {
+        window.location.href = href;
+      });
+      node.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          window.location.href = href;
+        }
+      });
+    });
+
+    figure.addEventListener('mouseleave', hide);
+  });
+</script>
+
+<style>
+  /* The figure is a band of paper, not a boxed illustration (PRD §5): no heavy border,
+     nothing between the diagram and the page but air. */
+  .idiagram {
+    position: relative;
+    /* `margin` shorthand would set margin-left:auto and clobber the offset .breakout
+       needs; auto margins also shrink-wrap the figure when it is a grid item, and an
+       SVG sized only by viewBox then collapses to nothing. */
+    margin-block: 2rem 0;
+    padding: 0;
+    background: none;
+  }
+  .idiagram--inert .diagram-svg {
+    pointer-events: none;
+  }
+
+  .cap {
+    margin-top: 0.85rem;
+    font-size: 12px;
+    color: var(--ink-muted);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+  .cap-note {
+    font-size: 11px;
+    opacity: 0.8;
+  }
+  .cap a {
+    color: var(--ink-muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+  }
+  .cap a:hover {
+    color: var(--ink);
+  }
+
+  .tip {
+    position: absolute;
+    z-index: 3;
+    transform: translateX(-50%);
+    pointer-events: none;
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+    padding: 0.35rem 0.6rem;
+    border-radius: 2px;
+    white-space: nowrap;
+    max-width: 90%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tip[hidden] {
+    display: none;
+  }
+
+  .diagram-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    border: 1px solid var(--rule);
+    color: var(--ink-muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* Mobile: the diagram keeps its aspect ratio and scrolls sideways in its frame. */
+  @media (max-width: 780px) {
+    .idiagram:not(.idiagram--inert) {
+      overflow-x: auto;
+    }
+    .idiagram:not(.idiagram--inert) .diagram-svg {
+      min-width: 640px;
+    }
+  }
+</style>

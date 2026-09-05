@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Bốn Lớp, Một Bộ Khung",
+    "output": "structure.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-gate",
+        "label": "Nơi bắt được nguy hiểm",
+        "focus": [
+          "hooks",
+          "project"
+        ],
+        "note": "Mọi lệnh Bash đi qua hook trước khi chạm vào repo của anh em."
+      },
+      {
+        "id": "shared-state",
+        "label": "Cái mà pane không sở hữu",
+        "focus": [
+          "tracker",
+          "herdr",
+          "worktrees"
+        ],
+        "note": "Tracker giữ state; herdr và worktree chỉ là nơi công việc diễn ra."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "runtime_claude",
+      "type": "external",
+      "label": "Claude Code",
+      "sublabel": "runtime",
+      "pos": [135, 60],
+      "size": [180, 74]
+    },
+    {
+      "id": "runtime_codex",
+      "type": "external",
+      "label": "Codex",
+      "sublabel": "runtime",
+      "pos": [355, 60],
+      "size": [180, 74]
+    },
+    {
+      "id": "runtime_opencode",
+      "type": "external",
+      "label": "OpenCode",
+      "sublabel": "runtime",
+      "pos": [575, 60],
+      "size": [180, 74]
+    },
+    {
+      "id": "roles",
+      "type": "backend",
+      "label": "Vai",
+      "sublabel": "Thomas · Shaper · Builder · Rin · QA",
+      "pos": [40, 250],
+      "size": [180, 74]
+    },
+    {
+      "id": "skills",
+      "type": "backend",
+      "label": "Skill",
+      "sublabel": "16 skill đóng gói",
+      "pos": [250, 250],
+      "size": [180, 74]
+    },
+    {
+      "id": "ledger",
+      "type": "database",
+      "label": "Bộ Nhớ / Ledger",
+      "sublabel": "cái thật sự đã xảy ra",
+      "pos": [460, 250],
+      "size": [180, 74]
+    },
+    {
+      "id": "hooks",
+      "type": "security",
+      "label": "Hook",
+      "sublabel": "4 hook vòng đời",
+      "pos": [670, 250],
+      "size": [180, 74]
+    },
+    {
+      "id": "tracker",
+      "type": "external",
+      "label": "Tracker",
+      "sublabel": "GitHub · Jira · Linear",
+      "pos": [40, 440],
+      "size": [180, 74]
+    },
+    {
+      "id": "herdr",
+      "type": "backend",
+      "label": "herdr",
+      "sublabel": "mỗi agent một pane",
+      "pos": [250, 440],
+      "size": [180, 74]
+    },
+    {
+      "id": "worktrees",
+      "type": "backend",
+      "label": "git worktree",
+      "sublabel": "mỗi ticket một checkout",
+      "pos": [460, 440],
+      "size": [180, 74]
+    },
+    {
+      "id": "project",
+      "type": "frontend",
+      "label": "Dự Án Của Anh Em",
+      "sublabel": "repo · CONTEXT.md · ADR",
+      "pos": [650, 630],
+      "size": [220, 74]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "RUNTIME",
+      "wraps": ["runtime_claude", "runtime_codex", "runtime_opencode"],
+      "pad": 24
+    },
+    {
+      "kind": "region",
+      "label": "HARNESS",
+      "wraps": ["roles", "skills", "ledger", "hooks"],
+      "pad": 24
+    },
+    {
+      "kind": "region",
+      "label": "COORDINATION",
+      "wraps": ["tracker", "herdr", "worktrees"],
+      "pad": 24
+    },
+    {
+      "kind": "region",
+      "label": "DỰ ÁN CỦA ANH EM",
+      "wraps": ["project"],
+      "pad": 24
+    }
+  ],
+  "connections": [
+    {
+      "from": "runtime_claude",
+      "to": "roles",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "runtime_codex",
+      "to": "roles",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "runtime_opencode",
+      "to": "roles",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "roles",
+      "to": "tracker",
+      "label": "Thomas hỏi frontier",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [150, 400]
+    },
+    {
+      "from": "roles",
+      "to": "worktrees",
+      "label": "Builder claim worktree",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "via": [[130, 380], [550, 380]],
+      "labelAt": [340, 405]
+    },
+    {
+      "from": "hooks",
+      "to": "project",
+      "label": "chặn lệnh nguy hiểm",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Runtime Là Lựa Chọn, Không Phải Ràng Buộc",
+      "items": [
+        "Claude Code, Codex, và OpenCode đều lái cùng một bộ khung bên dưới",
+        "Vai, skill, hook, và ledger không phụ thuộc runtime — không cái nào ở đây chỉ chạy được với Claude",
+        "Đổi runtime giữa chừng chỉ đổi người cầm lái, không đổi bộ khung"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Ledger Không Phải Là Log",
+      "items": [
+        "Mọi receipt của hook và mọi quyết định gate đều vào memory/ledger, không chỉ ra stdout",
+        "Skill và vai được đọc lúc bắt đầu session, không đóng cứng vào một binary",
+        "16 skill dùng lại được cho mọi vai cần đến chúng"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Coordination Sống Bên Ngoài Pane",
+      "items": [
+        "Tracker là nền state; pane herdr và worktree đều dùng xong là bỏ",
+        "Mọi claim được ghi vào tracker trước khi worktree kịp tạo ra",
+        "Hook gác cửa ranh giới giữa bộ khung và repo project thật của anh em"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+[
+  {
+    "sha": "776019f1b83459231cfa677b692caa299cac9a19",
+    "date": "2026-08-27",
+    "subject": "2.7.12 — the drift class that corrupts the frontier, and the rule AST-137 was missing",
+    "ledger": "Ledger: none."
+  },
+  {
+    "sha": "8df85dd6dc1c149214ec28bd8e7861741f9b121e",
+    "date": "2026-08-27",
+    "subject": "2.7.11 — this package had no self-test",
+    "ledger": "Ledger: none — AST-137 is the entry, and this is its executable form."
+  },
+  {
+    "sha": "17ff7684d6ea621798465de2329719d4b702645c",
+    "date": "2026-08-27",
+    "subject": "2.7.10 — my fix for a false positive made the gate unpassable on a supported layout",
+    "ledger": "Ledger: none."
+  },
+  {
+    "sha": "c60c850a9757d4521b0a99727cb7a3c4c59fdfa4",
+    "date": "2026-08-27",
+    "subject": "2.7.9 — the code disobeyed a comment two lines above it",
+    "ledger": "Ledger: none."
+  },
+  {
+    "sha": "0e5453fa2a75db5debed3343ce7d417dc732a658",
+    "date": "2026-08-27",
+    "subject": "2.7.8 — a rename leaves a fossil install.sh structurally cannot see",
+    "ledger": "Ledger: none."
+  },
+  {
+    "sha": "9a87c8abc5f911db71532cdcaafa66af09d7f5d7",
+    "date": "2026-08-27",
+    "subject": "2.7.7 — fixed one of three call sites that shared the comparison",
+    "ledger": "Ledger: none — AST-137 covers it, and the entry's own wording is what needed widening."
+  },
+  {
+    "sha": "97a8f8b9fce1608b9d45a6b855ffd666cc33d27d",
+    "date": "2026-08-27",
+    "subject": "2.7.6 — staging a release made a healthy project's own gate fail",
+    "ledger": "Ledger: none — AST-137 already covers the class, and this is its eighth instance."
+  },
+  {
+    "sha": "ffc1c440179f1d2601b1c4f95d3c6721e66d22cc",
+    "date": "2026-08-27",
+    "subject": "2.7.5 — the correction the downstream project made against its own interest",
+    "ledger": "Ledger: AST-137."
+  },
+  {
+    "sha": "fcffa59389d118a4fbe21ed2ad1e407ac0d420d4",
+    "date": "2026-08-27",
+    "subject": "2.7.4 — the tested path and the real path differed by one substitution, again",
+    "ledger": "Ledger: AST-136."
+  },
+  {
+    "sha": "61a63e38803b775e197efbcefb1120edd56cbed0",
+    "date": "2026-08-27",
+    "subject": "2.7.3 — the emitter was right, the span made it noise",
+    "ledger": "Ledger: none."
+  },
+  {
+    "sha": "bda6661fa8eca5dd984417d0821f0be13fbc9da1",
+    "date": "2026-08-27",
+    "subject": "2.7.2 — a release that could not install itself, and why one gate never fires",
+    "ledger": "Ledger: none — the measurements are the downstream project's and belong in its ledger."
+  },
+  {
+    "sha": "26657c00539cfaee097633b4b20f1229482b4345",
+    "date": "2026-08-27",
+    "subject": "2.7.1 — what a live project found in a day, and the check that would have found it",
+    "ledger": "Ledger: none — the measurements belong to the project that made them, and it has them."
+  },
+  {
+    "sha": "28e22144810dac3e93554f951387bccc6ef465c3",
+    "date": "2026-08-27",
+    "subject": "\"integrated\" becomes a question a script answers",
+    "ledger": "Ledger: none."
+  },
+  {
+    "sha": "d4166723a8c006c87a6c35f5b2b631838c582896",
+    "date": "2026-08-27",
+    "subject": "etsy 2.3.34 -> 2.7.0: seven defects a real project found in a day",
+    "ledger": "Ledger: none here — the entries belong in the project's own ledger, and it has them."
+  },
+  {
+    "sha": "6126f3cf48c649bf90351819632fe28c704e1c0a",
+    "date": "2026-08-27",
+    "subject": "first contact with a real project, which is where these were always going to show",
+    "ledger": "Ledger: none — the pipefail class is worth an entry, but that is the owner's call and the project ledger is where it would go."
+  },
+  {
+    "sha": "b657d20c2e77790ea5bd1d1ff6a2428c6287b166",
+    "date": "2026-08-26",
+    "subject": "2.7.0 — the mechanisms, and one reply before the owner",
+    "ledger": "Ledger: none."
+  },
+  {
+    "sha": "8dc921432df7f2962180c0317a158c6e62709c87",
+    "date": "2026-08-26",
+    "subject": "fold gate 4: a digest that misreported, and a gate that refused correct installs",
+    "ledger": "Ledger: none — five defects in this branch's own work."
+  },
+  {
+    "sha": "3114ea870b91af6f45c9f15268ea4b535741c279",
+    "date": "2026-08-26",
+    "subject": "the durable tier, and the ledger's rule half",
+    "ledger": "Ledger: none."
+  },
+  {
+    "sha": "8143c778d29551cf6b6ac9d769a4cf47ee08fab5",
+    "date": "2026-08-26",
+    "subject": "herdr, brownfield and the plugin seam: gates that printed, writers with no readers",
+    "ledger": "Ledger: none."
+  },
+  {
+    "sha": "7d73d273ff475fa513cbcdfc91745aa683dcb55e",
+    "date": "2026-08-26",
+    "subject": "gate 3: the matcher does not converge, so its claim shrinks instead of its rules growing",
+    "ledger": "Ledger: none — three gates over this branch's own code; the convergence failure is the finding and it is recorded in the file it is about."
+  }
+]

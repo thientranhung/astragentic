@@ -1,0 +1,23 @@
+---
+import { getCollection } from 'astro:content';
+import SkillBody from '../../../components/pages/SkillBody.astro';
+import { getSkillCards } from '../../../lib/skills';
+
+/** English twin of /skills/<name>. A flat `<name>.md` left over from pass 1 counts as
+ *  English until the writers finish moving files into `skills/en/`. */
+export async function getStaticPaths() {
+  const cards = await getSkillCards('en');
+  const entries = await getCollection('skills');
+  const find = (name: string) =>
+    entries.find((entry) => entry.id === `en/${name}`) ??
+    entries.find((entry) => entry.id === name);
+  return cards.map((card) => ({
+    params: { slug: card.name },
+    props: { name: card.name, line: card.line, group: card.group, entry: find(card.name) },
+  }));
+}
+
+const { name, line, group, entry } = Astro.props;
+---
+
+<SkillBody lang="en" name={name} line={line} group={group} entry={entry} />

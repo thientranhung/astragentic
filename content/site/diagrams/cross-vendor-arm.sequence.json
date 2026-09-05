@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "The Cross-Vendor Arm",
+    "output": "cross-vendor-arm.html",
+    "viewBox": [
+      820,
+      700
+    ],
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-review",
+        "label": "The second vendor reads the diff",
+        "focus": [
+          "builder",
+          "codex"
+        ],
+        "note": "The author reads the ticket; the arm reads the repository."
+      },
+      {
+        "id": "the-receipt",
+        "label": "The receipt closes the loop",
+        "focus": [
+          "builder",
+          "head",
+          "thomas"
+        ],
+        "note": "An empty commit at the Builder's head, then handback."
+      }
+    ]
+  },
+  "participants": [
+    {
+      "id": "builder",
+      "type": "backend",
+      "label": "Builder",
+      "sublabel": "own worktree"
+    },
+    {
+      "id": "codex",
+      "type": "external",
+      "label": "Codex",
+      "sublabel": "adversarial-review"
+    },
+    {
+      "id": "head",
+      "type": "database",
+      "label": "Ticket Branch",
+      "sublabel": "HEAD"
+    },
+    {
+      "id": "thomas",
+      "type": "backend",
+      "label": "Thomas",
+      "sublabel": "resident router"
+    }
+  ],
+  "segments": [
+    {
+      "from": 165,
+      "to": 300,
+      "label": "Fire the arm"
+    },
+    {
+      "from": 320,
+      "to": 440,
+      "label": "Verdict"
+    },
+    {
+      "from": 460,
+      "to": 600,
+      "label": "Receipt + handback"
+    }
+  ],
+  "messages": [
+    {
+      "id": "range-header",
+      "from": "builder",
+      "to": "head",
+      "y": 200,
+      "label": "commit range <base>..HEAD",
+      "variant": "default"
+    },
+    {
+      "id": "adversarial",
+      "from": "builder",
+      "to": "codex",
+      "y": 260,
+      "label": "adversarial-review --wait --base <ref>",
+      "variant": "emphasis",
+      "note": "Focus text carries the owner intent"
+    },
+    {
+      "id": "verdict",
+      "from": "codex",
+      "to": "builder",
+      "y": 365,
+      "label": "blocking / non-blocking",
+      "variant": "return",
+      "note": "Only the output file is trustworthy, never the exit code"
+    },
+    {
+      "id": "receipt",
+      "from": "builder",
+      "to": "head",
+      "y": 500,
+      "label": "arm(ticket): receipt",
+      "variant": "dashed",
+      "note": "Findings folded by class first; empty commit, parent is the tree the gate read"
+    },
+    {
+      "id": "handback",
+      "from": "builder",
+      "to": "thomas",
+      "y": 565,
+      "label": "branch, SHA, markers",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "builder",
+      "from": 200,
+      "to": 565,
+      "type": "backend"
+    },
+    {
+      "participant": "codex",
+      "from": 260,
+      "to": 370,
+      "type": "external"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "The Builder Fires Its Own Arm",
+      "items": [
+        "At ticket scope, the Builder fires the arm from inside its own closed loop",
+        "HEAD resolves to the head under review — there is nowhere else it could resolve to",
+        "No gate worktree, no broker to kill: none of the spec-scope apparatus applies"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "What The Arm Wins At",
+      "items": [
+        "Internal inconsistency against the project's own standard",
+        "The author reads the ticket; the arm reads the repository",
+        "One pass found a real deadlock the code pass had just added"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Failover Is Recorded, Not Hidden",
+      "items": [
+        "Codex unavailable or out of quota means the arm DID NOT RUN, recorded as such",
+        "The exit code is never trustworthy — only the output file is",
+        "The receipt is an empty commit whose body names the pass that ran"
+      ]
+    }
+  ]
+}

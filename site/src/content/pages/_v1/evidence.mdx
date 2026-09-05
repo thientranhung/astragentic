@@ -1,0 +1,66 @@
+---
+title: "Evidence — the ledger, the cross-vendor arm, and the boundary we state ourselves"
+description: "Why this package keeps an append-only ledger of its own failures, what the cross-vendor arm checks, and what it does not yet prove."
+---
+
+import Eyebrow from '../../components/Eyebrow.astro';
+import StatTrio from '../../components/StatTrio.astro';
+import Receipt from '../../components/Receipt.astro';
+import Diagram from '../../components/Diagram.astro';
+import QuoteBlock from '../../components/QuoteBlock.astro';
+
+<Eyebrow>Evidence</Eyebrow>
+
+# Why we keep a ledger
+
+Every rule in this harness traces back to something that actually broke. `recurring-failure-modes.md` is an append-only ledger of those breaks: 136 entries, `AST-001` through `AST-137`, one entry withdrawn. Nothing is deleted once it's written — the ledger stays the truth even after the tooling that caused an entry is fixed.
+
+<StatTrio
+  items={[
+    { value: "136", label: "ENTRIES, AST-001 → AST-137" },
+    { value: "13", label: "RELEASES IN 3 DAYS" },
+    { value: "23", label: "DEFECTS FOUND BEFORE 2.7.0 SHIPPED" },
+  ]}
+/>
+
+The ledger is generated into a browsable index rather than read cold: `harness/.agents/memory/INDEX.md` lists one line per entry (lesson, status, word count, and which contracts or skills now cite it), so a session can find the entry it needs without loading the full 57,000-token file. A "Cited by" column left empty is not a gap in the index; it means the entry closed in code, went stale when the method was rebuilt, or names a finding nothing has bound yet.
+
+<Receipt kind="ledger-index" source="harness/.agents/memory/INDEX.md" pending />
+
+<Eyebrow>What the ledger is</Eyebrow>
+
+## From a real failure to an executable check
+
+An entry is never a rule stated in the abstract. It records what actually happened, dated, in a live project or a cross-vendor gate — then the rule the failure justifies, then the contract or script that now enforces it. Two examples that shaped how this package is built:
+
+Agents sharing one checkout moved `HEAD` under each other; a read-only reviewer's branch switch cost a builder its in-progress work with no error raised (`AST-016`). That entry is why every Builder now gets its own git worktree, and why the isolation rule is enforced by tooling rather than stated as an instruction an agent could forget.
+
+A prior version of this method measured 5 to 14 review rounds on a single plan or slice, because the exit condition belonged to the party that could always produce one more finding. `docs/adr/0001` records the decision that followed: move the loop to the front of the process — resolve decisions during shaping, not during review — and let the review ladder run once, in order, per ticket.
+
+<Eyebrow>The cross-vendor arm</Eyebrow>
+
+## A second vendor reads every diff
+
+The cross-vendor arm is the last step in a ticket's review ladder, after code-review and the simplify pass. If a Builder ran on Claude, Codex reads the diff at that Builder's own head and produces an `arm(ticket):` receipt — an empty commit whose parent is the tree the gate actually read. If the root runtime is Codex, Claude does the opposite pass.
+
+The point isn't a contest between models. It's that a system reviewing its own diff with the same vendor that wrote it can miss what a second, differently-trained reader catches. That happened at least once on the record: an export step committed live secrets and buyer PII into a tracked file, a same-vendor review passed it clean, and a cross-vendor reviewer caught it before it shipped further (`AST-015`).
+
+<Diagram slug="cross-vendor-arm" />
+
+<Receipt kind="arm-report" source="arm(ticket): receipt" pending />
+
+<Eyebrow>The boundary we state ourselves</Eyebrow>
+
+## What this does not yet prove
+
+Release 2.7.12 closed a thirteen-release, three-day cycle with a line we keep on this page rather than soften anywhere else on the site:
+
+<QuoteBlock source="RELEASE-NOTES.md, 2.7.12">
+Every check in this package now proves the tooling is correct. Nothing in it proves the loop works.
+</QuoteBlock>
+
+No ticket has gone through dispatch → build → code-review → simplify → `arm(ticket)` → merge with every gate firing on live work, inside this repository, in this cycle. Those are two different claims — "the tooling is correct" and "the loop works end to end" — and the gap between them is real, unmeasured, and not closable by any check either side of it can write.
+
+That gap isn't papered over. During the same cycle, a live downstream project reported five tickets sitting in the working state with zero assignees — labels reading `in-progress` with no claim behind them, invisible to the frontier query that decides what gets built next, because nothing revisits a stale label. As the release notes put it: a gate nobody fires and a label nobody clears are the same failure in different clothes, and only one of them had a script watching.
+
+[What breaks without this →](/why) · [How the roles fit together →](/architecture)

@@ -1,0 +1,121 @@
+hero:
+  headline: "Astragentic is the coordination layer\nfor several agents on one real repo."
+  sub: "One agent on its own needs none of this; this is for the afternoon you run four at once."
+  primary: "See the structure ↓"
+  secondary: "Install it in your repo"
+
+sections:
+  structure:
+    headline: "Four layers, one question each"
+    sub: "A runtime runs the agent, the harness holds the rules, coordination holds the state, and your repo sits underneath."
+  roles:
+    headline: "Five roles, five session shapes"
+    sub: "How long a role lives decides what it can remember, so I split them by session lifetime rather than by job title."
+  lifecycle:
+    headline: "A ticket walks seven stages"
+    sub: "The seven names are here so that when something breaks I have somewhere to hang it."
+  tracker:
+    headline: "Thomas asks the tracker instead of remembering it"
+    sub: "What is ready to work on is a query against the board, not something a session keeps in its head."
+  skills:
+    headline: "Sixteen skills, grouped by when you reach for them"
+    sub: "One verb line each, and a page saying exactly what it leaves behind."
+  hooks:
+    headline: "Four hooks standing guard"
+    sub: "Three of them run, one is dormant, and I left the dormant one here."
+  why:
+    headline: "Five whys"
+    sub: "Each one states its cost, because a choice with no cost is usually a choice nobody has tried."
+  stack:
+    headline: "Nine things I stand on"
+    sub: "Anything that only gets slightly inconvenient when you remove it is already gone."
+  arm:
+    headline: "Two vendors read each other"
+    sub: "Claude builds, Codex reads it back, and the receipt is bound to the exact SHA that was read."
+  evidence:
+    headline: "Evidence, not promises"
+    sub: "{{meta.cited}} of {{meta.total}} lines are bound to a file that makes someone act differently today, and I left the rest in the table."
+    cta: "Open the ledger"
+  limit:
+    headline: "What I have not measured"
+    sub: "This loop has never run all the way through on live work, and I am leaving that gap open here."
+
+stages:
+  claim: "Write the assignee, read it back, then create the branch. The branch decides."
+  brief: "Thomas dispatches the ticket into a pane, with the Base code-review needs."
+  build: "The Builder is the sole writer in that worktree, committing at every phase boundary."
+  code-review: "Both axes, Standards and Spec, run once over the whole increment."
+  simplify: "The simplify(increment) commit has to BE the head, with nothing stacked on it."
+  arm: "The Builder calls the other vendor to read the diff, leaving an arm(ticket) receipt."
+  merge: "Commit the merge first, gate that SHA, then write the frontier back."
+
+roleCards:
+  thomas: "Resident. Owns the tracker, the frontier, the claim, dispatch and merge."
+  shaper: "One unbroken session: grill, spec, cut tickets, then stop."
+  builder: "One ticket, one worktree, the only writer in it."
+  rin: "One round per milestone, reading the diff and the process traces."
+  qa: "Uses the running product like a user, never reads the diff."
+
+hooksCards:
+  - id: pre-tool-use
+    title: "PreToolUse · git guard"
+    when: "Before every Bash command, on Claude Code and Codex."
+    does: "Denies a mistyped git command, naming the right one to run instead, or says nothing. It never acts."
+  - id: worktree-remove
+    title: "WorktreeRemove · release"
+    when: "When a worktree goes through the tool path, and Thomas removes them with plain git."
+    does: "Should reap processes, then call the project plug. Measured zero firings, so manual cleanup stays required."
+  - id: session-start
+    title: "SessionStart(compact) · contract reload"
+    when: "Right after a Claude Code session compacts."
+    does: "Re-arms the role contract path, reaching the agent before it acts."
+  - id: subagent-stop
+    title: "SubagentStop · log"
+    when: "Every time a subagent ends."
+    does: "Logs agent_type, agent_id, session_id. It was the control group that proved the hook above is dormant."
+
+whyCards:
+  - slug: why-astragentic
+    question: "Why add another layer at all?"
+    oneLine: "One agent does not need it. The second and third are where work vanishes with no error thrown."
+  - slug: why-mattpocock
+    question: "Why rent the method from mattpocock?"
+    oneLine: "He loops at the front. I looped at the back and paid 5 to 14 review rounds per ticket for it."
+  - slug: why-not-subagents
+    question: "Why not just use subagents?"
+    oneLine: "Shared checkout, shared context, no tracker holding state, no pane to look at, no second vendor."
+  - slug: why-tracker
+    question: "Why does state have to live on a tracker?"
+    oneLine: "A plan file cannot answer which ticket is ready right now. A query can."
+  - slug: why-cross-vendor
+    question: "Why have another vendor read it back?"
+    oneLine: "A same-vendor pass let a defect commit live secrets and buyer PII; the cross-vendor pass caught it as P1."
+
+stackItems:
+  - slug: claude-code
+    name: "Claude Code"
+    oneLine: "The root runtime: all five roles run here, and the two most important hooks live here."
+  - slug: codex
+    name: "Codex"
+    oneLine: "The second vendor. Without it the cross-vendor arm does not exist."
+  - slug: opencode
+    name: "OpenCode"
+    oneLine: "A third runtime for role dispatch, and the place the git guard cannot reach."
+  - slug: git-worktree
+    name: "git worktree"
+    oneLine: "The real isolation boundary: one checkout per ticket, one writer in it."
+  - slug: herdr
+    name: "herdr"
+    oneLine: "A pane per agent you can open and look at, so dispatch is countable instead of narrated."
+  - slug: mattpocock-skills
+    name: "mattpocock-skills"
+    oneLine: "The whole craft layer is rented from here; Astragentic writes no method of its own."
+  - slug: trackers
+    name: "GitHub · Jira · Linear"
+    oneLine: "Three adapters behind one tracker contract, so you keep the board you already run."
+  - slug: scripts
+    name: "Python · Bash"
+    oneLine: "Every script needs a moment and an owner; without both, nobody runs it until something has gone wrong."
+  - slug: archify
+    name: "archify"
+    oneLine: "Diagrams described as JSON and rendered to HTML and SVG, so the two languages cannot drift apart."

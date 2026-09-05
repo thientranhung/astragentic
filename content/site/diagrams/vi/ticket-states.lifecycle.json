@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Claim Của Một Ticket, Từng State",
+    "output": "ticket-states.html",
+    "viewBox": [
+      980,
+      660
+    ],
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-claim",
+        "label": "Giao thức claim",
+        "focus": [
+          "unclaimed",
+          "claimed",
+          "readback",
+          "worktree"
+        ],
+        "note": "Gán một ticket chính là claim, và nó xảy ra trước khi worktree tồn tại."
+      },
+      {
+        "id": "when-it-fails",
+        "label": "Khi claim mất",
+        "focus": [
+          "readback",
+          "lost_race",
+          "worktree",
+          "branch_failed"
+        ],
+        "note": "Một assignee khác, hoặc một branch đã tồn tại, cả hai đều làm mất claim."
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "main",
+      "label": "Vòng đời claim"
+    },
+    {
+      "id": "contest",
+      "label": "Mất claim"
+    }
+  ],
+  "states": [
+    {
+      "id": "unclaimed",
+      "type": "start",
+      "label": "Chưa Claim",
+      "sublabel": "trên frontier",
+      "lane": "main",
+      "col": 0
+    },
+    {
+      "id": "claimed",
+      "type": "active",
+      "label": "Đã Claim",
+      "sublabel": "assignee đã ghi",
+      "lane": "main",
+      "col": 1
+    },
+    {
+      "id": "readback",
+      "type": "decision",
+      "label": "Đọc Lại",
+      "sublabel": "assignee được đọc lại",
+      "lane": "main",
+      "col": 2
+    },
+    {
+      "id": "worktree",
+      "type": "active",
+      "label": "Worktree",
+      "sublabel": "branch + worktree add",
+      "lane": "main",
+      "col": 3
+    },
+    {
+      "id": "merged",
+      "type": "success",
+      "label": "Đã Merge",
+      "sublabel": "dòng Ledger đã ghi",
+      "lane": "main",
+      "col": 4
+    },
+    {
+      "id": "lost_race",
+      "type": "failure",
+      "label": "Mất Claim",
+      "sublabel": "assignee khác thắng",
+      "lane": "contest",
+      "col": 0
+    },
+    {
+      "id": "branch_failed",
+      "type": "failure",
+      "label": "Branch Bị Từ Chối",
+      "sublabel": "branch đã tồn tại",
+      "lane": "contest",
+      "col": 1
+    }
+  ],
+  "transitions": [
+    {
+      "id": "write-assignee",
+      "from": "unclaimed",
+      "to": "claimed",
+      "label": "ghi assignee",
+      "labelDy": 75
+    },
+    {
+      "id": "read-it-back",
+      "from": "claimed",
+      "to": "readback",
+      "label": "đọc lại ticket",
+      "labelDy": 75
+    },
+    {
+      "id": "match-create",
+      "from": "readback",
+      "to": "worktree",
+      "label": "đọc lại khớp",
+      "labelDy": 75
+    },
+    {
+      "id": "worktree-merge",
+      "from": "worktree",
+      "to": "merged",
+      "label": "merge",
+      "labelDy": 75
+    },
+    {
+      "id": "mismatch",
+      "from": "readback",
+      "to": "lost_race",
+      "label": "assignee khác",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "route": "straight",
+      "labelDy": 24
+    },
+    {
+      "id": "branch-exists",
+      "from": "worktree",
+      "to": "branch_failed",
+      "label": "branch bị từ chối",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "route": "straight",
+      "labelDy": 24
+    },
+    {
+      "id": "lost-retry",
+      "from": "lost_race",
+      "to": "unclaimed",
+      "label": "lấy ticket kế tiếp",
+      "variant": "dashed",
+      "route": "bottom-channel",
+      "channelY": 470,
+      "toSide": "bottom",
+      "fromSide": "bottom"
+    },
+    {
+      "id": "failed-retry",
+      "from": "branch_failed",
+      "to": "unclaimed",
+      "label": "reset assignee, xóa worktree",
+      "variant": "dashed",
+      "route": "bottom-channel",
+      "channelY": 530,
+      "toSide": "bottom",
+      "fromSide": "bottom"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Claim Đến Trước",
+      "items": [
+        "Gán một ticket chính là claim, và nó xảy ra trước khi worktree tồn tại",
+        "Đọc lại là thứ khiến claim chỉ mang tính khuyến nghị, không được tin mù quáng",
+        "Tạo branch là bước atomic thực sự quyết định một race xảy ra cùng giây"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Hai Cách Để Mất Nó",
+      "items": [
+        "Một assignee khác khi đọc lại nghĩa là một dispatcher khác đã thắng trước rồi",
+        "Một branch bị từ chối nghĩa là branch đã tồn tại dưới tên đó",
+        "Cả hai đều làm mất claim; không cái nào chặn ticket mãi mãi"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Một Claim Thắng Để Lại Gì",
+      "items": [
+        "Một worktree và branch chỉ Builder này được viết vào",
+        "Một merge xóa assignee và ghi một dòng Ledger",
+        "Không tracker nào có lock sẵn — đọc lại cộng tạo branch chính là cái khóa liên động"
+      ]
+    }
+  ]
+}

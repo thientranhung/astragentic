@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Five Roles, Five Session Lifespans",
+    "output": "five-roles.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-spine",
+        "label": "The ticket's path",
+        "focus": [
+          "thomas",
+          "shaper",
+          "builder"
+        ],
+        "note": "Thomas routes work in, Shaper shapes it, Builder implements it alone."
+      },
+      {
+        "id": "the-gates",
+        "label": "Who checks the work",
+        "focus": [
+          "thomas",
+          "rin",
+          "qa"
+        ],
+        "note": "Rin verifies the artifact and its process traces; QA runs the built product."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "thomas",
+      "type": "backend",
+      "label": "Thomas",
+      "sublabel": "resident router",
+      "tag": "session: resident",
+      "pos": [
+        420,
+        40
+      ],
+      "size": [
+        200,
+        74
+      ]
+    },
+    {
+      "id": "shaper",
+      "type": "frontend",
+      "label": "Shaper",
+      "sublabel": "grill → spec → tickets",
+      "tag": "session: unbroken",
+      "pos": [
+        40,
+        320
+      ],
+      "size": [
+        190,
+        74
+      ]
+    },
+    {
+      "id": "builder",
+      "type": "backend",
+      "label": "Builder",
+      "sublabel": "implements, own worktree",
+      "tag": "session: per ticket",
+      "pos": [
+        280,
+        320
+      ],
+      "size": [
+        190,
+        74
+      ]
+    },
+    {
+      "id": "rin",
+      "type": "security",
+      "label": "Rin",
+      "sublabel": "verifies artifact + traces",
+      "tag": "session: per milestone",
+      "pos": [
+        520,
+        320
+      ],
+      "size": [
+        190,
+        74
+      ]
+    },
+    {
+      "id": "qa",
+      "type": "external",
+      "label": "QA",
+      "sublabel": "runs the real product",
+      "tag": "session: per walk",
+      "pos": [
+        760,
+        320
+      ],
+      "size": [
+        190,
+        74
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "thomas",
+      "to": "shaper",
+      "label": "spec, then tickets",
+      "variant": "default",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        135,
+        285
+      ]
+    },
+    {
+      "from": "thomas",
+      "to": "builder",
+      "label": "claim, then dispatch",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        375,
+        285
+      ]
+    },
+    {
+      "from": "thomas",
+      "to": "rin",
+      "label": "milestone gate",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        615,
+        285
+      ]
+    },
+    {
+      "from": "thomas",
+      "to": "qa",
+      "label": "qa walk",
+      "variant": "default",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        855,
+        285
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Session Lifespans",
+      "items": [
+        "Thomas never closes — tracker, frontier and dispatch record live with it",
+        "Shaper holds one unbroken session from grill to tickets, no /compact",
+        "Builder gets exactly one session per ticket, cleared after handback"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Concurrency, Not Seniority",
+      "items": [
+        "Roles follow session boundaries, not rank — every spine step needs an agent playing the human at that step",
+        "Several Builders can be dispatched at once, each sole writer in its own worktree",
+        "Thomas is the only role a Builder, Rin or QA session ever hands back to"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Gates Are Milestone- and Walk-Scoped",
+      "items": [
+        "Rin runs read-only, in a detached worktree, once per milestone — never per ticket",
+        "QA exercises journeys and contracts against the running product, not the diff",
+        "Neither gate loops — a blocking finding escalates to the owner, not to another round"
+      ]
+    }
+  ]
+}

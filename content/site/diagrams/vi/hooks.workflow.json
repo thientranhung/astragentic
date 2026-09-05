@@ -1,0 +1,236 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Bốn Hook, Bốn Thời Điểm",
+    "output": "hooks.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-gate",
+        "label": "Trước mọi lệnh Bash",
+        "focus": [
+          "PreToolUse",
+          "gitguard",
+          "run",
+          "block"
+        ],
+        "note": "Guard quyết định allow hay block trước khi lệnh chạy."
+      },
+      {
+        "id": "cleanup-and-resume",
+        "label": "Dọn dẹp và tiếp tục",
+        "focus": [
+          "WorktreeRemove",
+          "release",
+          "SessionStart",
+          "reload"
+        ],
+        "note": "Dọn worktree và nạp lại contract sau compact bắn độc lập với mọi lệnh gọi tool."
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "tool_call",
+      "label": "Mỗi Lệnh Bash"
+    },
+    {
+      "id": "worktree",
+      "label": "Dọn Worktree"
+    },
+    {
+      "id": "session",
+      "label": "Tiếp Tục Session"
+    },
+    {
+      "id": "subagent",
+      "label": "Subagent Thoát"
+    }
+  ],
+  "groups": [
+    {
+      "id": "guard_decision",
+      "label": "quyết định của git guard",
+      "lane": "tool_call",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "security"
+    }
+  ],
+  "mainPath": [
+    "bash_cmd",
+    "PreToolUse",
+    "gitguard",
+    "run"
+  ],
+  "nodes": [
+    {
+      "id": "bash_cmd",
+      "lane": "tool_call",
+      "col": 0,
+      "type": "frontend",
+      "label": "Lệnh Bash",
+      "sublabel": "bất kỳ tool call nào",
+      "width": 150
+    },
+    {
+      "id": "PreToolUse",
+      "lane": "tool_call",
+      "col": 1,
+      "type": "backend",
+      "label": "PreToolUse",
+      "sublabel": "bắn trước khi gọi",
+      "width": 150
+    },
+    {
+      "id": "gitguard",
+      "lane": "tool_call",
+      "col": 2,
+      "type": "security",
+      "label": "hook-git-guard.py",
+      "sublabel": "allow hay block?",
+      "width": 150
+    },
+    {
+      "id": "run",
+      "lane": "tool_call",
+      "col": 3,
+      "type": "backend",
+      "label": "Lệnh chạy",
+      "sublabel": "giữ nguyên",
+      "width": 150
+    },
+    {
+      "id": "block",
+      "lane": "tool_call",
+      "col": 3,
+      "type": "security",
+      "label": "Block",
+      "sublabel": "stderr + đã log, không chạy",
+      "width": 150,
+      "yOffset": 90
+    },
+    {
+      "id": "WorktreeRemove",
+      "lane": "worktree",
+      "col": 0,
+      "type": "backend",
+      "label": "WorktreeRemove",
+      "sublabel": "bắn khi tháo worktree",
+      "width": 150
+    },
+    {
+      "id": "release",
+      "lane": "worktree",
+      "col": 1,
+      "type": "backend",
+      "label": "release-worktree-resources.sh",
+      "sublabel": "giải phóng pane + process",
+      "width": 200
+    },
+    {
+      "id": "SessionStart",
+      "lane": "session",
+      "col": 0,
+      "type": "backend",
+      "label": "SessionStart",
+      "sublabel": "matcher: compact",
+      "width": 150
+    },
+    {
+      "id": "reload",
+      "lane": "session",
+      "col": 1,
+      "type": "backend",
+      "label": "hook-contract-reload.py",
+      "sublabel": "nạp lại contract của vai",
+      "width": 180
+    },
+    {
+      "id": "SubagentStop",
+      "lane": "subagent",
+      "col": 0,
+      "type": "backend",
+      "label": "SubagentStop",
+      "sublabel": "bắn mỗi khi agent thoát",
+      "width": 150
+    },
+    {
+      "id": "logstop",
+      "lane": "subagent",
+      "col": 1,
+      "type": "database",
+      "label": "harness-hook-events.log",
+      "sublabel": "ghi lại lần thoát",
+      "width": 180
+    }
+  ],
+  "edges": [
+    {
+      "from": "bash_cmd",
+      "to": "PreToolUse"
+    },
+    {
+      "from": "PreToolUse",
+      "to": "gitguard",
+      "label": "chạy script guard"
+    },
+    {
+      "from": "gitguard",
+      "to": "run",
+      "label": "sạch"
+    },
+    {
+      "from": "gitguard",
+      "to": "block",
+      "label": "pattern nguy hiểm",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "from": "WorktreeRemove",
+      "to": "release",
+      "label": "chạy script release"
+    },
+    {
+      "from": "SessionStart",
+      "to": "reload",
+      "label": "nạp lại contract"
+    },
+    {
+      "from": "SubagentStop",
+      "to": "logstop",
+      "label": "ghi thêm một dòng log"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Bốn Hook, Bốn Thời Điểm",
+      "items": [
+        "PreToolUse gác mọi lệnh Bash, trước khi nó chạm tới shell",
+        "WorktreeRemove giải phóng pane và process mà một worktree đang giữ",
+        "SessionStart(compact) nạp lại contract của vai bị mất sau compact; SubagentStop chỉ log lần thoát"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Guard Chạy Trước, Không Bao Giờ Sau",
+      "items": [
+        "hook-git-guard.py quyết định allow hay block trước khi lệnh thực thi",
+        "Một block ghi ra stderr và thêm một dòng — lệnh không bao giờ chạy",
+        "Không có vòng lặp thử lại: một block kết thúc lần thử, không đẩy vào hàng đợi review"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "State Sống Trong Một Log Phẳng",
+      "items": [
+        "Mọi WorktreeRemove, SubagentStop, và sự kiện thiếu script đều vào chung một file",
+        "/tmp/harness-hook-events.log chỉ để chẩn đoán — nó không phải tracker",
+        "Một script hook bị thiếu vẫn log và cảnh báo thay vì lặng lẽ thất bại"
+      ]
+    }
+  ]
+}

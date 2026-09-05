@@ -1,0 +1,160 @@
+---
+title: "Vì sao"
+description: "Năm câu vì sao mình đã phải tự trả lời: vì sao cần lớp này, vì sao thuê method của mattpocock, vì sao không dừng ở subagent, vì sao tracker, vì sao hai hãng."
+---
+
+Năm câu dưới đây là năm chỗ mình bị hỏi nhiều nhất, và cũng là năm chỗ mình đã đổi ý ít nhất
+một lần. Mỗi câu mình cố nói cả cái giá, vì một lựa chọn không có giá thường là lựa chọn chưa
+được thử.
+
+## why-astragentic
+
+Một agent chạy một mình thì không cần gì ở đây cả. Một agent, một branch, không có bài toán
+điều phối nào hết, và nếu anh em đang ở đó thì cứ ở đó.
+
+Vấn đề bắt đầu ở con thứ hai và thứ ba, trên một repo thật. Lỗi lúc đó không ồn ào: agent ghi
+đè việc của nhau mà không có exception nào được ném ra, review kéo dài vòng này qua vòng khác,
+và tới cuối không ai nói được chính xác cái gì đã thật sự chạy. Mình mất một buổi chiều làm
+việc theo đúng kiểu đó. Ba session trên cùng một checkout, không lỗi nào, chỉ là công việc biến
+mất, rồi mất thêm một buổi nữa để hiểu vì sao.
+
+Astragentic tồn tại để mấy lỗi đó khó xảy ra về mặt cấu trúc, thay vì thành thứ phải để ý bằng
+mắt mỗi lần. Isolation là git worktree chứ không phải nội quy. Claim là một dòng trên tracker
+chứ không phải một câu trong chat. Bằng chứng là commit và biên nhận chứ không phải lời báo cáo
+của chính agent vừa làm.
+
+Cái giá thì có hai phần. Phần thứ nhất: đây là thêm một lớp phải cài, phải hiểu, và phải nâng
+cấp, và mỗi bản upgrade là một sự kiện project phải hấp thụ. Phần thứ hai mình để nguyên vì nó
+quan trọng hơn: cả cái vòng này chưa từng chạy trọn một lần từ dispatch tới merge với đủ gate
+nổ trên việc thật bên trong repo này. Chứng minh công cụ chạy đúng và chứng minh cái vòng chạy
+đúng là hai tuyên bố khác nhau, và mình mới làm được cái thứ nhất.
+
+## why-mattpocock
+
+Astragentic không viết method riêng. Nó thuê `mattpocock-skills` làm toàn bộ phần craft
+(`wayfinder`, `grill-with-docs`, `to-spec`, `to-tickets`, `implement`, `code-review`) rồi bọc
+điều phối quanh đó. Bản 1.0.0 gỡ đi 19 skill đã được vendor vào repo này để nhường chỗ cho
+plugin upstream, và ADR-0001 là chỗ ghi lại quyết định đó.
+
+Lý do chọn là một câu rất ngắn trong ADR: anh ấy loop ở đầu, còn mình đã loop ở đuôi. Hai tuần
+dùng thật sinh ra những plan phải đi qua 5 tới 14 vòng review-gate. Vòng 2 thêm một cái lock,
+vòng 3 cắt nó đi vì đó là sự yên tâm giả, và vòng 8 vẫn đang sửa một câu vòng 2 để lại. Chỗ
+hỏng không phải reviewer. Chỗ hỏng là những quyết định chưa từng được chốt đi thẳng vào code,
+rồi được chốt ở điểm đắt nhất của quy trình. Trong hệ của anh ấy, `grilling` chạy cho tới khi
+frontier quyết định rỗng, còn mọi review là một lượt có biên, không có điều kiện hội tụ.
+
+Về Superpowers thì mình nói cho rõ, vì đây là câu hay bị hỏi kèm: Superpowers là một hệ rất tốt
+và team mình có dùng nó thật ở project khác. Nó chỉ nằm khác lớp. Nó gói method và điều phối
+vào chung một session; 14 skill, không có role, một hook `SessionStart`, và state công việc
+sống trong file plan nằm trong branch. Astragentic thì để state trên tracker và tách vai theo
+ranh giới session. Nửa sau của spine thì Superpowers gánh được, có chỗ còn mạnh hơn; nửa đầu
+thì không có thứ tương đương với `to-tickets` sinh ra ticket kèm blocking edge trên tracker, mà
+tracker chính là substrate điều phối ở đây. Còn chạy cả hai trong cùng một repo thì không phải
+vì thừa skill, mà vì hai orchestrator tranh nhau cùng một cái bàn: hai lược đồ worktree, hai
+substrate state, và một bootstrap dạy "đừng dừng lại hỏi người" đâm thẳng vào giao thức
+handback ở đây.
+
+Cái giá của việc thuê ngoài là mình phụ thuộc thật. `check-requirements.sh` fail cứng khi thiếu
+`mattpocock-skills >= 1.2.3`. Địa chỉ `/mattpocock-skills:<name>` được hardcode khắp các
+contract, nên đổi method không phải sửa config mà là viết lại contract. Và mình chỉ vá được
+đường nối, không vá được chính plugin: AST-057 là một defect nằm ở `to-tickets`, và câu trả lời
+đúng ở đây là dạy contract sống chung với nó chứ không phải fork một bản vá.
+
+## why-not-subagents
+
+Claude Code có subagent và có agent team, và chúng chạy tốt. Câu hỏi không phải chúng có dùng
+được không, mà là chúng có làm được lớp điều phối không. Mình đã thử, và năm thứ thiếu đều
+thiếu theo cùng một kiểu: chúng không phát ra tín hiệu khi sai.
+
+Checkout bị dùng chung. Subagent chạy trong cùng cây làm việc với session cha. AST-016 đo được
+hệ quả: nhiều agent chung một checkout kéo HEAD của nhau đi, và trường hợp bắt được là một
+reviewer chỉ-đọc đã `git switch` checkout của người khác. Cái ngoại lệ "agent này chỉ đọc thôi"
+chính là thứ mình đã tin, và nó sai. Từ đó isolation thành vô điều kiện.
+
+Context window cũng bị dùng chung. Một fork thừa kế nguyên context của cha, và cùng với đó là
+những thứ mình không định trao. AST-006: fork thừa kế luôn model của cha, đè lên bậc thang
+model đã khai, nên một việc đáng chạy bằng model rẻ lại chạy bằng model đắt nhất mà không ai
+khai gì cả. Nặng hơn, fork thừa kế cả địa chỉ của dispatcher: AST-119 ghi lại một fork bên
+trong Builder gửi handback cho dispatcher, đến trên đúng socket đó dưới đúng cái tên đó, và
+Builder không hề nhìn thấy chuyện đó xảy ra. Tin nhắn ấy còn mang một sự thật kỹ thuật về
+branch mà chính Builder không biết, nên nó không bỏ qua được như nhiễu, cũng không tin được như
+lời khai. AST-130 là bước tiếp theo của cùng một lớp lỗi: một fork ký một marker
+`simplify(increment):` lên phần code do chính nó vừa commit, đúng form được phép, không check
+nào bắt được, chỉ lộ vì Builder thấy một commit mình không hề tạo ra.
+
+Không có tracker nào giữ state. State của subagent sống trong context của session cha. Nghĩa là
+nó biến mất khi session compact, và trong lúc còn sống thì chủ dự án không nhìn thấy được. Chủ
+dự án không chạy được truy vấn nào, họ mở board ra và nhìn. Một frontier chỉ được tính mà không
+được ghi lại thì phục vụ agent hoàn hảo và vô hình với đúng người không tính được (AST-057).
+
+Không có pane để nhìn, và đây là chỗ đau nhất vì nó im lặng nhất. AST-018 đo được một lần
+dispatch chỉ được kể ra bằng chữ mà chưa từng được gọi; kể lại một tool call không phải là gọi
+nó, và không có tín hiệu sống nào để phân biệt hai chuyện đó. Trong một session dài downstream
+có compact một lần, một ticket bị dispatch thành subagent chạy trong tiến trình thay vì thành
+một pane nhìn thấy được, và không ai phát hiện cho tới lúc chủ dự án hỏi. Một pane là thứ đếm
+được; một subagent trong tiến trình thì không.
+
+Và không có bên thứ hai: subagent của Claude vẫn là Claude. Cross-vendor arm cần một model của
+hãng khác đọc lại artifact, và không cách spawn nào bên trong một runtime tạo ra được điều đó.
+
+Astragentic vẫn dùng fork bên trong Builder cho việc chỉ-báo-cáo, và luật đi kèm là fork đó
+phải có `isolation: "worktree"` và tuyệt đối không được nhắn cho dispatcher. Subagent làm được
+việc thật. Nó chỉ không phải chỗ để đặt lớp điều phối.
+
+Cái giá của cách này thì nặng thật. Anh em phải cài herdr và phải có một tracker được cấu hình
+đàng hoàng, hai dependency ngoài mà một subagent không cần. Mỗi Builder tốn một worktree trên
+đĩa và vài giây setup. Mỗi lần dispatch tốn thêm một lượt ghi lên tracker và một lượt đọc lại.
+Và có một cái giá không đo bằng máy: quy trình dài hơn, nhiều tên hơn phải nhớ. Mình trả, vì
+buổi chiều biến mất kia đắt hơn nhiều.
+
+## why-tracker
+
+Trạng thái công việc phải sống ở một chỗ mà agent không giữ được trong đầu và chủ dự án mở ra
+nhìn được. Tracker là chỗ duy nhất thoả cả hai vế đó, nên ADR-0001 gọi nó là substrate điều
+phối chứ không phải sổ ghi chép.
+
+Ba thứ mình lấy từ đó. Blocking edge cho một đồ thị phụ thuộc, nên "cái gì đang chờ cái gì" là
+dữ liệu chứ không phải trí nhớ. Truy vấn frontier trả lời "cái gì sẵn sàng ngay bây giờ". Và
+assignee làm claim: ghi tên lên ticket trước khi tạo worktree là thứ giữ cho hai session đồng
+thời không đụng nhau, không cần lock file, không cần queue, không cần một dispatcher trung tâm
+quyết ai đi trước.
+
+Nhưng một frontier chỉ được tính thì vô hình với người không tính được. AST-057 đo trên một dự
+án thật: suốt cả đời dự án đó, không ticket nào từng bước vào trạng thái chưa-bắt-đầu, và một
+ticket ngồi trông như đang bị chặn suốt nhiều giờ sau khi cả hai blocker của nó đã merge. Bốn
+ticket đeo nhãn sẵn-sàng trong lúc đang bị chặn. Không check nào của harness từng nhìn tới đó;
+chủ dự án bắt được bằng cách mở hai cái board ra so bằng mắt. Nên contract mang cả hai nửa:
+tính xong thì ghi câu trả lời ngược lại lên tracker, và không bao giờ đọc một nhãn sẵn-sàng như
+thể nó là trạng thái.
+
+Cái giá là mình thừa kế nguyên mọi giới hạn của cái tracker anh em đang dùng. Không tracker nào
+có ô assignee được thiết kế để chứa `builder/<ticket-id>`. GitHub Issues không có trường status
+thật, nên status sống trong label và cột trên Project board chỉ là bản sao ai đó phải giữ đồng
+bộ. Mỗi adapter vì thế mang theo workaround riêng và cái bẫy riêng của nó. Và vì tracker là
+substrate chứ không phải bản ghi thụ động, nó lệch được với thực tế: một ticket nói
+`in-progress` với assignee còn sống rất lâu sau khi branch của nó đã merge. Đó là việc của
+`reconcile-tracker`: nó đo tracker bằng git, không bao giờ đo tracker bằng chính tracker, vì
+một trạng thái sai vẫn tự nhất quán hoàn hảo.
+
+## why-cross-vendor
+
+Sau khi Claude viết xong và đã tự review, một model của hãng khác đọc lại diff. Nghe như thừa,
+cho tới lúc mình có số.
+
+AST-015: một vòng review đúng-sai cùng hãng đã cho lọt một defect đem secret sống và PII của
+người mua vào file được track; vòng cross-vendor bắt được nó và xếp P1. AST-012 rút ra cái tổng
+quát: hai ống kính bắt hai lớp defect khác nhau, nên chúng tồn tại song song chứ không thay thế
+nhau. Một ca khác đo trên diff lớn: một payload phạm vi slice gồm 6.904 dòng thêm mới trên 31
+file đi qua một lượt đọc cùng hãng bỏ sót ba cái test rỗng trong một ngày, trong khi một lượt
+phạm vi ticket trên diff nhỏ hơn bắt được một deadlock thật mà chính bản vá của lượt trước vừa
+tạo ra.
+
+Lý do cơ chế thì đơn giản: arm đọc repository trong khi tác giả đọc ticket. Nên thứ nó thắng là
+mâu thuẫn nội bộ với chính tiêu chuẩn dự án đã tự khai, đúng cái mà người viết code không nhìn
+ra được, vì họ đang nhìn từ phía yêu cầu.
+
+Cái giá là ma sát lúc gọi, và nó thật. Cách quote và argv khác nhau giữa các runtime. Đường
+`codex exec` trực tiếp đã có lần treo im lặng, nên nó cần timeout và cần một dispatcher đứng
+canh. Và nguy hiểm nhất là chuyện phạm vi: nếu `--base` và `HEAD` được resolve lệch nhau thì
+companion đem một branch so với chính nó và trả về sạch trên không commit nào. Nên mọi phạm vi
+phải in ra dòng range trước khi ai đó được phép tin cái verdict.

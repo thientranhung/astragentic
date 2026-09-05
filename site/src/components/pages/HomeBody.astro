@@ -1,0 +1,717 @@
+---
+// The landing, nine sections in the order of build spec 4 §4. Each section carries at
+// most two sentences; everything else on it is a picture, a card or a short list.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import InteractiveDiagram from '../InteractiveDiagram.astro';
+import QuoteBlock from '../QuoteBlock.astro';
+import AdoptBlock from '../AdoptBlock.astro';
+import { getPage } from '../../lib/pages';
+import { getLanding } from '../../lib/landing';
+import { getSkillGroups } from '../../lib/skills';
+import { HOOKS, STACK, WHY } from '../../lib/anchors';
+import { failures, meta } from '../../lib/data';
+import { ROLE_IDS, ROLE_META, roleHref } from '../../lib/roles';
+import { termHref } from '../../lib/terms';
+import { ROUTES, REPO, UI, type Lang } from '../../lib/site';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const page = await getPage(lang, 'home');
+const copy = await getLanding(lang);
+const skillGroups = await getSkillGroups(lang);
+
+// The seven checkpoints, in order. Stage names are harness vocabulary and stay English
+// in both locales. The lifecycle SVG names two of them differently; the map is the one
+// place that translation lives.
+const STAGES = ['claim', 'brief', 'build', 'code-review', 'simplify', 'arm', 'merge'];
+const NODE_TO_STAGE: Record<string, string> = {
+  claim: 'claim',
+  brief: 'brief',
+  implement: 'build',
+  code_review: 'code-review',
+  simplify: 'simplify',
+  arm: 'arm',
+  merge: 'merge',
+};
+
+const failuresRoute = ROUTES.failures[lang];
+const evidenceRoute = ROUTES.evidence[lang];
+const structureRoute = ROUTES.structure[lang];
+const skillsRoute = ROUTES.skills[lang];
+const hooksRoute = ROUTES.hooks[lang];
+const whyRoute = ROUTES.why[lang];
+const stackRoute = ROUTES.stack[lang];
+
+/** Node ids come from build spec 4 §5. A key the diagram does not carry is ignored,
+ *  so this map is safe to write before the diagram lands. */
+const structureMap: Record<string, string> = {
+  runtime: `${structureRoute}#runtime`,
+  harness: `${structureRoute}#harness`,
+  coordination: `${structureRoute}#coordination`,
+  project: `${structureRoute}#project`,
+  runtime_claude: `${stackRoute}#claude-code`,
+  runtime_codex: `${stackRoute}#codex`,
+  runtime_opencode: `${stackRoute}#opencode`,
+  roles: roleHref(lang, 'thomas'),
+  skills: skillsRoute,
+  hooks: hooksRoute,
+  ledger: evidenceRoute,
+  tracker: termHref(lang, 'tracker'),
+  herdr: `${stackRoute}#herdr`,
+  worktrees: termHref(lang, 'worktree'),
+};
+
+const rolesMap = Object.fromEntries(ROLE_IDS.map((id) => [id, roleHref(lang, id)]));
+const lifecycleMap = Object.fromEntries(
+  Object.entries(NODE_TO_STAGE).map(([node, stage]) => [node, `${failuresRoute}#${stage}`]),
+);
+const trackerMap: Record<string, string> = {
+  thomas: roleHref(lang, 'thomas'),
+  frontier_query: termHref(lang, 'frontier'),
+  blocking_edges: termHref(lang, 'blocking-edge'),
+  assignee_field: termHref(lang, 'claim'),
+  board: `${evidenceRoute}#ast-074`,
+};
+
+const perStage = STAGES.map((stage, i) => ({
+  stage,
+  number: String(i + 1).padStart(2, '0'),
+  caption: copy.stages[stage] ?? '',
+  hits: failures.filter((f) => f.stage === stage),
+}));
+
+// Verbatim, English in both locales, behind a label that says so (PRD §4).
+const TRACKER_SRC = `${REPO}/blob/main/harness/.agents/tracker-contract.md#L44`;
+const TRACKER_REQ = 'A surface the OWNER can open and read without running a query.';
+const QUOTE =
+  'Every check in this package now proves the tooling is correct. Nothing in it proves the loop works.';
+---
+
+<BaseLayout title={page.title} description={page.description} lang={lang} page="home">
+  {/* ── 1 · Hero ─────────────────────────────────────────────────────────── */}
+  <section class="screen screen--paper hero-screen" id="hero">
+    <div class="column-band hero">
+      <div class="hero-copy">
+        <p class="eyebrow">{UI.heroEyebrow[lang]} · v{meta.version}</p>
+        <h1>{copy.hero.headline}</h1>
+        <p class="hero-sub">{copy.hero.sub}</p>
+        <p class="cta">
+          <a class="btn btn--primary" href="#structure">{copy.hero.primary}</a>
+          <a class="btn btn--ghost mono" href={ROUTES.adopt[lang]}>{copy.hero.secondary} →</a>
+        </p>
+      </div>
+      <div class="hero-art">
+        {/* five-roles, not structure: five boxes at this width carry labels a reader
+            can actually read, where the four-layer diagram packs fourteen. The whole
+            structure diagram is one screen further down, at full band width. */}
+        <InteractiveDiagram slug="five-roles" lang={lang} inert maxWidth={620} />
+      </div>
+    </div>
+    <div class="column-band">
+      <p class="strip mono">
+        <span>{meta.total} {UI.statLogged[lang]}</span>
+        <span class="dot">·</span>
+        <span>{meta.cited} {UI.statBound[lang]}</span>
+        <span class="dot">·</span>
+        <span>3 {UI.statRuntimes[lang]}</span>
+      </p>
+    </div>
+  </section>
+
+  {/* ── 2 · The structure ────────────────────────────────────────────────── */}
+  <section class="screen screen--sunk" id="structure">
+    <div class="column">
+      <h2>{copy.sections.structure.headline}</h2>
+      <p class="sub">{copy.sections.structure.sub}</p>
+    </div>
+    <div class="column">
+      <InteractiveDiagram slug="structure" lang={lang} hrefMap={structureMap} explore class="band" />
+      <a class="more-link" href={structureRoute}>{UI.structureAll[lang]}</a>
+    </div>
+  </section>
+
+  {/* ── 3 · Five roles ───────────────────────────────────────────────────── */}
+  <section class="screen screen--paper" id="roles">
+    <div class="column">
+      <h2>{copy.sections.roles.headline}</h2>
+      <p class="sub">{copy.sections.roles.sub}</p>
+    </div>
+    <div class="column">
+      <InteractiveDiagram slug="five-roles" lang={lang} hrefMap={rolesMap} class="band" />
+      <ul class="cards band">
+        {
+          ROLE_IDS.map((id) => (
+            <li>
+              <a href={roleHref(lang, id)}>
+                <span class="card-name mono">{ROLE_META[id].label}</span>
+                <span class="card-line">{copy.roleCards[id]}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  {/* ── 4 · One ticket, seven checkpoints ────────────────────────────────── */}
+  <section class="screen screen--sunk" id="lifecycle">
+    <div class="column">
+      <h2>{copy.sections.lifecycle.headline}</h2>
+      <p class="sub">{copy.sections.lifecycle.sub}</p>
+    </div>
+    <div class="column">
+      <InteractiveDiagram slug="ticket-lifecycle" lang={lang} hrefMap={lifecycleMap} class="band" />
+      <ol class="steps band">
+        {
+          perStage.map(({ stage, number, caption, hits }) => (
+            <li class:list={['step', hits.length > 0 && 'step--hit']}>
+              <a class="step-head" href={`${failuresRoute}#${stage}`}>
+                <span class="n mono">{number}</span>
+                <span class="stage mono" lang="en">{stage}</span>
+              </a>
+              <p class="step-line">{caption}</p>
+              {hits.length > 0 && (
+                <p class="hits">
+                  {hits.map((f) => (
+                    <a class="ast" href={`${failuresRoute}#${f.id.toLowerCase()}`}>{f.id}</a>
+                  ))}
+                </p>
+              )}
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  {/* ── 5 · From tracker to pane ─────────────────────────────────────────── */}
+  <section class="screen screen--paper" id="tracker">
+    <div class="column">
+      <h2>{copy.sections.tracker.headline}</h2>
+      <p class="sub">{copy.sections.tracker.sub}</p>
+    </div>
+    <div class="column">
+      <InteractiveDiagram slug="frontier-query" lang={lang} hrefMap={trackerMap} class="band" />
+      <aside class="req band">
+        <p class="req-label mono">{UI.trackerReq[lang]} · {UI.verbatim[lang]}</p>
+        <blockquote class="req-quote mono" lang="en">{TRACKER_REQ}</blockquote>
+        <a class="req-src mono" href={TRACKER_SRC} target="_blank" rel="noreferrer">
+          tracker-contract.md:44 ↗
+        </a>
+      </aside>
+    </div>
+  </section>
+
+  {/* ── 6 · The skills ───────────────────────────────────────────────────── */}
+  <section class="screen screen--sunk" id="skills">
+    <div class="column">
+      <h2>{copy.sections.skills.headline}</h2>
+      <p class="sub">{copy.sections.skills.sub}</p>
+    </div>
+    <div class="column">
+      {/* The heading promises a list filed by when you reach for one, so the list is
+          filed that way — same groups, same order, same names as /skills. */}
+      {
+        skillGroups.map((group) => (
+          <section class="skill-group band">
+            <h3 class="skill-group-name mono">{group.title}</h3>
+            <ul class="grid grid--skills">
+              {group.skills.map((skill) => (
+                <li>
+                  <a href={skill.href}>
+                    <span class="g-name mono">{skill.name}</span>
+                    <span class="g-line">{skill.line}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))
+      }
+      <a class="more-link" href={skillsRoute}>{copy.sections.skills.cta} →</a>
+    </div>
+  </section>
+
+  {/* ── 7 · The hooks ────────────────────────────────────────────────────── */}
+  <section class="screen screen--paper" id="hooks">
+    <div class="column">
+      <h2>{copy.sections.hooks.headline}</h2>
+      <p class="sub">{copy.sections.hooks.sub}</p>
+    </div>
+    <div class="column">
+      <ul class="grid grid--hooks band">
+        {
+          HOOKS.map((hook) => (
+            <li>
+              <a href={`${hooksRoute}#${hook.id}`}>
+                <span class="g-name mono" lang="en">{copy.hooksCards[hook.id].title}</span>
+                <span class="g-when">{copy.hooksCards[hook.id].when}</span>
+                <span class="g-line">{copy.hooksCards[hook.id].does}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  {/* ── 8 · Why ──────────────────────────────────────────────────────────── */}
+  <section class="screen screen--sunk" id="why">
+    <div class="column">
+      <h2>{copy.sections.why.headline}</h2>
+      <p class="sub">{copy.sections.why.sub}</p>
+    </div>
+    <div class="column">
+      <ul class="asks band">
+        {
+          WHY.map((why, i) => (
+            <li>
+              <a href={`${whyRoute}#${why.id}`}>
+                <span class="n mono">{String(i + 1).padStart(2, '0')}</span>
+                <span class="ask">
+                  <span class="ask-q">{copy.whyCards[why.id].question}</span>
+                  <span class="ask-a">{copy.whyCards[why.id].oneLine}</span>
+                </span>
+                <span class="arrow mono">→</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  {/* ── 9 · Tech stack, and how to install it ────────────────────────────── */}
+  <section class="screen screen--paper" id="stack">
+    <div class="column">
+      <h2>{copy.sections.stack.headline}</h2>
+      <p class="sub">{copy.sections.stack.sub}</p>
+    </div>
+    <div class="column">
+      <ul class="rail band">
+        {
+          STACK.map((item) => (
+            <li>
+              <a class="mono" href={`${stackRoute}#${item.id}`}>{copy.stackItems[item.id].name}</a>
+            </li>
+          ))
+        }
+      </ul>
+      <AdoptBlock lang={lang} />
+      <QuoteBlock
+        size="sm"
+        label={UI.verbatim[lang]}
+        source="RELEASE-NOTES.md:393"
+        href={`${REPO}/blob/main/RELEASE-NOTES.md#L393`}
+      >
+        {QUOTE}
+      </QuoteBlock>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* ── hero ── */
+  .hero-screen {
+    padding-block: 3.75rem 2.75rem;
+  }
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 620px);
+    gap: 2.25rem;
+    align-items: center;
+    min-height: 40vh;
+  }
+  /* Capped below the global h1: the hero headline is a whole sentence, and at the
+     global size it takes five lines and outweighs the diagram beside it (PRD §5).
+     Capped again for the wider art column, so the two lines the writer set in the YAML
+     stay two lines. */
+  .hero h1 {
+    font-size: clamp(28px, 2.5vw, 36px);
+    line-height: 1.08;
+    /* The writer sets the two-line break in the YAML; honour it. */
+    white-space: pre-line;
+    margin-bottom: 1rem;
+  }
+  .hero-sub {
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink-muted);
+    max-width: 44ch;
+    margin-bottom: 1.75rem;
+  }
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    margin: 0;
+  }
+  .btn {
+    display: inline-block;
+    padding: 0.62rem 1.1rem;
+    border-radius: 2px;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    border: 1px solid var(--ink);
+  }
+  .btn--primary {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .btn--primary:hover {
+    background: var(--pass);
+    border-color: var(--pass);
+  }
+  .btn--ghost {
+    background: none;
+    color: var(--ink);
+    border-color: var(--rule);
+    font-size: 12.5px;
+    letter-spacing: 0.06em;
+  }
+  .btn--ghost:hover {
+    border-color: var(--ink);
+  }
+
+  .strip {
+    margin: 2.25rem 0 0;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--rule);
+    font-size: 11.5px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .strip .dot {
+    margin-inline: 0.7rem;
+    color: var(--rule);
+  }
+
+  .screen h2 {
+    text-wrap: balance;
+  }
+
+  /* ── role cards (also the mobile fallback for the diagram) ── */
+  .cards {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.75rem;
+    /* shorthand would reset margin-left and undo the band offset */
+    margin-block: 1.5rem 0;
+    padding: 0;
+  }
+  .cards li {
+    margin: 0;
+  }
+  .cards a {
+    display: block;
+    height: 100%;
+    padding: 0.8rem 0.85rem 0.9rem;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: var(--paper);
+    text-decoration: none;
+  }
+  .cards a:hover {
+    border-color: var(--pass);
+  }
+  .card-name {
+    display: block;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+  .card-line {
+    display: block;
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--ink-muted);
+  }
+
+  /* ── seven steps under the lifecycle diagram ── */
+  .steps {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-block: 1.75rem 0;
+    padding: 0;
+    border-top: 1px solid var(--ink);
+  }
+  .step {
+    margin: 0;
+    padding-top: 0.9rem;
+  }
+  .step-head {
+    display: block;
+    text-decoration: none;
+  }
+  .step .n {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--rule);
+  }
+  .step .stage {
+    display: block;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    color: var(--ink-muted);
+    margin-top: 0.1rem;
+  }
+  .step-head:hover .stage {
+    color: var(--pass);
+  }
+  .step--hit .stage {
+    color: var(--ink);
+  }
+  .step-line {
+    font-size: 13px;
+    line-height: 1.45;
+    margin: 0.5rem 0 0;
+    color: var(--ink-muted);
+  }
+  .hits {
+    margin: 0.45rem 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .hits .ast {
+    font-size: 11px;
+  }
+
+  /* ── diagram beside a mono block ── */
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 280px);
+    gap: 1.75rem;
+    align-items: start;
+  }
+  .in-split {
+    width: 100%;
+  }
+  .req {
+    margin-top: 1.75rem;
+    padding: 1.1rem 1.3rem;
+    border-left: 2px solid var(--ink);
+    background: none;
+    display: grid;
+    grid-template-columns: minmax(0, 14rem) minmax(0, 1fr) auto;
+    gap: 1.5rem;
+    align-items: baseline;
+  }
+  .req-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--ink-muted);
+    margin: 0;
+  }
+  .req-quote {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .req-src {
+    font-size: 11px;
+    color: var(--ink-muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+  }
+  .req-src:hover {
+    color: var(--ink);
+  }
+
+  /* ── card grids: skills and hooks ── */
+  .grid {
+    list-style: none;
+    display: grid;
+    gap: 0.7rem;
+    margin-block: 1.75rem 0;
+    padding: 0;
+  }
+  .grid li {
+    margin: 0;
+  }
+  .grid a {
+    display: block;
+    height: 100%;
+    padding: 0.75rem 0.85rem 0.85rem;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: var(--paper);
+    text-decoration: none;
+  }
+  .grid a:hover {
+    border-color: var(--pass);
+  }
+  .g-name {
+    display: block;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.35rem;
+  }
+  .g-when {
+    display: block;
+    font-size: 12.5px;
+    line-height: 1.35;
+    color: var(--ink);
+    margin-bottom: 0.3rem;
+  }
+  .g-line {
+    display: block;
+    font-size: 13px;
+    line-height: 1.38;
+    color: var(--ink-muted);
+  }
+  .grid--skills {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-block: 0.85rem 0;
+    margin-left: 0;
+    width: auto;
+  }
+  .skill-group {
+    margin-top: 2.25rem;
+  }
+  .skill-group:first-of-type {
+    margin-top: 1.5rem;
+  }
+  .skill-group-name {
+    margin: 0;
+    padding-bottom: 0.55rem;
+    border-bottom: 1px solid var(--rule);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .grid--hooks {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  /* ── five questions ── */
+  .asks {
+    list-style: none;
+    margin-block: 1.75rem 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .asks li {
+    margin: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .asks a {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr) 2rem;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.95rem 0.25rem;
+    text-decoration: none;
+  }
+  .asks a:hover .ask {
+    color: var(--pass);
+  }
+  .asks .n {
+    font-size: 11px;
+    color: var(--rule);
+    letter-spacing: 0.1em;
+  }
+  .ask {
+    display: block;
+  }
+  .ask-q {
+    display: block;
+    font-size: 19px;
+    line-height: 1.3;
+  }
+  .ask-a {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--ink-muted);
+  }
+  .asks .arrow {
+    font-size: 13px;
+    color: var(--ink-muted);
+    text-align: right;
+  }
+
+  /* ── stack rail ── */
+  .rail {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-block: 1.75rem 0;
+    padding: 0;
+  }
+  .rail li {
+    margin: 0;
+  }
+  .rail a {
+    display: inline-block;
+    padding: 0.45rem 0.8rem;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: var(--paper);
+    font-size: 12.5px;
+    text-decoration: none;
+    color: var(--ink-muted);
+  }
+  .rail a:hover {
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+
+  #stack :global(.quote) {
+    margin-top: 2.5rem;
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 980px) {
+    .hero,
+    .split,
+    .req {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    /* Under the copy now, so it takes the width it was capped at rather than half of
+       it — a shrunk diagram is the one thing this page cannot afford. */
+    .hero-art {
+      max-width: 620px;
+    }
+    .req {
+      margin-top: 0;
+    }
+    .cards,
+    .grid--skills,
+    .grid--hooks {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .steps {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      row-gap: 1.5rem;
+    }
+  }
+  @media (max-width: 560px) {
+    .cards,
+    .steps,
+    .grid--skills,
+    .grid--hooks {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    /* At phone width the five-role art renders labels at about four pixels. It is the
+       same drawing the roles screen shows full width and scrollable two screens down,
+       so on a phone the hero drops it rather than shipping an unreadable copy. */
+    .hero-art {
+      display: none;
+    }
+  }
+</style>

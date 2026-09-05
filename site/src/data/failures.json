@@ -1,0 +1,32 @@
+[
+  {
+    "id": "AST-131",
+    "stage": "claim",
+    "costLine": "measured once, one project — 2 of 4 slots idle after two merges, 12 claimable tickets waiting, nothing errored."
+  },
+  {
+    "id": "AST-074",
+    "stage": "merge",
+    "costLine": "measured once, one project — 4 tickets stale, the oldest by a full day, before anyone noticed."
+  },
+  {
+    "id": "AST-056",
+    "stage": "merge",
+    "costLine": "measured twice in one day — a naive merge would have reverted already-reviewed work."
+  },
+  {
+    "id": "AST-097",
+    "stage": "build",
+    "costLine": "measured three times, one pane, one session — the dispatcher nearly reported it abandoned before checking further."
+  },
+  {
+    "id": "AST-092",
+    "stage": "build",
+    "costLine": "measured five times, three Builder sessions — 93 to 433 lines lost each time, never recovered."
+  },
+  {
+    "id": "AST-015",
+    "stage": "arm",
+    "costLine": "one measured incident — a same-vendor review passed it; a cross-vendor reviewer caught it before it shipped further."
+  }
+]

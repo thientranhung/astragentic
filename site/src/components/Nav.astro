@@ -1,0 +1,148 @@
+---
+// Seven destinations, plus the two that are not destinations: the language toggle and
+// the repository. Those two used to read as nav items, which made the bar look like ten
+// places to go. The toggle is one control now, and the repository is an icon with a
+// label a screen reader still gets.
+import LangSwitch from './LangSwitch.astro';
+import { NAV, ROUTES, REPO, UI, type Lang, type PageKey } from '../lib/site';
+
+interface Props {
+  lang: Lang;
+  page?: PageKey;
+  /** Off-table pages (role pages) hand their own vi/en pair to the switch. */
+  alternate?: Record<Lang, string>;
+}
+const { lang, page, alternate } = Astro.props;
+---
+
+<header class="nav-bar">
+  <nav class="column-wide nav">
+    <a href={ROUTES.home[lang]} class="wordmark">Astragentic</a>
+    <ul class="items">
+      {
+        NAV.map((item) => (
+          <li>
+            <a href={ROUTES[item.key][lang]} class={item.key === page ? 'on' : undefined}>
+              {item.label[lang]}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    <div class="right">
+      {(page || alternate) && <LangSwitch lang={lang} page={page} hrefs={alternate} />}
+      <a href={REPO} target="_blank" rel="noreferrer" class="gh" aria-label={UI.repoAria[lang]}>
+        {/* GitHub's own mark, drawn as a path — no glyph standing in for an icon. */}
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+          <path
+            fill="currentColor"
+            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
+          ></path>
+        </svg>
+      </a>
+    </div>
+  </nav>
+</header>
+
+<style>
+  .nav-bar {
+    border-bottom: 1px solid var(--rule);
+    background: var(--paper);
+    position: relative;
+    z-index: 2;
+  }
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    padding-block: 1.15rem;
+  }
+  .wordmark {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.6rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .items li {
+    margin: 0;
+  }
+  .items a {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    text-decoration: none;
+    display: inline-block;
+    padding: 0.75rem 0.15rem;
+    min-height: 44px;
+    line-height: 1.2;
+    border-bottom: 1px solid transparent;
+  }
+  .items a:hover {
+    color: var(--ink);
+  }
+  .items a.on {
+    color: var(--ink);
+    border-bottom-color: var(--ink);
+  }
+  .right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .gh {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin-right: -0.6rem;
+    color: var(--ink-muted);
+  }
+  .gh:hover {
+    color: var(--ink);
+  }
+  .gh svg {
+    display: block;
+  }
+
+  /* Two rows, not a drawer: seven links are readable stacked, and a hamburger would
+     hide the whole site behind one tap. */
+  @media (max-width: 860px) {
+    .nav {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      row-gap: 0.35rem;
+      column-gap: 1rem;
+      align-items: center;
+      padding-block: 0.9rem 0.4rem;
+    }
+    .wordmark {
+      grid-area: 1 / 1;
+    }
+    .right {
+      grid-area: 1 / 2;
+      justify-self: end;
+    }
+    .items {
+      grid-area: 2 / 1 / 3 / -1;
+      gap: 0 1.15rem;
+    }
+    .items a {
+      min-height: 38px;
+      padding-block: 0.55rem;
+    }
+  }
+</style>

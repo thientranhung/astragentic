@@ -1,0 +1,110 @@
+---
+// /skills · /en/skills — the catalog, grouped by the moment you reach for one
+// (build spec 4 §3, aihero-style). Each group gets a heading and one sentence; each
+// skill gets one verb line and its own page.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getSkillGroups } from '../../lib/skills';
+import { UI, type Lang } from '../../lib/site';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const groups = await getSkillGroups(lang);
+const count = groups.reduce((n, group) => n + group.skills.length, 0);
+
+const title = UI.skillsTitle[lang];
+const lede =
+  lang === 'vi'
+    ? 'Skill là quy trình viết sẵn cho một lúc cụ thể. Danh sách dưới đây xếp theo lúc anh em cần đến chúng, không theo cái chúng làm bằng gì.'
+    : 'A skill is a written-down procedure for one moment. The list below is filed by when you need one, not by what it is made of.';
+---
+
+<BaseLayout title={title} description={lede} lang={lang} page="skills">
+  <section class="screen screen--paper">
+    <div class="column">
+      <p class="eyebrow mono">{count} {UI.skillsCount[lang]}</p>
+      <h1>{title}</h1>
+      <p class="sub">{lede}</p>
+    </div>
+  </section>
+
+  <section class="screen screen--sunk">
+    <div class="column">
+      {
+        groups.map((group) => (
+          <section class="group" id={group.id}>
+            <h2>{group.title}</h2>
+            <p class="group-line">{group.line}</p>
+            <ul class="rows">
+              {group.skills.map((skill) => (
+                <li>
+                  <a href={skill.href}>
+                    <span class="name mono">{skill.name}</span>
+                    <span class="line">{skill.line}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .group {
+    margin-bottom: 3.25rem;
+  }
+  .group:last-child {
+    margin-bottom: 0;
+  }
+  .group h2 {
+    font-size: 24px;
+    margin-bottom: 0.4rem;
+  }
+  .group-line {
+    font-size: 15px;
+    color: var(--ink-muted);
+    margin: 0 0 1rem;
+    max-width: 60ch;
+  }
+  .rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .rows li {
+    margin: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .rows a {
+    display: grid;
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: baseline;
+    padding: 0.7rem 0.25rem;
+    text-decoration: none;
+  }
+  .rows a:hover .name {
+    color: var(--pass);
+  }
+  .name {
+    font-size: 13px;
+    letter-spacing: 0.01em;
+  }
+  .line {
+    font-size: 15px;
+    line-height: 1.4;
+    color: var(--ink-muted);
+  }
+
+  @media (max-width: 640px) {
+    .rows a {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.3rem;
+    }
+  }
+</style>

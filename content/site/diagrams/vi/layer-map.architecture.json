@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Hai Lớp, Chỉ Một Là Của Ta",
+    "output": "layer-map.html",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "the-rented-method", "label": "Cạnh duy nhất", "focus": ["astragentic", "mattpocock_skills"], "note": "Astragentic dispatch session; phương pháp bên trong mỗi session là đi thuê, không phải tự xây." },
+      { "id": "same-layer", "label": "Cùng lớp, không xếp hạng", "focus": ["mattpocock_skills", "superpowers", "others"], "note": "Mỗi box phương pháp đứng cùng độ cao. Không đường nào chạm Superpowers hay others." }
+    ]
+  },
+  "components": [
+    { "id": "astragentic", "type": "backend", "label": "Astragentic", "sublabel": "điều phối", "pos": [40, 460], "size": [180, 74] },
+    { "id": "claude_code", "type": "external", "label": "Claude Code", "sublabel": "runtime", "pos": [40, 260], "size": [180, 74] },
+    { "id": "codex", "type": "external", "label": "Codex", "sublabel": "runtime", "pos": [280, 260], "size": [180, 74] },
+    { "id": "opencode", "type": "external", "label": "OpenCode", "sublabel": "runtime", "pos": [520, 260], "size": [180, 74] },
+    { "id": "mattpocock_skills", "type": "external", "label": "mattpocock-skills", "sublabel": "phương pháp", "pos": [40, 60], "size": [180, 74] },
+    { "id": "superpowers", "type": "external", "label": "Superpowers", "sublabel": "phương pháp", "pos": [280, 60], "size": [180, 74] },
+    { "id": "others", "type": "external", "label": "khác", "sublabel": "phương pháp chưa liệt kê", "pos": [520, 60], "size": [180, 74] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "ĐIỀU PHỐI", "wraps": ["astragentic"], "pad": 16 },
+    { "kind": "region", "label": "RUNTIME", "wraps": ["claude_code", "codex", "opencode"], "pad": 16 },
+    { "kind": "region", "label": "PHƯƠNG PHÁP", "wraps": ["mattpocock_skills", "superpowers", "others"], "pad": 16 }
+  ],
+  "connections": [
+    { "from": "astragentic", "to": "mattpocock_skills", "label": "đi thuê", "variant": "emphasis", "fromSide": "left", "toSide": "left", "via": [[10, 497], [10, 97]] }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "Một Lớp Là Của Ta", "items": ["Astragentic nằm dưới cùng, dispatch session dựa vào tracker", "Runtime nằm giữa — Claude Code, Codex, OpenCode, đổi cho nhau được", "Phương pháp nằm trên cùng, bên trong mỗi session, và Astragentic thuê đúng một cái"] },
+    { "dot": "cyan", "title": "Không Node Nào Được Ưu Tiên", "items": ["Mỗi node trong dải phương pháp cùng kích thước, cùng fill, cùng độ đậm", "mattpocock-skills không được nâng cấp hình ảnh chỉ vì Astragentic đang dùng nó", "Chỉ có cạnh đánh dấu quan hệ — không phải cái box"] },
+    { "dot": "rose", "title": "Phần Còn Lại Đứng Cùng Độ Cao", "items": ["Không đường nào nối Astragentic tới Superpowers hay tới others", "Việc không có đường là chủ ý, không phải xúc phạm", "Cùng lớp, khác lựa chọn, không ai bị xếp hạng"] }
+  ]
+}

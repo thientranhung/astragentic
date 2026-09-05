@@ -1,0 +1,30 @@
+{
+  "prerequisites": [
+    {
+      "name": "Claude Code CLI",
+      "version": null,
+      "href": "https://docs.anthropic.com/en/docs/claude-code"
+    },
+    {
+      "name": "Git (with worktree support)",
+      "version": null,
+      "href": null
+    },
+    {
+      "name": "herdr",
+      "version": ">= 0.8.0",
+      "href": "https://github.com/herdrdev/herdr"
+    },
+    {
+      "name": "mattpocock-skills plugin",
+      "version": ">= 1.2.3",
+      "href": "https://github.com/mattpocock/skills"
+    }
+  ],
+  "commands": [
+    "./check-requirements.sh",
+    "./install.sh /path/to/your-repo",
+    "cd /path/to/your-repo\nclaude \"Read .astraler/releases/2.8.0/ADAPT-HARNESS.md completely and execute it.\"",
+    "claude --agent thomas"
+  ]
+}

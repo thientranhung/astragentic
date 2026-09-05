@@ -1,0 +1,142 @@
+[
+  {
+    "id": "AST-001",
+    "lesson": "Gate wired to a fix tool, not a review tool",
+    "status": "promoted",
+    "words": 17,
+    "citedBy": ["docs-staleness-audit.sh", "ledger-rules.py"],
+    "indexLine": 16,
+    "entryLine": 12,
+    "promotedOn": "2026-07-11",
+    "entry": "The gate called a formatter and reported green. A formatter cannot fail a review; it can only rewrite. Bound: `scripts/ledger-rules.py`.",
+    "refs": [
+      { "name": "docs-staleness-audit.sh", "kind": "file", "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/docs-staleness-audit.sh" },
+      { "name": "ledger-rules.py", "kind": "file", "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/ledger-rules.py" }
+    ]
+  },
+  {
+    "id": "AST-002",
+    "lesson": "A prose link does not guarantee load",
+    "status": "promoted",
+    "words": 20,
+    "citedBy": [],
+    "indexLine": 17,
+    "entryLine": 18,
+    "promotedOn": "2026-07-11",
+    "entry": "A rule referenced from prose is a suggestion. Only an always-on rule file is read every turn.",
+    "refs": []
+  },
+  {
+    "id": "AST-015",
+    "lesson": "Export step committed live secrets + buyer PII",
+    "status": "promoted",
+    "words": 35,
+    "citedBy": ["review-with-rin"],
+    "indexLine": 30,
+    "entryLine": 108,
+    "promotedOn": "2026-07-11",
+    "entry": "An export helper wrote a live `.env` and a buyer CSV into the repo and the commit passed every automated check. Nothing in the diff looked wrong to a tool. Bound: milestone gate reads the diff for secrets before it reads it for design.",
+    "refs": [{ "name": "review-with-rin", "kind": "skill", "href": "/skills/review-with-rin" }]
+  },
+  {
+    "id": "AST-016",
+    "lesson": "Agents sharing one checkout moved HEAD under each other",
+    "status": "promoted",
+    "words": 38,
+    "citedBy": ["codex-claude-arm", "dispatch-ticket"],
+    "indexLine": 31,
+    "entryLine": 114,
+    "promotedOn": "2026-07-11",
+    "entry": "Includes a READ-ONLY reviewer that `git switch`ed the PM's HEAD. Worktree isolation is UNCONDITIONAL for every spawned agent that can run state-changing git; PM re-asserts its branch each turn + verifies reflog after each agent. Bound: `.claude/rules/agent-worktree-isolation.md` (always-on).",
+    "refs": [
+      { "name": "codex-claude-arm", "kind": "file", "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.claude/skills/codex-claude-arm/SKILL.md" },
+      { "name": "dispatch-ticket", "kind": "skill", "href": "/skills/dispatch-ticket" }
+    ]
+  },
+  {
+    "id": "AST-056",
+    "lesson": "A blocking edge expresses order, not exclusion",
+    "status": "promoted",
+    "words": 329,
+    "citedBy": ["dispatch-qa-walk", "dispatch-ticket", "thomas.md"],
+    "indexLine": 71,
+    "entryLine": 1420,
+    "promotedOn": "2026-08-02",
+    "entry": "A blocking edge between two tickets was read as \"these two may never run together\". It says only that one must land before the other. Two tickets can be claimed at once and still respect the edge.",
+    "refs": [
+      { "name": "dispatch-qa-walk", "kind": "skill", "href": "/skills/dispatch-qa-walk" },
+      { "name": "dispatch-ticket", "kind": "skill", "href": "/skills/dispatch-ticket" },
+      { "name": "thomas.md", "kind": "file", "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.claude/agents/thomas.md" }
+    ]
+  },
+  {
+    "id": "AST-074",
+    "lesson": "A tracker measured only against itself cannot detect its own drift",
+    "status": "promoted",
+    "words": 484,
+    "citedBy": ["thomas.md"],
+    "indexLine": 88,
+    "entryLine": 1911,
+    "promotedOn": "2026-08-21",
+    "entry": "Four tickets read \"in progress\" days after their code had merged. The board agreed with itself at every read. Reconciliation has to compare the tracker against git, not against the last thing the tracker said.",
+    "refs": [{ "name": "thomas.md", "kind": "file", "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.claude/agents/thomas.md" }]
+  },
+  {
+    "id": "AST-092",
+    "lesson": "Builder stops after writing code but before committing",
+    "status": "promoted",
+    "words": 308,
+    "citedBy": ["CLEANUP.md", "MARKERS.md", "builder.md", "hook-git-guard.py"],
+    "indexLine": 106,
+    "entryLine": 2402,
+    "promotedOn": "2026-08-14",
+    "entry": "The pane reads done, cleanup deletes the worktree, and the work is gone. A turn ending is not a unit of work ending.",
+    "refs": [
+      { "name": "CLEANUP.md", "kind": "file", "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/CLEANUP.md" },
+      { "name": "MARKERS.md", "kind": "file", "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/MARKERS.md" },
+      { "name": "builder.md", "kind": "file", "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.claude/agents/builder.md" },
+      { "name": "hook-git-guard.py", "kind": "file", "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/hook-git-guard.py" }
+    ]
+  },
+  {
+    "id": "AST-097",
+    "lesson": "TERMINAL:done means the turn ended, not that the work finished",
+    "status": "promoted",
+    "words": 831,
+    "citedBy": ["builder-claude.md", "dispatch-ticket", "dispatch-ticket-claude", "hook-git-guard.py"],
+    "indexLine": 111,
+    "entryLine": 2570,
+    "promotedOn": "2026-08-19",
+    "entry": "The router treated the terminal marker as a completion signal. Measured 67 seconds between the marker and the last write on the branch. A marker reports the shape of the turn, never the state of the branch.",
+    "refs": [
+      { "name": "builder-claude.md", "kind": "file", "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.claude/agents/builder-claude.md" },
+      { "name": "dispatch-ticket", "kind": "skill", "href": "/skills/dispatch-ticket" },
+      { "name": "dispatch-ticket-claude", "kind": "file", "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.claude/skills/dispatch-ticket-claude/SKILL.md" },
+      { "name": "hook-git-guard.py", "kind": "file", "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/hook-git-guard.py" }
+    ]
+  },
+  {
+    "id": "AST-131",
+    "lesson": "The queue drained and nothing asked whether a slot was free",
+    "status": "promoted",
+    "words": 344,
+    "citedBy": ["thomas.md"],
+    "indexLine": 145,
+    "entryLine": 3346,
+    "promotedOn": "2026-08-22",
+    "entry": "Measured on an adapted project running continuously by the owner's instruction: after two merges, two of four Builder slots sat idle while twelve claimable tickets waited. Nothing errored. Every step performed was performed correctly.",
+    "refs": [{ "name": "thomas.md", "kind": "file", "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.claude/agents/thomas.md" }]
+  },
+  {
+    "id": "AST-136",
+    "lesson": "A merge is not done until the push proves it",
+    "status": "proposed",
+    "words": 61,
+    "citedBy": [],
+    "indexLine": 150,
+    "entryLine": 3510,
+    "promotedOn": null,
+    "entry": "The merge commit existed locally and the ticket was closed on that evidence. The push had failed. Read back the remote ref before writing the ticket done.",
+    "refs": []
+  }
+]

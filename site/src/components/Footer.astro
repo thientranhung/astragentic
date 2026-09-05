@@ -1,0 +1,77 @@
+---
+import { ROUTES, REPO, UI, type Lang } from '../lib/site';
+import { meta } from '../lib/data';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const stamp = meta.generatedAt ? meta.generatedAt.slice(0, 10) : null;
+---
+
+<footer class="foot">
+  <div class="column-wide row">
+    <p class="line">{UI.tagline[lang]}</p>
+    <ul class="links">
+      <li><a href={ROUTES.adopt[lang]}>{UI.footerAdopt[lang]}</a></li>
+      <li><a href={REPO} target="_blank" rel="noreferrer">GitHub ↗</a></li>
+    </ul>
+  </div>
+  {
+    stamp && (
+      <div class="column-wide">
+        <p class="stamp">
+          v{meta.version} · {meta.cited}/{meta.total} {UI.footerCited[lang]} · {UI.footerGenerated[lang]} {stamp}
+        </p>
+      </div>
+    )
+  }
+</footer>
+
+<style>
+  .foot {
+    border-top: 1px solid var(--rule);
+    background: var(--paper);
+    padding-block: 2.5rem 3rem;
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .line,
+  .stamp {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-muted);
+    margin: 0;
+  }
+  .stamp {
+    margin-top: 0.9rem;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+  .links {
+    display: flex;
+    gap: 1.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .links li {
+    margin: 0;
+  }
+  .links a {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-muted);
+    text-decoration: none;
+  }
+  .links a:hover {
+    color: var(--ink);
+  }
+</style>

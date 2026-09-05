@@ -1,0 +1,189 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Một Ticket, Bảy Chốt Kiểm",
+    "output": "ticket-lifecycle.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "before-code",
+        "label": "Trước khi có code",
+        "focus": [
+          "claim",
+          "brief"
+        ],
+        "note": "Quyền sở hữu được quyết định trước khi worktree tồn tại."
+      },
+      {
+        "id": "the-review-ladder",
+        "label": "Thang review",
+        "focus": [
+          "code_review",
+          "simplify",
+          "arm"
+        ],
+        "note": "Một vòng, ba lớp, đúng thứ tự — không lặp lại."
+      },
+      {
+        "id": "merge",
+        "label": "Nơi nó cập bến",
+        "focus": [
+          "arm",
+          "merge"
+        ],
+        "note": "Merge là bước duy nhất Builder không bao giờ tự làm."
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "thomas",
+      "label": "Thomas"
+    },
+    {
+      "id": "builder",
+      "label": "Builder"
+    }
+  ],
+  "groups": [
+    {
+      "id": "review_ladder",
+      "label": "Thang review — một vòng",
+      "lane": "builder",
+      "fromCol": 3,
+      "toCol": 5,
+      "variant": "emphasis"
+    }
+  ],
+  "mainPath": [
+    "claim",
+    "brief",
+    "implement",
+    "code_review",
+    "simplify",
+    "arm",
+    "merge"
+  ],
+  "nodes": [
+    {
+      "id": "claim",
+      "lane": "thomas",
+      "col": 0,
+      "type": "backend",
+      "label": "Claim",
+      "sublabel": "ghi assignee + đọc lại",
+      "width": 130
+    },
+    {
+      "id": "brief",
+      "lane": "thomas",
+      "col": 1,
+      "type": "backend",
+      "label": "Brief",
+      "sublabel": "dispatch vào pane, tại Base",
+      "width": 130
+    },
+    {
+      "id": "merge",
+      "lane": "thomas",
+      "col": 5,
+      "type": "backend",
+      "label": "Merge",
+      "sublabel": "ghi Ledger, xóa assignee",
+      "width": 130
+    },
+    {
+      "id": "implement",
+      "lane": "builder",
+      "col": 2,
+      "type": "frontend",
+      "label": "Implement",
+      "sublabel": "commit trên branch ticket",
+      "width": 130
+    },
+    {
+      "id": "code_review",
+      "lane": "builder",
+      "col": 3,
+      "type": "security",
+      "label": "Code-review",
+      "sublabel": "Standards + Spec, một lượt",
+      "width": 130
+    },
+    {
+      "id": "simplify",
+      "lane": "builder",
+      "col": 4,
+      "type": "security",
+      "label": "Simplify",
+      "sublabel": "simplify(increment): commit",
+      "width": 130
+    },
+    {
+      "id": "arm",
+      "lane": "builder",
+      "col": 5,
+      "type": "security",
+      "label": "Arm chéo vendor",
+      "sublabel": "arm(ticket): receipt",
+      "width": 130
+    }
+  ],
+  "edges": [
+    {
+      "from": "claim",
+      "to": "brief"
+    },
+    {
+      "from": "brief",
+      "to": "implement"
+    },
+    {
+      "from": "implement",
+      "to": "code_review"
+    },
+    {
+      "from": "code_review",
+      "to": "simplify"
+    },
+    {
+      "from": "simplify",
+      "to": "arm"
+    },
+    {
+      "from": "arm",
+      "to": "merge",
+      "label": "handback"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Thứ Tự Cố Định",
+      "items": [
+        "Claim quyết định quyền sở hữu trước khi worktree tồn tại",
+        "Mọi ticket đi qua đủ bảy chốt kiểm, không ngoại lệ",
+        "Đường vui vẻ là đường duy nhất được vẽ ra — race và claim lỗi thời sống trong văn xuôi"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Mỗi Bước Để Lại Một Artifact",
+      "items": [
+        "Claim: assignee được ghi, rồi đọc lại",
+        "Simplify: một commit đánh dấu tên lượt chạy",
+        "Merge: một dòng Ledger, và assignee được xóa"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Một Vòng, Ba Lớp",
+      "items": [
+        "Code-review, simplify, và cánh tay chéo vendor chạy đúng một lần mỗi cái, theo thứ tự",
+        "Không lặp: một finding chặn thì đẩy lên chủ, không bao giờ quay vòng thêm",
+        "Builder tự bắn cánh tay của mình, khép vòng lặp của chính nó trước khi handback"
+      ]
+    }
+  ]
+}

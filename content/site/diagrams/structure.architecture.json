@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Four Layers, One Harness",
+    "output": "structure.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-gate",
+        "label": "Where danger is caught",
+        "focus": [
+          "hooks",
+          "project"
+        ],
+        "note": "Every Bash call passes the hook before it reaches your repo."
+      },
+      {
+        "id": "shared-state",
+        "label": "What panes don't own",
+        "focus": [
+          "tracker",
+          "herdr",
+          "worktrees"
+        ],
+        "note": "The tracker holds state; herdr and worktrees are just where work happens."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "runtime_claude",
+      "type": "external",
+      "label": "Claude Code",
+      "sublabel": "runtime",
+      "pos": [135, 60],
+      "size": [180, 74]
+    },
+    {
+      "id": "runtime_codex",
+      "type": "external",
+      "label": "Codex",
+      "sublabel": "runtime",
+      "pos": [355, 60],
+      "size": [180, 74]
+    },
+    {
+      "id": "runtime_opencode",
+      "type": "external",
+      "label": "OpenCode",
+      "sublabel": "runtime",
+      "pos": [575, 60],
+      "size": [180, 74]
+    },
+    {
+      "id": "roles",
+      "type": "backend",
+      "label": "Roles",
+      "sublabel": "Thomas · Shaper · Builder · Rin · QA",
+      "pos": [40, 250],
+      "size": [180, 74]
+    },
+    {
+      "id": "skills",
+      "type": "backend",
+      "label": "Skills",
+      "sublabel": "16 packaged skills",
+      "pos": [250, 250],
+      "size": [180, 74]
+    },
+    {
+      "id": "ledger",
+      "type": "database",
+      "label": "Memory / Ledger",
+      "sublabel": "what actually happened",
+      "pos": [460, 250],
+      "size": [180, 74]
+    },
+    {
+      "id": "hooks",
+      "type": "security",
+      "label": "Hooks",
+      "sublabel": "4 lifecycle hooks",
+      "pos": [670, 250],
+      "size": [180, 74]
+    },
+    {
+      "id": "tracker",
+      "type": "external",
+      "label": "Tracker",
+      "sublabel": "GitHub · Jira · Linear",
+      "pos": [40, 440],
+      "size": [180, 74]
+    },
+    {
+      "id": "herdr",
+      "type": "backend",
+      "label": "herdr",
+      "sublabel": "one pane per agent",
+      "pos": [250, 440],
+      "size": [180, 74]
+    },
+    {
+      "id": "worktrees",
+      "type": "backend",
+      "label": "git worktrees",
+      "sublabel": "one checkout per ticket",
+      "pos": [460, 440],
+      "size": [180, 74]
+    },
+    {
+      "id": "project",
+      "type": "frontend",
+      "label": "Your Project",
+      "sublabel": "repo · CONTEXT.md · ADR",
+      "pos": [650, 630],
+      "size": [220, 74]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "RUNTIME",
+      "wraps": ["runtime_claude", "runtime_codex", "runtime_opencode"],
+      "pad": 24
+    },
+    {
+      "kind": "region",
+      "label": "HARNESS",
+      "wraps": ["roles", "skills", "ledger", "hooks"],
+      "pad": 24
+    },
+    {
+      "kind": "region",
+      "label": "COORDINATION",
+      "wraps": ["tracker", "herdr", "worktrees"],
+      "pad": 24
+    },
+    {
+      "kind": "region",
+      "label": "YOUR PROJECT",
+      "wraps": ["project"],
+      "pad": 24
+    }
+  ],
+  "connections": [
+    {
+      "from": "runtime_claude",
+      "to": "roles",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "runtime_codex",
+      "to": "roles",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "runtime_opencode",
+      "to": "roles",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "roles",
+      "to": "tracker",
+      "label": "Thomas asks frontier",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [150, 400]
+    },
+    {
+      "from": "roles",
+      "to": "worktrees",
+      "label": "Builder claims worktree",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "via": [[130, 380], [550, 380]],
+      "labelAt": [340, 405]
+    },
+    {
+      "from": "hooks",
+      "to": "project",
+      "label": "blocks a dangerous command",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Runtime Is a Choice, Not a Dependency",
+      "items": [
+        "Claude Code, Codex, and OpenCode all drive the same harness underneath",
+        "Roles, skills, hooks, and the ledger are runtime-agnostic — nothing here is Claude-only",
+        "Swapping runtimes mid-project changes the driver seat, not the harness"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "The Ledger Is Not a Log",
+      "items": [
+        "Every hook receipt and every gate decision lands in memory/ledger, not just stdout",
+        "Skills and roles are read at session start, not baked into a fixed binary",
+        "16 skills stay reusable across every role that needs them"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Coordination Lives Outside the Pane",
+      "items": [
+        "The tracker is the state substrate; herdr panes and worktrees are disposable",
+        "Every claim is written to the tracker before a worktree is even created",
+        "Hooks gate the boundary between the harness and your actual project repo"
+      ]
+    }
+  ]
+}

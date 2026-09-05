@@ -1,0 +1,187 @@
+---
+import { adopt } from '../lib/data';
+import { UI, type Lang } from '../lib/site';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const script = adopt.commands.join('\n');
+---
+
+<div class="adopt breakout">
+  <div class="col">
+    <p class="label mono">{UI.prerequisites[lang]}</p>
+    <ul class="pre">
+      {
+        adopt.prerequisites.map((p) => (
+          <li>
+            {p.href ? (
+              <a href={p.href} target="_blank" rel="noreferrer" class="mono name">{p.name}</a>
+            ) : (
+              <span class="mono name">{p.name}</span>
+            )}
+            {p.version && <span class="mono ver"> {p.version}</span>}
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+
+  <div class="col col--wide">
+    <div class="cmd-head">
+      <p class="label mono">{UI.quickstart[lang]}</p>
+      <button
+        class="copy mono"
+        type="button"
+        data-copy
+        data-label={UI.copy[lang]}
+        data-done={UI.copied[lang]}
+        data-payload={script}
+      >{UI.copy[lang]}</button>
+    </div>
+    <ol class="cmds">
+      {
+        adopt.commands.map((command) => (
+          <li>
+            <pre class="mono" lang="en">{command}</pre>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const payload = button.dataset.payload ?? '';
+      try {
+        await navigator.clipboard.writeText(payload);
+      } catch {
+        const box = document.createElement('textarea');
+        box.value = payload;
+        document.body.append(box);
+        box.select();
+        document.execCommand('copy');
+        box.remove();
+      }
+      button.textContent = button.dataset.done ?? 'Copied';
+      window.setTimeout(() => {
+        button.textContent = button.dataset.label ?? 'Copy';
+      }, 1600);
+    });
+  });
+</script>
+
+<style>
+  .adopt {
+    display: grid;
+    grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
+    gap: 2.25rem;
+    margin-block: 2.5rem 0;
+    padding: 1.75rem 1.9rem;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+  }
+  .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-muted);
+    margin: 0 0 0.85rem;
+  }
+  .pre {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .pre li {
+    margin: 0 0 0.6rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--rule-faint);
+  }
+  .pre li:last-child {
+    border-bottom: 0;
+    margin-bottom: 0;
+  }
+  .name {
+    font-size: 12.5px;
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+  }
+  a.name:hover {
+    border-bottom-color: var(--ink);
+  }
+  .ver {
+    font-size: 11.5px;
+    color: var(--ink-muted);
+  }
+
+  .cmd-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .copy {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-muted);
+    background: none;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 0.55rem 0.9rem;
+    min-height: 36px;
+    cursor: pointer;
+  }
+  @media (pointer: coarse) {
+    .copy {
+      min-height: 44px;
+      padding-inline: 1rem;
+    }
+  }
+  .copy:hover {
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+
+  .cmds {
+    list-style: none;
+    counter-reset: step;
+    margin: 0;
+    padding: 0;
+  }
+  .cmds li {
+    counter-increment: step;
+    position: relative;
+    padding-left: 2rem;
+    margin: 0 0 0.5rem;
+  }
+  .cmds li::before {
+    content: counter(step, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 0.85rem;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink-muted);
+  }
+  .cmds pre {
+    margin: 0;
+    font-size: 12.5px;
+    padding: 0.7rem 0.85rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  @media (max-width: 760px) {
+    .adopt {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.75rem;
+    }
+  }
+</style>

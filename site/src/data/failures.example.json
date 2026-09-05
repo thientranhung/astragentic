@@ -1,0 +1,8 @@
+[
+  { "id": "AST-131", "stage": "claim", "costLine": "Measured once, one project — 2 of 4 Builder slots idle after two merges, 12 claimable tickets waiting, nothing errored." },
+  { "id": "AST-097", "stage": "build", "costLine": "Measured once — 67 seconds between the terminal marker and the last write on the branch." },
+  { "id": "AST-092", "stage": "build", "costLine": "Measured twice in one day — the pane read done, cleanup deleted the worktree, the commit was never made." },
+  { "id": "AST-015", "stage": "arm", "costLine": "Measured once — a live .env and a buyer CSV reached a commit that passed every automated check." },
+  { "id": "AST-074", "stage": "merge", "costLine": "Measured once, one project — 4 tickets stale, the oldest by a full day, before anyone noticed." },
+  { "id": "AST-056", "stage": "merge", "costLine": "Measured twice in one day — a naive merge would have reverted already-reviewed work." }
+]

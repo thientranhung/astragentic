@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Năm Vai, Năm Vòng Đời Session",
+    "output": "five-roles.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-spine",
+        "label": "Đường đi của ticket",
+        "focus": [
+          "thomas",
+          "shaper",
+          "builder"
+        ],
+        "note": "Thomas route việc vào, Shaper shape việc, Builder tự implement một mình."
+      },
+      {
+        "id": "the-gates",
+        "label": "Ai kiểm việc",
+        "focus": [
+          "thomas",
+          "rin",
+          "qa"
+        ],
+        "note": "Rin verify artifact và trace của cả quá trình; QA chạy sản phẩm thật."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "thomas",
+      "type": "backend",
+      "label": "Thomas",
+      "sublabel": "router thường trực",
+      "tag": "session: thường trực",
+      "pos": [
+        420,
+        40
+      ],
+      "size": [
+        200,
+        74
+      ]
+    },
+    {
+      "id": "shaper",
+      "type": "frontend",
+      "label": "Shaper",
+      "sublabel": "grill → spec → ticket",
+      "tag": "session: liền mạch",
+      "pos": [
+        40,
+        320
+      ],
+      "size": [
+        190,
+        74
+      ]
+    },
+    {
+      "id": "builder",
+      "type": "backend",
+      "label": "Builder",
+      "sublabel": "implement, worktree riêng",
+      "tag": "session: mỗi ticket",
+      "pos": [
+        280,
+        320
+      ],
+      "size": [
+        190,
+        74
+      ]
+    },
+    {
+      "id": "rin",
+      "type": "security",
+      "label": "Rin",
+      "sublabel": "verify artifact + trace",
+      "tag": "session: mỗi milestone",
+      "pos": [
+        520,
+        320
+      ],
+      "size": [
+        190,
+        74
+      ]
+    },
+    {
+      "id": "qa",
+      "type": "external",
+      "label": "QA",
+      "sublabel": "chạy sản phẩm thật",
+      "tag": "session: mỗi walk",
+      "pos": [
+        760,
+        320
+      ],
+      "size": [
+        190,
+        74
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "thomas",
+      "to": "shaper",
+      "label": "spec, rồi ticket",
+      "variant": "default",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        135,
+        285
+      ]
+    },
+    {
+      "from": "thomas",
+      "to": "builder",
+      "label": "claim, rồi dispatch",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        375,
+        285
+      ]
+    },
+    {
+      "from": "thomas",
+      "to": "rin",
+      "label": "gate milestone",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        615,
+        285
+      ]
+    },
+    {
+      "from": "thomas",
+      "to": "qa",
+      "label": "qa walk",
+      "variant": "default",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        855,
+        285
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Vòng Đời Session",
+      "items": [
+        "Thomas không bao giờ đóng — tracker, frontier và bản ghi dispatch sống cùng nó",
+        "Shaper giữ một session liền mạch từ grill đến ticket, không /compact",
+        "Builder chỉ có đúng một session cho mỗi ticket, đóng lại sau khi handback"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Song Song, Không Phải Thứ Bậc",
+      "items": [
+        "Vai đi theo ranh giới session, không theo cấp bậc — mỗi bước trên spine cần một agent đóng vai người ở bước đó",
+        "Nhiều Builder có thể được dispatch cùng lúc, mỗi cái là người viết duy nhất trong worktree của mình",
+        "Thomas là vai duy nhất mà một session Builder, Rin hay QA handback về"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Gate Chỉ Theo Milestone Và Theo Walk",
+      "items": [
+        "Rin chạy read-only, trong worktree tách biệt, mỗi milestone một lần — không phải mỗi ticket",
+        "QA thử journey và contract trên sản phẩm đang chạy thật, không phải trên diff",
+        "Không gate nào lặp lại — một finding chặn thì đẩy lên chủ, không quay vòng thêm"
+      ]
+    }
+  ]
+}

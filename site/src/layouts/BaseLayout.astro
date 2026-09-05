@@ -1,0 +1,50 @@
+---
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { ROUTES, htmlLang, type Lang, type PageKey } from '../lib/site';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  lang: Lang;
+  /** Omitted on the English-only reference pages (/skills/*, /dictionary/*), which
+   *  are off-nav and have no translated twin — so no active item, no alternates. */
+  page?: PageKey;
+  /** vi/en pair for pages outside the ROUTES table (role pages). Drives both the
+   *  language switch and the hreflang links, so both sides must be the same page. */
+  alternate?: Record<Lang, string>;
+  /** A pair that is not a translation: /dictionary/tracker has no Vietnamese twin, but
+   *  a Vietnamese reader still has somewhere to go. It gets the switch, not an
+   *  hreflang link — the two pages say related things, not the same thing. */
+  switchTo?: Record<Lang, string>;
+}
+const { title, description, lang, page, alternate, switchTo } = Astro.props;
+const site = Astro.site?.toString().replace(/\/$/, '') ?? '';
+---
+
+<!doctype html>
+<html lang={htmlLang(lang)}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} — Astragentic</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {(alternate ?? (page ? ROUTES[page] : null)) && (
+      <>
+        <link rel="alternate" hreflang="vi" href={`${site}${(alternate ?? ROUTES[page!]).vi}`} />
+        <link rel="alternate" hreflang="en" href={`${site}${(alternate ?? ROUTES[page!]).en}`} />
+      </>
+    )}
+  </head>
+  <body>
+    <div class="page">
+      <Nav lang={lang} page={page} alternate={alternate ?? switchTo} />
+      <main>
+        <slot />
+      </main>
+      <Footer lang={lang} />
+    </div>
+  </body>
+</html>

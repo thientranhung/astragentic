@@ -1,0 +1,189 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Truy Vấn Frontier",
+    "output": "frontier-query.html",
+    "viewBox": [
+      1080,
+      640
+    ],
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-inputs",
+        "label": "Truy vấn đọc gì",
+        "focus": [
+          "tickets",
+          "blocking_edges",
+          "assignee_field",
+          "frontier_query"
+        ],
+        "note": "Mọi ticket mà blocker đã xong hết và assignee còn trống."
+      },
+      {
+        "id": "who-reruns-it",
+        "label": "Ai chạy lại, khi nào",
+        "focus": [
+          "frontier_query",
+          "board",
+          "thomas",
+          "owner"
+        ],
+        "note": "Lúc bắt đầu session, và lại một lần nữa ngay khi một ticket đóng."
+      }
+    ]
+  },
+  "stages": [
+    {
+      "label": "Field trên tracker"
+    },
+    {
+      "label": "Truy vấn"
+    },
+    {
+      "label": "Board"
+    },
+    {
+      "label": "Tiêu thụ"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "tickets",
+      "type": "database",
+      "label": "Ticket Đang Mở",
+      "sublabel": "toàn bộ item tracker",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "blocking_edges",
+      "type": "database",
+      "label": "Cạnh Blocking",
+      "sublabel": "đồ thị blocked_by",
+      "stage": 0,
+      "row": 1
+    },
+    {
+      "id": "assignee_field",
+      "type": "database",
+      "label": "Field Assignee",
+      "sublabel": "trống hoặc đang giữ",
+      "stage": 0,
+      "row": 2
+    },
+    {
+      "id": "frontier_query",
+      "type": "backend",
+      "label": "Frontier Query",
+      "sublabel": "hỏi cái gì đã sẵn sàng",
+      "stage": 1,
+      "row": 1,
+      "tag": "không nhớ lại"
+    },
+    {
+      "id": "board",
+      "type": "cloud",
+      "label": "Board Claimable",
+      "sublabel": "claim được, chưa ai claim",
+      "stage": 2,
+      "row": 1,
+      "width": 120
+    },
+    {
+      "id": "thomas",
+      "type": "backend",
+      "label": "Thomas",
+      "sublabel": "chạy lại sau merge/handback",
+      "stage": 3,
+      "row": 0,
+      "width": 140
+    },
+    {
+      "id": "owner",
+      "type": "external",
+      "label": "Chủ site",
+      "sublabel": "nhìn vào board",
+      "stage": 3,
+      "row": 2
+    }
+  ],
+  "flows": [
+    {
+      "id": "all-tickets",
+      "from": "tickets",
+      "to": "frontier_query",
+      "label": "mọi ticket đang mở",
+      "classification": "đọc state"
+    },
+    {
+      "id": "blockers-done",
+      "from": "blocking_edges",
+      "to": "frontier_query",
+      "label": "blocker xong hết?",
+      "classification": "đọc đồ thị",
+      "labelAt": [
+        300,
+        314
+      ]
+    },
+    {
+      "id": "assignee-empty",
+      "from": "assignee_field",
+      "to": "frontier_query",
+      "label": "assignee trống?",
+      "classification": "đọc state"
+    },
+    {
+      "id": "answer-written",
+      "from": "frontier_query",
+      "to": "board",
+      "label": "kết quả đã ghi",
+      "classification": "suy ra"
+    },
+    {
+      "id": "board-thomas",
+      "from": "board",
+      "to": "thomas",
+      "label": "đầu session + ticket đóng",
+      "classification": "polled"
+    },
+    {
+      "id": "board-owner",
+      "from": "board",
+      "to": "owner",
+      "label": "xem lại độ sẵn sàng",
+      "classification": "chỉ đọc"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Sẵn Sàng, Không Phải Nhớ Lại",
+      "items": [
+        "Frontier là mọi ticket mà blocker đã xong hết và assignee còn trống",
+        "Thomas hỏi tracker, thay vì nhớ lại cái gì từng sẵn sàng",
+        "Truy vấn chạy lại lúc bắt đầu session, và lại một lần nữa khi một ticket đóng"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "State Sống Trên Tracker",
+      "items": [
+        "Ticket đang mở, cạnh blocking, và field assignee là những input duy nhất",
+        "Board được ghi vào state claimable-và-chưa-claim của tracker",
+        "Promotion sau một spec vẫn cần phán đoán của Thomas — cạnh blocking bao trùm hơi rộng"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Chủ Site Đọc Board",
+      "items": [
+        "Chủ site nhìn cái Thomas đã ghi, không phải một truy vấn sống",
+        "Một nhãn sẵn-sàng ghi lúc tạo ticket không bao giờ được truy vấn này xem lại",
+        "Chỉ đọc cạnh và state, không bao giờ đọc nhãn sẵn-sàng"
+      ]
+    }
+  ]
+}

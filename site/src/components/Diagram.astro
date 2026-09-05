@@ -1,0 +1,105 @@
+---
+// A static archify SVG plus a link to the interactive explore page. A Vietnamese page
+// takes src/assets/diagrams/vi/<slug>.svg; if that file has not landed, the English one
+// renders and the build warns (PRD §4). Falls back to a placeholder so the build never
+// crashes on a diagram that does not exist at all.
+//
+// Label sizing, the legend crop and unique ids all live in src/lib/diagram.ts, shared
+// with InteractiveDiagram so the two cannot render the same file differently.
+import '../styles/diagram.css';
+import { UI, type Lang } from '../lib/site';
+import { BAND, prepare, stripFocus } from '../lib/diagram';
+
+interface Props {
+  slug: string;
+  lang?: Lang;
+  title?: string;
+  /** Caps the SVG inside the full-width band and centres it. */
+  svgMaxWidth?: number;
+  /** Width the figure actually occupies on a desktop screen. The label floor is
+   *  measured against it; leave it unset for a figure in the full diagram band. */
+  frame?: number;
+  class?: string;
+}
+const { slug, lang = 'vi', title, svgMaxWidth, frame, class: extra = '' } = Astro.props;
+
+const mod = import.meta.glob('/src/assets/diagrams/**/*.svg', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
+const localised = lang === 'vi' ? mod[`/src/assets/diagrams/vi/${slug}.svg`] : undefined;
+const english = mod[`/src/assets/diagrams/${slug}.svg`];
+if (lang === 'vi' && !localised && english) {
+  console.warn(
+    `[diagram] no Vietnamese diagram for "${slug}" — rendering the English one. ` +
+      `Expected src/assets/diagrams/vi/${slug}.svg`,
+  );
+}
+const raw = localised ?? english ?? null;
+// Nothing here is clickable, so the nodes give back the tab stops archify gave them.
+const svg = raw
+  ? prepare(raw, { lang, frame: frame ?? svgMaxWidth ?? BAND, transform: stripFocus }).html
+  : null;
+const exploreHref = localised ? `/explore/vi/${slug}.html` : `/explore/${slug}.html`;
+const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` : undefined;
+---
+
+<figure class:list={['diagram', extra]}>
+  {
+    svg ? (
+      <div class="diagram-svg" style={svgStyle} set:html={svg} />
+    ) : (
+      <div class="diagram-placeholder mono">{title ?? slug}</div>
+    )
+  }
+  <figcaption class="mono diagram-caption">
+    <a href={exploreHref} target="_blank" rel="noreferrer">{UI.explore[lang]}</a>
+    <span class="note">{UI.exploreNote[lang]}</span>
+  </figcaption>
+</figure>
+
+<style>
+  .diagram {
+    margin-block: 2rem 2.5rem;
+    padding: 0;
+    background: none;
+  }
+
+  .diagram-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    color: var(--ink-muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .diagram-caption {
+    margin-top: 0.85rem;
+    font-size: 12px;
+    color: var(--ink-muted);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+  .diagram-caption a {
+    color: var(--ink-muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+  }
+  .diagram-caption a:hover {
+    color: var(--ink);
+  }
+  .note {
+    font-size: 11px;
+    color: var(--ink-muted);
+    opacity: 0.8;
+  }
+</style>

@@ -1,0 +1,118 @@
+---
+// /tech-stack · /en/tech-stack — nine pieces, one anchored section each
+// (build spec 4 §3). The writer owns src/content/pages/<lang>/tech-stack.md, split by
+// `## claude-code`, `## codex`, … one `## <slug>` per item in src/lib/anchors.ts.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Diagram from '../Diagram.astro';
+import Prose from '../Prose.astro';
+import { getPage } from '../../lib/pages';
+import { STACK } from '../../lib/anchors';
+import { UI, type Lang } from '../../lib/site';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const page = await getPage(lang, 'tech-stack');
+const heading = lang === 'vi' ? 'Chín thứ, và vì sao là chúng' : 'Nine pieces, and why these';
+
+/** Two of the nine pieces are shapes, not products: herdr is a hub with one pane per
+ *  spoke, and git worktree is a set of parallel lanes. Both drawings already exist. */
+const FIGURE: Record<string, string> = {
+  herdr: 'hub-and-spokes',
+  'git-worktree': 'parallel-lanes',
+};
+---
+
+<BaseLayout
+  title={page.missing ? UI.stackTitle[lang] : page.title}
+  description={page.description}
+  lang={lang}
+  page="stack"
+>
+  <section class="screen screen--paper">
+    <div class="column">
+      <p class="eyebrow">{UI.stackTitle[lang]}</p>
+      <h1>{page.missing ? heading : page.title}</h1>
+      {page.intro && <Prose html={page.intro} lead />}
+      <ul class="rail">
+        {
+          STACK.map((item) => (
+            <li>
+              <a class="mono" href={`#${item.id}`}>{item.name}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+    <div class="column">
+      {/* The whole stack at once, before the nine sections take it apart. */}
+      <Diagram slug="layer-map" lang={lang} class="band" />
+    </div>
+  </section>
+
+  {
+    STACK.map((item, i) => (
+      <section class:list={['screen', i % 2 === 0 ? 'screen--sunk' : 'screen--paper']} id={item.id}>
+        <div class="column">
+          <p class="eyebrow mono">
+            {String(i + 1).padStart(2, '0')} ·{' '}
+            {item.required ? UI.stackRequired[lang] : UI.stackOptional[lang]}
+          </p>
+          <h2 class="mono item-name" lang="en">{item.name}</h2>
+          {FIGURE[item.id] && <Diagram slug={FIGURE[item.id]} lang={lang} class="band" />}
+          {page.sections[item.id] ? (
+            <Prose html={page.sections[item.id]} class="body" />
+          ) : (
+            <p class="line">{item.line[lang]}</p>
+          )}
+        </div>
+      </section>
+    ))
+  }
+</BaseLayout>
+
+<style>
+  .item-name {
+    font-size: clamp(22px, 2.1vw, 28px);
+    letter-spacing: -0.005em;
+  }
+  .rail {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 2rem 0 0;
+    padding: 0;
+  }
+  .rail li {
+    margin: 0;
+  }
+  .rail a {
+    display: inline-block;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    text-decoration: none;
+  }
+  .rail a:hover {
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+  .line {
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink-muted);
+    max-width: 64ch;
+    margin: 0.75rem 0 0;
+  }
+  .body {
+    margin-top: 0.75rem;
+  }
+  .body :global(p),
+  .body :global(li) {
+    max-width: 68ch;
+  }
+</style>

@@ -1,0 +1,83 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AdoptBlock from '../AdoptBlock.astro';
+import Prose from '../Prose.astro';
+import { getPage } from '../../lib/pages';
+import { meta } from '../../lib/data';
+import { UI, type Lang } from '../../lib/site';
+import catalog from '../../data/skill-catalog.json';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const page = await getPage(lang, 'adopt');
+
+// Brownfield skills come from the catalog, not from prose — one source, no drift.
+const brownfield = (catalog as { name: string; kind: string; oneLiner: string; group: string }[])
+  .filter((item) => item.group === 'brownfield' || item.group === 'entry')
+  .filter((item) => item.kind === 'skill');
+---
+
+<BaseLayout title={page.title} description={page.description} lang={lang} page="adopt">
+  <section class="screen screen--paper">
+    <div class="column">
+      <p class="eyebrow" lang="en">install · v{meta.version}</p>
+      <h1>{page.title}</h1>
+      <Prose html={page.intro} lead />
+      <AdoptBlock lang={lang} />
+    </div>
+  </section>
+
+  <section class="screen screen--sunk" id="brownfield">
+    <div class="column">
+      <p class="eyebrow" lang="en">brownfield</p>
+      <h2>{UI.brownfield[lang]}</h2>
+      <Prose html={page.sections['brownfield'] ?? ''} />
+      <ul class="skills breakout">
+        {
+          brownfield.map((item) => (
+            <li>
+              <p class="name mono" lang="en">{item.name}</p>
+              <p class="one" lang="en">{item.oneLiner}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .skills {
+    list-style: none;
+    margin-block: 2.25rem 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+  }
+  .skills li {
+    margin: 0;
+    padding: 1.25rem 1.35rem;
+    background: var(--paper);
+  }
+  .name {
+    font-size: 12.5px;
+    letter-spacing: 0.04em;
+    margin: 0 0 0.5rem;
+  }
+  .one {
+    font-size: 15px;
+    line-height: 1.45;
+    color: var(--ink-muted);
+    margin: 0;
+  }
+  @media (max-width: 700px) {
+    .skills {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

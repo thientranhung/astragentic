@@ -1,0 +1,249 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import InteractiveDiagram from '../InteractiveDiagram.astro';
+import DefectCard from '../DefectCard.astro';
+import Prose from '../Prose.astro';
+import { getRole, roleDefects, roleHref, roleContractHref, ROLE_IDS, ROLE_META, ROLE_SKILLS } from '../../lib/roles';
+import type { RoleId } from '../../lib/roles';
+import { ROUTES, UI, type Lang } from '../../lib/site';
+
+interface Props {
+  lang: Lang;
+  id: RoleId;
+}
+const { lang, id } = Astro.props;
+
+const role = await getRole(lang, id);
+const meta = ROLE_META[id];
+const defects = roleDefects(id);
+const skills = ROLE_SKILLS[id];
+
+// The same five-roles diagram as the home page, with this role lit on arrival and the
+// other four still clickable — the reader can walk sideways without going back.
+const hrefMap = Object.fromEntries(
+  ROLE_IDS.filter((other) => other !== id).map((other) => [other, roleHref(lang, other)]),
+);
+const alternate = { vi: roleHref('vi', id), en: roleHref('en', id) };
+const evidenceRoute = ROUTES.evidence[lang];
+// The SVG tag reads `session: per ticket`; a writer may drop the prefix. Print one form.
+const sessionTag = `session: ${role.sessionTag.replace(/^session:\s*/i, '')}`;
+---
+
+<BaseLayout
+  title={role.title}
+  description={role.tagline}
+  lang={lang}
+  alternate={alternate}
+>
+  <section class="screen screen--paper role-hero">
+    <div class="column">
+      <p class="eyebrow" lang="en">{UI.roleEyebrow[lang]} · {sessionTag}</p>
+      <h1>{role.title}</h1>
+      <p class="tagline">{role.tagline}</p>
+    </div>
+    <div class="column">
+      <InteractiveDiagram
+        slug="five-roles"
+        lang={lang}
+        hrefMap={hrefMap}
+        activeId={id}
+        class="breakout"
+      />
+    </div>
+  </section>
+
+  <section class="screen screen--sunk">
+    <div class="column">
+      <h2>{UI.roleDoes[lang]}</h2>
+      {
+        role.sections['does'] ? (
+          <Prose html={role.sections['does']} lead />
+        ) : (
+          <p class="gap mono">{UI.roleMissing[lang]}</p>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="screen screen--paper">
+    <div class="column">
+      <h2>{UI.roleRights[lang]}</h2>
+      <div class="rights breakout">
+        <div class="col col--may">
+          <p class="col-head mono">{UI.roleMay[lang]}</p>
+          {role.sections['may'] ? <Prose html={role.sections['may']} /> : <p class="gap mono">—</p>}
+        </div>
+        <div class="col col--not">
+          <p class="col-head mono">{UI.roleMayNot[lang]}</p>
+          {
+            role.sections['may-not'] ? (
+              <Prose html={role.sections['may-not']} />
+            ) : (
+              <p class="gap mono">—</p>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen screen--sunk">
+    <div class="column">
+      <h2>{UI.roleDefects[lang]}</h2>
+      <p class="count mono" lang="en">
+        {defects.length} entries · cited by {meta.cites.join(', ')}
+      </p>
+      {
+        defects.length === 0 ? (
+          <p class="gap mono">{UI.roleNoDefects[lang]}</p>
+        ) : (
+          <div class="defects breakout">
+            {defects.map((row) => (
+              <DefectCard
+                row={row}
+                lang={lang}
+                size="sm"
+                compact={true}
+                href={`${evidenceRoute}#${row.id.toLowerCase()}`}
+              />
+            ))}
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="screen screen--paper">
+    <div class="column">
+      <div class="foot-links">
+        <div>
+          <p class="foot-label mono">{UI.roleContract[lang]}</p>
+          <a class="foot-a mono" href={roleContractHref(id)} target="_blank" rel="noreferrer" lang="en">
+            harness/.claude/agents/{id}.md ↗
+          </a>
+        </div>
+        {
+          skills.length > 0 && (
+            <div>
+              <p class="foot-label mono">{UI.roleSkills[lang]}</p>
+              <ul class="skills">
+                {skills.map((name) => (
+                  <li>
+                    <a class="foot-a mono" href={`/skills/${name}`} lang="en">
+                      {name} →
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        }
+      </div>
+      <a class="more-link" href={ROUTES.home[lang]}>{UI.backHome[lang]}</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .role-hero {
+    padding-block: 4rem 4.5rem;
+  }
+  .role-hero h1 {
+    font-size: clamp(40px, 4.4vw, 60px);
+    margin-bottom: 0.9rem;
+  }
+  .tagline {
+    font-size: 21px;
+    line-height: 1.5;
+    color: var(--ink-muted);
+    max-width: 44ch;
+    margin-bottom: 0;
+  }
+
+  .gap {
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    margin: 0;
+  }
+
+  .rights {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem;
+    margin-top: 1.75rem;
+  }
+  .col {
+    padding: 1.25rem 1.4rem 0.6rem;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: var(--paper);
+  }
+  .col--not {
+    border-color: color-mix(in srgb, var(--defect) 35%, var(--rule));
+  }
+  .col-head {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-muted);
+    margin: 0 0 0.9rem;
+  }
+  .col--not .col-head {
+    color: var(--defect);
+  }
+
+  .count {
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    color: var(--ink-muted);
+    margin: 0.4rem 0 0;
+  }
+  .defects {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+  }
+
+  .foot-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3rem;
+  }
+  .foot-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-muted);
+    margin: 0 0 0.6rem;
+  }
+  .foot-a {
+    font-size: 12.5px;
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+  }
+  .foot-a:hover {
+    border-bottom-color: var(--ink);
+  }
+  .skills {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .skills li {
+    margin-bottom: 0.4rem;
+  }
+
+  @media (max-width: 900px) {
+    .defects {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 620px) {
+    .rights,
+    .defects {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

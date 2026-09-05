@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "One Ticket, One Worktree, One Pane",
+    "output": "parallel-lanes.html",
+    "viewBox": [
+      900,
+      820
+    ],
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-claim",
+        "label": "The claim, staggered",
+        "focus": [
+          "tracker",
+          "tra139",
+          "tra142",
+          "tra125",
+          "tra087"
+        ],
+        "note": "Git decides the claim; four claims land at four different moments."
+      },
+      {
+        "id": "no-shared-checkout",
+        "label": "No shared checkout",
+        "focus": [
+          "tra139",
+          "tra142"
+        ],
+        "note": "Each worktree runs its own build and review, never touching another."
+      }
+    ]
+  },
+  "participants": [
+    {
+      "id": "tracker",
+      "type": "backend",
+      "label": "Tracker",
+      "sublabel": "frontier + assignee"
+    },
+    {
+      "id": "tra139",
+      "type": "frontend",
+      "label": "TRA-139",
+      "sublabel": "Builder worktree"
+    },
+    {
+      "id": "tra142",
+      "type": "frontend",
+      "label": "TRA-142",
+      "sublabel": "Builder worktree"
+    },
+    {
+      "id": "tra125",
+      "type": "frontend",
+      "label": "TRA-125",
+      "sublabel": "Builder worktree"
+    },
+    {
+      "id": "tra087",
+      "type": "frontend",
+      "label": "TRA-087",
+      "sublabel": "Builder worktree"
+    }
+  ],
+  "segments": [
+    {
+      "from": 165,
+      "to": 400,
+      "label": "claim (staggered)"
+    },
+    {
+      "from": 420,
+      "to": 640,
+      "label": "build + review (isolated per worktree)"
+    },
+    {
+      "from": 605,
+      "to": 725,
+      "label": "merge (staggered return)"
+    }
+  ],
+  "messages": [
+    {
+      "id": "claim-139",
+      "from": "tracker",
+      "to": "tra139",
+      "y": 195,
+      "label": "claim",
+      "variant": "emphasis"
+    },
+    {
+      "id": "claim-142",
+      "from": "tracker",
+      "to": "tra142",
+      "y": 245,
+      "label": "claim",
+      "variant": "emphasis"
+    },
+    {
+      "id": "claim-125",
+      "from": "tracker",
+      "to": "tra125",
+      "y": 300,
+      "label": "claim",
+      "variant": "emphasis"
+    },
+    {
+      "id": "claim-087",
+      "from": "tracker",
+      "to": "tra087",
+      "y": 360,
+      "label": "claim",
+      "variant": "emphasis"
+    },
+    {
+      "id": "merge-139",
+      "from": "tra139",
+      "to": "tracker",
+      "y": 620,
+      "label": "merge",
+      "variant": "return"
+    },
+    {
+      "id": "merge-125",
+      "from": "tra125",
+      "to": "tracker",
+      "y": 650,
+      "label": "merge",
+      "variant": "return"
+    },
+    {
+      "id": "merge-142",
+      "from": "tra142",
+      "to": "tracker",
+      "y": 680,
+      "label": "merge",
+      "variant": "return"
+    },
+    {
+      "id": "merge-087",
+      "from": "tra087",
+      "to": "tracker",
+      "y": 710,
+      "label": "merge",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "tra139",
+      "from": 195,
+      "to": 620,
+      "type": "frontend"
+    },
+    {
+      "participant": "tra142",
+      "from": 245,
+      "to": 680,
+      "type": "frontend"
+    },
+    {
+      "participant": "tra125",
+      "from": 300,
+      "to": 650,
+      "type": "frontend"
+    },
+    {
+      "participant": "tra087",
+      "from": 360,
+      "to": 710,
+      "type": "frontend"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Claim, Then Build",
+      "items": [
+        "Every Builder gets its own branch and its own checkout",
+        "Git decides the claim; the tracker records who holds it",
+        "Claims land at different moments — nothing here is synchronized"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "No Cross-Lane Edges",
+      "items": [
+        "No worktree reads or writes another worktree's files",
+        "Concurrency stops being a race once isolation is structural",
+        "Four tickets, four independent spans, no shared HEAD"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Merge Returns Out of Phase",
+      "items": [
+        "Each ticket merges back to the tracker on its own schedule",
+        "A slow ticket does not block a fast one",
+        "The tracker, not the clock, is what all four spans share"
+      ]
+    }
+  ]
+}

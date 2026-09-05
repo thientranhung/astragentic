@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Cánh Tay Chéo Vendor",
+    "output": "cross-vendor-arm.html",
+    "viewBox": [
+      820,
+      700
+    ],
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-review",
+        "label": "Vendor thứ hai đọc diff",
+        "focus": [
+          "builder",
+          "codex"
+        ],
+        "note": "Tác giả đọc ticket; cánh tay đọc repo."
+      },
+      {
+        "id": "the-receipt",
+        "label": "Receipt khép vòng lặp",
+        "focus": [
+          "builder",
+          "head",
+          "thomas"
+        ],
+        "note": "Một commit rỗng tại HEAD của Builder, rồi handback."
+      }
+    ]
+  },
+  "participants": [
+    {
+      "id": "builder",
+      "type": "backend",
+      "label": "Builder",
+      "sublabel": "worktree riêng"
+    },
+    {
+      "id": "codex",
+      "type": "external",
+      "label": "Codex",
+      "sublabel": "review đối kháng"
+    },
+    {
+      "id": "head",
+      "type": "database",
+      "label": "Ticket Branch",
+      "sublabel": "HEAD"
+    },
+    {
+      "id": "thomas",
+      "type": "backend",
+      "label": "Thomas",
+      "sublabel": "router thường trực"
+    }
+  ],
+  "segments": [
+    {
+      "from": 165,
+      "to": 300,
+      "label": "Bắn cánh tay"
+    },
+    {
+      "from": 320,
+      "to": 440,
+      "label": "Phán quyết"
+    },
+    {
+      "from": 460,
+      "to": 600,
+      "label": "Receipt + handback"
+    }
+  ],
+  "messages": [
+    {
+      "id": "range-header",
+      "from": "builder",
+      "to": "head",
+      "y": 200,
+      "label": "commit range <base>..HEAD",
+      "variant": "default"
+    },
+    {
+      "id": "adversarial",
+      "from": "builder",
+      "to": "codex",
+      "y": 260,
+      "label": "adversarial-review --wait --base <ref>",
+      "variant": "emphasis",
+      "note": "Chữ focus mang ý định của chủ ticket"
+    },
+    {
+      "id": "verdict",
+      "from": "codex",
+      "to": "builder",
+      "y": 365,
+      "label": "blocking / non-blocking",
+      "variant": "return",
+      "note": "Chỉ file output đáng tin, không bao giờ tin exit code"
+    },
+    {
+      "id": "receipt",
+      "from": "builder",
+      "to": "head",
+      "y": 500,
+      "label": "arm(ticket): receipt",
+      "variant": "dashed",
+      "note": "Finding gộp theo class trước; commit rỗng, parent là cây mà gate đã đọc"
+    },
+    {
+      "id": "handback",
+      "from": "builder",
+      "to": "thomas",
+      "y": 565,
+      "label": "branch, SHA, marker",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "builder",
+      "from": 200,
+      "to": 565,
+      "type": "backend"
+    },
+    {
+      "participant": "codex",
+      "from": 260,
+      "to": 370,
+      "type": "external"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Builder Tự Bắn Cánh Tay Của Mình",
+      "items": [
+        "Ở phạm vi ticket, Builder tự bắn cánh tay từ trong vòng lặp khép kín của chính nó",
+        "HEAD trỏ về đúng head đang được review — không còn chỗ nào khác để trỏ tới",
+        "Không worktree gate, không broker phải kill: cả bộ máy phạm vi spec không áp dụng ở đây"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Cánh Tay Thắng Ở Đâu",
+      "items": [
+        "Mâu thuẫn nội bộ so với chuẩn của chính project",
+        "Tác giả đọc ticket; cánh tay đọc repo",
+        "Một lượt chạy từng bắt được deadlock thật mà chính code review vừa thêm vào"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Failover Được Ghi Lại, Không Giấu",
+      "items": [
+        "Codex không sẵn sàng hoặc hết quota nghĩa là cánh tay KHÔNG CHẠY, và được ghi đúng như vậy",
+        "Exit code không bao giờ đáng tin — chỉ file output mới đáng tin",
+        "Receipt là một commit rỗng có body ghi tên lượt chạy đã diễn ra"
+      ]
+    }
+  ]
+}

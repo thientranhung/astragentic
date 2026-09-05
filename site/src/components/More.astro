@@ -1,0 +1,33 @@
+---
+// A "go on" link that closes a block: mono, small, the one accent colour.
+interface Props {
+  href: string;
+}
+const { href } = Astro.props;
+const external = /^https?:\/\//.test(href);
+---
+
+<p class="more">
+  <a href={href} target={external ? '_blank' : undefined} rel={external ? 'noreferrer' : undefined}>
+    <slot />
+  </a>
+</p>
+
+<style>
+  .more {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 1.5rem;
+  }
+  .more a {
+    color: var(--pass);
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 1px;
+  }
+  .more a:hover {
+    opacity: 0.75;
+  }
+</style>

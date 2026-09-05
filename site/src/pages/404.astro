@@ -1,0 +1,72 @@
+---
+// One 404 for both languages. A static host serves this same file for /khong-co and
+// for /en/anything, so the page ships Vietnamese — the site's primary language — and a
+// three-line script swaps it to English when the address that missed was under /en/.
+// With scripting off a Vietnamese reader is still right, and an English reader still
+// gets two working links.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { ROUTES, UI } from '../lib/site';
+---
+
+<BaseLayout title={`404 — ${UI.notFoundTitle.vi}`} lang="vi">
+  <section class="screen screen--paper miss">
+    <div class="column">
+      <p class="code mono">404</p>
+      <h1 data-t-title>{UI.notFoundTitle.vi}</h1>
+      <p class="sub" data-t-line>{UI.notFoundLine.vi}</p>
+      <p class="ways">
+        <a class="more-link" href={ROUTES.home.vi} data-t-home>{UI.notFoundHome.vi}</a>
+        <a class="more-link" href={ROUTES.skills.vi} data-t-skills>{UI.notFoundSkills.vi}</a>
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<script
+  is:inline
+  define:vars={{
+    en: {
+      title: UI.notFoundTitle.en,
+      line: UI.notFoundLine.en,
+      home: UI.notFoundHome.en,
+      skills: UI.notFoundSkills.en,
+      homeHref: ROUTES.home.en,
+      skillsHref: ROUTES.skills.en,
+    },
+  }}
+>
+  if (location.pathname === '/en' || location.pathname.startsWith('/en/')) {
+    document.documentElement.lang = 'en';
+    const set = (sel, text, href) => {
+      const node = document.querySelector(sel);
+      if (!node) return;
+      node.textContent = text;
+      if (href) node.setAttribute('href', href);
+    };
+    set('[data-t-title]', en.title);
+    set('[data-t-line]', en.line);
+    set('[data-t-home]', en.home, en.homeHref);
+    set('[data-t-skills]', en.skills, en.skillsHref);
+  }
+</script>
+
+<style>
+  .miss {
+    padding-block: 7rem 8rem;
+  }
+  .code {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    color: var(--ink-muted);
+    margin: 0 0 1.1rem;
+  }
+  .ways {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.75rem;
+    margin: 2.25rem 0 0;
+  }
+  .ways .more-link {
+    margin-top: 0;
+  }
+</style>

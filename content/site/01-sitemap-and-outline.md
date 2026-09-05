@@ -132,3 +132,22 @@ hơn mọi lời quảng cáo quanh nó.
 2. Chọn một feature thật chạy xuyên suốt để làm ví dụ và để chụp ảnh — story README yêu cầu.
 3. Chụp bằng chứng thật (workspace nhiều pane, board, arm report, git log) trước khi dựng trang.
 4. Dựng `/` trước, bốn trang còn lại sau.
+
+---
+
+## Bổ sung 2026-09-04: mở rộng theo kiến trúc nội dung aihero.dev
+
+Năm trang mặt tiền giữ nguyên. Thêm ba lớp phía sau, đo từ `03-reference-aihero-structure.md`,
+hợp đồng build ở `04-build-contract.md`:
+
+| Lớp | Route | Đợt 1 |
+|---|---|---|
+| Hub | `/skills` | 1, liệt kê đủ 16 skill + 5 role, chỉ link cái có trang |
+| Skill page | `/skills/<slug>` | 6 |
+| Dictionary | `/dictionary`, `/dictionary/<slug>` | 12 |
+| Essay | `/essays/<slug>` | 1 |
+| Explore | `/explore/<slug>.html` | 8 diagram archify tương tác |
+
+Lý do phá quy tắc "5 trang, không hơn": lớp giải thích "vì sao mình chọn vậy" cần chỗ ở.
+Dictionary là chất kết dính để skill page ngắn; skill page kéo failure mode thật từ ledger.
+Quy mô đợt 1 khoảng 25 trang; thêm trang sau đó là thêm một file markdown, không đụng code.

@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "A Ticket's Claim, State by State",
+    "output": "ticket-states.html",
+    "viewBox": [
+      980,
+      660
+    ],
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-claim",
+        "label": "The claim protocol",
+        "focus": [
+          "unclaimed",
+          "claimed",
+          "readback",
+          "worktree"
+        ],
+        "note": "Assigning a ticket is the claim, and it happens before its worktree exists."
+      },
+      {
+        "id": "when-it-fails",
+        "label": "When the claim is lost",
+        "focus": [
+          "readback",
+          "lost_race",
+          "worktree",
+          "branch_failed"
+        ],
+        "note": "A different assignee, or a branch that already exists, both release the claim."
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "main",
+      "label": "Claim lifecycle"
+    },
+    {
+      "id": "contest",
+      "label": "Lost claim"
+    }
+  ],
+  "states": [
+    {
+      "id": "unclaimed",
+      "type": "start",
+      "label": "Unclaimed",
+      "sublabel": "on the frontier",
+      "lane": "main",
+      "col": 0
+    },
+    {
+      "id": "claimed",
+      "type": "active",
+      "label": "Claimed",
+      "sublabel": "assignee written",
+      "lane": "main",
+      "col": 1
+    },
+    {
+      "id": "readback",
+      "type": "decision",
+      "label": "Readback",
+      "sublabel": "assignee re-read",
+      "lane": "main",
+      "col": 2
+    },
+    {
+      "id": "worktree",
+      "type": "active",
+      "label": "Worktree",
+      "sublabel": "branch + worktree add",
+      "lane": "main",
+      "col": 3
+    },
+    {
+      "id": "merged",
+      "type": "success",
+      "label": "Merged",
+      "sublabel": "Ledger line written",
+      "lane": "main",
+      "col": 4
+    },
+    {
+      "id": "lost_race",
+      "type": "failure",
+      "label": "Claim Lost",
+      "sublabel": "another assignee won",
+      "lane": "contest",
+      "col": 0
+    },
+    {
+      "id": "branch_failed",
+      "type": "failure",
+      "label": "Branch Refused",
+      "sublabel": "branch already exists",
+      "lane": "contest",
+      "col": 1
+    }
+  ],
+  "transitions": [
+    {
+      "id": "write-assignee",
+      "from": "unclaimed",
+      "to": "claimed",
+      "label": "write assignee",
+      "labelDy": 75
+    },
+    {
+      "id": "read-it-back",
+      "from": "claimed",
+      "to": "readback",
+      "label": "read the ticket back",
+      "labelDy": 75
+    },
+    {
+      "id": "match-create",
+      "from": "readback",
+      "to": "worktree",
+      "label": "readback matches",
+      "labelDy": 75
+    },
+    {
+      "id": "worktree-merge",
+      "from": "worktree",
+      "to": "merged",
+      "label": "merge",
+      "labelDy": 75
+    },
+    {
+      "id": "mismatch",
+      "from": "readback",
+      "to": "lost_race",
+      "label": "different assignee",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "route": "straight",
+      "labelDy": 24
+    },
+    {
+      "id": "branch-exists",
+      "from": "worktree",
+      "to": "branch_failed",
+      "label": "branch refused",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "route": "straight",
+      "labelDy": 24
+    },
+    {
+      "id": "lost-retry",
+      "from": "lost_race",
+      "to": "unclaimed",
+      "label": "take the next ticket",
+      "variant": "dashed",
+      "route": "bottom-channel",
+      "channelY": 470,
+      "toSide": "bottom",
+      "fromSide": "bottom"
+    },
+    {
+      "id": "failed-retry",
+      "from": "branch_failed",
+      "to": "unclaimed",
+      "label": "assignee reset, worktree removed",
+      "variant": "dashed",
+      "route": "bottom-channel",
+      "channelY": 530,
+      "toSide": "bottom",
+      "fromSide": "bottom"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The Claim Comes First",
+      "items": [
+        "Assigning a ticket is the claim, and it happens before its worktree exists",
+        "The readback is what makes the claim advisory rather than trusted blindly",
+        "Branch creation is the atomic step that actually decides a same-second race"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Two Ways to Lose It",
+      "items": [
+        "A different assignee on readback means another dispatcher already won",
+        "A refused branch means the branch already exists under that name",
+        "Both release the claim; neither one blocks the ticket forever"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "What a Won Claim Leaves",
+      "items": [
+        "A worktree and branch that are this Builder's alone to write",
+        "A merge that clears the assignee and writes a Ledger line",
+        "No tracker natively holds a lock — the readback plus branch creation is the interlock"
+      ]
+    }
+  ]
+}

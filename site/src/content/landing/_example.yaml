@@ -1,0 +1,42 @@
+# Schema sample for src/content/landing/{vi,en}.yaml — landing spec §4.
+# Files starting with `_` are skipped by the loader, so this one never renders.
+# Voice: "mình" / "anh em"; English uses "I". No teaching words.
+hero:
+  headline: "Một agent thì ngon. Ba agent thì việc biến mất."   # 2 dòng, ≤ 12 từ
+  sub: "Mình dựng lớp điều phối để việc không rơi giữa các session."  # 1 câu
+  primary: "Xem nó chạy"
+  secondary: "Cài cho repo của anh em"
+sections:
+  roles:
+    headline: "Năm vai, năm tuổi thọ session"
+    sub: "Bấm một vai để xem nó được phép làm gì."
+  lifecycle:
+    headline: "Một ticket đi qua bảy chặng"
+    sub: "Mỗi chặng là chỗ đã có thứ rơi ra."
+  tracker:
+    headline: "Từ tracker tới pane"
+    sub: "Thomas hỏi board cái gì sẵn, thay vì nhớ."
+  arm:
+    headline: "Hai bên soi nhau"
+    sub: "Claude build, Codex đọc lại, biên nhận buộc vào SHA."
+  evidence:
+    headline: "Bằng chứng, không phải lời hứa"
+    sub: "Mỗi luật đến từ một lần hỏng thật."
+    cta: "Mở cuốn sổ"
+  limit:
+    headline: "Chỗ nó chưa chạy"
+    sub: "Cái vòng chưa từng khép trọn trên việc thật."
+stages:
+  claim: "Assignee ghi rồi đọc lại."
+  brief: "Dispatch vào pane, tại Base."
+  build: "Builder làm trong worktree riêng."
+  code-review: "Rin đọc lại artifact."
+  simplify: "Dọn marker, cắt phần thừa."
+  arm: "Codex đọc lại, biên nhận buộc vào SHA."
+  merge: "Ledger ghi dòng, assignee gỡ."
+roleCards:
+  thomas: "Router thường trú, giữ board và pane."
+  shaper: "Grill tới khi spec đứng được."
+  builder: "Làm trong worktree riêng, một ticket một session."
+  rin: "Đọc lại artifact và dấu vết."
+  qa: "Chạy sản phẩm thật, không đọc code."

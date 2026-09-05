@@ -1,0 +1,57 @@
+---
+// One control, two states — not two nav items. The current language is the filled half
+// of a small toggle; the other half is the only thing that can be clicked.
+import { ROUTES, UI, other, type Lang, type PageKey } from '../lib/site';
+
+interface Props {
+  lang: Lang;
+  /** Pages listed in the ROUTES table. */
+  page?: PageKey;
+  /** Pages that are not, such as /vai/<id> — the pair is passed in directly. */
+  hrefs?: Record<Lang, string>;
+}
+const { lang, page, hrefs } = Astro.props;
+const langs: Lang[] = ['vi', 'en'];
+const target = (code: Lang) => hrefs?.[code] ?? (page ? ROUTES[page][code] : '#');
+---
+
+<div class="lang mono" role="group" aria-label={UI.langAria[lang]}>
+  {
+    langs.map((code) =>
+      code === lang ? (
+        <span class="here" aria-current="true">{code.toUpperCase()}</span>
+      ) : (
+        <a href={target(code)} hreflang={code}>{code.toUpperCase()}</a>
+      ),
+    )
+  }
+</div>
+<span hidden>{other(lang)}</span>
+
+<style>
+  .lang {
+    display: inline-flex;
+    align-items: stretch;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    line-height: 1;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .lang > * {
+    padding: 0.42rem 0.5rem;
+  }
+  .lang a {
+    color: var(--ink-muted);
+    text-decoration: none;
+  }
+  .lang a:hover {
+    color: var(--ink);
+    background: var(--paper-sunk);
+  }
+  .here {
+    color: var(--paper);
+    background: var(--ink);
+  }
+</style>

@@ -1,0 +1,144 @@
+---
+import DefectCard from './DefectCard.astro';
+import { byId, type Failure } from '../lib/data';
+import { ROUTES, UI, type Lang } from '../lib/site';
+
+interface Props {
+  failures: Failure[];
+  lang: Lang;
+}
+const { failures, lang } = Astro.props;
+
+// The seven checkpoints a ticket passes, in order. Stage names are harness vocabulary
+// and stay English in both locales.
+const STAGES = ['claim', 'brief', 'build', 'code-review', 'simplify', 'arm', 'merge'];
+
+const perStage = STAGES.map((stage, i) => ({
+  stage,
+  number: String(i + 1).padStart(2, '0'),
+  items: failures.filter((f) => f.stage === stage),
+}));
+---
+
+<div class="rail breakout">
+  <ol class="heads">
+    {
+      perStage.map(({ stage, number, items }) => (
+        <li class:list={['head', items.length > 0 && 'head--hit']}>
+          <span class="tick" aria-hidden="true"></span>
+          <span class="num mono">{number}</span>
+          <span class="name mono" lang="en">{stage}</span>
+        </li>
+      ))
+    }
+  </ol>
+
+  <div class="hangs">
+    {
+      perStage.map(({ stage, items }) => (
+        <div class="hang">
+          {items.length === 0 ? (
+            <p class="empty mono">{UI.emptyStage[lang]}</p>
+          ) : (
+            items.map((f) => {
+              const row = byId.get(f.id);
+              return row ? (
+                <DefectCard
+                  row={row}
+                  lang={lang}
+                  size="sm"
+                  compact={true}
+                  href={`${ROUTES.failures[lang]}#${f.id.toLowerCase()}`}
+                />
+              ) : null;
+            })
+          )}
+        </div>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .rail {
+    margin-block: 2.75rem 0;
+  }
+
+  .heads {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.75rem;
+    border-top: 1px solid var(--ink);
+  }
+  .head {
+    position: relative;
+    margin: 0;
+    padding-top: 1.05rem;
+  }
+  .tick {
+    position: absolute;
+    top: -4px;
+    left: 0;
+    width: 7px;
+    height: 7px;
+    background: var(--paper-sunk);
+    border: 1px solid var(--ink);
+    border-radius: 50%;
+  }
+  .head--hit .tick {
+    background: var(--defect);
+    border-color: var(--defect);
+  }
+  .num {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ink-muted);
+  }
+  .name {
+    display: block;
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+    margin-top: 0.15rem;
+  }
+  .head--hit .name {
+    color: var(--ink);
+  }
+
+  .hangs {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 1.6rem;
+    align-items: start;
+  }
+  .hang {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .empty {
+    font-size: 10.5px;
+    line-height: 1.5;
+    color: var(--ink-muted);
+    margin: 0;
+    padding-top: 0.15rem;
+    border-top: 1px dashed var(--rule);
+  }
+
+  @media (max-width: 900px) {
+    .heads,
+    .hangs {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 560px) {
+    .heads,
+    .hangs {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

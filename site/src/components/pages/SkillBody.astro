@@ -1,0 +1,164 @@
+---
+// /skills/<name> · /en/skills/<name> — one skill, in one language. The prose comes from
+// src/content/skills/<lang>/<name>.md; when that file has not landed, the page still
+// stands on the catalog line and says so.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Diagram from '../Diagram.astro';
+import { catalogLine, GROUPS, skillHref, type GroupId } from '../../lib/skills';
+import { ROUTES, REPO, UI, type Lang } from '../../lib/site';
+import { render } from 'astro:content';
+
+interface Props {
+  lang: Lang;
+  name: string;
+  line: string;
+  group: GroupId;
+  entry?: any;
+}
+const { lang, name, line, group, entry } = Astro.props;
+const Content = entry ? (await render(entry)).Content : null;
+const data = entry?.data ?? {};
+const source = data.source as string | undefined;
+const runtimes = (data.runtimes ?? []) as string[];
+const updated = data.updated as Date | undefined;
+const alternate = { vi: skillHref('vi', name), en: skillHref('en', name) };
+---
+
+<BaseLayout title={name} description={line} lang={lang} alternate={alternate}>
+  <section class="screen screen--paper">
+    <div class="column">
+      <p class="eyebrow mono">{GROUPS[group].title[lang]}</p>
+      <h1 class="mono name">{name}</h1>
+      <p class="sub">{line}</p>
+      {data.diagram && <Diagram slug={data.diagram} lang={lang} title={name} class="band" />}
+    </div>
+    <div class="column facts">
+      <dl>
+        {
+          source && (
+            <div>
+              <dt class="mono">{UI.skillSource[lang]}</dt>
+              <dd class="mono" lang="en">{source}</dd>
+            </div>
+          )
+        }
+        {
+          runtimes.length > 0 && (
+            <div>
+              <dt class="mono">{UI.skillRuntimes[lang]}</dt>
+              <dd class="mono" lang="en">{runtimes.join(' · ')}</dd>
+            </div>
+          )
+        }
+        {
+          updated && (
+            <div>
+              <dt class="mono">{UI.skillUpdated[lang]}</dt>
+              <dd class="mono">{new Date(updated).toISOString().slice(0, 10)}</dd>
+            </div>
+          )
+        }
+      </dl>
+    </div>
+    <div class="column">
+      {
+        Content ? (
+          <article class="prose skill-prose">
+            <Content />
+          </article>
+        ) : (
+          <div class="gap">
+            <p class="gap-note mono">{UI.skillMissing[lang]}</p>
+            <p class="gap-line" lang="en">{catalogLine(name)}</p>
+            <p class="gap-src mono">
+              <a href={`${REPO}/tree/main/harness/.agents/skills/${name}`} target="_blank" rel="noreferrer">
+                {`harness/.agents/skills/${name}/SKILL.md ↗`}
+              </a>
+            </p>
+          </div>
+        )
+      }
+      <a class="more-link" href={ROUTES.skills[lang]}>{UI.skillBack[lang]}</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  h1.name {
+    font-size: clamp(28px, 2.8vw, 38px);
+    letter-spacing: -0.01em;
+  }
+  .facts dl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin: 1.75rem 0 0;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--rule);
+  }
+  .facts dt {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--ink-muted);
+    margin-bottom: 0.35rem;
+  }
+  .facts dd {
+    margin: 0;
+    font-size: 12px;
+    color: var(--ink);
+  }
+  .skill-prose {
+    margin-top: 2.5rem;
+  }
+  .skill-prose :global(h2) {
+    font-size: 22px;
+    margin-top: 2.5rem;
+    margin-bottom: 0.6rem;
+  }
+  .skill-prose :global(p),
+  .skill-prose :global(li) {
+    max-width: 68ch;
+  }
+  .skill-prose :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+    font-size: 14px;
+  }
+  .skill-prose :global(th),
+  .skill-prose :global(td) {
+    border-bottom: 1px solid var(--rule);
+    padding: 0.45rem 0.75rem 0.45rem 0;
+    text-align: left;
+    vertical-align: top;
+  }
+  .gap {
+    margin-top: 2.5rem;
+    padding: 1.25rem 1.4rem;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    background: var(--paper-sunk);
+  }
+  .gap-note {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-muted);
+    margin-bottom: 0.9rem;
+  }
+  .gap-line {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 0.9rem;
+  }
+  .gap-src {
+    font-size: 11.5px;
+    margin: 0;
+  }
+  .gap-src a {
+    color: var(--ink-muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+  }
+</style>

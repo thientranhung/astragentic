@@ -1,0 +1,170 @@
+/* archify semantic classes -> site tokens (see src/assets/diagrams/README.md).
+   Shared by Diagram.astro and InteractiveDiagram.astro so one diagram cannot drift
+   from the other. Every selector is scoped to .diagram-svg, which only those two emit. */
+
+.diagram-svg svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+/* archify semantic classes → site tokens (see src/assets/diagrams/README.md) */
+.diagram-svg .c-backend,
+.diagram-svg .c-frontend,
+.diagram-svg .c-database,
+.diagram-svg .c-cloud,
+.diagram-svg .c-external,
+.diagram-svg .c-messagebus {
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 1;
+}
+.diagram-svg .c-security {
+  fill: var(--paper);
+  stroke: var(--defect);
+}
+.diagram-svg .c-region {
+  fill: var(--paper-sunk);
+  stroke: var(--rule);
+  stroke-dasharray: 9 4;
+}
+/* archify wraps a decision cluster in `.c-<type>-group`. Unmapped, an SVG rect with a
+   class falls back to a solid black fill, which is how a whole band of the hooks
+   diagram came out as a black box. Any `-group` band reads as a faint region. */
+.diagram-svg [class$='-group'] {
+  fill: var(--paper-sunk);
+  fill-opacity: 0.55;
+  stroke: var(--rule);
+  stroke-dasharray: 7 3;
+}
+.diagram-svg .c-security-group {
+  fill: color-mix(in srgb, var(--defect) 6%, var(--paper));
+  stroke: color-mix(in srgb, var(--defect) 45%, transparent);
+}
+.diagram-svg .c-lane {
+  fill: var(--paper-sunk);
+  fill-opacity: 0.6;
+  stroke: var(--rule);
+  stroke-dasharray: 7 3;
+}
+.diagram-svg rect:not([class]),
+.diagram-svg path:not([class]) {
+  fill: none;
+  stroke: currentColor;
+}
+.diagram-svg rect[fill^="url(#grid)"] {
+  stroke: none;
+}
+.diagram-svg .c-mask {
+  fill: var(--paper);
+  stroke: none;
+}
+.diagram-svg .a-default,
+.diagram-svg .a-dashed {
+  stroke: var(--ink-muted);
+  fill: none;
+}
+.diagram-svg .a-dashed {
+  stroke-dasharray: 6 4;
+}
+.diagram-svg .m-default,
+.diagram-svg .m-dashed {
+  fill: var(--ink-muted);
+  stroke: var(--ink-muted);
+}
+.diagram-svg .a-emphasis {
+  stroke: var(--pass);
+  fill: none;
+  stroke-width: 1.5;
+}
+.diagram-svg .m-emphasis {
+  fill: var(--pass);
+  stroke: var(--pass);
+}
+.diagram-svg .a-security {
+  stroke: var(--defect);
+  fill: none;
+  stroke-dasharray: 6 4;
+}
+.diagram-svg .m-security {
+  fill: var(--defect);
+  stroke: var(--defect);
+}
+.diagram-svg .t-primary {
+  fill: var(--ink);
+}
+.diagram-svg .t-muted,
+.diagram-svg .t-backend,
+.diagram-svg .t-frontend,
+.diagram-svg .t-cloud,
+.diagram-svg .t-external,
+.diagram-svg .t-messagebus,
+.diagram-svg .t-database {
+  fill: var(--ink-muted);
+}
+.diagram-svg .t-security {
+  fill: var(--defect);
+}
+.diagram-svg .t-dim {
+  fill: var(--ink-muted);
+  opacity: 0.7;
+}
+.diagram-svg .s-backend,
+.diagram-svg .s-frontend,
+.diagram-svg .s-cloud,
+.diagram-svg .s-external,
+.diagram-svg .s-database {
+  color: var(--ink-muted);
+}
+.diagram-svg .s-security {
+  color: var(--defect);
+}
+.diagram-svg text {
+  font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
+}
+.diagram-svg .c-grid {
+  fill: none;
+  stroke: var(--rule);
+}
+.diagram-svg svg {
+  background: var(--paper);
+}
+
+/* ── Interactive nodes (landing spec §5) ──────────────────────────────────────
+   A node is interactive only when the page handed it an href; every other node
+   keeps the flat rendering above, so "nothing lights up" means "nowhere to go". */
+.diagram-svg g.is-link {
+  cursor: pointer;
+}
+.diagram-svg g.is-link:hover > rect:not(.c-mask),
+.diagram-svg g.is-link:focus-visible > rect:not(.c-mask),
+.diagram-svg g.is-link.is-hover > rect:not(.c-mask) {
+  stroke: var(--pass);
+  stroke-width: 2;
+  fill: color-mix(in srgb, var(--pass) 9%, var(--paper));
+}
+.diagram-svg g.is-link:focus-visible {
+  outline: none;
+}
+.diagram-svg g.is-active > rect:not(.c-mask) {
+  stroke: var(--pass);
+  stroke-width: 2.5;
+  fill: color-mix(in srgb, var(--pass) 14%, var(--paper));
+}
+.diagram-svg g.is-active > text.t-primary,
+.diagram-svg g.is-link:hover > text.t-primary {
+  fill: var(--ink);
+}
+
+/* ── The legend does not ship ─────────────────────────────────────────────────
+   Every archify file ends in a key reading "Frontend · Backend · Database · Security ·
+   External". Those are archify's node kinds, not words this product uses anywhere else
+   on the site, so a reader who consults the key learns nothing and mistrusts the rest.
+   Hidden here; src/lib/diagram.ts crops the viewBox so the band it occupied goes too.
+   The standalone /explore/*.html pages are archify's own UI and keep theirs. */
+.diagram-svg [data-legend] {
+  display: none;
+}
+
+/* Label sizes are raised in src/lib/diagram.ts, against each file's own viewBox and
+   the width the figure really occupies (PRD §5). It cannot be done here: a CSS rule
+   has no way to read the viewBox, and every diagram scales differently. */

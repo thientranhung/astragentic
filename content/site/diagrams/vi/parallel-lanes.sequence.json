@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Một Ticket, Một Worktree, Một Pane",
+    "output": "parallel-lanes.html",
+    "viewBox": [
+      900,
+      820
+    ],
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "the-claim",
+        "label": "Claim, lệch giờ",
+        "focus": [
+          "tracker",
+          "tra139",
+          "tra142",
+          "tra125",
+          "tra087"
+        ],
+        "note": "Git quyết định ai claim; bốn claim rơi vào bốn thời điểm khác nhau."
+      },
+      {
+        "id": "no-shared-checkout",
+        "label": "Không checkout chung",
+        "focus": [
+          "tra139",
+          "tra142"
+        ],
+        "note": "Mỗi worktree tự build và tự review, không đụng vào worktree khác."
+      }
+    ]
+  },
+  "participants": [
+    {
+      "id": "tracker",
+      "type": "backend",
+      "label": "Tracker",
+      "sublabel": "frontier + assignee"
+    },
+    {
+      "id": "tra139",
+      "type": "frontend",
+      "label": "TRA-139",
+      "sublabel": "worktree Builder"
+    },
+    {
+      "id": "tra142",
+      "type": "frontend",
+      "label": "TRA-142",
+      "sublabel": "worktree Builder"
+    },
+    {
+      "id": "tra125",
+      "type": "frontend",
+      "label": "TRA-125",
+      "sublabel": "worktree Builder"
+    },
+    {
+      "id": "tra087",
+      "type": "frontend",
+      "label": "TRA-087",
+      "sublabel": "worktree Builder"
+    }
+  ],
+  "segments": [
+    {
+      "from": 165,
+      "to": 400,
+      "label": "claim (lệch giờ)"
+    },
+    {
+      "from": 420,
+      "to": 640,
+      "label": "build + review (tách biệt từng worktree)"
+    },
+    {
+      "from": 605,
+      "to": 725,
+      "label": "merge (trả về lệch giờ)"
+    }
+  ],
+  "messages": [
+    {
+      "id": "claim-139",
+      "from": "tracker",
+      "to": "tra139",
+      "y": 195,
+      "label": "claim",
+      "variant": "emphasis"
+    },
+    {
+      "id": "claim-142",
+      "from": "tracker",
+      "to": "tra142",
+      "y": 245,
+      "label": "claim",
+      "variant": "emphasis"
+    },
+    {
+      "id": "claim-125",
+      "from": "tracker",
+      "to": "tra125",
+      "y": 300,
+      "label": "claim",
+      "variant": "emphasis"
+    },
+    {
+      "id": "claim-087",
+      "from": "tracker",
+      "to": "tra087",
+      "y": 360,
+      "label": "claim",
+      "variant": "emphasis"
+    },
+    {
+      "id": "merge-139",
+      "from": "tra139",
+      "to": "tracker",
+      "y": 620,
+      "label": "merge",
+      "variant": "return"
+    },
+    {
+      "id": "merge-125",
+      "from": "tra125",
+      "to": "tracker",
+      "y": 650,
+      "label": "merge",
+      "variant": "return"
+    },
+    {
+      "id": "merge-142",
+      "from": "tra142",
+      "to": "tracker",
+      "y": 680,
+      "label": "merge",
+      "variant": "return"
+    },
+    {
+      "id": "merge-087",
+      "from": "tra087",
+      "to": "tracker",
+      "y": 710,
+      "label": "merge",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "tra139",
+      "from": 195,
+      "to": 620,
+      "type": "frontend"
+    },
+    {
+      "participant": "tra142",
+      "from": 245,
+      "to": 680,
+      "type": "frontend"
+    },
+    {
+      "participant": "tra125",
+      "from": 300,
+      "to": 650,
+      "type": "frontend"
+    },
+    {
+      "participant": "tra087",
+      "from": 360,
+      "to": 710,
+      "type": "frontend"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Claim Trước, Build Sau",
+      "items": [
+        "Mỗi Builder có branch riêng và checkout riêng",
+        "Git quyết định ai claim; tracker ghi lại ai đang giữ",
+        "Claim rơi vào từng thời điểm khác nhau — không có gì ở đây đồng bộ"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Không Có Cạnh Cắt Ngang Lane",
+      "items": [
+        "Không worktree nào đọc hay ghi file của worktree khác",
+        "Song song hết còn là race một khi cách ly là cấu trúc, không phải may rủi",
+        "Bốn ticket, bốn khoảng thời gian độc lập, không HEAD nào dùng chung"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Merge Trả Về Lệch Pha",
+      "items": [
+        "Mỗi ticket merge về tracker theo lịch riêng của nó",
+        "Một ticket chậm không chặn một ticket nhanh",
+        "Tracker, không phải đồng hồ, mới là thứ cả bốn khoảng thời gian dùng chung"
+      ]
+    }
+  ]
+}
