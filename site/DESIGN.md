@@ -8,9 +8,9 @@ colors:
   brand-primary-soft: "#FBE9E6"
   brand-on-primary: "#FFFFFF"
   canvas: "#F2F3F6"
-  canvas-grid-a: "#F0574A"
+  canvas-grid-a: "#FBDCD8"
   canvas-grid-b: "#E53625"
-  canvas-grid-c: "#B8271B"
+  canvas-grid-c: "#E53625"
   surface: "#FFFFFF"
   surface-raised: "#F7F8FA"
   ink: "#14161A"
@@ -273,7 +273,7 @@ Depth is tonal, not shadowed. The system layers white on near-white on cool grey
 
 ### Shadow Vocabulary
 
-- **Island** (`box-shadow: 0 1px 2px rgba(20,22,26,.06), 0 12px 40px rgba(60,10,6,.32)`): the whole page frame, once.
+- **Island** (`box-shadow: 0 1px 2px rgba(20,22,26,.06), 0 12px 40px rgba(90,20,14,.22)`): the whole page frame, once.
 - **Raised** (`box-shadow: 0 1px 2px rgba(20,22,26,.08)`): a contact shadow on a diagram node the reader has picked, applied as a `drop-shadow` filter. Nothing else uses it.
 
 ### Named Rules

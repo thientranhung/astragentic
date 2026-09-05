@@ -22,7 +22,7 @@
       }
     },
     "canvas": {
-      "$description": "The graph-paper desk the page island sits on. Owner asked for the desk to be the Astraler red itself, not a tint: a ramp from a slightly lifted red through the logo red #E53625 to a deeper red, with white grid lines at low alpha. The island stays neutral.",
+      "$description": "The graph-paper desk the page island sits on: a soft ramp in the Astraler red hue, from a near-white tint at the top-left to the logo red #E53625 at the bottom-right, under white grid lines. Tints are the logo red mixed with white so the ramp never drifts orange. The island stays neutral.",
       "base": {
         "$value": "#F2F3F6",
         "$extensions": {
@@ -32,7 +32,7 @@
         }
       },
       "grid-a": {
-        "$value": "#F0574A",
+        "$value": "#FBDCD8",
         "$extensions": {
           "site": {
             "cssVar": "--grid-a"
@@ -40,7 +40,7 @@
         }
       },
       "grid-b": {
-        "$value": "#E53625",
+        "$value": "#F28E85",
         "$extensions": {
           "site": {
             "cssVar": "--grid-b"
@@ -48,7 +48,7 @@
         }
       },
       "grid-c": {
-        "$value": "#B8271B",
+        "$value": "#E53625",
         "$extensions": {
           "site": {
             "cssVar": "--grid-c"
@@ -56,7 +56,7 @@
         }
       },
       "grid-line": {
-        "$value": "rgba(255, 255, 255, 0.28)",
+        "$value": "rgba(255, 255, 255, 0.55)",
         "$extensions": {
           "site": {
             "cssVar": "--grid-line"
@@ -781,7 +781,7 @@
           "spread": "0"
         },
         {
-          "color": "rgba(60, 10, 6, 0.32)",
+          "color": "rgba(90, 20, 14, 0.22)",
           "offsetX": "0",
           "offsetY": "12px",
           "blur": "40px",
