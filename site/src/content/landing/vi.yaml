@@ -1,8 +1,8 @@
 hero:
-  headline: "Astragentic là lớp điều phối\ncho nhiều coding agent trên một repo."
-  sub: "Một agent đơn lẻ không cần lớp này. Bốn agent trên cùng một repo thì cần: Astragentic tách checkout, trạng thái và review cho từng agent."
-  primary: "Xem cấu trúc ↓"
-  secondary: "Cài cho repo của bạn"
+  headline: "Vibe coding đặt kỹ sư vào vai người gõ.\nAstragentic đặt kỹ sư vào vai khách hàng."
+  sub: "Khi hiểu biết về quy trình phần mềm và tech stack đã có sẵn, nút thắt không còn là viết code mà là điều phối. Astragentic mô hình hoá một đơn vị outsource hoàn chỉnh bằng agent, với một người đại diện duy nhất để trao đổi, một quy trình phát triển được kiểm chứng, và một hồ sơ thiết kế và quyết định có thể đọc lại. Tôi thu hồi được thời gian mà không mất quyền kiểm soát."
+  primary: "Xem đội vận hành ↓"
+  secondary: "Triển khai vào repo của bạn"
 
 sections:
   structure:

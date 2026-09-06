@@ -1,8 +1,8 @@
 hero:
-  headline: "Astragentic is the coordination layer\nfor several coding agents on one repo."
-  sub: "A single agent does not need this layer. Four agents on one repo do: Astragentic separates the checkout, the state and the review for each one."
-  primary: "See the structure ↓"
-  secondary: "Install it in your repo"
+  headline: "Vibe coding puts the engineer at the keyboard.\nAstragentic puts the engineer in the client's seat."
+  sub: "Once the software process and the stack are understood, the bottleneck is no longer writing code but coordinating it. Astragentic models a complete outsourcing unit with agents: one representative to talk to, a verified development process, and a record of designs and decisions you can reread. I get my time back without giving up control."
+  primary: "See the team at work ↓"
+  secondary: "Deploy it in your repo"
 
 sections:
   structure:
