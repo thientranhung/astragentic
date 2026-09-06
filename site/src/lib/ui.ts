@@ -40,8 +40,8 @@ export const UI = {
 
   /* ── hero strip ── */
   heroEyebrow: {
-    vi: 'Đơn vị outsource vận hành bằng agent',
-    en: 'An outsourcing unit run by agents',
+    vi: 'Astragentic Agent Engineering',
+    en: 'Astragentic Agent Engineering',
   },
   statLogged: { vi: 'lỗi đã ghi vào sổ', en: 'failure modes logged' },
   statBound: { vi: 'dòng đã buộc vào một file', en: 'bound to a file' },
