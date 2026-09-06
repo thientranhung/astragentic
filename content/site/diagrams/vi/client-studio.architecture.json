@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Một Ghế Khách Hàng, Một Studio",
+    "output": "client-studio.html",
+    "quality_profile": "showcase",
+    "viewBox": [1320, 650],
+    "views": [
+      {
+        "id": "the-conversation",
+        "label": "Bạn nói chuyện với ai",
+        "focus": ["client", "thomas"],
+        "note": "Bạn chỉ nói chuyện với Thomas. Anh ấy hỏi lại khi có quyết định là của bạn."
+      },
+      {
+        "id": "what-you-see",
+        "label": "Bạn giám sát được gì",
+        "focus": ["client", "tracker", "herdr"],
+        "note": "Tracker và herdr cho bạn đọc thiết kế, xem pane đang chạy mà không cần ra tay."
+      }
+    ]
+  },
+  "components": [
+    { "id": "client", "type": "external", "label": "Bạn, khách hàng", "sublabel": "yêu cầu, quyết định", "pos": [420, 40], "size": [240, 74] },
+    { "id": "thomas", "type": "backend", "label": "Thomas · người đại diện", "sublabel": "hỏi lại trước khi quyết", "pos": [420, 220], "size": [240, 74] },
+    { "id": "shaper", "type": "frontend", "label": "Shaper", "sublabel": "grill → spec → ticket", "pos": [20, 460], "size": [190, 74] },
+    { "id": "builder", "type": "backend", "label": "Builder", "sublabel": "implement, worktree riêng", "pos": [240, 460], "size": [190, 74] },
+    { "id": "rin", "type": "security", "label": "Rin", "sublabel": "verify artifact + trace", "pos": [460, 460], "size": [190, 74] },
+    { "id": "qa", "type": "external", "label": "QA", "sublabel": "chạy sản phẩm thật", "pos": [680, 460], "size": [190, 74] },
+    { "id": "tracker", "type": "database", "label": "Tracker", "sublabel": "board, ticket", "pos": [950, 220], "size": [220, 74] },
+    { "id": "herdr", "type": "external", "label": "herdr", "sublabel": "pane đang chạy live", "pos": [950, 460], "size": [220, 74] }
+  ],
+  "connections": [
+    { "id": "client-thomas", "from": "client", "to": "thomas", "label": "yêu cầu, quyết định", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "labelAt": [540, 185] },
+    { "id": "thomas-client", "from": "thomas", "to": "client", "label": "hỏi lại khi cần bạn quyết", "variant": "dashed", "fromSide": "left", "toSide": "left", "via": [[350, 257], [350, 77]] },
+    { "id": "thomas-shaper", "from": "thomas", "to": "shaper", "label": "spec, ticket", "fromSide": "bottom", "toSide": "top", "labelAt": [115, 425] },
+    { "id": "thomas-builder", "from": "thomas", "to": "builder", "label": "claim, dispatch", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "labelAt": [335, 425] },
+    { "id": "thomas-rin", "from": "thomas", "to": "rin", "label": "gate milestone", "variant": "security", "fromSide": "bottom", "toSide": "top", "labelAt": [555, 425] },
+    { "id": "thomas-qa", "from": "thomas", "to": "qa", "label": "qa walk", "fromSide": "bottom", "toSide": "top", "labelAt": [775, 425] },
+    { "id": "builder-tracker", "from": "builder", "to": "tracker", "label": "ticket, commit, biên nhận", "fromSide": "bottom", "toSide": "right", "via": [[335, 580], [1250, 580], [1250, 257]] },
+    { "id": "client-tracker", "from": "client", "to": "tracker", "label": "đọc thiết kế, giám sát", "variant": "dashed", "fromSide": "right", "toSide": "top" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Một Tiếng Nói, Không Phải Năm", "items": [
+      "Bạn không bao giờ nói chuyện trực tiếp với Shaper, Builder, Rin, hay QA",
+      "Thomas là agent duy nhất handback công việc về cho bạn",
+      "Mọi ticket, spec, và gate đều đi qua đúng một ghế đó"
+    ] },
+    { "dot": "emerald", "title": "Quyết Định Vẫn Là Của Bạn", "items": [
+      "Thomas hỏi lại bạn về lựa chọn UI/UX và tech stack",
+      "Anh ấy không tự quyết những việc đó, kể cả khi bị ép tiến độ",
+      "Mọi thứ còn lại — implement, dispatch, gate — chạy phía sau anh ấy"
+    ] },
+    { "dot": "rose", "title": "Giám Sát, Không Vận Hành", "items": [
+      "Tracker giữ board, ticket, và toàn bộ lịch sử",
+      "herdr cho thấy pane nào đang thật sự chạy, theo thời gian thực",
+      "Bạn đọc và giám sát qua cả hai — bạn không bao giờ tự tay làm việc"
+    ] }
+  ]
+}

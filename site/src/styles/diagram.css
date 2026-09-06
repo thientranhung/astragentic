@@ -285,14 +285,18 @@
    The split is per-figure because the SVGs are not ours to edit: `data-diagram` on the
    <figure> is the only handle either component gives us, and it is enough. */
 .diagram[data-diagram='five-roles'] .diagram-svg .c-security,
+.diagram[data-diagram='client-studio'] .diagram-svg .c-security,
 .diagram[data-diagram='hub-and-spokes'] .diagram-svg .c-security,
 .diagram[data-diagram='ticket-lifecycle'] .diagram-svg .c-security,
 .idiagram[data-diagram='five-roles'] .diagram-svg .c-security,
+.idiagram[data-diagram='client-studio'] .diagram-svg .c-security,
 .idiagram[data-diagram='hub-and-spokes'] .diagram-svg .c-security,
 .idiagram[data-diagram='ticket-lifecycle'] .diagram-svg .c-security {
   stroke: var(--role-rin);
 }
 .diagram[data-diagram='five-roles'] .diagram-svg .a-security,
+.diagram[data-diagram='client-studio'] .diagram-svg .a-security,
+.idiagram[data-diagram='client-studio'] .diagram-svg .a-security,
 .diagram[data-diagram='hub-and-spokes'] .diagram-svg .a-security,
 .diagram[data-diagram='ticket-lifecycle'] .diagram-svg .a-security,
 .idiagram[data-diagram='five-roles'] .diagram-svg .a-security,

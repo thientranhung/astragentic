@@ -65,6 +65,13 @@ const structureMap: Record<string, string> = {
 };
 
 const rolesMap = Object.fromEntries(ROLE_IDS.map((id) => [id, roleHref(lang, id)]));
+// hero: the client-studio picture. Every box goes somewhere the client would look next.
+const studioMap: Record<string, string> = {
+  ...rolesMap,
+  client: ROUTES.why[lang],
+  tracker: `${ROUTES.structure[lang]}#coordination`,
+  herdr: `${ROUTES.stack[lang]}#herdr`,
+};
 const lifecycleMap = Object.fromEntries(
   Object.entries(NODE_TO_STAGE).map(([node, stage]) => [node, `${failuresRoute}#${stage}`]),
 );
@@ -107,7 +114,7 @@ const QUOTE =
         {/* five-roles, not structure: five boxes at this width carry labels a reader
             can actually read, where the four-layer diagram packs fourteen. The whole
             structure diagram is one screen further down, at full band width. */}
-        <InteractiveDiagram slug="five-roles" lang={lang} inert maxWidth={620} />
+        <InteractiveDiagram slug="client-studio" lang={lang} hrefMap={studioMap} maxWidth={1120} />
       </div>
     </div>
     <div class="column-band">
@@ -319,11 +326,19 @@ const QUOTE =
   .hero-screen {
     padding-block: 3rem 2.25rem;
   }
+  /* Copy above, the client-studio picture below at full band width: the diagram has
+     eight boxes and a right-hand column, and beside the copy its labels fell under 9px. */
   .hero {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 620px);
-    gap: 2.25rem;
-    align-items: center;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+    align-items: start;
+  }
+  .hero-copy {
+    max-width: 760px;
+  }
+  .hero-art {
+    width: 100%;
   }
   /* Capped below the global h1: the hero headline is a whole sentence, and at the
      global size it takes five lines and outweighs the diagram beside it (PRD §5).
@@ -677,7 +692,7 @@ const QUOTE =
     /* Under the copy now, so it takes the width it was capped at rather than half of
        it — a shrunk diagram is the one thing this page cannot afford. */
     .hero-art {
-      max-width: 620px;
+      max-width: 100%;
     }
     .req {
       margin-top: 0;
@@ -703,7 +718,7 @@ const QUOTE =
        same drawing the roles screen shows full width and scrollable two screens down,
        so on a phone the hero drops it rather than shipping an unreadable copy. */
     .hero-art {
-      display: none;
+      display: block;
     }
   }
 </style>
