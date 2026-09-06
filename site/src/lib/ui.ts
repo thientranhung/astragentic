@@ -13,8 +13,8 @@ export type Dict = Record<Lang, string>;
 export const UI = {
   /* ── chrome ── */
   tagline: {
-    vi: 'Astragentic: lớp điều phối cho nhiều coding agent trên một repo thật.',
-    en: 'Astragentic: the coordination layer for coding agents on a real repo.',
+    vi: 'Astragentic: một đơn vị outsource bằng agent, đặt kỹ sư vào vai khách hàng.',
+    en: 'Astragentic: an agent outsourcing unit that puts the engineer in the client\'s seat.',
   },
   repoLink: { vi: 'GitHub ↗', en: 'GitHub ↗' },
   footerAdopt: { vi: 'Cài', en: 'Adopt' },
@@ -40,8 +40,8 @@ export const UI = {
 
   /* ── hero strip ── */
   heroEyebrow: {
-    vi: 'Lớp điều phối cho nhiều coding agent trên một repo thật',
-    en: 'Coordination layer for coding agents',
+    vi: 'Đơn vị outsource vận hành bằng agent',
+    en: 'An outsourcing unit run by agents',
   },
   statLogged: { vi: 'lỗi đã ghi vào sổ', en: 'failure modes logged' },
   statBound: { vi: 'dòng đã buộc vào một file', en: 'bound to a file' },
