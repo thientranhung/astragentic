@@ -99,10 +99,14 @@ const { lang, page, alternate } = Astro.props;
     text-transform: uppercase;
     color: var(--ink-muted);
     text-decoration: none;
-    display: inline-block;
-    padding: 0.55rem 0.15rem;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 0.15rem;
     min-height: var(--row-h);
     line-height: 1.2;
+    /* equal transparent rules top and bottom so the label's optical centre stays on the
+       bar's centre line; only the bottom one ever takes colour */
+    border-top: 2px solid transparent;
     border-bottom: 2px solid transparent;
   }
   .items a:hover {
