@@ -2,7 +2,7 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "One Client Seat, One Studio",
+    "title": "One ticket through the team, tracker at the centre",
     "output": "client-studio.html",
     "quality_profile": "showcase",
     "viewBox": [1320, 650],
@@ -14,32 +14,35 @@
         "note": "You only ever talk to Thomas. He asks you back when a decision is yours."
       },
       {
-        "id": "what-you-see",
-        "label": "What you can audit",
-        "focus": ["client", "tracker", "herdr"],
-        "note": "The tracker and herdr let you read designs and watch panes without touching the work."
+        "id": "the-centre",
+        "label": "What sits in the middle",
+        "focus": ["thomas", "tracker", "shaper", "builder"],
+        "note": "Every role hands work through the tracker, not to each other."
       }
     ]
   },
   "components": [
-    { "id": "client", "type": "external", "label": "You, the client", "sublabel": "requirements, decisions", "pos": [420, 40], "size": [240, 74] },
-    { "id": "thomas", "type": "backend", "label": "Thomas · representative", "sublabel": "asks before deciding", "pos": [420, 220], "size": [240, 74] },
-    { "id": "shaper", "type": "frontend", "label": "Shaper", "sublabel": "grill → spec → tickets", "pos": [20, 460], "size": [190, 74] },
-    { "id": "builder", "type": "backend", "label": "Builder", "sublabel": "implements, own worktree", "pos": [240, 460], "size": [190, 74] },
-    { "id": "rin", "type": "security", "label": "Rin", "sublabel": "verifies artifact + traces", "pos": [460, 460], "size": [190, 74] },
-    { "id": "qa", "type": "external", "label": "QA", "sublabel": "runs the real product", "pos": [680, 460], "size": [190, 74] },
-    { "id": "tracker", "type": "database", "label": "Tracker", "sublabel": "board, tickets", "pos": [950, 220], "size": [220, 74] },
-    { "id": "herdr", "type": "external", "label": "herdr", "sublabel": "panes running live", "pos": [950, 460], "size": [220, 74] }
+    { "id": "client", "type": "external", "label": "You, the client", "sublabel": "requirements, decisions", "pos": [40, 263], "size": [220, 74] },
+    { "id": "thomas", "type": "backend", "label": "Thomas · representative", "sublabel": "PM, BA, secretary", "pos": [330, 263], "size": [210, 74] },
+    { "id": "tracker", "type": "database", "label": "Issue tracker", "sublabel": "every task passes here", "pos": [760, 265], "size": [200, 70] },
+    { "id": "shaper", "type": "frontend", "label": "Shaper", "sublabel": "grill → spec → ticket", "pos": [770, 108], "size": [180, 64] },
+    { "id": "builder", "type": "backend", "label": "Builder", "sublabel": "implement, own worktree", "pos": [1000, 268], "size": [180, 64] },
+    { "id": "rin", "type": "security", "label": "Rin", "sublabel": "verify artifact + trace", "pos": [670, 438], "size": [180, 64] },
+    { "id": "qa", "type": "external", "label": "QA", "sublabel": "runs the real product", "pos": [870, 438], "size": [180, 64] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Astragentic outsourcing team", "wraps": ["thomas", "tracker", "shaper", "builder", "rin", "qa"], "pad": 40 }
   ],
   "connections": [
-    { "id": "client-thomas", "from": "client", "to": "thomas", "label": "requirements, decisions", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "labelAt": [540, 185] },
-    { "id": "thomas-client", "from": "thomas", "to": "client", "label": "asks when a decision is yours", "variant": "dashed", "fromSide": "left", "toSide": "left", "via": [[350, 257], [350, 77]] },
-    { "id": "thomas-shaper", "from": "thomas", "to": "shaper", "label": "spec, tickets", "fromSide": "bottom", "toSide": "top", "labelAt": [115, 425] },
-    { "id": "thomas-builder", "from": "thomas", "to": "builder", "label": "claim, dispatch", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "labelAt": [335, 425] },
-    { "id": "thomas-rin", "from": "thomas", "to": "rin", "label": "milestone gate", "variant": "security", "fromSide": "bottom", "toSide": "top", "labelAt": [555, 425] },
-    { "id": "thomas-qa", "from": "thomas", "to": "qa", "label": "qa walk", "fromSide": "bottom", "toSide": "top", "labelAt": [775, 425] },
-    { "id": "builder-tracker", "from": "builder", "to": "tracker", "label": "tickets, commits, receipts", "fromSide": "bottom", "toSide": "right", "via": [[335, 580], [1250, 580], [1250, 257]] },
-    { "id": "client-tracker", "from": "client", "to": "tracker", "label": "reads designs, audits", "variant": "dashed", "fromSide": "right", "toSide": "top" }
+    { "id": "client-thomas", "from": "client", "to": "thomas", "label": "requirements", "variant": "emphasis", "fromSide": "right", "toSide": "left" },
+    { "id": "thomas-client", "from": "thomas", "to": "client", "label": "asks when it is yours to decide", "variant": "dashed", "fromSide": "top", "toSide": "top", "via": [[435, 220], [150, 220]] },
+    { "id": "thomas-tracker", "from": "thomas", "to": "tracker", "label": "frontier, claim, dispatch", "variant": "emphasis", "fromSide": "right", "toSide": "left" },
+    { "id": "shaper-tracker", "from": "shaper", "to": "tracker", "label": "spec → ticket", "fromSide": "bottom", "toSide": "top", "labelDy": 24 },
+    { "id": "tracker-builder", "from": "tracker", "to": "builder", "label": "claim", "fromSide": "right", "toSide": "left" },
+    { "id": "builder-tracker", "from": "builder", "to": "tracker", "label": "commit, receipt", "fromSide": "bottom", "toSide": "bottom", "via": [[1090, 355], [860, 355]] },
+    { "id": "tracker-rin", "from": "tracker", "to": "rin", "label": "gate milestone", "variant": "security", "fromSide": "bottom", "toSide": "top" },
+    { "id": "tracker-qa", "from": "tracker", "to": "qa", "label": "qa walk", "fromSide": "bottom", "toSide": "top" },
+    { "id": "client-tracker", "from": "client", "to": "tracker", "label": "reads, audits", "variant": "dashed", "fromSide": "bottom", "toSide": "bottom", "via": [[150, 580], [860, 580]] }
   ],
   "cards": [
     { "dot": "cyan", "title": "One Voice, Not Five", "items": [
@@ -47,15 +50,15 @@
       "Thomas is the only agent that hands work back to you",
       "Every ticket, spec, and gate routes through that one seat"
     ] },
-    { "dot": "emerald", "title": "Decisions Stay Yours", "items": [
+    { "dot": "emerald", "title": "The Tracker Is the Centre", "items": [
+      "Every role hands work through the tracker, never to each other",
+      "Thomas dispatches from it, Builder commits back into it",
+      "One shared record — not five private conversations"
+    ] },
+    { "dot": "rose", "title": "Decisions Stay Yours", "items": [
       "Thomas asks you back on UI/UX and tech-stack choices",
       "He does not decide those for you, even under pressure to ship",
-      "Everything else — implementation, dispatch, gates — runs behind him"
-    ] },
-    { "dot": "rose", "title": "Audit, Don't Operate", "items": [
-      "The tracker holds the board, the tickets, and the history",
-      "herdr shows the panes actually running, live",
-      "You read and audit through both — you never drive the work yourself"
+      "You read and audit the tracker — you never drive the work yourself"
     ] }
   ]
 }
