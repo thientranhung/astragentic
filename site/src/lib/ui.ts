@@ -40,8 +40,8 @@ export const UI = {
 
   /* ── hero strip ── */
   heroEyebrow: {
-    vi: 'Astragentic Agent Engineering',
-    en: 'Astragentic Agent Engineering',
+    vi: 'Agentic engineering',
+    en: 'Agentic engineering',
   },
   statLogged: { vi: 'lỗi đã ghi vào sổ', en: 'failure modes logged' },
   statBound: { vi: 'dòng đã buộc vào một file', en: 'bound to a file' },
