@@ -56,14 +56,21 @@ const { lang, page, alternate } = Astro.props;
     top: 0;
     z-index: 5;
   }
+  /* Three columns of 1fr · auto · 1fr so the menu sits on the island's true centre line,
+     not in the leftover space between the wordmark and the language toggle. */
   .nav {
-    display: flex;
-    flex-wrap: nowrap;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
-    justify-content: space-between;
-    gap: 1.25rem;
+    column-gap: 1.25rem;
     height: var(--header-h);
     padding-block: 0;
+  }
+  .nav > .right {
+    justify-self: end;
+  }
+  .nav > .items {
+    justify-content: center;
   }
   .wordmark {
     font-family: var(--font-mono);
