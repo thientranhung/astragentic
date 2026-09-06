@@ -334,8 +334,19 @@ const QUOTE =
     gap: 2rem;
     align-items: start;
   }
+  /* The diagram below takes the full band, so the copy sits on the centre axis above it
+     instead of hugging the left edge with an empty right half. */
   .hero-copy {
-    max-width: 760px;
+    max-width: 780px;
+    margin-inline: auto;
+    text-align: center;
+  }
+  .hero-copy .hero-sub {
+    margin-inline: auto;
+  }
+  .hero-copy .actions,
+  .hero-copy .cta {
+    justify-content: center;
   }
   .hero-art {
     width: 100%;
