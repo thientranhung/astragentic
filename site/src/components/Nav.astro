@@ -1,4 +1,5 @@
 ---
+import Wordmark from './Wordmark.astro';
 // Seven destinations, plus the two that are not destinations: the language toggle and
 // the repository. Those two used to read as nav items, which made the bar look like ten
 // places to go. The toggle is one control now, and the repository is an icon with a
@@ -17,7 +18,7 @@ const { lang, page, alternate } = Astro.props;
 
 <header class="nav-bar">
   <nav class="column-wide nav">
-    <a href={ROUTES.home[lang]} class="wordmark">Astragentic</a>
+    <Wordmark href={ROUTES.home[lang]} tag="by Astraler" />
     <ul class="items">
       {
         NAV.map((item) => (

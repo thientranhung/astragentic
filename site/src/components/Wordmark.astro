@@ -1,0 +1,74 @@
+---
+// Site wordmark in the Astraler family: a heavy geometric "A" with the diagonal cut on
+// its left leg (the Astraler mark's signature), then the rest of the name set tight in
+// the same red. Large bold text on white sits above 3:1, which is the floor for text at
+// this size; the mark itself carries no words.
+interface Props {
+  href: string;
+  /** Optional small line under the name, e.g. "by Astraler". */
+  tag?: string;
+  compact?: boolean;
+}
+const { href, tag, compact = false } = Astro.props;
+---
+
+<a href={href} class:list={['wordmark', { 'wordmark--compact': compact }]} aria-label="Astragentic, trang chủ">
+  <svg class="mark" viewBox="0 0 64 56" aria-hidden="true" focusable="false">
+    <!-- outer A -->
+    <path
+      fill="currentColor"
+      d="M26.5 2h11L64 54H50.8l-4.6-10.6H17.8L13.2 54H0L26.5 2Zm5.5 14.2L22.4 33.4h19.2L32 16.2Z"
+    />
+    <!-- the Astraler cut: a slit across the left leg -->
+    <path fill="var(--surface, #fff)" d="M14.6 39.5 34.4 8.6l3.1 4.9L19.6 41.3l-5-1.8Z" />
+    <!-- counter spark -->
+    <path fill="currentColor" d="M31.9 20.4l3.2 6.1h-6.3l3.1-6.1Z" />
+  </svg>
+  <span class="name">
+    <span class="name-text">STRAGENTIC</span>
+    {tag && !compact && <span class="tag">{tag}</span>}
+  </span>
+</a>
+
+<style>
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.05em;
+    color: var(--brand-primary);
+    text-decoration: none;
+    line-height: 1;
+  }
+  .mark {
+    width: 1.35em;
+    height: 1.18em;
+    flex: 0 0 auto;
+    font-size: var(--text-h3, 19px);
+    transform: translateY(-0.02em);
+  }
+  .name {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .name-text {
+    font-family: var(--font-sans);
+    font-weight: 800;
+    font-size: var(--text-h3, 19px);
+    letter-spacing: -0.015em;
+    text-transform: uppercase;
+    color: var(--brand-primary);
+  }
+  .tag {
+    font-family: var(--font-mono);
+    font-size: var(--text-micro, 10px);
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink-62);
+    margin-top: 2px;
+    padding-left: 0.1em;
+  }
+  .wordmark:hover .name-text {
+    color: var(--brand-primary-hover);
+  }
+</style>
