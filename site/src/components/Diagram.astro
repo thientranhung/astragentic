@@ -19,9 +19,25 @@ interface Props {
   /** Width the figure actually occupies on a desktop screen. The label floor is
    *  measured against it; leave it unset for a figure in the full diagram band. */
   frame?: number;
+  /** Crop the drawing down to these node ids — a card-sized detail instead of the
+   *  whole figure. The box comes from the rects archify laid out, so a label inside a
+   *  cropped node is never cut. */
+  crop?: string[];
+  /** The "open the interactive version" line under the figure. A thumbnail on a card
+   *  is not a figure the reader explores, so a card turns it off. */
+  caption?: boolean;
   class?: string;
 }
-const { slug, lang = 'vi', title, svgMaxWidth, frame, class: extra = '' } = Astro.props;
+const {
+  slug,
+  lang = 'vi',
+  title,
+  svgMaxWidth,
+  frame,
+  crop,
+  caption = true,
+  class: extra = '',
+} = Astro.props;
 
 const mod = import.meta.glob('/src/assets/diagrams/**/*.svg', {
   query: '?raw',
@@ -39,9 +55,10 @@ if (lang === 'vi' && !localised && english) {
 }
 const raw = localised ?? english ?? null;
 // Nothing here is clickable, so the nodes give back the tab stops archify gave them.
-const svg = raw
-  ? prepare(raw, { lang, frame: frame ?? svgMaxWidth ?? BAND, transform: stripFocus }).html
+const prepared = raw
+  ? prepare(raw, { lang, frame: frame ?? svgMaxWidth ?? BAND, crop, transform: stripFocus })
   : null;
+const svg = prepared?.html ?? null;
 const exploreHref = localised ? `/explore/vi/${slug}.html` : `/explore/${slug}.html`;
 const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` : undefined;
 ---
@@ -54,10 +71,14 @@ const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` 
       <div class="diagram-placeholder mono">{title ?? slug}</div>
     )
   }
-  <figcaption class="mono diagram-caption">
-    <a href={exploreHref} target="_blank" rel="noreferrer">{UI.explore[lang]}</a>
-    <span class="note">{UI.exploreNote[lang]}</span>
-  </figcaption>
+  {
+    caption && (
+      <figcaption class="mono diagram-caption">
+        <a href={exploreHref} target="_blank" rel="noreferrer">{UI.explore[lang]}</a>
+        <span class="note">{UI.exploreNote[lang]}</span>
+      </figcaption>
+    )
+  }
 </figure>
 
 <style>

@@ -1,19 +1,19 @@
 ---
-// The landing, nine sections in the order of build spec 4 §4. Each section carries at
-// most two sentences; everything else on it is a picture, a card or a short list.
+// The landing, v2. Five sections in the order the reader asks the questions (home v2
+// spec): why this exists → what it does → how it runs → who it is for → how to start.
+// Everything the page used to carry about layers, hooks, the skill catalog and the
+// stack now lives only on its own page, still in the nav.
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Diagram from '../Diagram.astro';
 import InteractiveDiagram from '../InteractiveDiagram.astro';
-import QuoteBlock from '../QuoteBlock.astro';
-import RoleKey from '../RoleKey.astro';
 import AdoptBlock from '../AdoptBlock.astro';
 import { getPage } from '../../lib/pages';
 import { getLanding } from '../../lib/landing';
-import { getSkillGroups } from '../../lib/skills';
-import { HOOKS, STACK, WHY } from '../../lib/anchors';
-import { failures, meta } from '../../lib/data';
-import { ROLE_IDS, ROLE_META, roleHref } from '../../lib/roles';
+import { ACTIVE, HAS_UNSET, SAMPLE, ORCHESTRATOR_FILE } from '../../lib/orchestrator';
+import { failures } from '../../lib/data';
+import { ROLE_META, roleHref, type RoleId } from '../../lib/roles';
 import { termHref } from '../../lib/terms';
-import { ROUTES, REPO, UI, type Lang } from '../../lib/site';
+import { NAV, ROUTES, UI, type Lang } from '../../lib/site';
 
 interface Props {
   lang: Lang;
@@ -21,7 +21,6 @@ interface Props {
 const { lang } = Astro.props;
 const page = await getPage(lang, 'home');
 const copy = await getLanding(lang);
-const skillGroups = await getSkillGroups(lang);
 
 // The seven checkpoints, in order. Stage names are harness vocabulary and stay English
 // in both locales. The lifecycle SVG names two of them differently; the map is the one
@@ -38,50 +37,19 @@ const NODE_TO_STAGE: Record<string, string> = {
 };
 
 const failuresRoute = ROUTES.failures[lang];
-const evidenceRoute = ROUTES.evidence[lang];
-const structureRoute = ROUTES.structure[lang];
-const skillsRoute = ROUTES.skills[lang];
-const hooksRoute = ROUTES.hooks[lang];
+const adoptRoute = ROUTES.adopt[lang];
 const whyRoute = ROUTES.why[lang];
-const stackRoute = ROUTES.stack[lang];
 
-/** Node ids come from build spec 4 §5. A key the diagram does not carry is ignored,
- *  so this map is safe to write before the diagram lands. */
-const structureMap: Record<string, string> = {
-  runtime: `${structureRoute}#runtime`,
-  harness: `${structureRoute}#harness`,
-  coordination: `${structureRoute}#coordination`,
-  project: `${structureRoute}#project`,
-  runtime_claude: `${stackRoute}#claude-code`,
-  runtime_codex: `${stackRoute}#codex`,
-  runtime_opencode: `${stackRoute}#opencode`,
-  roles: roleHref(lang, 'thomas'),
-  skills: skillsRoute,
-  hooks: hooksRoute,
-  ledger: evidenceRoute,
-  tracker: termHref(lang, 'tracker'),
-  herdr: `${stackRoute}#herdr`,
-  worktrees: termHref(lang, 'worktree'),
-};
-
-const rolesMap = Object.fromEntries(ROLE_IDS.map((id) => [id, roleHref(lang, id)]));
 // hero: the client-studio picture. Every box goes somewhere the client would look next.
 const studioMap: Record<string, string> = {
-  ...rolesMap,
-  client: ROUTES.why[lang],
+  ...Object.fromEntries(Object.keys(ROLE_META).map((id) => [id, roleHref(lang, id)])),
+  client: whyRoute,
   tracker: `${ROUTES.structure[lang]}#coordination`,
   herdr: `${ROUTES.stack[lang]}#herdr`,
 };
 const lifecycleMap = Object.fromEntries(
   Object.entries(NODE_TO_STAGE).map(([node, stage]) => [node, `${failuresRoute}#${stage}`]),
 );
-const trackerMap: Record<string, string> = {
-  thomas: roleHref(lang, 'thomas'),
-  frontier_query: termHref(lang, 'frontier'),
-  blocking_edges: termHref(lang, 'blocking-edge'),
-  assignee_field: termHref(lang, 'claim'),
-  board: `${evidenceRoute}#ast-074`,
-};
 
 const perStage = STAGES.map((stage, i) => ({
   stage,
@@ -90,11 +58,21 @@ const perStage = STAGES.map((stage, i) => ({
   hits: failures.filter((f) => f.stage === stage),
 }));
 
-// Verbatim, English in both locales, behind a label that says so (PRD §4).
-const TRACKER_SRC = `${REPO}/blob/main/harness/.agents/tracker-contract.md#L44`;
-const TRACKER_REQ = 'A surface the OWNER can open and read without running a query.';
-const QUOTE =
-  'Every check in this package now proves the tooling is correct. Nothing in it proves the loop works.';
+// The three places the reader goes after installing, in nav order.
+const adoptLinks = NAV.filter((item) => ['structure', 'roles', 'skills'].includes(item.key));
+
+/** Card 5 has no drawing: the ladder is a table of literal strings read out of
+ *  orchestrator.md, and a picture of a table is worse than the table. Four columns need
+ *  their heads — "runtime" and "effort" are not readable off the values alone. */
+const MODEL_CARD = 'models';
+/** Card 4 quotes one row of the same file, because the sentence on it is about the
+ *  declaration that file holds. */
+const RUNTIME_CARD = 'runtime';
+/** What a thumbnail's SVG actually occupies inside a card at 1200: the band divided
+ *  three ways, less the gaps, the card's hairline and the frame's own padding. The
+ *  label floor in src/lib/diagram.ts is measured against this number, so it is measured
+ *  off the rendered page rather than guessed. */
+const CARD_FRAME = 330;
 ---
 
 <BaseLayout title={page.title} description={page.description} lang={lang} page="home">
@@ -102,12 +80,12 @@ const QUOTE =
   <section class="screen screen--canvas hero-screen" id="hero">
     <div class="column-band hero">
       <div class="hero-copy">
-        <p class="eyebrow">{UI.heroEyebrow[lang]} · v{meta.version}</p>
+        <p class="eyebrow">{copy.hero.eyebrow}</p>
         <h1>{copy.hero.headline}</h1>
         <p class="hero-sub">{copy.hero.sub}</p>
         <p class="cta">
-          <a class="btn btn--primary" href="#structure">{copy.hero.primary}</a>
-          <a class="btn btn--ghost mono" href={ROUTES.adopt[lang]}>{copy.hero.secondary} →</a>
+          <a class="btn btn--primary" href="#lifecycle">{copy.hero.primary}</a>
+          <a class="btn btn--ghost mono" href={adoptRoute}>{copy.hero.secondary} →</a>
         </p>
       </div>
       <div class="hero-art">
@@ -119,35 +97,76 @@ const QUOTE =
     </div>
   </section>
 
-  {/* ── 2 · The structure ────────────────────────────────────────────────── */}
-  <section class="screen screen--surface" id="structure">
+  {/* ── 2 · Why it exists ────────────────────────────────────────────────── */}
+  <section class="screen screen--surface" id="why">
     <div class="column">
-      <h2>{copy.sections.structure.headline}</h2>
-      <p class="sub">{copy.sections.structure.sub}</p>
+      <h2>{copy.why.headline}</h2>
     </div>
     <div class="column">
-      <InteractiveDiagram slug="structure" lang={lang} hrefMap={structureMap} explore class="band" />
-      <a class="more-link" href={structureRoute}>{UI.structureAll[lang]}</a>
+      <div class="two-col breakout">
+        <p>{copy.why.p1}</p>
+        <p>{copy.why.p2}</p>
+      </div>
+      <a class="more-link" href={whyRoute}>{copy.why.more}</a>
     </div>
   </section>
 
-  {/* ── 3 · Five roles ───────────────────────────────────────────────────── */}
-  <section class="screen screen--canvas" id="roles">
+  {/* ── 3 · What it does ─────────────────────────────────────────────────── */}
+  <section class="screen screen--canvas" id="features">
     <div class="column">
-      <h2>{copy.sections.roles.headline}</h2>
-      <p class="sub">{copy.sections.roles.sub}</p>
-    </div>
-    <div class="column">
-      <InteractiveDiagram slug="five-roles" lang={lang} hrefMap={rolesMap} class="band" />
-      <div class="band"><RoleKey lang={lang} /></div>
-      <ul class="cards band">
+      <ul class="features band">
         {
-          ROLE_IDS.map((id) => (
-            <li data-role={id}>
-              <a href={roleHref(lang, id)}>
-                <span class="card-name mono"><span class="dot" />{ROLE_META[id].label}</span>
-                <span class="card-line">{copy.roleCards[id]}</span>
-              </a>
+          copy.features.map((feature) => (
+            <li class="feature">
+              <div class="thumb">
+                {feature.id === MODEL_CARD ? (
+                  <table class="models mono">
+                    <thead>
+                      <tr>
+                        <th scope="col">{UI.colRole[lang]}</th>
+                        <th scope="col" lang="en">{UI.colRuntime[lang]}</th>
+                        <th scope="col" lang="en">{UI.colModel[lang]}</th>
+                        <th scope="col" lang="en">{UI.colEffort[lang]}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ACTIVE.map((row) => (
+                        <tr data-role={row.role}>
+                          <th scope="row">
+                            <span class="dot" />
+                            {ROLE_META[row.role as RoleId]?.label ?? row.role}
+                          </th>
+                          <td lang="en">{row.runtime}</td>
+                          <td class="model" lang="en">{row.model}</td>
+                          <td lang="en">{row.effort}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : feature.diagram ? (
+                  <Diagram
+                    slug={feature.diagram}
+                    lang={lang}
+                    crop={feature.crop}
+                    frame={CARD_FRAME}
+                    caption={false}
+                  />
+                ) : null}
+              </div>
+              <h3>{feature.title}</h3>
+              <p class="feature-body">{feature.body}</p>
+              {feature.id === RUNTIME_CARD && SAMPLE && (
+                <p class="sample mono" lang="en">
+                  <span class="sample-src">{ORCHESTRATOR_FILE}</span>
+                  {[SAMPLE.role, SAMPLE.runtime, SAMPLE.model, SAMPLE.effort].join(' · ')}
+                </p>
+              )}
+              {feature.id === MODEL_CARD && HAS_UNSET && (
+                <p class="unset mono">— {UI.declareYourself[lang]}</p>
+              )}
+              {feature.href && (
+                <a class="feature-link mono" href={feature.href}>{UI.featureMore[lang]}</a>
+              )}
             </li>
           ))
         }
@@ -155,7 +174,7 @@ const QUOTE =
     </div>
   </section>
 
-  {/* ── 4 · One ticket, seven checkpoints ────────────────────────────────── */}
+  {/* ── 4 · How it runs ──────────────────────────────────────────────────── */}
   <section class="screen screen--surface" id="lifecycle">
     <div class="column">
       <h2>{copy.sections.lifecycle.headline}</h2>
@@ -183,131 +202,48 @@ const QUOTE =
           ))
         }
       </ol>
+      <a class="more-link" href={failuresRoute}>{UI.readAll[lang]}</a>
     </div>
   </section>
 
-  {/* ── 5 · From tracker to pane ─────────────────────────────────────────── */}
-  <section class="screen screen--canvas" id="tracker">
+  {/* ── 5 · Who it is for ────────────────────────────────────────────────── */}
+  <section class="screen screen--canvas" id="fit">
     <div class="column">
-      <h2>{copy.sections.tracker.headline}</h2>
-      <p class="sub">{copy.sections.tracker.sub}</p>
+      <h2>{copy.fit.headline}</h2>
+      <p class="sub">{copy.fit.body}</p>
     </div>
     <div class="column">
-      <InteractiveDiagram slug="frontier-query" lang={lang} hrefMap={trackerMap} class="band" />
-      <aside class="req band">
-        <p class="req-label mono">{UI.trackerReq[lang]} · {UI.verbatim[lang]}</p>
-        <blockquote class="req-quote mono" lang="en">{TRACKER_REQ}</blockquote>
-        <a class="req-src mono" href={TRACKER_SRC} target="_blank" rel="noreferrer">
-          tracker-contract.md:44 ↗
-        </a>
-      </aside>
-    </div>
-  </section>
-
-  {/* ── 6 · The skills ───────────────────────────────────────────────────── */}
-  <section class="screen screen--surface" id="skills">
-    <div class="column">
-      <h2>{copy.sections.skills.headline}</h2>
-      <p class="sub">{copy.sections.skills.sub}</p>
-    </div>
-    <div class="column">
-      {/* The heading promises a list filed by when you reach for one, so the list is
-          filed that way — same groups, same order, same names as /skills. */}
-      {
-        skillGroups.map((group) => (
-          <section class="skill-group band" data-group={group.id}>
-            <h3 class="skill-group-name mono"><span class="dot" />{group.title}</h3>
-            <ul class="grid grid--skills">
-              {group.skills.map((skill) => (
-                <li data-group={group.id}>
-                  <a href={skill.href}>
-                    <span class="g-name mono">{skill.name}</span>
-                    <span class="g-line">{skill.line}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))
-      }
-      <a class="more-link" href={skillsRoute}>{copy.sections.skills.cta} →</a>
+      <div class="two-col fit breakout">
+        <div>
+          <p class="fit-head mono">{copy.fit.fitsLabel}</p>
+          <ul class="fit-list">{copy.fit.fits.map((line) => <li>{line}</li>)}</ul>
+        </div>
+        <div>
+          <p class="fit-head mono">{copy.fit.notYetLabel}</p>
+          <ul class="fit-list fit-list--not">
+            {copy.fit.notYet.map((line) => <li>{line}</li>)}
+          </ul>
+        </div>
+      </div>
     </div>
   </section>
 
-  {/* ── 7 · The hooks ────────────────────────────────────────────────────── */}
-  <section class="screen screen--canvas" id="hooks">
+  {/* ── 6 · How to start ─────────────────────────────────────────────────── */}
+  <section class="screen screen--surface" id="adopt">
     <div class="column">
-      <h2>{copy.sections.hooks.headline}</h2>
-      <p class="sub">{copy.sections.hooks.sub}</p>
+      <h2>{copy.adopt.headline}</h2>
     </div>
     <div class="column">
-      <ul class="grid grid--hooks band">
-        {
-          HOOKS.map((hook) => (
-            <li>
-              <a href={`${hooksRoute}#${hook.id}`}>
-                <span class="g-name mono" lang="en">{copy.hooksCards[hook.id].title}</span>
-                <span class="g-when">{copy.hooksCards[hook.id].when}</span>
-                <span class="g-line">{copy.hooksCards[hook.id].does}</span>
-              </a>
-            </li>
-          ))
-        }
-      </ul>
-    </div>
-  </section>
-
-  {/* ── 8 · Why ──────────────────────────────────────────────────────────── */}
-  <section class="screen screen--surface" id="why">
-    <div class="column">
-      <h2>{copy.sections.why.headline}</h2>
-      <p class="sub">{copy.sections.why.sub}</p>
-    </div>
-    <div class="column">
-      <ul class="asks band">
-        {
-          WHY.map((why, i) => (
-            <li>
-              <a href={`${whyRoute}#${why.id}`}>
-                <span class="n mono">{String(i + 1).padStart(2, '0')}</span>
-                <span class="ask">
-                  <span class="ask-q">{copy.whyCards[why.id].question}</span>
-                  <span class="ask-a">{copy.whyCards[why.id].oneLine}</span>
-                </span>
-                <span class="arrow mono">→</span>
-              </a>
-            </li>
-          ))
-        }
-      </ul>
-    </div>
-  </section>
-
-  {/* ── 9 · Tech stack, and how to install it ────────────────────────────── */}
-  <section class="screen screen--canvas" id="stack">
-    <div class="column">
-      <h2>{copy.sections.stack.headline}</h2>
-      <p class="sub">{copy.sections.stack.sub}</p>
-    </div>
-    <div class="column">
-      <ul class="rail band">
-        {
-          STACK.map((item) => (
-            <li>
-              <a class="mono" href={`${stackRoute}#${item.id}`}>{copy.stackItems[item.id].name}</a>
-            </li>
-          ))
-        }
-      </ul>
       <AdoptBlock lang={lang} />
-      <QuoteBlock
-        size="sm"
-        label={UI.verbatim[lang]}
-        source="RELEASE-NOTES.md:393"
-        href={`${REPO}/blob/main/RELEASE-NOTES.md#L393`}
-      >
-        {QUOTE}
-      </QuoteBlock>
+      <ul class="onward">
+        {
+          adoptLinks.map((item) => (
+            <li>
+              <a class="mono" href={ROUTES[item.key][lang]}>{item.label[lang]}</a>
+            </li>
+          ))
+        }
+      </ul>
     </div>
   </section>
 </BaseLayout>
@@ -335,7 +271,6 @@ const QUOTE =
   .hero-copy .hero-sub {
     margin-inline: auto;
   }
-  .hero-copy .actions,
   .hero-copy .cta {
     justify-content: center;
   }
@@ -343,9 +278,7 @@ const QUOTE =
     width: 100%;
   }
   /* Capped below the global h1: the hero headline is a whole sentence, and at the
-     global size it takes five lines and outweighs the diagram beside it (PRD §5).
-     Capped again for the wider art column, so the two lines the writer set in the YAML
-     stay two lines. */
+     global size it takes five lines and outweighs the diagram beside it (PRD §5). */
   .hero h1 {
     font-size: var(--text-hero);
     line-height: 1.08;
@@ -357,7 +290,7 @@ const QUOTE =
     font-size: var(--text-body);
     line-height: 1.55;
     color: var(--ink-muted);
-    max-width: 44ch;
+    max-width: 62ch;
     margin-bottom: 1.5rem;
   }
   .cta {
@@ -365,20 +298,6 @@ const QUOTE =
     flex-wrap: wrap;
     gap: 0.9rem;
     margin: 0;
-  }
-
-  .strip {
-    margin: 1.5rem 0 0;
-    padding-top: 1rem;
-    border-top: 1px solid var(--rule);
-    font-size: var(--text-label);
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--ink-muted);
-  }
-  .strip .dot {
-    margin-inline: 0.7rem;
-    color: var(--ink-22);
   }
 
   .screen h2 {
@@ -389,54 +308,173 @@ const QUOTE =
     font-size: var(--text-body);
   }
 
-  /* ── role cards (also the mobile fallback for the diagram) ── */
-  .cards {
-    list-style: none;
+  /* ── two columns of prose: why, and the fit lists ── */
+  .two-col {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 0.75rem;
-    /* shorthand would reset margin-left and undo the band offset */
-    margin-block: 1.5rem 0;
-    padding: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 2.5rem;
+    margin-top: 1.75rem;
   }
-  .cards li {
+  .two-col p {
+    max-width: 62ch;
     margin: 0;
   }
-  .cards a {
-    display: block;
-    height: 100%;
-    padding: 0.85rem 0.9rem 0.95rem;
-    border: 1px solid var(--ink-10);
-    border-radius: 6px;
+
+  /* ── the six feature cards ── */
+  .features {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
+    /* shorthand would reset margin-left and undo the band offset */
+    margin-block: 0;
+    padding: 0;
+  }
+  .feature {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 1.15rem 1.25rem 1.35rem;
     background: var(--surface);
-    text-decoration: none;
+    border: 1px solid var(--ink-10);
+    border-radius: var(--radius-card);
   }
-  /* A card is one step off whatever it sits on — the same rule the diagram pane
-     follows. On a canvas screen it is white and stands up; on a white screen it takes
-     the canvas tone and sits in. A white card on a white screen has a hairline and no
-     depth, which is the flatness spec 6 was written against. */
-  .screen--surface .cards a,
-  .screen--surface .grid a,
-  .screen--surface .rail a {
-    background: var(--canvas);
-  }
-  .cards a:hover {
-    border-color: var(--ink-22);
-  }
-  .card-name {
+  /* One fixed frame for every thumbnail, whatever the crop's own ratio is: the drawing
+     is fitted inside it, never cut, so the six cards start their copy on one line. The
+     frame runs to the card's edges, because every pixel of width it gives back is a
+     pixel the label floor can spend. */
+  .thumb {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-    font-size: var(--text-label);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    margin-bottom: 0.4rem;
+    justify-content: center;
+    height: 132px;
+    margin: -1.15rem -1.25rem 1.1rem;
+    padding-inline: 0.75rem;
+    border-bottom: 1px solid var(--ink-10);
+    overflow: hidden;
   }
-  .card-line {
-    display: block;
-    font-size: var(--text-ui);
-    line-height: 1.35;
+  .thumb :global(.diagram) {
+    margin: 0;
+    width: 100%;
+  }
+  /* The pane's own frame would be a second border inside the card's. */
+  .thumb :global(.diagram-svg) {
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: 0;
+  }
+  .feature h3 {
+    font-size: var(--text-h3);
+    line-height: 1.3;
+    margin: 0 0 0.5rem;
+  }
+  .feature-body {
+    font-size: var(--text-body-sm);
+    line-height: 1.5;
     color: var(--ink-muted);
+    margin: 0 0 1rem;
+  }
+  /* One row of the file, quoted. Mono because every word in it is a literal string the
+     reader would type into orchestrator.md. */
+  .sample {
+    font-size: var(--text-label-sm);
+    color: var(--ink-70);
+    margin: -0.4rem 0 1rem;
+  }
+  /* A path is a string the reader types, so it keeps its own case. Uppercasing it
+     would make it a label instead of a literal. */
+  .sample-src {
+    display: block;
+    font-size: var(--text-micro);
+    letter-spacing: 0.02em;
+    color: var(--ink-muted);
+    margin-bottom: 0.3rem;
+  }
+  .unset {
+    font-size: var(--text-label-sm);
+    color: var(--ink-muted);
+    margin: -0.4rem 0 1rem;
+  }
+  .feature-link {
+    margin-top: auto;
+    align-self: flex-start;
+    font-size: var(--text-mono);
+    letter-spacing: 0.04em;
+    color: var(--pass);
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 2px;
+  }
+  .feature-link:hover {
+    opacity: 0.75;
+  }
+
+  /* ── role → model, read off the orchestrator's Active assignments table ── */
+  /* The frame runs to the card's edges for the drawings; the table is words, so it
+     comes back to the same left edge as the title under it. */
+  .models {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-label-sm);
+    padding-inline: 0.5rem;
+  }
+  .models th,
+  .models td {
+    text-align: left;
+    font-weight: 400;
+    padding: 0.09rem 0;
+    border-bottom: 1px solid var(--ink-05);
+  }
+  .models thead th {
+    font-size: var(--text-micro);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-muted);
+    padding-bottom: 0.3rem;
+    border-bottom-color: var(--rule);
+  }
+  .models tbody th {
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .models tbody td {
+    color: var(--ink-muted);
+    white-space: nowrap;
+  }
+  /* The model id is the longest string in the row and the one being compared down the
+     column, so it takes the width and the others take what is left. */
+  .models .model {
+    color: var(--ink-88);
+  }
+  .models th:last-child,
+  .models td:last-child {
+    text-align: right;
+  }
+  .models tbody tr:last-child th,
+  .models tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  .models .dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 0.4rem;
+    vertical-align: middle;
+    background: var(--role-thomas);
+  }
+  .models [data-role='shaper'] .dot {
+    background: var(--role-shaper);
+  }
+  .models [data-role='builder'] .dot {
+    background: var(--role-builder);
+  }
+  .models [data-role='rin'] .dot {
+    background: var(--role-rin);
+  }
+  .models [data-role='qa'] .dot {
+    background: var(--role-qa);
   }
 
   /* ── seven steps under the lifecycle diagram ── */
@@ -492,203 +530,71 @@ const QUOTE =
     font-size: var(--text-label-sm);
   }
 
-  /* ── diagram beside a mono block ── */
-  .split {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 280px);
-    gap: 1.75rem;
-    align-items: start;
-  }
-  .in-split {
-    width: 100%;
-  }
-  .req {
-    margin-top: 1.75rem;
-    padding: 1.1rem 1.3rem;
-    border-left: 2px solid var(--ink);
-    background: none;
-    display: grid;
-    grid-template-columns: minmax(0, 14rem) minmax(0, 1fr) auto;
-    gap: 1.5rem;
-    align-items: baseline;
-  }
-  .req-label {
+  /* ── fits / does not fit yet ── */
+  .fit-head {
     font-size: var(--text-micro);
     text-transform: uppercase;
-    letter-spacing: 0.11em;
+    letter-spacing: 0.12em;
     color: var(--ink-muted);
-    margin: 0;
-  }
-  .req-quote {
-    margin: 0;
-    font-size: var(--text-mono);
-    line-height: 1.55;
-    color: var(--ink);
-  }
-  .req-src {
-    font-size: var(--text-label-sm);
-    color: var(--ink-muted);
-    text-decoration: none;
+    margin: 0 0 0.75rem;
+    padding-bottom: 0.5rem;
     border-bottom: 1px solid var(--rule);
   }
-  .req-src:hover {
-    color: var(--ink);
-  }
-
-  /* ── card grids: skills and hooks ── */
-  .grid {
+  .fit-list {
     list-style: none;
-    display: grid;
-    gap: 0.7rem;
-    margin-block: 1.75rem 0;
+    margin: 0;
     padding: 0;
   }
-  .grid li {
-    margin: 0;
-  }
-  .grid a {
-    display: block;
-    height: 100%;
-    padding: 0.8rem 0.9rem 0.9rem;
-    border: 1px solid var(--ink-10);
-    border-radius: 6px;
-    background: var(--surface);
-    text-decoration: none;
-  }
-  .grid a:hover {
-    border-color: var(--ink-22);
-  }
-  .g-name {
-    display: block;
-    font-size: var(--text-label);
-    letter-spacing: 0.02em;
-    margin-bottom: 0.35rem;
-  }
-  .g-when {
-    display: block;
-    font-size: var(--text-mono);
-    line-height: 1.35;
-    color: var(--ink);
-    margin-bottom: 0.3rem;
-  }
-  .g-line {
-    display: block;
-    font-size: var(--text-mono);
-    line-height: 1.38;
-    color: var(--ink-muted);
-  }
-  .grid--skills {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    margin-block: 0.85rem 0;
-    margin-left: 0;
-    width: auto;
-  }
-  .skill-group {
-    margin-top: 2.25rem;
-  }
-  .skill-group:first-of-type {
-    margin-top: 1.5rem;
-  }
-  .skill-group-name {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    margin: 0;
-    padding-bottom: 0.55rem;
-    border-bottom: 1px solid var(--rule);
-    font-size: var(--text-label-sm);
-    font-weight: 500;
-    letter-spacing: 0.11em;
-    text-transform: uppercase;
-    color: var(--ink-70);
-  }
-  .grid--hooks {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-  /* ── five questions ── */
-  .asks {
-    list-style: none;
-    margin-block: 1.75rem 0;
-    padding: 0;
-    border-top: 1px solid var(--rule);
-  }
-  .asks li {
-    margin: 0;
-    border-bottom: 1px solid var(--rule);
-  }
-  .asks a {
-    display: grid;
-    grid-template-columns: 3rem minmax(0, 1fr) 2rem;
-    align-items: baseline;
-    gap: 0.5rem;
-    padding: 0.95rem 0.25rem;
-    text-decoration: none;
-  }
-  .asks a:hover .ask {
-    color: var(--accent);
-  }
-  .asks .n {
-    font-size: var(--text-label-sm);
-    color: var(--ink-62);
-    letter-spacing: 0.1em;
-  }
-  .ask {
-    display: block;
-  }
-  .ask-q {
-    display: block;
-    font-size: var(--text-h3);
-    line-height: 1.3;
-  }
-  .ask-a {
-    display: block;
-    margin-top: 0.3rem;
-    font-size: var(--text-ui);
+  .fit-list li {
+    position: relative;
+    margin: 0 0 0.55rem;
+    padding-left: 1.35rem;
+    font-size: var(--text-body-sm);
     line-height: 1.45;
-    color: var(--ink-muted);
+    color: var(--ink-88);
   }
-  .asks .arrow {
+  .fit-list li::before {
+    content: '+';
+    position: absolute;
+    left: 0;
+    font-family: var(--font-mono);
     font-size: var(--text-mono);
-    color: var(--ink-muted);
-    text-align: right;
+    color: var(--ink-62);
+  }
+  /* Ledger Rust marks a measured limit, and "not yet" is one. It is not a button. */
+  .fit-list--not li::before {
+    content: '−';
+    color: var(--defect);
   }
 
-  /* ── stack rail ── */
-  .rail {
+  /* ── the three pages to read after installing ── */
+  .onward {
     list-style: none;
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-block: 1.75rem 0;
+    gap: 0.5rem 1.5rem;
+    margin: 1.75rem 0 0;
     padding: 0;
   }
-  .rail li {
+  .onward li {
     margin: 0;
   }
-  .rail a {
-    display: inline-block;
-    padding: 0.45rem 0.8rem;
-    border: 1px solid var(--ink-10);
-    border-radius: 6px;
-    background: var(--surface);
+  .onward a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--row-h);
     font-size: var(--text-mono);
+    letter-spacing: 0.06em;
+    color: var(--pass);
     text-decoration: none;
-    color: var(--ink-muted);
+    border-bottom: 1px solid currentColor;
   }
-  .rail a:hover {
-    color: var(--ink);
-    border-color: var(--ink);
-  }
-
-  #stack :global(.quote) {
-    margin-top: 2.5rem;
-    margin-bottom: 0;
+  .onward a:hover {
+    opacity: 0.75;
   }
 
   @media (max-width: 980px) {
-    .hero,
-    .split,
-    .req {
+    .hero {
       grid-template-columns: minmax(0, 1fr);
     }
     /* Under the copy now, so it takes the width it was capped at rather than half of
@@ -696,12 +602,7 @@ const QUOTE =
     .hero-art {
       max-width: 100%;
     }
-    .req {
-      margin-top: 0;
-    }
-    .cards,
-    .grid--skills,
-    .grid--hooks {
+    .features {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     .steps {
@@ -710,17 +611,10 @@ const QUOTE =
     }
   }
   @media (max-width: 560px) {
-    .cards,
-    .steps,
-    .grid--skills,
-    .grid--hooks {
+    .two-col,
+    .features,
+    .steps {
       grid-template-columns: minmax(0, 1fr);
-    }
-    /* At phone width the five-role art renders labels at about four pixels. It is the
-       same drawing the roles screen shows full width and scrollable two screens down,
-       so on a phone the hero drops it rather than shipping an unreadable copy. */
-    .hero-art {
-      display: block;
     }
   }
 </style>

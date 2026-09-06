@@ -39,10 +39,6 @@ export const UI = {
   roleKey: { vi: 'Màu vai trong hình', en: 'Role colours in this figure' },
 
   /* ── hero strip ── */
-  heroEyebrow: {
-    vi: 'Agentic engineering',
-    en: 'Agentic engineering',
-  },
   statLogged: { vi: 'lỗi đã ghi vào sổ', en: 'failure modes logged' },
   statBound: { vi: 'dòng đã buộc vào một file', en: 'bound to a file' },
   statRuntimes: { vi: 'runtime', en: 'runtimes' },
@@ -66,6 +62,20 @@ export const UI = {
     en: 'Click a box to open its page.',
   },
 
+  /* ── landing feature cards ── */
+  featureMore: { vi: 'Xem chi tiết →', en: 'Read more →' },
+  /** Column heads on the role table, read out of orchestrator.md. "Runtime", "Model"
+   *  and "Effort" are the file's own column names and stay English in both locales. */
+  colRole: { vi: 'Vai', en: 'Role' },
+  colRuntime: { vi: 'Runtime', en: 'Runtime' },
+  colModel: { vi: 'Model', en: 'Model' },
+  colEffort: { vi: 'Effort', en: 'Effort' },
+  /** Shown under the table only when a row still carries the file's `<set-me>`. */
+  declareYourself: {
+    vi: 'khai báo theo tài khoản của bạn',
+    en: 'declare it for your own account',
+  },
+
   /* ── ledger / evidence tables ── */
   filter: { vi: 'lọc theo mã hoặc bài học…', en: 'filter by id or lesson…' },
   colId: { vi: 'Mã', en: 'ID' },
@@ -81,7 +91,7 @@ export const UI = {
     vi: '20 commit gần nhất có dòng Ledger:',
     en: 'The last 20 commits carrying a Ledger: line',
   },
-  readAll: { vi: 'Sáu lỗi, đọc đủ →', en: 'Six failures, read them all →' },
+  readAll: { vi: 'Sáu lỗi đo được →', en: 'Six measured failures →' },
   wholeTable: { vi: 'Cả bảng, và 65 dòng mồ côi →', en: 'The whole table, and 65 orphan rows →' },
 
   /* ── adopt ── */

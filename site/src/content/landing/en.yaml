@@ -1,8 +1,68 @@
 hero:
-  headline: "Build software by process\nwith Astragentic."
-  sub: "You take the client's seat with an outsourcing team made of AI agents. You talk to a single representative, keep every decision that matters, and reread each design on the tracker. The agent team takes the work, builds it, and reports back through a verified process."
+  eyebrow: "Agentic engineering · for multi-milestone projects · v{{meta.version}}"
+  headline: "An outsourcing team made of AI agents.\nRunning by process, around the clock, for large projects."
+  sub: "Astragentic puts you in the client's seat at a complete software development unit: one representative to talk to, a team of agents with clearly defined roles to build, and an issue tracker at the centre so every piece of work leaves a trace. You keep the decisions and full oversight; the execution belongs to the team."
   primary: "See the team at work ↓"
   secondary: "Deploy it in your repo"
+
+why:
+  headline: "AI already works like a real developer. The question left is who leads."
+  p1: "Vibe coding proved that an agent can take a ticket, write the code and test its own work like an engineer. Once execution stops being the bottleneck, an engineer's value moves elsewhere: framing the right requirement, making the right decision, and keeping the whole process on course."
+  p2: "Astragentic is built so that you do exactly that part. It organises agents into an outsourcing team under the familiar SDLC discipline, but redesigns how work is assigned, reviewed and handed back, to exploit a speed and a volume no human team can sustain."
+  more: "Read all five answers →"
+
+features:
+  - id: cross-vendor
+    title: "A review gate in two layers, from two vendors."
+    body: "Every ticket goes through Claude Code's built-in review, then through a cross-read by Codex. Two models read the same diff and argue it out before the merge. Quality no longer rests on whether the Builder had a good day."
+    diagram: cross-vendor-arm
+    crop: [builder, codex, head]
+    href: /en/skills/codex-arm
+  - id: tracker
+    title: "Continuous operation around the issue tracker."
+    body: "Every analysis, slice and task sits on the tracker. When a review finds new work, that work loads itself into the queue. The team runs around the clock without you watching it, and nothing falls outside the system."
+    diagram: frontier-query
+    crop: [frontier_query, board]
+    href: /en/structure#coordination
+  - id: roles
+    title: "A team with names, roles and contracts."
+    body: "Thomas represents you, the Shaper shapes, the Builder builds, Rin holds the gate, QA accepts. Each role carries its own system context, so responsibility is clear and nobody does someone else's job. Claude Code and Codex both support agent profiles at this level."
+    diagram: five-roles
+    crop: [shaper, builder]
+    href: /en/roles/thomas
+  - id: runtime
+    title: "No runtime lock-in."
+    body: "Codex alone, Claude Code alone, or both together all work. You declare which role runs on which provider in orchestrator.md; changing the provider does not change the process."
+    diagram: structure
+    crop: [runtime_claude, runtime_codex]
+    href: /en/tech-stack#claude-code
+  - id: models
+    title: "The right model for the right work."
+    body: "Sonnet for the Builder to implement quickly, Opus for the analysis and the slicing that need deeper reasoning. Cost and quality are balanced per role instead of one model for everything."
+    href: /en/roles/builder
+  - id: oversight
+    title: "Full oversight, no need to take over."
+    body: "The tracker board, the herdr panes, the designs and the decisions can all be read back. Thomas comes back to you at the points that matter: UI/UX, and the choice of tech stack. You decide, the team builds."
+    diagram: hub-and-spokes
+    crop: [tra139, tra142]
+    href: /en/roles/thomas
+
+fit:
+  headline: "Built for projects with many stories and many milestones."
+  body: "Astragentic is not for a single script or a weekend prototype. It pays off when the backlog is long, the milestones run back to back, and you need a team that holds steady for weeks. If your project is at that scale, the rest of this site is written for you."
+  fitsLabel: "Fits when"
+  notYetLabel: "Not yet when"
+  fits:
+    - "The backlog is long, with stories still waiting their turn."
+    - "Milestones follow one another across several weeks."
+    - "You need a team that holds steady, not a single run."
+  notYet:
+    - "A script that runs once and is done."
+    - "A prototype put together over a weekend."
+    - "A small change that finishes inside one session."
+
+adopt:
+  headline: "Four commands, one orchestrator.md."
 
 sections:
   structure:
@@ -12,7 +72,7 @@ sections:
     headline: "Five roles, five session lifetimes"
     sub: "Session lifetime decides what a role can remember, so I split the roles by lifetime rather than by job title."
   lifecycle:
-    headline: "A ticket passes through seven named stages"
+    headline: "From issue to merge, with the tracker in the middle."
     sub: "The seven stages are named so that every measured failure attaches to exactly one of them."
   tracker:
     headline: "Thomas queries the tracker instead of remembering it"

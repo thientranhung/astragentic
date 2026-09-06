@@ -34,24 +34,33 @@ export interface Prepared {
   html: string;
   /** viewBox width in user units, or null when the file carries no viewBox. */
   width: number | null;
+  /** viewBox height in user units, after any crop. Null with no viewBox. */
+  height: number | null;
 }
 
 let instances = 0;
 
-function readViewBox(svg: string): { x: string; y: string; w: number; h: number } | null {
+/** A viewBox, in user units. */
+interface Box {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+function readViewBox(svg: string): Box | null {
   const raw = /<svg\b[^>]*\sviewBox="([^"]+)"/.exec(svg)?.[1];
   if (!raw) return null;
-  const parts = raw.trim().split(/[\s,]+/);
-  if (parts.length !== 4) return null;
-  const w = Number(parts[2]);
-  const h = Number(parts[3]);
-  if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) return null;
-  return { x: parts[0], y: parts[1], w, h };
+  const parts = raw.trim().split(/[\s,]+/).map(Number);
+  if (parts.length !== 4 || parts.some((n) => !Number.isFinite(n))) return null;
+  const [x, y, w, h] = parts;
+  if (w <= 0 || h <= 0) return null;
+  return { x, y, w, h };
 }
 
 /** Cut the viewBox back to just above the legend block, which archify always draws
  *  last. A file without a legend is returned untouched. */
-function cropLegend(svg: string, box: { x: string; y: string; w: number; h: number }): string {
+function cropLegend(svg: string, box: Box): string {
   const start = svg.indexOf('<g data-legend');
   if (start < 0) return svg;
   const tail = svg.slice(start);
@@ -65,6 +74,77 @@ function cropLegend(svg: string, box: { x: string; y: string; w: number; h: numb
     /(<svg\b[^>]*\sviewBox=")[^"]+(")/,
     `$1${box.x} ${box.y} ${box.w} ${cut}$2`,
   );
+}
+
+/** The box archify drew for one node, in user units. The node group opens with its own
+ *  `<rect>`, so the first rect after the group tag is the box itself. */
+function nodeRect(svg: string, id: string): Box | null {
+  const open = new RegExp(`<g id="node-${id}"[^>]*>`).exec(svg);
+  if (!open) return null;
+  const tail = svg.slice(open.index + open[0].length, open.index + open[0].length + 1200);
+  const rect = /<rect\b[^>]*\sx="(-?[\d.]+)"[^>]*\sy="(-?[\d.]+)"[^>]*\swidth="([\d.]+)"[^>]*\sheight="([\d.]+)"/.exec(
+    tail,
+  );
+  if (!rect) return null;
+  const [x, y, w, h] = rect.slice(1, 5).map(Number);
+  return Number.isFinite(x + y + w + h) ? { x, y, w, h } : null;
+}
+
+/** Room left around a cropped detail so a node's own hairline and its sublabel are not
+ *  sitting on the edge of the frame. */
+const CROP_PAD = 20;
+
+/** Remove every label the crop would only show part of. A viewBox is a window, not a
+ *  filter: an edge label whose baseline sits just below the cut still draws its
+ *  ascenders inside the frame, and half a word reads as a rendering bug. Dropping the
+ *  whole label loses a caption a thumbnail was never going to carry anyway.
+ *
+ *  Vertically the test is the baseline, since a line inks upward from it. Horizontally
+ *  the label is centred on its `x`, so half its computed advance has to clear both
+ *  sides. */
+function dropClippedText(svg: string, box: Box): string {
+  return svg.replace(/<text\b([^>]*)>([\s\S]*?)<\/text>/g, (whole, tag: string, body: string) => {
+    const x = Number(/\sx="(-?[\d.]+)"/.exec(tag)?.[1]);
+    const y = Number(/\sy="(-?[\d.]+)"/.exec(tag)?.[1]);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return whole;
+    const size = Number(/\sfont-size="([\d.]+)"/.exec(tag)?.[1]) || 10;
+    const chars = body.replace(/<[^>]*>/g, '').replace(/&\S{1,6};/g, 'x').trim().length;
+    const half = (MONO_ADVANCE * chars * size) / 2;
+    const inside =
+      y - size >= box.y &&
+      y + 0.3 * size <= box.y + box.h &&
+      x - half >= box.x &&
+      x + half <= box.x + box.w;
+    return inside ? whole : '';
+  });
+}
+
+/** Crop the viewBox to the union of the named nodes' boxes. A card-sized figure that
+ *  keeps the whole drawing renders its labels at four or five pixels; a detail of two
+ *  or three boxes renders them at the size the label floor asks for. The box is taken
+ *  from the rects archify laid out, never from the text, so a label can be too small
+ *  here but it can never be cut in half. Unknown ids are ignored; if none of them
+ *  resolve, the figure is returned whole rather than blank. */
+function cropNodes(svg: string, box: Box, ids: string[]): { svg: string; box: Box } {
+  const found = ids.map((id) => nodeRect(svg, id)).filter((b): b is Box => b !== null);
+  if (found.length === 0) return { svg, box };
+  const left = Math.min(...found.map((b) => b.x));
+  const top = Math.min(...found.map((b) => b.y));
+  const right = Math.max(...found.map((b) => b.x + b.w));
+  const bottom = Math.max(...found.map((b) => b.y + b.h));
+  const next: Box = {
+    x: Math.round(left - CROP_PAD),
+    y: Math.round(top - CROP_PAD),
+    w: Math.round(right - left + 2 * CROP_PAD),
+    h: Math.round(bottom - top + 2 * CROP_PAD),
+  };
+  return {
+    svg: svg.replace(
+      /(<svg\b[^>]*\sviewBox=")[^"]+(")/,
+      `$1${next.x} ${next.y} ${next.w} ${next.h}$2`,
+    ),
+    box: next,
+  };
 }
 
 /** Advance width of one JetBrains Mono character, in em. Every label in an archify SVG
@@ -248,20 +328,36 @@ export interface PrepareOptions {
   lang: Lang;
   /** Rendered width of the figure on a desktop screen, in CSS px. */
   frame: number;
+  /** Node ids to crop the viewBox down to, for a card-sized detail of a big drawing. */
+  crop?: string[];
   /** Run before the ids are made unique — this is where node groups get their classes
    *  and their link semantics. */
   transform?: (svg: string) => string;
 }
 
-export function prepare(raw: string, { lang, frame, transform }: PrepareOptions): Prepared {
+export function prepare(raw: string, { lang, frame, crop, transform }: PrepareOptions): Prepared {
   const suffix = `d${++instances}`;
-  const box = readViewBox(raw);
+  let box = readViewBox(raw);
   let svg = raw;
   if (box) {
-    svg = cropLegend(svg, box);
+    // A node crop already excludes the legend, and both rewrite the same attribute, so
+    // only one of the two ever runs.
+    if (crop?.length) {
+      const cropped = cropNodes(svg, box, crop);
+      svg = cropped.svg;
+      box = cropped.box;
+    } else {
+      svg = cropLegend(svg, box);
+      box = readViewBox(svg) ?? box;
+    }
+    // The label floor is measured against what is actually on screen, so a cropped
+    // figure sizes its labels against the crop rather than the whole drawing.
     svg = raiseLabels(svg, box.w, frame);
+    // After the floor has settled, not before: a label that was raised is wider than
+    // the one that was read, and it is the raised one the frame has to hold.
+    if (crop?.length) svg = dropClippedText(svg, box);
   }
   svg = setLang(svg, lang);
   if (transform) svg = transform(svg);
-  return { html: uniqueIds(svg, suffix), width: box?.w ?? null };
+  return { html: uniqueIds(svg, suffix), width: box?.w ?? null, height: box?.h ?? null };
 }

@@ -82,12 +82,50 @@ const landing = defineCollection({
   schema: z.object({
     hero: z
       .object({
+        eyebrow: z.string().optional(),
         headline: z.string().optional(),
         sub: z.string().optional(),
         primary: z.string().optional(),
         secondary: z.string().optional(),
       })
       .optional(),
+    /** Home v2 §Section 1: two columns of prose, no picture. */
+    why: z
+      .object({
+        headline: z.string().optional(),
+        p1: z.string().optional(),
+        p2: z.string().optional(),
+        more: z.string().optional(),
+      })
+      .optional(),
+    /** Home v2 §Section 2: six cards, in the writer's order. `diagram` is a slug under
+     *  src/assets/diagrams and `crop` the node ids the card's thumbnail is cut down to;
+     *  a card with neither renders copy only. */
+    features: z
+      .array(
+        z.object({
+          id: z.string(),
+          title: z.string().optional(),
+          body: z.string().optional(),
+          diagram: z.string().optional(),
+          crop: z.array(z.string()).optional(),
+          href: z.string().optional(),
+        }),
+      )
+      .optional(),
+    /** Home v2 §Section 4. `fits` / `notYet` avoid the YAML keys `yes` and `no`. */
+    fit: z
+      .object({
+        headline: z.string().optional(),
+        body: z.string().optional(),
+        fitsLabel: z.string().optional(),
+        notYetLabel: z.string().optional(),
+        fits: z.array(z.string()).optional(),
+        notYet: z.array(z.string()).optional(),
+      })
+      .optional(),
+    /** Home v2 §Section 5. The commands themselves come from src/data/adopt.json. */
+    adopt: z.object({ headline: z.string().optional() }).optional(),
     sections: z
       .object({
         structure: caption.optional(),

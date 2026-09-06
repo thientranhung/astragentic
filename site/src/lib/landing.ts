@@ -11,8 +11,36 @@ export interface Caption {
   headline: string;
   sub: string;
 }
+/** One card in the feature grid (home v2 §Section 2). `crop` names the nodes the
+ *  thumbnail is cut down to; see src/lib/diagram.ts. A card with no `diagram` is copy
+ *  only, and HomeBody decides what stands in for the picture. */
+export interface Feature {
+  id: string;
+  title: string;
+  body: string;
+  diagram?: string;
+  crop?: string[];
+  href?: string;
+}
+
 export interface Landing {
-  hero: { headline: string; sub: string; primary: string; secondary: string };
+  hero: { eyebrow: string; headline: string; sub: string; primary: string; secondary: string };
+  /** Section 1. Two columns of prose and a link onward; no picture. */
+  why: { headline: string; p1: string; p2: string; more: string };
+  /** Section 2, in the writer's order. Empty until the YAML lands — the copy has one
+   *  home, and duplicating six paragraphs into a fallback would give it two. */
+  features: Feature[];
+  /** Section 4. `fits` / `notYet` dodge the YAML keys `yes` and `no`. */
+  fit: {
+    headline: string;
+    body: string;
+    fitsLabel: string;
+    notYetLabel: string;
+    fits: string[];
+    notYet: string[];
+  };
+  /** Section 5. The four commands come from src/data/adopt.json. */
+  adopt: { headline: string };
   sections: {
     structure: Caption;
     roles: Caption;
@@ -53,11 +81,16 @@ const cards = (lang: Lang) => ({
 const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
   vi: {
     hero: {
+      eyebrow: 'Agentic engineering',
       headline: 'Bốn Builder chạy cùng lúc\ntrên một repo, không giẫm lên nhau.',
       sub: 'Tôi dựng lớp điều phối này để việc không rơi mất giữa các session.',
       primary: 'Xem cấu trúc',
       secondary: 'Cài cho repo của bạn',
     },
+    why: { headline: '', p1: '', p2: '', more: '' },
+    features: [],
+    fit: { headline: '', body: '', fitsLabel: '', notYetLabel: '', fits: [], notYet: [] },
+    adopt: { headline: '' },
     sections: {
       structure: {
         headline: 'Astragentic nằm ở đâu trong stack',
@@ -113,11 +146,16 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
   },
   en: {
     hero: {
+      eyebrow: 'Agentic engineering',
       headline: 'Four Builders at once\non one repo, never in each other’s way.',
       sub: 'I built this coordination layer so work stops falling between sessions.',
       primary: 'See the structure',
       secondary: 'Install it in your repo',
     },
+    why: { headline: '', p1: '', p2: '', more: '' },
+    features: [],
+    fit: { headline: '', body: '', fitsLabel: '', notYetLabel: '', fits: [], notYet: [] },
+    adopt: { headline: '' },
     sections: {
       structure: {
         headline: 'Where Astragentic sits in the stack',

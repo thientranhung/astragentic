@@ -29,13 +29,14 @@ export const ROUTES: Record<PageKey, Record<Lang, string>> = {
   evidence: { vi: '/bang-chung', en: '/en/evidence' },
 };
 
-/** Seven items, in the order the reader needs them (build spec 4 §3). */
+/** Seven items, in the order the reader asks the questions (home v2 spec §Nav): why the
+ *  thing exists, then what it is made of, then how to install it. */
 export const NAV: { key: PageKey; label: Record<Lang, string> }[] = [
+  { key: 'why', label: { vi: 'Vì sao', en: 'Why' } },
   { key: 'structure', label: { vi: 'Cấu trúc', en: 'Structure' } },
   { key: 'roles', label: { vi: 'Vai', en: 'Roles' } },
   { key: 'skills', label: { vi: 'Skills', en: 'Skills' } },
   { key: 'hooks', label: { vi: 'Hooks', en: 'Hooks' } },
-  { key: 'why', label: { vi: 'Vì sao', en: 'Why' } },
   { key: 'stack', label: { vi: 'Tech stack', en: 'Tech stack' } },
   { key: 'adopt', label: { vi: 'Cài', en: 'Adopt' } },
 ];
