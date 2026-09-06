@@ -111,20 +111,11 @@ const QUOTE =
         </p>
       </div>
       <div class="hero-art">
-        {/* five-roles, not structure: five boxes at this width carry labels a reader
-            can actually read, where the four-layer diagram packs fourteen. The whole
-            structure diagram is one screen further down, at full band width. */}
+        {/* The client-studio picture, drawn from the owner's sketch: the tracker sits at
+            the centre of the team and every edge passes through it. Numbers stay on
+            /bang-chung; the hero carries no stat strip. */}
         <InteractiveDiagram slug="client-studio" lang={lang} hrefMap={studioMap} maxWidth={1120} />
       </div>
-    </div>
-    <div class="column-band">
-      <p class="strip mono">
-        <span>{meta.total} {UI.statLogged[lang]}</span>
-        <span class="dot">·</span>
-        <span>{meta.cited} {UI.statBound[lang]}</span>
-        <span class="dot">·</span>
-        <span>3 {UI.statRuntimes[lang]}</span>
-      </p>
     </div>
   </section>
 
