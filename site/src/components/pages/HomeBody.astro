@@ -1,4 +1,5 @@
 ---
+import { hl } from '../../lib/markup';
 // The landing, v2. Five sections in the order the reader asks the questions (home v2
 // spec): why this exists → what it does → how it runs → who it is for → how to start.
 // Everything the page used to carry about layers, hooks, the skill catalog and the
@@ -10,7 +11,7 @@ import AdoptBlock from '../AdoptBlock.astro';
 import { getPage } from '../../lib/pages';
 import { getLanding } from '../../lib/landing';
 import { ACTIVE, HAS_UNSET, SAMPLE, ORCHESTRATOR_FILE } from '../../lib/orchestrator';
-import { failures } from '../../lib/data';
+import { failures, meta } from '../../lib/data';
 import { ROLE_META, roleHref, type RoleId } from '../../lib/roles';
 import { termHref } from '../../lib/terms';
 import { NAV, ROUTES, UI, type Lang } from '../../lib/site';
@@ -80,8 +81,8 @@ const CARD_FRAME = 330;
   <section class="screen screen--canvas hero-screen" id="hero">
     <div class="column-band hero">
       <div class="hero-copy">
-        <p class="eyebrow">{copy.hero.eyebrow}</p>
-        <h1>{copy.hero.headline}</h1>
+        <p class="eyebrow" set:html={hl(String(copy.hero.eyebrow).replace("{{meta.version}}", meta.version))} />
+        <h1 set:html={hl(copy.hero.headline)} />
         <p class="hero-sub">{copy.hero.sub}</p>
         <p class="cta">
           <a class="btn btn--primary" href="#lifecycle">{copy.hero.primary}</a>
@@ -258,6 +259,15 @@ const CARD_FRAME = 330;
 </BaseLayout>
 
 <style>
+  /* Owner's positioning phrases, marked **…** in the copy: brand red at text weight. */
+  .hero-copy :global(.hl) {
+    color: var(--brand-primary-hover);
+    font-weight: inherit;
+  }
+  .eyebrow :global(.hl) {
+    color: var(--brand-primary-hover);
+    font-weight: 600;
+  }
   /* ── hero ── */
   .hero-screen {
     padding-block: 3rem 2.25rem;

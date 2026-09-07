@@ -1,5 +1,6 @@
 ---
 import { adopt } from '../lib/data';
+import { hl } from '../lib/markup';
 import { UI, type Lang } from '../lib/site';
 
 interface Requirement {
@@ -40,7 +41,7 @@ const script = adopt.commands.join('\n');
               )}
               {p.tag && <span class="mono tag">{p.tag}</span>}
             </div>
-            {p.role && <p class="role">{p.role}</p>}
+            {p.role && <p class="role" set:html={hl(p.role)} />}
           </li>
         ))
       }
@@ -123,6 +124,15 @@ const script = adopt.commands.join('\n');
     letter-spacing: 0.1em;
     color: var(--ink-62);
     white-space: nowrap;
+  }
+  .name {
+    font-weight: 700;
+    color: var(--ink);
+    font-size: var(--text-ui, 15px);
+  }
+  .role :global(.hl) {
+    color: var(--ink);
+    font-weight: 600;
   }
   .role {
     margin: 0.2rem 0 0;
