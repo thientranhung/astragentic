@@ -62,8 +62,8 @@ fit:
     - "Một thay đổi nhỏ, xong trong đúng một phiên."
 
 adopt:
-  headline: "Bốn lệnh, một orchestrator.md."
-  reqTitle: "Yêu cầu và vai trò của từng thành phần"
+  headline: "Yêu cầu tech stack và cài đặt"
+  reqTitle: "Tech stack cần có"
   requirements:
     - name: "Claude Code CLI"
       tag: "bắt buộc"

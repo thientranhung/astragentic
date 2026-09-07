@@ -62,8 +62,8 @@ fit:
     - "A small change that finishes inside one session."
 
 adopt:
-  headline: "Four commands, one orchestrator.md."
-  reqTitle: "Requirements and what each one is for"
+  headline: "Tech stack requirements and install"
+  reqTitle: "Required tech stack"
   requirements:
     - name: "Claude Code CLI"
       tag: "required"

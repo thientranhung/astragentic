@@ -99,7 +99,7 @@ export const UI = {
   copy: { vi: 'Chép', en: 'Copy' },
   copied: { vi: 'Đã chép', en: 'Copied' },
   prerequisites: { vi: 'Cần sẵn', en: 'Prerequisites' },
-  quickstart: { vi: 'Bốn lệnh', en: 'Four commands' },
+  quickstart: { vi: 'Cài đặt', en: 'Install' },
   brownfield: { vi: 'Bốn skill cho repo có sẵn', en: 'Four skills for an existing repo' },
 
   /* ── roles ── */
