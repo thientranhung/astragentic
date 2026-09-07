@@ -2,26 +2,42 @@
 import { adopt } from '../lib/data';
 import { UI, type Lang } from '../lib/site';
 
+interface Requirement {
+  name: string;
+  tag?: string;
+  role?: string;
+  href?: string;
+}
 interface Props {
   lang: Lang;
+  /** Owner-written requirement list with what each piece is for; falls back to README data. */
+  requirements?: Requirement[];
+  reqTitle?: string;
 }
-const { lang } = Astro.props;
+const { lang, requirements, reqTitle } = Astro.props;
+const reqs: Requirement[] =
+  requirements && requirements.length > 0
+    ? requirements
+    : adopt.prerequisites.map((p) => ({ name: p.version ? `${p.name} ${p.version}` : p.name, href: p.href ?? undefined }));
 const script = adopt.commands.join('\n');
 ---
 
 <div class="adopt breakout">
   <div class="col">
-    <p class="label mono">{UI.prerequisites[lang]}</p>
+    <p class="label mono">{reqTitle ?? UI.prerequisites[lang]}</p>
     <ul class="pre">
       {
-        adopt.prerequisites.map((p) => (
-          <li>
-            {p.href ? (
-              <a href={p.href} target="_blank" rel="noreferrer" class="mono name">{p.name}</a>
-            ) : (
-              <span class="mono name">{p.name}</span>
-            )}
-            {p.version && <span class="mono ver"> {p.version}</span>}
+        reqs.map((p) => (
+          <li class="req-item">
+            <div class="req-head">
+              {p.href ? (
+                <a href={p.href} target="_blank" rel="noreferrer" class="mono name">{p.name}</a>
+              ) : (
+                <span class="mono name">{p.name}</span>
+              )}
+              {p.tag && <span class="mono tag">{p.tag}</span>}
+            </div>
+            {p.role && <p class="role">{p.role}</p>}
           </li>
         ))
       }
@@ -82,10 +98,34 @@ const script = adopt.commands.join('\n');
 </script>
 
 <style>
+  .req-item {
+    padding-block: 0.6rem;
+  }
+  .req-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  .tag {
+    font-size: var(--text-micro, 10px);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-62);
+    white-space: nowrap;
+  }
+  .role {
+    margin: 0.2rem 0 0;
+    font-size: var(--text-sm, 14px);
+    line-height: 1.5;
+    color: var(--ink-70);
+  }
+  /* Requirements first as a two-column grid, commands below at full width: seven
+     requirement rows are taller than four commands, so side by side they never balance. */
   .adopt {
     display: grid;
-    grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
-    gap: 2.25rem;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
     margin-block: 2.5rem 0;
     padding: 1.75rem 1.9rem;
     background: var(--surface);
@@ -103,6 +143,14 @@ const script = adopt.commands.join('\n');
     list-style: none;
     margin: 0;
     padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 2.5rem;
+  }
+  @media (max-width: 720px) {
+    .pre {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
   .pre li {
     margin: 0 0 0.6rem;

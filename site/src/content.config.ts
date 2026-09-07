@@ -125,7 +125,22 @@ const landing = defineCollection({
       })
       .optional(),
     /** Home v2 §Section 5. The commands themselves come from src/data/adopt.json. */
-    adopt: z.object({ headline: z.string().optional() }).optional(),
+    adopt: z
+      .object({
+        headline: z.string().optional(),
+        reqTitle: z.string().optional(),
+        requirements: z
+          .array(
+            z.object({
+              name: z.string(),
+              tag: z.string().optional(),
+              role: z.string().optional(),
+              href: z.string().optional(),
+            }),
+          )
+          .optional(),
+      })
+      .optional(),
     sections: z
       .object({
         structure: caption.optional(),

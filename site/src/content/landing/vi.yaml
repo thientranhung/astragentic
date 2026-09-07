@@ -63,119 +63,30 @@ fit:
 
 adopt:
   headline: "Bốn lệnh, một orchestrator.md."
-
-sections:
-  structure:
-    headline: "Bốn lớp, mỗi lớp trả lời một câu hỏi"
-    sub: "Runtime chạy agent, harness giữ luật, lớp điều phối giữ trạng thái, và repo của bạn nằm dưới cùng."
-  roles:
-    headline: "Năm vai, năm vòng đời session"
-    sub: "Vòng đời session quyết định một vai nhớ được gì, nên tôi chia vai theo tuổi thọ session chứ không theo chức danh."
-  lifecycle:
-    headline: "Từ issue tới merge, tracker ở giữa."
-    sub: "Bảy chặng có tên để mỗi lỗi đo được gắn vào đúng một chặng."
-  tracker:
-    headline: "Thomas truy vấn tracker thay vì ghi nhớ tracker"
-    sub: "Ticket nào sẵn sàng là kết quả một truy vấn trên board, không phải thứ một session giữ trong đầu."
-  skills:
-    headline: "Mười sáu skill, xếp theo lúc cần dùng"
-    sub: "Mỗi skill có một dòng động từ và một trang mô tả artifact nó để lại."
-  hooks:
-    headline: "Bốn hook chạy ở bốn thời điểm cố định"
-    sub: "Ba hook đang bắn, một hook đo được không lần bắn nào, và tôi giữ nguyên hook đó ở đây."
-  why:
-    headline: "Năm quyết định thiết kế và cái giá của chúng"
-    sub: "Mỗi câu trả lời nêu rõ cái giá phải trả, vì một lựa chọn không có giá thường là lựa chọn chưa được thử."
-  stack:
-    headline: "Chín thành phần của stack"
-    sub: "Thành phần nào bỏ đi mà chỉ gây bất tiện nhỏ, tôi đã bỏ. Còn lại là những thứ không thay được."
-  arm:
-    headline: "Hai vendor đọc lại diff của nhau"
-    sub: "Claude build, Codex đọc lại, và biên nhận buộc vào đúng SHA đã được đọc."
-  evidence:
-    headline: "Bằng chứng đo được, không phải lời hứa"
-    sub: "{{meta.cited}} trên {{meta.total}} dòng đã buộc vào một file đang bắt ai đó làm khác đi hôm nay; phần còn lại tôi giữ nguyên trong bảng."
-    cta: "Mở ledger"
-  limit:
-    headline: "Những gì tôi chưa đo được"
-    sub: "Vòng này chưa từng chạy trọn một lần trên việc thật, và tôi ghi rõ khoảng trống đó ở đây."
-
-stages:
-  claim: "Ghi assignee, đọc lại, rồi mới tạo branch. Tạo branch là interlock quyết định."
-  brief: "Thomas đẩy ticket vào một pane, kèm Base để code-review có ref thật."
-  build: "Builder là người viết duy nhất trong worktree, commit ở mỗi ranh giới pha."
-  code-review: "Hai trục Standards và Spec chạy đúng một lượt trên cả increment."
-  simplify: "Commit simplify(increment) phải nằm đúng ở head, không có commit nào đè lên."
-  arm: "Builder gọi vendor còn lại đọc lại diff, để lại biên nhận arm(ticket)."
-  merge: "Commit merge trước, gate trên SHA đó, rồi ghi frontier trở lại board."
-
-roleCards:
-  thomas: "Thomas sống suốt phiên, giữ tracker, frontier, claim, dispatch và merge."
-  shaper: "Shaper chạy một session không đứt: grill, spec, cắt ticket, rồi dừng."
-  builder: "Builder nhận một ticket, một worktree, và là người viết duy nhất ở đó."
-  rin: "Rin chạy một vòng mỗi milestone, đọc diff và kiểm dấu vết quy trình."
-  qa: "QA dùng sản phẩm đang chạy như một người dùng và không đọc diff."
-
-hooksCards:
-  - id: pre-tool-use
-    title: "PreToolUse · git guard"
-    when: "Trước mỗi lệnh Bash, trên Claude Code và Codex."
-    does: "Từ chối lệnh git sai kèm câu lệnh đúng để thay, hoặc im lặng cho qua. Hook này không bao giờ tự chạy lệnh."
-  - id: worktree-remove
-    title: "WorktreeRemove · release"
-    when: "Khi worktree bị gỡ qua đường tool, còn Thomas thì gỡ bằng git thuần."
-    does: "Thiết kế để reap tiến trình rồi gọi plug của project. Đo được không lần bắn nào, nên dọn tay vẫn bắt buộc."
-  - id: session-start
-    title: "SessionStart(compact) · contract reload"
-    when: "Ngay sau khi một session Claude Code compact."
-    does: "Nạp lại đường dẫn contract của vai, tới tay agent trước khi nó kịp hành động."
-  - id: subagent-stop
-    title: "SubagentStop · log"
-    when: "Mỗi lần một subagent kết thúc."
-    does: "Ghi agent_type, agent_id, session_id vào log. Chính nó là nhóm đối chứng chứng minh hook trên đang ngủ."
-
-whyCards:
-  - slug: why-astragentic
-    question: "Vì sao phải thêm một lớp nữa?"
-    oneLine: "Một agent thì không cần. Agent thứ hai và thứ ba mới là lúc việc biến mất mà không lỗi nào được ném ra."
-  - slug: why-mattpocock
-    question: "Vì sao thuê method của mattpocock?"
-    oneLine: "Method đó loop ở đầu quy trình. Tôi từng loop ở cuối và trả giá 5 tới 14 vòng review cho một ticket."
-  - slug: why-not-subagents
-    question: "Vì sao không chỉ dùng subagent?"
-    oneLine: "Subagent dùng chung checkout và context, không có tracker giữ trạng thái, không có pane để nhìn, không có vendor thứ hai."
-  - slug: why-tracker
-    question: "Vì sao trạng thái phải nằm trên tracker?"
-    oneLine: "Một file plan không trả lời được ticket nào đang sẵn sàng ngay bây giờ. Một truy vấn thì trả lời được."
-  - slug: why-cross-vendor
-    question: "Vì sao cần model của vendor khác đọc lại?"
-    oneLine: "Vòng cùng vendor đã cho lọt một defect commit secret và PII vào file được track. Vòng cross-vendor bắt được ở mức P1."
-
-stackItems:
-  - slug: claude-code
-    name: "Claude Code"
-    oneLine: "Runtime gốc: cả năm vai chạy được ở đây, và hai hook quan trọng nhất sống ở đây."
-  - slug: codex
-    name: "Codex"
-    oneLine: "Vendor thứ hai. Không có Codex thì cross-vendor arm không tồn tại."
-  - slug: opencode
-    name: "OpenCode"
-    oneLine: "Runtime thứ ba để dispatch vai, và là chỗ git guard không với tới."
-  - slug: git-worktree
-    name: "git worktree"
-    oneLine: "Ranh giới isolation thật: một checkout cho một ticket, một người ghi duy nhất."
-  - slug: herdr
-    name: "herdr"
-    oneLine: "Mỗi agent chạy trong một pane mở được, nên dispatch trở thành thứ đếm được thay vì thứ được kể lại."
-  - slug: mattpocock-skills
-    name: "mattpocock-skills"
-    oneLine: "Toàn bộ lớp craft thuê từ đây. Astragentic không viết method riêng."
-  - slug: trackers
-    name: "GitHub · Jira · Linear"
-    oneLine: "Ba adapter sau một tracker contract, để bạn dùng tiếp board đang có."
-  - slug: scripts
-    name: "Python · Bash"
-    oneLine: "Mỗi script cần một thời điểm gọi và một người sở hữu. Thiếu một trong hai thì không ai chạy nó."
-  - slug: archify
-    name: "archify"
-    oneLine: "Diagram mô tả bằng JSON rồi render ra HTML và SVG, nên bản Việt và bản Anh không lệch nhau."
+  reqTitle: "Yêu cầu và vai trò của từng thành phần"
+  requirements:
+    - name: "Claude Code CLI"
+      tag: "bắt buộc"
+      role: "Runtime chạy các vai. Cổng milestone của Rin chỉ chạy trên Claude, nên thiếu Claude là không gate được."
+      href: "https://docs.anthropic.com/en/docs/claude-code"
+    - name: "Codex CLI"
+      tag: "tuỳ chọn"
+      role: "Vendor thứ hai cho lượt review chéo và runtime dự phòng. Thiếu Codex, đội chạy chế độ một provider."
+      href: "https://github.com/openai/codex"
+    - name: "Git ≥ 2.5, có worktree"
+      tag: "bắt buộc"
+      role: "Ranh giới cô lập: mỗi Builder một checkout riêng, không ai ghi đè HEAD của ai."
+    - name: "herdr ≥ 0.8.0 và herdr skill"
+      tag: "bắt buộc"
+      role: "Mỗi agent một pane. Thomas nhìn thấy agent nào đang chạy, gửi và chờ tin qua herdr CLI."
+      href: "https://github.com/herdrdev/herdr"
+    - name: "mattpocock-skills ≥ 1.2.3"
+      tag: "bắt buộc"
+      role: "Phương pháp SDLC mà đội đi theo: grill, spec, tickets, implement, code review."
+      href: "https://github.com/mattpocock/skills"
+    - name: "Issue tracker: GitHub Issues, Jira hoặc Linear"
+      tag: "chọn một"
+      role: "Bộ nhớ chung của đội. Mọi task, claim và biên nhận đều đi qua đây."
+    - name: "python3"
+      tag: "bắt buộc"
+      role: "Chạy các hook gác git và nạp lại contract sau compaction."

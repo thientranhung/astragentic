@@ -63,119 +63,30 @@ fit:
 
 adopt:
   headline: "Four commands, one orchestrator.md."
-
-sections:
-  structure:
-    headline: "Four layers, each answering one question"
-    sub: "The runtime runs the agent, the harness holds the rules, the coordination layer holds the state, and your repo sits underneath."
-  roles:
-    headline: "Five roles, five session lifetimes"
-    sub: "Session lifetime decides what a role can remember, so I split the roles by lifetime rather than by job title."
-  lifecycle:
-    headline: "From issue to merge, with the tracker in the middle."
-    sub: "The seven stages are named so that every measured failure attaches to exactly one of them."
-  tracker:
-    headline: "Thomas queries the tracker instead of remembering it"
-    sub: "Which ticket is ready is the result of a query against the board, not something a session holds in its head."
-  skills:
-    headline: "Sixteen skills, grouped by when you need them"
-    sub: "Each skill has one verb line and a page describing the artifact it leaves behind."
-  hooks:
-    headline: "Four hooks fire at four fixed moments"
-    sub: "Three hooks fire, one measured zero firings, and I have left that one in place here."
-  why:
-    headline: "Five design decisions and what each one costs"
-    sub: "Every answer states its cost, because a choice with no cost is usually a choice nobody has tried."
-  stack:
-    headline: "Nine components in the stack"
-    sub: "Any component that only causes minor inconvenience when removed is already gone. What remains has no replacement."
-  arm:
-    headline: "Two vendors read each other's diff"
-    sub: "Claude builds, Codex reads it back, and the receipt is bound to the exact SHA that was read."
-  evidence:
-    headline: "Measured evidence, not promises"
-    sub: "{{meta.cited}} of {{meta.total}} entries are bound to a file that makes someone act differently today; I have left the rest in the table."
-    cta: "Open the ledger"
-  limit:
-    headline: "What I have not measured"
-    sub: "This loop has never run all the way through on live work, and I state that gap here."
-
-stages:
-  claim: "Write the assignee, read it back, then create the branch. Branch creation is the deciding interlock."
-  brief: "Thomas dispatches the ticket into a pane, with the Base that code-review needs."
-  build: "The Builder is the sole writer in the worktree, committing at every phase boundary."
-  code-review: "Both axes, Standards and Spec, run exactly once over the whole increment."
-  simplify: "The simplify(increment) commit has to be the head, with no commit stacked on top of it."
-  arm: "The Builder asks the other vendor to read the diff, leaving an arm(ticket) receipt."
-  merge: "Commit the merge first, gate that SHA, then write the frontier back to the board."
-
-roleCards:
-  thomas: "Thomas is resident for the session, holding the tracker, the frontier, the claim, dispatch and merge."
-  shaper: "The Shaper runs one unbroken session: grill, spec, cut tickets, then stop."
-  builder: "The Builder takes one ticket and one worktree, and is the sole writer in it."
-  rin: "Rin runs one round per milestone, reading the diff and the process traces."
-  qa: "QA uses the running product as a user would, and never reads the diff."
-
-hooksCards:
-  - id: pre-tool-use
-    title: "PreToolUse · git guard"
-    when: "Before every Bash command, on Claude Code and Codex."
-    does: "Denies a wrong git command and names the right one to run instead, or stays silent. This hook never runs a command itself."
-  - id: worktree-remove
-    title: "WorktreeRemove · release"
-    when: "When a worktree goes through the tool path, while Thomas removes them with plain git."
-    does: "Designed to reap processes, then call the project plug. It measured zero firings, so manual cleanup stays required."
-  - id: session-start
-    title: "SessionStart(compact) · contract reload"
-    when: "Right after a Claude Code session compacts."
-    does: "Reloads the role contract path, reaching the agent before it can act."
-  - id: subagent-stop
-    title: "SubagentStop · log"
-    when: "Every time a subagent ends."
-    does: "Logs agent_type, agent_id, session_id. It was the control group that proved the hook above is dormant."
-
-whyCards:
-  - slug: why-astragentic
-    question: "Why add another layer at all?"
-    oneLine: "One agent does not need it. The second and third agents are where work vanishes with no error thrown."
-  - slug: why-mattpocock
-    question: "Why rent the method from mattpocock?"
-    oneLine: "That method loops at the front of the process. I looped at the end and paid 5 to 14 review rounds per ticket."
-  - slug: why-not-subagents
-    question: "Why not just use subagents?"
-    oneLine: "Subagents share a checkout and a context, with no tracker holding state, no pane to look at, and no second vendor."
-  - slug: why-tracker
-    question: "Why does state have to live on a tracker?"
-    oneLine: "A plan file cannot answer which ticket is ready right now. A query can."
-  - slug: why-cross-vendor
-    question: "Why have another vendor read it back?"
-    oneLine: "A same-vendor pass let a defect commit live secrets and buyer PII into tracked files. The cross-vendor pass caught it as P1."
-
-stackItems:
-  - slug: claude-code
-    name: "Claude Code"
-    oneLine: "The root runtime: all five roles run here, and the two most important hooks live here."
-  - slug: codex
-    name: "Codex"
-    oneLine: "The second vendor. Without Codex the cross-vendor arm does not exist."
-  - slug: opencode
-    name: "OpenCode"
-    oneLine: "A third runtime for role dispatch, and the place the git guard cannot reach."
-  - slug: git-worktree
-    name: "git worktree"
-    oneLine: "The real isolation boundary: one checkout per ticket, one writer in it."
-  - slug: herdr
-    name: "herdr"
-    oneLine: "Each agent runs in a pane you can open, so dispatch becomes countable instead of narrated."
-  - slug: mattpocock-skills
-    name: "mattpocock-skills"
-    oneLine: "The whole craft layer is rented from here. Astragentic writes no method of its own."
-  - slug: trackers
-    name: "GitHub · Jira · Linear"
-    oneLine: "Three adapters behind one tracker contract, so you keep the board you already run."
-  - slug: scripts
-    name: "Python · Bash"
-    oneLine: "Every script needs a calling moment and an owner. Without either one, nobody runs it."
-  - slug: archify
-    name: "archify"
-    oneLine: "Diagrams described as JSON and rendered to HTML and SVG, so the Vietnamese and English versions cannot drift apart."
+  reqTitle: "Requirements and what each one is for"
+  requirements:
+    - name: "Claude Code CLI"
+      tag: "required"
+      role: "Runtime for the roles. Rin's milestone gate runs only on Claude, so without it nothing can gate."
+      href: "https://docs.anthropic.com/en/docs/claude-code"
+    - name: "Codex CLI"
+      tag: "optional"
+      role: "Second vendor for the cross review and a fallback runtime. Without it the team runs single-provider."
+      href: "https://github.com/openai/codex"
+    - name: "Git ≥ 2.5 with worktree"
+      tag: "required"
+      role: "The isolation boundary: one checkout per Builder, nobody moves anyone else's HEAD."
+    - name: "herdr ≥ 0.8.0 and the herdr skill"
+      tag: "required"
+      role: "One pane per agent. Thomas sees which agent is running and sends or waits on messages through the herdr CLI."
+      href: "https://github.com/herdrdev/herdr"
+    - name: "mattpocock-skills ≥ 1.2.3"
+      tag: "required"
+      role: "The SDLC method the team follows: grill, spec, tickets, implement, code review."
+      href: "https://github.com/mattpocock/skills"
+    - name: "Issue tracker: GitHub Issues, Jira or Linear"
+      tag: "pick one"
+      role: "The team's shared memory. Every task, claim and receipt passes through it."
+    - name: "python3"
+      tag: "required"
+      role: "Runs the git-guard hook and the contract reload after compaction."

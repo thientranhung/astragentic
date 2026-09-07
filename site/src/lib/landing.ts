@@ -7,6 +7,13 @@ import type { Lang } from './site';
  *  The writer owns src/content/landing/{vi,en}.yaml. Until a field lands, the
  *  placeholder below renders, so a half-written file never breaks the build and the
  *  gap is visible on screen instead of hidden. */
+export interface Requirement {
+  name: string;
+  tag?: string;
+  role?: string;
+  href?: string;
+}
+
 export interface Caption {
   headline: string;
   sub: string;
@@ -40,7 +47,7 @@ export interface Landing {
     notYet: string[];
   };
   /** Section 5. The four commands come from src/data/adopt.json. */
-  adopt: { headline: string };
+  adopt: { headline: string; reqTitle?: string; requirements?: Requirement[] };
   sections: {
     structure: Caption;
     roles: Caption;
