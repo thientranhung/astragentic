@@ -30,8 +30,35 @@ export interface Feature {
   href?: string;
 }
 
+/** One row inside an explain section: a role card, a quoted requirement, or a line of
+ *  the role → skill table. Only the fields a section uses are filled. */
+export interface ExplainItem {
+  id?: string;
+  title?: string;
+  tag?: string;
+  session?: string;
+  body?: string;
+  /** Verbatim English, quoted rather than translated (PRD §4). */
+  text?: string;
+  href?: string;
+}
+
+/** One of the five explain sections (home explain spec §A-§E). */
+export interface Explain {
+  eyebrow: string;
+  headline: string;
+  paragraphs?: string[];
+  commands?: { label?: string; lines: string[] };
+  items?: ExplainItem[];
+  more?: { label: string; href: string };
+}
+
 export interface Landing {
   hero: { eyebrow: string; headline: string; sub: string; primary: string; secondary: string };
+  /** The five explain sections, keyed by their anchor id: agents, comms, roles,
+   *  tracker, method. Empty until the YAML lands — HomeBody renders nothing for a
+   *  section it has no copy for, rather than a placeholder heading. */
+  explain: Record<string, Explain>;
   /** Section 1. Two columns of prose and a link onward; no picture. */
   why: { headline: string; p1: string; p2: string; more: string };
   /** Section 2, in the writer's order. Empty until the YAML lands — the copy has one
@@ -94,6 +121,7 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
       primary: 'Xem cấu trúc',
       secondary: 'Cài cho repo của bạn',
     },
+    explain: {},
     why: { headline: '', p1: '', p2: '', more: '' },
     features: [],
     fit: { headline: '', body: '', fitsLabel: '', notYetLabel: '', fits: [], notYet: [] },
@@ -159,6 +187,7 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
       primary: 'See the structure',
       secondary: 'Install it in your repo',
     },
+    explain: {},
     why: { headline: '', p1: '', p2: '', more: '' },
     features: [],
     fit: { headline: '', body: '', fitsLabel: '', notYetLabel: '', fits: [], notYet: [] },

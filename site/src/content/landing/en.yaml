@@ -5,6 +5,112 @@ hero:
   primary: "See the team at work ↓"
   secondary: "Deploy it in your repo"
 
+explain:
+  agents:
+    eyebrow: "Agents in Astragentic"
+    headline: "An agent is one coding-agent session handed a role."
+    paragraphs:
+      - "Every agent is a working session of Claude Code, Codex or OpenCode, launched from the command line with a defined role. It takes a task the way an employee does, hands back the result when it is finished, and can be cloned into several sessions running side by side: several Builders building at once, several QAs checking at once, like a real team."
+      - "Each role carries a person's name: Thomas, Shaper, Builder, Rin, QA. The proper name keeps the role from drifting across a long context, and it lets the skills attached to a role fire on the right one."
+      - "A role is defined by one declaration file in each runtime's own format, loaded into the system prompt when the session opens: Claude Code reads `.claude/agents/<role>.md`, Codex reads the launch profile `.codex/profiles/<role>.config.toml`, OpenCode reads `.opencode/agents/<role>.md`. The runtime, the model and the effort of every role are declared in one place, `orchestrator.md`."
+    commands:
+      label: "Launching one role on three runtimes"
+      lines:
+        - "claude   --agent builder --model <model>"
+        - "codex    --profile builder"
+        - "opencode --agent builder -m <provider>/<model>"
+    more:
+      label: "See the five roles →"
+      href: "/en/roles/thomas"
+
+  comms:
+    eyebrow: "How the agents talk"
+    headline: "Messages with an address, an acknowledgement, and someone watching."
+    paragraphs:
+      - "When two agents both run Claude Code, they use SendMessage, the native messaging channel between sessions. The sender passes the content and the artifact references; the receiver answers back into the session that sent it. Thomas uses that same channel to reply when a Builder is blocked, then sets a Monitor and waits for the signal that the work is done or that something needs discussing."
+      - "When the two agents are on different runtimes, a Builder on Codex for instance, Thomas goes through herdr: it sends the brief with `herdr agent prompt`, types commands into the pane with `herdr pane run`, reads the screen back with `herdr agent read`, and follows the state with a watcher."
+      - "herdr is a terminal multiplexer and a runtime for coding agents: it organises sessions into workspaces, tabs and panes; it recognises which agent is running and in what state; and it exposes every running session through a CLI. That is how Thomas sees each agent, sends to the right address, and reads the right pane, which an ordinary terminal does not provide."
+    commands:
+      label: "Thomas drives a Builder on Codex through herdr"
+      lines:
+        - 'herdr agent start "builder-TRA-142" --kind codex --pane <id> -- codex --profile builder'
+        - 'herdr agent prompt <pane-id> "<brief>"'
+        - "herdr agent read   <pane-id>"
+    more:
+      label: "See the tech stack →"
+      href: "/en/tech-stack#herdr"
+
+  roles:
+    eyebrow: "What each role does"
+    headline: "Five roles, five session lifetimes."
+    items:
+      - id: thomas
+        title: "Thomas"
+        tag: "your representative"
+        session: "A resident session, alive across many tickets."
+        body: "Holds the tracker, runs the frontier query, claims, dispatches and merges. It is the only role still there once a Builder has closed its session, so every durable piece of state belongs to Thomas. It comes back to you at the decisions that matter."
+        href: "/en/roles/thomas"
+      - id: shaper
+        title: "Shaper"
+        tag: "shaping"
+        session: "One unbroken session end to end, never compacted."
+        body: "Runs grill-with-docs, to-spec and to-tickets in that order, and stops after the spec for you to approve."
+        href: "/en/roles/shaper"
+      - id: builder
+        title: "Builder"
+        tag: "building"
+        session: "One session per ticket, in its own worktree, the only writer there."
+        body: "Implements, reviews the code on two axes, simplifies, then takes the cross-vendor review pass. It commits at every boundary, not only at handover."
+        href: "/en/roles/builder"
+      - id: rin
+        title: "Rin"
+        tag: "the gate"
+        session: "One session per milestone, in a separate worktree at the exact SHA under review."
+        body: "Reads only, and writes exactly one file: the gate report. One pass per milestone, never a loop."
+        href: "/en/roles/rin"
+      - id: qa
+        title: "QA"
+        tag: "acceptance"
+        session: "One session per walk, with the product running for real in its own worktree."
+        body: "Uses the product the way a user does and never reads the diff. Read-only by default; every write needs your permission, one at a time."
+        href: "/en/roles/qa"
+
+  tracker:
+    eyebrow: "The issue tracker"
+    headline: "Every piece of work passes through the tracker, so none of it drifts."
+    paragraphs:
+      - "The tracker is where the state of the work lives, not a chat log and not one agent's memory. Thomas asks the tracker what is ready; a claim is an assignee line written and read back; every precondition is a queryable edge; and you open the board and read it without running a query. Astragentic puts these five requirements on any tracker, which is why GitHub Issues, Jira and Linear all work."
+    items:
+      - text: "A stable ticket id in the TITLE"
+      - text: "A status with five states — Backlog / Todo / In Progress / Done / Won't fix"
+      - text: "An assignee, written and read back atomically"
+      - text: "Every precondition as a queryable EDGE"
+      - text: "A surface the OWNER can open and read without running a query"
+    more:
+      label: "See the structure →"
+      href: "/en/structure#coordination"
+
+  method:
+    eyebrow: "mattpocock-skills"
+    headline: "Astragentic does not invent an SDLC. It orchestrates a standard one."
+    paragraphs:
+      - "Matt Pocock's skill set is the backbone of the method: wayfinder and triage for Thomas; grill-with-docs, to-spec and to-tickets for the Shaper; implement for the Builder; and one shared craft layer of tdd, code-review, domain-modeling and diagnosing-bugs. I chose it over Superpowers because it puts the question-and-answer loop at the front, before any code is written, which is exactly where Astragentic used to fail by looping at the end. Astragentic does not compete with a method; it orchestrates one."
+    items:
+      - id: thomas
+        title: "Thomas"
+        text: "triage · wayfinder · to-questionnaire · ask-matt"
+      - id: shaper
+        title: "Shaper"
+        text: "grill-with-docs → to-spec → to-tickets"
+      - id: builder
+        title: "Builder"
+        text: "implement"
+      - title: "Shared"
+        text: "grilling · tdd · code-review · codebase-design · domain-modeling · research · prototype · diagnosing-bugs"
+    more:
+      label: "See why I chose it →"
+      href: "/en/why#why-mattpocock"
+
 why:
   headline: "AI already works like a real developer. The question left is who leads."
   p1: "Vibe coding proved that an agent can take a ticket, write the code and test its own work like an engineer. Once execution stops being the bottleneck, an engineer's value moves elsewhere: framing the right requirement, making the right decision, and keeping the whole process on course."

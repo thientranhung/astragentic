@@ -1,5 +1,6 @@
 ---
 import { adopt } from '../lib/data';
+import CodeFrame from './CodeFrame.astro';
 import { hl } from '../lib/markup';
 import { UI, type Lang } from '../lib/site';
 
@@ -22,7 +23,6 @@ const reqs: Requirement[] =
   requirements && requirements.length > 0
     ? requirements
     : adopt.prerequisites.map((p) => ({ name: p.version ? `${p.name} ${p.version}` : p.name, href: p.href ?? undefined }));
-const script = adopt.commands.join('\n');
 ---
 
 <div class:list={["adopt breakout", { "adopt--split": show !== "both" }]}>
@@ -51,58 +51,11 @@ const script = adopt.commands.join('\n');
 
   {(show === 'both' || show === 'commands') && (
   <div class="col col--wide">
-    <div class="cmd-head">
-      <p class="label mono">{UI.quickstart[lang]}</p>
-      <button
-        class="copy mono"
-        type="button"
-        data-copy
-        data-label={UI.copy[lang]}
-        data-done={UI.copied[lang]}
-        data-payload={script}
-      >{UI.copy[lang]}</button>
-    </div>
-    <ol class="cmds codeframe">
-      {
-        adopt.commands.map((command) => {
-          // The runner is the word the reader types; what follows is the thing being
-          // installed. Colouring the second half is the only syntax this site has.
-          const cut = command.indexOf(' ');
-          const head = cut === -1 ? command : command.slice(0, cut);
-          const rest = cut === -1 ? '' : command.slice(cut);
-          return (
-            <li>
-              <pre class="mono" lang="en">{head}<span class="cmd-key">{rest}</span></pre>
-            </li>
-          );
-        })
-      }
-    </ol>
+    {/* Split mode gives each half its own h2, so the pane's own caption would repeat it. */}
+    <CodeFrame lang={lang} lines={adopt.commands} label={show === 'both' ? UI.quickstart[lang] : undefined} />
   </div>
   )}
 </div>
-
-<script>
-  document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((button) => {
-    button.addEventListener('click', async () => {
-      const payload = button.dataset.payload ?? '';
-      try {
-        await navigator.clipboard.writeText(payload);
-      } catch {
-        const box = document.createElement('textarea');
-        box.value = payload;
-        document.body.append(box);
-        box.select();
-        document.execCommand('copy');
-        box.remove();
-      }
-      button.textContent = button.dataset.done ?? 'Copied';
-      window.setTimeout(() => {
-        button.textContent = button.dataset.label ?? 'Copy';
-      }, 1600);
-    });
-  });
-</script>
 
 <style>
   /* When the page gives each half its own h2, the inner mono label would repeat it. */
@@ -193,66 +146,6 @@ const script = adopt.commands.join('\n');
   .ver {
     font-size: var(--text-label);
     color: var(--ink-muted);
-  }
-
-  .cmd-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-  .copy {
-    font-size: var(--text-micro);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--ink-muted);
-    background: none;
-    border: 1px solid var(--rule);
-    border-radius: 2px;
-    padding: 0.55rem 0.9rem;
-    min-height: 36px;
-    cursor: pointer;
-  }
-  @media (pointer: coarse) {
-    .copy {
-      min-height: var(--row-h);
-      padding-inline: 1rem;
-    }
-  }
-  .copy:hover {
-    color: var(--ink);
-    border-color: var(--ink);
-  }
-
-  .cmds {
-    list-style: none;
-    counter-reset: step;
-    margin: 0.85rem 0 0;
-  }
-  .cmds li {
-    counter-increment: step;
-    position: relative;
-    padding-left: 3.1rem;
-    margin: 0;
-  }
-  .cmds li + li {
-    border-top: 1px solid var(--ink-05);
-  }
-  .cmds li::before {
-    content: counter(step, decimal-leading-zero);
-    position: absolute;
-    left: 1.1rem;
-    top: 0.55rem;
-    font-family: var(--font-mono);
-    font-size: var(--text-micro);
-    color: var(--ink-62);
-  }
-  .cmds pre {
-    font-size: var(--text-mono);
-    padding: 0.45rem 1.1rem 0.45rem 0;
-    white-space: pre-wrap;
-    word-break: break-word;
-    overflow-x: visible;
   }
 
   @media (max-width: 760px) {

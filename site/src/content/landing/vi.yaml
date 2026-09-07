@@ -5,6 +5,112 @@ hero:
   primary: "Xem đội vận hành ↓"
   secondary: "Triển khai vào repo"
 
+explain:
+  agents:
+    eyebrow: "Agent trong Astragentic"
+    headline: "Một agent là một session coding-agent được giao một vai."
+    paragraphs:
+      - "Mỗi agent là một phiên làm việc của Claude Code, Codex hoặc OpenCode, khởi chạy từ dòng lệnh với một vai xác định. Nó nhận nhiệm vụ như một nhân viên, làm xong thì trả kết quả, và có thể nhân bản thành nhiều phiên chạy song song: nhiều Builder cùng thi công, nhiều QA cùng kiểm, giống một đội thật."
+      - "Mỗi vai mang tên người: Thomas, Shaper, Builder, Rin, QA. Tên riêng giữ cho vai không bị trôi trong context dài, và giúp các skill gắn theo vai được kích hoạt đúng."
+      - "Vai được định nghĩa bằng một file khai báo theo chuẩn của từng runtime, nạp vào system prompt khi phiên mở: Claude Code đọc `.claude/agents/<vai>.md`, Codex đọc launch profile `.codex/profiles/<vai>.config.toml`, OpenCode đọc `.opencode/agents/<vai>.md`. Runtime, model và effort của từng vai khai ở một chỗ, `orchestrator.md`."
+    commands:
+      label: "Khởi chạy một vai trên ba runtime"
+      lines:
+        - "claude   --agent builder --model <model>"
+        - "codex    --profile builder"
+        - "opencode --agent builder -m <provider>/<model>"
+    more:
+      label: "Xem năm vai →"
+      href: "/vai/thomas"
+
+  comms:
+    eyebrow: "Cách các agent nói chuyện"
+    headline: "Giao tiếp có địa chỉ, có xác nhận, có người canh."
+    paragraphs:
+      - "Khi hai agent cùng chạy Claude Code, chúng dùng SendMessage, kênh nhắn tin nguyên bản giữa các session. Bên gửi chuyển nội dung và tham chiếu artifact; bên nhận trả lời về đúng phiên gửi. Thomas dùng chính kênh này để trả lời khi Builder bị chặn, rồi đặt Monitor chờ tín hiệu làm xong hoặc cần trao đổi."
+      - "Khi hai agent khác runtime, ví dụ Builder trên Codex, Thomas đi qua herdr: gửi brief bằng `herdr agent prompt`, gõ lệnh vào pane bằng `herdr pane run`, đọc lại màn hình bằng `herdr agent read`, và theo dõi trạng thái bằng watcher."
+      - "herdr là terminal multiplexer và runtime cho coding agent: nó tổ chức phiên thành workspace, tab, pane; nhận diện agent nào đang chạy và ở trạng thái gì; và mở toàn bộ phiên đang chạy ra ngoài qua CLI. Nhờ đó Thomas nhìn thấy từng agent, gửi đúng địa chỉ, và đọc đúng pane, điều một terminal thường không cung cấp."
+    commands:
+      label: "Thomas điều một Builder trên Codex qua herdr"
+      lines:
+        - 'herdr agent start "builder-TRA-142" --kind codex --pane <id> -- codex --profile builder'
+        - 'herdr agent prompt <pane-id> "<brief>"'
+        - "herdr agent read   <pane-id>"
+    more:
+      label: "Xem tech stack →"
+      href: "/tech-stack#herdr"
+
+  roles:
+    eyebrow: "Chức năng và nhiệm vụ"
+    headline: "Năm vai, năm vòng đời session."
+    items:
+      - id: thomas
+        title: "Thomas"
+        tag: "người đại diện"
+        session: "Session thường trực, sống qua nhiều ticket."
+        body: "Giữ tracker, chạy frontier query, claim, dispatch và merge. Là vai duy nhất còn ở đó khi Builder đã đóng phiên, nên mọi trạng thái bền đều thuộc Thomas. Hỏi lại bạn ở những quyết định quan trọng."
+        href: "/vai/thomas"
+      - id: shaper
+        title: "Shaper"
+        tag: "định hình"
+        session: "Một session liền mạch từ đầu tới cuối, không compact."
+        body: "Chạy grill-with-docs, to-spec, to-tickets theo thứ tự, dừng sau spec để bạn duyệt."
+        href: "/vai/shaper"
+      - id: builder
+        title: "Builder"
+        tag: "thi công"
+        session: "Một session mỗi ticket, trong worktree riêng, là người viết duy nhất ở đó."
+        body: "Implement, code review hai trục, simplify, rồi lượt review chéo vendor. Commit ở mỗi ranh giới, không chỉ lúc bàn giao."
+        href: "/vai/builder"
+      - id: rin
+        title: "Rin"
+        tag: "gác cổng"
+        session: "Một session mỗi milestone, worktree tách riêng tại đúng SHA được review."
+        body: "Chỉ đọc và viết đúng một file: báo cáo gate. Một vòng mỗi milestone, không lặp."
+        href: "/vai/rin"
+      - id: qa
+        title: "QA"
+        tag: "nghiệm thu"
+        session: "Một session mỗi lượt walk, với sản phẩm đang chạy thật trong worktree riêng."
+        body: "Dùng sản phẩm như người dùng, không đọc diff. Mặc định chỉ đọc, mọi thao tác ghi cần bạn cho phép từng lần."
+        href: "/vai/qa"
+
+  tracker:
+    eyebrow: "Issue tracker"
+    headline: "Mọi việc đi qua tracker, nên không việc nào lạc hướng."
+    paragraphs:
+      - "Tracker là nơi trạng thái công việc sống, không phải chat hay trí nhớ của một agent. Thomas hỏi tracker cái gì đã sẵn sàng; claim là một dòng assignee được ghi và đọc lại; mọi điều kiện tiên quyết là một cạnh truy vấn được; và bạn mở board là đọc được mà không cần chạy query. Astragentic đặt năm yêu cầu này lên bất kỳ tracker nào, nên GitHub Issues, Jira hay Linear đều dùng được."
+    items:
+      - text: "A stable ticket id in the TITLE"
+      - text: "A status with five states — Backlog / Todo / In Progress / Done / Won't fix"
+      - text: "An assignee, written and read back atomically"
+      - text: "Every precondition as a queryable EDGE"
+      - text: "A surface the OWNER can open and read without running a query"
+    more:
+      label: "Xem cấu trúc →"
+      href: "/cau-truc#coordination"
+
+  method:
+    eyebrow: "mattpocock-skills"
+    headline: "Astragentic không tự nghĩ ra SDLC. Nó điều phối một SDLC đã chuẩn."
+    paragraphs:
+      - "Bộ skill của Matt Pocock là xương sống phương pháp: wayfinder và triage cho Thomas; grill-with-docs, to-spec, to-tickets cho Shaper; implement cho Builder; cùng lớp craft dùng chung: tdd, code-review, domain-modeling, diagnosing-bugs. Tôi chọn nó thay vì Superpowers vì nó đặt vòng lặp hỏi đáp ở đầu, trước khi viết code, đúng chỗ Astragentic từng thất bại khi lặp ở cuối. Astragentic không cạnh tranh với phương pháp; nó điều phối phương pháp."
+    items:
+      - id: thomas
+        title: "Thomas"
+        text: "triage · wayfinder · to-questionnaire · ask-matt"
+      - id: shaper
+        title: "Shaper"
+        text: "grill-with-docs → to-spec → to-tickets"
+      - id: builder
+        title: "Builder"
+        text: "implement"
+      - title: "Dùng chung"
+        text: "grilling · tdd · code-review · codebase-design · domain-modeling · research · prototype · diagnosing-bugs"
+    more:
+      label: "Xem lý do chọn →"
+      href: "/vi-sao#why-mattpocock"
+
 why:
   headline: "AI đã làm việc như một developer thực thụ. Câu hỏi còn lại là ai dẫn dắt."
   p1: "Vibe coding chứng minh một agent có thể nhận việc, viết code và tự kiểm thử như một kỹ sư. Khi năng lực thực thi không còn là nút thắt, giá trị của người kỹ sư chuyển sang chỗ khác: đặt yêu cầu đúng, quyết định đúng, và giữ toàn bộ quy trình đi đúng hướng."

@@ -8,11 +8,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Diagram from '../Diagram.astro';
 import InteractiveDiagram from '../InteractiveDiagram.astro';
 import AdoptBlock from '../AdoptBlock.astro';
+import CodeFrame from '../CodeFrame.astro';
 import { getPage } from '../../lib/pages';
 import { getLanding } from '../../lib/landing';
 import { ACTIVE, HAS_UNSET, SAMPLE, ORCHESTRATOR_FILE } from '../../lib/orchestrator';
 import { failures, meta } from '../../lib/data';
-import { ROLE_META, roleHref, type RoleId } from '../../lib/roles';
+import { ROLE_IDS, ROLE_META, roleHref, type RoleId } from '../../lib/roles';
 import { termHref } from '../../lib/terms';
 import { NAV, ROUTES, UI, type Lang } from '../../lib/site';
 
@@ -38,8 +39,28 @@ const NODE_TO_STAGE: Record<string, string> = {
 };
 
 const failuresRoute = ROUTES.failures[lang];
+const structureRoute = ROUTES.structure[lang];
 const adoptRoute = ROUTES.adopt[lang];
 const whyRoute = ROUTES.why[lang];
+
+// The five explain sections (home explain spec §A-§E), keyed by their anchor id. The
+// copy is the writer's; which drawing stands beside it is a layout decision and lives
+// here. Static where the picture only names the parts, interactive where every box is
+// a page the reader would open next.
+const EX = copy.explain ?? {};
+const roleMap = Object.fromEntries(ROLE_IDS.map((id) => [id, roleHref(lang, id)]));
+const trackerMap: Record<string, string> = {
+  thomas: roleHref(lang, 'thomas'),
+  ...Object.fromEntries(
+    ['frontier_query', 'board', 'tickets', 'assignee_field', 'blocking_edges'].map((id) => [
+      id,
+      `${structureRoute}#coordination`,
+    ]),
+  ),
+};
+/** What a figure beside the prose occupies inside the 1040 breakout, once the column
+ *  gap is taken off. The label floor in src/lib/diagram.ts is measured against it. */
+const SIDE_FRAME = 500;
 
 // hero: the client-studio picture. Every box goes somewhere the client would look next.
 const studioMap: Record<string, string> = {
@@ -98,8 +119,152 @@ const CARD_FRAME = 330;
     </div>
   </section>
 
-  {/* ── 2 · Why it exists ────────────────────────────────────────────────── */}
-  <section class="screen screen--surface" id="why">
+  {/* ── 2 · What an agent is (explain §A) ─────────────────────────────── */}
+  {EX.agents && (
+    <section class="screen screen--surface explain" id="agents">
+      <div class="column">
+        <p class="eyebrow">{EX.agents.eyebrow}</p>
+        <h2>{EX.agents.headline}</h2>
+      </div>
+      <div class="column">
+        {EX.agents.paragraphs?.map((line) => <p class="lede" set:html={hl(line)} />)}
+        {/* No drawing here on purpose: five-roles is §C's figure and it needs the full
+            band to clear the label floor, so a small copy of it beside this prose would
+            render its names at six pixels. The three commands are the figure — one role,
+            declared once, launched on three runtimes. */}
+        {EX.agents.commands && (
+          <div class="pane breakout">
+            <CodeFrame
+              lang={lang}
+              lines={EX.agents.commands.lines}
+              label={EX.agents.commands.label}
+            />
+          </div>
+        )}
+        {EX.agents.more && (
+          <a class="more-link" href={EX.agents.more.href}>{EX.agents.more.label}</a>
+        )}
+      </div>
+    </section>
+  )}
+
+  {/* ── 3 · How the agents talk (explain §B) ───────────────────────────── */}
+  {EX.comms && (
+    <section class="screen screen--canvas explain" id="comms">
+      <div class="column">
+        <p class="eyebrow">{EX.comms.eyebrow}</p>
+        <h2>{EX.comms.headline}</h2>
+      </div>
+      <div class="column">
+        {EX.comms.paragraphs?.map((line) => <p class="lede" set:html={hl(line)} />)}
+        {/* Thomas at the hub, one pane per spoke. Static: the panes are this session's
+            own ticket ids, not pages the reader can open. */}
+        <Diagram slug="hub-and-spokes" lang={lang} class="band" caption={false} />
+        {EX.comms.commands && (
+          <div class="pane breakout">
+            <CodeFrame
+              lang={lang}
+              lines={EX.comms.commands.lines}
+              label={EX.comms.commands.label}
+            />
+          </div>
+        )}
+        {EX.comms.more && (
+          <a class="more-link" href={EX.comms.more.href}>{EX.comms.more.label}</a>
+        )}
+      </div>
+    </section>
+  )}
+
+  {/* ── 4 · The five roles (explain §C) ────────────────────────────────── */}
+  {EX.roles && (
+    <section class="screen screen--surface explain" id="roles">
+      <div class="column">
+        <p class="eyebrow">{EX.roles.eyebrow}</p>
+        <h2>{EX.roles.headline}</h2>
+      </div>
+      <div class="column">
+        {/* Five rows, not five columns: at a fifth of the band each card would be
+            180px wide and every one of these paragraphs is three sentences. */}
+        <ul class="roles breakout">
+          {EX.roles.items?.map((item) => (
+            <li>
+              <a class="role-row has-dot" href={item.href} data-role={item.id}>
+                <span class="role-name">
+                  <span class="dot" />
+                  <span class="rn" lang="en">{item.title}</span>
+                  <span class="rt">{item.tag}</span>
+                </span>
+                <span class="role-copy">
+                  <span class="role-session mono">{item.session}</span>
+                  <span class="role-body">{item.body}</span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        <InteractiveDiagram slug="five-roles" lang={lang} hrefMap={roleMap} class="band" />
+      </div>
+    </section>
+  )}
+
+  {/* ── 5 · The tracker (explain §D) ───────────────────────────────────── */}
+  {EX.tracker && (
+    <section class="screen screen--canvas explain" id="tracker">
+      <div class="column">
+        <p class="eyebrow">{EX.tracker.eyebrow}</p>
+        <h2>{EX.tracker.headline}</h2>
+      </div>
+      <div class="column">
+        {EX.tracker.paragraphs?.map((line) => <p class="lede" set:html={hl(line)} />)}
+        {/* The five requirements are lifted out of tracker-contract.md and stay in the
+            file's own words: a translated requirement is a different requirement. */}
+        <div class="reqs breakout">
+          <p class="reqs-label mono">{UI.verbatim[lang]}</p>
+          <ol class="req-list">
+            {EX.tracker.items?.map((item) => (
+              <li class="mono" lang="en">{item.text}</li>
+            ))}
+          </ol>
+        </div>
+        <InteractiveDiagram slug="frontier-query" lang={lang} hrefMap={trackerMap} class="band" />
+        {EX.tracker.more && (
+          <a class="more-link" href={EX.tracker.more.href}>{EX.tracker.more.label}</a>
+        )}
+      </div>
+    </section>
+  )}
+
+  {/* ── 6 · The method underneath (explain §E) ─────────────────────────── */}
+  {EX.method && (
+    <section class="screen screen--surface explain" id="method">
+      <div class="column">
+        <p class="eyebrow" lang="en">{EX.method.eyebrow}</p>
+        <h2>{EX.method.headline}</h2>
+      </div>
+      <div class="column">
+        {EX.method.paragraphs?.map((line) => <p class="lede" set:html={hl(line)} />)}
+        <dl class="method-map breakout">
+          {EX.method.items?.map((item) => (
+            <div class="mrow has-dot" data-role={item.id}>
+              <dt>
+                {item.id && <span class="dot" />}
+                <span lang={item.id ? 'en' : undefined}>{item.title}</span>
+              </dt>
+              <dd class="mono" lang="en">{item.text}</dd>
+            </div>
+          ))}
+        </dl>
+        <Diagram slug="layer-map" lang={lang} svgMaxWidth={620} class="band" caption={false} />
+        {EX.method.more && (
+          <a class="more-link" href={EX.method.more.href}>{EX.method.more.label}</a>
+        )}
+      </div>
+    </section>
+  )}
+
+  {/* ── 7 · Why it exists ────────────────────────────────────────────────── */}
+  <section class="screen screen--canvas" id="why">
     <div class="column">
       <h2>{copy.why.headline}</h2>
     </div>
@@ -112,8 +277,8 @@ const CARD_FRAME = 330;
     </div>
   </section>
 
-  {/* ── 3 · What it does ─────────────────────────────────────────────────── */}
-  <section class="screen screen--canvas" id="features">
+  {/* ── 8 · What it does ─────────────────────────────────────────────────── */}
+  <section class="screen screen--surface" id="features">
     <div class="column">
       <ul class="features band">
         {
@@ -175,8 +340,8 @@ const CARD_FRAME = 330;
     </div>
   </section>
 
-  {/* ── 4 · How it runs ──────────────────────────────────────────────────── */}
-  <section class="screen screen--surface" id="lifecycle">
+  {/* ── 9 · How it runs ──────────────────────────────────────────────────── */}
+  <section class="screen screen--canvas" id="lifecycle">
     <div class="column">
       <h2>{copy.sections.lifecycle.headline}</h2>
       <p class="sub">{copy.sections.lifecycle.sub}</p>
@@ -207,8 +372,8 @@ const CARD_FRAME = 330;
     </div>
   </section>
 
-  {/* ── 5 · Who it is for ────────────────────────────────────────────────── */}
-  <section class="screen screen--canvas" id="fit">
+  {/* ── 10 · Who it is for ───────────────────────────────────────────────── */}
+  <section class="screen screen--surface" id="fit">
     <div class="column">
       <h2>{copy.fit.headline}</h2>
       <p class="sub">{copy.fit.body}</p>
@@ -229,8 +394,8 @@ const CARD_FRAME = 330;
     </div>
   </section>
 
-  {/* ── 6 · How to start ─────────────────────────────────────────────────── */}
-  <section class="screen screen--surface" id="requirements">
+  {/* ── 11 · How to start ────────────────────────────────────────────────── */}
+  <section class="screen screen--canvas" id="requirements">
     <div class="column">
       <h2>{copy.adopt.reqHeadline ?? copy.adopt.reqTitle}</h2>
     </div>
@@ -239,7 +404,7 @@ const CARD_FRAME = 330;
     </div>
   </section>
 
-  <section class="screen screen--canvas" id="adopt">
+  <section class="screen screen--surface" id="adopt">
     <div class="column">
       <h2>{copy.adopt.headline}</h2>
     </div>
@@ -317,6 +482,185 @@ const CARD_FRAME = 330;
     flex-wrap: wrap;
     gap: 0.9rem;
     margin: 0;
+  }
+
+  /* ── the five explain sections (home explain spec §A-§E) ─────────────────
+     Every figure here runs the full band and every pane the full breakout. A drawing
+     set beside the prose at half the band renders archify's 11-unit titles at under
+     six pixels, and the growth cap in src/lib/diagram.ts cannot lift them to the 13px
+     floor — so these sections stack instead of splitting. */
+  .explain .lede {
+    max-width: 62ch;
+    margin: 0 0 1.1rem;
+    font-size: var(--text-body);
+    line-height: var(--leading-body);
+  }
+  .explain .lede:first-child {
+    margin-top: 1.75rem;
+  }
+  .pane {
+    margin-top: 2rem;
+  }
+  /* A boxed code span split across a line break reads as a rendering fault; these are
+     all short enough to move to the next line whole. */
+  .explain .lede :global(code) {
+    white-space: nowrap;
+  }
+
+  /* One dot vocabulary for both lists on this page: the role hue is 8px of colour and
+     nothing else wears it (design system, The Dot-Size Rule). */
+  .has-dot .dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+    background: var(--ink-35);
+  }
+  .has-dot[data-role='thomas'] .dot {
+    background: var(--role-thomas);
+  }
+  .has-dot[data-role='shaper'] .dot {
+    background: var(--role-shaper);
+  }
+  .has-dot[data-role='builder'] .dot {
+    background: var(--role-builder);
+  }
+  .has-dot[data-role='rin'] .dot {
+    background: var(--role-rin);
+  }
+  .has-dot[data-role='qa'] .dot {
+    background: var(--role-qa);
+  }
+
+  /* ── five roles, one row each ── */
+  .roles {
+    list-style: none;
+    /* shorthand would reset margin-left and undo the breakout offset */
+    margin-block: 1.75rem 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .roles li {
+    margin: 0;
+    border-bottom: 1px solid var(--rule-faint);
+  }
+  /* The whole row is the link. At rest nothing is coloured; the arrow takes the red on
+     hover, so five role names do not put five reds down the page. */
+  .role-row {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+    min-height: var(--row-h);
+    padding-block: 0.9rem;
+    color: inherit;
+    text-decoration: none;
+  }
+  /* The affordance sits on the name, where the eye already is: the site's own link
+     vocabulary, an ink hairline that goes brand when the row is under the cursor. */
+  .rn {
+    font-size: var(--text-ui);
+    font-weight: 700;
+    color: var(--ink);
+    border-bottom: 1px solid var(--ink-22);
+    padding-bottom: 2px;
+    transition: border-color var(--motion-hover) var(--ease-out);
+  }
+  .role-row:hover .rn,
+  .role-row:focus-visible .rn {
+    border-bottom-color: var(--pass);
+  }
+  .rt {
+    display: block;
+    /* aligned under the name, past the dot and its gap */
+    margin: 0.25rem 0 0 1rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-62);
+  }
+  .role-session {
+    display: block;
+    font-size: var(--text-mono);
+    color: var(--ink-62);
+    margin-bottom: 0.3rem;
+  }
+  .role-body {
+    display: block;
+    max-width: 66ch;
+    font-size: var(--text-body-sm);
+    line-height: 1.5;
+    color: var(--ink-88);
+  }
+
+  /* ── the five tracker requirements, quoted ── */
+  .reqs {
+    margin-top: 1.75rem;
+    padding: 1.5rem 1.9rem;
+    background: var(--surface);
+    border: 1px solid var(--ink-10);
+    border-radius: var(--radius-card);
+  }
+  .reqs-label {
+    font-size: var(--text-micro);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-muted);
+    margin: 0 0 1rem;
+  }
+  .req-list {
+    list-style: none;
+    counter-reset: req;
+    margin: 0;
+    padding: 0;
+  }
+  .req-list li {
+    counter-increment: req;
+    position: relative;
+    margin: 0;
+    padding: 0.55rem 0 0.55rem 2.6rem;
+    font-size: var(--text-mono);
+    line-height: 1.5;
+    color: var(--ink-88);
+  }
+  .req-list li + li {
+    border-top: 1px solid var(--ink-05);
+  }
+  .req-list li::before {
+    content: counter(req, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 0.62rem;
+    font-size: var(--text-micro);
+    color: var(--ink-62);
+  }
+
+  /* ── role → mattpocock skill ── */
+  .method-map {
+    margin-block: 1.75rem 0;
+    border-top: 1px solid var(--rule);
+  }
+  .mrow {
+    display: grid;
+    grid-template-columns: 118px minmax(0, 1fr);
+    gap: 1rem;
+    padding-block: 0.7rem;
+    border-bottom: 1px solid var(--rule-faint);
+  }
+  .mrow dt {
+    margin: 0;
+    font-size: var(--text-ui);
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .mrow dd {
+    margin: 0;
+    font-size: var(--text-mono);
+    line-height: 1.5;
+    color: var(--ink-70);
   }
 
   .screen h2 {
@@ -621,6 +965,9 @@ const CARD_FRAME = 330;
     .hero-art {
       max-width: 100%;
     }
+    .role-row {
+      grid-template-columns: 160px minmax(0, 1fr);
+    }
     .features {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -634,6 +981,14 @@ const CARD_FRAME = 330;
     .features,
     .steps {
       grid-template-columns: minmax(0, 1fr);
+    }
+    .role-row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.5rem;
+    }
+    .mrow {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.25rem;
     }
   }
 </style>

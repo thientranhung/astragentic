@@ -113,6 +113,38 @@ const landing = defineCollection({
         }),
       )
       .optional(),
+    /** Home explain spec §A-§E: the five sections that say what an agent, a message,
+     *  a role, the tracker and the method actually are. Every field is optional and
+     *  the keys are shared, so a section renders whichever of them the writer filled:
+     *  `commands` is a code pane, `items` is a list of rows, `paragraphs` is prose. */
+    explain: z
+      .record(
+        z.string(),
+        z.object({
+          eyebrow: z.string().optional(),
+          headline: z.string().optional(),
+          paragraphs: z.array(z.string()).optional(),
+          commands: z
+            .object({ label: z.string().optional(), lines: z.array(z.string()) })
+            .optional(),
+          items: z
+            .array(
+              z.object({
+                id: z.string().optional(),
+                title: z.string().optional(),
+                tag: z.string().optional(),
+                session: z.string().optional(),
+                body: z.string().optional(),
+                /** Verbatim English, quoted rather than translated. */
+                text: z.string().optional(),
+                href: z.string().optional(),
+              }),
+            )
+            .optional(),
+          more: z.object({ label: z.string(), href: z.string() }).optional(),
+        }),
+      )
+      .optional(),
     /** Home v2 §Section 4. `fits` / `notYet` avoid the YAML keys `yes` and `no`. */
     fit: z
       .object({
