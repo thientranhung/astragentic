@@ -63,7 +63,7 @@ export const UI = {
   },
 
   /* ── landing feature cards ── */
-  featureMore: { vi: 'Xem chi tiết →', en: 'Read more →' },
+  featureMore: { vi: 'Tìm hiểu thêm →', en: 'Read more →' },
   /** Column heads on the role table, read out of orchestrator.md. "Runtime", "Model"
    *  and "Effort" are the file's own column names and stay English in both locales. */
   colRole: { vi: 'Vai', en: 'Role' },
@@ -91,11 +91,11 @@ export const UI = {
     vi: '20 commit gần nhất có dòng Ledger:',
     en: 'The last 20 commits carrying a Ledger: line',
   },
-  readAll: { vi: 'Sáu lỗi đo được →', en: 'Six measured failures →' },
-  wholeTable: { vi: 'Cả bảng, và 65 dòng mồ côi →', en: 'The whole table, and 65 orphan rows →' },
+  readAll: { vi: 'Xem sáu lỗi đã đo được →', en: 'See the six measured failures →' },
+  wholeTable: { vi: 'Xem toàn bộ ledger →', en: 'View the full ledger →' },
 
   /* ── adopt ── */
-  installIt: { vi: 'Cài cho repo của bạn →', en: 'Install it in your repo →' },
+  installIt: { vi: 'Triển khai vào repo của bạn →', en: 'Deploy to your repo →' },
   copy: { vi: 'Chép', en: 'Copy' },
   copied: { vi: 'Đã chép', en: 'Copied' },
   prerequisites: { vi: 'Cần sẵn', en: 'Prerequisites' },
@@ -119,21 +119,21 @@ export const UI = {
     vi: 'Trang vai này chưa có prose. Bằng chứng bên dưới là dữ liệu thật.',
     en: 'No prose for this role yet. The evidence below is live data.',
   },
-  backHome: { vi: 'Về trang chủ →', en: 'Back to the home page →' },
+  backHome: { vi: 'Về trang chủ →', en: 'Back to home →' },
   seeItRun: { vi: 'Xem nó chạy', en: 'Watch it run' },
-  armSkill: { vi: 'Đọc skill codex-arm →', en: 'Read the codex-arm skill →' },
+  armSkill: { vi: 'Xem skill codex-arm →', en: 'View the codex-arm skill →' },
   trackerReq: { vi: 'Yêu cầu số 5', en: 'Requirement 5' },
 
   /* ── skills catalog ── */
   skillsTitle: { vi: 'Skill có sẵn', en: 'The skills' },
-  skillsAll: { vi: 'Cả catalog →', en: 'The whole catalog →' },
+  skillsAll: { vi: 'Xem toàn bộ skill →', en: 'Browse all skills →' },
   skillsCount: { vi: 'skill', en: 'skills' },
   skillOneLiner: { vi: 'Nó làm gì', en: 'What it does' },
   skillSource: { vi: 'Nguồn', en: 'Source' },
   skillRuntimes: { vi: 'Chạy được trên', en: 'Runtimes' },
   skillUpdated: { vi: 'Cập nhật', en: 'Updated' },
   skillGroupLabel: { vi: 'Nhóm', en: 'Group' },
-  skillBack: { vi: 'Về catalog skill →', en: 'Back to the skill catalog →' },
+  skillBack: { vi: 'Về danh mục skill →', en: 'Back to the skill catalog →' },
   skillMissing: {
     vi: 'Trang skill này chưa có bản tiếng Việt. Dữ liệu bên dưới lấy từ catalog.',
     en: 'This skill page has no prose yet. The data below comes from the catalog.',
@@ -144,15 +144,15 @@ export const UI = {
   hookWhen: { vi: 'Bắn khi', en: 'Fires when' },
   hookScript: { vi: 'Script', en: 'Script' },
   hookEffect: { vi: 'Chặn hay ghi', en: 'Blocks or logs' },
-  hooksAll: { vi: 'Bốn hook, đọc đủ →', en: 'All four hooks →' },
+  hooksAll: { vi: 'Xem bốn hook →', en: 'See all four hooks →' },
 
   /* ── why ── */
   whyTitle: { vi: 'Vì sao', en: 'Why' },
-  whyAll: { vi: 'Năm câu vì sao →', en: 'All five answers →' },
+  whyAll: { vi: 'Xem năm lý do thiết kế →', en: 'See the five design decisions →' },
 
   /* ── tech stack ── */
   stackTitle: { vi: 'Astragentic chạy trên gì', en: 'What this runs on' },
-  stackAll: { vi: 'Cả tech stack →', en: 'The whole stack →' },
+  stackAll: { vi: 'Xem toàn bộ tech stack →', en: 'View the full tech stack →' },
   stackRequired: { vi: 'bắt buộc', en: 'required' },
   stackOptional: { vi: 'tuỳ chọn', en: 'optional' },
 

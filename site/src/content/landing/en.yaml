@@ -9,7 +9,7 @@ why:
   headline: "AI already works like a real developer. The question left is who leads."
   p1: "Vibe coding proved that an agent can take a ticket, write the code and test its own work like an engineer. Once execution stops being the bottleneck, an engineer's value moves elsewhere: framing the right requirement, making the right decision, and keeping the whole process on course."
   p2: "Astragentic is built so that you do exactly that part. It organises agents into an outsourcing team under the familiar SDLC discipline, but redesigns how work is assigned, reviewed and handed back, to exploit a speed and a volume no human team can sustain."
-  more: "Read all five answers →"
+  more: "Explore the design rationale →"
 
 features:
   - id: cross-vendor
