@@ -13,8 +13,10 @@ interface Props {
   /** Owner-written requirement list with what each piece is for; falls back to README data. */
   requirements?: Requirement[];
   reqTitle?: string;
+  /** Render only one half when the page splits requirements and install into two sections. */
+  show?: 'both' | 'requirements' | 'commands';
 }
-const { lang, requirements, reqTitle } = Astro.props;
+const { lang, requirements, reqTitle, show = 'both' } = Astro.props;
 const reqs: Requirement[] =
   requirements && requirements.length > 0
     ? requirements
@@ -22,7 +24,8 @@ const reqs: Requirement[] =
 const script = adopt.commands.join('\n');
 ---
 
-<div class="adopt breakout">
+<div class:list={["adopt breakout", { "adopt--split": show !== "both" }]}>
+  {(show === 'both' || show === 'requirements') && (
   <div class="col">
     <p class="label mono">{reqTitle ?? UI.prerequisites[lang]}</p>
     <ul class="pre">
@@ -43,7 +46,9 @@ const script = adopt.commands.join('\n');
       }
     </ul>
   </div>
+  )}
 
+  {(show === 'both' || show === 'commands') && (
   <div class="col col--wide">
     <div class="cmd-head">
       <p class="label mono">{UI.quickstart[lang]}</p>
@@ -73,6 +78,7 @@ const script = adopt.commands.join('\n');
       }
     </ol>
   </div>
+  )}
 </div>
 
 <script>
@@ -98,6 +104,10 @@ const script = adopt.commands.join('\n');
 </script>
 
 <style>
+  /* When the page gives each half its own h2, the inner mono label would repeat it. */
+  .adopt--split .label {
+    display: none;
+  }
   .req-item {
     padding-block: 0.6rem;
   }

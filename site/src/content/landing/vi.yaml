@@ -62,7 +62,8 @@ fit:
     - "Một thay đổi nhỏ, xong trong đúng một phiên."
 
 adopt:
-  headline: "Yêu cầu tech stack và cài đặt"
+  headline: "Cài đặt"
+  reqHeadline: "Tech stack cần có"
   reqTitle: "Tech stack cần có"
   requirements:
     - name: "Claude Code CLI"

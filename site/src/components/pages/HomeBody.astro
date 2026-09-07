@@ -229,12 +229,21 @@ const CARD_FRAME = 330;
   </section>
 
   {/* ── 6 · How to start ─────────────────────────────────────────────────── */}
-  <section class="screen screen--surface" id="adopt">
+  <section class="screen screen--surface" id="requirements">
+    <div class="column">
+      <h2>{copy.adopt.reqHeadline ?? copy.adopt.reqTitle}</h2>
+    </div>
+    <div class="column">
+      <AdoptBlock lang={lang} requirements={copy.adopt.requirements} reqTitle={copy.adopt.reqTitle} show="requirements" />
+    </div>
+  </section>
+
+  <section class="screen screen--canvas" id="adopt">
     <div class="column">
       <h2>{copy.adopt.headline}</h2>
     </div>
     <div class="column">
-      <AdoptBlock lang={lang} requirements={copy.adopt.requirements} reqTitle={copy.adopt.reqTitle} />
+      <AdoptBlock lang={lang} show="commands" />
       <ul class="onward">
         {
           adoptLinks.map((item) => (

@@ -47,7 +47,7 @@ export interface Landing {
     notYet: string[];
   };
   /** Section 5. The four commands come from src/data/adopt.json. */
-  adopt: { headline: string; reqTitle?: string; requirements?: Requirement[] };
+  adopt: { headline: string; reqHeadline?: string; reqTitle?: string; requirements?: Requirement[] };
   sections: {
     structure: Caption;
     roles: Caption;

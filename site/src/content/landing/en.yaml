@@ -62,7 +62,8 @@ fit:
     - "A small change that finishes inside one session."
 
 adopt:
-  headline: "Tech stack requirements and install"
+  headline: "Install"
+  reqHeadline: "Required tech stack"
   reqTitle: "Required tech stack"
   requirements:
     - name: "Claude Code CLI"

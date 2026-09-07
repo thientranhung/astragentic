@@ -129,6 +129,7 @@ const landing = defineCollection({
       .object({
         headline: z.string().optional(),
         reqTitle: z.string().optional(),
+        reqHeadline: z.string().optional(),
         requirements: z
           .array(
             z.object({
