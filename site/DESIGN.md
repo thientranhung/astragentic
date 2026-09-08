@@ -261,7 +261,7 @@ Body sets `font-variant-numeric: tabular-nums`, because a ledger of ids and coun
 
 One page frame, one reading column, one breakout width, and a single set of rails for read mode.
 
-The landing frame is 1200px; the docs frame is 1440px. Inside the docs frame a three-column grid runs 232px sidebar / flexible content / 180px table of contents with a 28px column gap, which lands the content card at 924px at 1440 — measured against aihero.dev's reading column, and taken honestly by trimming the rails rather than by overlapping the sticky table of contents. The right-hand table of contents disappears below 1180px, and the whole grid collapses to one column below 900px, where the sidebar becomes a single collapsed disclosure above the first paragraph rather than a drawer.
+Every page shares one 1440px frame (the landing used 1200px until 2026-09-08; the island changed width on navigation, so both now match). Inside the docs frame a three-column grid runs 232px sidebar / flexible content / 180px table of contents with a 28px column gap, which lands the content card at 924px at 1440 — measured against aihero.dev's reading column, and taken honestly by trimming the rails rather than by overlapping the sticky table of contents. The right-hand table of contents disappears below 1180px, and the whole grid collapses to one column below 900px, where the sidebar becomes a single collapsed disclosure above the first paragraph rather than a drawer.
 
 On the landing page the reading column is 680px, a breakout block is 1040px, and a diagram band is 1120px. The outer gutter is `clamp(20px, 4vw, 48px)`. The header bar is 56px and sticky; both rails hang off its bottom edge, so that height is a measurement rather than a taste.
 
