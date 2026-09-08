@@ -48,6 +48,10 @@ explain:
   roles:
     eyebrow: "What each role does"
     headline: "Five roles, five session lifetimes."
+    models:
+      label: "Model and effort per role"
+      intro: "Each role runs on the model and effort its work needs. Thomas and Shaper reason at length, so they run Opus, Shaper at high effort because grilling and spec are where the thinking happens; Builder and QA build and test, so they run Sonnet for speed and cost; Rin gates on Opus at medium effort."
+      note: "This table is read straight from `.agents/orchestrator.md` in your repo. Change one row and that role's runtime, model or effort changes at the next dispatch, with no edit to the role contract."
     items:
       - id: thomas
         title: "Thomas"

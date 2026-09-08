@@ -57,6 +57,7 @@ export interface Explain {
   commands?: Pane | Pane[];
   items?: ExplainItem[];
   more?: { label: string; href: string };
+  models?: { label: string; intro: string; note: string };
 }
 
 /** The YAML may spell one pane as an object and several as a list; the page only ever

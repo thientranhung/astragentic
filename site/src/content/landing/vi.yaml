@@ -48,6 +48,10 @@ explain:
   roles:
     eyebrow: "Chức năng và nhiệm vụ"
     headline: "Năm vai, năm vòng đời session."
+    models:
+      label: "Model và effort theo vai"
+      intro: "Mỗi vai chạy trên model và effort hợp với việc của nó. Thomas và Shaper suy luận dài nên dùng Opus, Shaper ở effort high vì grill và spec là chỗ tốn suy nghĩ nhất; Builder và QA thi công và kiểm thử nên dùng Sonnet cho nhanh và rẻ; Rin gate trên Opus ở effort medium."
+      note: "Bảng này đọc thẳng từ `.agents/orchestrator.md` trong repo của bạn. Đổi một dòng là đổi runtime, model hay effort của vai đó ở lần dispatch kế tiếp, không cần sửa contract của vai."
     items:
       - id: thomas
         title: "Thomas"

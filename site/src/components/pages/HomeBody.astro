@@ -17,6 +17,7 @@ import { failures, meta } from '../../lib/data';
 import { ROLE_IDS, ROLE_META, roleHref, type RoleId } from '../../lib/roles';
 import { termHref } from '../../lib/terms';
 import { NAV, ROUTES, UI, type Lang } from '../../lib/site';
+const rowFor = (id: string) => ACTIVE.find((r) => r.role.toLowerCase() === id.toLowerCase());
 
 interface Props {
   lang: Lang;
@@ -175,11 +176,24 @@ const CARD_FRAME = 330;
                 <span class="role-copy">
                   <span class="role-session mono">{item.session}</span>
                   <span class="role-body" set:html={hl(item.body)} />
+                  {rowFor(item.id) && (
+                    <span class="role-model mono" lang="en">
+                      {rowFor(item.id)!.runtime} · {rowFor(item.id)!.model} · effort {rowFor(item.id)!.effort}
+                    </span>
+                  )}
                 </span>
               </a>
             </li>
           ))}
         </ul>
+        {EX.roles.models && (
+          <div class="role-models">
+            <p class="eyebrow">{EX.roles.models.label}</p>
+            <p class="lede" set:html={hl(EX.roles.models.intro)} />
+            <p class="lede" set:html={hl(EX.roles.models.note)} />
+            <p class="role-models-src mono">{ORCHESTRATOR_FILE} → Active assignments</p>
+          </div>
+        )}
         <InteractiveDiagram slug="five-roles" lang={lang} hrefMap={roleMap} class="band" />
       </div>
     </section>
@@ -619,6 +633,22 @@ const CARD_FRAME = 330;
     font-size: var(--text-mono);
     color: var(--ink-62);
     margin-bottom: 0.3rem;
+  }
+  .role-model {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: var(--text-label);
+    color: var(--ink-62);
+    letter-spacing: 0.02em;
+  }
+  .role-models {
+    max-width: 68ch;
+    margin: 2rem 0 0.5rem;
+  }
+  .role-models-src {
+    font-size: var(--text-label);
+    color: var(--ink-62);
+    margin-top: 0.25rem;
   }
   .role-body {
     display: block;
