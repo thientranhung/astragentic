@@ -104,7 +104,7 @@ const CARD_FRAME = 330;
       <div class="hero-copy">
         <p class="eyebrow" set:html={hl(String(copy.hero.eyebrow).replace("{{meta.version}}", meta.version))} />
         <h1 set:html={hl(copy.hero.headline)} />
-        <p class="hero-sub">{copy.hero.sub}</p>
+        <p class="hero-sub" set:html={hl(copy.hero.sub)} />
         <p class="cta">
           <a class="btn btn--primary" href="#lifecycle">{copy.hero.primary}</a>
           <a class="btn btn--ghost mono" href={adoptRoute}>{copy.hero.secondary} →</a>
@@ -197,7 +197,7 @@ const CARD_FRAME = 330;
                 </span>
                 <span class="role-copy">
                   <span class="role-session mono">{item.session}</span>
-                  <span class="role-body">{item.body}</span>
+                  <span class="role-body" set:html={hl(item.body)} />
                 </span>
               </a>
             </li>
@@ -270,8 +270,8 @@ const CARD_FRAME = 330;
     </div>
     <div class="column">
       <div class="two-col breakout">
-        <p>{copy.why.p1}</p>
-        <p>{copy.why.p2}</p>
+        <p set:html={hl(copy.why.p1)} />
+        <p set:html={hl(copy.why.p2)} />
       </div>
       <a class="more-link" href={whyRoute}>{copy.why.more}</a>
     </div>
@@ -320,7 +320,7 @@ const CARD_FRAME = 330;
                 ) : null}
               </div>
               <h3>{feature.title}</h3>
-              <p class="feature-body">{feature.body}</p>
+              <p class="feature-body" set:html={hl(feature.body)} />
               {feature.id === RUNTIME_CARD && SAMPLE && (
                 <p class="sample mono" lang="en">
                   <span class="sample-src">{ORCHESTRATOR_FILE}</span>
@@ -376,7 +376,7 @@ const CARD_FRAME = 330;
   <section class="screen screen--surface" id="fit">
     <div class="column">
       <h2>{copy.fit.headline}</h2>
-      <p class="sub">{copy.fit.body}</p>
+      <p class="sub" set:html={hl(copy.fit.body)} />
     </div>
     <div class="column">
       <div class="two-col fit breakout">
@@ -424,6 +424,10 @@ const CARD_FRAME = 330;
 </BaseLayout>
 
 <style>
+  :global(.brand) {
+    font-weight: 600;
+    color: var(--ink);
+  }
   /* Owner's positioning phrases, marked **…** in the copy: brand red at text weight. */
   .hero-copy :global(.hl) {
     color: var(--brand-primary-hover);
