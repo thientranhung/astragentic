@@ -20,8 +20,12 @@ interface Props {
   switchTo?: Record<Lang, string>;
   /** Read mode: the wider frame the three-column shell needs (design spec 5 §2). */
   docs?: boolean;
+  /** One static file serving both languages (the 404): ship nav and footer for both,
+   *  hide the pair that does not match the address. Vietnamese shows without script. */
+  dualChrome?: boolean;
 }
-const { title, description, lang, page, alternate, switchTo, docs = false } = Astro.props;
+const { title, description, lang, page, alternate, switchTo, docs = false, dualChrome = false } = Astro.props;
+const other: Lang = lang === 'vi' ? 'en' : 'vi';
 const site = Astro.site?.toString().replace(/\/$/, '') ?? '';
 ---
 
@@ -42,11 +46,25 @@ const site = Astro.site?.toString().replace(/\/$/, '') ?? '';
   </head>
   <body>
     <div class:list={['page', docs && 'page--docs']}>
-      <Nav lang={lang} page={page} alternate={alternate ?? switchTo} />
+      {dualChrome ? (
+        <>
+          <div data-chrome={lang}><Nav lang={lang} page={page} alternate={alternate ?? switchTo} /></div>
+          <div data-chrome={other} hidden><Nav lang={other} page={page} alternate={alternate ?? switchTo} /></div>
+        </>
+      ) : (
+        <Nav lang={lang} page={page} alternate={alternate ?? switchTo} />
+      )}
       <main>
         <slot />
       </main>
-      <Footer lang={lang} />
+      {dualChrome ? (
+        <>
+          <div data-chrome={lang}><Footer lang={lang} /></div>
+          <div data-chrome={other} hidden><Footer lang={other} /></div>
+        </>
+      ) : (
+        <Footer lang={lang} />
+      )}
     </div>
   </body>
 </html>

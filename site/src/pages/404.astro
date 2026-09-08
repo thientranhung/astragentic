@@ -8,7 +8,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { ROUTES, UI } from '../lib/site';
 ---
 
-<BaseLayout title={`404 — ${UI.notFoundTitle.vi}`} lang="vi">
+<BaseLayout title={`404 — ${UI.notFoundTitle.vi}`} lang="vi" dualChrome>
   <section class="screen screen--canvas miss">
     <div class="column">
       <p class="code mono">404</p>
@@ -37,6 +37,8 @@ import { ROUTES, UI } from '../lib/site';
 >
   if (location.pathname === '/en' || location.pathname.startsWith('/en/')) {
     document.documentElement.lang = 'en';
+    document.querySelectorAll('[data-chrome="vi"]').forEach((n) => (n.hidden = true));
+    document.querySelectorAll('[data-chrome="en"]').forEach((n) => (n.hidden = false));
     const set = (sel, text, href) => {
       const node = document.querySelector(sel);
       if (!node) return;
