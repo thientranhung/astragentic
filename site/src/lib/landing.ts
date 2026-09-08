@@ -43,14 +43,32 @@ export interface ExplainItem {
   href?: string;
 }
 
-/** One of the five explain sections (home explain spec §A-§E). */
+/** One pane of literal commands. A section may declare one or several. */
+export interface Pane {
+  label?: string;
+  lines: string[];
+}
+
+/** One of the explain sections (home explain spec §A-§E). */
 export interface Explain {
   eyebrow: string;
   headline: string;
   paragraphs?: string[];
-  commands?: { label?: string; lines: string[] };
+  commands?: Pane | Pane[];
   items?: ExplainItem[];
   more?: { label: string; href: string };
+}
+
+/** The YAML may spell one pane as an object and several as a list; the page only ever
+ *  wants a list. */
+export const panes = (commands: Explain['commands']): Pane[] =>
+  !commands ? [] : Array.isArray(commands) ? commands : [commands];
+
+/** A photograph of the running system. Until `src` lands the page draws a dashed frame
+ *  carrying the caption, so the gap is visible rather than hidden (home order §3). */
+export interface Shot {
+  caption: string;
+  src?: string;
 }
 
 export interface Landing {
@@ -75,9 +93,12 @@ export interface Landing {
   };
   /** Section 5. The four commands come from src/data/adopt.json. */
   adopt: { headline: string; reqHeadline?: string; reqTitle?: string; requirements?: Requirement[] };
+  /** Keyed by the slug HomeBody asks for: sendmessage, herdr, tracker. */
+  shots: Record<string, Shot>;
   sections: {
     structure: Caption;
     roles: Caption;
+    team: Caption;
     lifecycle: Caption;
     tracker: Caption;
     skills: Caption & { cta: string };
@@ -126,6 +147,7 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
     features: [],
     fit: { headline: '', body: '', fitsLabel: '', notYetLabel: '', fits: [], notYet: [] },
     adopt: { headline: '' },
+    shots: {},
     sections: {
       structure: {
         headline: 'Astragentic nằm ở đâu trong stack',
@@ -134,6 +156,10 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
       roles: {
         headline: 'Năm vai, năm vòng đời session',
         sub: 'Vòng đời session quyết định một vai nhớ được gì.',
+      },
+      team: {
+        headline: 'Cả đội trong một bức tranh.',
+        sub: 'Bạn ở ngoài, Thomas ở cổng, issue tracker ở giữa, và mọi việc đi qua tracker.',
       },
       lifecycle: {
         headline: 'Một ticket đi qua bảy chặng',
@@ -192,6 +218,7 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
     features: [],
     fit: { headline: '', body: '', fitsLabel: '', notYetLabel: '', fits: [], notYet: [] },
     adopt: { headline: '' },
+    shots: {},
     sections: {
       structure: {
         headline: 'Where Astragentic sits in the stack',
@@ -200,6 +227,10 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
       roles: {
         headline: 'Five roles, five session lifetimes',
         sub: 'Session lifetime decides what a role can remember.',
+      },
+      team: {
+        headline: 'The whole team in one picture.',
+        sub: 'You on the outside, Thomas at the gate, the issue tracker in the middle, and every piece of work passing through it.',
       },
       lifecycle: {
         headline: 'A ticket passes through seven named stages',

@@ -25,20 +25,25 @@ explain:
 
   comms:
     eyebrow: "Cách các agent nói chuyện"
-    headline: "Giao tiếp có địa chỉ, có xác nhận, có người canh."
+    headline: "Dispatch một ticket là mở một cuộc trao đổi có địa chỉ."
     paragraphs:
-      - "Khi hai agent cùng chạy Claude Code, chúng dùng SendMessage, kênh nhắn tin nguyên bản giữa các session. Bên gửi chuyển nội dung và tham chiếu artifact; bên nhận trả lời về đúng phiên gửi. Thomas dùng chính kênh này để trả lời khi Builder bị chặn, rồi đặt Monitor chờ tín hiệu làm xong hoặc cần trao đổi."
-      - "Khi hai agent khác runtime, ví dụ Builder trên Codex, Thomas đi qua herdr: gửi brief bằng `herdr agent prompt`, gõ lệnh vào pane bằng `herdr pane run`, đọc lại màn hình bằng `herdr agent read`, và theo dõi trạng thái bằng watcher."
-      - "herdr là terminal multiplexer và runtime cho coding agent: nó tổ chức phiên thành workspace, tab, pane; nhận diện agent nào đang chạy và ở trạng thái gì; và mở toàn bộ phiên đang chạy ra ngoài qua CLI. Nhờ đó Thomas nhìn thấy từng agent, gửi đúng địa chỉ, và đọc đúng pane, điều một terminal thường không cung cấp."
+      - "Thomas dispatch theo skill `dispatch-ticket`: claim ticket trên tracker trước, tạo branch và worktree, mở một pane herdr, khởi chạy vai theo runtime đã khai, gửi brief, và lập tức đặt watcher. Chuỗi ticket → assignee → pane → worktree → branch → PR là một-một, nên nhiều Builder làm song song mà không giẫm lên nhau."
+      - "Khi các vai cùng chạy Claude Code, kênh chính là SendMessage nguyên bản của Claude Code. Brief và mọi trao đổi sau đó đi thẳng giữa hai session, có địa chỉ theo tên, trả lời về đúng phiên gửi. Builder bị chặn thì hỏi; Thomas đọc câu hỏi, trả lời qua đúng kênh đó, rồi đặt Monitor mới chờ tín hiệu làm xong. Nhờ vậy vòng dispatch, hỏi, đáp, bàn giao chạy liền mạch mà không cần người ngồi canh."
+      - "herdr là mặt phẳng nhìn thấy và là đường dự phòng. Mỗi vai một pane có tên, Thomas đọc pane bằng `herdr agent read` khi một phiên im lặng, và dùng herdr CLI để điều Builder trên Codex hay OpenCode, nơi SendMessage không có. Watcher theo dõi trạng thái working, blocked, idle của từng pane."
+      - "Phân loại câu hỏi là điều đưa bạn từ human-in-the-loop sang human-on-the-loop. Câu hỏi kỹ thuật thường gặp, Thomas trả lời thay bạn từ contract, spec và tracker. Chỉ quyết định thiết kế thật sự mới đi lên bạn qua `to-questionnaire`, dưới dạng câu hỏi trả lời được. Bạn không đứng trong vòng lặp ở từng bước; bạn đứng trên vòng lặp và can thiệp khi có việc cần bạn."
     commands:
-      label: "Thomas điều một Builder trên Codex qua herdr"
-      lines:
-        - 'herdr agent start "builder-TRA-142" --kind codex --pane <id> -- codex --profile builder'
-        - 'herdr agent prompt <pane-id> "<brief>"'
-        - "herdr agent read   <pane-id>"
+      - label: "Trả lời một Builder bị chặn, cùng Claude Code"
+        lines:
+          - 'SendMessage({ to: "builder-TRA-142", message: "<câu trả lời>" })'
+          - "Monitor(...)   # chờ tín hiệu làm xong hoặc cần trao đổi"
+      - label: "Điều một Builder trên Codex qua herdr"
+        lines:
+          - 'herdr agent start "builder-TRA-142" --kind codex --pane <id> -- codex --profile builder'
+          - 'herdr agent prompt <pane-id> "<brief>"'
+          - "herdr agent read   <pane-id>"
     more:
-      label: "Xem tech stack →"
-      href: "/tech-stack#herdr"
+      label: "Xem skill dispatch-ticket →"
+      href: "/skills/dispatch-ticket"
 
   roles:
     eyebrow: "Chức năng và nhiệm vụ"
@@ -116,6 +121,14 @@ why:
   p1: "Vibe coding chứng minh một agent có thể nhận việc, viết code và tự kiểm thử như một kỹ sư. Khi năng lực thực thi không còn là nút thắt, giá trị của người kỹ sư chuyển sang chỗ khác: đặt yêu cầu đúng, quyết định đúng, và giữ toàn bộ quy trình đi đúng hướng."
   p2: "Astragentic được xây để bạn làm đúng phần đó. Nó tổ chức các agent thành một đội outsource theo kỷ luật SDLC quen thuộc, nhưng thiết kế lại cách phân việc, review và bàn giao để khai thác tốc độ và khối lượng công việc mà một đội người không thể duy trì."
   more: "Tìm hiểu lý do thiết kế →"
+
+shots:
+  sendmessage:
+    caption: "Một lượt SendMessage giữa Thomas và Builder"
+  herdr:
+    caption: "Workspace herdr với năm pane đang chạy"
+  tracker:
+    caption: "Board tracker của một dự án thật, 71 ticket"
 
 features:
   - id: cross-vendor

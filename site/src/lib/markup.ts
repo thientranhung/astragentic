@@ -5,7 +5,8 @@
 // Product and tool names the owner wants readable at a glance: bold, ink, no colour.
 // Longest first so "Claude Code" wins over "Claude". Applied outside code spans only.
 const BRANDS = [
-  'Claude Code', 'OpenCode', 'Codex', 'Claude', 'herdr', 'mattpocock-skills', 'Superpowers',
+  'Claude Code', 'OpenCode', 'Codex', 'Claude', 'herdr', 'mattpocock-skills', 'Matt Pocock',
+  'Superpowers',
   'GitHub Issues', 'GitHub', 'Jira', 'Linear', 'SendMessage', 'Monitor', 'Astragentic', 'Astraler',
 ];
 const BRAND_RE = new RegExp(`(^|[^\\w-])(${BRANDS.map((b) => b.replace(/[-]/g, '\\-')).join('|')})(?![\\w-])`, 'g');

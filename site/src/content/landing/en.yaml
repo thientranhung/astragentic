@@ -25,20 +25,25 @@ explain:
 
   comms:
     eyebrow: "How the agents talk"
-    headline: "Messages with an address, an acknowledgement, and someone watching."
+    headline: "Dispatching a ticket opens a conversation with an address."
     paragraphs:
-      - "When two agents both run Claude Code, they use SendMessage, the native messaging channel between sessions. The sender passes the content and the artifact references; the receiver answers back into the session that sent it. Thomas uses that same channel to reply when a Builder is blocked, then sets a Monitor and waits for the signal that the work is done or that something needs discussing."
-      - "When the two agents are on different runtimes, a Builder on Codex for instance, Thomas goes through herdr: it sends the brief with `herdr agent prompt`, types commands into the pane with `herdr pane run`, reads the screen back with `herdr agent read`, and follows the state with a watcher."
-      - "herdr is a terminal multiplexer and a runtime for coding agents: it organises sessions into workspaces, tabs and panes; it recognises which agent is running and in what state; and it exposes every running session through a CLI. That is how Thomas sees each agent, sends to the right address, and reads the right pane, which an ordinary terminal does not provide."
+      - "Thomas dispatches through the `dispatch-ticket` skill: it claims the ticket on the tracker first, creates the branch and the worktree, opens a herdr pane, launches the role on its declared runtime, sends the brief, and sets a watcher straight away. The chain ticket → assignee → pane → worktree → branch → PR is one to one, so several Builders work in parallel without getting in each other’s way."
+      - "When the roles all run Claude Code, the main channel is Claude Code’s native SendMessage. The brief and every exchange after it travel straight between two sessions, addressed by name, answering back into the session that sent them. A blocked Builder asks; Thomas reads the question, answers through that same channel, then sets a fresh Monitor and waits for the signal that the work is done. That is how the loop of dispatch, question, answer and handover runs unbroken, with nobody sitting and watching it."
+      - "herdr is the visible plane and the fallback path. Each role has a named pane, Thomas reads a pane with `herdr agent read` when a session falls silent, and it uses the herdr CLI to drive a Builder on Codex or OpenCode, where SendMessage does not exist. The watcher follows the working, blocked and idle state of every pane."
+      - "Sorting the questions is what moves you from human-in-the-loop to human-on-the-loop. The routine technical questions Thomas answers for you, out of the contract, the spec and the tracker. Only a real design decision comes up to you through `to-questionnaire`, in the form of a question you can answer. You are not standing inside the loop at every step; you are standing on top of it and stepping in when something needs you."
     commands:
-      label: "Thomas drives a Builder on Codex through herdr"
-      lines:
-        - 'herdr agent start "builder-TRA-142" --kind codex --pane <id> -- codex --profile builder'
-        - 'herdr agent prompt <pane-id> "<brief>"'
-        - "herdr agent read   <pane-id>"
+      - label: "Answering a blocked Builder, both on Claude Code"
+        lines:
+          - 'SendMessage({ to: "builder-TRA-142", message: "<the answer>" })'
+          - "Monitor(...)   # wait for the done signal, or for something to discuss"
+      - label: "Driving a Builder on Codex through herdr"
+        lines:
+          - 'herdr agent start "builder-TRA-142" --kind codex --pane <id> -- codex --profile builder'
+          - 'herdr agent prompt <pane-id> "<brief>"'
+          - "herdr agent read   <pane-id>"
     more:
-      label: "See the tech stack →"
-      href: "/en/tech-stack#herdr"
+      label: "See the dispatch-ticket skill →"
+      href: "/en/skills/dispatch-ticket"
 
   roles:
     eyebrow: "What each role does"
@@ -116,6 +121,14 @@ why:
   p1: "Vibe coding proved that an agent can take a ticket, write the code and test its own work like an engineer. Once execution stops being the bottleneck, an engineer's value moves elsewhere: framing the right requirement, making the right decision, and keeping the whole process on course."
   p2: "Astragentic is built so that you do exactly that part. It organises agents into an outsourcing team under the familiar SDLC discipline, but redesigns how work is assigned, reviewed and handed back, to exploit a speed and a volume no human team can sustain."
   more: "Explore the design rationale →"
+
+shots:
+  sendmessage:
+    caption: "One SendMessage exchange between Thomas and a Builder"
+  herdr:
+    caption: "A herdr workspace with five panes running"
+  tracker:
+    caption: "The tracker board of a real project, 71 tickets"
 
 features:
   - id: cross-vendor

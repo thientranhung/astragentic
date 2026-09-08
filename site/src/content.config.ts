@@ -77,6 +77,9 @@ const pages = defineCollection({
  *  src/lib/landing.ts merges what lands over a placeholder default and the page shows
  *  the gap instead of failing the build. */
 const caption = z.object({ headline: z.string().optional(), sub: z.string().optional() });
+/** One pane of literal commands inside an explain section. A section may carry one or
+ *  several; the single-object form is the older spelling and still validates. */
+const pane = z.object({ label: z.string().optional(), lines: z.array(z.string()) });
 const landing = defineCollection({
   loader: glob({ pattern: '[^_]*.{yaml,yml}', base: './src/content/landing' }),
   schema: z.object({
@@ -124,9 +127,7 @@ const landing = defineCollection({
           eyebrow: z.string().optional(),
           headline: z.string().optional(),
           paragraphs: z.array(z.string()).optional(),
-          commands: z
-            .object({ label: z.string().optional(), lines: z.array(z.string()) })
-            .optional(),
+          commands: z.union([pane, z.array(pane)]).optional(),
           items: z
             .array(
               z.object({
@@ -174,10 +175,21 @@ const landing = defineCollection({
           .optional(),
       })
       .optional(),
+    /** Photographs of the running system that the owner has not sent yet. Keyed by the
+     *  slug HomeBody asks for; `src` is a path under site/public and turns the dashed
+     *  placeholder into the real picture (home order spec §3). */
+    shots: z
+      .record(
+        z.string(),
+        z.object({ caption: z.string().optional(), src: z.string().optional() }),
+      )
+      .optional(),
     sections: z
       .object({
         structure: caption.optional(),
         roles: caption.optional(),
+        /** The whole team in one picture, between the roles and the messaging. */
+        team: caption.optional(),
         lifecycle: caption.optional(),
         tracker: caption.optional(),
         skills: caption.extend({ cta: z.string().optional() }).optional(),

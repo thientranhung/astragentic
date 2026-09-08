@@ -1,0 +1,78 @@
+---
+// A photograph of the running system — a SendMessage exchange, a herdr workspace, a
+// real board (home order spec §3). The owner has not sent the files yet, so with no
+// `src` this renders a dashed 16:9 frame carrying a mono "real screenshot · to come"
+// and the caption underneath. Once the file lands under site/public/shots/ the same
+// component renders the picture and drops the dashes, so nothing else on the page has
+// to change when it does.
+//
+// The dashes are the one place ink-22 is allowed to draw a border: a solid hairline
+// would read as a finished figure, which is exactly what this is not.
+import { UI, type Lang } from '../lib/site';
+
+interface Props {
+  lang: Lang;
+  /** What the picture will show. Also the alt text once `src` lands. */
+  caption: string;
+  /** Path under site/public, e.g. /shots/sendmessage.png. */
+  src?: string;
+  class?: string;
+}
+const { lang, caption, src, class: extra = '' } = Astro.props;
+---
+
+<figure class:list={['shot', !src && 'shot--pending', extra]}>
+  {
+    src ? (
+      <img class="shot-img" src={src} alt={caption} loading="lazy" decoding="async" />
+    ) : (
+      <div class="shot-frame">
+        <p class="shot-mark mono">{UI.shotPending[lang]}</p>
+      </div>
+    )
+  }
+  <figcaption class="shot-cap">{caption}</figcaption>
+</figure>
+
+<style>
+  .shot {
+    /* shorthand would reset margin-left and undo the .breakout offset */
+    margin-block: 1.75rem 0;
+  }
+  /* 16:9 whether the picture has landed or not, so the page does not reflow the day it
+     does. */
+  .shot-frame,
+  .shot-img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius-card);
+  }
+  .shot-frame {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-2);
+    border: 1px dashed var(--ink-22);
+  }
+  .shot-img {
+    object-fit: cover;
+    border: 1px solid var(--ink-10);
+  }
+  .shot-mark {
+    margin: 0;
+    font-size: var(--text-label);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-62);
+    text-align: center;
+    padding-inline: 1.5rem;
+  }
+  .shot-cap {
+    margin: 0.7rem 0 0;
+    font-size: var(--text-body-sm);
+    line-height: 1.45;
+    color: var(--ink-muted);
+    max-width: 62ch;
+  }
+</style>

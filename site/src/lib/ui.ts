@@ -46,6 +46,11 @@ export const UI = {
   /* ── verbatim quoting (PRD §4) ── */
   verbatim: { vi: 'nguyên văn · tiếng Anh', en: 'verbatim' },
 
+  /** Stands inside a dashed frame where a photograph of the running system will go. It
+   *  says the picture is real and not yet taken, so the frame reads as a promise rather
+   *  than a broken image (home order spec §3). */
+  shotPending: { vi: 'ảnh thật · sẽ cập nhật', en: 'real screenshot · to come' },
+
   /* ── diagrams ── */
   explore: { vi: 'Mở bản tương tác ↗', en: 'Explore ↗' },
   /** The explore pages are archify's own standalone build: they open in a new tab and
