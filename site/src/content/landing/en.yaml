@@ -16,9 +16,9 @@ explain:
     commands:
       label: "Launching one role on three runtimes"
       lines:
-        - "claude   --agent builder --model <model>"
-        - "codex    --profile builder"
-        - "opencode --agent builder -m <provider>/<model>"
+        - "claude   --agent builder --model <model> --effort <low|medium|high|xhigh|max>"
+        - "codex    --profile builder            # model and model_reasoning_effort live in the profile TOML"
+        - "opencode --agent builder -m <provider>/<model>   # no effort flag"
     more:
       label: "See the five roles →"
       href: "/en/roles/thomas"

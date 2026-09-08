@@ -16,9 +16,9 @@ explain:
     commands:
       label: "Khởi chạy một vai trên ba runtime"
       lines:
-        - "claude   --agent builder --model <model>"
-        - "codex    --profile builder"
-        - "opencode --agent builder -m <provider>/<model>"
+        - "claude   --agent builder --model <model> --effort <low|medium|high|xhigh|max>"
+        - "codex    --profile builder            # model + model_reasoning_effort nằm trong profile TOML"
+        - "opencode --agent builder -m <provider>/<model>   # không có cờ effort"
     more:
       label: "Xem năm vai →"
       href: "/vai/thomas"
