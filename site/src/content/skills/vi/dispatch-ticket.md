@@ -21,9 +21,9 @@ vài chuỗi như vậy cùng lúc, nên im lặng ở đây nghĩa là một Bu
 ai nhìn. <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
 
 Điểm khác của nó nằm ở chỗ đặt ranh giới: **claim xảy ra trước khi worktree tồn tại.** Ticket được
-gán trên tracker trước, nên hai phiên Thomas cùng nhặt trên frontier sẽ thấy claim của nhau thay vì
-đua nhau tạo cùng một branch. Vấn đề sinh ra luật này là hai phiên dùng chung một checkout và mất
-commit trong im lặng vì một lệnh `git switch` chạy song song. Mỗi phiên một worktree là cách chữa,
+gán trên tracker trước, nên hai session Thomas cùng nhặt trên frontier sẽ thấy claim của nhau thay vì
+đua nhau tạo cùng một branch. Vấn đề sinh ra luật này là hai session dùng chung một checkout và mất
+commit trong im lặng vì một lệnh `git switch` chạy song song. Mỗi session một worktree là cách chữa,
 và sự cô lập đó phủ mọi lệnh có ghi xuống đĩa, không riêng git.
 <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
 
@@ -72,8 +72,8 @@ và sự cô lập đó phủ mọi lệnh có ghi xuống đĩa, không riêng 
 Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Mọi mục dưới đây đều đang ở trạng
 thái `promoted`: đã sửa và đã nằm trong hợp đồng mà trang này mô tả.
 
-- **AST-016 / AST-027**: hai phiên root dùng chung một checkout, mất commit trong im lặng vì
-  một `git switch` chạy song song. Đã sửa: mỗi phiên một worktree, không ngoại lệ.
+- **AST-016 / AST-027**: hai session root dùng chung một checkout, mất commit trong im lặng vì
+  một `git switch` chạy song song. Đã sửa: mỗi session một worktree, không ngoại lệ.
 - **AST-036**: harness được allow-list nhưng chưa commit thì vô hình bên trong mọi worktree của
   Builder. Đã sửa: kiểm tra commit trước cú dispatch đầu tiên.
 - **AST-032 / AST-037**: một brief nhiều dòng dán vào composer mà không submit, và pane báo
@@ -92,7 +92,7 @@ thái `promoted`: đã sửa và đã nằm trong hợp đồng mà trang này m
 
 ## Đang chạy đúng nếu
 
-- Watchdog được xác nhận đang chạy trước cú dispatch đầu tiên của phiên, không phải mặc định là có.
+- Watchdog được xác nhận đang chạy trước cú dispatch đầu tiên của session, không phải mặc định là có.
 - `.astraler/state/dispatch-record.json` có một entry cho mọi ticket đang sống, kèm write-set.
 - Mọi brief đã gửi đều có watcher arm ngay trong cùng hành động đó, không phải một bước riêng
   làm sau.

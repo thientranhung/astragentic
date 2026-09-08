@@ -20,7 +20,7 @@ mất thêm một buổi nữa để hiểu nguyên nhân.
 
 Astragentic tồn tại để những lỗi đó khó xảy ra về mặt cấu trúc, thay vì thành thứ phải canh
 bằng mắt mỗi lần. Isolation là git worktree chứ không phải nội quy. Claim là một dòng trên
-tracker chứ không phải một câu trong chat. Bằng chứng là commit và biên nhận chứ không phải lời
+tracker chứ không phải một câu trong chat. Bằng chứng là commit và receipt chứ không phải lời
 báo cáo của chính agent vừa làm.
 
 Cái giá có hai phần. Phần thứ nhất: đây là thêm một lớp phải cài, phải hiểu và phải nâng cấp,

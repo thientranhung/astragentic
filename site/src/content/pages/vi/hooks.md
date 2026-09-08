@@ -83,7 +83,7 @@ Lỗi sinh ra nó là AST-069, và dạng một dòng là: một chỉ dẫn kh�
 đo được bằng không. System prompt đã có sẵn dòng "Read `.agents/roles/<role>.md` now", và dòng
 đó đi qua compaction nguyên vẹn vì nó là system prompt. Thứ không đi qua được là chữ "now". Một
 agent vừa compact đọc bản tóm tắt của chính nó, thấy công việc đang dở, kết luận nó đang giữa
-phiên, và không bao giờ đọc lại. Chỉ dẫn vẫn nằm đó, và trơ.
+session, và không bao giờ đọc lại. Chỉ dẫn vẫn nằm đó, và trơ.
 
 Hai chi tiết là cố ý. Hook bắn ở `compact` chứ không ở `clear`, vì sau `/clear` agent đối diện
 một context rỗng và tự đọc contract, còn sau compaction nó đối diện một bản tóm tắt khẳng định

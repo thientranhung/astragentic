@@ -38,14 +38,14 @@ trong đường ống báo lỗi để nói ra chuyện đó.
 | Thứ đang ở trước mặt | Gọi cái này |
 |---|---|
 | Một cú merge vừa vào | Chạy ngay, vì đây chính là chỗ độ lệch sinh ra, và bước merge vốn đã bắt chạy lại frontier và báo cái gì đã đổi |
-| Một phiên mới đang bắt đầu | Chạy nó để bắt bất cứ thứ gì phiên trước bỏ dở giữa chừng lúc dispatch |
+| Một session mới đang bắt đầu | Chạy nó để bắt bất cứ thứ gì session trước bỏ dở giữa chừng lúc dispatch |
 | Chủ project hỏi "tracker có đúng không?" | Chạy nó. Câu trả lời phải được đo, không bao giờ được nhớ lại |
 <!-- source: harness/.agents/skills/reconcile-tracker/SKILL.md -->
 
 ## Cần sẵn gì
 
 `TICKET_PREFIX` phải được set. Nó không có giá trị mặc định, và một lượt quét trần `[A-Z]+-[0-9]+`
-sẽ vơ luôn cả ADR id và spec id cùng với ticket thật. Đọc giá trị đó từ chỉ dẫn đầu phiên của
+sẽ vơ luôn cả ADR id và spec id cùng với ticket thật. Đọc giá trị đó từ chỉ dẫn đầu session của
 project (`AGENTS.md` / `CLAUDE.md`), và một giá trị chưa set là điểm dừng chứ không phải chỗ để
 đoán. Kéo ticket id từ tracker trước, rồi truyền tường minh cho script. Dạng trần của
 `ticket-git-facts.sh` suy ra danh sách của nó từ các subject đã nằm trên base branch, nên một
@@ -85,7 +85,7 @@ hay `linear-issue-tracker`) quyết định cách đọc nửa phần tracker, n
 ## Nó nằm ở đâu trong chuỗi
 
 `dispatch-ticket` claim một ticket rồi giao cho Builder → bước merge chạy lại frontier và ghi
-ngược cái gì đã đổi → `reconcile-tracker` kiểm, ngay sau cú merge đó và lần nữa lúc đầu phiên, xem
+ngược cái gì đã đổi → `reconcile-tracker` kiểm, ngay sau cú merge đó và lần nữa lúc đầu session, xem
 cú ghi ngược có thật sự xảy ra không. Tracker đang được đọc (`github-issue-tracker`,
 `jira-issue-tracker`, hay `linear-issue-tracker`) cấp phần cách làm cho đúng một sản phẩm cụ thể,
 còn `reconcile-tracker` là lượt kiểm chạy y như nhau bất kể tracker nào đang dùng. Chỗ nào nó tìm

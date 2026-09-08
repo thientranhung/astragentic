@@ -40,13 +40,13 @@ export const GROUPS: Record<
     title: { vi: 'Lúc chạy việc', en: 'Running the work' },
     short: { vi: 'Chạy việc', en: 'Running' },
     line: {
-      vi: 'Đường đi thường ngày của một ticket, từ dispatch tới biên nhận.',
+      vi: 'Đường đi thường ngày của một ticket, từ dispatch tới receipt.',
       en: 'The everyday path of a ticket, from dispatch to receipt.',
     },
   },
   gate: {
-    title: { vi: 'Lúc qua cổng', en: 'At the gate' },
-    short: { vi: 'Cổng', en: 'Gate' },
+    title: { vi: 'Lúc qua gate', en: 'At the gate' },
+    short: { vi: 'Gate', en: 'Gate' },
     line: {
       vi: 'Chỗ một người khác đọc lại trước khi thứ gì đó đi tiếp.',
       en: 'Where someone else re-reads before anything moves on.',
@@ -114,15 +114,15 @@ const VERB: Record<string, Record<Lang, string>> = {
     en: 'Dispatch one claimed ticket as a visible pane.',
   },
   'dispatch-ticket-claude': {
-    vi: 'Khởi chạy và xác nhận một Builder trên Claude Code.',
+    vi: 'Launch và xác nhận một Builder trên Claude Code.',
     en: 'Launch and verify a Builder on Claude Code.',
   },
   'dispatch-ticket-codex': {
-    vi: 'Khởi chạy và xác nhận một Builder trên Codex.',
+    vi: 'Launch và xác nhận một Builder trên Codex.',
     en: 'Launch and verify a Builder on Codex.',
   },
   'dispatch-ticket-opencode': {
-    vi: 'Khởi chạy và xác nhận một Builder trên OpenCode.',
+    vi: 'Launch và xác nhận một Builder trên OpenCode.',
     en: 'Launch and verify a Builder on OpenCode.',
   },
   'dispatch-qa-walk': {

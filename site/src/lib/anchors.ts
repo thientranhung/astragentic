@@ -207,7 +207,7 @@ export const WHY: WhyCard[] = [
       en: 'Why not just use Claude Code subagents?',
     },
     answer: {
-      vi: 'Subagent dùng chung một checkout và thừa hưởng context của người gọi. Không có tracker giữ trạng thái, không có pane để nhìn, nên khi một nhánh im lặng thì không còn chỗ nào đọc ra điều đó.',
+      vi: 'Subagent dùng chung một checkout và thừa hưởng context của người gọi. Không có tracker giữ trạng thái, không có pane để nhìn, nên khi một branch im lặng thì không còn chỗ nào đọc ra điều đó.',
       en: 'Subagents share one checkout and inherit the caller’s context. There is no tracker holding state and no pane to look at, so when a branch goes quiet there is nowhere left to read that from.',
     },
   },
@@ -229,7 +229,7 @@ export const WHY: WhyCard[] = [
       en: 'Why let a second vendor read the diff?',
     },
     answer: {
-      vi: 'Một mô hình đọc lại diff của chính nó thì đọc lại luôn cả giả định của nó. Một vendor khác không mang theo giả định đó, và biên nhận buộc vào đúng SHA đã được đọc.',
+      vi: 'Một mô hình đọc lại diff của chính nó thì đọc lại luôn cả giả định của nó. Một vendor khác không mang theo giả định đó, và receipt buộc vào đúng SHA đã được đọc.',
       en: 'A model re-reading its own diff re-reads its own assumptions with it. A second vendor does not carry them, and the receipt is bound to the SHA that was actually read.',
     },
   },
@@ -303,7 +303,7 @@ export const GOOD_PARTS: GoodPart[] = [
     id: 'cross-vendor-arm',
     title: { vi: 'Cánh tay cross-vendor', en: 'The cross-vendor arm' },
     line: {
-      vi: 'Claude build, Codex đọc lại, biên nhận buộc vào đúng SHA đã đọc.',
+      vi: 'Claude build, Codex đọc lại, receipt buộc vào đúng SHA đã đọc.',
       en: 'Claude builds, Codex re-reads, and the receipt is bound to the SHA that was read.',
     },
   },

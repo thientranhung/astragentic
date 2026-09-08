@@ -14,7 +14,7 @@ updated: 2026-09-04
 
 `jira-issue-tracker` là một trong ba adapter tracker. `.agents/tracker-contract.md` nêu năm thứ
 pipeline đòi ở bất kỳ tracker nào. File này là phần cách làm cho Jira: trạng thái dưới dạng
-transition, hai toạ độ mà một phiên không tự tìm ra được, các issue link cùng hướng dễ bị đảo
+transition, hai toạ độ mà một session không tự tìm ra được, các issue link cùng hướng dễ bị đảo
 ngược của chúng, việc ghi đè trọn trường description, và những thứ chỉ con người mới đổi được.
 Phần thuộc dự án ở lại trong dự án: site, `cloudId`, project key và bảng transition id đều nằm
 trong `docs/agents/issue-tracker.md` của dự án đó. Tôi truy cập Jira qua bộ công cụ MCP của
@@ -46,7 +46,7 @@ cái chốt, và nó rẻ hơn nhóm lỗi mà nó chặn. Đổi lại, lợi t
 ## Cần sẵn gì
 
 - **`cloudId` đã được ghi lại.** Nó không xuất hiện trong bất kỳ URL nào người ta dán, nên thiếu
-  nó thì mỗi phiên đều mở đầu bằng một lượt tìm qua `getAccessibleAtlassianResources`.
+  nó thì mỗi session đều mở đầu bằng một lượt tìm qua `getAccessibleAtlassianResources`.
 - **Project key được đặt trong dấu nháy khi viết JQL.** Một key trùng từ khoá JQL làm
   `project = <KEY>` không parse được, và thông báo lỗi không hề nói là phải nháy.
 - **Bạn biết dự án là team-managed hay company-managed**, vì điều đó quyết định các trạng thái
@@ -101,7 +101,7 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Cả hai đều 
 
 ## Nó nằm ở đâu trong chuỗi
 
-`thomas.md` đọc `issue-tracker.md` của dự án lúc mở phiên → file đó gọi tên adapter này →
+`thomas.md` đọc `issue-tracker.md` của dự án lúc mở session → file đó gọi tên adapter này →
 frontier là một truy vấn JQL → `dispatch-ticket` claim ticket thắng cuộc bằng cách đặt assignee,
 rồi git quyết mọi cuộc đua trong cùng một giây → merge lấy transition sang Done và kéo thứ nó
 vừa mở khoá sang trạng thái sẵn sàng → `reconcile-tracker` đem kết quả ra đo với git. Hai adapter

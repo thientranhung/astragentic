@@ -140,7 +140,7 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
       headline: 'Bốn Builder chạy cùng lúc\ntrên một repo, không giẫm lên nhau.',
       sub: 'Tôi dựng lớp điều phối này để việc không rơi mất giữa các session.',
       primary: 'Xem cấu trúc',
-      secondary: 'Cài cho repo của bạn',
+      secondary: 'Install cho repo của bạn',
     },
     explain: {},
     why: { headline: '', p1: '', p2: '', more: '' },
@@ -159,11 +159,11 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
       },
       team: {
         headline: 'Cả đội trong một bức tranh.',
-        sub: 'Bạn ở ngoài, Thomas ở cổng, issue tracker ở giữa, và mọi việc đi qua tracker.',
+        sub: 'Bạn ở ngoài, Thomas ở gate, issue tracker ở giữa, và mọi việc đi qua tracker.',
       },
       lifecycle: {
-        headline: 'Một ticket đi qua bảy chặng',
-        sub: 'Bảy chặng có tên để mỗi lỗi đo được gắn vào đúng một chặng.',
+        headline: 'Một ticket đi qua bảy stage',
+        sub: 'Bảy stage có tên để mỗi lỗi đo được gắn vào đúng một stage.',
       },
       tracker: {
         headline: 'Thomas hỏi tracker, không nhớ tracker',
@@ -193,7 +193,7 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
       build: 'Builder làm trong worktree riêng.',
       'code-review': 'Rin đọc lại artifact và dấu vết.',
       simplify: 'Dọn marker, cắt phần thừa.',
-      arm: 'Codex đọc lại, biên nhận buộc vào SHA.',
+      arm: 'Codex đọc lại, receipt buộc vào SHA.',
       merge: 'Ledger ghi một dòng, assignee gỡ.',
     },
     roleCards: {

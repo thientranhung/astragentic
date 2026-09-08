@@ -6,7 +6,7 @@ sessionTag: "resident"
 
 ## does
 
-1. **Chạy frontier query** ở đầu phiên và mỗi lần một ticket đóng: mọi ticket đã hết blocker và
+1. **Chạy frontier query** ở đầu session và mỗi lần một ticket đóng: mọi ticket đã hết blocker và
    assignee còn trống. Thomas viết câu trả lời lên board, ở trạng thái claimable-and-unclaimed của
    tracker, để owner nhìn board là thấy. Thomas đọc edges và state, không đọc readiness label, vì
    label đó tả ticket lúc nó được tạo và không ai quay lại sửa.

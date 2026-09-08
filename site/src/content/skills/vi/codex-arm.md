@@ -37,7 +37,7 @@ Bỏ qua nó là đã ship một lỗi 500 lên production, đúng trên con đ�
 | Runtime ở root là Codex, cần một lượt Claude thay vào | `codex-claude-arm` (skill đối xứng; cánh tay luôn gọi vendor *bên kia*) |
 | Một spec vừa xong, sắp cắt thành ticket | `codex-arm` ở `arm: spec`, do Thomas chạy từ base checkout |
 | Một slice đang khép lại | `codex-arm` ở `arm: slice`, tương tự như trên |
-| Cần chạy chính cửa gate của Rin | Không phải skill này. Rin không tự chạy cánh tay từ bên trong lượt review của chính nó |
+| Cần chạy chính gate của Rin | Không phải skill này. Rin không tự chạy cánh tay từ bên trong lượt review của chính nó |
 
 <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
 
@@ -75,7 +75,7 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Mọi mục dư�
 
 - **AST-103**: companion resolve `HEAD` từ chính checkout nó đang chạy. Chỗ nào cái đó lệch với
   `--base` thì lượt chạy đem base branch so với chính nó và trả về sạch. Bị bắt hai lần, bởi người
-  vận hành chứ không phải bởi cửa gate. Đã sửa: in dải commit và file thành dòng output đầu tiên,
+  vận hành chứ không phải bởi gate. Đã sửa: in dải commit và file thành dòng output đầu tiên,
   dừng khi dải có 0 commit.
 - **AST-095**: companion thoát mã 0 khi lỗi cấu hình, và cache state khoá theo workspace root. Đã
   sửa: không bao giờ rẽ nhánh theo exit code, chỉ theo nội dung file output; không bao giờ dùng
@@ -108,8 +108,8 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Mọi mục dư�
 ## Nó nằm ở đâu trong chuỗi
 
 Vòng khép kín của một Builder chạy `implement` → review → simplify → `codex-arm` (phạm vi ticket)
-→ biên nhận `arm(ticket):` → handback, và bước cleanup của `/skills/dispatch-ticket` kiểm biên
-nhận đó trước khi gỡ worktree. Ở phạm vi spec và slice, Thomas chạy nó từ base checkout trước khi
+→ receipt `arm(ticket):` → handback, và bước cleanup của `/skills/dispatch-ticket` kiểm receipt
+đó trước khi gỡ worktree. Ở phạm vi spec và slice, Thomas chạy nó từ base checkout trước khi
 thả một `shaper` đang tạm dừng hoặc trước khi khép một slice. `codex-claude-arm` là bản đối xứng
 cho trường hợp root là Codex: cùng nhịp, ngược vendor. Không cái nào thay được
-`/skills/review-with-rin`, vì đó mới là cửa gate, còn đây là lượt chạy nuôi cửa đó.
+`/skills/review-with-rin`, vì đó mới là gate, còn đây là lượt chạy nuôi gate đó.

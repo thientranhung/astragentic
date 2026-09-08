@@ -75,7 +75,7 @@ trạng thái `promoted`.
 - **AST-051**: một địa chỉ mà người gọi không dùng được thì sinh ra một thứ thay thế, không sinh
   ra lỗi. Một hợp đồng gọi tên một lượt chạy bằng lệnh slash, vốn là dạng *con người* gõ, và một
   agent không có bàn phím thì không gọi được. Hệ quả là hai Builder mỗi người tự làm một cú dọn
-  dẹp thủ công, cả hai lần bàn giao đều mô tả trung thực một lượt chạy có thật, và skill thật bắn
+  dẹp thủ công, cả hai lần handback đều mô tả trung thực một lượt chạy có thật, và skill thật bắn
   lại sau đó trên cùng diff tìm ra một chỗ tách mà cả hai đều bỏ sót. Luật chung: một địa chỉ chỉ
   đúng tương đối với người phải dùng nó. Skill này mang luật đó ở bước expand-contract, chỗ trỏ
   sang `to-tickets`, vốn do người dùng gọi nên model không tự với tới được.

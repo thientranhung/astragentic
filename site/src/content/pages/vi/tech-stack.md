@@ -11,7 +11,7 @@ dựng chính trang này.
 ## claude-code
 
 Runtime gốc. Cả năm vai đều chạy được ở đây, và `claude --agent thomas` là câu lệnh mở đầu một
-phiên. Nếu bạn chỉ cài đúng một runtime thì phải là runtime này.
+session. Nếu bạn chỉ cài đúng một runtime thì phải là runtime này.
 
 Đây cũng là nơi tôi đặt hai hook quan trọng nhất, vì hai cơ chế tôi cần chỉ tồn tại ở đây. Thứ
 nhất là chỗ tách system prompt khỏi contract: `.claude/agents/<role>.md` là system prompt và
@@ -94,7 +94,7 @@ label.
 ## scripts
 
 Phần Python và Bash tôi tự viết. Ba script đại diện cho ba kiểu: `hook-git-guard.py` là lớp
-chặn chạy trong lúc quyền còn đang được quyết; `herdr-watchdog.sh` chạy nền suốt phiên và phải
+chặn chạy trong lúc quyền còn đang được quyết; `herdr-watchdog.sh` chạy nền suốt session và phải
 sống trước mọi dispatch; `ledger-index.sh` chạy sau khi payload đổi, không phải sau khi công
 việc đổi.
 

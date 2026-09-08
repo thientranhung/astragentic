@@ -26,7 +26,7 @@ bộ từ vựng.
 Thứ nó thay thế là một buổi phỏng vấn domain năm mươi câu ở đầu một project brownfield, loại buổi
 mà không ai rảnh một tiếng và câu trả lời rồi cũng lệch khỏi thứ code thật sự làm. Nhưng bài toán
 khó hơn mà nó được dựng lên để chống thì kín đáo hơn: một bộ từ điển do agent viết mà trông như đã
-được xác nhận còn tệ hơn không có từ điển nào, vì các phiên sau sẽ coi văn xuôi nghe chắc chắn là
+được xác nhận còn tệ hơn không có từ điển nào, vì các session sau sẽ coi văn xuôi nghe chắc chắn là
 sự thật đã chốt. Nên skill này rút ra chứ không bịa ra, và nó đánh dấu mọi thuật ngữ là
 `UNREVIEWED` cho tới khi chủ project nhìn qua. Dấu đó nằm ở chỗ nhìn thấy được, trong một header
 mà mọi người đọc đều thấy, vì bản thân trường trạng thái duyệt không tồn tại ở bất cứ đâu khác
@@ -85,7 +85,7 @@ nếu thiếu nó.
 
 `bootstrap-glossary` chạy một lần, gọi đích danh, sớm trong đời một project brownfield, cùng nhóm
 với các lượt bootstrap khác cũng gọi một lần và được chủ project duyệt: `extract-standards` cho quy
-ước code và `batch-triage` cho một backlog thừa kế. Thomas sở hữu cả ba như những chặng, để không
+ước code và `batch-triage` cho một backlog thừa kế. Thomas sở hữu cả ba như những stage, để không
 cái nào biến thành phần việc mà ai cũng tưởng người khác đã chạy. Khi các thuật ngữ đã `CONFIRMED`,
 `domain-modeling` là chỗ chúng được mài sắc thêm. Việc của skill này kết thúc ở chỗ trao cho
 `domain-modeling` một bộ từ vựng rút từ code đang có thật, chứ không phải một bộ từ vựng ai đó đoán

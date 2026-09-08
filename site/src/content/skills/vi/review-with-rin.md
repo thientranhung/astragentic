@@ -1,6 +1,6 @@
 ---
 title: review-with-rin
-oneLiner: "Chạy cửa gate milestone của Rin trong một pane quan sát được, rồi phân loại các phát hiện."
+oneLiner: "Chạy gate milestone của Rin trong một pane quan sát được, rồi phân loại các phát hiện."
 group: gate
 order: 1
 runtimes: [claude]
@@ -70,7 +70,7 @@ bước cleanup.
 - `AST-033`: cách tra cũ "có tab ticket nào đang sống không?" trả lời "không" mọi lần ở một gate
   spec, âm thầm biến mọi gate spec thành một subagent vô hình. Promoted, đã được thay bằng câu hỏi
   "có gọi được tên workspace không?"
-- `AST-043`: cửa gate đòi bản brief mang theo "bằng chứng browser-verify của Builder", trong khi
+- `AST-043`: gate đòi bản brief mang theo "bằng chứng browser-verify của Builder", trong khi
   `builder.md` chưa từng nhắc là phải tạo ra thứ đó. Promoted: hợp đồng nào nợ nó thì giờ đã nói ra.
 - `AST-032`: một pipeline sinh token có thể hỏng giữa ống mà vẫn thoát mã 0 dưới `set -e` trần, làm
   rỗng token freshness trong im lặng. Promoted, sửa bằng `set -euo pipefail` cộng một lượt kiểm độ dài.
@@ -91,7 +91,7 @@ bước cleanup.
 ## Nó nằm ở đâu trong chuỗi
 
 Một ticket đi qua worktree của `/skills/dispatch-ticket`, và khi nó sẵn sàng đóng thì
-`review-with-rin` gác cửa: đọc diff, kiểm xem marker simplify và dòng `Ledger:` có thật sự tồn tại
+`review-with-rin` giữ gate: đọc diff, kiểm xem marker simplify và dòng `Ledger:` có thật sự tồn tại
 không, và bằng chứng trình duyệt có chống lưng cho mọi thay đổi UI không. Thứ Rin không phán được,
 tức sản phẩm đang chạy có còn liền mạch không, là việc của `dispatch-qa-walk`. Khi các phát hiện
 đã được gộp và kiểm lại, `/skills/codex-arm` nhận SHA cuối cho lượt cross-vendor trước khi bất cứ

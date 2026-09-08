@@ -1,6 +1,6 @@
 ---
 title: dispatch-ticket-codex
-oneLiner: "Khởi chạy một pane Codex từ profile cục bộ của chủ máy, sau khi kiểm profile khớp dòng cấu hình."
+oneLiner: "Launch một pane Codex từ profile cục bộ của chủ máy, sau khi kiểm profile khớp dòng cấu hình."
 group: adapter
 order: 2
 runtimes: [codex]
@@ -14,14 +14,14 @@ updated: 2026-09-04
 
 `dispatch-ticket-codex` là nửa Codex của `dispatch-ticket`. Skill dùng chung giữ phần định danh,
 chốt input, luật worktree, khuôn brief, cách gửi, cách canh, simplify và dọn dẹp. Adapter này thêm
-đúng ba thứ: bảng lệnh khởi chạy cho các dòng Codex, bước kiểm profile trước khi dispatch, và
+đúng ba thứ: bảng lệnh launch cho các dòng Codex, bước kiểm profile trước khi dispatch, và
 những sự thật đã đo được về cách Codex tự báo trạng thái của nó. Đây là adapter mỏng nhất trong ba
 adapter runtime, và mỏng là có chủ đích. Với Codex, skill dùng chung đã sở hữu sẵn phần gửi brief
 và phần canh; điều này được kiểm lại chứ không phải giả định, trong một đợt quét tìm hướng dẫn cũ
 còn sót.
 <!-- source: harness/.agents/skills/dispatch-ticket-codex/SKILL.md, RELEASE-NOTES.md -->
 
-Điểm khác ở đây là chỗ cấu hình nằm. Trên Claude, model và effort đi theo dòng lệnh; trên Codex
+Điểm khác ở đây là chỗ cấu hình nằm. Trên Claude, model và effort đi theo CLI; trên Codex
 thì không. Các profile đứng sau `codex --profile <role>` là file **cục bộ theo máy** nằm dưới
 `${CODEX_HOME:-$HOME/.codex}/`, effort là một trường TOML (`model_reasoning_effort`) vì Codex
 không có cờ `--effort`, và `--yolo` đã cũ từ v0.147.0, thay bằng
@@ -36,7 +36,7 @@ chiếu.
 |---|---|
 | Một ticket đã claim, và `orchestrator.md` ghi vai này chạy trên Codex | `dispatch-ticket` + `dispatch-ticket-codex` |
 | Một pane Builder, Shaper hoặc QA trên Codex | `codex --profile <role> --dangerously-bypass-approvals-and-sandbox` |
-| Một dòng `rin` ghi Codex | Dừng lại. Phiên gốc Codex không host được gate (`codex-claude-arm`) |
+| Một dòng `rin` ghi Codex | Dừng lại. Session gốc Codex không host được gate (`codex-claude-arm`) |
 | Profile thiếu hoặc đã lệch khỏi template | Đưa chủ máy đúng lệnh copy và diff; không bao giờ tự tạo trong im lặng |
 | Một file `.codex/agents/*.toml` trông như đáp án | Không phải. Đó là subagent spawn được, không phải pane của một vai |
 
@@ -46,18 +46,18 @@ chiếu.
 
 - **Profile cục bộ theo máy có tồn tại** tại `${CODEX_HOME:-$HOME/.codex}/<role>.config.toml`.
   Harness ship sẵn template thuộc quyền chủ máy ở `.codex/profiles/<role>.config.toml`, và
-  template đó là nguồn đúng cho một lần khởi chạy pane.
+  template đó là nguồn đúng cho một lần launch pane.
 - **Profile khớp template của nó**, hoặc độ lệch được báo cho chủ máy chứ không tự sửa lặng lẽ.
 - **Model và effort trong TOML khớp dòng `orchestrator.md`.** Hai chỗ, một đáp án, và không còn
   gì khác đem chúng ra so.
-- **cwd của pane là worktree**, theo cổng cwd bắt buộc trong giao thức dùng chung.
+- **cwd của pane là worktree**, theo gate cwd bắt buộc trong giao thức dùng chung.
 
 ## Nó để lại gì
 
 | Kết quả | Nơi nó nằm lại |
 |---|---|
-| Lần khởi chạy | `herdr agent start "<role>-<ticket-id>" --kind codex`, kèm cờ profile |
-| Danh tính vai, model và effort | File TOML cục bộ theo máy, không phải dòng lệnh |
+| Lần launch | `herdr agent start "<role>-<ticket-id>" --kind codex`, kèm cờ profile |
+| Danh tính vai, model và effort | File TOML cục bộ theo máy, không phải CLI |
 | Một phát hiện lệch | Một báo cáo cho chủ máy, kèm lệnh copy và diff, trước mọi lần dispatch |
 | Mọi thứ còn lại, gồm brief, watch, phán quyết và dọn dẹp | Giao thức dùng chung `dispatch-ticket` |
 
@@ -85,17 +85,17 @@ này đọc, và cả hai đều `promoted`.
 - Profile được đọc từ `${CODEX_HOME:-$HOME/.codex}/`, và việc nó vắng mặt làm dừng lần dispatch
   chứ không kích hoạt một cú copy lặng lẽ.
 - Lệnh `diff -q` với template đã ship có chạy, và mọi độ lệch đều tới tay chủ máy bằng lời.
-- Lệnh khởi chạy mang `--dangerously-bypass-approvals-and-sandbox`, không bao giờ mang `--yolo`
+- Lệnh launch mang `--dangerously-bypass-approvals-and-sandbox`, không bao giờ mang `--yolo`
   đã nghỉ hưu.
-- Không có effort nào truyền qua dòng lệnh, vì Codex không có cờ cho nó.
+- Không có effort nào truyền qua CLI, vì Codex không có cờ cho nó.
 - Không Builder nào bị định tuyến qua subagent `.codex/agents/*.toml`, vì nó dùng chung topology
-  của phiên cha và không được cấp worktree.
+  của session cha và không được cấp worktree.
 
 <!-- source: harness/.agents/skills/dispatch-ticket-codex/SKILL.md -->
 
 ## Nó nằm ở đâu trong chuỗi
 
 `dispatch-ticket` claim ticket rồi dựng worktree, tab và pane → `dispatch-ticket-codex` kiểm
-profile và khởi chạy runtime → giao thức dùng chung giao brief, arm cái watch và đọc phán quyết
-→ trên phiên gốc Codex, lượt cross-vendor là `codex-claude-arm`, còn gate vẫn ở lại trên phiên
+profile và launch runtime → giao thức dùng chung giao brief, arm cái watch và đọc phán quyết
+→ trên session gốc Codex, lượt cross-vendor là `codex-claude-arm`, còn gate vẫn ở lại trên session
 gốc Claude. Hai skill song song với nó là `dispatch-ticket-claude` và `dispatch-ticket-opencode`.

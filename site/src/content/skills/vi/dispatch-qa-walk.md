@@ -12,7 +12,7 @@ updated: 2026-09-04
 
 ## Nó làm gì
 
-Skill này dispatch lượt đi bộ sản phẩm của QA: cửa gate phán hệ thống đang chạy thay vì phán cái
+Skill này dispatch lượt đi bộ sản phẩm của QA: gate phán hệ thống đang chạy thay vì phán cái
 diff. Nó dựa trên phần gate-file và dạng pane của `review-with-rin` chứ không chép lại, và thêm
 đúng một thứ mà một lượt đi bộ cần còn các gate khác thì không: một môi trường. Thomas tạo một
 gate worktree tại SHA đang review, khởi động app ở đó bằng đúng lệnh của project, đóng gói một
@@ -94,7 +94,7 @@ trả lời hợp lệ, còn "chưa đếm" thì không.
 ## Nó nằm ở đâu trong chuỗi
 
 Một ticket đóng lại qua `/skills/dispatch-ticket`, `/skills/review-with-rin` đọc diff và kiểm xem
-quy trình có để lại dấu vết không, còn `dispatch-qa-walk` là cửa gate bên cạnh, cửa không đọc gì
+quy trình có để lại dấu vết không, còn `dispatch-qa-walk` là gate bên cạnh, gate không đọc gì
 cả. Nó lái sản phẩm đang chạy, vì một cái diff mạch lạc và một sản phẩm mạch lạc là hai lời khẳng
 định khác nhau. Phát hiện từ cả hai cửa đi cùng một đường: `qa` khuyến nghị, Thomas phân loại,
 Builder sửa, và một quyết định sản phẩm thật sự thì lên chủ project. Lượt đi bộ chạy bên trong một

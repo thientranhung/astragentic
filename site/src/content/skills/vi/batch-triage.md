@@ -53,7 +53,7 @@ cũ sẽ sai đúng chỗ triage cần nó nhất: trên đoạn code đã dời
 - Cây code hiện tại, không phải một cái map của nó. Phần lớn quyết định triage phụ thuộc vào việc
   đoạn code mà item gọi tên còn tồn tại hay không, nên từng item được resolve bằng `rg` và `git log`
   trên cây ở trạng thái hiện tại. <!-- source: harness/.agents/skills/batch-triage/SKILL.md -->
-- Thomas sở hữu skill này như một chặng. Đây là skill do người gọi, chạy một lần cho mỗi repo và
+- Thomas sở hữu skill này như một stage. Đây là skill do người gọi, chạy một lần cho mỗi repo và
   chạy lại khi đã cũ, và kết thúc ở lượt duyệt của chủ project. Một skill do người gọi không tự gọi
   được skill khác, đó là lý do vai này tồn tại. <!-- source: harness/.agents/roles/thomas.md -->
 - Có một adapter tracker đang hoạt động, vì các item còn sống sẽ trở thành ticket thật. Chọn adapter
@@ -106,10 +106,10 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`.
 
 ## Nó nằm ở đâu trong chuỗi
 
-`batch-triage` chạy sớm, bên cạnh chặng bootstrap còn lại mà Thomas sở hữu:
+`batch-triage` chạy sớm, bên cạnh stage bootstrap còn lại mà Thomas sở hữu:
 `/skills/bootstrap-glossary` gieo bộ từ vựng từ code, còn `batch-triage` đọc backlog đối chiếu với
 đúng đoạn code đó. Cả hai đều gọi đích danh, chạy một lần cho mỗi repo, và kết thúc ở lượt duyệt
 của chủ project, nên không cái nào biến thành phần việc mà ai cũng tưởng người khác đã chạy. Kết
 quả của nó đi thẳng vào câu truy vấn frontier trong `thomas.md`, và đó là chỗ `/skills/dispatch-ticket`
-claim. Một item quá lớn cho một ticket thì chuyển sang `mattpocock-skills:wayfinder` và một phiên
+claim. Một item quá lớn cho một ticket thì chuyển sang `mattpocock-skills:wayfinder` và một session
 Shaper; một item mới tới sau này thì chuyển sang `mattpocock-skills:triage`, không quay lại đây.

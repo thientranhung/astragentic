@@ -1,5 +1,5 @@
 ---
-title: "Cài vào repo của bạn"
+title: "Install vào repo của bạn"
 description: "Bộ cài chỉ stage một release bất biến rồi dừng. Việc tích hợp do một agent làm sau khi đọc project thật."
 ---
 
@@ -9,7 +9,7 @@ repo của bạn thực hiện, sau khi nó đọc build command, agent config v
 
 Tôi tách thành hai bước vì một bộ cài kiểu chép đè sẽ luôn đè nhầm file. Nó không phân biệt
 được thứ thuộc về harness, thứ thuộc về project và thứ do owner sở hữu. Cái giá là bạn phải
-chạy thêm một phiên agent và đọc kỹ những gì nó định làm, thay vì gõ một lệnh rồi bỏ đi.
+chạy thêm một session agent và đọc kỹ những gì nó định làm, thay vì gõ một lệnh rồi bỏ đi.
 
 ## brownfield
 

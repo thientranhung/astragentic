@@ -17,7 +17,7 @@ export const UI = {
     en: 'Astragentic: an agent outsourcing unit that puts the engineer in the client\'s seat.',
   },
   repoLink: { vi: 'GitHub ↗', en: 'GitHub ↗' },
-  footerAdopt: { vi: 'Cài', en: 'Adopt' },
+  footerAdopt: { vi: 'Install', en: 'Adopt' },
   footerVersion: { vi: 'phiên bản', en: 'version' },
   footerCited: { vi: 'dòng ledger đã buộc vào file', en: 'entries bound to a file' },
   footerGenerated: { vi: 'số liệu sinh ngày', en: 'data generated' },
@@ -28,14 +28,14 @@ export const UI = {
   contents: { vi: 'Mục lục', en: 'Contents' },
   overview: { vi: 'Tổng quan', en: 'Overview' },
   sideStructure: { vi: 'Cấu trúc', en: 'Structure' },
-  sideRoles: { vi: 'Vai', en: 'Roles' },
+  sideRoles: { vi: 'Role', en: 'Roles' },
   sideSkills: { vi: 'Skills', en: 'Skills' },
   sideHooks: { vi: 'Hooks', en: 'Hooks' },
   sideWhy: { vi: 'Vì sao', en: 'Why' },
   sideStack: { vi: 'Tech stack', en: 'Tech stack' },
   sideFailures: { vi: 'Lỗi', en: 'Failures' },
   sideEvidence: { vi: 'Bằng chứng', en: 'Evidence' },
-  sideAdopt: { vi: 'Cài', en: 'Adopt' },
+  sideAdopt: { vi: 'Install', en: 'Adopt' },
   roleKey: { vi: 'Màu vai trong hình', en: 'Role colours in this figure' },
 
   /* ── hero strip ── */
@@ -52,7 +52,7 @@ export const UI = {
   shotPending: { vi: 'ảnh thật · sẽ cập nhật', en: 'real screenshot · to come' },
 
   /* ── diagrams ── */
-  explore: { vi: 'Mở bản tương tác ↗', en: 'Explore ↗' },
+  explore: { vi: 'Explore ↗', en: 'Explore ↗' },
   /** The explore pages are archify's own standalone build: they open in a new tab and
    *  their chrome is English even when the labels are Vietnamese. Say so before the
    *  click, not after (PRD §4). */
@@ -68,10 +68,10 @@ export const UI = {
   },
 
   /* ── landing feature cards ── */
-  featureMore: { vi: 'Tìm hiểu thêm →', en: 'Read more →' },
+  featureMore: { vi: 'Read more →', en: 'Read more →' },
   /** Column heads on the role table, read out of orchestrator.md. "Runtime", "Model"
    *  and "Effort" are the file's own column names and stay English in both locales. */
-  colRole: { vi: 'Vai', en: 'Role' },
+  colRole: { vi: 'Role', en: 'Role' },
   colRuntime: { vi: 'Runtime', en: 'Runtime' },
   colModel: { vi: 'Model', en: 'Model' },
   colEffort: { vi: 'Effort', en: 'Effort' },
@@ -100,15 +100,15 @@ export const UI = {
   wholeTable: { vi: 'Xem toàn bộ ledger →', en: 'View the full ledger →' },
 
   /* ── adopt ── */
-  installIt: { vi: 'Triển khai vào repo của bạn →', en: 'Deploy to your repo →' },
-  copy: { vi: 'Chép', en: 'Copy' },
-  copied: { vi: 'Đã chép', en: 'Copied' },
+  installIt: { vi: 'Deploy vào repo của bạn →', en: 'Deploy to your repo →' },
+  copy: { vi: 'Copy', en: 'Copy' },
+  copied: { vi: 'Copied', en: 'Copied' },
   prerequisites: { vi: 'Cần sẵn', en: 'Prerequisites' },
-  quickstart: { vi: 'Cài đặt', en: 'Install' },
+  quickstart: { vi: 'Install', en: 'Install' },
   brownfield: { vi: 'Bốn skill cho repo có sẵn', en: 'Four skills for an existing repo' },
 
   /* ── roles ── */
-  roleEyebrow: { vi: 'VAI', en: 'ROLE' },
+  roleEyebrow: { vi: 'ROLE', en: 'ROLE' },
   roleDoes: { vi: 'Nó làm gì mỗi lượt', en: 'What it does each turn' },
   roleRights: { vi: 'Nó được phép và không được phép', en: 'What it may and may not do' },
   roleMay: { vi: 'Được', en: 'May' },
@@ -158,8 +158,8 @@ export const UI = {
   /* ── tech stack ── */
   stackTitle: { vi: 'Astragentic chạy trên gì', en: 'What this runs on' },
   stackAll: { vi: 'Xem toàn bộ tech stack →', en: 'View the full tech stack →' },
-  stackRequired: { vi: 'bắt buộc', en: 'required' },
-  stackOptional: { vi: 'tuỳ chọn', en: 'optional' },
+  stackRequired: { vi: 'required', en: 'required' },
+  stackOptional: { vi: 'optional', en: 'optional' },
 
   /* ── structure ── */
   structureTitle: { vi: 'Cấu trúc', en: 'Structure' },

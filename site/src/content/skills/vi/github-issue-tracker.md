@@ -77,7 +77,7 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Cả hai đều 
   lặng thì không.
 - **AST-074**: một tracker chỉ được đo bằng chính nó thì không phát hiện được nó đang trôi. Bốn
   ticket nằm nguyên trạng thái đã claim, đang làm, có người nhận, sau khi code của chúng đã merge
-  vào nhánh gốc, cái cũ nhất trễ trọn một ngày, và không có gì báo lỗi. Một trạng thái sai vẫn
+  vào branch gốc, cái cũ nhất trễ trọn một ngày, và không có gì báo lỗi. Một trạng thái sai vẫn
   hoàn toàn nhất quán với chính nó, nên oracle phải độc lập với thứ nó đo. Bản sửa là
   `reconcile-tracker` cộng `scripts/ticket-git-facts.sh`, chỉ đọc theo một phán quyết được ghi
   lại chứ không phải do bỏ sót.
@@ -99,7 +99,7 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Cả hai đều 
 
 ## Nó nằm ở đâu trong chuỗi
 
-`thomas.md` đọc `issue-tracker.md` của dự án lúc mở phiên → file đó gọi tên adapter này → truy
+`thomas.md` đọc `issue-tracker.md` của dự án lúc mở session → file đó gọi tên adapter này → truy
 vấn frontier chạy dưới dạng một lệnh liệt kê cộng một vòng lặp N+1, vì GitHub không có ngôn ngữ
 truy vấn → `dispatch-ticket` claim ticket thắng cuộc bằng `--add-assignee @me` → merge đóng issue
 và ghi `todo` cho thứ nó vừa mở khoá, trong cùng một lượt → `reconcile-tracker` đem kết quả ra đo

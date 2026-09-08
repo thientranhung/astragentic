@@ -1,6 +1,6 @@
 ---
 title: dispatch-ticket-claude
-oneLiner: "Khởi chạy, giao brief và canh một pane Claude Code, theo đúng thứ tự không thể giả một lượt đã xong."
+oneLiner: "Launch, giao brief và canh một pane Claude Code, theo đúng thứ tự không thể giả một lượt đã xong."
 group: adapter
 order: 1
 runtimes: [claude]
@@ -14,7 +14,7 @@ updated: 2026-09-04
 
 `dispatch-ticket-claude` là nửa Claude Code của `dispatch-ticket`. Skill dùng chung giữ phần định
 danh, chốt input, luật worktree, khuôn brief, cách gửi, cách canh, simplify và dọn dẹp. Skill này
-thêm bảng lệnh khởi chạy, bước kiểm trước khi dispatch, thứ tự gửi brief và những sự thật đã đo
+thêm bảng lệnh launch, bước kiểm trước khi dispatch, thứ tự gửi brief và những sự thật đã đo
 được của runtime Claude. Nó là adapter, không phải một giao thức thứ hai. Hãy đọc `dispatch-ticket`
 trước, vì mọi thứ không viết ở đây đều lấy từ đó.
 <!-- source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md -->
@@ -22,7 +22,7 @@ trước, vì mọi thứ không viết ở đây đều lấy từ đó.
 Xương sống của file là bốn hành động theo một thứ tự cố định: gửi phần thân brief bằng
 `SendMessage`, gõ lệnh slash trần vào pane, xác nhận nó đã echo, rồi mới arm Monitor. Làm sai thứ
 tự sẽ sinh ra một trạng thái kết thúc giả mà mọi lớp kiểm phía sau đều đọc thành khoẻ mạnh. Thứ tự
-này đến từ hai lỗi riêng biệt rơi vào cùng bốn bước. Tin nhắn giữa hai phiên không phải một lượt
+này đến từ hai lỗi riêng biệt rơi vào cùng bốn bước. Tin nhắn giữa hai session không phải một lượt
 của người dùng, nên lệnh slash không bao giờ chạy (AST-112). Và một `SendMessage` chỉ có phần thân
 vẫn tạo ra một lượt, nên watch arm quá sớm sẽ thấy *lượt đó* kết thúc rồi báo idle cho một Builder
 chưa hề bắt đầu (AST-114). Giờ thứ tự được ghi ngay tại chỗ dùng, không để người đọc tự suy.
@@ -34,8 +34,8 @@ chưa hề bắt đầu (AST-114). Giờ thứ tự được ghi ngay tại ch�
 |---|---|
 | Một ticket đã claim, và `orchestrator.md` ghi vai này chạy trên Claude | `dispatch-ticket` + `dispatch-ticket-claude` |
 | Cũng vậy, nhưng trên Codex hoặc OpenCode | `dispatch-ticket-codex` / `dispatch-ticket-opencode` |
-| Builder hoặc Shaper, tức vai có ghi | Khởi chạy kèm `--dangerously-skip-permissions` |
-| Rin hoặc QA, tức vai review | Khởi chạy không kèm; Rin không có dòng dự phòng nào |
+| Builder hoặc Shaper, tức vai có ghi | Launch kèm `--dangerously-skip-permissions` |
+| Rin hoặc QA, tức vai review | Launch không kèm; Rin không có dòng dự phòng nào |
 | Monitor báo `blocked` | Đọc pane, trả lời bằng `SendMessage`, arm một Monitor **mới** |
 
 <!-- source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md -->
@@ -47,7 +47,7 @@ chưa hề bắt đầu (AST-114). Giờ thứ tự được ghi ngay tại ch�
   `claude --agent <role>` sẽ nạp.
 - **Dòng `orchestrator.md` của vai này đã chốt**, có model và, chỉ khi dòng đó đặt, có effort.
   Model và effort lấy từ dòng đó, không lấy từ trí nhớ.
-- **Tên phiên của Builder tra được** bằng `ListAgents`, vì `SendMessage` gọi phiên theo tên.
+- **Tên session của Builder tra được** bằng `ListAgents`, vì `SendMessage` gọi session theo tên.
 - **Thứ đặt trong Monitor là `herdr-watch-terminal.sh`.** Monitor là kênh chuyển tin; script
   mới là cái canh.
 
@@ -55,7 +55,7 @@ chưa hề bắt đầu (AST-114). Giờ thứ tự được ghi ngay tại ch�
 
 | Kết quả | Nơi nó nằm lại |
 |---|---|
-| Phần thân brief | Phiên của Builder, gửi bằng `SendMessage` |
+| Phần thân brief | Session của Builder, gửi bằng `SendMessage` |
 | Lệnh gọi phase | Một lượt người dùng thật trong pane: một lệnh slash có tiền tố plugin, kèm Enter |
 | Bằng chứng nó đã tới | Lệnh echo trong pane, đọc lại trước khi làm bất cứ việc gì khác |
 | Cái canh | Mỗi pane một Monitor, `description: "builder-<ticket-id> status"`, `timeout_ms` và `persistent` đều ghi tường minh |
@@ -94,7 +94,7 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Tất cả đề
 
 - Bốn hành động diễn ra đúng thứ tự, và echo được đọc trước khi arm Monitor.
 - Ba Builder đang chạy nghĩa là ba Monitor, mỗi pane một cái, mỗi cái một description riêng.
-- Vai review khởi chạy không kèm `--dangerously-skip-permissions`, vai ghi thì có kèm.
+- Vai review launch không kèm `--dangerously-skip-permissions`, vai ghi thì có kèm.
 - Mọi thông báo đều được kiểm lại bằng `herdr agent get <pane-id>` trước khi ai đó hành động.
 - Không tin bất kỳ `idle` nào cho tới khi bộ chặn khởi động đã thấy `working` trước. Ô soạn thảo
   Claude trống khớp luật idle, nên một brief chưa gửi đọc ra thành một Builder xong tức thì.
@@ -104,7 +104,7 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Tất cả đề
 ## Nó nằm ở đâu trong chuỗi
 
 `dispatch-ticket` claim ticket rồi dựng worktree, tab và pane → `dispatch-ticket-claude` khởi
-chạy runtime, giao brief và arm cái watch → Builder chạy vòng khép kín của nó rồi bàn giao →
+chạy runtime, giao brief và arm cái watch → Builder chạy vòng khép kín của nó rồi handback →
 `WATCHING.md` và `CLEANUP.md` của skill dùng chung quyết định chuyện gì xảy ra ở mỗi dòng phán
 quyết. Hai skill song song với nó là `dispatch-ticket-codex` và `dispatch-ticket-opencode`; cả ba
 đều là adapter dưới một giao thức.

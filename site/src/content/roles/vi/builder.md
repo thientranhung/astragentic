@@ -18,7 +18,7 @@ sessionTag: "per ticket"
    tên pass đã chạy.
 4. **`arm: ticket`** chạy từ chính worktree của Builder và gọi sang vendor còn lại. Builder fold
    theo class chứ không theo từng instance, và ghi rõ những gì bỏ lại. Biên nhận là một commit rỗng
-   ở head, nên parent của biên nhận đúng là tree mà gate đã đọc. Tôi đặt trigger ở đây để gate nằm
+   ở head, nên parent của receipt đúng là tree mà gate đã đọc. Tôi đặt trigger ở đây để gate nằm
    trong tree nó đọc, thay vì nằm trong lượt của Thomas.
 5. **Mọi bề mặt người dùng nhìn thấy được đều phải có browser evidence**: nhìn cái gì, ở viewport
    nào, thấy gì. Một diff đúng vẫn có thể tạo ra một control đúng về kỹ thuật nhưng chìm hẳn xuống

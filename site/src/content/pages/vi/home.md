@@ -7,7 +7,7 @@ acts:
     headline: "Ba agent trên một checkout làm mất việc mà không ném lỗi."
   - id: act-2
     eyebrow: "BẢY CHẶNG"
-    headline: "Bảy chặng đánh dấu bảy chỗ đã có thứ rơi ra."
+    headline: "Bảy stage đánh dấu bảy chỗ đã có thứ rơi ra."
   - id: act-3
     eyebrow: "harness/.agents/memory/INDEX.md"
     headline: "Mỗi dòng ledger có link tới file để bạn tự kiểm."
@@ -28,14 +28,14 @@ giá đó vì buổi chiều kia đắt hơn nhiều.
 
 ## act-2
 
-Ban đầu quy trình chỉ có hai chặng: agent làm, tôi review. Review kéo từ năm tới mười bốn
+Ban đầu quy trình chỉ có hai stage: agent làm, tôi review. Review kéo từ năm tới mười bốn
 vòng, và phần lớn vòng sau dùng để dọn thứ vòng trước để lại. Reviewer không phải chỗ hỏng.
 Chỗ hỏng nằm xa hơn về phía đầu: những quyết định chưa từng được chốt đi thẳng vào code, rồi
 bị chốt ở điểm đắt nhất của quy trình.
 
-Tôi đẩy vòng lặp lên đầu quy trình và cắt phần còn lại thành bảy chặng có tên. Bảy chặng có
-tên để mỗi lỗi đo được gắn vào đúng một chặng; không có tên thì lần sau lỗi rơi vào chỗ không
-ai chỉ ra được. Cái giá là quy trình dài hơn, và ba trong bảy chặng vẫn trống vì tôi chưa đo
+Tôi đẩy vòng lặp lên đầu quy trình và cắt phần còn lại thành bảy stage có tên. Bảy stage có
+tên để mỗi lỗi đo được gắn vào đúng một stage; không có tên thì lần sau lỗi rơi vào chỗ không
+ai chỉ ra được. Cái giá là quy trình dài hơn, và ba trong bảy stage vẫn trống vì tôi chưa đo
 được lỗi nào ở đó.
 
 ## act-3

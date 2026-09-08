@@ -1,6 +1,6 @@
 ---
 title: dispatch-ticket-opencode
-oneLiner: "Khởi chạy pane OpenCode và báo rõ bước kiểm nào của giao thức chung bị suy giảm trên runtime này."
+oneLiner: "Launch pane OpenCode và báo rõ bước kiểm nào của giao thức chung bị suy giảm trên runtime này."
 group: adapter
 order: 3
 runtimes: [opencode]
@@ -14,7 +14,7 @@ updated: 2026-09-04
 
 `dispatch-ticket-opencode` là nửa OpenCode của `dispatch-ticket`. Skill dùng chung giữ phần định
 danh, chốt input, luật worktree, khuôn brief, cách gửi, cách canh, simplify và dọn dẹp. Adapter
-này thêm bảng lệnh khởi chạy, bước kiểm adapter và sáu sự thật đã đo được của runtime. Chỉ hai
+này thêm bảng lệnh launch, bước kiểm adapter và sáu sự thật đã đo được của runtime. Chỉ hai
 trong sáu là tiện ích. Bốn cái còn lại là giới hạn, và tôi ghi chúng đúng như giới hạn thay vì
 tìm đường đi vòng.
 <!-- source: harness/.agents/skills/dispatch-ticket-opencode/SKILL.md -->
@@ -38,7 +38,7 @@ qua như một câu trả lời bình thường.
 | Một pane Builder hoặc Shaper | `opencode --agent <role> -m <provider>/<model> --auto` |
 | Một dòng OpenCode có ô Effort không trống | Dừng và hỏi chủ dự án, vì effort không dùng được ở đây |
 | Một pane báo `idle` | Đọc artifact, vì trạng thái đó không có luật nào đứng sau |
-| Một worktree sắp bị gỡ dựa trên câu trả lời một nguồn | Lấy nguồn thứ hai bằng đường khác, hoặc bàn giao lại thay vì gỡ |
+| Một worktree sắp bị gỡ dựa trên câu trả lời một nguồn | Lấy nguồn thứ hai bằng đường khác, hoặc handback lại thay vì gỡ |
 
 <!-- source: harness/.agents/skills/dispatch-ticket-opencode/SKILL.md -->
 
@@ -58,7 +58,7 @@ qua như một câu trả lời bình thường.
 
 | Chuyện gì đã xảy ra | Nó nằm lại ở đâu |
 |---|---|
-| Lần khởi chạy | `herdr agent start "<role>-<ticket-id>" --kind opencode`, agent được nhận diện, tiến trình xác nhận còn sống bằng `pgrep` |
+| Lần launch | `herdr agent start "<role>-<ticket-id>" --kind opencode`, agent được nhận diện, tiến trình xác nhận còn sống bằng `pgrep` |
 | Tư thế quyền hạn | `--auto` cộng với `permission: { "*": allow }` của chính agent, hai thứ cộng lại nghĩa là không giới hạn |
 | Một bước kiểm kết thúc bị suy giảm | Một báo cáo suy giảm, viết như khi báo runtime rơi về dự phòng, không phải một phán quyết một nguồn im lặng |
 | Mọi phần còn lại: brief, watch, phán quyết, dọn dẹp | Giao thức dùng chung `dispatch-ticket` |
@@ -95,6 +95,6 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Cả hai đều 
 ## Nó nằm ở đâu trong chuỗi
 
 `dispatch-ticket` claim ticket rồi dựng worktree, tab và pane → `dispatch-ticket-opencode` kiểm
-adapter và khởi chạy runtime → giao thức dùng chung giao brief và arm cái watch, và ở đây phán
+adapter và launch runtime → giao thức dùng chung giao brief và arm cái watch, và ở đây phán
 quyết của nó yếu hơn hai runtime kia → artifact, chứ không phải pane, quyết định ticket đã xong
 hay chưa. Hai adapter cùng nhóm là `dispatch-ticket-claude` và `dispatch-ticket-codex`.

@@ -56,7 +56,7 @@ gánh nó.
 
 | Chuyện gì đã xảy ra | Nó nằm lại ở đâu |
 |---|---|
-| Cú claim | `assignee: "me"` cộng trạng thái `In Progress`, là lệnh ghi đầu tiên của phiên |
+| Cú claim | `assignee: "me"` cộng trạng thái `In Progress`, là lệnh ghi đầu tiên của session |
 | Danh tính Builder | Bản ghi dispatch và một comment, vì `assignee` chỉ trỏ tới một thành viên thật trong workspace |
 | Frontier, đã thành hình | Trạng thái `Todo`, ghi vào lúc cái chặn cuối cùng đóng lại |
 | Đồ thị chặn | Quan hệ gốc, qua trường `blockedBy` của `save_issue` |
@@ -99,7 +99,7 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Cả hai đều 
 
 ## Nó nằm ở đâu trong chuỗi
 
-`thomas.md` đọc `issue-tracker.md` của dự án lúc mở phiên → file đó gọi tên adapter này →
+`thomas.md` đọc `issue-tracker.md` của dự án lúc mở session → file đó gọi tên adapter này →
 frontier là `list_issues` với điều kiện chưa ai nhận, trạng thái chưa kết thúc và không còn
 `blockedBy` nào dang dở → `dispatch-ticket` claim ticket thắng cuộc bằng `assignee: "me"`, và
 `git worktree add -b` quyết mọi cuộc đua trong cùng một giây → merge kéo ticket sang `Done` và
