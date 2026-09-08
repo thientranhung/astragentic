@@ -59,7 +59,14 @@ const { lang, page, alternate } = Astro.props;
   }
   /* Three columns of 1fr · auto · 1fr so the menu sits on the island's true centre line,
      not in the leftover space between the wordmark and the language toggle. */
+  /* The bar spans the island on every page, home and docs alike, with one gutter, so the
+     wordmark and the language toggle sit at the same distance from the island's edge no
+     matter how wide the frame under it is. Before, the inner column was capped at
+     1040px and floated in a 1440px docs island, so the wordmark jumped ~200px between
+     pages. */
   .nav {
+    max-width: none;
+    padding-inline: clamp(1rem, 2.5vw, 1.75rem);
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
