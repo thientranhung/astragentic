@@ -544,12 +544,13 @@
     "layout": {
       "$description": "Every width the page can be. Measured against aihero.dev's reading column at 1440.",
       "frame": {
-        "$value": "1200px",
+        "$value": "1440px",
         "$extensions": {
           "site": {
             "cssVar": "--frame"
           }
-        }
+        },
+        "$description": "One island width on every page (owner 2026-09-08): home and docs pages must not change width when navigating. Same as frame-docs."
       },
       "frame-docs": {
         "$value": "1440px",

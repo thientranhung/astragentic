@@ -32,13 +32,14 @@ export const ROUTES: Record<PageKey, Record<Lang, string>> = {
 /** Seven items, in the order the reader asks the questions (home v2 spec §Nav): why the
  *  thing exists, then what it is made of, then how to install it. */
 export const NAV: { key: PageKey; label: Record<Lang, string> }[] = [
+  { key: 'home', label: { vi: 'Trang chủ', en: 'Home' } },
   { key: 'why', label: { vi: 'Vì sao', en: 'Why' } },
   { key: 'structure', label: { vi: 'Cấu trúc', en: 'Structure' } },
   { key: 'roles', label: { vi: 'Vai', en: 'Roles' } },
   { key: 'skills', label: { vi: 'Skills', en: 'Skills' } },
   { key: 'hooks', label: { vi: 'Hooks', en: 'Hooks' } },
   { key: 'stack', label: { vi: 'Tech stack', en: 'Tech stack' } },
-  { key: 'adopt', label: { vi: 'Cài', en: 'Adopt' } },
+  { key: 'adopt', label: { vi: 'Install', en: 'Install' } },
 ];
 
 export const REPO = 'https://github.com/thientranhung/astragentic';
