@@ -12,7 +12,7 @@ import CodeFrame from '../CodeFrame.astro';
 import Shot from '../Shot.astro';
 import { getPage } from '../../lib/pages';
 import { getLanding, panes } from '../../lib/landing';
-import { ACTIVE, HAS_UNSET, SAMPLE, ORCHESTRATOR_FILE } from '../../lib/orchestrator';
+import { ACTIVE, ACTIVE_TABLE, HAS_UNSET, SAMPLE, ORCHESTRATOR_FILE } from '../../lib/orchestrator';
 import { failures, meta } from '../../lib/data';
 import { ROLE_IDS, ROLE_META, roleHref, type RoleId } from '../../lib/roles';
 import { termHref } from '../../lib/terms';
@@ -191,7 +191,7 @@ const CARD_FRAME = 330;
             <p class="eyebrow">{EX.roles.models.label}</p>
             <p class="lede" set:html={hl(EX.roles.models.intro)} />
             <p class="lede" set:html={hl(EX.roles.models.note)} />
-            <p class="role-models-src mono">{ORCHESTRATOR_FILE} → Active assignments</p>
+            <CodeFrame lines={ACTIVE_TABLE} lang={lang} label={ORCHESTRATOR_FILE} class="role-models-table" />
           </div>
         )}
         <InteractiveDiagram slug="five-roles" lang={lang} hrefMap={roleMap} class="band" />
@@ -642,7 +642,7 @@ const CARD_FRAME = 330;
     letter-spacing: 0.02em;
   }
   .role-models {
-    max-width: 68ch;
+    max-width: var(--column-wide);
     margin: 2rem 0 0.5rem;
   }
   .role-models-src {

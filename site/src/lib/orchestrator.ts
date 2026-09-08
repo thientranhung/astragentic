@@ -90,3 +90,19 @@ export const SAMPLE: Assignment | null =
 
 /** True when any row on the active table is still waiting on the reader. */
 export const HAS_UNSET = ACTIVE.some((row) => row.unset);
+
+/** The "Active assignments" block verbatim, heading to the blank line after the table,
+ *  for showing the reader the exact text they would edit. */
+export const ACTIVE_TABLE: string[] = (() => {
+  const lines = RAW.split('\n');
+  const start = lines.findIndex((l) => /^##\s+Active assignments/.test(l));
+  if (start === -1) return [];
+  const out: string[] = [];
+  for (let i = start; i < lines.length; i++) {
+    const l = lines[i];
+    if (i > start && /^##\s/.test(l)) break;
+    if (i > start && l.trim() === '' && out.some((x) => x.startsWith('|'))) break;
+    out.push(l);
+  }
+  return out.filter((l, i) => !(i > 0 && l.trim() === ''));
+})();
