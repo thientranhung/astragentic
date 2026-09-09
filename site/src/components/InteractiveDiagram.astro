@@ -33,6 +33,9 @@ interface Props {
   svgMaxWidth?: number;
   /** Show the "open the interactive version" caption under the figure. */
   explore?: boolean;
+  /** Animate the flows: a pulse in the receiving role's colour travels each edge,
+   *  one edge after another, in document order. Pure CSS; off under reduced motion. */
+  flow?: boolean;
   class?: string;
 }
 const {
@@ -45,6 +48,7 @@ const {
   maxWidth,
   svgMaxWidth,
   explore = false,
+  flow = false,
   class: extra = '',
 } = Astro.props;
 
@@ -93,16 +97,34 @@ function mark(svg: string): string {
   });
 }
 
+/** Behind every edge path archify drew, lay a second copy that carries the moving
+ *  pulse. `pathLength="1"` normalises the dash units so one keyframe set fits edges
+ *  of any length; `data-flow-to` names the role whose colour the pulse borrows and
+ *  `data-flow-key` its place in the queue. No marker, so the pulse ends at the
+ *  arrowhead the original already draws. */
+function flows(svg: string): string {
+  return svg.replace(
+    /<path (data-edge-from="[^"]*" data-edge-to="([^"]*)"[^>]*data-edge-key="(\d+)"[^>]*)\/>/g,
+    (whole, attrs: string, to: string, key: string) => {
+      const d = /\sd="([^"]*)"/.exec(attrs)?.[1];
+      if (!d) return whole;
+      return `${whole}<path class="a-flow" data-flow-to="${to}" data-flow-key="${key}" d="${d}" pathLength="1"/>`;
+    },
+  );
+}
+
 const frame = maxWidth ?? svgMaxWidth ?? BAND;
-const svg = raw
-  ? prepare(raw, { lang, frame, transform: (s) => (inert ? stripFocus(mark(s)) : mark(s)) }).html
-  : null;
+const decorate = (s: string) => {
+  const marked = inert ? stripFocus(mark(s)) : mark(s);
+  return flow ? flows(marked) : marked;
+};
+const svg = raw ? prepare(raw, { lang, frame, transform: decorate }).html : null;
 const style = maxWidth ? `max-width:${maxWidth}px;` : undefined;
 const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` : undefined;
 ---
 
 <figure
-  class:list={['idiagram', inert && 'idiagram--inert', !maxWidth && 'idiagram--band', extra]}
+  class:list={['idiagram', inert && 'idiagram--inert', !maxWidth && 'idiagram--band', flow && 'idiagram--flow', extra]}
   data-diagram={slug}
   data-hrefs={inert ? undefined : JSON.stringify(hrefMap)}
   style={style}
