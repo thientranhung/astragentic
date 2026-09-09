@@ -101,14 +101,20 @@ function mark(svg: string): string {
  *  pulse. `pathLength="1"` normalises the dash units so one keyframe set fits edges
  *  of any length; `data-flow-to` names the role whose colour the pulse borrows and
  *  `data-flow-key` its place in the queue. No marker, so the pulse ends at the
- *  arrowhead the original already draws. */
+ *  arrowhead the original already draws. Every edge also gets a return pulse: the
+ *  talk is two-way even where the arrow is drawn one way. */
 function flows(svg: string): string {
   return svg.replace(
     /<path (data-edge-from="[^"]*" data-edge-to="([^"]*)"[^>]*data-edge-key="(\d+)"[^>]*)\/>/g,
     (whole, attrs: string, to: string, key: string) => {
       const d = /\sd="([^"]*)"/.exec(attrs)?.[1];
       if (!d) return whole;
-      return `${whole}<path class="a-flow" data-flow-to="${to}" data-flow-key="${key}" d="${d}" pathLength="1"/>`;
+      // Two twins: the request goes down in the receiving role's colour, the answer
+      // (a question, a handback, a receipt) comes back up in Thomas's.
+      return (
+        `${whole}<path class="a-flow a-flow--out" data-flow-to="${to}" data-flow-key="${key}" d="${d}" pathLength="1"/>` +
+        `<path class="a-flow a-flow--back" data-flow-key="${key}" d="${d}" pathLength="1"/>`
+      );
     },
   );
 }

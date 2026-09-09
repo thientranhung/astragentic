@@ -343,12 +343,13 @@
 }
 
 /* ── Flow pulses (`flow` on InteractiveDiagram) ────────────────────────────────
-   Each edge gets a twin path with pathLength="1"; a short dash in the receiving
-   role's colour rides it from the sender to the arrowhead. The dash pattern is one
-   period of 2, so the dash is off both ends of the path at either extreme of the
-   offset, and the edges take turns: key n starts n × 0.9s later inside a 3.6s loop.
-   Off under reduced motion, where global.css collapses the animation to one frame:
-   the twin is then hidden so it does not leave a static blob on the line. */
+   Each edge gets two twin paths with pathLength="1". A short dash rides the first
+   from the sender to the arrowhead in the receiving role's colour (the request), then
+   a second dash rides back up in Thomas's colour (the question, the handback, the
+   receipt). The dash pattern is one period of 2, so the dash is off both ends of the
+   path at either extreme of the offset. Edges take turns: one round trip per 1.5s
+   slot, four slots in a 6s loop. Off under reduced motion, where global.css collapses
+   the animation to one frame: the twins are hidden so they leave no static blob. */
 .idiagram--flow .diagram-svg .a-flow {
   fill: none;
   stroke: var(--ink-35);
@@ -358,21 +359,29 @@
   stroke-dashoffset: 0.22;
   opacity: 0.95;
   pointer-events: none;
-  animation: flow-pulse 3.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation: flow-out 6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
-.idiagram--flow .diagram-svg .a-flow[data-flow-key='1'] { animation-delay: 0.9s; }
-.idiagram--flow .diagram-svg .a-flow[data-flow-key='2'] { animation-delay: 1.8s; }
-.idiagram--flow .diagram-svg .a-flow[data-flow-key='3'] { animation-delay: 2.7s; }
-.idiagram--flow .diagram-svg .a-flow[data-flow-key='4'] { animation-delay: 3.6s; }
-.idiagram--flow .diagram-svg .a-flow[data-flow-to='thomas'] { stroke: var(--role-thomas); }
-.idiagram--flow .diagram-svg .a-flow[data-flow-to='shaper'] { stroke: var(--role-shaper); }
-.idiagram--flow .diagram-svg .a-flow[data-flow-to='builder'] { stroke: var(--role-builder); }
-.idiagram--flow .diagram-svg .a-flow[data-flow-to='rin'] { stroke: var(--role-rin); }
-.idiagram--flow .diagram-svg .a-flow[data-flow-to='qa'] { stroke: var(--role-qa); }
-@keyframes flow-pulse {
+.idiagram--flow .diagram-svg .a-flow--back {
+  stroke: var(--role-thomas);
+  stroke-dashoffset: -1;
+  animation-name: flow-back;
+}
+.idiagram--flow .diagram-svg .a-flow[data-flow-key='1'] { animation-delay: 1.5s; }
+.idiagram--flow .diagram-svg .a-flow[data-flow-key='2'] { animation-delay: 3s; }
+.idiagram--flow .diagram-svg .a-flow[data-flow-key='3'] { animation-delay: 4.5s; }
+.idiagram--flow .diagram-svg .a-flow--out[data-flow-to='thomas'] { stroke: var(--role-thomas); }
+.idiagram--flow .diagram-svg .a-flow--out[data-flow-to='shaper'] { stroke: var(--role-shaper); }
+.idiagram--flow .diagram-svg .a-flow--out[data-flow-to='builder'] { stroke: var(--role-builder); }
+.idiagram--flow .diagram-svg .a-flow--out[data-flow-to='rin'] { stroke: var(--role-rin); }
+.idiagram--flow .diagram-svg .a-flow--out[data-flow-to='qa'] { stroke: var(--role-qa); }
+/* out: 0–0.6s of the slot; the role "works" 0.6–0.9s; back: 0.9–1.5s; then wait */
+@keyframes flow-out {
   0% { stroke-dashoffset: 0.22; }
-  /* the trip takes a third of the loop; the rest is the wait for the other edges */
-  34%, 100% { stroke-dashoffset: -1; }
+  10%, 100% { stroke-dashoffset: -1; }
+}
+@keyframes flow-back {
+  0%, 15% { stroke-dashoffset: -1; }
+  25%, 100% { stroke-dashoffset: 0.22; }
 }
 @media (prefers-reduced-motion: reduce) {
   .idiagram--flow .diagram-svg .a-flow { display: none; }
