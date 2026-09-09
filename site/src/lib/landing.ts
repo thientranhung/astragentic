@@ -160,7 +160,7 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
       },
       team: {
         headline: 'Cả đội trong một bức tranh.',
-        sub: 'Bạn ở ngoài, Thomas ở gate, issue tracker ở giữa, và mọi việc đi qua tracker.',
+        sub: 'Bạn là khách hàng, trao đổi với Thomas là người đại diện của đội. Đội làm việc quanh issue tracker, và mọi việc đều đi qua đó để bạn đọc lại được bất cứ lúc nào.',
       },
       lifecycle: {
         headline: 'Một ticket đi qua bảy stage',
