@@ -210,7 +210,20 @@ const CARD_FRAME = 330;
   <section class="screen screen--surface" id="team">
     <div class="column">
       <h2>{copy.sections.team.headline}</h2>
-      <p class="sub">{copy.sections.team.sub}</p>
+      <p class="sub" set:html={hl(copy.sections.team.sub)} />
+      {copy.sections.team.points?.length && (
+        <div class="thomas breakout">
+          {copy.sections.team.pointsLabel && <p class="thomas-label mono">{copy.sections.team.pointsLabel}</p>}
+          <dl class="thomas-points">
+            {copy.sections.team.points.map((pt) => (
+              <div class="thomas-point">
+                <dt set:html={hl(pt.title)} />
+                <dd set:html={hl(pt.body)} />
+              </div>
+            ))}
+          </dl>
+        </div>
+      )}
     </div>
     <div class="column">
       {/* Drawn from the owner's sketch: the tracker sits at the centre of the team and
@@ -666,6 +679,44 @@ const CARD_FRAME = 330;
   }
 
   /* ── the five tracker requirements, quoted ── */
+  /* §4: what Thomas does for the client, three rows under the caption. */
+  .thomas {
+    margin-top: 1.75rem;
+  }
+  .thomas-label {
+    font-size: var(--text-label);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin: 0 0 0.75rem;
+  }
+  .thomas-points {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem;
+    border-top: 1px solid var(--ink-10);
+  }
+  .thomas-point {
+    padding-top: 1rem;
+  }
+  .thomas-point dt {
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.35rem;
+  }
+  .thomas-point dd {
+    margin: 0;
+    color: var(--ink-70);
+    font-size: var(--text-body-sm);
+    line-height: var(--leading-body);
+  }
+  @media (max-width: 860px) {
+    .thomas-points {
+      grid-template-columns: 1fr;
+    }
+  }
+
   .reqs {
     margin-top: 1.75rem;
     padding: 1.5rem 1.9rem;

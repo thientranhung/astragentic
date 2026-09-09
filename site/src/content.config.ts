@@ -190,7 +190,12 @@ const landing = defineCollection({
         structure: caption.optional(),
         roles: caption.optional(),
         /** The whole team in one picture, between the roles and the messaging. */
-        team: caption.optional(),
+        team: caption
+          .extend({
+            pointsLabel: z.string().optional(),
+            points: z.array(z.object({ title: z.string(), body: z.string() })).optional(),
+          })
+          .optional(),
         lifecycle: caption.optional(),
         tracker: caption.optional(),
         skills: caption.extend({ cta: z.string().optional() }).optional(),

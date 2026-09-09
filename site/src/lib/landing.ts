@@ -18,6 +18,11 @@ export interface Caption {
   headline: string;
   sub: string;
 }
+/** A caption with a short list under it: the team section names what Thomas does. */
+export interface TeamCaption extends Caption {
+  pointsLabel?: string;
+  points?: { title: string; body: string }[];
+}
 /** One card in the feature grid (home v2 §Section 2). `crop` names the nodes the
  *  thumbnail is cut down to; see src/lib/diagram.ts. A card with no `diagram` is copy
  *  only, and HomeBody decides what stands in for the picture. */
@@ -99,7 +104,7 @@ export interface Landing {
   sections: {
     structure: Caption;
     roles: Caption;
-    team: Caption;
+    team: TeamCaption;
     lifecycle: Caption;
     tracker: Caption;
     skills: Caption & { cta: string };
@@ -161,6 +166,21 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
       team: {
         headline: 'Mô hình vận hành.',
         sub: 'Bạn là khách hàng, trao đổi với Thomas là người đại diện của đội. Đội làm việc quanh issue tracker, và mọi việc đều đi qua đó để bạn đọc lại được bất cứ lúc nào.',
+        pointsLabel: 'Hằng ngày, bạn chỉ làm việc với Thomas',
+        points: [
+          {
+            title: 'Thomas điều phối đội.',
+            body: 'Thomas mở session Shaper khi cần shape, dispatch ticket cho Builder theo capacity, gọi Rin gate ở mỗi milestone và QA walk trước khi merge. Bạn không phải tự gọi từng agent.',
+          },
+          {
+            title: 'Thomas đọc báo cáo thay bạn.',
+            body: 'Handback, receipt, kết luận gate, walk report đều về Thomas trước. Thomas đọc, đối chiếu với ticket, rồi trình bày lại cho bạn theo ngữ cảnh dự án, không bắt bạn đọc log của từng agent. Báo cáo gốc vẫn nằm trên tracker để bạn kiểm chứng.',
+          },
+          {
+            title: 'Bạn giữ ý định và các quyết định lớn.',
+            body: 'Việc của bạn là làm Thomas hiểu đúng ý định và hướng đi. Thomas tự giải quyết câu hỏi mở với đội, và chỉ quay lại khi một quyết định thuộc về bạn: UI/UX, tech stack, phạm vi. Khi đó câu hỏi đã được thu gọn thành một lựa chọn trả lời được.',
+          },
+        ],
       },
       lifecycle: {
         headline: 'Một ticket đi qua bảy stage',
@@ -232,6 +252,21 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
       team: {
         headline: 'The operating model.',
         sub: "You are the client, talking to Thomas, the team's representative. The team works around the issue tracker, and everything passes through it so you can read it back at any time.",
+        pointsLabel: 'Day to day, you work with Thomas alone',
+        points: [
+          {
+            title: 'Thomas runs the team.',
+            body: 'Thomas opens a Shaper session when something needs shaping, dispatches tickets to Builders up to capacity, calls Rin’s gate at every milestone and QA’s walk before a merge. You never summon an agent yourself.',
+          },
+          {
+            title: 'Thomas reads the reports for you.',
+            body: 'Handbacks, receipts, gate verdicts and walk reports reach Thomas first. Thomas reads them against the ticket and presents them to you in the project’s own terms, so you are not reading every agent’s log. The originals stay on the tracker for you to check.',
+          },
+          {
+            title: 'You keep the intent and the big decisions.',
+            body: 'Your job is to make Thomas understand your intent and direction. Thomas settles open questions with the team and comes back only when a decision is yours: UI/UX, tech stack, scope. By then it has been reduced to a question you can answer.',
+          },
+        ],
       },
       lifecycle: {
         headline: 'A ticket passes through seven named stages',
