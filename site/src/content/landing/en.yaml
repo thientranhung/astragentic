@@ -14,7 +14,7 @@ explain:
       - "Each role carries a person's name: Thomas, Shaper, Builder, Rin, QA. The proper name keeps the role from drifting across a long context, and it lets the skills attached to a role fire on the right one."
       - "A role is defined by one declaration file in each runtime's own format, loaded into the system prompt when the session opens: Claude Code reads `.claude/agents/<role>.md`, Codex reads the launch profile `.codex/profiles/<role>.config.toml`, OpenCode reads `.opencode/agents/<role>.md`. The runtime, the model and the effort of every role are declared in one place, `orchestrator.md`."
     commands:
-      label: "Launching one role on three runtimes"
+      label: "Start an agent over the CLI on three runtimes"
       lines:
         - "claude   --agent builder --model <model> --effort <low|medium|high|xhigh|max>"
         - "codex    --profile builder            # model and model_reasoning_effort live in the profile TOML"
