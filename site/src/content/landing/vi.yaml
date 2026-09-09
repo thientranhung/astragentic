@@ -27,6 +27,7 @@ explain:
     eyebrow: "Cách các agent nói chuyện"
     headline: "Dispatch một ticket là mở một cuộc trao đổi có địa chỉ."
     paragraphs:
+      - "Ticket là một issue trên tracker: một task, một feature hay một requirement đã được cắt đủ nhỏ để một Builder hoàn thành trong một session. Mỗi ticket mang một id ổn định trong tiêu đề, một trạng thái, một assignee, và các blocking edge tới việc phải xong trước. Shaper tạo ticket từ spec bằng skill `to-tickets`; Thomas chỉ dispatch những ticket đã sẵn sàng."
       - "Thomas dispatch theo skill `dispatch-ticket`: claim ticket trên tracker trước, tạo branch và worktree, mở một pane herdr, launch vai theo runtime đã khai, gửi brief, và lập tức đặt watcher. Chuỗi ticket → assignee → pane → worktree → branch → PR là một-một, nên nhiều Builder làm song song mà không giẫm lên nhau."
       - "Khi các vai cùng chạy Claude Code, kênh chính là SendMessage nguyên bản của Claude Code. Brief và mọi trao đổi sau đó đi thẳng giữa hai session, có địa chỉ theo tên, trả lời về đúng session gửi. Builder bị chặn thì hỏi; Thomas đọc câu hỏi, trả lời qua đúng kênh đó, rồi đặt Monitor mới chờ tín hiệu làm xong. Nhờ vậy vòng dispatch, hỏi, đáp, handback chạy liền mạch mà không cần người ngồi canh."
       - "herdr là mặt phẳng nhìn thấy và là đường dự phòng. Mỗi vai một pane có tên, Thomas đọc pane bằng `herdr agent read` khi một session im lặng, và dùng herdr CLI để điều Builder trên Codex hay OpenCode, nơi SendMessage không có. Watcher theo dõi trạng thái working, blocked, idle của từng pane."
