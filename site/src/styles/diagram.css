@@ -347,8 +347,9 @@
    from the sender to the arrowhead in the receiving role's colour (the request), then
    a second dash rides back up in Thomas's colour (the question, the handback, the
    receipt). The dash pattern is one period of 2, so the dash is off both ends of the
-   path at either extreme of the offset. Edges take turns: one round trip per 1.5s
-   slot, four slots in a 6s loop. Off under reduced motion, where global.css collapses
+   path at either extreme of the offset. Edges take turns: one round trip per 3s
+   slot, four slots in a 12s loop, and the word "dispatch" beside the trunk lights up
+   for the outbound leg of every slot. Off under reduced motion, where global.css collapses
    the animation to one frame: the twins are hidden so they leave no static blob. */
 .idiagram--flow .diagram-svg .a-flow {
   fill: none;
@@ -359,22 +360,32 @@
   stroke-dashoffset: 0.22;
   opacity: 0.95;
   pointer-events: none;
-  animation: flow-out 6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation: flow-out 12s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 .idiagram--flow .diagram-svg .a-flow--back {
   stroke: var(--role-thomas);
   stroke-dashoffset: -1;
   animation-name: flow-back;
 }
-.idiagram--flow .diagram-svg .a-flow[data-flow-key='1'] { animation-delay: 1.5s; }
-.idiagram--flow .diagram-svg .a-flow[data-flow-key='2'] { animation-delay: 3s; }
-.idiagram--flow .diagram-svg .a-flow[data-flow-key='3'] { animation-delay: 4.5s; }
+.idiagram--flow .diagram-svg .a-flow[data-flow-key='1'] { animation-delay: 3s; }
+.idiagram--flow .diagram-svg .a-flow[data-flow-key='2'] { animation-delay: 6s; }
+.idiagram--flow .diagram-svg .a-flow[data-flow-key='3'] { animation-delay: 9s; }
+.idiagram--flow .diagram-svg .a-flow-word {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  fill: var(--role-thomas);
+  opacity: 0;
+  pointer-events: none;
+  animation: flow-word 3s ease-out infinite;
+}
 .idiagram--flow .diagram-svg .a-flow--out[data-flow-to='thomas'] { stroke: var(--role-thomas); }
 .idiagram--flow .diagram-svg .a-flow--out[data-flow-to='shaper'] { stroke: var(--role-shaper); }
 .idiagram--flow .diagram-svg .a-flow--out[data-flow-to='builder'] { stroke: var(--role-builder); }
 .idiagram--flow .diagram-svg .a-flow--out[data-flow-to='rin'] { stroke: var(--role-rin); }
 .idiagram--flow .diagram-svg .a-flow--out[data-flow-to='qa'] { stroke: var(--role-qa); }
-/* out: 0–0.6s of the slot; the role "works" 0.6–0.9s; back: 0.9–1.5s; then wait */
+/* out: 0–1.2s of the slot; the role "works" 1.2–1.8s; back: 1.8–3s; then wait */
 @keyframes flow-out {
   0% { stroke-dashoffset: 0.22; }
   10%, 100% { stroke-dashoffset: -1; }
@@ -383,6 +394,13 @@
   0%, 15% { stroke-dashoffset: -1; }
   25%, 100% { stroke-dashoffset: 0.22; }
 }
+/* one slot long: on as the pulse leaves, off once it has arrived */
+@keyframes flow-word {
+  0% { opacity: 0; }
+  6%, 34% { opacity: 1; }
+  46%, 100% { opacity: 0; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .idiagram--flow .diagram-svg .a-flow { display: none; }
+  .idiagram--flow .diagram-svg .a-flow,
+  .idiagram--flow .diagram-svg .a-flow-word { display: none; }
 }

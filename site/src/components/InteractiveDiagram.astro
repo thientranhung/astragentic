@@ -104,7 +104,15 @@ function mark(svg: string): string {
  *  arrowhead the original already draws. Every edge also gets a return pulse: the
  *  talk is two-way even where the arrow is drawn one way. */
 function flows(svg: string): string {
-  return svg.replace(
+  // The word that lights up each time a pulse leaves: set beside the first edge's
+  // first segment, i.e. the trunk every edge shares out of the sender.
+  let word = '';
+  const pts = /data-edge-from="[^"]*"[^>]*data-composition-points="(\d+),(\d+);(\d+),(\d+)/.exec(svg);
+  if (pts) {
+    const [x1, y1, , y2] = pts.slice(1).map(Number);
+    word = `<text class="a-flow-word" x="${x1 + 12}" y="${(y1 + y2) / 2 + 4}">dispatch</text>`;
+  }
+  return svg.replace(/<\/svg>\s*$/, `${word}</svg>`).replace(
     /<path (data-edge-from="[^"]*" data-edge-to="([^"]*)"[^>]*data-edge-key="(\d+)"[^>]*)\/>/g,
     (whole, attrs: string, to: string, key: string) => {
       const d = /\sd="([^"]*)"/.exec(attrs)?.[1];
