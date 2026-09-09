@@ -35,8 +35,10 @@ interface Props {
   explore?: boolean;
   /** Animate the flows: a pulse in the receiving role's colour travels each edge,
    *  one edge after another, in document order, and a pulse in the sender's colour
-   *  comes back. Pure CSS; paused off-screen; off under reduced motion. */
-  flow?: boolean;
+   *  comes back. `'sequence'` is for a picture whose arrows already run both ways:
+   *  one pulse per edge in the sender's colour, in edge order, no return leg.
+   *  Pure CSS; paused off-screen; off under reduced motion. */
+  flow?: boolean | 'sequence';
   /** What comes back on each edge, keyed by the receiving node id: shown in place of
    *  the edge label while the return pulse runs. An edge with no entry keeps its label. */
   flowBack?: Record<string, string>;
@@ -114,19 +116,20 @@ function mark(svg: string): string {
  *  to that text while the answer runs. No extra vocabulary, so no edge is described
  *  by a word that is true of a different edge. */
 function flows(svg: string): string {
+  const sequence = flow === 'sequence';
   const withPulses = svg.replace(
     /<path (data-edge-from="[^"]*" data-edge-to="([^"]*)"[^>]*data-edge-key="(\d+)"[^>]*)\/>/g,
     (whole, attrs: string, to: string, key: string) => {
       const d = /\sd="([^"]*)"/.exec(attrs)?.[1];
       if (!d) return whole;
-      return (
-        `${whole}<path class="a-flow a-flow--out" data-flow-to="${to}" data-flow-key="${key}" d="${d}" pathLength="1"/>` +
-        `<path class="a-flow a-flow--back" data-flow-key="${key}" d="${d}" pathLength="1"/>`
-      );
+      const from = /data-edge-from="([^"]*)"/.exec(attrs)?.[1] ?? '';
+      const out = `${whole}<path class="a-flow a-flow--out" data-flow-from="${from}" data-flow-to="${to}" data-flow-key="${key}" d="${d}" pathLength="1"/>`;
+      if (sequence) return out;
+      return `${out}<path class="a-flow a-flow--back" data-flow-key="${key}" d="${d}" pathLength="1"/>`;
     },
   );
   return withPulses.replace(
-    /<g data-detail="context" (data-edge-from="[^"]*" data-edge-to="([^"]*)"[^>]*data-edge-key="(\d+)")>([\s\S]*?)<\/g>/g,
+    /<g data-detail="context" (data-edge-from="[^"]*" data-edge-to="([^"]*)"[^>]*data-edge-key="(\d+)"[^>]*)>([\s\S]*?)<\/g>/g,
     (whole, attrs: string, to: string, key: string, inner: string) => {
       const t = /<text x="([\d.]+)" y="([\d.]+)" class="([^"]*)" font-size="([\d.]+)"/.exec(inner);
       const back = flowBack[to];
@@ -140,7 +143,8 @@ function flows(svg: string): string {
           `<rect x="${(x - w / 2).toFixed(1)}" y="${y - size - 2}" width="${w.toFixed(1)}" height="${size + 6}" rx="3" class="c-mask"/>` +
           `<text x="${x}" y="${y}" class="${cls}" font-size="${size}" text-anchor="middle">${back}</text></g>`;
       }
-      return `<g class="a-flow-label" data-detail="context" data-flow-to="${to}" data-flow-key="${key}" ${attrs}>${inner}</g>${reply}`;
+      const from = /data-edge-from="([^"]*)"/.exec(attrs)?.[1] ?? '';
+      return `<g class="a-flow-label" data-detail="context" data-flow-from="${from}" data-flow-to="${to}" data-flow-key="${key}" ${attrs}>${inner}</g>${reply}`;
     },
   );
 }
@@ -151,6 +155,27 @@ const decorate = (s: string) => {
   return flow ? flows(marked) : marked;
 };
 const svg = raw ? prepare(raw, { lang, frame, transform: decorate }).html : null;
+
+/** Sequence mode: N edges take turns in 1.5s slots; the pulse takes 1.1s of its slot
+ *  and the label stays lit for the whole slot. The percentages depend on N, so the
+ *  keyframes are written here, per figure, rather than in diagram.css. */
+const edgeCount = flow === 'sequence' && svg ? (svg.match(/class="a-flow a-flow--out"/g) ?? []).length : 0;
+const seqId = `${slug}-${lang}`.replace(/[^a-z0-9-]/gi, '-');
+let seqCss = '';
+if (edgeCount) {
+  const slot = 1.5;
+  const loop = slot * edgeCount;
+  const pct = (t: number) => `${((t / loop) * 100).toFixed(3)}%`;
+  const delays = Array.from({ length: edgeCount }, (_, i) =>
+    i ? `.idiagram--flow[data-seq="${seqId}"] .diagram-svg [data-flow-key='${i}'],.idiagram--flow[data-seq="${seqId}"] .diagram-svg [data-flow-key='${i}'] > text{animation-delay:${(i * slot).toFixed(1)}s}` : '',
+  ).join('');
+  seqCss =
+    `.idiagram--flow[data-seq="${seqId}"] .diagram-svg .a-flow--out{animation:seq-out-${seqId} ${loop}s cubic-bezier(.45,0,.55,1) infinite}` +
+    `.idiagram--flow[data-seq="${seqId}"] .diagram-svg .a-flow-label > text{animation:seq-label-${seqId} ${loop}s ease-out infinite}` +
+    delays +
+    `@keyframes seq-out-${seqId}{0%{stroke-dashoffset:.22}${pct(1.1)},100%{stroke-dashoffset:-1}}` +
+    `@keyframes seq-label-${seqId}{0%,${pct(1.3)}{fill:var(--flow-ink);font-weight:600}${pct(1.5)},100%{fill:var(--label-base);font-weight:400}}`;
+}
 const style = maxWidth ? `max-width:${maxWidth}px;` : undefined;
 const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` : undefined;
 ---
@@ -158,6 +183,7 @@ const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` 
 <figure
   class:list={['idiagram', inert && 'idiagram--inert', !maxWidth && 'idiagram--band', flow && 'idiagram--flow', extra]}
   data-diagram={slug}
+  data-seq={edgeCount ? seqId : undefined}
   data-hrefs={inert ? undefined : JSON.stringify(hrefMap)}
   style={style}
 >
@@ -168,6 +194,7 @@ const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` 
       <div class="diagram-placeholder mono">{title ?? slug}</div>
     )
   }
+  {seqCss && <style set:html={seqCss} />}
   {!inert && <div class="tip mono" role="status" hidden />}
   {
     explore && (

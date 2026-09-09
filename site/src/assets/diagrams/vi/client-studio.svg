@@ -32,7 +32,7 @@
         <path data-edge-from="thomas" data-edge-to="tracker" data-edge-label="frontier, claim, dispatch" data-edge-key="2" data-edge-id="thomas-tracker" data-composition-points="540,300;760,300" d="M 540 300 L 760 300" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <path data-edge-from="shaper" data-edge-to="tracker" data-edge-label="spec → ticket" data-edge-key="3" data-edge-id="shaper-tracker" data-composition-points="860,172;860,265" d="M 860 172 L 860 265" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         <path data-edge-from="tracker" data-edge-to="builder" data-edge-label="claim" data-edge-key="4" data-edge-id="tracker-builder" data-composition-points="960,300;1000,300" d="M 960 300 L 1000 300" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="builder" data-edge-to="tracker" data-edge-label="commit, biên nhận" data-edge-key="5" data-edge-id="builder-tracker" data-composition-points="1090,332;1090,355;860,355;860,335" d="M 1090 332 L 1090 347 Q 1090 355 1082 355 L 868 355 Q 860 355 860 347 L 860 335" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="builder" data-edge-to="tracker" data-edge-label="commit, receipt" data-edge-key="5" data-edge-id="builder-tracker" data-composition-points="1090,332;1090,355;860,355;860,335" d="M 1090 332 L 1090 347 Q 1090 355 1082 355 L 868 355 Q 860 355 860 347 L 860 335" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         <path data-edge-from="tracker" data-edge-to="rin" data-edge-label="gate milestone" data-edge-key="6" data-edge-id="tracker-rin" data-composition-points="853,335;853,386.5;760,386.5;760,438" d="M 853 335 L 853 378.5 Q 853 386.5 845 386.5 L 768 386.5 Q 760 386.5 760 394.5 L 760 438" class="a-security" stroke-width="1.5" marker-end="url(#arrowhead-security)"/>
         <path data-edge-from="tracker" data-edge-to="qa" data-edge-label="qa walk" data-edge-key="7" data-edge-id="tracker-qa" data-composition-points="867,335;867,386.5;960,386.5;960,438" d="M 867 335 L 867 378.5 Q 867 386.5 875 386.5 L 952 386.5 Q 960 386.5 960 394.5 L 960 438" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
         <path data-edge-from="client" data-edge-to="tracker" data-edge-label="đọc lại, giám sát" data-edge-key="8" data-edge-id="client-tracker" data-composition-points="150,337;150,580;860,580;860,335" d="M 150 337 L 150 572 Q 150 580 158 580 L 852 580 Q 860 580 860 572 L 860 335" class="a-dashed" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
@@ -143,9 +143,9 @@
           <rect x="963" y="280" width="34" height="14" rx="3" class="c-mask"/>
           <text x="980" y="290" class="t-muted" font-size="8" text-anchor="middle">claim</text>
         </g>
-        <g data-detail="context" data-edge-from="builder" data-edge-to="tracker" data-edge-label="commit, biên nhận" data-edge-key="5" data-edge-id="builder-tracker">
+        <g data-detail="context" data-edge-from="builder" data-edge-to="tracker" data-edge-label="commit, receipt" data-edge-key="5" data-edge-id="builder-tracker">
           <rect x="929.2" y="335" width="91.6" height="14" rx="3" class="c-mask"/>
-          <text x="975" y="345" class="t-muted" font-size="8" text-anchor="middle">commit, biên nhận</text>
+          <text x="975" y="345" class="t-muted" font-size="8" text-anchor="middle">commit, receipt</text>
         </g>
         <g data-detail="context" data-edge-from="tracker" data-edge-to="rin" data-edge-label="gate milestone" data-edge-key="6" data-edge-id="tracker-rin">
           <rect x="767.9" y="366.5" width="77.2" height="14" rx="3" class="c-mask"/>

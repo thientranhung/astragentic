@@ -159,7 +159,7 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
         sub: 'Vòng đời session quyết định một vai nhớ được gì.',
       },
       team: {
-        headline: 'Cả đội trong một bức tranh.',
+        headline: 'Mô hình vận hành.',
         sub: 'Bạn là khách hàng, trao đổi với Thomas là người đại diện của đội. Đội làm việc quanh issue tracker, và mọi việc đều đi qua đó để bạn đọc lại được bất cứ lúc nào.',
       },
       lifecycle: {
@@ -230,7 +230,7 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
         sub: 'Session lifetime decides what a role can remember.',
       },
       team: {
-        headline: 'The whole team in one picture.',
+        headline: 'The operating model.',
         sub: "You are the client, talking to Thomas, the team's representative. The team works around the issue tracker, and everything passes through it so you can read it back at any time.",
       },
       lifecycle: {

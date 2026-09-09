@@ -305,6 +305,8 @@
   stroke: var(--role-rin);
 }
 .diagram[data-diagram='five-roles'] .diagram-svg .m-security,
+.diagram[data-diagram='client-studio'] .diagram-svg .m-security,
+.idiagram[data-diagram='client-studio'] .diagram-svg .m-security,
 .diagram[data-diagram='hub-and-spokes'] .diagram-svg .m-security,
 .diagram[data-diagram='ticket-lifecycle'] .diagram-svg .m-security,
 .idiagram[data-diagram='five-roles'] .diagram-svg .m-security,
@@ -314,6 +316,8 @@
   stroke: var(--role-rin);
 }
 .diagram[data-diagram='five-roles'] .diagram-svg .t-security,
+.diagram[data-diagram='client-studio'] .diagram-svg .t-security,
+.idiagram[data-diagram='client-studio'] .diagram-svg .t-security,
 .diagram[data-diagram='hub-and-spokes'] .diagram-svg .t-security,
 .diagram[data-diagram='ticket-lifecycle'] .diagram-svg .t-security,
 .idiagram[data-diagram='five-roles'] .diagram-svg .t-security,
@@ -322,6 +326,8 @@
   fill: var(--role-rin);
 }
 .diagram[data-diagram='five-roles'] .diagram-svg .s-security,
+.diagram[data-diagram='client-studio'] .diagram-svg .s-security,
+.idiagram[data-diagram='client-studio'] .diagram-svg .s-security,
 .diagram[data-diagram='hub-and-spokes'] .diagram-svg .s-security,
 .diagram[data-diagram='ticket-lifecycle'] .diagram-svg .s-security,
 .idiagram[data-diagram='five-roles'] .diagram-svg .s-security,
@@ -367,9 +373,15 @@
   stroke-dashoffset: -1;
   animation-name: flow-back;
 }
+/* The lit label must snap back to its own colour when its turn ends; a keyframe that
+   left `fill` unset would instead fade it out over the rest of the loop, so the base
+   colour is named here per label class and written into the closing keyframes. */
 .idiagram--flow .diagram-svg .a-flow-label > text {
+  --label-base: var(--ink-70);
   animation: flow-label 12s ease-out infinite;
 }
+.idiagram--flow .diagram-svg .a-flow-label > text.t-primary { --label-base: var(--ink); }
+.idiagram--flow .diagram-svg .a-flow-label > text.t-security { --label-base: var(--role-rin); }
 .idiagram--flow .diagram-svg .a-flow-reply {
   opacity: 0;
   pointer-events: none;
@@ -384,11 +396,20 @@
 .idiagram--flow .diagram-svg [data-flow-key='2'] > text { animation-delay: 6s; }
 .idiagram--flow .diagram-svg [data-flow-key='3'],
 .idiagram--flow .diagram-svg [data-flow-key='3'] > text { animation-delay: 9s; }
+/* the pulse and the lit label take the colour of whoever is speaking: the receiving
+   role in round-trip mode, the sender in sequence mode (data-flow-from wins) */
 .idiagram--flow .diagram-svg [data-flow-to='thomas'] { --flow-ink: var(--role-thomas); }
 .idiagram--flow .diagram-svg [data-flow-to='shaper'] { --flow-ink: var(--role-shaper); }
 .idiagram--flow .diagram-svg [data-flow-to='builder'] { --flow-ink: var(--role-builder); }
 .idiagram--flow .diagram-svg [data-flow-to='rin'] { --flow-ink: var(--role-rin); }
 .idiagram--flow .diagram-svg [data-flow-to='qa'] { --flow-ink: var(--role-qa); }
+.idiagram--flow[data-seq] .diagram-svg [data-flow-from='client'] { --flow-ink: var(--brand-primary); }
+.idiagram--flow[data-seq] .diagram-svg [data-flow-from='tracker'] { --flow-ink: var(--ink); }
+.idiagram--flow[data-seq] .diagram-svg [data-flow-from='thomas'] { --flow-ink: var(--role-thomas); }
+.idiagram--flow[data-seq] .diagram-svg [data-flow-from='shaper'] { --flow-ink: var(--role-shaper); }
+.idiagram--flow[data-seq] .diagram-svg [data-flow-from='builder'] { --flow-ink: var(--role-builder); }
+.idiagram--flow[data-seq] .diagram-svg [data-flow-from='rin'] { --flow-ink: var(--role-rin); }
+.idiagram--flow[data-seq] .diagram-svg [data-flow-from='qa'] { --flow-ink: var(--role-qa); }
 .idiagram--flow .diagram-svg .a-flow--out { stroke: var(--flow-ink, var(--ink-35)); }
 .idiagram--flow .diagram-svg .a-flow-reply > text { fill: var(--flow-ink, var(--ink)); }
 .idiagram--flow[data-flow='paused'] .diagram-svg .a-flow,
@@ -406,11 +427,10 @@
   25%, 100% { stroke-dashoffset: 0.22; }
 }
 @keyframes flow-label {
-  0%, 1% { fill: var(--flow-ink); font-weight: 600; }
-  12%, 14% { fill: var(--flow-ink); font-weight: 600; }
-  /* hands the spot to the reply text, then comes back muted once the answer landed */
-  15%, 25% { opacity: 0; }
-  27%, 100% { opacity: 1; }
+  0%, 14% { fill: var(--flow-ink); font-weight: 600; opacity: 1; }
+  /* hands the spot to the reply text, then comes back in its own colour */
+  15%, 25% { fill: var(--label-base); font-weight: 400; opacity: 0; }
+  27%, 100% { fill: var(--label-base); font-weight: 400; opacity: 1; }
 }
 @keyframes flow-reply {
   0%, 14% { opacity: 0; }

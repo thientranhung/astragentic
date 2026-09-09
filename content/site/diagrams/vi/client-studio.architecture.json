@@ -39,7 +39,7 @@
     { "id": "thomas-tracker", "from": "thomas", "to": "tracker", "label": "frontier, claim, dispatch", "variant": "emphasis", "fromSide": "right", "toSide": "left" },
     { "id": "shaper-tracker", "from": "shaper", "to": "tracker", "label": "spec → ticket", "fromSide": "bottom", "toSide": "top", "labelDy": 24 },
     { "id": "tracker-builder", "from": "tracker", "to": "builder", "label": "claim", "fromSide": "right", "toSide": "left" },
-    { "id": "builder-tracker", "from": "builder", "to": "tracker", "label": "commit, biên nhận", "fromSide": "bottom", "toSide": "bottom", "via": [[1090, 355], [860, 355]] },
+    { "id": "builder-tracker", "from": "builder", "to": "tracker", "label": "commit, receipt", "fromSide": "bottom", "toSide": "bottom", "via": [[1090, 355], [860, 355]] },
     { "id": "tracker-rin", "from": "tracker", "to": "rin", "label": "gate milestone", "variant": "security", "fromSide": "bottom", "toSide": "top" },
     { "id": "tracker-qa", "from": "tracker", "to": "qa", "label": "qa walk", "fromSide": "bottom", "toSide": "top" },
     { "id": "client-tracker", "from": "client", "to": "tracker", "label": "đọc lại, giám sát", "variant": "dashed", "fromSide": "bottom", "toSide": "bottom", "via": [[150, 580], [860, 580]] }
