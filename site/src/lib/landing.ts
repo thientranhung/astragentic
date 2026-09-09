@@ -231,7 +231,7 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
       },
       team: {
         headline: 'The whole team in one picture.',
-        sub: 'You on the outside, Thomas at the gate, the issue tracker in the middle, and every piece of work passing through it.',
+        sub: "You are the client, talking to Thomas, the team's representative. The team works around the issue tracker, and everything passes through it so you can read it back at any time.",
       },
       lifecycle: {
         headline: 'A ticket passes through seven named stages',
