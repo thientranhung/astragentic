@@ -194,7 +194,14 @@ const CARD_FRAME = 330;
             <CodeFrame lines={ACTIVE_TABLE} lang={lang} label={ORCHESTRATOR_FILE} class="role-models-table" />
           </div>
         )}
-        <InteractiveDiagram slug="five-roles" lang={lang} hrefMap={roleMap} class="band" flow />
+        <InteractiveDiagram
+          slug="five-roles"
+          lang={lang}
+          hrefMap={roleMap}
+          class="band"
+          flow
+          flowBack={{ shaper: 'spec + ticket', builder: 'handback + receipt', rin: 'gate verdict', qa: 'walk report' }}
+        />
       </div>
     </section>
   )}

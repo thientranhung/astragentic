@@ -345,12 +345,12 @@
 /* ── Flow pulses (`flow` on InteractiveDiagram) ────────────────────────────────
    Each edge gets two twin paths with pathLength="1". A short dash rides the first
    from the sender to the arrowhead in the receiving role's colour (the request), then
-   a second dash rides back up in Thomas's colour (the question, the handback, the
-   receipt). The dash pattern is one period of 2, so the dash is off both ends of the
-   path at either extreme of the offset. Edges take turns: one round trip per 3s
-   slot, four slots in a 12s loop, and the word "dispatch" beside the trunk lights up
-   for the outbound leg of every slot. Off under reduced motion, where global.css collapses
-   the animation to one frame: the twins are hidden so they leave no static blob. */
+   a second dash rides back in the sender's colour (the answer). The dash pattern is
+   one period of 2, so the dash is off both ends of the path at either extreme of the
+   offset. Edges take turns: one round trip per 3s slot, four slots in a 12s loop.
+   The edge's own label lights up in the role's colour for the request and swaps to
+   the `flowBack` text for the answer. Paused while off-screen (data-flow), hidden
+   under reduced motion so the one frame global.css leaves does not become a blob. */
 .idiagram--flow .diagram-svg .a-flow {
   fill: none;
   stroke: var(--ink-35);
@@ -367,25 +367,36 @@
   stroke-dashoffset: -1;
   animation-name: flow-back;
 }
-.idiagram--flow .diagram-svg .a-flow[data-flow-key='1'] { animation-delay: 3s; }
-.idiagram--flow .diagram-svg .a-flow[data-flow-key='2'] { animation-delay: 6s; }
-.idiagram--flow .diagram-svg .a-flow[data-flow-key='3'] { animation-delay: 9s; }
-.idiagram--flow .diagram-svg .a-flow-word {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  fill: var(--role-thomas);
+.idiagram--flow .diagram-svg .a-flow-label > text {
+  animation: flow-label 12s ease-out infinite;
+}
+.idiagram--flow .diagram-svg .a-flow-reply {
   opacity: 0;
   pointer-events: none;
-  animation: flow-word 3s ease-out infinite;
+  animation: flow-reply 12s ease-out infinite;
 }
-.idiagram--flow .diagram-svg .a-flow--out[data-flow-to='thomas'] { stroke: var(--role-thomas); }
-.idiagram--flow .diagram-svg .a-flow--out[data-flow-to='shaper'] { stroke: var(--role-shaper); }
-.idiagram--flow .diagram-svg .a-flow--out[data-flow-to='builder'] { stroke: var(--role-builder); }
-.idiagram--flow .diagram-svg .a-flow--out[data-flow-to='rin'] { stroke: var(--role-rin); }
-.idiagram--flow .diagram-svg .a-flow--out[data-flow-to='qa'] { stroke: var(--role-qa); }
-/* out: 0–1.2s of the slot; the role "works" 1.2–1.8s; back: 1.8–3s; then wait */
+.idiagram--flow .diagram-svg .a-flow-reply > text {
+  font-weight: 600;
+}
+.idiagram--flow .diagram-svg [data-flow-key='1'],
+.idiagram--flow .diagram-svg [data-flow-key='1'] > text { animation-delay: 3s; }
+.idiagram--flow .diagram-svg [data-flow-key='2'],
+.idiagram--flow .diagram-svg [data-flow-key='2'] > text { animation-delay: 6s; }
+.idiagram--flow .diagram-svg [data-flow-key='3'],
+.idiagram--flow .diagram-svg [data-flow-key='3'] > text { animation-delay: 9s; }
+.idiagram--flow .diagram-svg [data-flow-to='thomas'] { --flow-ink: var(--role-thomas); }
+.idiagram--flow .diagram-svg [data-flow-to='shaper'] { --flow-ink: var(--role-shaper); }
+.idiagram--flow .diagram-svg [data-flow-to='builder'] { --flow-ink: var(--role-builder); }
+.idiagram--flow .diagram-svg [data-flow-to='rin'] { --flow-ink: var(--role-rin); }
+.idiagram--flow .diagram-svg [data-flow-to='qa'] { --flow-ink: var(--role-qa); }
+.idiagram--flow .diagram-svg .a-flow--out { stroke: var(--flow-ink, var(--ink-35)); }
+.idiagram--flow .diagram-svg .a-flow-reply > text { fill: var(--flow-ink, var(--ink)); }
+.idiagram--flow[data-flow='paused'] .diagram-svg .a-flow,
+.idiagram--flow[data-flow='paused'] .diagram-svg .a-flow-label > text,
+.idiagram--flow[data-flow='paused'] .diagram-svg .a-flow-reply {
+  animation-play-state: paused;
+}
+/* one 3s slot = 25% of the loop: request 0–10%, the role works 10–15%, answer 15–25% */
 @keyframes flow-out {
   0% { stroke-dashoffset: 0.22; }
   10%, 100% { stroke-dashoffset: -1; }
@@ -394,13 +405,20 @@
   0%, 15% { stroke-dashoffset: -1; }
   25%, 100% { stroke-dashoffset: 0.22; }
 }
-/* one slot long: on as the pulse leaves, off once it has arrived */
-@keyframes flow-word {
-  0% { opacity: 0; }
-  6%, 34% { opacity: 1; }
-  46%, 100% { opacity: 0; }
+@keyframes flow-label {
+  0%, 1% { fill: var(--flow-ink); font-weight: 600; }
+  12%, 14% { fill: var(--flow-ink); font-weight: 600; }
+  /* hands the spot to the reply text, then comes back muted once the answer landed */
+  15%, 25% { opacity: 0; }
+  27%, 100% { opacity: 1; }
+}
+@keyframes flow-reply {
+  0%, 14% { opacity: 0; }
+  16%, 24% { opacity: 1; }
+  26%, 100% { opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .idiagram--flow .diagram-svg .a-flow,
-  .idiagram--flow .diagram-svg .a-flow-word { display: none; }
+  .idiagram--flow .diagram-svg .a-flow-reply { display: none; }
+  .idiagram--flow .diagram-svg .a-flow-label > text { animation: none; }
 }

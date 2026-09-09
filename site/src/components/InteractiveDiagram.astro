@@ -34,8 +34,12 @@ interface Props {
   /** Show the "open the interactive version" caption under the figure. */
   explore?: boolean;
   /** Animate the flows: a pulse in the receiving role's colour travels each edge,
-   *  one edge after another, in document order. Pure CSS; off under reduced motion. */
+   *  one edge after another, in document order, and a pulse in the sender's colour
+   *  comes back. Pure CSS; paused off-screen; off under reduced motion. */
   flow?: boolean;
+  /** What comes back on each edge, keyed by the receiving node id: shown in place of
+   *  the edge label while the return pulse runs. An edge with no entry keeps its label. */
+  flowBack?: Record<string, string>;
   class?: string;
 }
 const {
@@ -49,6 +53,7 @@ const {
   svgMaxWidth,
   explore = false,
   flow = false,
+  flowBack = {},
   class: extra = '',
 } = Astro.props;
 
@@ -97,32 +102,45 @@ function mark(svg: string): string {
   });
 }
 
-/** Behind every edge path archify drew, lay a second copy that carries the moving
- *  pulse. `pathLength="1"` normalises the dash units so one keyframe set fits edges
- *  of any length; `data-flow-to` names the role whose colour the pulse borrows and
- *  `data-flow-key` its place in the queue. No marker, so the pulse ends at the
- *  arrowhead the original already draws. Every edge also gets a return pulse: the
- *  talk is two-way even where the arrow is drawn one way. */
+/** Behind every edge path archify drew, lay two copies that carry the moving pulses:
+ *  the request goes down in the receiving role's colour, the answer (a spec, a
+ *  handback, a verdict) comes back up in the sender's. `pathLength="1"` normalises the
+ *  dash units so one keyframe set fits edges of any length; `data-flow-to` names the
+ *  role whose colour the pulse borrows and `data-flow-key` its place in the queue. No
+ *  marker, so the pulse ends at the arrowhead the original already draws.
+ *
+ *  The words are the diagrammer's own edge labels: each lights up in the role's
+ *  colour while its request runs, and — when the page said what comes back — swaps
+ *  to that text while the answer runs. No extra vocabulary, so no edge is described
+ *  by a word that is true of a different edge. */
 function flows(svg: string): string {
-  // The word that lights up each time a pulse leaves: set beside the first edge's
-  // first segment, i.e. the trunk every edge shares out of the sender.
-  let word = '';
-  const pts = /data-edge-from="[^"]*"[^>]*data-composition-points="(\d+),(\d+);(\d+),(\d+)/.exec(svg);
-  if (pts) {
-    const [x1, y1, , y2] = pts.slice(1).map(Number);
-    word = `<text class="a-flow-word" x="${x1 + 12}" y="${(y1 + y2) / 2 + 4}">dispatch</text>`;
-  }
-  return svg.replace(/<\/svg>\s*$/, `${word}</svg>`).replace(
+  const withPulses = svg.replace(
     /<path (data-edge-from="[^"]*" data-edge-to="([^"]*)"[^>]*data-edge-key="(\d+)"[^>]*)\/>/g,
     (whole, attrs: string, to: string, key: string) => {
       const d = /\sd="([^"]*)"/.exec(attrs)?.[1];
       if (!d) return whole;
-      // Two twins: the request goes down in the receiving role's colour, the answer
-      // (a question, a handback, a receipt) comes back up in Thomas's.
       return (
         `${whole}<path class="a-flow a-flow--out" data-flow-to="${to}" data-flow-key="${key}" d="${d}" pathLength="1"/>` +
         `<path class="a-flow a-flow--back" data-flow-key="${key}" d="${d}" pathLength="1"/>`
       );
+    },
+  );
+  return withPulses.replace(
+    /<g data-detail="context" (data-edge-from="[^"]*" data-edge-to="([^"]*)"[^>]*data-edge-key="(\d+)")>([\s\S]*?)<\/g>/g,
+    (whole, attrs: string, to: string, key: string, inner: string) => {
+      const t = /<text x="([\d.]+)" y="([\d.]+)" class="([^"]*)" font-size="([\d.]+)"/.exec(inner);
+      const back = flowBack[to];
+      let reply = '';
+      if (t && back) {
+        const [x, y, cls, size] = [Number(t[1]), Number(t[2]), t[3], Number(t[4])];
+        // A mask of its own, sized to the word, so the line does not show through.
+        const w = back.length * size * 0.62 + 8;
+        reply =
+          `<g class="a-flow-reply" data-flow-to="${to}" data-flow-key="${key}">` +
+          `<rect x="${(x - w / 2).toFixed(1)}" y="${y - size - 2}" width="${w.toFixed(1)}" height="${size + 6}" rx="3" class="c-mask"/>` +
+          `<text x="${x}" y="${y}" class="${cls}" font-size="${size}" text-anchor="middle">${back}</text></g>`;
+      }
+      return `<g class="a-flow-label" data-detail="context" data-flow-to="${to}" data-flow-key="${key}" ${attrs}>${inner}</g>${reply}`;
     },
   );
 }
@@ -162,6 +180,14 @@ const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` 
 </figure>
 
 <script>
+  // Flow pulses run only while the figure is on screen; without JavaScript they
+  // simply run. Reduced motion hides them outright in diagram.css.
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) (e.target as HTMLElement).dataset.flow = e.isIntersecting ? 'run' : 'paused';
+    });
+    document.querySelectorAll<HTMLElement>('.idiagram--flow').forEach((f) => io.observe(f));
+  }
   type Tip = HTMLElement | null;
 
   document.querySelectorAll<HTMLElement>('.idiagram[data-hrefs]').forEach((figure) => {
