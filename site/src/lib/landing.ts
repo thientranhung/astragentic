@@ -174,11 +174,11 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
           },
           {
             title: 'Thomas đọc báo cáo thay bạn.',
-            body: 'Handback, receipt, kết luận gate, walk report đều về Thomas trước. Thomas đọc, đối chiếu với ticket, rồi trình bày lại cho bạn theo ngữ cảnh dự án, không bắt bạn đọc log của từng agent. Báo cáo gốc vẫn nằm trên tracker để bạn kiểm chứng.',
+            body: 'Handback, receipt, kết luận gate, walk report đều về Thomas trước. Thomas đọc, đối chiếu với ticket, rồi kể lại cho bạn theo cách hai bên vẫn trao đổi: ngôn ngữ bạn dùng, mức chi tiết bạn cần, ví dụ thay cho thuật ngữ khi bạn muốn. Báo cáo gốc vẫn nằm trên tracker để bạn kiểm chứng.',
           },
           {
-            title: 'Bạn giữ ý định và các quyết định lớn.',
-            body: 'Việc của bạn là làm Thomas hiểu đúng ý định và hướng đi. Thomas tự giải quyết câu hỏi mở với đội, và chỉ quay lại khi một quyết định thuộc về bạn: UI/UX, tech stack, phạm vi. Khi đó câu hỏi đã được thu gọn thành một lựa chọn trả lời được.',
+            title: 'Bạn chỉ cần làm Thomas hiểu ý định của mình.',
+            body: 'Bạn nói điều mình muốn và hướng đi; Thomas tự triển khai với đội, tự quyết trong quá trình làm. Nó chỉ quay lại hỏi khi một quyết định thật sự là của bạn, như UI/UX hay tech stack, và lúc đó câu hỏi đã được thu gọn thành một lựa chọn trả lời được.',
           },
         ],
       },
@@ -260,11 +260,11 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
           },
           {
             title: 'Thomas reads the reports for you.',
-            body: 'Handbacks, receipts, gate verdicts and walk reports reach Thomas first. Thomas reads them against the ticket and presents them to you in the project’s own terms, so you are not reading every agent’s log. The originals stay on the tracker for you to check.',
+            body: 'Handbacks, receipts, gate verdicts and walk reports reach Thomas first. Thomas reads them against the ticket and tells you what they say the way the two of you already talk: your language, the level of detail you want, an example in place of a term when you prefer one. The originals stay on the tracker for you to check.',
           },
           {
-            title: 'You keep the intent and the big decisions.',
-            body: 'Your job is to make Thomas understand your intent and direction. Thomas settles open questions with the team and comes back only when a decision is yours: UI/UX, tech stack, scope. By then it has been reduced to a question you can answer.',
+            title: 'You only have to make Thomas understand what you want.',
+            body: 'You state what you want and where it is going; Thomas carries it out with the team and makes the calls along the way. It comes back to you only when a decision is genuinely yours, such as UI/UX or the tech stack, and by then the question has been reduced to a choice you can answer.',
           },
         ],
       },
