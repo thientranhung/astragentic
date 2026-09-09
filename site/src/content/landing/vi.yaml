@@ -14,7 +14,7 @@ explain:
       - "Mỗi vai mang tên người: Thomas, Shaper, Builder, Rin, QA. Tên riêng giữ cho vai không bị trôi trong context dài, và giúp các skill gắn theo vai được kích hoạt đúng."
       - "Vai được định nghĩa bằng một file khai báo theo chuẩn của từng runtime, nạp vào system prompt khi session mở: Claude Code đọc `.claude/agents/<vai>.md`, Codex đọc launch profile `.codex/profiles/<vai>.config.toml`, OpenCode đọc `.opencode/agents/<vai>.md`. Runtime, model và effort của từng vai khai ở một chỗ, `orchestrator.md`."
     commands:
-      label: "Launch một vai trên ba runtime"
+      label: "Start agent qua CLI trên ba runtime"
       lines:
         - "claude   --agent builder --model <model> --effort <low|medium|high|xhigh|max>"
         - "codex    --profile builder            # model + model_reasoning_effort nằm trong profile TOML"
