@@ -8,7 +8,7 @@ hero:
 explain:
   agents:
     eyebrow: "Agent trong Astragentic"
-    headline: "Một agent là một session của coding agent, được giao một vai."
+    headline: "Mỗi agent là một session runtime độc lập, mang một vai và một contract riêng."
     paragraphs:
       - "Mỗi agent là một session của Claude Code, Codex hoặc OpenCode, launch từ CLI với một vai xác định. Nó nhận nhiệm vụ như một nhân viên, làm xong thì trả kết quả, và có thể nhân bản thành nhiều session chạy song song: nhiều Builder cùng thi công, nhiều QA cùng kiểm, giống một đội thật."
       - "Mỗi vai có một tên riêng: Thomas, Shaper, Builder, Rin, QA. Tên riêng giữ cho vai không bị trôi trong context dài, và là địa chỉ để gửi việc, đọc pane, gắn skill đúng vai."
