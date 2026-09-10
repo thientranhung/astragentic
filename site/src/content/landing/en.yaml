@@ -108,9 +108,9 @@ explain:
 
   method:
     eyebrow: "mattpocock-skills"
-    headline: "A complete SDLC, every step a ready-made skill."
+    headline: "Astragentic adopts mattpocock-skills as its framework for running and building a project."
     paragraphs:
-      - "Astragentic runs on Matt Pocock’s mattpocock-skills: grill before building, write the spec, cut the tickets, implement with TDD, review, simplify. Each role gets exactly the skills for its job, so the whole team follows one process from the first requirement to the last PR."
+      - "Matt Pocock’s skill set covers both halves of a project. The management half: wayfinder sets direction, triage sorts the work, grill draws out the requirement, to-spec pins the spec, to-tickets cuts it into tickets. The development half: implement with TDD, code-review, simplify, diagnosing-bugs. Astragentic assigns each skill to the right role, so Thomas manages and the Builder builds inside one framework, from the first requirement to the last PR."
       - "I chose this set over Superpowers because it puts the question-and-answer loop first, before any code is written, which is where projects usually go wrong."
     items:
       - id: thomas
