@@ -143,7 +143,8 @@ shots:
       webm: /shots/herdr.webm
       poster: /shots/herdr.jpg
   tracker:
-    caption: "Board tracker của một dự án thật, 71 ticket"
+    caption: "Ba tracker, một cách làm việc: GitHub Issues, Jira và Linear đều có adapter riêng trong harness, Thomas nạp đúng adapter ở đầu session. Board Linear ở giữa là board thật của dự án Inception."
+    src: /shots/tracker.jpg
 
 features:
   - id: cross-vendor

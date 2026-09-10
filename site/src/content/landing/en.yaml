@@ -143,7 +143,8 @@ shots:
       webm: /shots/herdr.webm
       poster: /shots/herdr.jpg
   tracker:
-    caption: "The tracker board of a real project, 71 tickets"
+    caption: "Three trackers, one way of working: GitHub Issues, Jira and Linear each have their own adapter in the harness, and Thomas loads the right one at session start. The Linear board in front is the real board of the Inception project."
+    src: /shots/tracker.jpg
 
 features:
   - id: cross-vendor
