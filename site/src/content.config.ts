@@ -76,7 +76,7 @@ const pages = defineCollection({
  *  §4 and §6). Every field is optional so a half-written file still builds;
  *  src/lib/landing.ts merges what lands over a placeholder default and the page shows
  *  the gap instead of failing the build. */
-const caption = z.object({ headline: z.string().optional(), sub: z.string().optional() });
+const caption = z.object({ eyebrow: z.string().optional(), headline: z.string().optional(), sub: z.string().optional() });
 /** One pane of literal commands inside an explain section. A section may carry one or
  *  several; the single-object form is the older spelling and still validates. */
 const pane = z.object({ label: z.string().optional(), lines: z.array(z.string()) });
@@ -95,6 +95,7 @@ const landing = defineCollection({
     /** Home v2 §Section 1: two columns of prose, no picture. */
     why: z
       .object({
+        eyebrow: z.string().optional(),
         headline: z.string().optional(),
         p1: z.string().optional(),
         p2: z.string().optional(),
@@ -150,6 +151,7 @@ const landing = defineCollection({
     /** Home v2 §Section 4. `fits` / `notYet` avoid the YAML keys `yes` and `no`. */
     fit: z
       .object({
+        eyebrow: z.string().optional(),
         headline: z.string().optional(),
         body: z.string().optional(),
         fitsLabel: z.string().optional(),
@@ -202,6 +204,8 @@ const landing = defineCollection({
         structure: caption.optional(),
         roles: caption.optional(),
         /** The whole team in one picture, between the roles and the messaging. */
+        /** Heading over the six feature cards. */
+        features: caption.optional(),
         team: caption
           .extend({
             pointsLabel: z.string().optional(),

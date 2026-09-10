@@ -7,7 +7,7 @@ hero:
 
 explain:
   agents:
-    eyebrow: "Agents in Astragentic"
+    eyebrow: "Agent"
     headline: "Each agent is an independent runtime session with a role and a contract of its own."
     paragraphs:
       - "Every agent is a working session of Claude Code, Codex or OpenCode, launched from the command line with a defined role. It takes a task the way an employee does, hands back the result when it is finished, and can be cloned into several sessions running side by side: several Builders building at once, several QAs checking at once, like a real team."
@@ -24,7 +24,7 @@ explain:
       href: "/en/roles/thomas"
 
   comms:
-    eyebrow: "How the agents talk"
+    eyebrow: "How agents talk to each other"
     headline: "Dispatching a ticket opens a conversation with an address."
     paragraphs:
       - "A ticket is an issue on the tracker: a **task**, a **feature** or a **requirement** sliced small enough for one Builder to finish in one session. Each ticket carries a stable id in its title, a status, an assignee, and blocking edges to the work that must land first. Shaper creates tickets from the spec with the `to-tickets` skill; Thomas dispatches only the ones that are ready."
@@ -49,7 +49,7 @@ explain:
       href: "/en/skills/dispatch-ticket"
 
   roles:
-    eyebrow: "What each role does"
+    eyebrow: "Roles on the team"
     headline: "Five roles, five session lifetimes."
     models:
       label: "Model and effort per role"
@@ -128,6 +128,7 @@ explain:
       href: "/en/why#why-mattpocock"
 
 why:
+  eyebrow: "Why"
   headline: "AI is now a real developer. Astragentic puts you in charge of that developer team."
   p1: "A coding agent today takes the work, writes the code, runs the tests and fixes until they pass, like an engineer sitting next to you. Once execution is no longer the bottleneck, the engineer's value moves elsewhere: setting the right requirement, making the right call, and keeping the whole process on course."
   p2: "Astragentic is built so that you do exactly that part. It organises agents into an outsourcing team under the familiar SDLC discipline, and redesigns dispatch, review and handback to exploit a speed and a volume no human team can sustain."
@@ -199,6 +200,7 @@ features:
     href: /en/roles/thomas
 
 fit:
+  eyebrow: "The right size of project"
   headline: "For long-lived projects with many parts running in parallel."
   body: "A project is not large because it has sprints or stories. It is large for four reasons: it lives long (several releases, a codebase still edited months after launch), it is wide (several modules or subsystems worked on at once), it has dependencies (this must finish before that), and it carries risk (real users, regressions that cost). Astragentic has exactly four mechanisms for those four things: the tracker and receipts keep state outside any agent's memory, claims and worktrees let several Builders run in parallel, blocking edges and the frontier query keep the order, Rin's gate and QA's walk stop a merge before it hurts. Without all four, this machinery is overhead, and an ordinary agent session is enough."
   fitsLabel: "A fit when"

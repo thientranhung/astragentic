@@ -224,8 +224,9 @@ const CARD_FRAME = 330;
   )}
 
   {/* ── 4 · The whole team in one picture ────────────────────────────────── */}
-  <section class="screen screen--surface" id="team">
+  <section class="screen screen--surface explain" id="team">
     <div class="column">
+      {copy.sections.team.eyebrow && <p class="eyebrow">{copy.sections.team.eyebrow}</p>}
       <h2>{copy.sections.team.headline}</h2>
       <p class="sub" set:html={hl(copy.sections.team.sub)} />
       {copy.sections.team.points?.length && (
@@ -324,8 +325,9 @@ const CARD_FRAME = 330;
   )}
 
   {/* ── 7 · How a ticket runs (right after the tracker it lives on) ─────── */}
-  <section class="screen screen--canvas" id="lifecycle">
+  <section class="screen screen--canvas explain" id="lifecycle">
     <div class="column">
+      {copy.sections.lifecycle.eyebrow && <p class="eyebrow">{copy.sections.lifecycle.eyebrow}</p>}
       <h2>{copy.sections.lifecycle.headline}</h2>
       <p class="sub">{copy.sections.lifecycle.sub}</p>
     </div>
@@ -393,8 +395,9 @@ const CARD_FRAME = 330;
   )}
 
   {/* ── 9 · Why it exists ───────────────────────────────────────────────── */}
-  <section class="screen screen--canvas" id="why">
+  <section class="screen screen--canvas explain" id="why">
     <div class="column">
+      {copy.why.eyebrow && <p class="eyebrow">{copy.why.eyebrow}</p>}
       <h2>{copy.why.headline}</h2>
     </div>
     <div class="column">
@@ -407,7 +410,14 @@ const CARD_FRAME = 330;
   </section>
 
   {/* ── 10 · What it does ────────────────────────────────────────────────── */}
-  <section class="screen screen--surface" id="features">
+  <section class="screen screen--surface explain" id="features">
+    {copy.sections.features && (
+      <div class="column">
+        {copy.sections.features.eyebrow && <p class="eyebrow">{copy.sections.features.eyebrow}</p>}
+        <h2>{copy.sections.features.headline}</h2>
+        {copy.sections.features.sub && <p class="sub">{copy.sections.features.sub}</p>}
+      </div>
+    )}
     <div class="column">
       <ul class="features band">
         {
@@ -470,8 +480,9 @@ const CARD_FRAME = 330;
   </section>
 
   {/* ── 11 · Who it is for ──────────────────────────────────────────────── */}
-  <section class="screen screen--canvas" id="fit">
+  <section class="screen screen--canvas explain" id="fit">
     <div class="column">
+      {copy.fit.eyebrow && <p class="eyebrow">{copy.fit.eyebrow}</p>}
       <h2>{copy.fit.headline}</h2>
       <p class="sub" set:html={hl(copy.fit.body)} />
     </div>

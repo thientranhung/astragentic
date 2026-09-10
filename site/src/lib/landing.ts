@@ -15,6 +15,7 @@ export interface Requirement {
 }
 
 export interface Caption {
+  eyebrow?: string;
   headline: string;
   sub: string;
 }
@@ -86,12 +87,13 @@ export interface Landing {
    *  section it has no copy for, rather than a placeholder heading. */
   explain: Record<string, Explain>;
   /** Section 1. Two columns of prose and a link onward; no picture. */
-  why: { headline: string; p1: string; p2: string; more: string };
+  why: { eyebrow?: string; headline: string; p1: string; p2: string; more: string };
   /** Section 2, in the writer's order. Empty until the YAML lands — the copy has one
    *  home, and duplicating six paragraphs into a fallback would give it two. */
   features: Feature[];
   /** Section 4. `fits` / `notYet` dodge the YAML keys `yes` and `no`. */
   fit: {
+    eyebrow?: string;
     headline: string;
     body: string;
     fitsLabel: string;
@@ -115,6 +117,7 @@ export interface Landing {
   sections: {
     structure: Caption;
     roles: Caption;
+    features?: Caption;
     team: TeamCaption;
     lifecycle: Caption;
     tracker: Caption;
@@ -174,7 +177,13 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
         headline: 'Năm vai, năm vòng đời session',
         sub: 'Vòng đời session quyết định một vai nhớ được gì.',
       },
+      features: {
+        eyebrow: 'Tính năng',
+        headline: 'Sáu điều một đội làm được mà một agent đơn lẻ thì không.',
+        sub: 'Mỗi thẻ mở trang giải thích cơ chế bên dưới.',
+      },
       team: {
+        eyebrow: 'Khách hàng và đội',
         headline: 'Mô hình vận hành.',
         sub: 'Bạn là khách hàng, trao đổi với Thomas là người đại diện của đội. Đội làm việc quanh issue tracker, và mọi việc đều đi qua đó để bạn đọc lại được bất cứ lúc nào.',
         pointsLabel: 'Hằng ngày, bạn chỉ làm việc với Thomas',
@@ -194,8 +203,9 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
         ],
       },
       lifecycle: {
-        headline: 'Một ticket đi qua bảy stage',
-        sub: 'Bảy stage có tên để mỗi sự cố đo được gắn vào đúng một stage.',
+        eyebrow: 'Vòng đời ticket',
+        headline: 'Một ticket đi qua bảy stage.',
+        sub: 'Bảy stage có tên, nên mỗi sự cố đo được gắn vào đúng một stage.',
       },
       tracker: {
         headline: 'Thomas hỏi tracker, không nhớ tracker',
@@ -260,7 +270,13 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
         headline: 'Five roles, five session lifetimes',
         sub: 'Session lifetime decides what a role can remember.',
       },
+      features: {
+        eyebrow: 'Features',
+        headline: 'Six things a team can do that a single agent cannot.',
+        sub: 'Each card opens the page that explains the mechanism behind it.',
+      },
       team: {
+        eyebrow: 'Client and team',
         headline: 'The operating model.',
         sub: "You are the client, talking to Thomas, the team's representative. The team works around the issue tracker, and everything passes through it so you can read it back at any time.",
         pointsLabel: 'Day to day, you work with Thomas alone',
@@ -280,8 +296,9 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
         ],
       },
       lifecycle: {
-        headline: 'A ticket passes through seven named stages',
-        sub: 'The stages are named so every measured incident attaches to one of them.',
+        eyebrow: 'Ticket lifecycle',
+        headline: 'A ticket passes through seven stages.',
+        sub: 'The stages are named, so every measured incident attaches to exactly one of them.',
       },
       tracker: {
         headline: 'Thomas asks the tracker instead of remembering it',

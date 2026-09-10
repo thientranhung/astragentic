@@ -7,7 +7,7 @@ hero:
 
 explain:
   agents:
-    eyebrow: "Agent trong Astragentic"
+    eyebrow: "Agent"
     headline: "Mỗi agent là một session runtime độc lập, mang một vai và một contract riêng."
     paragraphs:
       - "Mỗi agent là một session của Claude Code, Codex hoặc OpenCode, launch từ CLI với một vai xác định. Nó nhận nhiệm vụ như một nhân viên, làm xong thì trả kết quả, và có thể nhân bản thành nhiều session chạy song song: nhiều Builder cùng thi công, nhiều QA cùng kiểm, giống một đội thật."
@@ -24,7 +24,7 @@ explain:
       href: "/vai/thomas"
 
   comms:
-    eyebrow: "Cách các agent nói chuyện"
+    eyebrow: "Giao tiếp giữa các agent"
     headline: "Dispatch một ticket là mở một cuộc trao đổi có địa chỉ."
     paragraphs:
       - "Ticket là một issue trên tracker: một **task**, một **feature** hay một **requirement** đã được cắt đủ nhỏ để một Builder hoàn thành trong một session. Mỗi ticket mang một id ổn định trong tiêu đề, một trạng thái, một assignee, và các blocking edge tới việc phải xong trước. Shaper tạo ticket từ spec bằng skill `to-tickets`; Thomas chỉ dispatch những ticket đã sẵn sàng."
@@ -33,7 +33,7 @@ explain:
       - "herdr là mặt phẳng nhìn thấy và là đường dự phòng: mỗi vai một pane có tên, watcher báo working, blocked, idle. Thomas đọc pane bằng `herdr agent read` khi một session im lặng, và điều Builder trên Codex hay OpenCode qua herdr CLI, nơi không có cross-session messaging."
       - "Phân loại câu hỏi là điều đưa bạn từ human-in-the-loop sang human-on-the-loop. Câu hỏi kỹ thuật thường gặp, Thomas trả lời thay bạn từ contract, spec và tracker. Chỉ quyết định thiết kế thật sự mới đi lên bạn qua `to-questionnaire`, dưới dạng câu hỏi trả lời được. Bạn không đứng trong vòng lặp ở từng bước; bạn đứng trên vòng lặp và can thiệp khi có việc cần bạn."
     commands:
-      - label: "Trả lời một Builder bị chặn, cùng Claude Code"
+      - label: "Trả lời một Builder bị chặn trên Claude Code"
         lines:
           - "ListAgents                                  # Thomas tra tên session của Builder"
           - "@builder-TRA-142 <câu trả lời>              # gửi theo đúng tên đó"
@@ -49,7 +49,7 @@ explain:
       href: "/skills/dispatch-ticket"
 
   roles:
-    eyebrow: "Chức năng và nhiệm vụ"
+    eyebrow: "Vai trong đội"
     headline: "Năm vai, năm vòng đời session."
     models:
       label: "Model và effort theo vai"
@@ -128,6 +128,7 @@ explain:
       href: "/vi-sao#why-mattpocock"
 
 why:
+  eyebrow: "Vì sao"
   headline: "AI đã là một developer thực thụ. Astragentic đặt bạn vào vai người dẫn dắt đội developer đó."
   p1: "Coding agent hôm nay nhận việc, viết code, chạy test và sửa cho tới khi xanh, như một kỹ sư ngồi cạnh bạn. Khi thực thi không còn là nút thắt, giá trị của người kỹ sư chuyển sang chỗ khác: đặt yêu cầu đúng, quyết định đúng, và giữ cả quy trình đi đúng hướng."
   p2: "Astragentic được xây để bạn làm đúng phần đó. Nó tổ chức các agent thành một đội outsource theo kỷ luật SDLC quen thuộc, và thiết kế lại cách dispatch, review, handback để khai thác tốc độ và khối lượng mà một đội người không duy trì được."
@@ -199,6 +200,7 @@ features:
     href: /vai/thomas
 
 fit:
+  eyebrow: "Quy mô phù hợp"
   headline: "Dành cho dự án dài hơi, nhiều phần, chạy song song."
   body: "Một dự án lớn không lớn vì có sprint hay story. Nó lớn vì bốn thứ: sống lâu (nhiều release, codebase còn sửa nhiều tháng sau ra mắt), rộng (nhiều module hay hệ con làm cùng lúc), phụ thuộc (việc này phải xong trước việc kia), và rủi ro (có người dùng thật, regression gây thiệt hại). Astragentic có đúng bốn cơ chế cho bốn thứ đó: tracker và receipt giữ trạng thái ngoài trí nhớ agent, claim và worktree cho nhiều Builder chạy song song, blocking edge và frontier query giữ thứ tự, Rin gate và QA walk chặn trước khi merge. Thiếu cả bốn thì bộ máy này là thừa, một session agent bình thường là đủ."
   fitsLabel: "Hợp khi"
