@@ -67,10 +67,13 @@ const uid = Math.random().toString(36).slice(2, 7);
     padding: 0;
   }
   /* The wall: a warm dark grey band the frames sit on, like the room in the reference. */
+  /* One large frame for the real board, two smaller ones stacked beside it, the way
+     a wall mixes sizes; the large one is wide enough to read the ticket titles. */
   .wall-row {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: clamp(1rem, 2.5vw, 2rem);
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    gap: clamp(1rem, 2vw, 1.6rem);
     align-items: start;
     padding: clamp(1.5rem, 3vw, 2.75rem) clamp(1.25rem, 3vw, 2.5rem);
     background: color-mix(in srgb, var(--ink) 74%, var(--surface));
@@ -80,7 +83,11 @@ const uid = Math.random().toString(36).slice(2, 7);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.9rem;
+    gap: 0.7rem;
+  }
+  .hang:first-child {
+    grid-row: 1 / span 2;
+    align-self: center;
   }
   .frame {
     display: block;
@@ -104,9 +111,9 @@ const uid = Math.random().toString(36).slice(2, 7);
   }
   .mat {
     display: block;
-    padding: clamp(0.6rem, 1.4vw, 1.1rem);
+    padding: clamp(0.4rem, 0.9vw, 0.7rem);
     border: 1px solid var(--ink-10);
-    margin: clamp(0.35rem, 0.8vw, 0.6rem);
+    margin: clamp(0.25rem, 0.5vw, 0.4rem);
   }
   .mat img {
     display: block;
@@ -186,6 +193,9 @@ const uid = Math.random().toString(36).slice(2, 7);
   @media (max-width: 860px) {
     .wall-row {
       grid-template-columns: 1fr;
+    }
+    .hang:first-child {
+      grid-row: auto;
     }
   }
 </style>
