@@ -77,13 +77,22 @@
         position: absolute; top: 0; left: 20px; transform: translateY(-50%);
         background: #13141b; padding: 0 10px; font-size: 15px; font-weight: 600; color: #c7cbe0; z-index: 2;
       }
+      .pane.compact .title { font-size: 14px; left: 16px; }
       .pane-body { position: relative; flex: 1; overflow: hidden; padding: 26px 26px 10px; }
+      .pane.compact .pane-body { padding: 18px 18px 6px; font-size: 15px; line-height: 21px; }
       .overlay { position: absolute; inset: 26px 26px 10px; }
+      .pane.compact .overlay { inset: 18px 18px 6px; }
       .status-line { height: 40px; flex-shrink: 0; padding: 0 26px; display: flex; align-items: center; gap: 16px; border-top: 1px solid #1f242c; font-size: 15px; color: #888e99; opacity: 0; }
       .status-line .bp { color: #3ecf8e; }
 
+      .status-block { flex-shrink: 0; padding: 8px 26px 10px; display: flex; flex-direction: column; gap: 3px; border-top: 1px solid #1f242c; font-size: 15px; color: #888e99; opacity: 0; }
+      .status-block .row1 { color: #c7cbe0; font-weight: 600; }
+      .status-block .bp { color: #3ecf8e; }
+      .pane.compact .status-block { padding: 7px 18px 9px; font-size: 13px; gap: 2px; }
+
       /* ── TUI line vocabulary (from video/dispatch) ─────────────────── */
       .line { position: relative; width: 100%; opacity: 0; white-space: pre-wrap; word-break: break-word; margin-bottom: 8px; }
+      .pane.compact .line { margin-bottom: 6px; }
       .line.say { color: #e6eaf0; }
       .line.say::before, .line.tool::before { content: "⏺"; margin-right: 12px; }
       .line.say::before { color: #d8dde6; }
@@ -137,28 +146,29 @@
       .board-wrap { position: absolute; top: 0; left: 0; width: 1920px; height: 1200px; margin-top: -60px; transform-origin: 0 0; }
       .board-wrap img { position: absolute; inset: 0; width: 1920px; height: 1200px; display: block; }
       .board-highlight {
-        position: absolute; left: 18px; top: 893px; width: 427px; height: 186px;
-        border: 3px solid #e53625; border-radius: 10px; opacity: 0;
+        position: absolute; border: 3px solid #e53625; border-radius: 10px; opacity: 0;
         box-shadow: 0 0 0 4000px rgba(6, 7, 10, 0.45), 0 0 24px rgba(229, 54, 37, 0.6);
       }
       .done-card {
-        position: absolute; left: 1362px; top: 300px; width: 340px; opacity: 0;
+        position: absolute; left: 1362px; width: 340px; opacity: 0;
         background: #14161d; border: 1px solid #2b3040; border-radius: 10px;
         padding: 14px 16px; font-size: 17px; line-height: 24px; color: #dfe6f3;
         box-shadow: 0 12px 30px rgba(0,0,0,0.5);
       }
+      .done-card.working { left: 900px; }
       .done-card .row { display: flex; align-items: flex-start; gap: 10px; }
       .done-card .check {
         flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; background: #123326;
         color: #3ecf8e; font-size: 14px; line-height: 20px; text-align: center; font-weight: 700; margin-top: 2px;
       }
+      .done-card.working .check { background: #3a2f12; color: #e0a83a; }
       .done-card .id { color: #8b93a1; font-size: 14px; margin-bottom: 2px; }
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="main" data-start="0" data-duration="60" data-width="1920" data-height="1080">
+    <div id="root" data-composition-id="main" data-start="0" data-duration="70" data-width="1920" data-height="1080">
       <div class="bg"></div>
-      <section id="scene" class="clip" data-start="0" data-duration="60" data-track-index="1">
+      <section id="scene" class="clip" data-start="0" data-duration="70" data-track-index="1">
         <div class="app">
           <!-- ── sidebar ─────────────────────────────────────────────── -->
           <div class="sidebar">
@@ -180,13 +190,12 @@
 
           <!-- ── main area ───────────────────────────────────────────── -->
           <div class="main-area">
-            <div class="tabs-row">
+            <div class="tabs-row" id="tabs-row">
               <span class="tab" id="tab-thomas">thomas</span>
-              <span class="tab" id="tab-builder">builder-tra-200</span>
               <span class="tab-add">+</span>
             </div>
             <div class="panes-wrap">
-              <!-- single full-width pane: 0–32.5s and 49.5–60s -->
+              <!-- single full-width pane: scenes 1-2, tail of scene 3, scene 4 -->
               <div class="pane-box" id="box-full" style="inset:0">
                 <div class="pane focused">
                   <span class="title" id="title-full" data-layout-allow-overflow data-layout-allow-occlusion data-layout-allow-overlap>thomas</span>
@@ -196,48 +205,65 @@
                     </div>
                     <div class="overlay" id="chat-log" style="opacity:0" data-layout-allow-overflow></div>
                   </div>
-                  <div class="status-line" id="status-full"><span class="bp">▶▶ bypass permissions on</span><span>~/inception &gt; main</span></div>
+                  <div class="status-block" id="status-full">
+                    <div class="row1">[Opus 5·medium] 📁 inception | 🌿 main</div>
+                    <div class="row2"><span class="bp">▶▶ bypass permissions on</span>&nbsp;&nbsp;~/inception &gt; main</div>
+                  </div>
                 </div>
               </div>
 
-              <!-- split view: 32.5–49.5s -->
-              <div class="pane-box" id="box-split" style="inset:0;opacity:0;display:flex;gap:20px">
-                <div class="pane-box" style="position:relative;width:50%;height:100%">
-                  <div class="pane focused" id="pane-left">
+              <!-- quad view: thomas (55%) + three Builders stacked (45%) -->
+              <div class="pane-box" id="box-quad" style="inset:0;opacity:0;display:flex;gap:20px">
+                <div class="pane-box" style="position:relative;width:55%;height:100%">
+                  <div class="pane focused" id="pane-quad-left">
                     <span class="title" data-layout-allow-overflow data-layout-allow-occlusion data-layout-allow-overlap>thomas</span>
-                    <div class="pane-body"><div class="overlay" id="left-log" style="opacity:1" data-layout-allow-overflow></div></div>
-                    <div class="status-line" style="opacity:1"><span class="bp">▶▶ bypass permissions on</span><span>~/inception &gt; main</span></div>
-                    <div class="flash" id="flash-left"></div>
+                    <div class="pane-body"><div class="overlay" id="quad-left-log" style="opacity:1" data-layout-allow-overflow></div></div>
+                    <div class="status-block" style="opacity:1">
+                      <div class="row1">[Opus 5·medium] 📁 inception | 🌿 main</div>
+                      <div class="row2"><span class="bp">▶▶ bypass permissions on</span>&nbsp;&nbsp;~/inception &gt; main</div>
+                    </div>
+                    <div class="flash" id="flash-quad-left"></div>
                   </div>
                 </div>
-                <div class="pane-box" style="position:relative;width:50%;height:100%">
-                  <div class="pane" id="pane-right">
-                    <span class="title" data-layout-allow-overflow data-layout-allow-occlusion data-layout-allow-overlap>builder-tra-200</span>
-                    <div class="pane-body"><div class="overlay" id="right-log" style="opacity:1" data-layout-allow-overflow></div></div>
-                    <div class="status-line" style="opacity:1"><span class="bp">▶▶ bypass permissions on</span><span>~/wt/TRA-200 &gt; feat/TRA-200</span></div>
-                    <div class="flash" id="flash-right"></div>
-                  </div>
-                </div>
+                <div class="quad-right" id="quad-right" style="position:relative;width:45%;height:100%;display:flex;flex-direction:column;gap:14px"></div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="comet fwd" id="comet-1" data-layout-allow-overflow data-layout-allow-overlap><div class="comet-streak"></div><div class="comet-head"></div></div>
-        <div class="comet back" id="comet-2" data-layout-allow-overflow data-layout-allow-overlap><div class="comet-streak"></div><div class="comet-head"></div></div>
-        <div class="comet fwd" id="comet-3" data-layout-allow-overflow data-layout-allow-overlap><div class="comet-streak"></div><div class="comet-head"></div></div>
+        <div id="comets" data-layout-allow-overflow data-layout-allow-overlap></div>
 
         <div class="board-overlay" id="board-overlay" data-layout-allow-overlap data-layout-allow-occlusion>
           <div class="board-wrap" id="board-wrap" data-layout-allow-overflow>
             <img src="assets/tracker-linear.jpg" alt="" />
-            <div class="board-highlight" id="board-highlight"></div>
+            <div class="board-highlight" id="hl-196"></div>
+            <div class="board-highlight" id="hl-200"></div>
+            <div class="board-highlight" id="hl-204"></div>
           </div>
-          <div class="done-card" id="done-card">
+          <div class="done-card" id="card-196" style="top:260px">
+            <div class="row">
+              <span class="check">✓</span>
+              <div>
+                <div class="id">TRA-196</div>
+                <div>APPTWEAK_FANOUT_MAX fixed, receipt hợp lệ</div>
+              </div>
+            </div>
+          </div>
+          <div class="done-card" id="card-200" style="top:420px">
             <div class="row">
               <span class="check">✓</span>
               <div>
                 <div class="id">TRA-200</div>
                 <div>App-id validation covers every surface</div>
+              </div>
+            </div>
+          </div>
+          <div class="done-card working" id="card-204" style="top:550px">
+            <div class="row">
+              <span class="check">●</span>
+              <div>
+                <div class="id">TRA-204</div>
+                <div>Đang chuẩn hoá window cho movers/rank</div>
               </div>
             </div>
           </div>
@@ -265,46 +291,10 @@
         return row;
       }
       const rowThomas = addAgentRow('row-thomas', 'thomas', 'working', 'claude');
-      const rowBuilder = addAgentRow('row-builder', 'builder-tra-200', 'working', 'claude');
       function setDot(row, state, runtime) {
         row.querySelector('.dot').className = 'dot state-' + state;
         row.querySelector('.agent-state').textContent = state + ' · ' + runtime;
       }
-
-      // ── cards, top-right, one visible at a time ─────────────────────────
-      const CARDS = [
-        [0.0, 'Một buổi sáng, mở herdr.'],
-        [6.9, 'Thomas là người đại diện của team. Bạn chỉ nói chuyện với Thomas.'],
-        [14.5, 'Thomas lên tracker trước khi trả lời.'],
-        [16.7, 'Board là nguồn sự thật. Thomas đọc nó thay bạn.'],
-        [21.3, 'Thomas không lấy ticket đầu hàng. Thomas đọc trạng thái, loại việc bị chặn, chọn việc mở đường.'],
-        [27.6, 'Bạn giữ quyền quyết định; một chữ là đủ.'],
-        [29.6, 'Claim trên board, mở worktree, mở session Builder.'],
-        [32.6, 'Mỗi agent một session, có tên, có trạng thái.'],
-        [34.6, 'Brief đi thẳng vào session của Builder.'],
-        [40.0, 'Builder kẹt, herdr báo, Thomas thấy ngay.'],
-        [42.5, 'Câu hỏi kỹ thuật, Thomas tự trả lời. Chỉ quyết định sản phẩm mới lên bạn.'],
-        [49.6, 'Thomas kiểm receipt trước khi báo cáo.'],
-        [52.6, 'Bạn nhận báo cáo, không nhận log.'],
-        [57.0, 'Mọi việc để lại dấu vết trên board.'],
-        [58.8, ''],
-      ];
-      const cardOverlay = document.getElementById('card-overlay');
-      const cardEls = CARDS.map(([t, html]) => {
-        const el = document.createElement('div');
-        el.className = 'card';
-        el.innerHTML = html;
-        cardOverlay.appendChild(el);
-        return el;
-      });
-      const FADE = 0.25;
-      CARDS.forEach(([t], i) => {
-        const el = cardEls[i];
-        const next = CARDS[i + 1] ? CARDS[i + 1][0] : 60;
-        if (!CARDS[i][1]) return;
-        tl.to(el, { autoAlpha: 1, duration: FADE }, t);
-        tl.to(el, { autoAlpha: 0, duration: FADE }, next - FADE);
-      });
 
       // ── generic "reveal a line" helper ──────────────────────────────────
       function makeLine(kind, html) {
@@ -318,22 +308,103 @@
       }
       function toolHtml(label, cmd) { return `<b>${esc(label)}</b>(${esc(cmd)})`; }
 
+      // ── measured scroll + reveal, generic per-pane log ───────────────────
+      function runLog(container, paneEl, items) {
+        const paneH = container.parentElement.clientHeight;
+        let scrollY = 0;
+        for (const it of items) {
+          const bottom = it.el.offsetTop + it.el.offsetHeight;
+          const need = Math.max(0, bottom - paneH + 12);
+          if (need > scrollY) {
+            tl.to(container, { y: -need, duration: 0.35, ease: 'power2.out' }, it.t - 0.1);
+            scrollY = need;
+          }
+          if (it.hist) {
+            tl.set(it.el, { autoAlpha: 1 }, it.t);
+            continue;
+          }
+          if (it.typed !== undefined) {
+            const typedEl = it.el.querySelector('.typed');
+            const curEl = it.el.querySelector('.cursor');
+            const dur = it.typed.length / it.cps;
+            tl.to(it.el, { autoAlpha: 1, duration: 0.15 }, it.t - 0.25);
+            tl.set(curEl, { opacity: 1 }, it.t - 0.25);
+            tl.to(typedEl, { text: { value: it.typed }, duration: dur, ease: 'none' }, it.t);
+            tl.set(curEl, { opacity: 0 }, it.t + dur + 0.25);
+          } else {
+            tl.fromTo(it.el, { autoAlpha: 0, y: 6 }, { autoAlpha: 1, y: 0, duration: 0.2, ease: 'power2.out' }, it.t);
+          }
+        }
+      }
+
+      function makeLog(logEl) {
+        const items = [];
+        const api = {
+          items,
+          input(t, text, cps) {
+            const idx = items.length;
+            const el = makeLine('input', `<span class="prompt">&gt;</span><span class="typed" id="li-${idx}"></span><span class="cursor" id="lc-${idx}"></span>`);
+            logEl.appendChild(el);
+            items.push({ t, el, typed: text, cps: cps || 16 });
+            return el;
+          },
+          say(t, text, opts) {
+            const el = makeLine('say', esc(text));
+            if (opts && opts.hist) el.classList.add('hist');
+            logEl.appendChild(el);
+            items.push({ t, el, hist: opts && opts.hist });
+            return el;
+          },
+          tool(t, label, cmd, opts) {
+            const el = makeLine('tool', toolHtml(label, cmd));
+            if (opts && opts.hist) el.classList.add('hist');
+            logEl.appendChild(el);
+            items.push({ t, el, hist: opts && opts.hist });
+            return el;
+          },
+          out(t, text, opts) {
+            const el = makeLine('out', esc(text));
+            if (opts && opts.hist) el.classList.add('hist');
+            logEl.appendChild(el);
+            items.push({ t, el, hist: opts && opts.hist });
+            return el;
+          },
+          preview(t, text) {
+            const el = makeLine('preview', esc(text));
+            logEl.appendChild(el);
+            items.push({ t, el });
+            return el;
+          },
+          expanded(t, text) {
+            const el = makeLine('expanded', esc(text));
+            logEl.appendChild(el);
+            items.push({ t, el });
+            return el;
+          },
+          tag(t, kind) {
+            const el = makeLine('out', `<span class="tag ${kind}" data-layout-allow-overlap>TERMINAL:${kind}</span>`);
+            logEl.appendChild(el);
+            items.push({ t, el });
+            return el;
+          },
+        };
+        return api;
+      }
+
       // ── scene 1: shell + launch command ──────────────────────────────
       const shellEmpty = document.getElementById('shell-empty');
       const shellTyped = document.getElementById('shell-typed');
       const shellCur = document.getElementById('shell-cur');
       const chatLog = document.getElementById('chat-log');
-      const titleFull = document.getElementById('title-full');
       const statusFull = document.getElementById('status-full');
       const tabThomas = document.getElementById('tab-thomas');
-      const tabBuilder = document.getElementById('tab-builder');
 
       const LAUNCH_CMD = 'claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium';
       const LAUNCH_CPS = 18;
-      const launchDur = LAUNCH_CMD.length / LAUNCH_CPS; // ~5.0s
+      const launchDur = LAUNCH_CMD.length / LAUNCH_CPS;
       const T_TYPE_START = 1.5;
-      const T_LAUNCH_END = T_TYPE_START + launchDur; // ~6.5
-      const T_WELCOME = T_LAUNCH_END + 0.5; // ~7.0
+      const T_LAUNCH_END = T_TYPE_START + launchDur;
+      const T_WELCOME = T_LAUNCH_END + 0.5;
 
       tl.to(shellTyped, { text: { value: LAUNCH_CMD }, duration: launchDur, ease: 'none' }, T_TYPE_START);
       tl.to(shellEmpty, { opacity: 0, duration: 0.2 }, T_WELCOME);
@@ -349,147 +420,114 @@
       welcomeEl.style.opacity = 1;
       chatLog.appendChild(welcomeEl);
 
-      // ── scene 2 + scene 4 content, one continuous scroll container ──────
-      // items: { t, kind: 'input'|'say'|'tool'|'out'|'hist', ... }
-      const chatItems = [];
-      function addChat(t, kind, a, b, opts) {
-        opts = opts || {};
-        let el;
-        if (kind === 'input') {
-          el = makeLine('input', `<span class="prompt">&gt;</span><span class="typed" id="ci-${chatItems.length}"></span><span class="cursor" id="cc-${chatItems.length}"></span>`);
-          chatLog.appendChild(el);
-          chatItems.push({ t, el, typed: a, cps: opts.cps || 16 });
-        } else if (kind === 'say') {
-          el = makeLine('say', esc(a));
-          if (opts.hist) el.classList.add('hist');
-          chatLog.appendChild(el);
-          chatItems.push({ t, el, hist: opts.hist });
-        } else if (kind === 'tool') {
-          el = makeLine('tool', toolHtml(a, b));
-          if (opts.hist) el.classList.add('hist');
-          chatLog.appendChild(el);
-          chatItems.push({ t, el, hist: opts.hist });
-        } else if (kind === 'out') {
-          el = makeLine('out', esc(a));
-          if (opts.hist) el.classList.add('hist');
-          chatLog.appendChild(el);
-          chatItems.push({ t, el, hist: opts.hist });
-        }
-        return el;
-      }
+      // ── scene 2: greeting, tracker read, board zoom, reasoning, ok ───────
+      const main = makeLog(chatLog);
+      main.input(9.5, 'Hello Thomas, dự án thế nào rồi? Tiếp tục triển khai nhé.', 16);
+      const T_MSG1_END = 9.5 + 'Hello Thomas, dự án thế nào rồi? Tiếp tục triển khai nhé.'.length / 16;
 
-      addChat(9.5, 'input', 'Hello Thomas, dự án thế nào rồi? Tiếp tục triển khai nhé.', null, { cps: 16 });
-      const T_MSG1 = 9.5 + 'Hello Thomas, dự án thế nào rồi? Tiếp tục triển khai nhé.'.length / 16;
+      const T_TOOL1 = T_MSG1_END + 0.8;
+      main.tool(T_TOOL1, 'Bash', 'linear issue list --project Inception --state "In Progress,Todo,Backlog"');
+      main.out(T_TOOL1 + 0.35, '7 issues');
 
-      const T_TOOL1 = T_MSG1 + 0.8; // ~14.3
-      addChat(T_TOOL1, 'tool', 'Bash', 'linear issue list --project Inception --state "In Progress,Todo,Backlog"');
-      addChat(T_TOOL1 + 0.35, 'out', '7 issues');
+      const T_BOARD = T_TOOL1 + 2.2;
+      const T_BOARD_END = T_BOARD + 7.2;
 
-      const T_BOARD = T_TOOL1 + 2.2; // ~16.7 — board cut starts
-      const T_BOARD_END = T_BOARD + 5.0; // ~21.1 — back to pane; leaves a ~2.5s hold on the zoomed TRA-200 card
+      const T_TOOL2 = T_BOARD_END + 0.3;
+      main.tool(T_TOOL2, 'Bash', 'linear issue view TRA-196 TRA-200 TRA-204 --fields write-set');
+      main.out(T_TOOL2 + 0.35, 'TRA-196 src/jobs/fanout/* · TRA-200 src/ingest/validation/* · TRA-204 src/rank/movers/*');
 
-      addChat(T_BOARD_END + 0.3, 'say', 'Tiến độ: 50 done, TRA-196 (bug APPTWEAK_FANOUT_MAX) đang In Progress, để Builder chạy tiếp. Todo chỉ có TRA-54 nhưng đang needs-info, chưa làm được. Backlog có 3 ticket needs-info nữa, tôi gom câu hỏi gửi bạn sau. TRA-200 là ticket duy nhất ready-for-agent và không bị chặn, nó mở đường cho TRA-179. Tôi dispatch TRA-200.');
+      const T_REASON = T_TOOL2 + 1.0;
+      main.say(T_REASON, 'Tiến độ: 50 done. Bốn ticket đang needs-info (TRA-54, TRA-182, TRA-183, TRA-141), tôi gom câu hỏi gửi bạn sau. Ba ticket làm được ngay: TRA-196 bug fan-out đang In Progress nhưng chưa có session nào chạy, TRA-200 ready-for-agent và mở đường cho TRA-179, TRA-204 không bị chặn. Write-set của ba ticket nằm ở ba module khác nhau, không giao nhau, nên tôi mở ba Builder chạy song song, mỗi Builder một worktree.');
 
-      const T_OK = T_BOARD_END + 6.7; // ~27.6
-      addChat(T_OK, 'input', 'ok', null, { cps: 10 });
+      const T_OK = T_REASON + 6.5;
+      main.input(T_OK, 'ok', 10);
 
-      const T_DISPATCH = T_OK + 1.5; // ~29.6
-      addChat(T_DISPATCH, 'tool', 'Bash', 'linear issue update TRA-200 --state "In Progress" --assignee builder');
-      addChat(T_DISPATCH + 0.35, 'out', 'updated');
-      addChat(T_DISPATCH + 0.7, 'tool', 'Bash', 'git worktree add ../wt/TRA-200 -b feat/TRA-200 main');
-      addChat(T_DISPATCH + 1.05, 'out', 'Preparing worktree');
-      addChat(T_DISPATCH + 1.4, 'tool', 'Bash', 'herdr agent start builder-tra-200 -- claude --agent builder --model claude-sonnet-5 --effort medium');
-      addChat(T_DISPATCH + 1.75, 'out', 'started');
+      // ── scene 3: three claims, three worktrees, three dispatches ─────────
+      const BUILDERS = [
+        {
+          id: '196', ticket: 'TRA-196', branch: 'builder/TRA-196', folder: 'tra-196', wt: 'tra-196',
+          status2: 'ctx 18% | ↑52k ↓4k tok | $1.45 | ⏱ 5m 20s',
+          path: 'src/jobs/fanout/sweep.py', testFile: 'tests/jobs/test_fanout.py', testPass: '9 passed',
+          brief: 'Ticket TRA-196: bug fan-out gửi trùng job khi retry, sửa theo write-set src/jobs/fanout/sweep.py…',
+        },
+        {
+          id: '200', ticket: 'TRA-200', branch: 'builder/TRA-200', folder: 'tra-200', wt: 'tra-200',
+          status2: 'ctx 12% | ↑41k ↓3k tok | $1.20 | ⏱ 4m 10s',
+          path: 'src/ingest/validation/app_id.py', testFile: 'tests/ingest/test_app_id.py', testPass: '14 passed', testPass2: '17 passed',
+          brief: 'Ticket TRA-200: app-id validation mới chỉ phủ featured surface, mở rộng cho mọi surface trong payload…',
+          blocked: true,
+        },
+        {
+          id: '204', ticket: 'TRA-204', branch: 'builder/TRA-204', folder: 'tra-204', wt: 'tra-204',
+          status2: 'ctx 9% | ↑33k ↓2k tok | $0.95 | ⏱ 3m 40s',
+          path: 'src/rank/movers/window.py', testFile: 'tests/rank/test_movers.py',
+          brief: 'Ticket TRA-204: MOVERS/RANK thiếu mốc thời gian per-row, chuẩn hoá window theo write-set src/rank/movers/window.py…',
+        },
+      ];
 
-      const T_SPLIT = T_DISPATCH + 2.9; // ~32.5
+      const T_DISPATCH = T_OK + 1.5;
+      BUILDERS.forEach((b, i) => {
+        const base = T_DISPATCH + i * 1.0;
+        main.tool(base, 'Bash', `linear issue update ${b.ticket} --state "In Progress" --assignee builder`);
+        main.out(base + 0.3, 'updated');
+        main.tool(base + 0.6, 'Bash', `git worktree add ../wt/${b.ticket} -b ${b.branch} main`);
+        main.out(base + 0.9, 'Preparing worktree');
+        main.tool(base + 1.2, 'Bash', `herdr agent start builder-tra-${b.id} -- claude --agent builder --model claude-sonnet-5 --effort medium`);
+        main.out(base + 1.5, 'started');
+        b.tStarted = base + 1.5;
+      });
+      const T_LAST_STARTED = T_DISPATCH + 2 * 1.0 + 1.5;
+      const T_SPLIT = T_LAST_STARTED + 0.5;
 
-      // split-phase left-pane lines, replayed into chat-log as history once merged back
-      const T_MERGE = 49.5;
-      addChat(T_MERGE - 0.01, 'tool', 'Monitor', 'scripts/herdr-watch-terminal.sh builder-tra-200', { hist: true });
-      addChat(T_MERGE - 0.01, 'out', 'watching', { hist: true });
-      addChat(T_MERGE - 0.01, 'out', 'TERMINAL:blocked pane=builder-tra-200', { hist: true });
-      addChat(T_MERGE - 0.01, 'tool', 'Bash', 'herdr agent read builder-tra-200', { hist: true });
-      addChat(T_MERGE - 0.01, 'say', 'Câu hỏi kỹ thuật, có trong spec TRA-179: payload cũ thiếu app-id thì bỏ qua và ghi warning. Trả lời Builder, không cần làm phiền bạn.', { hist: true });
+      // sidebar rows + tabs, one per builder, at the moment each session starts
+      const tabAdd = document.querySelector('.tab-add');
+      BUILDERS.forEach((b) => {
+        const row = addAgentRow('row-builder-' + b.id, 'builder-tra-' + b.id, 'working', 'claude');
+        const tabEl = document.createElement('span');
+        tabEl.className = 'tab';
+        tabEl.textContent = 'builder-tra-' + b.id;
+        tabEl.style.opacity = 0;
+        tabAdd.parentElement.insertBefore(tabEl, tabAdd);
+        b.rowEl = row;
+        b.tabEl = tabEl;
+        tl.call(() => { setDot(row, 'working', 'claude'); }, [], b.tStarted);
+        tl.to(row, { opacity: 1, duration: 0.25 }, b.tStarted);
+        tl.to(tabEl, { opacity: 1, duration: 0.2 }, b.tStarted);
+      });
 
-      addChat(T_MERGE + 0.2, 'out', 'TERMINAL:done pane=builder-tra-200');
-      addChat(T_MERGE + 0.55, 'tool', 'Bash', 'scripts/check-simplify-markers.sh main feat/TRA-200');
-      addChat(T_MERGE + 0.9, 'out', 'exit 0');
-      addChat(T_MERGE + 1.25, 'tool', 'Bash', 'linear issue update TRA-200 --state Done');
-      addChat(T_MERGE + 1.6, 'out', 'updated');
-
-      const T_REPORT = T_MERGE + 3.1; // ~52.6
-      addChat(T_REPORT, 'say', 'TRA-200 xong: 3 commit, 17 test pass, receipt hợp lệ, đã chuyển Done. Builder hỏi một câu kỹ thuật, tôi trả lời theo spec TRA-179. Còn 4 ticket needs-info (TRA-54, TRA-182, TRA-183, TRA-141), tôi đã gom câu hỏi, bạn xem lúc rảnh. TRA-196 vẫn đang chạy.');
-
-      // ── measured scroll + reveal, chat-log ───────────────────────────
-      function runLog(container, paneEl, items, opts) {
-        opts = opts || {};
-        const paneH = container.parentElement.clientHeight;
-        let scrollY = 0;
-        for (const it of items) {
-          const bottom = it.el.offsetTop + it.el.offsetHeight;
-          const need = Math.max(0, bottom - paneH + 12);
-          if (need > scrollY) {
-            tl.to(container, { y: -need, duration: 0.35, ease: 'power2.out' }, it.t - 0.1);
-            scrollY = need;
-          }
-          if (it.hist) {
-            tl.set(it.el, { autoAlpha: 1 }, it.t);
-            continue;
-          }
-          if (it.typed !== undefined) {
-            const idx = items.indexOf(it);
-            const typedEl = it.el.querySelector('.typed');
-            const curEl = it.el.querySelector('.cursor');
-            const dur = it.typed.length / it.cps;
-            tl.to(it.el, { autoAlpha: 1, duration: 0.15 }, it.t - 0.25);
-            tl.set(curEl, { opacity: 1 }, it.t - 0.25);
-            tl.to(typedEl, { text: { value: it.typed }, duration: dur, ease: 'none' }, it.t);
-            tl.set(curEl, { opacity: 0 }, it.t + dur + 0.25);
-          } else {
-            tl.fromTo(it.el, { autoAlpha: 0, y: 6 }, { autoAlpha: 1, y: 0, duration: 0.2, ease: 'power2.out' }, it.t);
-          }
-        }
-      }
-      runLog(chatLog, document.getElementById('box-full'), chatItems);
-
-      // ── board cut: scene 2, board zoom on TRA-200 ────────────────────
-      const boardOverlay = document.getElementById('board-overlay');
-      const boardWrap = document.getElementById('board-wrap');
-      const boardHighlight = document.getElementById('board-highlight');
-      const doneCard = document.getElementById('done-card');
-
-      // TRA-200 card, board-wrap local space (1920x1200), matches .board-highlight above
-      const tra200Mid = { x: (18 + 445) / 2, y: (893 + 1079) / 2 };
-      const ZOOM = 2.2;
-      const zoomX = 960 - ZOOM * tra200Mid.x;
-      const zoomY = 540 - ZOOM * tra200Mid.y;
-
-      tl.set(boardWrap, { x: 0, y: 0, scale: 1 }, T_BOARD);
-      tl.set(boardHighlight, { autoAlpha: 0 }, T_BOARD);
-      tl.set(doneCard, { autoAlpha: 0 }, T_BOARD);
-      tl.to(boardOverlay, { autoAlpha: 1, duration: 0.2 }, T_BOARD);
-      tl.to(boardWrap, { x: zoomX, y: zoomY, scale: ZOOM, duration: 1.2, ease: 'power2.inOut' }, T_BOARD + 1.0);
-      tl.to(boardHighlight, { autoAlpha: 1, duration: 0.3 }, T_BOARD + 2.4);
-      tl.to(boardOverlay, { autoAlpha: 0, duration: 0.3 }, T_BOARD_END - 0.3);
-
-      // ── scene 3: split view ────────────────────────────────────────
+      // ── quad layout: thomas left, three Builders stacked right ───────────
       const boxFull = document.getElementById('box-full');
-      const boxSplit = document.getElementById('box-split');
-      const leftLog = document.getElementById('left-log');
-      const rightLog = document.getElementById('right-log');
+      const boxQuad = document.getElementById('box-quad');
+      const quadLeftLog = document.getElementById('quad-left-log');
+      const quadRight = document.getElementById('quad-right');
+
+      BUILDERS.forEach((b) => {
+        const box = document.createElement('div');
+        box.style.cssText = 'position:relative;flex:1;min-height:0';
+        box.innerHTML = `
+          <div class="pane compact" id="pane-b${b.id}">
+            <span class="title" data-layout-allow-overflow data-layout-allow-occlusion data-layout-allow-overlap>builder-tra-${b.id}</span>
+            <div class="pane-body"><div class="overlay" id="log-b${b.id}" style="opacity:1" data-layout-allow-overflow></div></div>
+            <div class="status-block" id="status-b${b.id}" style="opacity:1">
+              <div class="row1">[Sonnet 5·medium] 📁 ${esc(b.folder)} | 🌿 ${esc(b.branch)} | 🌳 ${esc(b.wt)}</div>
+              <div class="row2">${esc(b.status2)}</div>
+              <div class="row3"><span class="bp">▶▶ bypass permissions on</span> · 1 shell · ← for agents</div>
+            </div>
+            <div class="flash" id="flash-b${b.id}"></div>
+          </div>`;
+        quadRight.appendChild(box);
+        b.paneBox = box;
+        b.paneEl = box.querySelector('#pane-b' + b.id);
+        b.logEl = box.querySelector('#log-b' + b.id);
+        b.flashEl = box.querySelector('#flash-b' + b.id);
+        b.log = makeLog(b.logEl);
+      });
 
       tl.to(boxFull, { autoAlpha: 0, duration: 0.3 }, T_SPLIT);
-      tl.to(boxSplit, { autoAlpha: 1, duration: 0.3 }, T_SPLIT);
-      tl.to(tabBuilder, { opacity: 1, duration: 0.2 }, T_SPLIT);
-      tl.call(() => { setDot(rowBuilder, 'working', 'claude'); }, [], T_SPLIT);
-      tl.to(rowBuilder, { opacity: 1, duration: 0.25 }, T_SPLIT);
+      tl.to(boxQuad, { autoAlpha: 1, duration: 0.3 }, T_SPLIT);
 
-      // left-log: pre-populated history — only what has actually happened by
-      // the moment the pane splits (T_SPLIT). Everything scripted for later
-      // (the T_MERGE-0.01 hist replay lines, and anything after merge) must
-      // stay out of this snapshot or it reveals the story early and then
-      // duplicates once its own timed reveal (addLeft/runLog) fires.
-      chatItems.filter((it) => it.t < T_SPLIT).forEach((it) => {
+      // left pane (thomas, quad): clone pre-split history, matches causality rule
+      main.items.filter((it) => it.t < T_SPLIT).forEach((it) => {
         const clone = it.el.cloneNode(true);
         clone.classList.add('hist');
         clone.style.opacity = 1;
@@ -498,83 +536,27 @@
           const cur = clone.querySelector('.cursor');
           if (cur) cur.style.opacity = 0;
         }
-        leftLog.appendChild(clone);
+        quadLeftLog.appendChild(clone);
       });
+      const left = makeLog(quadLeftLog);
 
-      // left pane: split-phase-only lines
-      const leftItems = [];
-      function addLeft(t, kind, a, b) {
-        const el = kind === 'tool' ? makeLine('tool', toolHtml(a, b)) : kind === 'out' ? makeLine('out', esc(a)) : makeLine('say', esc(a));
-        leftLog.appendChild(el);
-        leftItems.push({ t, el });
-        return el;
-      }
-      const T_BRIEF = T_SPLIT + 2.1; // ~34.6
-      addLeft(T_BRIEF + 0.3, 'tool', 'Monitor', 'scripts/herdr-watch-terminal.sh builder-tra-200');
-      addLeft(T_BRIEF + 0.65, 'out', 'watching');
+      const T_MONITOR = T_SPLIT + 0.3;
+      left.tool(T_MONITOR, 'Monitor', 'scripts/herdr-watch-terminal.sh builder-tra-196 builder-tra-200 builder-tra-204');
+      left.out(T_MONITOR + 0.35, 'watching 3 panes');
 
-      const T_BLOCKED = 40.0;
-      const T_ANSWER = 42.5;
-      addLeft(T_ANSWER, 'out', 'TERMINAL:blocked pane=builder-tra-200');
-      addLeft(T_ANSWER + 0.35, 'tool', 'Bash', 'herdr agent read builder-tra-200');
-      addLeft(T_ANSWER + 0.7, 'say', 'Câu hỏi kỹ thuật, có trong spec TRA-179: payload cũ thiếu app-id thì bỏ qua và ghi warning. Trả lời Builder, không cần làm phiền bạn.');
-      runLog(leftLog, document.getElementById('pane-left'), leftItems);
-
-      // right pane: builder-tra-200 session
-      const rightItems = [];
-      function addRight(t, kind, a, b) {
-        let el;
-        if (kind === 'preview') {
-          el = makeLine('preview', esc(a));
-        } else if (kind === 'expanded') {
-          el = makeLine('expanded', esc(a));
-        } else if (kind === 'tag') {
-          el = makeLine('out', `<span class="tag ${a}" data-layout-allow-overlap>TERMINAL:${a}</span>`);
-        } else if (kind === 'tool') {
-          el = makeLine('tool', toolHtml(a, b));
-        } else if (kind === 'out') {
-          el = makeLine('out', esc(a));
-        } else {
-          el = makeLine('say', esc(a));
-        }
-        rightLog.appendChild(el);
-        rightItems.push({ t, el });
-        return el;
-      }
-
-      const BRIEF_MSG = 'Ticket TRA-200: app-id validation mới chỉ phủ featured surface, mở rộng cho mọi surface trong payload…';
-      addRight(T_BRIEF, 'preview', `› Message from @thomas: ${BRIEF_MSG} (ctrl+o to expand)`);
-      addRight(T_BRIEF + 0.5, 'expanded', BRIEF_MSG);
-
-      const T_WORK1 = T_BRIEF + 2.4; // ~37.0
-      addRight(T_WORK1, 'tool', 'Read', 'src/ingest/validation/app_id.py');
-      addRight(T_WORK1 + 0.6, 'tool', 'Edit', 'src/ingest/validation/app_id.py');
-      addRight(T_WORK1 + 1.2, 'tool', 'Bash', 'pytest tests/ingest/test_app_id.py');
-      addRight(T_WORK1 + 1.55, 'out', '14 passed');
-
-      addRight(T_BLOCKED, 'say', 'Surface "search" không có app-id trong payload cũ, bỏ qua hay coi là lỗi?');
-      addRight(T_BLOCKED + 0.4, 'tag', 'blocked');
-      tl.call(() => { setDot(rowBuilder, 'blocked', 'claude'); }, [], T_BLOCKED + 0.4);
-
-      const ANSWER_MSG = 'Payload cũ thiếu app-id thì bỏ qua và ghi warning, theo spec TRA-179. Tiếp tục.';
-      const T_RESUME = 46.0;
-      addRight(T_RESUME, 'preview', `› Message from @thomas: ${ANSWER_MSG} (ctrl+o to expand)`);
-      addRight(T_RESUME + 0.5, 'expanded', ANSWER_MSG);
-      tl.call(() => { setDot(rowBuilder, 'working', 'claude'); }, [], T_RESUME);
-
-      addRight(T_RESUME + 1.1, 'tool', 'Edit', 'src/ingest/validation/app_id.py');
-      addRight(T_RESUME + 1.7, 'tool', 'Bash', 'pytest tests/ingest/test_app_id.py');
-      addRight(T_RESUME + 2.05, 'out', '17 passed');
-      addRight(T_RESUME + 2.4, 'tool', 'Bash', 'git push');
-      addRight(T_RESUME + 2.75, 'tag', 'done');
-      tl.call(() => { setDot(rowBuilder, 'done', 'claude'); }, [], T_RESUME + 2.75);
-      runLog(rightLog, document.getElementById('pane-right'), rightItems);
-
-      // ── comets: message streaks between panes ────────────────────────
-      function fireComet(id, atTime, dir, fromPaneId, toPaneId) {
-        const c = document.getElementById(id);
-        const from = document.getElementById(fromPaneId).getBoundingClientRect();
-        const to = document.getElementById(toPaneId).getBoundingClientRect();
+      // ── briefs: comet from thomas to each Builder, 0.6s apart ────────────
+      const comets = document.getElementById('comets');
+      let cometSeq = 0;
+      function fireComet(atTime, dir, fromEl, toEl, flashEl) {
+        const c = document.createElement('div');
+        c.className = 'comet ' + dir;
+        c.id = 'comet-' + (cometSeq++);
+        c.setAttribute('data-layout-allow-overflow', '');
+        c.setAttribute('data-layout-allow-overlap', '');
+        c.innerHTML = '<div class="comet-streak"></div><div class="comet-head"></div>';
+        comets.appendChild(c);
+        const from = fromEl.getBoundingClientRect();
+        const to = toEl.getBoundingClientRect();
         const y = from.top + from.height * 0.5;
         const x0 = dir === 'fwd' ? from.right - 30 : from.left + 30;
         const x1 = dir === 'fwd' ? to.left + 30 : to.right - 30;
@@ -582,28 +564,219 @@
         tl.to(c, { autoAlpha: 1, duration: 0.1 }, atTime - 0.1);
         tl.to(c, { x: x1, duration: 0.7, ease: 'power2.inOut' }, atTime);
         tl.to(c, { autoAlpha: 0, duration: 0.15 }, atTime + 0.7);
-        const flashEl = document.getElementById(dir === 'fwd' ? 'flash-right' : 'flash-left');
-        const color = dir === 'fwd' ? '#4f7fd6' : '#3ecf8e';
-        tl.fromTo(flashEl, { opacity: 0.16, backgroundColor: color }, { opacity: 0, duration: 0.5, immediateRender: false }, atTime + 0.7);
+        if (flashEl) {
+          const color = dir === 'fwd' ? '#4f7fd6' : '#3ecf8e';
+          tl.fromTo(flashEl, { opacity: 0.16, backgroundColor: color }, { opacity: 0, duration: 0.5, immediateRender: false }, atTime + 0.7);
+        }
       }
-      fireComet('comet-1', T_BRIEF - 0.05, 'fwd', 'pane-left', 'pane-right');
-      fireComet('comet-2', T_BLOCKED + 0.5, 'back', 'pane-right', 'pane-left');
-      fireComet('comet-3', T_RESUME - 0.05, 'fwd', 'pane-left', 'pane-right');
 
-      // ── scene 4: merge back to single pane ────────────────────────────
-      tl.to(boxSplit, { autoAlpha: 0, duration: 0.3 }, T_MERGE);
+      const paneQuadLeft = document.getElementById('pane-quad-left');
+
+      const T_BRIEF_196 = T_SPLIT + 2.1;
+      const T_BRIEF_200 = T_BRIEF_196 + 0.6;
+      const T_BRIEF_204 = T_BRIEF_200 + 0.6;
+      BUILDERS[0].tBrief = T_BRIEF_196;
+      BUILDERS[1].tBrief = T_BRIEF_200;
+      BUILDERS[2].tBrief = T_BRIEF_204;
+
+      BUILDERS.forEach((b) => {
+        b.log.preview(b.tBrief, `› Message from @thomas: ${b.brief} (ctrl+o to expand)`);
+        b.log.expanded(b.tBrief + 0.5, b.brief);
+        fireComet(b.tBrief - 0.05, 'fwd', paneQuadLeft, b.paneEl, b.flashEl);
+      });
+
+      // ── staggered work per Builder ────────────────────────────────────
+      BUILDERS[0].tWork = BUILDERS[0].tBrief + 2.4;
+      BUILDERS[1].tWork = BUILDERS[1].tBrief + 2.8;
+      BUILDERS[2].tWork = BUILDERS[2].tBrief + 3.2;
+
+      // TRA-196: no block, finishes first
+      const b196 = BUILDERS[0];
+      b196.log.tool(b196.tWork, 'Read', b196.path);
+      b196.log.tool(b196.tWork + 0.6, 'Edit', b196.path);
+      b196.log.tool(b196.tWork + 1.2, 'Bash', `pytest ${b196.testFile}`);
+      b196.log.out(b196.tWork + 1.55, b196.testPass);
+      b196.log.tool(b196.tWork + 1.9, 'Bash', 'git push');
+      b196.log.tag(b196.tWork + 2.25, 'done');
+      const T_DONE_196 = b196.tWork + 2.25;
+      tl.call(() => { setDot(b196.rowEl, 'done', 'claude'); }, [], T_DONE_196);
+
+      // TRA-200: blocked mid-way, resumes, finishes second
+      const b200 = BUILDERS[1];
+      b200.log.tool(b200.tWork, 'Read', b200.path);
+      b200.log.tool(b200.tWork + 0.6, 'Edit', b200.path);
+      b200.log.tool(b200.tWork + 1.2, 'Bash', `pytest ${b200.testFile}`);
+      b200.log.out(b200.tWork + 1.55, b200.testPass);
+
+      const T_BLOCKED = b200.tWork + 3.0;
+      b200.log.say(T_BLOCKED, 'Surface "search" không có app-id trong payload cũ, bỏ qua hay coi là lỗi?');
+      b200.log.tag(T_BLOCKED + 0.4, 'blocked');
+      tl.call(() => { setDot(b200.rowEl, 'blocked', 'claude'); }, [], T_BLOCKED + 0.4);
+
+      const T_ANSWER = T_BLOCKED + 2.4;
+      left.out(T_ANSWER, 'TERMINAL:blocked pane=builder-tra-200');
+      left.tool(T_ANSWER + 0.35, 'Bash', 'herdr agent read builder-tra-200');
+      left.say(T_ANSWER + 0.7, 'Câu hỏi kỹ thuật, có trong spec TRA-179: payload cũ thiếu app-id thì bỏ qua và ghi warning. Trả lời Builder, không cần làm phiền bạn.');
+      fireComet(T_BLOCKED + 0.5, 'back', b200.paneEl, paneQuadLeft, b200.flashEl);
+
+      const T_RESUME = T_ANSWER + 3.4;
+      const ANSWER_MSG = 'Payload cũ thiếu app-id thì bỏ qua và ghi warning, theo spec TRA-179. Tiếp tục.';
+      b200.log.preview(T_RESUME, `› Message from @thomas: ${ANSWER_MSG} (ctrl+o to expand)`);
+      b200.log.expanded(T_RESUME + 0.5, ANSWER_MSG);
+      fireComet(T_RESUME - 0.05, 'fwd', paneQuadLeft, b200.paneEl, b200.flashEl);
+      tl.call(() => { setDot(b200.rowEl, 'working', 'claude'); }, [], T_RESUME);
+
+      b200.log.tool(T_RESUME + 1.1, 'Edit', b200.path);
+      b200.log.tool(T_RESUME + 1.7, 'Bash', `pytest ${b200.testFile}`);
+      b200.log.out(T_RESUME + 2.05, b200.testPass2);
+      b200.log.tool(T_RESUME + 2.4, 'Bash', 'git push');
+      b200.log.tag(T_RESUME + 2.75, 'done');
+      const T_DONE_200 = T_RESUME + 2.75;
+      tl.call(() => { setDot(b200.rowEl, 'done', 'claude'); }, [], T_DONE_200);
+
+      // TRA-204: keeps working, never finishes in this cut
+      const b204 = BUILDERS[2];
+      b204.log.tool(b204.tWork, 'Read', b204.path);
+      b204.log.tool(b204.tWork + 0.6, 'Edit', b204.path);
+      b204.log.tool(b204.tWork + 9.0, 'Bash', `pytest ${b204.testFile}`);
+      b204.log.out(b204.tWork + 9.35, '6 passed, 3 failed');
+      b204.log.tool(b204.tWork + 9.9, 'Edit', b204.path);
+
+      // ── thomas closes tickets as they land, without waiting for all three ──
+      const T_CLOSE_196 = T_RESUME + 1.0;
+      left.out(T_CLOSE_196, 'TERMINAL:done pane=builder-tra-196');
+      left.tool(T_CLOSE_196 + 0.35, 'Bash', 'scripts/check-simplify-markers.sh main builder/TRA-196');
+      left.out(T_CLOSE_196 + 0.7, 'exit 0');
+      left.tool(T_CLOSE_196 + 1.05, 'Bash', 'linear issue update TRA-196 --state Done');
+      left.out(T_CLOSE_196 + 1.4, 'updated');
+
+      const T_CLOSE_200 = T_DONE_200 + 1.75;
+      left.out(T_CLOSE_200, 'TERMINAL:done pane=builder-tra-200');
+      left.tool(T_CLOSE_200 + 0.35, 'Bash', 'scripts/check-simplify-markers.sh main builder/TRA-200');
+      left.out(T_CLOSE_200 + 0.7, 'exit 0');
+      left.tool(T_CLOSE_200 + 1.05, 'Bash', 'linear issue update TRA-200 --state Done');
+      left.out(T_CLOSE_200 + 1.4, 'updated');
+
+      // ── merge back to a single thomas pane ────────────────────────────
+      const T_MERGE = T_CLOSE_200 + 3.4;
+      tl.to(boxQuad, { autoAlpha: 0, duration: 0.3 }, T_MERGE);
       tl.to(boxFull, { autoAlpha: 1, duration: 0.3 }, T_MERGE);
-      tl.to(tabBuilder, { opacity: 0, duration: 0.2 }, T_MERGE);
-      tl.call(() => tabBuilder.classList.remove('selected'), [], T_MERGE);
+      BUILDERS.forEach((b) => { tl.to(b.tabEl, { opacity: 0, duration: 0.2 }, T_MERGE); });
 
-      // ── final board cut: TRA-200 lands in Done ────────────────────────
-      const T_DONE_CUT = 57.0;
+      // replay of split-only events into the merged chat log, filtered to the merge cut
+      const REPLAY = [
+        ['tool', 'Monitor', 'scripts/herdr-watch-terminal.sh builder-tra-196 builder-tra-200 builder-tra-204'],
+        ['out', 'watching 3 panes'],
+        ['out', 'TERMINAL:blocked pane=builder-tra-200'],
+        ['say', 'Câu hỏi kỹ thuật, có trong spec TRA-179: payload cũ thiếu app-id thì bỏ qua và ghi warning. Trả lời Builder, không cần làm phiền bạn.'],
+        ['out', 'TERMINAL:done pane=builder-tra-196'],
+        ['out', 'TERMINAL:done pane=builder-tra-200'],
+        ['out', 'linear issue update TRA-196, TRA-200 --state Done'],
+      ];
+      REPLAY.forEach(([kind, a, b]) => {
+        if (kind === 'tool') main.tool(T_MERGE - 0.01, a, b, { hist: true });
+        else if (kind === 'say') main.say(T_MERGE - 0.01, a, { hist: true });
+        else main.out(T_MERGE - 0.01, a, { hist: true });
+      });
+
+      const T_REPORT = T_MERGE + 0.5;
+      main.say(T_REPORT, 'Sáng nay: TRA-196 và TRA-200 xong, receipt hợp lệ, đã chuyển Done. TRA-204 đang chạy, tôi sẽ báo khi xong. Builder TRA-200 hỏi một câu kỹ thuật, tôi trả lời theo spec TRA-179. Bốn ticket needs-info tôi đã gom câu hỏi, bạn xem lúc rảnh.');
+
+      runLog(chatLog, boxFull, main.items);
+      runLog(quadLeftLog, paneQuadLeft, left.items);
+      BUILDERS.forEach((b) => { runLog(b.logEl, b.paneEl, b.log.items); });
+
+      // ── board cut, scene 2: wide, then zoom across Backlog/Todo/In Progress ─
+      const boardOverlay = document.getElementById('board-overlay');
+      const boardWrap = document.getElementById('board-wrap');
+      const hl196 = document.getElementById('hl-196');
+      const hl200 = document.getElementById('hl-200');
+      const hl204 = document.getElementById('hl-204');
+
+      // raw source image is 1600×1000; board-wrap renders it at 1920×1200 (×1.2)
+      const S = 1.2;
+      function boxFromImage(x0, y0, x1, y1) {
+        return { left: x0 * S, top: y0 * S, width: (x1 - x0) * S, height: (y1 - y0) * S };
+      }
+      const box196 = boxFromImage(763, 155, 1105, 295);
+      const box200 = { left: 18, top: 893, width: 427, height: 186 }; // reuses v1's measured TRA-200 box
+      const box204 = boxFromImage(23, 305, 363, 445);
+      [[hl196, box196], [hl200, box200], [hl204, box204]].forEach(([el, b]) => {
+        el.style.left = b.left + 'px';
+        el.style.top = b.top + 'px';
+        el.style.width = b.width + 'px';
+        el.style.height = b.height + 'px';
+      });
+
+      // zoom that frames all three columns (Backlog, Todo, In Progress)
+      const ZOOM = 1.05;
+      const ZOOM_CX = 678, ZOOM_CY = 606; // region centre in board-wrap space
+      const zoomX = 960 - ZOOM * ZOOM_CX;
+      const zoomY = 540 - ZOOM * ZOOM_CY;
+
+      tl.set(boardWrap, { x: 0, y: 0, scale: 1 }, T_BOARD);
+      tl.set([hl196, hl200, hl204], { autoAlpha: 0 }, T_BOARD);
+      tl.to(boardOverlay, { autoAlpha: 1, duration: 0.2 }, T_BOARD);
+      tl.to(boardWrap, { x: zoomX, y: zoomY, scale: ZOOM, duration: 1.2, ease: 'power2.inOut' }, T_BOARD + 1.0);
+      tl.to(hl196, { autoAlpha: 1, duration: 0.3 }, T_BOARD + 2.4);
+      tl.to(hl200, { autoAlpha: 1, duration: 0.3 }, T_BOARD + 3.1);
+      tl.to(hl204, { autoAlpha: 1, duration: 0.3 }, T_BOARD + 3.8);
+      tl.to(boardOverlay, { autoAlpha: 0, duration: 0.3 }, T_BOARD_END - 0.3);
+
+      // ── final board cut: TRA-196 + TRA-200 in Done, TRA-204 in In Progress ──
+      const card196 = document.getElementById('card-196');
+      const card200 = document.getElementById('card-200');
+      const card204 = document.getElementById('card-204');
+      const T_DONE_CUT = T_REPORT + 4.0;
       tl.set(boardWrap, { x: 0, y: 0, scale: 1 }, T_DONE_CUT);
-      tl.set(boardHighlight, { autoAlpha: 0 }, T_DONE_CUT);
+      tl.set([hl196, hl200, hl204], { autoAlpha: 0 }, T_DONE_CUT);
+      tl.set([card196, card200, card204], { autoAlpha: 0 }, T_DONE_CUT);
       tl.to(boardOverlay, { autoAlpha: 1, duration: 0.2 }, T_DONE_CUT);
-      tl.to(doneCard, { autoAlpha: 1, duration: 0.25 }, T_DONE_CUT + 0.2);
-      tl.to(doneCard, { autoAlpha: 0, duration: 0.2 }, T_DONE_CUT + 1.5);
-      tl.to(boardOverlay, { autoAlpha: 0, duration: 0.25 }, T_DONE_CUT + 1.7);
+      tl.to(card196, { autoAlpha: 1, duration: 0.25 }, T_DONE_CUT + 0.2);
+      tl.to(card200, { autoAlpha: 1, duration: 0.25 }, T_DONE_CUT + 0.45);
+      tl.to(card204, { autoAlpha: 1, duration: 0.25 }, T_DONE_CUT + 0.7);
+      const T_CUT_FADE = T_DONE_CUT + 2.0;
+      tl.to(boardOverlay, { autoAlpha: 0, duration: 0.25 }, T_CUT_FADE);
+
+      // full herdr view, holds through the loop point
+      const T_FULL = T_CUT_FADE + 0.3;
+
+      // ── caption cards, centred band, one visible at a time ────────────────
+      const CARDS = [
+        [0.0, 'Một buổi sáng, mở herdr.'],
+        [T_WELCOME - 0.1, 'Thomas là người đại diện của team. Bạn chỉ nói chuyện với Thomas.'],
+        [T_TOOL1, 'Thomas lên tracker trước khi trả lời.'],
+        [T_BOARD + 0.2, 'Board là nguồn sự thật. Thomas đọc nó thay bạn.'],
+        [T_REASON, 'Thomas không lấy ticket đầu hàng. Thomas đọc trạng thái, loại việc bị chặn, tìm ra ba ticket không giao nhau, chạy song song.'],
+        [T_OK, 'Bạn giữ quyền quyết định; một chữ là đủ.'],
+        [T_DISPATCH, 'Ba lần claim, ba worktree, ba session Builder.'],
+        [T_SPLIT, 'Mỗi Builder một session, một worktree, một brief.'],
+        [T_BLOCKED + 0.4, 'Một Builder kẹt, herdr báo, Thomas thấy ngay.'],
+        [T_ANSWER, 'Câu hỏi kỹ thuật, Thomas tự trả lời. Chỉ quyết định sản phẩm mới lên bạn.'],
+        [T_CLOSE_196, 'Xong cái nào, Thomas kiểm receipt và đóng cái đó. Không chờ cả ba.'],
+        [T_REPORT, 'Bạn nhận báo cáo, không nhận log.'],
+        [T_DONE_CUT, 'Mọi việc để lại dấu vết trên board.'],
+        [T_FULL, ''],
+      ];
+      const cardOverlay = document.getElementById('card-overlay');
+      const cardEls = CARDS.map(([t, html]) => {
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.setAttribute('data-layout-allow-overlap', '');
+        el.setAttribute('data-layout-allow-occlusion', '');
+        el.innerHTML = html;
+        cardOverlay.appendChild(el);
+        return el;
+      });
+      const FADE = 0.25;
+      const TOTAL_DURATION = 70;
+      CARDS.forEach(([t], i) => {
+        const el = cardEls[i];
+        const next = CARDS[i + 1] ? CARDS[i + 1][0] : TOTAL_DURATION;
+        if (!CARDS[i][1]) return;
+        tl.to(el, { autoAlpha: 1, duration: FADE }, t);
+        tl.to(el, { autoAlpha: 0, duration: FADE }, next - FADE);
+      });
 
       window.__timelines['main'] = tl;
     </script>

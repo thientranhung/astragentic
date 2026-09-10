@@ -131,7 +131,7 @@ why:
 
 shots:
   hero:
-    caption: "A simulated morning with Astragentic: open herdr, launch Thomas, ask how the project is going. Thomas reads the Linear board, reasons about which ticket to take, opens a Builder session, answers the technical question itself, then sends you a short report."
+    caption: "A simulated morning with Astragentic: open herdr, launch Thomas, ask how the project is going. Thomas reads the Linear board, finds three tickets that do not overlap, runs three Builders in parallel on three worktrees, answers the technical question itself, closes each ticket as it lands, then sends you a short report."
     video:
       mp4: /shots/hero.mp4
       webm: /shots/hero.webm
