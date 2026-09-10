@@ -33,7 +33,7 @@ export const UI = {
   sideHooks: { vi: 'Hooks', en: 'Hooks' },
   sideWhy: { vi: 'Vì sao', en: 'Why' },
   sideStack: { vi: 'Tech stack', en: 'Tech stack' },
-  sideFailures: { vi: 'Lỗi', en: 'Failures' },
+  sideFailures: { vi: 'Bài học', en: 'Lessons' },
   sideEvidence: { vi: 'Bằng chứng', en: 'Evidence' },
   sideAdopt: { vi: 'Install', en: 'Adopt' },
   roleKey: { vi: 'Màu vai trong hình', en: 'Role colours in this figure' },
@@ -101,7 +101,7 @@ export const UI = {
     vi: '20 commit gần nhất có dòng Ledger:',
     en: 'The last 20 commits carrying a Ledger: line',
   },
-  readAll: { vi: 'Xem sáu lỗi đã đo được →', en: 'See the six measured failures →' },
+  readAll: { vi: 'Xem sáu bài học đã đo được →', en: 'See the six measured lessons →' },
   wholeTable: { vi: 'Xem toàn bộ ledger →', en: 'View the full ledger →' },
 
   /* ── adopt ── */

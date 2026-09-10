@@ -57,7 +57,7 @@ trang thì nó chỉ còn là một câu khiêm tốn.
 
 Nó vạch đúng một ranh giới: chứng minh công cụ chạy đúng và chứng minh cả vòng chạy đúng là
 hai tuyên bố khác nhau, và tôi mới làm được tuyên bố thứ nhất. Chưa có ticket nào đi hết từ
-dispatch tới merge với đủ gate nổ trên việc thật bên trong repo này. Sáu lỗi bạn vừa đọc đều
+dispatch tới merge với đủ gate nổ trên việc thật bên trong repo này. Sáu bài học bạn vừa đọc đều
 đo ở downstream hoặc trong lúc dựng, không phải trong một vòng khép kín.
 
 Tôi giữ khoảng trống đó mở. Nếu bạn cài và nó gãy ở chỗ tôi chưa đo, đó là dữ liệu tôi chưa

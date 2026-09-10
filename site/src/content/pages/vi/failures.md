@@ -1,9 +1,9 @@
 ---
-title: "Sáu lỗi tôi đo được"
-description: "Sáu lỗi thật, có ngày, xếp theo stage mà nó rơi ra. Mỗi lỗi kèm cách chữa và cái giá của cách chữa đó."
+title: "Sáu bài học tôi đo được"
+description: "Sáu sự cố thật, có ngày, xếp theo stage mà nó rơi ra. Mỗi sự cố kèm cách chữa và cái giá của cách chữa đó."
 ---
 
-Sáu lỗi dưới đây không phải rủi ro giả định. Mỗi lỗi có ngày, có số lần đo, và có một file
+Sáu sự cố dưới đây không phải rủi ro giả định. Mỗi sự cố có ngày, có số lần đo, và có một file
 đang mang luật sinh ra từ nó. Tôi xếp chúng theo stage mà lỗi rơi ra chứ không theo mức nặng
 nhẹ, vì thứ cần nhớ là chỗ nào trong vòng đời hay thủng. Phần đáng đọc là cách chữa và cái
 giá của nó. Không cách chữa nào miễn phí.

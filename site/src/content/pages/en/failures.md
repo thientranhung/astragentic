@@ -1,6 +1,6 @@
 ---
-title: "Six failures I measured"
-description: "Six real dated failures, ordered by the stage they fell out of. Each one with the fix I chose and what that fix costs."
+title: "Six lessons I measured"
+description: "Six real dated incidents, ordered by the stage they fell out of. Each one with the fix I chose and what that fix costs."
 ---
 
 None of the six below is a hypothetical risk. Each has a date, a count of how many times it was
