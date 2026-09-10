@@ -63,7 +63,7 @@
       .agents-group { position: absolute; top: 0; left: 0; width: 100%; }
 
       /* main area */
-      .main-area { flex: 1; display: flex; flex-direction: column; position: relative; background: #0e0f14; padding-bottom: 140px; }
+      .main-area { flex: 1; display: flex; flex-direction: column; position: relative; background: #0e0f14; }
       .tabs-row { height: 48px; flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding: 0 20px; border-bottom: 1px solid #262838; background: #13141b; }
       .tab { padding: 7px 16px; border-radius: 6px; font-size: 15px; color: #8b93a1; }
       .tab.selected { background: rgba(167, 139, 250, 0.2); color: #e6eaf0; font-weight: 600; }
@@ -110,9 +110,9 @@
       .codex-working { color: #8b93a1; padding-left: 24px; }
 
       /* ── card overlay, bottom band of the main area ──────────────────── */
-      .card-overlay { position: absolute; left: 340px; right: 0; bottom: 16px; max-width: 900px; margin: 0 auto; }
+      .card-overlay { position: absolute; left: 340px; right: 0; top: 50%; height: 0; max-width: 900px; margin: 0 auto; z-index: 4; }
       .card {
-        position: absolute; left: 0; right: 0; bottom: 0; width: 100%; opacity: 0;
+        position: absolute; left: 0; right: 0; top: 0; width: 100%; opacity: 0; transform: translateY(-50%);
         background: rgba(19, 20, 27, 0.92); border: 1px solid #262838; border-radius: 10px;
         padding: 18px 22px; font-size: 24px; line-height: 34px; color: #dfe6f3; text-align: center;
       }
