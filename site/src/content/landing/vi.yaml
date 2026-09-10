@@ -225,8 +225,8 @@ adopt:
       note: "Skill này khai tracker, bộ nhãn triage và chỗ để CONTEXT.md, ADR; các skill engineering sau đó đọc cấu hình này."
       lines: ["claude", "/mattpocock-skills:setup-matt-pocock-skills"]
     - title: "Mở session Thomas"
-      note: "Thomas đọc orchestrator.md, nhận workspace và bắt đầu điều phối."
-      lines: ["claude --agent thomas"]
+      note: "Thomas chạy không hỏi quyền từng lệnh để điều phối liên tục; model và effort theo dòng thomas trong orchestrator.md."
+      lines: ["claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium"]
   reqEyebrow: "Tech stack"
   reqHeadline: "Bảy thứ cần có trước khi cài."
   reqSub: "Bốn bắt buộc, một tuỳ chọn, một chọn một. Script `check-requirements.sh` kiểm tất cả cho bạn trước khi cài."

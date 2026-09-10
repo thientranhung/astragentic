@@ -225,8 +225,8 @@ adopt:
       note: "This skill declares the tracker, the triage label set and where CONTEXT.md and ADRs live; the engineering skills read that configuration afterwards."
       lines: ["claude", "/mattpocock-skills:setup-matt-pocock-skills"]
     - title: "Open Thomas's session"
-      note: "Thomas reads orchestrator.md, claims the workspace and starts routing work."
-      lines: ["claude --agent thomas"]
+      note: "Thomas runs without per-command permission prompts so it can route continuously; model and effort follow the thomas row in orchestrator.md."
+      lines: ["claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium"]
   reqEyebrow: "Tech stack"
   reqHeadline: "Seven things to have before you install."
   reqSub: "Four required, one optional, one pick-one. The `check-requirements.sh` script checks all of them for you before the install."
