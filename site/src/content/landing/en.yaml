@@ -199,18 +199,18 @@ features:
     href: /en/roles/thomas
 
 fit:
-  headline: "Built for projects with many stories and many milestones."
-  body: "Astragentic is process machinery: a tracker, dispatch, review gates, receipts. That machinery only pays for itself when the project is big enough to need it: many features, many sprints, a long backlog, milestones one after another, and a team that has to run steadily for weeks. On a small project the process would cost more than the work itself, and an ordinary agent session is enough."
+  headline: "For long-lived projects with many parts running in parallel."
+  body: "A project is not large because it has sprints or stories. It is large for four reasons: it lives long (several releases, a codebase still edited months after launch), it is wide (several modules or subsystems worked on at once), it has dependencies (this must finish before that), and it carries risk (real users, regressions that cost). Astragentic has exactly four mechanisms for those four things: the tracker and receipts keep state outside any agent's memory, claims and worktrees let several Builders run in parallel, blocking edges and the frontier query keep the order, Rin's gate and QA's walk stop a merge before it hurts. Without all four, this machinery is overhead, and an ordinary agent session is enough."
   fitsLabel: "A fit when"
   notYetLabel: "Not needed when"
   fits:
-    - "The backlog is long and many stories are waiting their turn."
-    - "Milestones follow one another over weeks."
-    - "You need a team that runs steadily, not a single run."
+    - "There is a roadmap of several releases; the codebase lives on for months after launch."
+    - "Several modules or subsystems (app, backend, admin, integrations) are built in parallel."
+    - "Work depends on other work and needs ordering; real users make regressions a risk."
   notYet:
-    - "A small project, a few features, no sprints."
-    - "A script or a prototype to try an idea."
-    - "A contained change, done within one session."
+    - "One deliverable, done when delivered."
+    - "One person working sequentially would keep up; nothing runs in parallel."
+    - "No dependencies between pieces of work, no release after this one."
 
 adopt:
   headline: "Install"

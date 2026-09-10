@@ -199,18 +199,18 @@ features:
     href: /vai/thomas
 
 fit:
-  headline: "Sinh ra cho dự án nhiều story, nhiều milestone."
-  body: "Astragentic là một bộ máy quy trình: tracker, dispatch, review gate, receipt. Bộ máy đó chỉ trả lãi khi dự án đủ lớn để cần nó: nhiều feature, nhiều sprint, backlog dài, milestone nối tiếp, và một đội phải chạy ổn định trong nhiều tuần. Với một dự án nhỏ, chi phí quy trình sẽ lớn hơn chính việc cần làm, và một session agent bình thường là đủ."
+  headline: "Dành cho dự án dài hơi, nhiều phần, chạy song song."
+  body: "Một dự án lớn không lớn vì có sprint hay story. Nó lớn vì bốn thứ: sống lâu (nhiều release, codebase còn sửa nhiều tháng sau ra mắt), rộng (nhiều module hay hệ con làm cùng lúc), phụ thuộc (việc này phải xong trước việc kia), và rủi ro (có người dùng thật, regression gây thiệt hại). Astragentic có đúng bốn cơ chế cho bốn thứ đó: tracker và receipt giữ trạng thái ngoài trí nhớ agent, claim và worktree cho nhiều Builder chạy song song, blocking edge và frontier query giữ thứ tự, Rin gate và QA walk chặn trước khi merge. Thiếu cả bốn thì bộ máy này là thừa, một session agent bình thường là đủ."
   fitsLabel: "Hợp khi"
   notYetLabel: "Chưa cần khi"
   fits:
-    - "Backlog dài, nhiều story còn chờ tới lượt."
-    - "Milestone nối tiếp nhau qua nhiều tuần."
-    - "Bạn cần một đội chạy ổn định, không phải một lượt chạy."
+    - "Có roadmap nhiều release; codebase còn sống nhiều tháng sau khi ra mắt."
+    - "Nhiều module hay hệ con (app, backend, admin, tích hợp) làm song song."
+    - "Việc phụ thuộc nhau, cần thứ tự; có người dùng thật, regression là rủi ro."
   notYet:
-    - "Dự án nhỏ, vài feature, không có sprint."
-    - "Một script hay một prototype để thử ý tưởng."
-    - "Một thay đổi gọn, xong trong đúng một session."
+    - "Một deliverable, giao xong là xong."
+    - "Một người làm tuần tự cũng kịp, không có gì chạy song song."
+    - "Không có phụ thuộc giữa các việc, không có release sau."
 
 adopt:
   headline: "Install"
