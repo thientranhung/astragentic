@@ -265,6 +265,23 @@ hr {
      for anything that is words. The eyebrow is words, so it takes the link step. */
   color: var(--ink-62);
   margin: 0 0 1.1rem;
+  /* The eyebrow is the line that sets up each section, and its ink is deliberately
+     quiet; the brand dot in front is what makes it read as a marker, not a caption. */
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.eyebrow::before {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand-primary);
+}
+/* the hero eyebrow sits centred; keep the dot with it */
+.hero-copy .eyebrow {
+  justify-content: center;
 }
 
 /* Pass 2 removed the eyebrow hairline: screens are separated by ground, not by rules. */
