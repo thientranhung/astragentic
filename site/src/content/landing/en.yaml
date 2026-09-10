@@ -11,7 +11,7 @@ explain:
     headline: "An agent is one coding-agent session handed a role."
     paragraphs:
       - "Every agent is a working session of Claude Code, Codex or OpenCode, launched from the command line with a defined role. It takes a task the way an employee does, hands back the result when it is finished, and can be cloned into several sessions running side by side: several Builders building at once, several QAs checking at once, like a real team."
-      - "Each role carries a person's name: Thomas, Shaper, Builder, Rin, QA. The proper name keeps the role from drifting across a long context, and it lets the skills attached to a role fire on the right one."
+      - "Each role has a name of its own: Thomas, Shaper, Builder, Rin, QA. The name keeps the role from drifting across a long context, and it is the address for sending work, reading a pane, and attaching the right skills."
       - "A role is defined by one declaration file in each runtime's own format, loaded into the system prompt when the session opens: Claude Code reads `.claude/agents/<role>.md`, Codex reads the launch profile `.codex/profiles/<role>.config.toml`, OpenCode reads `.opencode/agents/<role>.md`. The runtime, the model and the effort of every role are declared in one place, `orchestrator.md`."
     commands:
       label: "Start an agent over the CLI on three runtimes"
@@ -72,7 +72,7 @@ explain:
         title: "Builder"
         tag: "building"
         session: "One session per ticket, in its own worktree, the only writer there."
-        body: "Implements, reviews the code on two axes, simplifies, then takes the cross-vendor review pass. It commits at every boundary, not only at handover."
+        body: "Implements, reviews the code on two axes, simplifies, then takes the cross-vendor review pass. It commits at every boundary, not only at handback."
         href: "/en/roles/builder"
       - id: rin
         title: "Rin"
@@ -165,31 +165,31 @@ shots:
 features:
   - id: cross-vendor
     title: "A review gate in two layers, from two vendors."
-    body: "Every ticket goes through Claude Code's built-in review, then through a cross-read by Codex. Two models read the same diff and argue it out before the merge. Quality no longer rests on whether the Builder had a good day."
+    body: "Every ticket goes through a code review against Standards and Spec on Claude Code, then a cross-read on Codex. Two models from two vendors read the same diff before the merge, so quality does not rest on a single model."
     diagram: cross-vendor-arm
     crop: [builder, codex, head]
     href: /en/skills/codex-arm
   - id: tracker
     title: "Continuous operation around the issue tracker."
-    body: "Every analysis, slice and task sits on the tracker. When a review finds new work, that work loads itself into the queue. The team runs around the clock without you watching it, and nothing falls outside the system."
+    body: "Every requirement, spec and ticket sits on the tracker. When a review finds new work, it is written up as a new ticket. The team runs around the clock without you watching it, and nothing falls outside the system."
     diagram: frontier-query
     crop: [frontier_query, board]
     href: /en/structure#coordination
   - id: roles
     title: "A team with names, roles and contracts."
-    body: "Thomas represents you, the Shaper shapes, the Builder builds, Rin holds the gate, QA accepts. Each role carries its own system context, so responsibility is clear and nobody does someone else's job. Claude Code and Codex both support agent profiles at this level."
+    body: "Thomas represents you, the Shaper shapes, the Builder builds, Rin holds the gate, QA accepts. Each role carries its own contract and system context, so responsibility is clear and nobody does someone else's job. Claude Code, Codex and OpenCode all support agent profiles at this level."
     diagram: five-roles
     crop: [shaper, builder]
     href: /en/roles/thomas
   - id: runtime
-    title: "No runtime lock-in."
-    body: "Codex alone, Claude Code alone, or both together all work. You declare which role runs on which provider in orchestrator.md; changing the provider does not change the process."
+    title: "One process, several runtimes."
+    body: "Claude Code is the required base; Codex and OpenCode come in when you want a second vendor or another model. Which role runs on which runtime is declared in orchestrator.md; changing the runtime does not change the process."
     diagram: structure
     crop: [runtime_claude, runtime_codex]
     href: /en/tech-stack#claude-code
   - id: models
     title: "The right model for the right work."
-    body: "Sonnet for the Builder to implement quickly, Opus for the analysis and the slicing that need deeper reasoning. Cost and quality are balanced per role instead of one model for everything."
+    body: "Sonnet for the Builder and QA, where fast and cheap matters; Opus for Thomas, the Shaper and Rin, where long reasoning matters. Cost and quality are balanced per role instead of one model for everything."
     href: /en/roles/builder
   - id: oversight
     title: "Full oversight, no need to take over."

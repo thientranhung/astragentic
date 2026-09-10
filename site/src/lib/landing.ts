@@ -186,7 +186,7 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
       },
       lifecycle: {
         headline: 'Một ticket đi qua bảy stage',
-        sub: 'Bảy stage có tên để mỗi lỗi đo được gắn vào đúng một stage.',
+        sub: 'Bảy stage có tên để mỗi sự cố đo được gắn vào đúng một stage.',
       },
       tracker: {
         headline: 'Thomas hỏi tracker, không nhớ tracker',
@@ -272,7 +272,7 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
       },
       lifecycle: {
         headline: 'A ticket passes through seven named stages',
-        sub: 'The stages are named so every measured failure attaches to one of them.',
+        sub: 'The stages are named so every measured incident attaches to one of them.',
       },
       tracker: {
         headline: 'Thomas asks the tracker instead of remembering it',
