@@ -7,7 +7,7 @@
 const BRANDS = [
   'Claude Code', 'OpenCode', 'Codex', 'Claude', 'herdr', 'mattpocock-skills', 'Matt Pocock',
   'Superpowers',
-  'GitHub Issues', 'GitHub', 'Jira', 'Linear', 'SendMessage', 'Monitor', 'Astragentic', 'Astraler',
+  'GitHub Issues', 'GitHub', 'Jira', 'Linear', 'SendMessage', 'ListAgents', 'Monitor', 'Astragentic', 'Astraler',
 ];
 const BRAND_RE = new RegExp(`(^|[^\\w-])(${BRANDS.map((b) => b.replace(/[-]/g, '\\-')).join('|')})(?![\\w-])`, 'g');
 

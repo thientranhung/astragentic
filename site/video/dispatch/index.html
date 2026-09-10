@@ -87,10 +87,27 @@
       .welcome { color: #8b93a1; border: 1px solid #262b34; border-radius: 8px; padding: 10px 16px; margin-bottom: 12px; }
       .welcome b { color: #e6eaf0; }
 
-      /* ── the pulse that crosses between panes ──────────────────────────── */
-      .bridge { position: absolute; left: 0; top: 0; width: 26px; height: 26px; border-radius: 50%; opacity: 0;
-        background: #2f5da8; border: 3px solid #0b0d11; }
-      .bridge.back { background: #0b6e4f; }
+      /* ── the comet that crosses between panes ──────────────────────────── */
+      .comet { position: absolute; left: 0; top: 0; width: 22px; height: 22px; opacity: 0; }
+      .comet-head { position: absolute; inset: 0; border-radius: 50%; border: 2px solid #0b0d11; }
+      .comet.fwd .comet-head { background: #4f7fd6; box-shadow: 0 0 0 6px rgba(79, 127, 214, .25); }
+      .comet.back .comet-head { background: #3ecf8e; box-shadow: 0 0 0 6px rgba(62, 207, 142, .25); }
+      .comet-streak {
+        position: absolute; top: 50%; width: 220px; height: 6px; border-radius: 3px; transform: translateY(-50%);
+      }
+      .comet.fwd .comet-streak { right: 100%; background: linear-gradient(to right, transparent, #4f7fd6); }
+      .comet.back .comet-streak { left: 100%; background: linear-gradient(to left, transparent, #3ecf8e); }
+      .comet-label {
+        position: absolute; left: 50%; bottom: 100%; margin-bottom: 12px; transform: translateX(-50%);
+        display: block; white-space: nowrap; font-size: 18px; font-weight: 600;
+      }
+      .comet.fwd .comet-label { color: #4f7fd6; }
+      .comet.back .comet-label { color: #3ecf8e; }
+
+      /* ── arrival flash overlay, one per pane ─────────────────────────────── */
+      .flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+      #flash-l { background: #3ecf8e; }
+      #flash-r { background: #4f7fd6; }
     </style>
   </head>
   <body>
@@ -102,19 +119,21 @@
             <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="name">thomas</span><span class="sep">·</span><span>Claude Code</span><span class="sep">·</span><span>claude-opus-5 · effort medium</span></div>
             <div class="body"><div class="scroll" id="scroll-l" data-layout-allow-overflow></div></div>
             <div class="status" id="status-l"><span class="lamp"></span><span id="status-l-text">idle</span></div>
+            <div class="flash" id="flash-l"></div>
           </div>
           <div class="pane" id="pane-r">
             <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="name">builder-TRA-142</span><span class="sep">·</span><span>Claude Code</span><span class="sep">·</span><span>worktree ../wt/TRA-142</span></div>
             <div class="body"><div class="scroll" id="scroll-r" data-layout-allow-overflow></div></div>
             <div class="status" id="status-r"><span class="lamp"></span><span id="status-r-text">no session</span></div>
+            <div class="flash" id="flash-r"></div>
           </div>
         </div>
-        <div class="bridge" id="bridge-1"></div>
-        <div class="bridge back" id="bridge-2"></div>
-        <div class="bridge" id="bridge-3"></div>
-        <div class="bridge back" id="bridge-4"></div>
-        <div class="bridge" id="bridge-5"></div>
-        <div class="bridge back" id="bridge-6"></div>
+        <div class="comet fwd" id="bridge-1"><div class="comet-streak"></div><div class="comet-label" id="bridge-1-label">SendMessage → builder-TRA-142</div><div class="comet-head"></div></div>
+        <div class="comet back" id="bridge-2"><div class="comet-streak"></div><div class="comet-label" id="bridge-2-label">TERMINAL:blocked → thomas</div><div class="comet-head"></div></div>
+        <div class="comet fwd" id="bridge-3"><div class="comet-streak"></div><div class="comet-label" id="bridge-3-label">SendMessage → builder-TRA-142</div><div class="comet-head"></div></div>
+        <div class="comet back" id="bridge-4"><div class="comet-streak"></div><div class="comet-label" id="bridge-4-label">TERMINAL:blocked → thomas</div><div class="comet-head"></div></div>
+        <div class="comet fwd" id="bridge-5"><div class="comet-streak"></div><div class="comet-label" id="bridge-5-label">SendMessage → builder-TRA-142</div><div class="comet-head"></div></div>
+        <div class="comet back" id="bridge-6"><div class="comet-streak"></div><div class="comet-label" id="bridge-6-label">TERMINAL:done → thomas</div><div class="comet-head"></div></div>
       </section>
     </div>
 
@@ -251,17 +270,37 @@
       const paneRect = { l: document.getElementById('pane-l').getBoundingClientRect(), r: document.getElementById('pane-r').getBoundingClientRect() };
       const scrollY = { l: 0, r: 0 };
       const lastLineY = { l: 200, r: 200 };
+      const lastLineEl = { l: null, r: null };
 
       for (const it of items) {
         if (it.bridge) {
           const b = document.getElementById(`bridge-${it.bridge}`);
-          const y = it.from === 'l' ? lastLineY.l : lastLineY.r;
-          const x0 = it.from === 'l' ? paneRect.l.right - 40 : paneRect.r.left + 14;
-          const x1 = it.from === 'l' ? paneRect.r.left + 14 : paneRect.l.right - 40;
-          tl.set(b, { x: x0, y: y - 13, autoAlpha: 0 }, it.t);
-          tl.to(b, { autoAlpha: 1, duration: 0.12 }, it.t);
-          tl.to(b, { x: x1, duration: 0.5, ease: 'power2.inOut' }, it.t + 0.05);
-          tl.to(b, { autoAlpha: 0, duration: 0.15 }, it.t + 0.5);
+          const fromPane = it.from === 'l' ? 'l' : 'r';
+          const toPane = fromPane === 'l' ? 'r' : 'l';
+          const y = lastLineY[fromPane];
+          const x0 = fromPane === 'l' ? paneRect.l.right - 40 : paneRect.r.left + 14;
+          const x1 = fromPane === 'l' ? paneRect.r.left + 14 : paneRect.l.right - 40;
+          const color = fromPane === 'l' ? '#4f7fd6' : '#3ecf8e';
+          const fadeInStart = it.t - 0.12;
+          const arrive = it.t + 0.9;
+
+          tl.set(b, { x: x0, y: y - 11, autoAlpha: 0 }, fadeInStart);
+          tl.fromTo(b, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.12 }, fadeInStart);
+          tl.to(b, { x: x1, duration: 0.9, ease: 'power2.inOut' }, it.t);
+          tl.to(b, { autoAlpha: 0, duration: 0.18 }, arrive);
+
+          // highlight the sending line at the moment of dispatch
+          const sendEl = lastLineEl[fromPane];
+          if (sendEl) {
+            tl.to(sendEl, { color, duration: 0.4, ease: 'power1.out' }, it.t);
+            tl.to(sendEl, { color: '#8b93a1', duration: 0.4, ease: 'power1.in' }, it.t + 0.4);
+          }
+
+          // flash the receiving pane on arrival
+          const pane = document.getElementById(`pane-${toPane}`);
+          const flash = document.getElementById(`flash-${toPane}`);
+          tl.fromTo(pane, { borderColor: color }, { borderColor: '#262b34', duration: 0.6 }, arrive);
+          tl.fromTo(flash, { opacity: 0.18 }, { opacity: 0, duration: 0.6 }, arrive);
           continue;
         }
         if (it.status) {
@@ -280,6 +319,7 @@
         }
         // absolute y of this line's centre on the stage, after the scroll settles
         lastLineY[it.pane] = paneRect[it.pane].top + 52 + 22 + el.offsetTop + Math.min(el.offsetHeight, 34) / 2 - need;
+        lastLineEl[it.pane] = el;
         if (it.typed) {
           const typed = el.querySelector('.typed');
           const cur = el.querySelector('.cursor');

@@ -29,14 +29,16 @@ explain:
     paragraphs:
       - "A ticket is an issue on the tracker: a **task**, a **feature** or a **requirement** sliced small enough for one Builder to finish in one session. Each ticket carries a stable id in its title, a status, an assignee, and blocking edges to the work that must land first. Shaper creates tickets from the spec with the `to-tickets` skill; Thomas dispatches only the ones that are ready."
       - "Thomas dispatches through the `dispatch-ticket` skill: it claims the ticket on the tracker first, creates the branch and the worktree, opens a herdr pane, launches the role on its declared runtime, sends the brief, and sets a watcher straight away. The chain ticket → assignee → pane → worktree → branch → PR is one to one, so several Builders work in parallel without getting in each other’s way."
-      - "When the roles all run Claude Code, the main channel is Claude Code’s native SendMessage. The brief and every exchange after it travel straight between two sessions, addressed by name, answering back into the session that sent them. A blocked Builder asks; Thomas reads the question, answers through that same channel, then sets a fresh Monitor and waits for the signal that the work is done. That is how the loop of dispatch, question, answer and handover runs unbroken, with nobody sitting and watching it."
+      - "When the roles all run Claude Code, the main channel is Claude Code’s built-in cross-session messaging. Every Claude Code session has a name; Thomas looks up the Builder’s with ListAgents and sends to exactly that name. In the receiving session the message shows up as a one-line preview, `› Message from @thomas: …`, expanded with ctrl+o, and the answer travels back into the session that sent it. A blocked Builder asks; Thomas reads the question, answers through that same channel, then sets a fresh Monitor and waits for the signal that the work is done. That is how the loop of dispatch, question, answer and handback runs unbroken, with nobody sitting and watching it."
       - "herdr is the visible plane and the fallback path. Each role has a named pane, Thomas reads a pane with `herdr agent read` when a session falls silent, and it uses the herdr CLI to drive a Builder on Codex or OpenCode, where SendMessage does not exist. The watcher follows the working, blocked and idle state of every pane."
       - "Sorting the questions is what moves you from human-in-the-loop to human-on-the-loop. The routine technical questions Thomas answers for you, out of the contract, the spec and the tracker. Only a real design decision comes up to you through `to-questionnaire`, in the form of a question you can answer. You are not standing inside the loop at every step; you are standing on top of it and stepping in when something needs you."
     commands:
       - label: "Answering a blocked Builder, both on Claude Code"
         lines:
-          - 'SendMessage({ to: "builder-TRA-142", message: "<the answer>" })'
-          - "Monitor(...)   # wait for the done signal, or for something to discuss"
+          - "ListAgents                                  # Thomas looks up the Builder’s session name"
+          - "@builder-TRA-142 <the answer>               # sends to exactly that name"
+          - "› Message from @thomas: <the answer> (ctrl+o to expand)   # what the Builder sees"
+          - "Monitor(...)   # Thomas waits for the done signal, or for something to discuss"
       - label: "Driving a Builder on Codex through herdr"
         lines:
           - 'herdr agent start "builder-TRA-142" --kind codex --pane <id> -- codex --profile builder'
@@ -129,7 +131,7 @@ why:
 
 shots:
   sendmessage:
-    caption: "A simulated dispatch of TRA-142: you talk to Thomas, Thomas steers the Builder over SendMessage, answers the technical question itself, and brings the UX decision back to you."
+    caption: "A simulated dispatch of TRA-142: you talk to Thomas, Thomas addresses the Builder by session name over cross-session messaging, answers the technical question itself, and brings the UX decision back to you."
     video:
       mp4: /shots/dispatch.mp4
       webm: /shots/dispatch.webm

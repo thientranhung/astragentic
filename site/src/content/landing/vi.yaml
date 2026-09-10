@@ -29,14 +29,16 @@ explain:
     paragraphs:
       - "Ticket là một issue trên tracker: một **task**, một **feature** hay một **requirement** đã được cắt đủ nhỏ để một Builder hoàn thành trong một session. Mỗi ticket mang một id ổn định trong tiêu đề, một trạng thái, một assignee, và các blocking edge tới việc phải xong trước. Shaper tạo ticket từ spec bằng skill `to-tickets`; Thomas chỉ dispatch những ticket đã sẵn sàng."
       - "Thomas dispatch theo skill `dispatch-ticket`: claim ticket trên tracker trước, tạo branch và worktree, mở một pane herdr, launch vai theo runtime đã khai, gửi brief, và lập tức đặt watcher. Chuỗi ticket → assignee → pane → worktree → branch → PR là một-một, nên nhiều Builder làm song song mà không giẫm lên nhau."
-      - "Khi các vai cùng chạy Claude Code, kênh chính là SendMessage nguyên bản của Claude Code. Brief và mọi trao đổi sau đó đi thẳng giữa hai session, có địa chỉ theo tên, trả lời về đúng session gửi. Builder bị chặn thì hỏi; Thomas đọc câu hỏi, trả lời qua đúng kênh đó, rồi đặt Monitor mới chờ tín hiệu làm xong. Nhờ vậy vòng dispatch, hỏi, đáp, handback chạy liền mạch mà không cần người ngồi canh."
+      - "Khi các vai cùng chạy Claude Code, kênh chính là cross-session messaging có sẵn của Claude Code. Mỗi session Claude Code có một tên; Thomas tra tên session của Builder bằng ListAgents rồi gửi cho đúng tên đó. Ở session nhận, thông điệp hiện thành một dòng preview `› Message from @thomas: …`, mở rộng bằng ctrl+o, và câu trả lời đi ngược về đúng session đã gửi. Builder bị chặn thì hỏi; Thomas đọc câu hỏi, trả lời qua đúng kênh đó, rồi đặt Monitor mới chờ tín hiệu làm xong. Nhờ vậy vòng dispatch, hỏi, đáp, handback chạy liền mạch mà không cần người ngồi canh."
       - "herdr là mặt phẳng nhìn thấy và là đường dự phòng. Mỗi vai một pane có tên, Thomas đọc pane bằng `herdr agent read` khi một session im lặng, và dùng herdr CLI để điều Builder trên Codex hay OpenCode, nơi SendMessage không có. Watcher theo dõi trạng thái working, blocked, idle của từng pane."
       - "Phân loại câu hỏi là điều đưa bạn từ human-in-the-loop sang human-on-the-loop. Câu hỏi kỹ thuật thường gặp, Thomas trả lời thay bạn từ contract, spec và tracker. Chỉ quyết định thiết kế thật sự mới đi lên bạn qua `to-questionnaire`, dưới dạng câu hỏi trả lời được. Bạn không đứng trong vòng lặp ở từng bước; bạn đứng trên vòng lặp và can thiệp khi có việc cần bạn."
     commands:
       - label: "Trả lời một Builder bị chặn, cùng Claude Code"
         lines:
-          - 'SendMessage({ to: "builder-TRA-142", message: "<câu trả lời>" })'
-          - "Monitor(...)   # chờ tín hiệu làm xong hoặc cần trao đổi"
+          - "ListAgents                                  # Thomas tra tên session của Builder"
+          - "@builder-TRA-142 <câu trả lời>              # gửi theo đúng tên đó"
+          - "› Message from @thomas: <câu trả lời> (ctrl+o to expand)   # phía Builder nhìn thấy"
+          - "Monitor(...)   # Thomas chờ tín hiệu làm xong hoặc cần trao đổi"
       - label: "Điều một Builder trên Codex qua herdr"
         lines:
           - 'herdr agent start "builder-TRA-142" --kind codex --pane <id> -- codex --profile builder'
@@ -129,7 +131,7 @@ why:
 
 shots:
   sendmessage:
-    caption: "Mô phỏng một lượt dispatch TRA-142: bạn nói với Thomas, Thomas điều Builder qua SendMessage, tự trả lời câu hỏi kỹ thuật, và đưa quyết định UX về cho bạn."
+    caption: "Mô phỏng một lượt dispatch TRA-142: bạn nói với Thomas, Thomas gọi Builder theo tên session bằng cross-session messaging, tự trả lời câu hỏi kỹ thuật, và đưa quyết định UX về cho bạn."
     video:
       mp4: /shots/dispatch.mp4
       webm: /shots/dispatch.webm

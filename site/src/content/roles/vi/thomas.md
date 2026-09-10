@@ -35,7 +35,7 @@ sessionTag: "resident"
   ghi lại vendor nào thật sự chạy.
 - Phân loại finding của Rin và QA thành work order của Thomas.
 - Promote ticket của một spec sang claimable, sau khi đã classify `arm: spec`.
-- Steer Builder trực tiếp: Claude qua SendMessage, Codex và OpenCode qua pane Herdr.
+- Steer Builder trực tiếp: Claude qua cross-session messaging, gọi theo tên session, Codex và OpenCode qua pane Herdr.
 - Trả lời một câu hỏi mở từ codebase, một ADR đã có, `research`, `prototype` hoặc một second
   opinion, và ghi lại nguồn nào.
 - Đưa câu hỏi thật sự thuộc về owner qua `to-questionnaire`.

@@ -37,7 +37,7 @@ sessionTag: "resident"
   and record which vendor actually ran.
 - Classify Rin's and QA's findings into Thomas's own work orders.
 - Promote a spec's tickets to claimable, once it has classified `arm: spec`.
-- Steer a Builder directly: Claude over SendMessage, Codex and OpenCode through a Herdr pane.
+- Steer a Builder directly: Claude over cross-session messaging, addressed by session name, Codex and OpenCode through a Herdr pane.
 - Answer an open question from the codebase, a prior ADR, `research`, `prototype` or a second
   opinion, and record which one.
 - Take a question that genuinely belongs to the owner through `to-questionnaire`.

@@ -23,6 +23,24 @@
         ],
         "createdAt": "2026-09-10T04:36:56.343Z",
         "reason": "assistant: simulated terminal is monospace at one body size by nature; only the chrome labels are smaller"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "video/dispatch/index.html"
+        ],
+        "createdAt": "2026-09-10T07:16:35.911Z",
+        "reason": "assistant: standalone HyperFrames terminal simulation with its own dark palette; not a site page and outside DESIGN.md scope"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "video/dispatch/index.html"
+        ],
+        "createdAt": "2026-09-10T07:16:35.975Z",
+        "reason": "assistant: standalone HyperFrames terminal simulation with its own dark palette; not a site page and outside DESIGN.md scope"
       }
     ]
   }
