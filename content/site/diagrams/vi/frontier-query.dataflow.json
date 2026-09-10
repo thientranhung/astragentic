@@ -31,6 +31,16 @@
           "owner"
         ],
         "note": "Lúc bắt đầu session, và lại một lần nữa ngay khi một ticket đóng."
+      },
+      {
+        "id": "the-loop",
+        "label": "Vòng lặp",
+        "focus": [
+          "board",
+          "builder",
+          "tickets"
+        ],
+        "note": "Builder claim từ board; issue phát sinh trong lúc làm được ghi lại thành ticket mới, và truy vấn lần sau sẽ thấy nó."
       }
     ]
   },
@@ -101,6 +111,15 @@
       "width": 140
     },
     {
+      "id": "builder",
+      "type": "backend",
+      "label": "Builder",
+      "sublabel": "claim rồi làm ticket",
+      "stage": 3,
+      "row": 1,
+      "width": 140
+    },
+    {
       "id": "owner",
       "type": "external",
       "label": "Chủ site",
@@ -155,6 +174,30 @@
       "to": "owner",
       "label": "xem lại độ sẵn sàng",
       "classification": "chỉ đọc"
+    },
+    {
+      "id": "board-builder",
+      "from": "board",
+      "to": "builder",
+      "label": "claim, rồi dispatch",
+      "classification": "ghi assignee",
+      "labelAt": [860, 225]
+    },
+    {
+      "id": "new-ticket",
+      "from": "builder",
+      "to": "tickets",
+      "label": "issue phát sinh → ticket mới",
+      "classification": "ghi",
+      "fromSide": "right",
+      "toSide": "left",
+      "via": [
+        [850, 271],
+        [850, 590],
+        [20, 590],
+        [20, 157]
+      ],
+      "labelAt": [435, 590]
     }
   ],
   "cards": [
@@ -173,7 +216,8 @@
       "items": [
         "Ticket đang mở, cạnh blocking, và field assignee là những input duy nhất",
         "Board được ghi vào state claimable-và-chưa-claim của tracker",
-        "Promotion sau một spec vẫn cần phán đoán của Thomas — cạnh blocking bao trùm hơi rộng"
+        "Promotion sau một spec vẫn cần phán đoán của Thomas — cạnh blocking bao trùm hơi rộng",
+        "Một Builder claim từ board, và issue phát sinh trong lúc làm được ghi lại thành ticket mới"
       ]
     },
     {

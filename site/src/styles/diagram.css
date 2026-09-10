@@ -407,6 +407,7 @@
 .idiagram--flow[data-seq] .diagram-svg .a-flow-label { --flow-ink: var(--ink); }
 .idiagram--flow[data-seq] .diagram-svg [data-flow-from='client'] { --flow-ink: var(--brand-primary); }
 .idiagram--flow[data-seq] .diagram-svg [data-flow-from='frontier_query'] { --flow-ink: var(--brand-primary); }
+.idiagram--flow[data-seq] .diagram-svg [data-flow-from='builder'] { --flow-ink: var(--role-builder); }
 .idiagram--flow[data-seq] .diagram-svg [data-flow-from='tracker'] { --flow-ink: var(--ink); }
 .idiagram--flow[data-seq] .diagram-svg [data-flow-from='thomas'] { --flow-ink: var(--role-thomas); }
 .idiagram--flow[data-seq] .diagram-svg [data-flow-from='shaper'] { --flow-ink: var(--role-shaper); }

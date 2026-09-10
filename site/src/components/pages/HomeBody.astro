@@ -61,6 +61,7 @@ const shots = copy.shots ?? {};
 const roleMap = Object.fromEntries(ROLE_IDS.map((id) => [id, roleHref(lang, id)]));
 const trackerMap: Record<string, string> = {
   thomas: roleHref(lang, 'thomas'),
+  builder: roleHref(lang, 'builder'),
   ...Object.fromEntries(
     ['frontier_query', 'board', 'tickets', 'assignee_field', 'blocking_edges'].map((id) => [
       id,
@@ -297,9 +298,9 @@ const CARD_FRAME = 330;
         ) : shots.tracker && (
           <Shot lang={lang} caption={shots.tracker.caption} src={shots.tracker.src} class="breakout" />
         )}
-        {/* Three inputs answer the query together, then the answer lands on the board,
-            then Thomas and the owner read it. */}
-        <InteractiveDiagram slug="frontier-query" lang={lang} hrefMap={trackerMap} class="band" flow="sequence" flowSlots={[[0, 1, 2], [3], [4, 5]]} />
+        {/* Three inputs answer the query together; the answer lands on the board; Thomas,
+            the owner and a Builder read it; the Builder's new ticket comes back round. */}
+        <InteractiveDiagram slug="frontier-query" lang={lang} hrefMap={trackerMap} class="band" flow="sequence" flowSlots={[[0, 1, 2], [3], [4, 5, 6], [7]]} />
         {EX.tracker.more && (
           <a class="more-link" href={EX.tracker.more.href}>{EX.tracker.more.label}</a>
         )}

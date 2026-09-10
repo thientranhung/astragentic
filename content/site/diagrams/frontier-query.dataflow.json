@@ -31,6 +31,16 @@
           "owner"
         ],
         "note": "At session start, and again the moment a ticket closes."
+      },
+      {
+        "id": "the-loop",
+        "label": "The loop",
+        "focus": [
+          "board",
+          "builder",
+          "tickets"
+        ],
+        "note": "The Builder claims from the board; an issue found while working is written back as a new ticket, and the next query sees it."
       }
     ]
   },
@@ -101,6 +111,15 @@
       "width": 140
     },
     {
+      "id": "builder",
+      "type": "backend",
+      "label": "Builder",
+      "sublabel": "claims and works the ticket",
+      "stage": 3,
+      "row": 1,
+      "width": 140
+    },
+    {
       "id": "owner",
       "type": "external",
       "label": "Owner",
@@ -155,6 +174,30 @@
       "to": "owner",
       "label": "reviews readiness",
       "classification": "read-only"
+    },
+    {
+      "id": "board-builder",
+      "from": "board",
+      "to": "builder",
+      "label": "claim, then dispatch",
+      "classification": "writes assignee",
+      "labelAt": [860, 225]
+    },
+    {
+      "id": "new-ticket",
+      "from": "builder",
+      "to": "tickets",
+      "label": "issue found → new ticket",
+      "classification": "writes",
+      "fromSide": "right",
+      "toSide": "left",
+      "via": [
+        [850, 271],
+        [850, 590],
+        [20, 590],
+        [20, 157]
+      ],
+      "labelAt": [435, 590]
     }
   ],
   "cards": [
@@ -173,7 +216,8 @@
       "items": [
         "Open tickets, blocking edges, and the assignee field are the only inputs",
         "The board is written to the tracker's claimable-and-unclaimed state",
-        "Promotion after a spec still needs Thomas's judgement — edges are over-inclusive"
+        "Promotion after a spec still needs Thomas's judgement — edges are over-inclusive",
+        "A Builder claims from the board, and an issue found while working goes back as a new ticket"
       ]
     },
     {

@@ -43,6 +43,8 @@
         <path data-edge-from="frontier_query" data-edge-to="board" data-edge-label="kết quả đã ghi" data-edge-key="3" data-edge-id="answer-written" data-composition-points="371,271;470,271" d="M 371 271 L 470 271" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
         <path data-edge-from="board" data-edge-to="thomas" data-edge-label="đầu session + ticket đóng" data-edge-key="4" data-edge-id="board-thomas" data-composition-points="590,264;632.5,264;632.5,157;675,157" d="M 590 264 L 632.5 264 L 632.5 157 L 675 157" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
         <path data-edge-from="board" data-edge-to="owner" data-edge-label="xem lại độ sẵn sàng" data-edge-key="5" data-edge-id="board-owner" data-composition-points="590,278;639.5,278;639.5,385;689,385" d="M 590 278 L 639.5 278 L 639.5 385 L 689 385" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="board" data-edge-to="builder" data-edge-label="claim, rồi dispatch" data-edge-key="6" data-edge-id="board-builder" data-composition-points="590,271;675,271" d="M 590 271 L 675 271" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="builder" data-edge-to="tickets" data-edge-label="issue phát sinh → ticket mới" data-edge-key="7" data-edge-id="new-ticket" data-composition-points="815,271;850,271;850,590;20,590;20,157;44,157" d="M 815 271 L 850 271 L 850 590 L 20 590 L 20 157 L 44 157" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
 
         <!-- Nodes -->
         <g id="node-tickets" data-node-id="tickets" data-node-label="Ticket Đang Mở" tabindex="0" role="button" aria-label="Focus Ticket Đang Mở, toàn bộ item tracker, 01 / Field trên tracker" aria-pressed="false" data-node-kind="database" data-node-sublabel="toàn bộ item tracker" data-node-context="01 / Field trên tracker">
@@ -115,6 +117,17 @@
           <text data-detail="context" x="745" y="165" class="t-muted" font-size="7" text-anchor="middle">chạy lại sau merge/handback</text>
         </g>
 
+        <g id="node-builder" data-node-id="builder" data-node-label="Builder" tabindex="0" role="button" aria-label="Focus Builder, claim rồi làm ticket, 04 / Tiêu thụ" aria-pressed="false" data-node-kind="backend" data-node-sublabel="claim rồi làm ticket" data-node-context="04 / Tiêu thụ">
+          <title>Builder · claim rồi làm ticket · 04 / Tiêu thụ</title>
+          <rect x="675" y="242" width="140" height="58" rx="6" class="c-mask"/>
+          <rect x="675" y="242" width="140" height="58" rx="6" class="c-backend" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(681 248) scale(0.6875)">
+            <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="745" y="263" class="t-primary" font-size="10" font-weight="600" text-anchor="middle">Builder</text>
+          <text data-detail="context" x="745" y="279" class="t-muted" font-size="7" text-anchor="middle">claim rồi làm ticket</text>
+        </g>
+
         <g id="node-owner" data-node-id="owner" data-node-label="Chủ site" tabindex="0" role="button" aria-label="Focus Chủ site, nhìn vào board, 04 / Tiêu thụ" aria-pressed="false" data-node-kind="external" data-node-sublabel="nhìn vào board" data-node-context="04 / Tiêu thụ">
           <title>Chủ site · nhìn vào board · 04 / Tiêu thụ</title>
           <rect x="689" y="356" width="112" height="58" rx="6" class="c-mask"/>
@@ -157,6 +170,16 @@
           <rect x="586.95" y="310.5" width="105.1" height="27" rx="4" class="c-mask"/>
           <text x="639.5" y="321.5" class="t-muted" font-size="8" text-anchor="middle">xem lại độ sẵn sàng</text>
         <text data-detail="fine" x="639.5" y="332.5" class="t-dim" font-size="7" text-anchor="middle">chỉ đọc</text>
+        </g>
+        <g data-detail="context" data-edge-from="board" data-edge-to="builder" data-edge-label="claim, rồi dispatch" data-edge-key="6" data-edge-id="board-builder">
+          <rect x="807.45" y="214" width="105.1" height="27" rx="4" class="c-mask"/>
+          <text x="860" y="225" class="t-muted" font-size="8" text-anchor="middle">claim, rồi dispatch</text>
+        <text data-detail="fine" x="860" y="236" class="t-dim" font-size="7" text-anchor="middle">ghi assignee</text>
+        </g>
+        <g data-detail="context" data-edge-from="builder" data-edge-to="tickets" data-edge-label="issue phát sinh → ticket mới" data-edge-key="7" data-edge-id="new-ticket">
+          <rect x="360.4" y="579" width="149.2" height="27" rx="4" class="c-mask"/>
+          <text x="435" y="590" class="t-muted" font-size="8" text-anchor="middle">issue phát sinh → ticket mới</text>
+        <text data-detail="fine" x="435" y="601" class="t-dim" font-size="7" text-anchor="middle">ghi</text>
         </g>
 
         <!-- Legend -->

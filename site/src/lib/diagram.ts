@@ -68,8 +68,15 @@ function cropLegend(svg: string, box: Box): string {
   if (tops.length === 0) return svg;
   // The smallest y in the legend is its "Legend" caption baseline; back off one line
   // of leading so the cap heights are not clipped.
-  const cut = Math.round(Math.min(...tops) - 14);
+  let cut = Math.round(Math.min(...tops) - 14);
   if (!Number.isFinite(cut) || cut <= 0 || cut >= box.h) return svg;
+  // An edge routed under the drawing (a feedback loop) can run below the legend's top
+  // line; the legend is hidden anyway, so keep the cut under the lowest edge point.
+  const headForY = svg.slice(0, start);
+  const pointYs = [...headForY.matchAll(/data-composition-points="([^"]+)"/g)].flatMap((m) =>
+    m[1].split(';').map((p) => Number(p.split(',')[1])),
+  ).filter(Number.isFinite);
+  if (pointYs.length) cut = Math.min(box.h, Math.max(cut, Math.ceil(Math.max(...pointYs) + 18)));
   // The legend row can be wider than the drawing above it, and archify sizes the
   // viewBox to the wider of the two. With the legend gone that slack sits to the right
   // and the picture reads as left-aligned, so trim the width to the drawing's own
