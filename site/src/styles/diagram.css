@@ -403,7 +403,10 @@
 .idiagram--flow .diagram-svg [data-flow-to='builder'] { --flow-ink: var(--role-builder); }
 .idiagram--flow .diagram-svg [data-flow-to='rin'] { --flow-ink: var(--role-rin); }
 .idiagram--flow .diagram-svg [data-flow-to='qa'] { --flow-ink: var(--role-qa); }
+.idiagram--flow[data-seq] .diagram-svg .a-flow--out,
+.idiagram--flow[data-seq] .diagram-svg .a-flow-label { --flow-ink: var(--ink); }
 .idiagram--flow[data-seq] .diagram-svg [data-flow-from='client'] { --flow-ink: var(--brand-primary); }
+.idiagram--flow[data-seq] .diagram-svg [data-flow-from='frontier_query'] { --flow-ink: var(--brand-primary); }
 .idiagram--flow[data-seq] .diagram-svg [data-flow-from='tracker'] { --flow-ink: var(--ink); }
 .idiagram--flow[data-seq] .diagram-svg [data-flow-from='thomas'] { --flow-ink: var(--role-thomas); }
 .idiagram--flow[data-seq] .diagram-svg [data-flow-from='shaper'] { --flow-ink: var(--role-shaper); }

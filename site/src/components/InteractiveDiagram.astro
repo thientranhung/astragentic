@@ -39,6 +39,10 @@ interface Props {
    *  one pulse per edge in the sender's colour, in edge order, no return leg.
    *  Pure CSS; paused off-screen; off under reduced motion. */
   flow?: boolean | 'sequence';
+  /** Sequence mode only: which edge keys share a slot, in play order. Edges not listed
+   *  play after the listed slots, one per slot. `[[0,1,2],[3]]` fires three inputs
+   *  together, then the result. */
+  flowSlots?: number[][];
   /** What comes back on each edge, keyed by the receiving node id: shown in place of
    *  the edge label while the return pulse runs. An edge with no entry keeps its label. */
   flowBack?: Record<string, string>;
@@ -56,6 +60,7 @@ const {
   explore = false,
   flow = false,
   flowBack = {},
+  flowSlots,
   class: extra = '',
 } = Astro.props;
 
@@ -162,19 +167,39 @@ const svg = raw ? prepare(raw, { lang, frame, transform: decorate }).html : null
 const edgeCount = flow === 'sequence' && svg ? (svg.match(/class="a-flow a-flow--out"/g) ?? []).length : 0;
 const seqId = `${slug}-${lang}`.replace(/[^a-z0-9-]/gi, '-');
 let seqCss = '';
-if (edgeCount) {
+if (edgeCount && svg) {
   const slot = 1.5;
-  const loop = slot * edgeCount;
+  // slot index per edge key: grouped keys share one, the rest follow one per slot
+  const listed = new Set((flowSlots ?? []).flat());
+  const slotOf = new Map<number, number>();
+  (flowSlots ?? []).forEach((keys, i) => keys.forEach((k) => slotOf.set(k, i)));
+  let next = flowSlots?.length ?? 0;
+  for (let k = 0; k < edgeCount; k++) if (!listed.has(k)) slotOf.set(k, next++);
+  const loop = slot * next;
   const pct = (t: number) => `${((t / loop) * 100).toFixed(3)}%`;
-  const delays = Array.from({ length: edgeCount }, (_, i) =>
-    i ? `.idiagram--flow[data-seq="${seqId}"] .diagram-svg [data-flow-key='${i}'],.idiagram--flow[data-seq="${seqId}"] .diagram-svg [data-flow-key='${i}'] > text{animation-delay:${(i * slot).toFixed(1)}s}` : '',
-  ).join('');
+  const sel = (rest: string) => `.idiagram--flow[data-seq="${seqId}"] .diagram-svg ${rest}`;
+  // the node each edge lands on, so it can light up as the pulse arrives
+  const targets = new Map<string, number>();
+  for (const m of svg.matchAll(/class="a-flow a-flow--out" data-flow-from="[^"]*" data-flow-to="([^"]*)" data-flow-key="(\d+)"/g)) {
+    const to = m[1], k = Number(m[2]);
+    if (!targets.has(to) || slotOf.get(k)! < slotOf.get(targets.get(to)!)!) targets.set(to, k);
+  }
+  const delays = Array.from({ length: edgeCount }, (_, k) => {
+    const d = (slotOf.get(k)! * slot).toFixed(1);
+    return `${sel(`[data-flow-key='${k}']`)},${sel(`[data-flow-key='${k}'] > text`)}{animation-delay:${d}s}`;
+  }).join('');
+  const nodes = Array.from(targets, ([to, k]) => {
+    const d = (slotOf.get(k)! * slot).toFixed(1);
+    return `${sel(`g[data-node-id='${to}'] > rect:not(.c-mask)`)}{animation:seq-node-${seqId} ${loop}s ease-out infinite;animation-delay:${d}s}`;
+  }).join('');
   seqCss =
-    `.idiagram--flow[data-seq="${seqId}"] .diagram-svg .a-flow--out{animation:seq-out-${seqId} ${loop}s cubic-bezier(.45,0,.55,1) infinite}` +
-    `.idiagram--flow[data-seq="${seqId}"] .diagram-svg .a-flow-label > text{animation:seq-label-${seqId} ${loop}s ease-out infinite}` +
-    delays +
+    `${sel('.a-flow--out')}{animation:seq-out-${seqId} ${loop}s cubic-bezier(.45,0,.55,1) infinite}` +
+    `${sel('.a-flow-label > text')}{animation:seq-label-${seqId} ${loop}s ease-out infinite}` +
+    delays + nodes +
     `@keyframes seq-out-${seqId}{0%{stroke-dashoffset:.22}${pct(1.1)},100%{stroke-dashoffset:-1}}` +
-    `@keyframes seq-label-${seqId}{0%,${pct(1.3)}{fill:var(--flow-ink);font-weight:600}${pct(1.5)},100%{fill:var(--label-base);font-weight:400}}`;
+    `@keyframes seq-label-${seqId}{0%,${pct(1.3)}{fill:var(--flow-ink);font-weight:600}${pct(1.5)},100%{fill:var(--label-base);font-weight:400}}` +
+    // the landing node: a brief tint and a thicker edge as the pulse reaches it
+    `@keyframes seq-node-${seqId}{0%,${pct(0.95)}{fill:#fff;stroke-width:1.5}${pct(1.15)},${pct(1.5)}{fill:color-mix(in srgb,var(--brand-primary) 9%,#fff);stroke-width:2.5}${pct(2.1)},100%{fill:#fff;stroke-width:1.5}}`;
 }
 const style = maxWidth ? `max-width:${maxWidth}px;` : undefined;
 const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` : undefined;
