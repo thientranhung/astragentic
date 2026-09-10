@@ -3,7 +3,7 @@ hero:
   headline: "An outsourcing team made of AI agents.\nRunning by process, **around the clock**, for **large projects**."
   sub: "Astragentic puts you in the client's seat at a complete software development unit: one representative to talk to, a team of agents with clearly defined roles to build, and an issue tracker at the centre so every piece of work leaves a trace. You keep the decisions and full oversight; the execution belongs to the team."
   primary: "See the team at work ↓"
-  secondary: "Deploy it in your repo"
+  secondary: "Why Astragentic exists"
 
 explain:
   agents:

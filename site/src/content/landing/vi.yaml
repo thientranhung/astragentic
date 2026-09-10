@@ -3,7 +3,7 @@ hero:
   headline: "Một đội outsource bằng AI agent.\nVận hành đúng quy trình, **liên tục 24/7**, cho **những dự án lớn**."
   sub: "Astragentic đưa bạn vào vị trí khách hàng của một đơn vị phát triển phần mềm hoàn chỉnh: một người đại diện để trao đổi, một đội agent có vai trò rõ ràng để thi công, và một issue tracker làm trung tâm để mọi việc đều có dấu vết. Bạn giữ quyền quyết định và toàn quyền giám sát; phần thực thi thuộc về đội."
   primary: "Xem đội vận hành ↓"
-  secondary: "Deploy vào repo"
+  secondary: "Vì sao có Astragentic"
 
 explain:
   agents:
