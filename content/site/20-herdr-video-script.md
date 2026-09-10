@@ -1,7 +1,7 @@
 # Kịch bản video "herdr trong Astragentic" (2026-09-10, bản nháp cho chủ site duyệt)
 
 Vị trí: trang chủ, mục Comms, thay placeholder "Workspace herdr với năm pane đang chạy". Dựng
-bằng HyperFrames như video dispatch, 16:9, không tiếng, lặp, khoảng 42 giây. Khung hình dựng
+bằng HyperFrames như video dispatch, 16:9, không tiếng, lặp, khoảng 32 giây. Khung hình dựng
 lại đúng bố cục herdr thật theo ảnh chủ site gửi 2026-09-10: sidebar `spaces` (project + branch),
 danh sách `agents · grouped` với chấm trạng thái, hàng tab, ô search, pane chính, status line.
 
@@ -31,51 +31,42 @@ từ `herdr --help` trên máy:
 - Status line trong pane Claude Code: đường dẫn, branch, ctx bar, dòng `bypass permissions`.
 - Video dựng lại đúng các vùng này với dữ liệu của Astragentic; không dùng ảnh thật của herdr.
 
-## Ba phần
+## Hai phần, khoảng 32 giây
 
-### Phần 1 · herdr là gì (0–9 s)
+Người xem là dev chưa từng thấy herdr. Câu hỏi của họ theo thứ tự: nó trông thế nào, nó
+cho tôi thấy gì, rồi Astragentic dùng nó làm gì. Video trả lời đúng thứ tự đó, mỗi nhịp một
+card chữ ngắn ở góc trên bên phải.
 
-| t | Hình | Chữ trên hình |
+### Phần 1 · herdr trông thế nào (0–11 s)
+
+| t | Hình | Card |
 |---|---|---|
-| 0.0 | Cửa sổ herdr mở ra: sidebar `spaces` với `astragentic · main`, `nizzy-ecom · main`; danh sách agents trống. | Card góc trên: **herdr** · the runtime coding agents run on |
-| 2.0 | Năm pane lần lượt xuất hiện trong danh sách agents của `astragentic`: `thomas · claude`, `builder-tra-142 · claude`, `builder-tra-143 · codex`, `rin · claude`, `qa · claude`. Mỗi dòng có chấm trạng thái. | Card: Một server nền giữ session cho các agent. Mỗi agent một pane, có tên. |
-| 5.0 | Chấm của `builder-tra-142` chuyển vàng "working", `rin` vòng rỗng "idle", `builder-tra-143` đỏ "blocked". Pane chính đang là `thomas`. | Card: herdr tự nhận diện trạng thái: working, blocked, done, idle. |
-| 7.5 | Con trỏ bấm `builder-tra-143`; pane chính đổi sang session Codex đang chờ câu trả lời. | Card: Bấm một tên là đọc được pane đó. |
+| 0.0 | Cửa sổ herdr mở ra, nền tối: sidebar `spaces` với `astragentic · main` (đang chọn) và `shop-demo · main`; khối `agents · grouped` trống; hàng tab `thomas` `+`; pane chính trống. | **herdr** · the runtime coding agents run on |
+| 2.0 | Năm agent lần lượt xuất hiện trong `agents`, mỗi dòng tên đậm và dòng dưới `trạng thái · runtime`: `thomas` working · claude, `builder-tra-142` working · claude, `builder-tra-143` working · codex, `rin` idle · claude, `qa` idle · claude. Chấm màu theo trạng thái. Pane chính hiện session `thomas` (Claude Code TUI thu nhỏ). | Mỗi agent một pane, có tên, có trạng thái. |
+| 6.0 | Chấm của `builder-tra-143` đổi sang đỏ, chữ đổi `blocked · codex`. Không ai gõ gì. | herdr tự nhận diện: working, blocked, done, idle. |
+| 8.5 | Con trỏ bấm `builder-tra-143`; tab mới mở, pane chính đổi sang session Codex đang chờ, thấy câu hỏi "Empty state dùng widget chung hay vẽ riêng?". | Bấm một tên là đọc được pane đó. Bạn là khách hàng, bạn xem được mọi pane. |
 
-### Phần 2 · Thomas đọc và chờ được pane của người khác (9–19 s)
+### Phần 2 · Astragentic dùng herdr thế nào (11–32 s)
 
-| t | Hình | Chữ trên hình |
+| t | Hình | Card |
 |---|---|---|
-| 9.0 | Danh sách agents phóng to: chấm đỏ tự sáng ở `builder-tra-143`, chữ `blocked` hiện cạnh tên. Không ai cuộn màn hình. | Card: Trạng thái pane là tín hiệu, không phải thứ phải ngồi canh. |
-| 12.0 | Pane `thomas`: `⏺ Bash(herdr agent read builder-tra-143)` · `⎿ Empty state dùng widget chung hay vẽ riêng?` | Card: Thomas đọc được pane của mọi agent, không cần ai copy dán. |
-| 15.0 | Pane `thomas`: `⏺ Bash(herdr agent wait builder-tra-143 --state idle,blocked)` · `⎿ blocked` | Card: và chờ đúng tín hiệu, thay vì đoán. |
-| 17.0 | Pane `thomas`: `⏺ Bash(herdr agent list)` · bốn dòng tên và trạng thái. | Card: CLI và socket API là cùng một bề mặt; agent tự điều khiển được. |
-
-### Phần 3 · trong Astragentic (19–42 s)
-
-| t | Hình | Chữ trên hình |
-|---|---|---|
-| 19.0 | Pane chính chia hai: trái `builder-tra-142 · claude`, phải `builder-tra-143 · codex`. | Card: Claude Code, Codex, OpenCode cùng một workspace. |
-| 21.0 | Trái: dòng preview `› Message from @thomas: …` (cross-session messaging của Claude Code). Phải: `thomas` gõ `herdr agent prompt builder-tra-143 "Dùng EmptyState chung theo contract UI."`, pane Codex nhận prompt và chạy tiếp. | Card: Cùng provider thì nhắn thẳng; khác provider thì đi qua herdr. Thomas nói được với cả hai. |
-| 26.0 | Danh sách agents: chấm `builder-tra-143` từ đỏ về vàng rồi xanh "done"; pane `thomas` hiện `⎿ TERMINAL:done pane=…` từ Monitor. | Card: Watcher đọc trạng thái pane, Thomas hành động theo đó. |
-| 29.0 | Trong `spaces` xuất hiện `prod-1 · remote` (gắn bằng `herdr machine add prod-1 --label prod`). Pane mới `deploy · prod-1` mở, prompt hiện hostname server. | Card: Session chạy trên server, không cần bạn đang attach. |
-| 32.0 | Pane `deploy`: `git pull`, `pnpm build`, `systemctl restart app` chạy, log trôi, kết thúc `active (running)`. | Card: Deploy thẳng từ workspace, cùng chỗ với đội. |
-| 36.0 | Pane `qa` mở URL vừa deploy, chạy walk; chấm `qa` xanh. | Card: QA walk trên bản vừa lên. |
-| 39.0 | Toàn cảnh: năm chấm xanh, sidebar hai space, pane `thomas` ở giữa. | Card cuối: Bạn nhìn thấy mọi pane. Thomas đọc được mọi pane. |
-| 42.0 | Giữ 1 giây rồi lặp. | |
+| 11.0 | Quay về pane `thomas`. Dòng `⎿ TERMINAL:blocked pane=builder-tra-143` hiện từ Monitor. | Watcher đọc trạng thái pane, Thomas biết ngay ai đang kẹt. |
+| 13.0 | Pane `thomas`: `⏺ Bash(herdr agent read builder-tra-143)` · `⎿ Empty state dùng widget chung hay vẽ riêng?` | Thomas đọc pane của Builder, không cần ai copy dán. |
+| 16.0 | Pane `thomas`: `⏺ Bash(herdr agent prompt builder-tra-143 "Dùng EmptyState chung theo contract UI. Tiếp tục.")`. Chia đôi pane chính: phải là `builder-tra-143 · codex` nhận đúng dòng đó và chạy tiếp. | Builder chạy Codex, không có cross-session messaging: Thomas nói qua herdr. |
+| 20.0 | Pane trái đổi sang `builder-tra-142 · claude`: dòng preview `› Message from @thomas: … (ctrl+o to expand)`. | Builder chạy Claude Code: Thomas nhắn thẳng. Cùng một workspace, hai runtime. |
+| 23.0 | Pane `thomas`: `⏺ Bash(herdr agent wait builder-tra-143 --state idle,done)`. Danh sách `agents`: chấm `builder-tra-143` từ đỏ về vàng, rồi xanh `done · codex`. | Thomas chờ đúng tín hiệu, thay vì đoán. |
+| 26.5 | Bấm space `shop-demo`: danh sách agents đổi sang đội của project đó, `thomas`, `builder-shop-17`, `qa`, cũng đang chạy. Bấm lại `astragentic`. | Mỗi project một space, một đội. Cùng lúc. |
+| 29.5 | Toàn cảnh: hai space, năm agent, chấm xanh và vàng, pane `thomas` ở giữa. | Bạn nhìn thấy mọi pane. Thomas đọc được mọi pane. |
+| 32.0 | Giữ 1 giây rồi lặp. | |
 
 ## Điều người xem phải nhận ra
 
-1. herdr là một workspace cho agent: mỗi agent một pane có tên, có trạng thái, có API.
-2. Vì pane có tên, trạng thái và API, Thomas đọc và chờ được pane của người khác.
-3. Nhờ vậy các agent khác provider vẫn làm việc chung, và deploy làm ngay trong workspace.
+1. herdr là một workspace cho agent: mỗi agent một pane có tên và trạng thái tự nhận diện.
+2. Khách hàng bấm một tên là đọc được pane đó; không có gì giấu.
+3. Thomas đọc, nhắn và chờ pane của người khác qua CLI, kể cả Builder chạy runtime khác.
+4. Nhiều project, nhiều đội, cùng lúc, trong một cửa sổ.
 
-## Chỗ cần chủ site quyết
+## Đã chốt với chủ site (2026-09-10)
 
-- Đoạn deploy: cách anh làm thật là gắn server bằng `herdr machine add` rồi mở pane trên đó, hay
-  agent chạy `ssh` từ pane local? Tôi vẽ theo cách thật.
-- Ba lệnh deploy trong pane (`git pull`, `pnpm build`, `systemctl restart app`) là ví dụ; đổi
-  sang lệnh anh dùng (Docker, Cloudflare, Coolify…) để người xem thấy quen.
-- Cần thêm hai ảnh thật: danh sách agents lúc có chấm blocked/idle (lấy đúng màu và chữ), và
-  một pane Codex trong herdr.
-- Tên tab và tên space: dùng `astragentic`, `nizzy-ecom`, `prod-1` như trên, hay đổi.
+- Không so sánh với công cụ khác. Không có đoạn deploy. Tên hiển thị: `astragentic` và project
+  demo `shop-demo`. Không cần thêm ảnh thật; ảnh hero của herdr.dev là chuẩn hình.
