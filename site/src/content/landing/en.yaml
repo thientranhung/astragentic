@@ -8,7 +8,7 @@ hero:
 explain:
   agents:
     eyebrow: "Agents in Astragentic"
-    headline: "An agent is one coding-agent session handed a role."
+    headline: "Each agent is an independent runtime session with a role and a contract of its own."
     paragraphs:
       - "Every agent is a working session of Claude Code, Codex or OpenCode, launched from the command line with a defined role. It takes a task the way an employee does, hands back the result when it is finished, and can be cloned into several sessions running side by side: several Builders building at once, several QAs checking at once, like a real team."
       - "Each role has a name of its own: Thomas, Shaper, Builder, Rin, QA. The name keeps the role from drifting across a long context, and it is the address for sending work, reading a pane, and attaching the right skills."
