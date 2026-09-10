@@ -226,8 +226,8 @@
     "refs": [
       {
         "name": "review-with-rin",
-        "kind": "skill",
-        "href": "/skills/review-with-rin"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/review-with-rin"
       }
     ],
     "commits": []
@@ -253,8 +253,8 @@
       },
       {
         "name": "dispatch-ticket",
-        "kind": "skill",
-        "href": "/skills/dispatch-ticket"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket"
       }
     ],
     "commits": []
@@ -436,8 +436,8 @@
     "refs": [
       {
         "name": "dispatch-ticket",
-        "kind": "skill",
-        "href": "/skills/dispatch-ticket"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket"
       }
     ],
     "commits": []
@@ -460,8 +460,8 @@
     "refs": [
       {
         "name": "dispatch-ticket",
-        "kind": "skill",
-        "href": "/skills/dispatch-ticket"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket"
       },
       {
         "name": "hook-git-guard.py",
@@ -470,8 +470,8 @@
       },
       {
         "name": "review-with-rin",
-        "kind": "skill",
-        "href": "/skills/review-with-rin"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/review-with-rin"
       },
       {
         "name": "selftest.sh",
@@ -510,13 +510,13 @@
     "refs": [
       {
         "name": "dispatch-ticket",
-        "kind": "skill",
-        "href": "/skills/dispatch-ticket"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket"
       },
       {
         "name": "review-with-rin",
-        "kind": "skill",
-        "href": "/skills/review-with-rin"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/review-with-rin"
       }
     ],
     "commits": []
@@ -536,8 +536,8 @@
     "refs": [
       {
         "name": "dispatch-ticket",
-        "kind": "skill",
-        "href": "/skills/dispatch-ticket"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket"
       }
     ],
     "commits": []
@@ -569,8 +569,8 @@
       },
       {
         "name": "dispatch-ticket",
-        "kind": "skill",
-        "href": "/skills/dispatch-ticket"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket"
       },
       {
         "name": "dispatch-ticket-claude",
@@ -599,8 +599,8 @@
       },
       {
         "name": "review-with-rin",
-        "kind": "skill",
-        "href": "/skills/review-with-rin"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/review-with-rin"
       }
     ],
     "commits": []
@@ -620,8 +620,8 @@
     "refs": [
       {
         "name": "review-with-rin",
-        "kind": "skill",
-        "href": "/skills/review-with-rin"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/review-with-rin"
       }
     ],
     "commits": []
@@ -674,8 +674,8 @@
       },
       {
         "name": "dispatch-ticket",
-        "kind": "skill",
-        "href": "/skills/dispatch-ticket"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket"
       },
       {
         "name": "dispatch-ticket-claude",
@@ -701,8 +701,8 @@
     "refs": [
       {
         "name": "dispatch-ticket",
-        "kind": "skill",
-        "href": "/skills/dispatch-ticket"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket"
       },
       {
         "name": "dispatch-ticket-claude",
@@ -840,8 +840,8 @@
       },
       {
         "name": "dispatch-qa-walk",
-        "kind": "skill",
-        "href": "/skills/dispatch-qa-walk"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-qa-walk"
       }
     ],
     "commits": []
@@ -928,8 +928,8 @@
       },
       {
         "name": "dispatch-ticket",
-        "kind": "skill",
-        "href": "/skills/dispatch-ticket"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket"
       },
       {
         "name": "docs-staleness-audit.sh",
@@ -975,8 +975,8 @@
       },
       {
         "name": "dispatch-ticket",
-        "kind": "skill",
-        "href": "/skills/dispatch-ticket"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket"
       },
       {
         "name": "docs-staleness-audit.sh",
@@ -1155,13 +1155,13 @@
     "refs": [
       {
         "name": "dispatch-qa-walk",
-        "kind": "skill",
-        "href": "/skills/dispatch-qa-walk"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-qa-walk"
       },
       {
         "name": "dispatch-ticket",
-        "kind": "skill",
-        "href": "/skills/dispatch-ticket"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket"
       },
       {
         "name": "thomas.md",
@@ -1197,8 +1197,8 @@
       },
       {
         "name": "dispatch-qa-walk",
-        "kind": "skill",
-        "href": "/skills/dispatch-qa-walk"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-qa-walk"
       },
       {
         "name": "hook-git-guard.py",
@@ -1207,8 +1207,8 @@
       },
       {
         "name": "reconcile-tracker",
-        "kind": "skill",
-        "href": "/skills/reconcile-tracker"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/reconcile-tracker"
       },
       {
         "name": "release-worktree-resources.sh",
@@ -1425,8 +1425,8 @@
     "refs": [
       {
         "name": "dispatch-ticket",
-        "kind": "skill",
-        "href": "/skills/dispatch-ticket"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket"
       },
       {
         "name": "ledger-rules.py",
@@ -1667,8 +1667,8 @@
     "refs": [
       {
         "name": "dispatch-ticket",
-        "kind": "skill",
-        "href": "/skills/dispatch-ticket"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket"
       }
     ],
     "commits": [
@@ -1982,8 +1982,8 @@
     "refs": [
       {
         "name": "codex-arm",
-        "kind": "skill",
-        "href": "/skills/codex-arm"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/codex-arm"
       }
     ],
     "commits": []
@@ -2013,13 +2013,13 @@
       },
       {
         "name": "codex-arm",
-        "kind": "skill",
-        "href": "/skills/codex-arm"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/codex-arm"
       },
       {
         "name": "dispatch-ticket",
-        "kind": "skill",
-        "href": "/skills/dispatch-ticket"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket"
       },
       {
         "name": "hook-git-guard.py",
@@ -2028,8 +2028,8 @@
       },
       {
         "name": "review-with-rin",
-        "kind": "skill",
-        "href": "/skills/review-with-rin"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/review-with-rin"
       },
       {
         "name": "thomas.md",
@@ -2063,8 +2063,8 @@
       },
       {
         "name": "dispatch-ticket",
-        "kind": "skill",
-        "href": "/skills/dispatch-ticket"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket"
       },
       {
         "name": "dispatch-ticket-claude",
@@ -2156,13 +2156,13 @@
       },
       {
         "name": "codex-arm",
-        "kind": "skill",
-        "href": "/skills/codex-arm"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/codex-arm"
       },
       {
         "name": "dispatch-qa-walk",
-        "kind": "skill",
-        "href": "/skills/dispatch-qa-walk"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-qa-walk"
       },
       {
         "name": "hook-git-guard.py",
@@ -2200,8 +2200,8 @@
       },
       {
         "name": "dispatch-qa-walk",
-        "kind": "skill",
-        "href": "/skills/dispatch-qa-walk"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-qa-walk"
       },
       {
         "name": "hook-git-guard.py",
@@ -2258,8 +2258,8 @@
     "refs": [
       {
         "name": "codex-arm",
-        "kind": "skill",
-        "href": "/skills/codex-arm"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/codex-arm"
       }
     ],
     "commits": []
@@ -2313,8 +2313,8 @@
     "refs": [
       {
         "name": "dispatch-ticket",
-        "kind": "skill",
-        "href": "/skills/dispatch-ticket"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket"
       }
     ],
     "commits": []
@@ -2337,8 +2337,8 @@
     "refs": [
       {
         "name": "dispatch-ticket",
-        "kind": "skill",
-        "href": "/skills/dispatch-ticket"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket"
       },
       {
         "name": "dispatch-ticket-claude",
@@ -2503,13 +2503,13 @@
       },
       {
         "name": "codex-arm",
-        "kind": "skill",
-        "href": "/skills/codex-arm"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/codex-arm"
       },
       {
         "name": "dispatch-qa-walk",
-        "kind": "skill",
-        "href": "/skills/dispatch-qa-walk"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-qa-walk"
       },
       {
         "name": "hook-git-guard.py",
@@ -2752,8 +2752,8 @@
     "refs": [
       {
         "name": "dispatch-ticket",
-        "kind": "skill",
-        "href": "/skills/dispatch-ticket"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket"
       },
       {
         "name": "thomas.md",
@@ -3025,8 +3025,8 @@
     "refs": [
       {
         "name": "dispatch-qa-walk",
-        "kind": "skill",
-        "href": "/skills/dispatch-qa-walk"
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-qa-walk"
       },
       {
         "name": "thomas.md",
