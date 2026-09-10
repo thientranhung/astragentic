@@ -45,6 +45,7 @@ export const UI = {
 
   /* ── verbatim quoting (PRD §4) ── */
   verbatim: { vi: 'nguyên văn · tiếng Anh', en: 'verbatim' },
+  trackerReqs: { vi: 'năm yêu cầu với tracker · nguyên văn từ tracker-contract.md', en: 'five requirements on the tracker · verbatim from tracker-contract.md' },
 
   /** Stands inside a dashed frame where a photograph of the running system will go. It
    *  says the picture is real and not yet taken, so the frame reads as a promise rather

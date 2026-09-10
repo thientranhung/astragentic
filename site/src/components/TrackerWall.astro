@@ -1,8 +1,8 @@
 ---
 // Three tracker boards hung on a gallery wall: white frame, mat, a placard under each
-// naming the adapter that drives it. Static by design — nothing moves, nothing loads
-// beyond three pictures — and a click opens the board at full width in a native
-// <dialog>, so a board a third of the frame wide is still readable.
+// naming the adapter that drives it. One hangs large, two small beside it, and they
+// take turns in the large spot (see the script). A click on the large one opens it
+// at full width in a native <dialog>; no animation library anywhere.
 import { UI, type Lang } from '../lib/site';
 
 export interface WallCard {
@@ -22,11 +22,11 @@ const { lang, cards, caption, class: extra = '' } = Astro.props;
 const uid = Math.random().toString(36).slice(2, 7);
 ---
 
-<figure class:list={['wall', extra]}>
+<figure class:list={['wall', 'is-0', extra]} data-count={cards.length}>
   <div class="wall-row">
     {cards.map((c, i) => (
-      <div class="hang">
-        <button class="frame" type="button" data-open={`${uid}-${i}`} aria-label={`${c.name} · ${UI.wallOpen[lang]}`}>
+      <div class="hang" data-i={i}>
+        <button class="frame" type="button" data-open={`${uid}-${i}`} data-i={i} aria-label={`${c.name} · ${UI.wallOpen[lang]}`}>
           <span class="mat"><img src={c.src} alt={`${c.name}${c.note ? ` · ${c.note}` : ''}`} loading="lazy" decoding="async" /></span>
         </button>
         <p class="placard mono">
@@ -49,13 +49,58 @@ const uid = Math.random().toString(36).slice(2, 7);
 </figure>
 
 <script>
-  document.querySelectorAll<HTMLButtonElement>('.frame[data-open]').forEach((b) => {
-    b.addEventListener('click', () => {
-      const d = document.getElementById(b.dataset.open!) as HTMLDialogElement | null;
-      d?.showModal();
+  // Which board hangs large is the figure's `is-N` class. Swapping is a class change;
+  // the motion is FLIP: measure, switch, then play each frame from its old box to
+  // its new one with the Web Animations API. The large frame opens the lightbox; a
+  // small one takes the large spot. Every 6 s the next small one comes forward,
+  // unless the wall is off screen, its lightbox is open, or motion is reduced.
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  document.querySelectorAll<HTMLElement>('.wall').forEach((wall) => {
+    const count = Number(wall.dataset.count || 0);
+    const hangs = Array.from(wall.querySelectorAll<HTMLElement>('.hang'));
+    let large = 0;
+    let timer: number | undefined;
+    const rects = () => hangs.map((h) => h.getBoundingClientRect());
+    const setLarge = (n: number) => {
+      const before = rects();
+      large = (n + count) % count;
+      wall.className = wall.className.replace(/\bis-\d+\b/, `is-${large}`);
+      if (reduce.matches) return;
+      const after = rects();
+      hangs.forEach((h, k) => {
+        const a = before[k], b = after[k];
+        const dx = a.left - b.left, dy = a.top - b.top, sx = a.width / b.width, sy = a.height / b.height;
+        if (!dx && !dy && sx === 1 && sy === 1) return;
+        h.animate(
+          [{ transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`, transformOrigin: 'top left' }, { transform: 'none', transformOrigin: 'top left' }],
+          { duration: 650, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+        );
+      });
+    };
+    const next = () => setLarge(large + 1);
+    const stop = () => { if (timer) { window.clearInterval(timer); timer = undefined; } };
+    const start = () => { if (!timer && !reduce.matches) timer = window.setInterval(next, 6000); };
+    wall.querySelectorAll<HTMLButtonElement>('.frame').forEach((b) => {
+      b.addEventListener('click', () => {
+        const i = Number(b.dataset.i);
+        if (i === large) {
+          stop();
+          (document.getElementById(b.dataset.open!) as HTMLDialogElement | null)?.showModal();
+        } else {
+          setLarge(i);
+          stop(); start();
+        }
+      });
     });
+    // no hover pause: a pointer parked over the wall would freeze it for good; the
+    // wall pauses only while its lightbox is open
+    wall.querySelectorAll<HTMLDialogElement>('dialog.light').forEach((d) => {
+      d.addEventListener('close', start);
+    });
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver((es) => es.forEach((e) => (e.isIntersecting ? start() : stop()))).observe(wall);
+    } else start();
   });
-  // click on the backdrop closes
   document.querySelectorAll<HTMLDialogElement>('dialog.light').forEach((d) => {
     d.addEventListener('click', (e) => { if (e.target === d) d.close(); });
   });
@@ -85,10 +130,15 @@ const uid = Math.random().toString(36).slice(2, 7);
     align-items: center;
     gap: 0.7rem;
   }
-  .hang:first-child {
+  /* the large one takes column 1 across both rows; the others fill column 2 in order */
+  .wall.is-0 .hang[data-i='0'], .wall.is-1 .hang[data-i='1'], .wall.is-2 .hang[data-i='2'] {
+    grid-column: 1;
     grid-row: 1 / span 2;
     align-self: center;
   }
+  .hang { grid-column: 2; }
+  .frame[data-i] { cursor: pointer; }
+  .wall.is-0 .frame[data-i='0'], .wall.is-1 .frame[data-i='1'], .wall.is-2 .frame[data-i='2'] { cursor: zoom-in; }
   .frame {
     display: block;
     width: 100%;
@@ -194,7 +244,8 @@ const uid = Math.random().toString(36).slice(2, 7);
     .wall-row {
       grid-template-columns: 1fr;
     }
-    .hang:first-child {
+    .hang, .wall.is-0 .hang[data-i='0'], .wall.is-1 .hang[data-i='1'], .wall.is-2 .hang[data-i='2'] {
+      grid-column: 1;
       grid-row: auto;
     }
   }
