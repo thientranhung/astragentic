@@ -492,18 +492,22 @@ const CARD_FRAME = 330;
   </section>
 
   {/* ── 12 · How to start ───────────────────────────────────────────────── */}
-  <section class="screen screen--surface" id="requirements">
+  <section class="screen screen--surface explain" id="requirements">
     <div class="column">
+      {copy.adopt.reqEyebrow && <p class="eyebrow">{copy.adopt.reqEyebrow}</p>}
       <h2>{copy.adopt.reqHeadline ?? copy.adopt.reqTitle}</h2>
+      {copy.adopt.reqSub && <p class="sub" set:html={hl(copy.adopt.reqSub)} />}
     </div>
     <div class="column">
       <AdoptBlock lang={lang} requirements={copy.adopt.requirements} reqTitle={copy.adopt.reqTitle} show="requirements" />
     </div>
   </section>
 
-  <section class="screen screen--canvas" id="adopt">
+  <section class="screen screen--canvas explain" id="adopt">
     <div class="column">
+      {copy.adopt.eyebrow && <p class="eyebrow">{copy.adopt.eyebrow}</p>}
       <h2>{copy.adopt.headline}</h2>
+      {copy.adopt.sub && <p class="sub" set:html={hl(copy.adopt.sub)} />}
     </div>
     <div class="column">
       <AdoptBlock lang={lang} show="commands" />

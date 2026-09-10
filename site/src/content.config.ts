@@ -161,9 +161,13 @@ const landing = defineCollection({
     /** Home v2 §Section 5. The commands themselves come from src/data/adopt.json. */
     adopt: z
       .object({
+        eyebrow: z.string().optional(),
         headline: z.string().optional(),
+        sub: z.string().optional(),
+        reqEyebrow: z.string().optional(),
         reqTitle: z.string().optional(),
         reqHeadline: z.string().optional(),
+        reqSub: z.string().optional(),
         requirements: z
           .array(
             z.object({

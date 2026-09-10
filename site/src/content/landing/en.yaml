@@ -12,7 +12,7 @@ explain:
     paragraphs:
       - "Every agent is a working session of Claude Code, Codex or OpenCode, launched from the command line with a defined role. It takes a task the way an employee does, hands back the result when it is finished, and can be cloned into several sessions running side by side: several Builders building at once, several QAs checking at once, like a real team."
       - "Each role has a name of its own: Thomas, Shaper, Builder, Rin, QA. The name keeps the role from drifting across a long context, and it is the address for sending work, reading a pane, and attaching the right skills."
-      - "A role is defined by one declaration file in each runtime's own format, loaded into the system prompt when the session opens: Claude Code reads `.claude/agents/<role>.md`, Codex reads the launch profile `.codex/profiles/<role>.config.toml`, OpenCode reads `.opencode/agents/<role>.md`. The runtime, the model and the effort of every role are declared in one place, `orchestrator.md`."
+      - "A role is a declaration file in each runtime’s own format, loaded into the system prompt when the session opens; runtime, model and effort per role are declared in one place, `orchestrator.md`. The path of each file is on the Structure page."
     commands:
       label: "Start an agent over the CLI on three runtimes"
       lines:
@@ -28,9 +28,9 @@ explain:
     headline: "Dispatching a ticket opens a conversation with an address."
     paragraphs:
       - "A ticket is an issue on the tracker: a **task**, a **feature** or a **requirement** sliced small enough for one Builder to finish in one session. Each ticket carries a stable id in its title, a status, an assignee, and blocking edges to the work that must land first. Shaper creates tickets from the spec with the `to-tickets` skill; Thomas dispatches only the ones that are ready."
-      - "Thomas dispatches through the `dispatch-ticket` skill: it claims the ticket on the tracker first, creates the branch and the worktree, opens a herdr pane, launches the role on its declared runtime, sends the brief, and sets a watcher straight away. The chain ticket → assignee → pane → worktree → branch → PR is one to one, so several Builders work in parallel without getting in each other’s way."
+      - "Thomas dispatches through the `dispatch-ticket` skill: claim on the tracker, create the branch and worktree, open a herdr pane, launch the role, send the brief, arm the watcher. The chain ticket → assignee → pane → worktree → branch → PR is one-to-one, so several Builders work in parallel without treading on each other."
       - "When the roles all run Claude Code, the main channel is Claude Code’s built-in cross-session messaging. Every Claude Code session has a name; Thomas looks up the Builder’s with ListAgents and sends to exactly that name. In the receiving session the message shows up as a one-line preview, `› Message from @thomas: …`, expanded with ctrl+o, and the answer travels back into the session that sent it. A blocked Builder asks; Thomas reads the question, answers through that same channel, then sets a fresh Monitor and waits for the signal that the work is done. That is how the loop of dispatch, question, answer and handback runs unbroken, with nobody sitting and watching it."
-      - "herdr is the visible plane and the fallback path. Each role has a named pane, Thomas reads a pane with `herdr agent read` when a session falls silent, and it uses the herdr CLI to drive a Builder on Codex or OpenCode, where SendMessage does not exist. The watcher follows the working, blocked and idle state of every pane."
+      - "herdr is the visible plane and the fallback path: one named pane per role, a watcher reporting working, blocked, idle. Thomas reads a pane with `herdr agent read` when a session falls silent, and steers a Builder on Codex or OpenCode through the herdr CLI, where there is no cross-session messaging."
       - "Sorting the questions is what moves you from human-in-the-loop to human-on-the-loop. The routine technical questions Thomas answers for you, out of the contract, the spec and the tracker. Only a real design decision comes up to you through `to-questionnaire`, in the form of a question you can answer. You are not standing inside the loop at every step; you are standing on top of it and stepping in when something needs you."
     commands:
       - label: "Answering a blocked Builder, both on Claude Code"
@@ -213,8 +213,12 @@ fit:
     - "No dependencies between pieces of work, no release after this one."
 
 adopt:
-  headline: "Install"
-  reqHeadline: "Required tech stack"
+  eyebrow: "Install"
+  headline: "Four commands to put the team into your repo."
+  sub: "Check the requirements, install the harness into the repo, let Claude Code run the adaptation, then open Thomas's session. From there, everything goes through Thomas."
+  reqEyebrow: "Tech stack"
+  reqHeadline: "Seven things to have before you install."
+  reqSub: "Four required, one optional, one pick-one. The `check-requirements.sh` script checks all of them for you before the install."
   reqTitle: "Required tech stack"
   requirements:
     - name: "Claude Code CLI"

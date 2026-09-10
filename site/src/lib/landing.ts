@@ -100,7 +100,16 @@ export interface Landing {
     notYet: string[];
   };
   /** Section 5. The four commands come from src/data/adopt.json. */
-  adopt: { headline: string; reqHeadline?: string; reqTitle?: string; requirements?: Requirement[] };
+  adopt: {
+    eyebrow?: string;
+    headline: string;
+    sub?: string;
+    reqEyebrow?: string;
+    reqHeadline?: string;
+    reqSub?: string;
+    reqTitle?: string;
+    requirements?: Requirement[];
+  };
   /** Keyed by the slug HomeBody asks for: sendmessage, herdr, tracker. */
   shots: Record<string, Shot>;
   sections: {

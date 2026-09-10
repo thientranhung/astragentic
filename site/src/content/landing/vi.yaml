@@ -12,7 +12,7 @@ explain:
     paragraphs:
       - "Mỗi agent là một session của Claude Code, Codex hoặc OpenCode, launch từ CLI với một vai xác định. Nó nhận nhiệm vụ như một nhân viên, làm xong thì trả kết quả, và có thể nhân bản thành nhiều session chạy song song: nhiều Builder cùng thi công, nhiều QA cùng kiểm, giống một đội thật."
       - "Mỗi vai có một tên riêng: Thomas, Shaper, Builder, Rin, QA. Tên riêng giữ cho vai không bị trôi trong context dài, và là địa chỉ để gửi việc, đọc pane, gắn skill đúng vai."
-      - "Vai được định nghĩa bằng một file khai báo theo chuẩn của từng runtime, nạp vào system prompt khi session mở: Claude Code đọc `.claude/agents/<vai>.md`, Codex đọc launch profile `.codex/profiles/<vai>.config.toml`, OpenCode đọc `.opencode/agents/<vai>.md`. Runtime, model và effort của từng vai khai ở một chỗ, `orchestrator.md`."
+      - "Mỗi vai là một file khai báo theo chuẩn của từng runtime, nạp vào system prompt khi session mở; runtime, model và effort của từng vai khai ở một chỗ, `orchestrator.md`. Đường dẫn từng file có ở trang Cấu trúc."
     commands:
       label: "Start agent qua CLI trên ba runtime"
       lines:
@@ -28,9 +28,9 @@ explain:
     headline: "Dispatch một ticket là mở một cuộc trao đổi có địa chỉ."
     paragraphs:
       - "Ticket là một issue trên tracker: một **task**, một **feature** hay một **requirement** đã được cắt đủ nhỏ để một Builder hoàn thành trong một session. Mỗi ticket mang một id ổn định trong tiêu đề, một trạng thái, một assignee, và các blocking edge tới việc phải xong trước. Shaper tạo ticket từ spec bằng skill `to-tickets`; Thomas chỉ dispatch những ticket đã sẵn sàng."
-      - "Thomas dispatch theo skill `dispatch-ticket`: claim ticket trên tracker trước, tạo branch và worktree, mở một pane herdr, launch vai theo runtime đã khai, gửi brief, và lập tức đặt watcher. Chuỗi ticket → assignee → pane → worktree → branch → PR là một-một, nên nhiều Builder làm song song mà không giẫm lên nhau."
+      - "Thomas dispatch theo skill `dispatch-ticket`: claim trên tracker, tạo branch và worktree, mở pane herdr, launch vai, gửi brief, đặt watcher. Chuỗi ticket → assignee → pane → worktree → branch → PR là một-một, nên nhiều Builder làm song song mà không giẫm lên nhau."
       - "Khi các vai cùng chạy Claude Code, kênh chính là cross-session messaging có sẵn của Claude Code. Mỗi session Claude Code có một tên; Thomas tra tên session của Builder bằng ListAgents rồi gửi cho đúng tên đó. Ở session nhận, thông điệp hiện thành một dòng preview `› Message from @thomas: …`, mở rộng bằng ctrl+o, và câu trả lời đi ngược về đúng session đã gửi. Builder bị chặn thì hỏi; Thomas đọc câu hỏi, trả lời qua đúng kênh đó, rồi đặt Monitor mới chờ tín hiệu làm xong. Nhờ vậy vòng dispatch, hỏi, đáp, handback chạy liền mạch mà không cần người ngồi canh."
-      - "herdr là mặt phẳng nhìn thấy và là đường dự phòng. Mỗi vai một pane có tên, Thomas đọc pane bằng `herdr agent read` khi một session im lặng, và dùng herdr CLI để điều Builder trên Codex hay OpenCode, nơi SendMessage không có. Watcher theo dõi trạng thái working, blocked, idle của từng pane."
+      - "herdr là mặt phẳng nhìn thấy và là đường dự phòng: mỗi vai một pane có tên, watcher báo working, blocked, idle. Thomas đọc pane bằng `herdr agent read` khi một session im lặng, và điều Builder trên Codex hay OpenCode qua herdr CLI, nơi không có cross-session messaging."
       - "Phân loại câu hỏi là điều đưa bạn từ human-in-the-loop sang human-on-the-loop. Câu hỏi kỹ thuật thường gặp, Thomas trả lời thay bạn từ contract, spec và tracker. Chỉ quyết định thiết kế thật sự mới đi lên bạn qua `to-questionnaire`, dưới dạng câu hỏi trả lời được. Bạn không đứng trong vòng lặp ở từng bước; bạn đứng trên vòng lặp và can thiệp khi có việc cần bạn."
     commands:
       - label: "Trả lời một Builder bị chặn, cùng Claude Code"
@@ -213,8 +213,12 @@ fit:
     - "Không có phụ thuộc giữa các việc, không có release sau."
 
 adopt:
-  headline: "Install"
-  reqHeadline: "Tech stack cần có"
+  eyebrow: "Install"
+  headline: "Bốn lệnh để đưa đội vào repo của bạn."
+  sub: "Kiểm yêu cầu, cài harness vào repo, để Claude Code chạy bản thích nghi, rồi mở session Thomas. Từ đó mọi việc đi qua Thomas."
+  reqEyebrow: "Tech stack"
+  reqHeadline: "Bảy thứ cần có trước khi cài."
+  reqSub: "Bốn bắt buộc, một tuỳ chọn, một chọn một. Script `check-requirements.sh` kiểm tất cả cho bạn trước khi cài."
   reqTitle: "Tech stack cần có"
   requirements:
     - name: "Claude Code CLI"
