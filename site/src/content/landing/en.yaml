@@ -20,7 +20,7 @@ explain:
         - "codex    --profile builder            # model and model_reasoning_effort live in the profile TOML"
         - "opencode --agent builder -m <provider>/<model>   # no effort flag"
     more:
-      label: "Each role in detail →"
+      label: "Meet the AI team →"
       href: "/en/roles/thomas"
 
   comms:
@@ -33,12 +33,6 @@ explain:
       - "herdr is the visible plane and the fallback path: one named pane per role, a watcher reporting working, blocked, idle. Thomas reads a pane with `herdr agent read` when a session falls silent, and steers a Builder on Codex or OpenCode through the herdr CLI, where there is no cross-session messaging."
       - "Sorting the questions is what moves you from human-in-the-loop to human-on-the-loop. The routine technical questions Thomas answers for you, out of the contract, the spec and the tracker. Only a real design decision comes up to you through `to-questionnaire`, in the form of a question you can answer. You are not standing inside the loop at every step; you are standing on top of it and stepping in when something needs you."
     commands:
-      - label: "Answering a blocked Builder, both on Claude Code"
-        lines:
-          - "ListAgents                                  # Thomas looks up the Builder’s session name"
-          - "@builder-TRA-142 <the answer>               # sends to exactly that name"
-          - "› Message from @thomas: <the answer> (ctrl+o to expand)   # what the Builder sees"
-          - "Monitor(...)   # Thomas waits for the done signal, or for something to discuss"
       - label: "Driving a Builder on Codex through herdr"
         lines:
           - 'herdr agent start "builder-TRA-142" --kind codex --pane <id> -- codex --profile builder'
@@ -49,8 +43,9 @@ explain:
       href: "/en/skills/dispatch-ticket"
 
   roles:
-    eyebrow: "Roles on the team"
-    headline: "Five roles, five session lifetimes."
+    eyebrow: "AI outsourcing team"
+    headline: "What each agent does."
+    figureNote: "Thomas runs the whole team: takes your request, brings in the Shaper when a spec is needed, dispatches tickets to Builders, calls Rin’s gate at every milestone and QA’s walk before a merge, then reports back to you. Every arrow in the picture is one exchange there and back."
     models:
       label: "Model and effort per role"
       intro: "Each role runs on the model and effort its work needs. Thomas and Shaper reason at length, so they run Opus, Shaper at high effort because grilling and spec are where the thinking happens; Builder and QA build and test, so they run Sonnet for speed and cost; Rin gates on Opus at medium effort."

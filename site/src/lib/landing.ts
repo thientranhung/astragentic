@@ -64,6 +64,7 @@ export interface Explain {
   items?: ExplainItem[];
   more?: { label: string; href: string };
   models?: { label: string; intro: string; note: string };
+  figureNote?: string;
 }
 
 /** The YAML may spell one pane as an object and several as a list; the page only ever
@@ -183,7 +184,7 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
         sub: 'Mỗi thẻ mở trang giải thích cơ chế bên dưới.',
       },
       team: {
-        eyebrow: 'Khách hàng và team',
+        eyebrow: 'Cách bạn làm việc với AI team',
         headline: 'Mô hình vận hành.',
         sub: 'Bạn là khách hàng, trao đổi với Thomas là người đại diện của team. Team làm việc quanh issue tracker, và mọi việc đều đi qua đó để bạn đọc lại được bất cứ lúc nào.',
         pointsLabel: 'Hằng ngày, bạn chỉ làm việc với Thomas',
@@ -276,7 +277,7 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
         sub: 'Each card opens the page that explains the mechanism behind it.',
       },
       team: {
-        eyebrow: 'Client and team',
+        eyebrow: 'How you work with the AI team',
         headline: 'The operating model.',
         sub: "You are the client, talking to Thomas, the team's representative. The team works around the issue tracker, and everything passes through it so you can read it back at any time.",
         pointsLabel: 'Day to day, you work with Thomas alone',

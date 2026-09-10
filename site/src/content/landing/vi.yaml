@@ -20,7 +20,7 @@ explain:
         - "codex    --profile builder            # model + model_reasoning_effort nằm trong profile TOML"
         - "opencode --agent builder -m <provider>/<model>   # không có cờ effort"
     more:
-      label: "Chi tiết từng role →"
+      label: "Khám phá AI team →"
       href: "/vai/thomas"
 
   comms:
@@ -33,12 +33,6 @@ explain:
       - "herdr là mặt phẳng nhìn thấy và là đường dự phòng: mỗi agent một pane có tên, watcher báo working, blocked, idle. Thomas đọc pane bằng `herdr agent read` khi một session im lặng, và điều Builder trên Codex hay OpenCode qua herdr CLI, nơi không có cross-session messaging."
       - "Phân loại câu hỏi là điều đưa bạn từ human-in-the-loop sang human-on-the-loop. Câu hỏi kỹ thuật thường gặp, Thomas trả lời thay bạn từ contract, spec và tracker. Chỉ quyết định thiết kế thật sự mới đi lên bạn qua `to-questionnaire`, dưới dạng câu hỏi trả lời được. Bạn không đứng trong vòng lặp ở từng bước; bạn đứng trên vòng lặp và can thiệp khi có việc cần bạn."
     commands:
-      - label: "Trả lời một Builder bị chặn trên Claude Code"
-        lines:
-          - "ListAgents                                  # Thomas tra tên session của Builder"
-          - "@builder-TRA-142 <câu trả lời>              # gửi theo đúng tên đó"
-          - "› Message from @thomas: <câu trả lời> (ctrl+o to expand)   # phía Builder nhìn thấy"
-          - "Monitor(...)   # Thomas chờ tín hiệu làm xong hoặc cần trao đổi"
       - label: "Điều một Builder trên Codex qua herdr"
         lines:
           - 'herdr agent start "builder-TRA-142" --kind codex --pane <id> -- codex --profile builder'
@@ -49,8 +43,9 @@ explain:
       href: "/skills/dispatch-ticket"
 
   roles:
-    eyebrow: "Role trong team"
-    headline: "Năm role, năm vòng đời session."
+    eyebrow: "AI outsource team"
+    headline: "Công việc của mỗi agent."
+    figureNote: "Thomas quản trị cả team: nhận yêu cầu từ bạn, gọi Shaper khi cần spec, dispatch ticket cho Builder, gọi Rin gate ở mỗi milestone và QA walk trước khi merge, rồi báo lại bạn. Mỗi mũi tên trên hình là một lượt trao đổi đi và về."
     models:
       label: "Model và effort theo role"
       intro: "Agent của mỗi role chạy trên model và effort hợp với việc của role đó. Thomas và Shaper suy luận dài nên dùng Opus, Shaper ở effort high vì grill và spec là chỗ tốn suy nghĩ nhất; Builder và QA thi công và kiểm thử nên dùng Sonnet cho nhanh và rẻ; Rin gate trên Opus ở effort medium."

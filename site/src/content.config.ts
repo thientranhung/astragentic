@@ -145,6 +145,8 @@ const landing = defineCollection({
             .optional(),
           more: z.object({ label: z.string(), href: z.string() }).optional(),
           models: z.object({ label: z.string(), intro: z.string(), note: z.string() }).optional(),
+          /** One sentence under the section's figure. */
+          figureNote: z.string().optional(),
         }),
       )
       .optional(),
