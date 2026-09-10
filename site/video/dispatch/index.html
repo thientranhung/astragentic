@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Dispatch một ticket — Thomas và Builder</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/TextPlugin.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "JetBrainsMono Nerd Font";
+        src: local("JetBrainsMono NF Regular"), local("JetBrainsMono Nerd Font");
+        font-weight: 400;
+      }
+      @font-face {
+        font-family: "JetBrainsMono Nerd Font";
+        src: local("JetBrainsMono NF SemiBold"), local("JetBrainsMono Nerd Font SemiBold");
+        font-weight: 600;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0b0d11; }
+      body {
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", Menlo, ui-monospace, monospace;
+        color: #d8dde6;
+        font-size: 22px;
+        line-height: 34px;
+      }
+      #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+      .bg { position: absolute; inset: 0; background: #0b0d11; }
+      .clip { position: absolute; inset: 0; }
+
+      /* ── two panes, herdr-style chrome ─────────────────────────────────── */
+      .stage { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; padding: 56px 64px; }
+      .pane {
+        position: relative; display: flex; flex-direction: column;
+        background: #12151b; border: 1px solid #262b34; border-radius: 12px; overflow: hidden;
+      }
+      .bar {
+        display: flex; align-items: center; gap: 14px; height: 52px; padding: 0 20px;
+        background: #171b22; border-bottom: 1px solid #262b34; font-size: 18px; color: #8b93a1;
+      }
+      .bar .dots { display: flex; gap: 8px; }
+      .bar .dots i { display: block; width: 12px; height: 12px; border-radius: 50%; background: #2c323c; }
+      .bar .name { color: #d8dde6; font-weight: 600; }
+      .bar .sep { color: #7f838a; }
+      .body { position: relative; flex: 1; overflow: hidden; padding: 22px 26px; }
+      .scroll { position: relative; width: 100%; }
+      .status {
+        height: 44px; padding: 0 26px; display: flex; align-items: center; gap: 12px;
+        border-top: 1px solid #1f242c; font-size: 18px; color: #8b93a1;
+      }
+      .status .lamp { width: 10px; height: 10px; border-radius: 50%; background: #3b424d; }
+      .status.working .lamp { background: #e0a83a; }
+      .status.blocked .lamp { background: #e53625; }
+      .status.done .lamp { background: #3ecf8e; }
+
+      /* ── lines ─────────────────────────────────────────────────────────── */
+      .line { position: relative; width: 100%; opacity: 0; white-space: pre-wrap; word-break: break-word; margin-bottom: 6px; }
+      .line.say { color: #e6eaf0; }
+      .line.say::before, .line.tool::before { content: "⏺"; margin-right: 12px; }
+      .line.say::before { color: #d8dde6; }
+      .line.tool { color: #c3c9d3; }
+      .line.tool::before { color: #3ecf8e; }
+      .line.tool b { color: #e6eaf0; font-weight: 600; }
+      .line.out { color: #8b93a1; padding-left: 34px; }
+      .line.out::before { content: "⎿"; margin-right: 10px; color: #3b424d; }
+      .line.input {
+        border: 1px solid #2c323c; border-radius: 8px; padding: 10px 16px; margin: 10px 0 12px; color: #e6eaf0; background: #0e1116;
+      }
+      .line.input .prompt { color: #8b93a1; margin-right: 12px; }
+      .line.input .typed { white-space: pre-wrap; }
+      .cursor { display: inline-block; width: 11px; height: 24px; vertical-align: -4px; background: #d8dde6; margin-left: 2px; opacity: 0; }
+      .line.msg {
+        border-left: 3px solid #2f5da8; background: #121a2a; padding: 10px 16px; margin: 8px 0 12px; border-radius: 0 8px 8px 0; color: #dfe6f3;
+      }
+      .line.msg .from { display: block; font-size: 17px; color: #7fa2e6; margin-bottom: 4px; }
+      .line.q {
+        border: 1px solid #3a4457; background: #141a25; padding: 12px 18px; margin: 8px 0 12px; border-radius: 8px; color: #e6eaf0;
+      }
+      .line.q .head { display: block; color: #7fa2e6; font-size: 18px; margin-bottom: 6px; }
+      .line.q .opt { display: block; padding-left: 8px; }
+      .tag { display: inline-block; padding: 0 10px; border-radius: 6px; font-size: 18px; line-height: 28px; font-weight: 600; vertical-align: 1px; }
+      .tag.blocked { background: #3a1a17; color: #ff7a6b; }
+      .tag.done { background: #123326; color: #3ecf8e; }
+      .tag.working { background: #33280f; color: #e0a83a; }
+      .launch { color: #8b93a1; }
+      .welcome { color: #8b93a1; border: 1px solid #262b34; border-radius: 8px; padding: 10px 16px; margin-bottom: 12px; }
+      .welcome b { color: #e6eaf0; }
+
+      /* ── the pulse that crosses between panes ──────────────────────────── */
+      .bridge { position: absolute; left: 0; top: 0; width: 26px; height: 26px; border-radius: 50%; opacity: 0;
+        background: #2f5da8; border: 3px solid #0b0d11; }
+      .bridge.back { background: #0b6e4f; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="36" data-width="1920" data-height="1080">
+      <div class="bg"></div>
+      <section id="scene" class="clip" data-start="0" data-duration="36" data-track-index="1">
+        <div class="stage">
+          <div class="pane" id="pane-l">
+            <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="name">thomas</span><span class="sep">·</span><span>Claude Code</span><span class="sep">·</span><span>claude-opus-5 · effort medium</span></div>
+            <div class="body"><div class="scroll" id="scroll-l" data-layout-allow-overflow></div></div>
+            <div class="status" id="status-l"><span class="lamp"></span><span id="status-l-text">idle</span></div>
+          </div>
+          <div class="pane" id="pane-r">
+            <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="name">builder-TRA-142</span><span class="sep">·</span><span>Claude Code</span><span class="sep">·</span><span>worktree ../wt/TRA-142</span></div>
+            <div class="body"><div class="scroll" id="scroll-r" data-layout-allow-overflow></div></div>
+            <div class="status" id="status-r"><span class="lamp"></span><span id="status-r-text">no session</span></div>
+          </div>
+        </div>
+        <div class="bridge" id="bridge-1"></div>
+        <div class="bridge back" id="bridge-2"></div>
+        <div class="bridge" id="bridge-3"></div>
+        <div class="bridge back" id="bridge-4"></div>
+        <div class="bridge" id="bridge-5"></div>
+        <div class="bridge back" id="bridge-6"></div>
+      </section>
+    </div>
+
+    <script>
+      gsap.registerPlugin(TextPlugin);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // ── the script (content/site/19-dispatch-video-script.md) ────────────
+      // kind: input (typed by the owner) · say (an agent's reply) · tool · out · msg
+      // (a cross-session message) · q (to-questionnaire) · launch · welcome · status · bridge
+      const L = 'l', R = 'r';
+      const S = [
+        [0.4, L, 'input', 'TRA-142 sẵn sàng rồi, dispatch đi. Builder không được đụng module thanh toán, có gì hỏi lại.', { cps: 34 }],
+        [3.6, L, 'status', 'working'],
+        [3.7, L, 'say', 'Claim TRA-142 trên tracker trước, rồi tạo branch và worktree.'],
+        [4.5, L, 'tool', 'Bash', 'gh issue edit 142 --add-assignee builder'],
+        [4.9, L, 'out', 'assigned'],
+        [5.3, L, 'tool', 'Bash', 'git worktree add ../wt/TRA-142 -b feat/TRA-142 main'],
+        [5.7, L, 'out', 'Preparing worktree (new branch feat/TRA-142)'],
+        [6.1, L, 'tool', 'Bash', 'herdr pane create --workspace astragentic --tab TRA-142'],
+        [6.5, L, 'out', 'pane 7a3f'],
+        [6.9, R, 'launch', '$ claude --agent builder --model claude-sonnet-5 --effort medium'],
+        [7.5, R, 'welcome'],
+        [7.6, R, 'status', 'idle'],
+        [8.2, L, 'tool', 'SendMessage', 'to: "builder-TRA-142"'],
+        [8.6, L, 'out', 'Ticket TRA-142: màn hình Lịch sử đơn hàng thêm pull-to-refresh và empty state. Acceptance: kéo xuống gọi lại API orders, danh sách rỗng hiện EmptyState, flutter test pass. Không đụng module thanh toán. Write-set: lib/features/orders/*.'],
+        [9.0, 'bridge', 1, L],
+        [9.6, R, 'msg', 'thomas', 'Ticket TRA-142: màn hình Lịch sử đơn hàng thêm pull-to-refresh và empty state. Acceptance: kéo xuống gọi lại API orders, danh sách rỗng hiện EmptyState, flutter test pass. Không đụng module thanh toán. Write-set: lib/features/orders/*.'],
+        [10.2, L, 'tool', 'Bash', "herdr pane run 7a3f '/mattpocock-skills:implement TRA-142'"],
+        [10.6, L, 'out', 'echoed'],
+        [10.8, R, 'input', '/mattpocock-skills:implement TRA-142', { cps: 60 }],
+        [11.6, R, 'status', 'working'],
+        [11.7, L, 'tool', 'Monitor', 'scripts/herdr-watch-terminal.sh 7a3f 3 3600 120'],
+        [12.1, L, 'out', 'watching builder-TRA-142'],
+        [12.4, R, 'tool', 'Read', 'lib/features/orders/orders_screen.dart'],
+        [13.0, R, 'tool', 'Edit', 'lib/features/orders/orders_screen.dart'],
+        [13.6, R, 'tool', 'Bash', 'flutter test test/features/orders'],
+        [14.4, R, 'out', '00:04 +9: All tests passed!'],
+        [15.2, R, 'say', 'Empty state dùng widget EmptyState chung của design system hay vẽ riêng có illustration? Ticket không nói.'],
+        [16.0, R, 'tag', 'blocked'],
+        [16.0, R, 'status', 'blocked'],
+        [16.3, 'bridge', 2, R],
+        [16.9, L, 'out', 'TERMINAL:blocked pane=7a3f'],
+        [17.2, L, 'tool', 'Bash', 'herdr agent read 7a3f'],
+        [17.6, L, 'out', 'Empty state dùng widget EmptyState chung hay vẽ riêng?'],
+        [18.2, L, 'say', 'Câu hỏi kỹ thuật, trả lời từ contract UI: mọi màn hình danh sách dùng EmptyState chung, không thêm asset mới.'],
+        [19.0, L, 'tool', 'SendMessage', 'to: "builder-TRA-142"'],
+        [19.3, L, 'out', 'Dùng EmptyState chung theo contract UI, không thêm asset. Tiếp tục.'],
+        [19.5, 'bridge', 3, L],
+        [20.1, R, 'msg', 'thomas', 'Dùng EmptyState chung theo contract UI, không thêm asset. Tiếp tục.'],
+        [20.2, R, 'status', 'working'],
+        [20.3, L, 'tool', 'Monitor', 'scripts/herdr-watch-terminal.sh 7a3f 3 3600 120'],
+        [20.6, L, 'out', 'watching builder-TRA-142'],
+        [20.8, R, 'tool', 'Edit', 'lib/features/orders/orders_screen.dart'],
+        [21.4, R, 'tool', 'Bash', 'flutter test test/features/orders'],
+        [22.0, R, 'out', '00:04 +11: All tests passed!'],
+        [22.8, R, 'say', 'EmptyState có thêm nút "Mua sắm ngay" dẫn về Home không? Spec chỉ nói hiện thông báo rỗng.'],
+        [23.6, R, 'tag', 'blocked'],
+        [23.6, R, 'status', 'blocked'],
+        [23.9, 'bridge', 4, R],
+        [24.5, L, 'out', 'TERMINAL:blocked pane=7a3f'],
+        [24.8, L, 'tool', 'Bash', 'herdr agent read 7a3f'],
+        [25.2, L, 'out', 'EmptyState có thêm nút "Mua sắm ngay" dẫn về Home không?'],
+        [25.8, L, 'say', 'Đây là quyết định UX, không có trong spec và contract. Đưa lên bạn.'],
+        [26.4, L, 'tool', 'Skill', 'mattpocock-skills:to-questionnaire'],
+        [26.9, L, 'q', 'TRA-142 · Empty state màn Lịch sử đơn hàng', ['A. Chỉ thông báo rỗng (theo spec)', 'B. Thêm nút "Mua sắm ngay" về Home']],
+        [27.5, L, 'status', 'idle'],
+        [28.4, L, 'input', 'B', { cps: 8 }],
+        [29.2, L, 'status', 'working'],
+        [29.3, L, 'say', 'Ghi quyết định vào ticket, chuyển cho Builder.'],
+        [29.9, L, 'tool', 'Bash', 'gh issue comment 142 --body "Decision: B — thêm nút Mua sắm ngay về Home"'],
+        [30.3, L, 'tool', 'SendMessage', 'to: "builder-TRA-142"'],
+        [30.6, L, 'out', 'Chủ dự án chọn B: thêm nút "Mua sắm ngay" điều hướng về Home. Tiếp tục.'],
+        [30.8, 'bridge', 5, L],
+        [31.4, R, 'msg', 'thomas', 'Chủ dự án chọn B: thêm nút "Mua sắm ngay" điều hướng về Home. Tiếp tục.'],
+        [31.5, R, 'status', 'working'],
+        [31.8, R, 'tool', 'Edit', 'lib/features/orders/orders_screen.dart'],
+        [32.3, R, 'tool', 'Bash', 'flutter test test/features/orders'],
+        [32.8, R, 'out', '00:05 +12: All tests passed!'],
+        [33.2, R, 'tool', 'Bash', 'git commit --allow-empty -m "arm(ticket): TRA-142 — green, 1 pass" && git push'],
+        [33.7, R, 'say', 'Handback TRA-142: 4 commit, 12 test pass, receipt đã commit. Chưa chạy trên máy thật, QA walk sẽ kiểm.'],
+        [34.3, R, 'tag', 'done'],
+        [34.3, R, 'status', 'done'],
+        [34.5, 'bridge', 6, R],
+        [35.0, L, 'out', 'TERMINAL:done pane=7a3f'],
+        [35.2, L, 'tool', 'Bash', "scripts/check-simplify-markers.sh main feat/TRA-142 --marker 'arm(ticket)'"],
+        [35.4, L, 'out', 'exit 0'],
+        [35.6, L, 'say', 'TRA-142 xong: 4 commit, 12 test pass, receipt hợp lệ. Builder hỏi hai câu: empty state dùng widget chung, tôi trả lời theo contract UI; nút "Mua sắm ngay" là quyết định của bạn, đã ghi vào ticket. PR sẵn sàng; QA walk sẽ chạy trên simulator trước khi merge.'],
+        [35.9, L, 'status', 'idle'],
+      ];
+
+      // ── build the DOM synchronously, every line hidden ───────────────────
+      const scroll = { l: document.getElementById('scroll-l'), r: document.getElementById('scroll-r') };
+      const body = { l: scroll.l.parentElement, r: scroll.r.parentElement };
+      const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      let n = 0;
+      const items = [];
+      for (const ev of S) {
+        const [t, pane, kind] = ev;
+        if (pane === 'bridge') { items.push({ t, bridge: kind, from: ev[3] }); continue; }
+        if (kind === 'status') { items.push({ t, pane, status: ev[3] }); continue; }
+        const el = document.createElement('div');
+        el.id = `ln-${n++}`;
+        el.className = 'line ' + (kind === 'tag' ? 'out' : kind);
+        el.setAttribute('data-layout-allow-overflow', '');
+        el.setAttribute('data-layout-allow-occlusion', '');
+        if (kind === 'input') {
+          el.innerHTML = `<span class="prompt">&gt;</span><span class="typed" id="${el.id}-typed"></span><span class="cursor" id="${el.id}-cur"></span>`;
+          // reserve the final height so the pane does not jump while typing
+          const ghost = document.createElement('span'); ghost.className = 'typed'; ghost.style.visibility = 'hidden'; ghost.style.position = 'absolute'; ghost.textContent = ev[3];
+          items.push({ t, pane, el, typed: ev[3], cps: ev[4].cps });
+        } else if (kind === 'say') { el.textContent = ev[3]; items.push({ t, pane, el }); }
+        else if (kind === 'tool') { el.innerHTML = `<b>${esc(ev[3])}</b>(${esc(ev[4])})`; items.push({ t, pane, el }); }
+        else if (kind === 'out') { el.textContent = ev[3]; items.push({ t, pane, el }); }
+        else if (kind === 'tag') { el.innerHTML = `<span class="tag ${ev[3]}">TERMINAL:${ev[3]}</span>`; items.push({ t, pane, el }); }
+        else if (kind === 'msg') { el.innerHTML = `<span class="from">&lt;cross-session-message from="${esc(ev[3])}"&gt;</span>${esc(ev[4])}`; items.push({ t, pane, el }); }
+        else if (kind === 'q') { el.innerHTML = `<span class="head">${esc(ev[3])}</span>` + ev[4].map((o) => `<span class="opt">${esc(o)}</span>`).join('') + `<span class="opt">Chọn A/B:</span>`; items.push({ t, pane, el }); }
+        else if (kind === 'launch') { el.className = 'line launch'; el.textContent = ev[3]; items.push({ t, pane, el }); }
+        else if (kind === 'welcome') { el.className = 'line welcome'; el.innerHTML = `<b>Claude Code</b> · agent: builder · cwd ../wt/TRA-142`; items.push({ t, pane, el }); }
+        scroll[pane].appendChild(el);
+      }
+      // For typed inputs, fill the text now so layout is measured at final size, then
+      // empty it; the timeline types it back in.
+      for (const it of items) if (it.typed) it.el.querySelector('.typed').textContent = it.typed;
+
+      // ── measure once, then animate reveal + scroll ───────────────────────
+      // Reserve one extra line-height of buffer beyond the padding subtraction: measurement
+      // happens before the custom monospace font-face is guaranteed to have swapped in, and a
+      // sub-pixel metric difference can shift the very last wrapped line of a long paragraph
+      // past the fold. The buffer absorbs that without visibly changing mid-timeline scroll.
+      const paneH = { l: body.l.clientHeight - 44 - 34, r: body.r.clientHeight - 44 - 34 };
+      const stageRect = document.querySelector('.stage').getBoundingClientRect();
+      const paneRect = { l: document.getElementById('pane-l').getBoundingClientRect(), r: document.getElementById('pane-r').getBoundingClientRect() };
+      const scrollY = { l: 0, r: 0 };
+      const lastLineY = { l: 200, r: 200 };
+
+      for (const it of items) {
+        if (it.bridge) {
+          const b = document.getElementById(`bridge-${it.bridge}`);
+          const y = it.from === 'l' ? lastLineY.l : lastLineY.r;
+          const x0 = it.from === 'l' ? paneRect.l.right - 40 : paneRect.r.left + 14;
+          const x1 = it.from === 'l' ? paneRect.r.left + 14 : paneRect.l.right - 40;
+          tl.set(b, { x: x0, y: y - 13, autoAlpha: 0 }, it.t);
+          tl.to(b, { autoAlpha: 1, duration: 0.12 }, it.t);
+          tl.to(b, { x: x1, duration: 0.5, ease: 'power2.inOut' }, it.t + 0.05);
+          tl.to(b, { autoAlpha: 0, duration: 0.15 }, it.t + 0.5);
+          continue;
+        }
+        if (it.status) {
+          const st = document.getElementById(`status-${it.pane}`);
+          const txt = document.getElementById(`status-${it.pane}-text`);
+          const label = { working: 'working', blocked: 'blocked · waiting for an answer', done: 'done', idle: 'idle' }[it.status];
+          tl.call(() => { st.className = 'status ' + it.status; txt.textContent = label; }, [], it.t);
+          continue;
+        }
+        const el = it.el;
+        const bottom = el.offsetTop + el.offsetHeight;
+        const need = Math.max(0, bottom - paneH[it.pane]);
+        if (need > scrollY[it.pane]) {
+          tl.to(scroll[it.pane], { y: -need, duration: 0.35, ease: 'power2.out' }, it.t);
+          scrollY[it.pane] = need;
+        }
+        // absolute y of this line's centre on the stage, after the scroll settles
+        lastLineY[it.pane] = paneRect[it.pane].top + 52 + 22 + el.offsetTop + Math.min(el.offsetHeight, 34) / 2 - need;
+        if (it.typed) {
+          const typed = el.querySelector('.typed');
+          const cur = el.querySelector('.cursor');
+          typed.textContent = '';
+          const dur = it.typed.length / it.cps;
+          tl.to(el, { autoAlpha: 1, duration: 0.15 }, it.t - 0.3);
+          tl.set(cur, { opacity: 1 }, it.t - 0.3);
+          tl.to(typed, { text: { value: it.typed }, duration: dur, ease: 'none' }, it.t);
+          tl.set(cur, { opacity: 0 }, it.t + dur + 0.25);
+        } else {
+          tl.fromTo(el, { autoAlpha: 0, y: 6 }, { autoAlpha: 1, y: 0, duration: 0.22, ease: 'power2.out' }, it.t);
+        }
+      }
+
+      window.__timelines['main'] = tl;
+    </script>
+  </body>
+</html>

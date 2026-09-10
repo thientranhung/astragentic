@@ -182,7 +182,11 @@ const landing = defineCollection({
     shots: z
       .record(
         z.string(),
-        z.object({ caption: z.string().optional(), src: z.string().optional() }),
+        z.object({
+          caption: z.string().optional(),
+          src: z.string().optional(),
+          video: z.object({ mp4: z.string(), webm: z.string().optional(), poster: z.string().optional() }).optional(),
+        }),
       )
       .optional(),
     sections: z

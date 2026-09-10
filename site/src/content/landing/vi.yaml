@@ -129,7 +129,11 @@ why:
 
 shots:
   sendmessage:
-    caption: "Một lượt SendMessage giữa Thomas và Builder"
+    caption: "Mô phỏng một lượt dispatch TRA-142: bạn nói với Thomas, Thomas điều Builder qua SendMessage, tự trả lời câu hỏi kỹ thuật, và đưa quyết định UX về cho bạn."
+    video:
+      mp4: /shots/dispatch.mp4
+      webm: /shots/dispatch.webm
+      poster: /shots/dispatch.jpg
   herdr:
     caption: "Workspace herdr với năm pane đang chạy"
   tracker:

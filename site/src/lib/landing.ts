@@ -75,6 +75,7 @@ export const panes = (commands: Explain['commands']): Pane[] =>
 export interface Shot {
   caption: string;
   src?: string;
+  video?: { mp4: string; webm?: string; poster?: string };
 }
 
 export interface Landing {

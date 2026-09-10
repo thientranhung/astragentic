@@ -16,14 +16,26 @@ interface Props {
   caption: string;
   /** Path under site/public, e.g. /shots/sendmessage.png. */
   src?: string;
+  /** A simulated exchange rendered from HTML (HyperFrames) instead of a photograph:
+   *  autoplay, muted, looping, with a poster while it loads. Marked as a simulation
+   *  so nobody mistakes it for a recording. */
+  video?: { mp4: string; webm?: string; poster?: string };
   class?: string;
 }
-const { lang, caption, src, class: extra = '' } = Astro.props;
+const { lang, caption, src, video, class: extra = '' } = Astro.props;
 ---
 
-<figure class:list={['shot', !src && 'shot--pending', extra]}>
+<figure class:list={['shot', !src && !video && 'shot--pending', extra]} style={video?.poster ? `--poster:url(${video.poster})` : undefined}>
   {
-    src ? (
+    video ? (
+      <div class="shot-video">
+        <video class="shot-img" autoplay muted loop playsinline preload="metadata" poster={video.poster} aria-label={caption}>
+          {video.webm && <source src={video.webm} type="video/webm" />}
+          <source src={video.mp4} type="video/mp4" />
+        </video>
+        <span class="shot-badge mono">{UI.shotSimulated[lang]}</span>
+      </div>
+    ) : src ? (
       <img class="shot-img" src={src} alt={caption} loading="lazy" decoding="async" />
     ) : (
       <div class="shot-frame">
@@ -58,6 +70,36 @@ const { lang, caption, src, class: extra = '' } = Astro.props;
   .shot-img {
     object-fit: cover;
     border: 1px solid var(--ink-10);
+  }
+  .shot-video {
+    position: relative;
+  }
+  .shot-badge {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    font-size: var(--text-label-sm);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-62);
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: var(--radius-control);
+    padding: 0.15rem 0.6rem;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    /* the poster stands in; the reader can still play it with the native controls */
+    .shot-video video {
+      display: none;
+    }
+    .shot-video::before {
+      content: '';
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: var(--radius-card);
+      background: var(--surface-2) center / cover no-repeat;
+      background-image: var(--poster);
+    }
   }
   .shot-mark {
     margin: 0;

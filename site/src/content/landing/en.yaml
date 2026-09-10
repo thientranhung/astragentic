@@ -129,7 +129,11 @@ why:
 
 shots:
   sendmessage:
-    caption: "One SendMessage exchange between Thomas and a Builder"
+    caption: "A simulated dispatch of TRA-142: you talk to Thomas, Thomas steers the Builder over SendMessage, answers the technical question itself, and brings the UX decision back to you."
+    video:
+      mp4: /shots/dispatch.mp4
+      webm: /shots/dispatch.webm
+      poster: /shots/dispatch.jpg
   herdr:
     caption: "A herdr workspace with five panes running"
   tracker:
