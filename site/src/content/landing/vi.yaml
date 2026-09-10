@@ -2,8 +2,8 @@ hero:
   eyebrow: "Agentic engineering · **cho dự án nhiều milestone** · v{{meta.version}}"
   headline: "Một team outsource bằng AI agent.\nVận hành đúng quy trình, **liên tục 24/7**, cho **những dự án lớn**."
   sub: "Astragentic đưa bạn vào vị trí khách hàng của một đơn vị phát triển phần mềm hoàn chỉnh: một người đại diện để trao đổi, một team agent với role rõ ràng để thi công, và một issue tracker làm trung tâm để mọi việc đều có dấu vết. Bạn giữ quyền quyết định và toàn quyền giám sát; phần thực thi thuộc về team."
-  primary: "Xem cách hoạt động ↓"
-  secondary: "Vì sao có Astragentic"
+  primary: "Khám phá cách hoạt động ↓"
+  secondary: "Hiểu rõ vì sao có Astragentic"
 
 explain:
   agents:
@@ -39,7 +39,7 @@ explain:
           - 'herdr agent prompt <pane-id> "<brief>"'
           - "herdr agent read   <pane-id>"
     more:
-      label: "Chi tiết skill dispatch-ticket →"
+      label: "Hiểu rõ hơn về dispatch →"
       href: "/skills/dispatch-ticket"
 
   roles:
@@ -98,7 +98,7 @@ explain:
       - text: "Every precondition as a queryable EDGE"
       - text: "A surface the OWNER can open and read without running a query"
     more:
-      label: "Chi tiết cấu trúc →"
+      label: "Khám phá cấu trúc →"
       href: "/cau-truc#coordination"
 
   method:
@@ -119,7 +119,7 @@ explain:
       - title: "Dùng chung"
         text: "grilling · tdd · code-review · codebase-design · domain-modeling · research · prototype · diagnosing-bugs"
     more:
-      label: "Lý do chọn mattpocock-skills →"
+      label: "Hiểu rõ hơn lý do chọn →"
       href: "/vi-sao#why-mattpocock"
 
 why:
@@ -127,7 +127,7 @@ why:
   headline: "AI đã là một developer thực thụ. Astragentic đặt bạn vào vị trí người dẫn dắt team developer đó."
   p1: "Coding agent hôm nay nhận việc, viết code, chạy test và sửa cho tới khi xanh, như một kỹ sư ngồi cạnh bạn. Khi thực thi không còn là nút thắt, giá trị của người kỹ sư chuyển sang chỗ khác: đặt yêu cầu đúng, quyết định đúng, và giữ cả quy trình đi đúng hướng."
   p2: "Astragentic được xây để bạn làm đúng phần đó. Nó tổ chức các agent thành một team outsource theo kỷ luật SDLC quen thuộc, và thiết kế lại cách dispatch, review, handback để khai thác tốc độ và khối lượng mà một team người không duy trì được."
-  more: "Toàn bộ lý do thiết kế →"
+  more: "Khám phá toàn bộ lý do thiết kế →"
 
 shots:
   sendmessage:

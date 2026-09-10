@@ -2,8 +2,8 @@ hero:
   eyebrow: "Agentic engineering · **for multi-milestone projects** · v{{meta.version}}"
   headline: "An outsourcing team made of AI agents.\nRunning by process, **around the clock**, for **large projects**."
   sub: "Astragentic puts you in the client's seat at a complete software development unit: one representative to talk to, a team of agents with clearly defined roles to build, and an issue tracker at the centre so every piece of work leaves a trace. You keep the decisions and full oversight; the execution belongs to the team."
-  primary: "See how it works ↓"
-  secondary: "Why Astragentic exists"
+  primary: "Explore how it works ↓"
+  secondary: "Understand why Astragentic exists"
 
 explain:
   agents:
@@ -39,7 +39,7 @@ explain:
           - 'herdr agent prompt <pane-id> "<brief>"'
           - "herdr agent read   <pane-id>"
     more:
-      label: "The dispatch-ticket skill in detail →"
+      label: "Learn more about dispatch →"
       href: "/en/skills/dispatch-ticket"
 
   roles:
@@ -98,7 +98,7 @@ explain:
       - text: "Every precondition as a queryable EDGE"
       - text: "A surface the OWNER can open and read without running a query"
     more:
-      label: "The structure in detail →"
+      label: "Explore the structure →"
       href: "/en/structure#coordination"
 
   method:
@@ -119,7 +119,7 @@ explain:
       - title: "Shared"
         text: "grilling · tdd · code-review · codebase-design · domain-modeling · research · prototype · diagnosing-bugs"
     more:
-      label: "Why mattpocock-skills →"
+      label: "Learn more about the choice →"
       href: "/en/why#why-mattpocock"
 
 why:
@@ -127,7 +127,7 @@ why:
   headline: "AI is now a real developer. Astragentic puts you in charge of that developer team."
   p1: "A coding agent today takes the work, writes the code, runs the tests and fixes until they pass, like an engineer sitting next to you. Once execution is no longer the bottleneck, the engineer's value moves elsewhere: setting the right requirement, making the right call, and keeping the whole process on course."
   p2: "Astragentic is built so that you do exactly that part. It organises agents into an outsourcing team under the familiar SDLC discipline, and redesigns dispatch, review and handback to exploit a speed and a volume no human team can sustain."
-  more: "All the design reasons →"
+  more: "Explore every design decision →"
 
 shots:
   sendmessage:

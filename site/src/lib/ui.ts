@@ -101,8 +101,8 @@ export const UI = {
     vi: '20 commit gần nhất có dòng Ledger:',
     en: 'The last 20 commits carrying a Ledger: line',
   },
-  readAll: { vi: 'Sáu bài học đã đo được →', en: 'The six measured lessons →' },
-  wholeTable: { vi: 'Xem toàn bộ ledger →', en: 'View the full ledger →' },
+  readAll: { vi: 'Khám phá sáu bài học đã đo được →', en: 'Explore the six measured lessons →' },
+  wholeTable: { vi: 'Khám phá toàn bộ ledger →', en: 'Explore the full ledger →' },
 
   /* ── adopt ── */
   installIt: { vi: 'Deploy vào repo của bạn →', en: 'Deploy to your repo →' },
@@ -130,13 +130,13 @@ export const UI = {
     en: 'No prose for this role yet. The evidence below is live data.',
   },
   backHome: { vi: 'Về trang chủ →', en: 'Back to home →' },
-  seeItRun: { vi: 'Xem nó chạy', en: 'Watch it run' },
-  armSkill: { vi: 'Xem skill codex-arm →', en: 'View the codex-arm skill →' },
+  seeItRun: { vi: 'Khám phá cách nó chạy', en: 'Explore how it runs' },
+  armSkill: { vi: 'Hiểu rõ hơn về codex-arm →', en: 'Learn more about codex-arm →' },
   trackerReq: { vi: 'Yêu cầu số 5', en: 'Requirement 5' },
 
   /* ── skills catalog ── */
   skillsTitle: { vi: 'Skill có sẵn', en: 'The skills' },
-  skillsAll: { vi: 'Xem toàn bộ skill →', en: 'Browse all skills →' },
+  skillsAll: { vi: 'Khám phá toàn bộ skill →', en: 'Explore all skills →' },
   skillsCount: { vi: 'skill', en: 'skills' },
   skillOneLiner: { vi: 'Nó làm gì', en: 'What it does' },
   skillSource: { vi: 'Nguồn', en: 'Source' },
@@ -154,21 +154,21 @@ export const UI = {
   hookWhen: { vi: 'Bắn khi', en: 'Fires when' },
   hookScript: { vi: 'Script', en: 'Script' },
   hookEffect: { vi: 'Chặn hay ghi', en: 'Blocks or logs' },
-  hooksAll: { vi: 'Xem bốn hook →', en: 'See all four hooks →' },
+  hooksAll: { vi: 'Khám phá bốn hook →', en: 'Explore all four hooks →' },
 
   /* ── why ── */
   whyTitle: { vi: 'Vì sao', en: 'Why' },
-  whyAll: { vi: 'Xem năm lý do thiết kế →', en: 'See the five design decisions →' },
+  whyAll: { vi: 'Khám phá năm lý do thiết kế →', en: 'Explore the five design decisions →' },
 
   /* ── tech stack ── */
   stackTitle: { vi: 'Astragentic chạy trên gì', en: 'What this runs on' },
-  stackAll: { vi: 'Xem toàn bộ tech stack →', en: 'View the full tech stack →' },
+  stackAll: { vi: 'Khám phá toàn bộ tech stack →', en: 'Explore the full tech stack →' },
   stackRequired: { vi: 'required', en: 'required' },
   stackOptional: { vi: 'optional', en: 'optional' },
 
   /* ── structure ── */
   structureTitle: { vi: 'Cấu trúc', en: 'Structure' },
-  structureAll: { vi: 'Xem cấu trúc →', en: 'See the structure →' },
+  structureAll: { vi: 'Khám phá cấu trúc →', en: 'Explore the structure →' },
   goodParts: { vi: 'Các phần hay', en: 'The good parts' },
   openLedger: { vi: 'Mở ledger →', en: 'Open the ledger →' },
   layers: { vi: 'Bốn lớp', en: 'Four layers' },
@@ -185,7 +185,7 @@ export const UI = {
     en: 'This address points at nothing. The page may have been renamed, or the address mistyped.',
   },
   notFoundHome: { vi: 'Về trang chủ', en: 'Back to the home page' },
-  notFoundSkills: { vi: 'Xem catalog skill', en: 'See the skill catalog' },
+  notFoundSkills: { vi: 'Khám phá catalog skill', en: 'Explore the skill catalog' },
 } as const satisfies Record<string, Dict>;
 
 export type UIKey = keyof typeof UI;
