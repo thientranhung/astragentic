@@ -1,18 +1,18 @@
 hero:
   eyebrow: "Agentic engineering · **cho dự án nhiều milestone** · v{{meta.version}}"
-  headline: "Một đội outsource bằng AI agent.\nVận hành đúng quy trình, **liên tục 24/7**, cho **những dự án lớn**."
-  sub: "Astragentic đưa bạn vào vị trí khách hàng của một đơn vị phát triển phần mềm hoàn chỉnh: một người đại diện để trao đổi, một đội agent có vai trò rõ ràng để thi công, và một issue tracker làm trung tâm để mọi việc đều có dấu vết. Bạn giữ quyền quyết định và toàn quyền giám sát; phần thực thi thuộc về đội."
+  headline: "Một team outsource bằng AI agent.\nVận hành đúng quy trình, **liên tục 24/7**, cho **những dự án lớn**."
+  sub: "Astragentic đưa bạn vào vị trí khách hàng của một đơn vị phát triển phần mềm hoàn chỉnh: một người đại diện để trao đổi, một team agent có role trò rõ ràng để thi công, và một issue tracker làm trung tâm để mọi việc đều có dấu vết. Bạn giữ quyền quyết định và toàn quyền giám sát; phần thực thi thuộc về team."
   primary: "Xem cách hoạt động ↓"
   secondary: "Vì sao có Astragentic"
 
 explain:
   agents:
     eyebrow: "Agent"
-    headline: "Mỗi agent là một session runtime độc lập, mang một vai và một contract riêng."
+    headline: "Mỗi agent là một session runtime độc lập, mang một role và một contract riêng."
     paragraphs:
-      - "Mỗi agent là một session của Claude Code, Codex hoặc OpenCode, launch từ CLI với một vai xác định. Nó nhận nhiệm vụ như một nhân viên, làm xong thì trả kết quả, và có thể nhân bản thành nhiều session chạy song song: nhiều Builder cùng thi công, nhiều QA cùng kiểm, giống một đội thật."
-      - "Mỗi vai có một tên riêng: Thomas, Shaper, Builder, Rin, QA. Tên riêng giữ cho vai không bị trôi trong context dài, và là địa chỉ để gửi việc, đọc pane, gắn skill đúng vai."
-      - "Mỗi vai là một file khai báo theo chuẩn của từng runtime, nạp vào system prompt khi session mở; runtime, model và effort của từng vai khai ở một chỗ, `orchestrator.md`. Đường dẫn từng file có ở trang Cấu trúc."
+      - "Mỗi agent là một session của Claude Code, Codex hoặc OpenCode, launch từ CLI với một role xác định. Nó nhận nhiệm vụ như một nhân viên, làm xong thì trả kết quả, và có thể nhân bản thành nhiều session chạy song song: nhiều Builder cùng thi công, nhiều QA cùng kiểm, giống một team thật."
+      - "Mỗi role có một tên riêng: Thomas, Shaper, Builder, Rin, QA. Tên riêng giữ cho role không bị trôi trong context dài, và là địa chỉ để gửi việc, đọc pane, gắn skill đúng role."
+      - "Mỗi role là một file khai báo theo chuẩn của từng runtime, nạp vào system prompt khi session mở; runtime, model và effort của từng role khai ở một chỗ, `orchestrator.md`. Đường dẫn từng file có ở trang Cấu trúc."
     commands:
       label: "Start agent qua CLI trên ba runtime"
       lines:
@@ -20,17 +20,17 @@ explain:
         - "codex    --profile builder            # model + model_reasoning_effort nằm trong profile TOML"
         - "opencode --agent builder -m <provider>/<model>   # không có cờ effort"
     more:
-      label: "Chi tiết từng vai →"
-      href: "/vai/thomas"
+      label: "Chi tiết từng role →"
+      href: "/role/thomas"
 
   comms:
     eyebrow: "Giao tiếp giữa các agent"
     headline: "Dispatch một ticket là mở một cuộc trao đổi có địa chỉ."
     paragraphs:
       - "Ticket là một issue trên tracker: một **task**, một **feature** hay một **requirement** đã được cắt đủ nhỏ để một Builder hoàn thành trong một session. Mỗi ticket mang một id ổn định trong tiêu đề, một trạng thái, một assignee, và các blocking edge tới việc phải xong trước. Shaper tạo ticket từ spec bằng skill `to-tickets`; Thomas chỉ dispatch những ticket đã sẵn sàng."
-      - "Thomas dispatch theo skill `dispatch-ticket`: claim trên tracker, tạo branch và worktree, mở pane herdr, launch vai, gửi brief, đặt watcher. Chuỗi ticket → assignee → pane → worktree → branch → PR là một-một, nên nhiều Builder làm song song mà không giẫm lên nhau."
-      - "Khi các vai cùng chạy Claude Code, kênh chính là cross-session messaging có sẵn của Claude Code. Mỗi session Claude Code có một tên; Thomas tra tên session của Builder bằng ListAgents rồi gửi cho đúng tên đó. Ở session nhận, thông điệp hiện thành một dòng preview `› Message from @thomas: …`, mở rộng bằng ctrl+o, và câu trả lời đi ngược về đúng session đã gửi. Builder bị chặn thì hỏi; Thomas đọc câu hỏi, trả lời qua đúng kênh đó, rồi đặt Monitor mới chờ tín hiệu làm xong. Nhờ vậy vòng dispatch, hỏi, đáp, handback chạy liền mạch mà không cần người ngồi canh."
-      - "herdr là mặt phẳng nhìn thấy và là đường dự phòng: mỗi vai một pane có tên, watcher báo working, blocked, idle. Thomas đọc pane bằng `herdr agent read` khi một session im lặng, và điều Builder trên Codex hay OpenCode qua herdr CLI, nơi không có cross-session messaging."
+      - "Thomas dispatch theo skill `dispatch-ticket`: claim trên tracker, tạo branch và worktree, mở pane herdr, launch role, gửi brief, đặt watcher. Chuỗi ticket → assignee → pane → worktree → branch → PR là một-một, nên nhiều Builder làm song song mà không giẫm lên nhau."
+      - "Khi các role cùng chạy Claude Code, kênh chính là cross-session messaging có sẵn của Claude Code. Mỗi session Claude Code có một tên; Thomas tra tên session của Builder bằng ListAgents rồi gửi cho đúng tên đó. Ở session nhận, thông điệp hiện thành một dòng preview `› Message from @thomas: …`, mở rộng bằng ctrl+o, và câu trả lời đi ngược về đúng session đã gửi. Builder bị chặn thì hỏi; Thomas đọc câu hỏi, trả lời qua đúng kênh đó, rồi đặt Monitor mới chờ tín hiệu làm xong. Nhờ vậy vòng dispatch, hỏi, đáp, handback chạy liền mạch mà không cần người ngồi canh."
+      - "herdr là mặt phẳng nhìn thấy và là đường dự phòng: mỗi role một pane có tên, watcher báo working, blocked, idle. Thomas đọc pane bằng `herdr agent read` khi một session im lặng, và điều Builder trên Codex hay OpenCode qua herdr CLI, nơi không có cross-session messaging."
       - "Phân loại câu hỏi là điều đưa bạn từ human-in-the-loop sang human-on-the-loop. Câu hỏi kỹ thuật thường gặp, Thomas trả lời thay bạn từ contract, spec và tracker. Chỉ quyết định thiết kế thật sự mới đi lên bạn qua `to-questionnaire`, dưới dạng câu hỏi trả lời được. Bạn không đứng trong vòng lặp ở từng bước; bạn đứng trên vòng lặp và can thiệp khi có việc cần bạn."
     commands:
       - label: "Trả lời một Builder bị chặn trên Claude Code"
@@ -49,43 +49,43 @@ explain:
       href: "/skills/dispatch-ticket"
 
   roles:
-    eyebrow: "Vai trong đội"
-    headline: "Năm vai, năm vòng đời session."
+    eyebrow: "Role trong team"
+    headline: "Năm role, năm vòng đời session."
     models:
-      label: "Model và effort theo vai"
-      intro: "Mỗi vai chạy trên model và effort hợp với việc của nó. Thomas và Shaper suy luận dài nên dùng Opus, Shaper ở effort high vì grill và spec là chỗ tốn suy nghĩ nhất; Builder và QA thi công và kiểm thử nên dùng Sonnet cho nhanh và rẻ; Rin gate trên Opus ở effort medium."
-      note: "Bảng này đọc thẳng từ `.agents/orchestrator.md` trong repo của bạn. Đổi một dòng là đổi runtime, model hay effort của vai đó ở lần dispatch kế tiếp, không cần sửa contract của vai."
+      label: "Model và effort theo role"
+      intro: "Mỗi role chạy trên model và effort hợp với việc của nó. Thomas và Shaper suy luận dài nên dùng Opus, Shaper ở effort high vì grill và spec là chỗ tốn suy nghĩ nhất; Builder và QA thi công và kiểm thử nên dùng Sonnet cho nhanh và rẻ; Rin gate trên Opus ở effort medium."
+      note: "Bảng này đọc thẳng từ `.agents/orchestrator.md` trong repo của bạn. Đổi một dòng là đổi runtime, model hay effort của role đó ở lần dispatch kế tiếp, không cần sửa contract của role."
     items:
       - id: thomas
         title: "Thomas"
         tag: "người đại diện"
         session: "Session thường trực, sống qua nhiều ticket."
-        body: "Giữ tracker, chạy frontier query, claim, dispatch và merge. Là vai duy nhất còn ở đó khi Builder đã đóng session, nên mọi trạng thái bền đều thuộc Thomas. Hỏi lại bạn ở những quyết định quan trọng."
-        href: "/vai/thomas"
+        body: "Giữ tracker, chạy frontier query, claim, dispatch và merge. Là role duy nhất còn ở đó khi Builder đã đóng session, nên mọi trạng thái bền đều thuộc Thomas. Hỏi lại bạn ở những quyết định quan trọng."
+        href: "/role/thomas"
       - id: shaper
         title: "Shaper"
         tag: "định hình"
         session: "Một session liền mạch từ đầu tới cuối, không compact."
         body: "Chạy grill-with-docs, to-spec, to-tickets theo thứ tự, dừng sau spec để bạn duyệt."
-        href: "/vai/shaper"
+        href: "/role/shaper"
       - id: builder
         title: "Builder"
         tag: "thi công"
         session: "Một session mỗi ticket, trong worktree riêng, là người viết duy nhất ở đó."
         body: "Implement, code review hai trục, simplify, rồi lượt review chéo vendor. Commit ở mỗi ranh giới, không chỉ lúc handback."
-        href: "/vai/builder"
+        href: "/role/builder"
       - id: rin
         title: "Rin"
         tag: "gate"
         session: "Một session mỗi milestone, worktree tách riêng tại đúng SHA được review."
         body: "Chỉ đọc và viết đúng một file: báo cáo gate. Một vòng mỗi milestone, không lặp."
-        href: "/vai/rin"
+        href: "/role/rin"
       - id: qa
         title: "QA"
         tag: "nghiệm thu"
         session: "Một session mỗi lượt walk, với sản phẩm đang chạy thật trong worktree riêng."
         body: "Dùng sản phẩm như người dùng, không đọc diff. Mặc định chỉ đọc, mọi thao tác ghi cần bạn cho phép từng lần."
-        href: "/vai/qa"
+        href: "/role/qa"
 
   tracker:
     eyebrow: "Issue tracker"
@@ -110,7 +110,7 @@ explain:
     eyebrow: "mattpocock-skills"
     headline: "Astragentic chọn mattpocock-skills làm khung quản trị và phát triển dự án."
     paragraphs:
-      - "Bộ skill của Matt Pocock bao trọn hai nửa của một dự án. Nửa quản trị: wayfinder định hướng, triage phân loại việc, grill hỏi cho ra yêu cầu, to-spec chốt spec, to-tickets cắt thành ticket. Nửa phát triển: implement theo TDD, code-review, simplify, diagnosing-bugs. Astragentic gắn từng skill vào đúng vai, nên Thomas quản trị và Builder thi công theo cùng một khung, từ yêu cầu đầu tiên tới PR cuối cùng."
+      - "Bộ skill của Matt Pocock bao trọn hai nửa của một dự án. Nửa quản trị: wayfinder định hướng, triage phân loại việc, grill hỏi cho ra yêu cầu, to-spec chốt spec, to-tickets cắt thành ticket. Nửa phát triển: implement theo TDD, code-review, simplify, diagnosing-bugs. Astragentic gắn từng skill vào đúng role, nên Thomas quản trị và Builder thi công theo cùng một khung, từ yêu cầu đầu tiên tới PR cuối cùng."
     items:
       - id: thomas
         title: "Thomas"
@@ -129,9 +129,9 @@ explain:
 
 why:
   eyebrow: "Vì sao"
-  headline: "AI đã là một developer thực thụ. Astragentic đặt bạn vào vai người dẫn dắt đội developer đó."
+  headline: "AI đã là một developer thực thụ. Astragentic đặt bạn vào role người dẫn dắt team developer đó."
   p1: "Coding agent hôm nay nhận việc, viết code, chạy test và sửa cho tới khi xanh, như một kỹ sư ngồi cạnh bạn. Khi thực thi không còn là nút thắt, giá trị của người kỹ sư chuyển sang chỗ khác: đặt yêu cầu đúng, quyết định đúng, và giữ cả quy trình đi đúng hướng."
-  p2: "Astragentic được xây để bạn làm đúng phần đó. Nó tổ chức các agent thành một đội outsource theo kỷ luật SDLC quen thuộc, và thiết kế lại cách dispatch, review, handback để khai thác tốc độ và khối lượng mà một đội người không duy trì được."
+  p2: "Astragentic được xây để bạn làm đúng phần đó. Nó tổ chức các agent thành một team outsource theo kỷ luật SDLC quen thuộc, và thiết kế lại cách dispatch, review, handback để khai thác tốc độ và khối lượng mà một team người không duy trì được."
   more: "Toàn bộ lý do thiết kế →"
 
 shots:
@@ -172,32 +172,32 @@ features:
     href: /skills/codex-arm
   - id: tracker
     title: "Vận hành liên tục quanh issue tracker."
-    body: "Mọi yêu cầu, spec và ticket đều nằm trên tracker. Review phát hiện việc mới thì ghi thành ticket mới. Đội chạy 24/7 mà không cần bạn ngồi canh, và không có việc nào rơi ra ngoài hệ thống."
+    body: "Mọi yêu cầu, spec và ticket đều nằm trên tracker. Review phát hiện việc mới thì ghi thành ticket mới. Team chạy 24/7 mà không cần bạn ngồi canh, và không có việc nào rơi ra ngoài hệ thống."
     diagram: frontier-query
     crop: [frontier_query, board]
     href: /cau-truc#coordination
   - id: roles
-    title: "Đội có tên, có vai, có contract."
-    body: "Thomas đại diện, Shaper định hình, Builder thi công, Rin giữ gate, QA nghiệm thu. Mỗi vai có contract và system context riêng, nên trách nhiệm rõ và không ai làm thay việc của ai. Claude Code, Codex và OpenCode đều hỗ trợ agent profile ở mức này."
+    title: "Team có tên, có role, có contract."
+    body: "Thomas đại diện, Shaper định hình, Builder thi công, Rin giữ gate, QA nghiệm thu. Mỗi role có contract và system context riêng, nên trách nhiệm rõ và không ai làm thay việc của ai. Claude Code, Codex và OpenCode đều hỗ trợ agent profile ở mức này."
     diagram: five-roles
     crop: [shaper, builder]
-    href: /vai/thomas
+    href: /role/thomas
   - id: runtime
     title: "Một quy trình, nhiều runtime."
-    body: "Claude Code là nền bắt buộc; Codex và OpenCode thêm vào khi bạn cần vendor thứ hai hay model khác. Vai nào chạy trên runtime nào khai trong orchestrator.md; đổi runtime không đổi quy trình."
+    body: "Claude Code là nền bắt buộc; Codex và OpenCode thêm vào khi bạn cần vendor thứ hai hay model khác. Role nào chạy trên runtime nào khai trong orchestrator.md; đổi runtime không đổi quy trình."
     diagram: structure
     crop: [runtime_claude, runtime_codex]
     href: /tech-stack#claude-code
   - id: models
     title: "Đúng model cho đúng việc."
-    body: "Sonnet cho Builder và QA, nơi cần nhanh và rẻ; Opus cho Thomas, Shaper và Rin, nơi cần suy luận dài. Chi phí và chất lượng cân theo từng vai thay vì một model cho tất cả."
-    href: /vai/builder
+    body: "Sonnet cho Builder và QA, nơi cần nhanh và rẻ; Opus cho Thomas, Shaper và Rin, nơi cần suy luận dài. Chi phí và chất lượng cân theo từng role thay vì một model cho tất cả."
+    href: /role/builder
   - id: oversight
     title: "Toàn quyền giám sát, không cần ra tay."
-    body: "Board tracker, pane herdr, thiết kế và quyết định đều đọc lại được. Thomas hỏi lại bạn ở những điểm quan trọng: UI/UX, lựa chọn tech stack. Bạn quyết, đội làm."
+    body: "Board tracker, pane herdr, thiết kế và quyết định đều đọc lại được. Thomas hỏi lại bạn ở những điểm quan trọng: UI/UX, lựa chọn tech stack. Bạn quyết, team làm."
     diagram: hub-and-spokes
     crop: [tra139, tra142]
-    href: /vai/thomas
+    href: /role/thomas
 
 fit:
   eyebrow: "Quy mô phù hợp"
@@ -216,7 +216,7 @@ fit:
 
 adopt:
   eyebrow: "Install"
-  headline: "Bốn lệnh để đưa đội vào repo của bạn."
+  headline: "Bốn lệnh để đưa team vào repo của bạn."
   sub: "Kiểm yêu cầu, cài harness vào repo, để Claude Code chạy bản thích nghi, rồi mở session Thomas. Từ đó mọi việc đi qua Thomas."
   reqEyebrow: "Tech stack"
   reqHeadline: "Bảy thứ cần có trước khi cài."
@@ -225,11 +225,11 @@ adopt:
   requirements:
     - name: "Claude Code CLI"
       tag: "required"
-      role: "Runtime chạy các vai. Gate milestone của Rin chỉ chạy trên **Claude**, nên thiếu Claude là không gate được."
+      role: "Runtime chạy các role. Gate milestone của Rin chỉ chạy trên **Claude**, nên thiếu Claude là không gate được."
       href: "https://docs.anthropic.com/en/docs/claude-code"
     - name: "Codex CLI"
       tag: "optional"
-      role: "Vendor thứ hai cho lượt review chéo và runtime dự phòng. Thiếu **Codex**, đội chạy chế độ một provider."
+      role: "Vendor thứ hai cho lượt review chéo và runtime dự phòng. Thiếu **Codex**, team chạy chế độ một provider."
       href: "https://github.com/openai/codex"
     - name: "Git ≥ 2.5, có worktree"
       tag: "required"
@@ -240,11 +240,11 @@ adopt:
       href: "https://github.com/herdrdev/herdr"
     - name: "mattpocock-skills ≥ 1.2.3"
       tag: "required"
-      role: "**Phương pháp SDLC** mà đội đi theo: grill, spec, tickets, implement, code review."
+      role: "**Phương pháp SDLC** mà team đi theo: grill, spec, tickets, implement, code review."
       href: "https://github.com/mattpocock/skills"
     - name: "Issue tracker: GitHub Issues, Jira hoặc Linear"
       tag: "pick one"
-      role: "**Bộ nhớ chung** (shared memory) của đội. Mọi task, claim và receipt đều đi qua đây."
+      role: "**Bộ nhớ chung** (shared memory) của team. Mọi task, claim và receipt đều đi qua đây."
     - name: "python3"
       tag: "required"
       role: "Chạy các **hook gác git** và nạp lại contract sau compaction."

@@ -35,7 +35,7 @@ export const NAV: { key: PageKey; label: Record<Lang, string> }[] = [
   { key: 'home', label: { vi: 'Trang chủ', en: 'Home' } },
   { key: 'why', label: { vi: 'Vì sao', en: 'Why' } },
   { key: 'structure', label: { vi: 'Cấu trúc', en: 'Structure' } },
-  { key: 'roles', label: { vi: 'Vai', en: 'Roles' } },
+  { key: 'roles', label: { vi: 'Role', en: 'Roles' } },
   { key: 'skills', label: { vi: 'Skills', en: 'Skills' } },
   { key: 'hooks', label: { vi: 'Hooks', en: 'Hooks' } },
   { key: 'stack', label: { vi: 'Tech stack', en: 'Tech stack' } },

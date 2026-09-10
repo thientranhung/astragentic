@@ -13,7 +13,7 @@ export type Dict = Record<Lang, string>;
 export const UI = {
   /* ── chrome ── */
   tagline: {
-    vi: 'Astragentic: một đơn vị outsource bằng agent, đặt kỹ sư vào vai khách hàng.',
+    vi: 'Astragentic: một đơn vị outsource bằng agent, đặt kỹ sư vào vị trí khách hàng.',
     en: 'Astragentic: an agent outsourcing unit that puts the engineer in the client\'s seat.',
   },
   repoLink: { vi: 'GitHub ↗', en: 'GitHub ↗' },
@@ -36,7 +36,7 @@ export const UI = {
   sideFailures: { vi: 'Bài học', en: 'Lessons' },
   sideEvidence: { vi: 'Bằng chứng', en: 'Evidence' },
   sideAdopt: { vi: 'Install', en: 'Adopt' },
-  roleKey: { vi: 'Màu vai trong hình', en: 'Role colours in this figure' },
+  roleKey: { vi: 'Màu role trong hình', en: 'Role colours in this figure' },
 
   /* ── hero strip ── */
   statLogged: { vi: 'lỗi đã ghi vào sổ', en: 'failure modes logged' },
@@ -120,13 +120,13 @@ export const UI = {
   roleMayNot: { vi: 'Không được', en: 'May not' },
   roleDefects: { vi: 'Lỗi nó đã gây ra hoặc bắt được', en: 'Failures it caused or caught' },
   roleNoDefects: {
-    vi: 'chưa có mục nào trỏ về vai này',
+    vi: 'chưa có mục nào trỏ về role này',
     en: 'nothing in the ledger points back to this role yet',
   },
   roleContract: { vi: 'Contract nguyên văn', en: 'The contract, verbatim' },
   roleSkills: { vi: 'Skill liên quan', en: 'Related skills' },
   roleMissing: {
-    vi: 'Trang vai này chưa có prose. Bằng chứng bên dưới là dữ liệu thật.',
+    vi: 'Trang role này chưa có prose. Bằng chứng bên dưới là dữ liệu thật.',
     en: 'No prose for this role yet. The evidence below is live data.',
   },
   backHome: { vi: 'Về trang chủ →', en: 'Back to home →' },

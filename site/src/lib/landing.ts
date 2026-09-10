@@ -174,22 +174,22 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
         sub: 'Bốn lớp, từ runtime xuống repo thật. Bấm vào một ô để mở trang của lớp đó.',
       },
       roles: {
-        headline: 'Năm vai, năm vòng đời session',
-        sub: 'Vòng đời session quyết định một vai nhớ được gì.',
+        headline: 'Năm role, năm vòng đời session',
+        sub: 'Vòng đời session quyết định một role nhớ được gì.',
       },
       features: {
         eyebrow: 'Tính năng',
-        headline: 'Sáu điều một đội làm được mà một agent đơn lẻ thì không.',
+        headline: 'Sáu điều một team làm được mà một agent đơn lẻ thì không.',
         sub: 'Mỗi thẻ mở trang giải thích cơ chế bên dưới.',
       },
       team: {
-        eyebrow: 'Khách hàng và đội',
+        eyebrow: 'Khách hàng và team',
         headline: 'Mô hình vận hành.',
-        sub: 'Bạn là khách hàng, trao đổi với Thomas là người đại diện của đội. Đội làm việc quanh issue tracker, và mọi việc đều đi qua đó để bạn đọc lại được bất cứ lúc nào.',
+        sub: 'Bạn là khách hàng, trao đổi với Thomas là người đại diện của team. Team làm việc quanh issue tracker, và mọi việc đều đi qua đó để bạn đọc lại được bất cứ lúc nào.',
         pointsLabel: 'Hằng ngày, bạn chỉ làm việc với Thomas',
         points: [
           {
-            title: 'Thomas điều phối đội.',
+            title: 'Thomas điều phối team.',
             body: 'Thomas mở session Shaper khi cần shape, dispatch ticket cho Builder theo capacity, gọi Rin gate ở mỗi milestone và QA walk trước khi merge. Bạn không phải tự gọi từng agent.',
           },
           {
@@ -198,7 +198,7 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
           },
           {
             title: 'Bạn chỉ cần làm Thomas hiểu ý định của mình.',
-            body: 'Bạn nói điều mình muốn và hướng đi; Thomas tự triển khai với đội, tự quyết trong quá trình làm. Nó chỉ quay lại hỏi khi một quyết định thật sự là của bạn, như UI/UX hay tech stack, và lúc đó câu hỏi đã được thu gọn thành một lựa chọn trả lời được.',
+            body: 'Bạn nói điều mình muốn và hướng đi; Thomas tự triển khai với team, tự quyết trong quá trình làm. Nó chỉ quay lại hỏi khi một quyết định thật sự là của bạn, như UI/UX hay tech stack, và lúc đó câu hỏi đã được thu gọn thành một lựa chọn trả lời được.',
           },
         ],
       },
