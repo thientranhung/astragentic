@@ -41,7 +41,7 @@ cd /path/to/your-repo
 claude "Read .astraler/releases/2.8.0/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Start the router
-claude --agent thomas
+claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium
 ```
 
 Thomas reads your orchestrator config, claims the workspace, and begins routing work.
@@ -289,7 +289,7 @@ Edit `.agents/orchestrator.md` — your file, never overwritten by upgrades:
 | qa      | claude  | claude-sonnet-5 | low    |
 ```
 
-Then: `claude --agent thomas`
+Then: `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium`
 
 ---
 

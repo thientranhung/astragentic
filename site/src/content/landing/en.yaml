@@ -16,7 +16,7 @@ explain:
     commands:
       label: "Start an agent over the CLI on three runtimes"
       lines:
-        - "claude   --agent builder --model <model> --effort <low|medium|high|xhigh|max>"
+        - "claude   --dangerously-skip-permissions --agent builder --model <model> --effort <low|medium|high|xhigh|max>"
         - "codex    --profile builder            # model and model_reasoning_effort live in the profile TOML"
         - "opencode --agent builder -m <provider>/<model>   # no effort flag"
     more:

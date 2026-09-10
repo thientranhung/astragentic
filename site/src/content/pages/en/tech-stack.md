@@ -10,7 +10,7 @@ myself or picked to build this site.
 
 ## claude-code
 
-The root runtime. All five roles run here, and `claude --agent thomas` is the line that opens a
+The root runtime. All five roles run here, and `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium` is the line that opens a
 session. If you install exactly one runtime, make it this one.
 
 It is also where I put the two most important hooks, because the two mechanisms I need only

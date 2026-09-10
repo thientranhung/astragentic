@@ -10,7 +10,7 @@ dựng chính trang này.
 
 ## claude-code
 
-Runtime gốc. Cả năm vai đều chạy được ở đây, và `claude --agent thomas` là câu lệnh mở đầu một
+Runtime gốc. Cả năm vai đều chạy được ở đây, và `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium` là câu lệnh mở đầu một
 session. Nếu bạn chỉ cài đúng một runtime thì phải là runtime này.
 
 Đây cũng là nơi tôi đặt hai hook quan trọng nhất, vì hai cơ chế tôi cần chỉ tồn tại ở đây. Thứ

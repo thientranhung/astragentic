@@ -16,7 +16,7 @@ explain:
     commands:
       label: "Start agent qua CLI trên ba runtime"
       lines:
-        - "claude   --agent builder --model <model> --effort <low|medium|high|xhigh|max>"
+        - "claude   --dangerously-skip-permissions --agent builder --model <model> --effort <low|medium|high|xhigh|max>"
         - "codex    --profile builder            # model + model_reasoning_effort nằm trong profile TOML"
         - "opencode --agent builder -m <provider>/<model>   # không có cờ effort"
     more:
