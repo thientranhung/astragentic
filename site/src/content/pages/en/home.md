@@ -57,7 +57,7 @@ page it reads as modesty for show.
 
 It draws one boundary precisely: proving the tooling is correct and proving the loop is correct
 are two different claims, and I have only done the first. No ticket has gone from dispatch to
-merge with the gates firing on live work inside this repo. The six failures you just read were
+merge with the gates firing on live work inside this repo. The six lessons you just read were
 measured downstream or while building this, not inside one closed loop.
 
 I am leaving that gap open. If you install this and it breaks somewhere I have not measured,
