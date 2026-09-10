@@ -38,10 +38,21 @@ export interface NavSection {
 const anchors = (base: string, rows: { id: string; label: string }[]): NavLeaf[] =>
   rows.map((row) => ({ label: row.label, href: `${base}#${row.id}`, anchor: row.id }));
 
+/** Same order as the top nav (site.ts NAV): why, structure, roles, skills, hooks, stack,
+ *  then the two pages the top nav leaves out, then install. One order, two menus. */
 export async function getNavTree(lang: Lang): Promise<NavSection[]> {
   const skillGroups = await getSkillGroups(lang);
 
   return [
+    {
+      id: 'why',
+      label: UI.sideWhy[lang],
+      href: ROUTES.why[lang],
+      items: anchors(
+        ROUTES.why[lang],
+        WHY.map((why) => ({ id: why.id, label: why.question[lang] })),
+      ),
+    },
     { id: 'structure', label: UI.sideStructure[lang], href: ROUTES.structure[lang] },
     {
       id: 'roles',
@@ -78,15 +89,6 @@ export async function getNavTree(lang: Lang): Promise<NavSection[]> {
           // in a 240px rail costs a line each and says nothing.
           label: hook.script?.replace(/^scripts\//, '') ?? hook.event,
         })),
-      ),
-    },
-    {
-      id: 'why',
-      label: UI.sideWhy[lang],
-      href: ROUTES.why[lang],
-      items: anchors(
-        ROUTES.why[lang],
-        WHY.map((why) => ({ id: why.id, label: why.question[lang] })),
       ),
     },
     {
