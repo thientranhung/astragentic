@@ -1,0 +1,244 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Ticket nào, skill đó",
+    "output": "skill-routing.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "classify",
+        "label": "Phân loại",
+        "focus": [
+          "ticket",
+          "triage",
+          "wayfinder",
+          "to_questionnaire",
+          "grill",
+          "implement"
+        ],
+        "note": "Từ ticket, triage rẽ theo loại việc — mờ, cần quyết định, thiếu spec hay đã sẵn sàng build."
+      },
+      {
+        "id": "close-the-loop",
+        "label": "Khép vòng",
+        "focus": [
+          "to_tickets",
+          "simplify",
+          "to_questionnaire",
+          "update"
+        ],
+        "note": "Mọi nhánh đều khép tiếp về tracker, dù kết quả là ticket mới, câu trả lời, hay handback đóng việc."
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "tracker",
+      "label": "Tracker"
+    },
+    {
+      "id": "thomas",
+      "label": "Thomas"
+    },
+    {
+      "id": "shaper",
+      "label": "Shaper"
+    },
+    {
+      "id": "builder",
+      "label": "Builder"
+    }
+  ],
+  "mainPath": [
+    "ticket",
+    "triage",
+    "implement",
+    "code_review",
+    "simplify"
+  ],
+  "nodes": [
+    {
+      "id": "ticket",
+      "lane": "tracker",
+      "col": 0,
+      "type": "external",
+      "label": "Ticket trên tracker",
+      "sublabel": "Thomas lấy về từ frontier",
+      "width": 150
+    },
+    {
+      "id": "triage",
+      "lane": "thomas",
+      "col": 1,
+      "type": "backend",
+      "label": "triage",
+      "sublabel": "phân loại: loại việc gì?",
+      "width": 130
+    },
+    {
+      "id": "wayfinder",
+      "lane": "thomas",
+      "col": 2,
+      "type": "backend",
+      "label": "wayfinder",
+      "sublabel": "chưa rõ hướng đi",
+      "width": 130,
+      "yOffset": -45
+    },
+    {
+      "id": "to_questionnaire",
+      "lane": "thomas",
+      "col": 2,
+      "type": "backend",
+      "label": "to-questionnaire",
+      "sublabel": "câu hỏi cho bạn quyết",
+      "width": 150,
+      "yOffset": 45
+    },
+    {
+      "id": "grill",
+      "lane": "shaper",
+      "col": 2,
+      "type": "frontend",
+      "label": "grill-with-docs",
+      "sublabel": "hỏi cho ra yêu cầu",
+      "width": 150
+    },
+    {
+      "id": "to_spec",
+      "lane": "shaper",
+      "col": 3,
+      "type": "frontend",
+      "label": "to-spec",
+      "sublabel": "chốt spec",
+      "width": 130
+    },
+    {
+      "id": "to_tickets",
+      "lane": "shaper",
+      "col": 4,
+      "type": "frontend",
+      "label": "to-tickets",
+      "sublabel": "cắt thành ticket",
+      "width": 130
+    },
+    {
+      "id": "diagnosing_bugs",
+      "lane": "builder",
+      "col": 2,
+      "type": "security",
+      "label": "diagnosing-bugs",
+      "sublabel": "tìm nguyên nhân trước",
+      "width": 150
+    },
+    {
+      "id": "implement",
+      "lane": "builder",
+      "col": 3,
+      "type": "frontend",
+      "label": "implement",
+      "sublabel": "TDD, commit trên branch ticket",
+      "width": 150
+    },
+    {
+      "id": "code_review",
+      "lane": "builder",
+      "col": 4,
+      "type": "security",
+      "label": "code-review",
+      "sublabel": "Standards + Spec",
+      "width": 130
+    },
+    {
+      "id": "simplify",
+      "lane": "builder",
+      "col": 5,
+      "type": "security",
+      "label": "simplify",
+      "sublabel": "dọn marker, cắt phần thừa",
+      "width": 140
+    },
+    {
+      "id": "update",
+      "lane": "tracker",
+      "col": 5,
+      "type": "external",
+      "label": "Cập nhật lên tracker",
+      "sublabel": "ticket mới, câu trả lời, handback",
+      "width": 195
+    }
+  ],
+  "edges": [
+    {
+      "from": "ticket",
+      "to": "triage"
+    },
+    {
+      "from": "triage",
+      "to": "wayfinder",
+      "label": "mờ, nhiều session"
+    },
+    {
+      "from": "triage",
+      "to": "to_questionnaire",
+      "label": "quyết định của chủ"
+    },
+    {
+      "from": "triage",
+      "to": "grill",
+      "label": "chưa có spec"
+    },
+    {
+      "from": "grill",
+      "to": "to_spec"
+    },
+    {
+      "from": "to_spec",
+      "to": "to_tickets"
+    },
+    {
+      "from": "triage",
+      "to": "implement",
+      "label": "sẵn sàng build",
+      "toSide": "top"
+    },
+    {
+      "from": "implement",
+      "to": "code_review"
+    },
+    {
+      "from": "code_review",
+      "to": "simplify"
+    },
+    {
+      "from": "triage",
+      "to": "diagnosing_bugs",
+      "label": "là bug"
+    },
+    {
+      "from": "diagnosing_bugs",
+      "to": "implement"
+    },
+    {
+      "from": "wayfinder",
+      "to": "update",
+      "label": "hướng đã chốt"
+    },
+    {
+      "from": "to_questionnaire",
+      "to": "update",
+      "label": "câu trả lời ghi vào ticket"
+    },
+    {
+      "from": "to_tickets",
+      "to": "update",
+      "label": "ticket mới lên board"
+    },
+    {
+      "from": "simplify",
+      "to": "update",
+      "label": "handback, ticket đóng"
+    }
+  ]
+}

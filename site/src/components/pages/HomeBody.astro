@@ -59,6 +59,21 @@ const commsPanes = panes(EX.comms?.commands);
  *  a dashed frame carrying the caption stands in for each one (home order spec §3). */
 const shots = copy.shots ?? {};
 const roleMap = Object.fromEntries(ROLE_IDS.map((id) => [id, roleHref(lang, id)]));
+// §7 method: the skill-routing picture. Each skill opens the role that runs it.
+const skillRoutingMap: Record<string, string> = {
+  ticket: `${structureRoute}#coordination`,
+  update: `${structureRoute}#coordination`,
+  triage: roleHref(lang, 'thomas'),
+  wayfinder: roleHref(lang, 'thomas'),
+  to_questionnaire: roleHref(lang, 'thomas'),
+  grill: roleHref(lang, 'shaper'),
+  to_spec: roleHref(lang, 'shaper'),
+  to_tickets: roleHref(lang, 'shaper'),
+  diagnosing_bugs: roleHref(lang, 'builder'),
+  implement: roleHref(lang, 'builder'),
+  code_review: roleHref(lang, 'builder'),
+  simplify: roleHref(lang, 'builder'),
+};
 const trackerMap: Record<string, string> = {
   thomas: roleHref(lang, 'thomas'),
   builder: roleHref(lang, 'builder'),
@@ -360,7 +375,16 @@ const CARD_FRAME = 330;
             </div>
           ))}
         </dl>
-        <Diagram slug="layer-map" lang={lang} svgMaxWidth={620} class="band" caption={false} />
+        {/* Which skill a ticket goes to once Thomas has classified it; every node opens
+            the page of the role that runs that skill. */}
+        <InteractiveDiagram
+          slug="skill-routing"
+          lang={lang}
+          hrefMap={skillRoutingMap}
+          class="band"
+          flow="sequence"
+          flowSlots={[[0], [1, 2, 3, 6, 9], [4, 7, 10], [5, 8], [11, 12, 13, 14]]}
+        />
         {EX.method.more && (
           <a class="more-link" href={EX.method.more.href}>{EX.method.more.label}</a>
         )}

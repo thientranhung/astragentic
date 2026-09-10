@@ -288,10 +288,12 @@
 .diagram[data-diagram='client-studio'] .diagram-svg .c-security,
 .diagram[data-diagram='hub-and-spokes'] .diagram-svg .c-security,
 .diagram[data-diagram='ticket-lifecycle'] .diagram-svg .c-security,
+.diagram[data-diagram='skill-routing'] .diagram-svg .c-security,
 .idiagram[data-diagram='five-roles'] .diagram-svg .c-security,
 .idiagram[data-diagram='client-studio'] .diagram-svg .c-security,
 .idiagram[data-diagram='hub-and-spokes'] .diagram-svg .c-security,
-.idiagram[data-diagram='ticket-lifecycle'] .diagram-svg .c-security {
+.idiagram[data-diagram='ticket-lifecycle'] .diagram-svg .c-security,
+.idiagram[data-diagram='skill-routing'] .diagram-svg .c-security {
   stroke: var(--role-rin);
 }
 .diagram[data-diagram='five-roles'] .diagram-svg .a-security,
@@ -299,9 +301,11 @@
 .idiagram[data-diagram='client-studio'] .diagram-svg .a-security,
 .diagram[data-diagram='hub-and-spokes'] .diagram-svg .a-security,
 .diagram[data-diagram='ticket-lifecycle'] .diagram-svg .a-security,
+.diagram[data-diagram='skill-routing'] .diagram-svg .a-security,
 .idiagram[data-diagram='five-roles'] .diagram-svg .a-security,
 .idiagram[data-diagram='hub-and-spokes'] .diagram-svg .a-security,
-.idiagram[data-diagram='ticket-lifecycle'] .diagram-svg .a-security {
+.idiagram[data-diagram='ticket-lifecycle'] .diagram-svg .a-security,
+.idiagram[data-diagram='skill-routing'] .diagram-svg .a-security {
   stroke: var(--role-rin);
 }
 .diagram[data-diagram='five-roles'] .diagram-svg .m-security,
@@ -309,9 +313,11 @@
 .idiagram[data-diagram='client-studio'] .diagram-svg .m-security,
 .diagram[data-diagram='hub-and-spokes'] .diagram-svg .m-security,
 .diagram[data-diagram='ticket-lifecycle'] .diagram-svg .m-security,
+.diagram[data-diagram='skill-routing'] .diagram-svg .m-security,
 .idiagram[data-diagram='five-roles'] .diagram-svg .m-security,
 .idiagram[data-diagram='hub-and-spokes'] .diagram-svg .m-security,
-.idiagram[data-diagram='ticket-lifecycle'] .diagram-svg .m-security {
+.idiagram[data-diagram='ticket-lifecycle'] .diagram-svg .m-security,
+.idiagram[data-diagram='skill-routing'] .diagram-svg .m-security {
   fill: var(--role-rin);
   stroke: var(--role-rin);
 }
@@ -320,9 +326,11 @@
 .idiagram[data-diagram='client-studio'] .diagram-svg .t-security,
 .diagram[data-diagram='hub-and-spokes'] .diagram-svg .t-security,
 .diagram[data-diagram='ticket-lifecycle'] .diagram-svg .t-security,
+.diagram[data-diagram='skill-routing'] .diagram-svg .t-security,
 .idiagram[data-diagram='five-roles'] .diagram-svg .t-security,
 .idiagram[data-diagram='hub-and-spokes'] .diagram-svg .t-security,
-.idiagram[data-diagram='ticket-lifecycle'] .diagram-svg .t-security {
+.idiagram[data-diagram='ticket-lifecycle'] .diagram-svg .t-security,
+.idiagram[data-diagram='skill-routing'] .diagram-svg .t-security {
   fill: var(--role-rin);
 }
 .diagram[data-diagram='five-roles'] .diagram-svg .s-security,
@@ -330,9 +338,11 @@
 .idiagram[data-diagram='client-studio'] .diagram-svg .s-security,
 .diagram[data-diagram='hub-and-spokes'] .diagram-svg .s-security,
 .diagram[data-diagram='ticket-lifecycle'] .diagram-svg .s-security,
+.diagram[data-diagram='skill-routing'] .diagram-svg .s-security,
 .idiagram[data-diagram='five-roles'] .diagram-svg .s-security,
 .idiagram[data-diagram='hub-and-spokes'] .diagram-svg .s-security,
-.idiagram[data-diagram='ticket-lifecycle'] .diagram-svg .s-security {
+.idiagram[data-diagram='ticket-lifecycle'] .diagram-svg .s-security,
+.idiagram[data-diagram='skill-routing'] .diagram-svg .s-security {
   color: var(--role-rin);
 }
 

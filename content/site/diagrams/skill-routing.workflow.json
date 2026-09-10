@@ -1,0 +1,244 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "The right skill for each ticket",
+    "output": "skill-routing.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "classify",
+        "label": "Classify",
+        "focus": [
+          "ticket",
+          "triage",
+          "wayfinder",
+          "to_questionnaire",
+          "grill",
+          "implement"
+        ],
+        "note": "From the ticket, triage branches by kind of work — foggy, needs an owner call, missing a spec, or ready to build."
+      },
+      {
+        "id": "close-the-loop",
+        "label": "Close the loop",
+        "focus": [
+          "to_tickets",
+          "simplify",
+          "to_questionnaire",
+          "update"
+        ],
+        "note": "All branches close forward onto the tracker, whether that's new tickets, an answer, or a closing handback."
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "tracker",
+      "label": "Tracker"
+    },
+    {
+      "id": "thomas",
+      "label": "Thomas"
+    },
+    {
+      "id": "shaper",
+      "label": "Shaper"
+    },
+    {
+      "id": "builder",
+      "label": "Builder"
+    }
+  ],
+  "mainPath": [
+    "ticket",
+    "triage",
+    "implement",
+    "code_review",
+    "simplify"
+  ],
+  "nodes": [
+    {
+      "id": "ticket",
+      "lane": "tracker",
+      "col": 0,
+      "type": "external",
+      "label": "Ticket on the tracker",
+      "sublabel": "Thomas takes it off the frontier",
+      "width": 150
+    },
+    {
+      "id": "triage",
+      "lane": "thomas",
+      "col": 1,
+      "type": "backend",
+      "label": "triage",
+      "sublabel": "classify: what kind of work?",
+      "width": 130
+    },
+    {
+      "id": "wayfinder",
+      "lane": "thomas",
+      "col": 2,
+      "type": "backend",
+      "label": "wayfinder",
+      "sublabel": "direction still foggy",
+      "width": 130,
+      "yOffset": -45
+    },
+    {
+      "id": "to_questionnaire",
+      "lane": "thomas",
+      "col": 2,
+      "type": "backend",
+      "label": "to-questionnaire",
+      "sublabel": "a question for you to decide",
+      "width": 150,
+      "yOffset": 45
+    },
+    {
+      "id": "grill",
+      "lane": "shaper",
+      "col": 2,
+      "type": "frontend",
+      "label": "grill-with-docs",
+      "sublabel": "draws out the requirement",
+      "width": 150
+    },
+    {
+      "id": "to_spec",
+      "lane": "shaper",
+      "col": 3,
+      "type": "frontend",
+      "label": "to-spec",
+      "sublabel": "pins the spec",
+      "width": 130
+    },
+    {
+      "id": "to_tickets",
+      "lane": "shaper",
+      "col": 4,
+      "type": "frontend",
+      "label": "to-tickets",
+      "sublabel": "cuts it into tickets",
+      "width": 130
+    },
+    {
+      "id": "diagnosing_bugs",
+      "lane": "builder",
+      "col": 2,
+      "type": "security",
+      "label": "diagnosing-bugs",
+      "sublabel": "find the cause first",
+      "width": 150
+    },
+    {
+      "id": "implement",
+      "lane": "builder",
+      "col": 3,
+      "type": "frontend",
+      "label": "implement",
+      "sublabel": "TDD, commits on the ticket branch",
+      "width": 150
+    },
+    {
+      "id": "code_review",
+      "lane": "builder",
+      "col": 4,
+      "type": "security",
+      "label": "code-review",
+      "sublabel": "Standards + Spec",
+      "width": 130
+    },
+    {
+      "id": "simplify",
+      "lane": "builder",
+      "col": 5,
+      "type": "security",
+      "label": "simplify",
+      "sublabel": "clean markers, cut the excess",
+      "width": 140
+    },
+    {
+      "id": "update",
+      "lane": "tracker",
+      "col": 5,
+      "type": "external",
+      "label": "Written back to the tracker",
+      "sublabel": "new tickets, the answer, the handback",
+      "width": 195
+    }
+  ],
+  "edges": [
+    {
+      "from": "ticket",
+      "to": "triage"
+    },
+    {
+      "from": "triage",
+      "to": "wayfinder",
+      "label": "foggy, multi-session"
+    },
+    {
+      "from": "triage",
+      "to": "to_questionnaire",
+      "label": "owner decision"
+    },
+    {
+      "from": "triage",
+      "to": "grill",
+      "label": "no spec yet"
+    },
+    {
+      "from": "grill",
+      "to": "to_spec"
+    },
+    {
+      "from": "to_spec",
+      "to": "to_tickets"
+    },
+    {
+      "from": "triage",
+      "to": "implement",
+      "label": "ready to build",
+      "toSide": "top"
+    },
+    {
+      "from": "implement",
+      "to": "code_review"
+    },
+    {
+      "from": "code_review",
+      "to": "simplify"
+    },
+    {
+      "from": "triage",
+      "to": "diagnosing_bugs",
+      "label": "it is a bug"
+    },
+    {
+      "from": "diagnosing_bugs",
+      "to": "implement"
+    },
+    {
+      "from": "wayfinder",
+      "to": "update",
+      "label": "direction settled"
+    },
+    {
+      "from": "to_questionnaire",
+      "to": "update",
+      "label": "answer written on the ticket"
+    },
+    {
+      "from": "to_tickets",
+      "to": "update",
+      "label": "new tickets on the board"
+    },
+    {
+      "from": "simplify",
+      "to": "update",
+      "label": "handback, ticket closed"
+    }
+  ]
+}
