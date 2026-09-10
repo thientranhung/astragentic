@@ -108,9 +108,10 @@ explain:
 
   method:
     eyebrow: "mattpocock-skills"
-    headline: "Astragentic không tự nghĩ ra SDLC. Nó điều phối một SDLC đã chuẩn."
+    headline: "Một SDLC hoàn chỉnh, mỗi bước là một skill có sẵn."
     paragraphs:
-      - "Bộ skill của Matt Pocock là xương sống phương pháp: wayfinder và triage cho Thomas; grill-with-docs, to-spec, to-tickets cho Shaper; implement cho Builder; cùng lớp craft dùng chung: tdd, code-review, domain-modeling, diagnosing-bugs. Tôi chọn nó thay vì Superpowers vì nó đặt vòng lặp hỏi đáp ở đầu, trước khi viết code, đúng chỗ Astragentic từng thất bại khi lặp ở cuối. Astragentic không cạnh tranh với phương pháp; nó điều phối phương pháp."
+      - "Astragentic chạy trên bộ skill mattpocock-skills của Matt Pocock: hỏi kỹ trước khi làm, viết spec, cắt ticket, implement theo TDD, review, dọn code. Mỗi vai nhận đúng skill cho việc của mình, nên cả đội đi cùng một quy trình từ yêu cầu đầu tiên tới PR cuối cùng."
+      - "Tôi chọn bộ này thay Superpowers vì nó đặt vòng hỏi đáp ở đầu, trước khi viết code, đúng chỗ dự án hay hỏng."
     items:
       - id: thomas
         title: "Thomas"

@@ -108,9 +108,10 @@ explain:
 
   method:
     eyebrow: "mattpocock-skills"
-    headline: "Astragentic does not invent an SDLC. It orchestrates a standard one."
+    headline: "A complete SDLC, every step a ready-made skill."
     paragraphs:
-      - "Matt Pocock's skill set is the backbone of the method: wayfinder and triage for Thomas; grill-with-docs, to-spec and to-tickets for the Shaper; implement for the Builder; and one shared craft layer of tdd, code-review, domain-modeling and diagnosing-bugs. I chose it over Superpowers because it puts the question-and-answer loop at the front, before any code is written, which is exactly where Astragentic used to fail by looping at the end. Astragentic does not compete with a method; it orchestrates one."
+      - "Astragentic runs on Matt Pocock’s mattpocock-skills: grill before building, write the spec, cut the tickets, implement with TDD, review, simplify. Each role gets exactly the skills for its job, so the whole team follows one process from the first requirement to the last PR."
+      - "I chose this set over Superpowers because it puts the question-and-answer loop first, before any code is written, which is where projects usually go wrong."
     items:
       - id: thomas
         title: "Thomas"
