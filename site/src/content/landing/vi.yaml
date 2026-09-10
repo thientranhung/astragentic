@@ -128,9 +128,9 @@ explain:
       href: "/vi-sao#why-mattpocock"
 
 why:
-  headline: "AI đã làm việc như một developer thực thụ. Câu hỏi còn lại là ai dẫn dắt."
-  p1: "Vibe coding chứng minh một agent có thể nhận việc, viết code và tự kiểm thử như một kỹ sư. Khi năng lực thực thi không còn là nút thắt, giá trị của người kỹ sư chuyển sang chỗ khác: đặt yêu cầu đúng, quyết định đúng, và giữ toàn bộ quy trình đi đúng hướng."
-  p2: "Astragentic được xây để bạn làm đúng phần đó. Nó tổ chức các agent thành một đội outsource theo kỷ luật SDLC quen thuộc, nhưng thiết kế lại cách phân việc, review và bàn giao để khai thác tốc độ và khối lượng công việc mà một đội người không thể duy trì."
+  headline: "AI đã là một developer thực thụ. Astragentic đặt bạn vào vai người dẫn dắt đội developer đó."
+  p1: "Coding agent hôm nay nhận việc, viết code, chạy test và sửa cho tới khi xanh, như một kỹ sư ngồi cạnh bạn. Khi thực thi không còn là nút thắt, giá trị của người kỹ sư chuyển sang chỗ khác: đặt yêu cầu đúng, quyết định đúng, và giữ cả quy trình đi đúng hướng."
+  p2: "Astragentic được xây để bạn làm đúng phần đó. Nó tổ chức các agent thành một đội outsource theo kỷ luật SDLC quen thuộc, và thiết kế lại cách dispatch, review, handback để khai thác tốc độ và khối lượng mà một đội người không duy trì được."
   more: "Tìm hiểu lý do thiết kế →"
 
 shots:

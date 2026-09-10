@@ -128,9 +128,9 @@ explain:
       href: "/en/why#why-mattpocock"
 
 why:
-  headline: "AI already works like a real developer. The question left is who leads."
-  p1: "Vibe coding proved that an agent can take a ticket, write the code and test its own work like an engineer. Once execution stops being the bottleneck, an engineer's value moves elsewhere: framing the right requirement, making the right decision, and keeping the whole process on course."
-  p2: "Astragentic is built so that you do exactly that part. It organises agents into an outsourcing team under the familiar SDLC discipline, but redesigns how work is assigned, reviewed and handed back, to exploit a speed and a volume no human team can sustain."
+  headline: "AI is now a real developer. Astragentic puts you in charge of that developer team."
+  p1: "A coding agent today takes the work, writes the code, runs the tests and fixes until they pass, like an engineer sitting next to you. Once execution is no longer the bottleneck, the engineer's value moves elsewhere: setting the right requirement, making the right call, and keeping the whole process on course."
+  p2: "Astragentic is built so that you do exactly that part. It organises agents into an outsourcing team under the familiar SDLC discipline, and redesigns dispatch, review and handback to exploit a speed and a volume no human team can sustain."
   more: "Explore the design rationale →"
 
 shots:
