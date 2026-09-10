@@ -2,7 +2,7 @@
 
 Vị trí: trang chủ, mục Comms, thay placeholder "ẢNH THẬT · SẼ CẬP NHẬT" dưới đoạn
 "Dispatch một ticket là mở một cuộc trao đổi có địa chỉ." Dựng bằng HyperFrames, render
-mp4/webm lặp, không tiếng, 16:9, khoảng 24 giây. Mọi dòng tool và lệnh lấy từ
+mp4/webm lặp, không tiếng, 16:9, khoảng 35 giây. Mọi dòng tool và lệnh lấy từ
 `harness/.agents/skills/dispatch-ticket{,-claude}/SKILL.md` và `roles/builder.md`; chỉ lời
 chat là viết mới, và là chỗ chủ site sửa.
 
@@ -43,18 +43,30 @@ hiện gần như tức thì.
 | 17.2 | → | Vệt sáng trái sang phải. |
 | 17.5 | phải | `<cross-session-message from="thomas">` hiện câu trả lời; Builder tiếp tục: `⏺ Edit(lib/features/orders/orders_screen.dart)`, `⏺ Bash(flutter test test/features/orders)` · `⎿ 11 passed`. |
 | 17.6 | trái | `⏺ Monitor(...)` · `⎿ watching builder-TRA-142` (Monitor mới) |
-| 20.0 | phải | `⏺ Bash(git commit --allow-empty -m "arm(ticket): TRA-142 — green, 1 pass")` · `⏺ Bash(git push)` · `⏺` Builder: `Handback TRA-142: 3 commit, 11 test pass, receipt đã commit. Chưa chạy trên máy thật, QA walk sẽ kiểm.` rồi `TERMINAL:done` |
-| 21.0 | ← | Vệt sáng phải sang trái. |
-| 21.3 | trái | `⎿ TERMINAL:done pane=7a3f` · `⏺ Bash(scripts/check-simplify-markers.sh main feat/TRA-142 --marker 'arm(ticket)')` · `⎿ exit 0` |
-| 22.2 | trái | `⏺` Thomas gửi bạn: `TRA-142 xong: 3 commit, 11 test pass, receipt hợp lệ. Builder hỏi một câu về empty state, tôi đã trả lời theo contract UI, không cần bạn. PR sẵn sàng; QA walk sẽ chạy trên simulator trước khi merge.` |
-| 24.0 | | Giữ 1 giây rồi lặp. |
+| 20.0 | phải | `⏺` Builder: `EmptyState có thêm nút "Mua sắm ngay" dẫn về Home không? Spec chỉ nói hiện thông báo rỗng.` rồi `TERMINAL:blocked` |
+| 20.8 | ← | Vệt sáng phải sang trái. |
+| 21.0 | trái | `⎿ TERMINAL:blocked pane=7a3f` · `⏺ Bash(herdr agent read 7a3f)` · `⎿ EmptyState có thêm nút "Mua sắm ngay" dẫn về Home không?` |
+| 22.0 | trái | `⏺` Thomas: `Đây là quyết định UX, không có trong spec và contract. Đưa lên bạn.` |
+| 22.8 | trái | `⏺ Skill(mattpocock-skills:to-questionnaire)` rồi hộp câu hỏi hiện trong pane Thomas: `TRA-142 · Empty state màn Lịch sử đơn hàng` · `A. Chỉ thông báo rỗng (theo spec)` · `B. Thêm nút "Mua sắm ngay" về Home` · `Chọn A/B:` |
+| 25.0 | trái | Ô nhập `>` nhấp nháy, bạn gõ: `B` và Enter. |
+| 26.0 | trái | `⏺` Thomas: `Ghi quyết định vào ticket, chuyển cho Builder.` · `⏺ Bash(gh issue comment 142 --body "Decision: B, thêm nút Mua sắm ngay về Home")` · `⏺ SendMessage(to: "builder-TRA-142")` · `⎿ Chủ dự án chọn B: thêm nút "Mua sắm ngay" điều hướng về Home. Tiếp tục.` |
+| 27.0 | → | Vệt sáng trái sang phải. |
+| 27.3 | phải | `<cross-session-message from="thomas">` hiện quyết định; Builder: `⏺ Edit(lib/features/orders/orders_screen.dart)`, `⏺ Bash(flutter test test/features/orders)` · `⎿ 12 passed`. |
+| 27.4 | trái | `⏺ Monitor(...)` · `⎿ watching builder-TRA-142` |
+| 30.0 | phải | `⏺ Bash(git commit --allow-empty -m "arm(ticket): TRA-142 — green, 1 pass")` · `⏺ Bash(git push)` · `⏺` Builder: `Handback TRA-142: 4 commit, 12 test pass, receipt đã commit. Chưa chạy trên máy thật, QA walk sẽ kiểm.` rồi `TERMINAL:done` |
+| 31.0 | ← | Vệt sáng phải sang trái. |
+| 31.3 | trái | `⎿ TERMINAL:done pane=7a3f` · `⏺ Bash(scripts/check-simplify-markers.sh main feat/TRA-142 --marker 'arm(ticket)')` · `⎿ exit 0` |
+| 32.2 | trái | `⏺` Thomas gửi bạn: `TRA-142 xong: 4 commit, 12 test pass, receipt hợp lệ. Builder hỏi hai câu: empty state dùng widget chung, tôi trả lời theo contract UI; nút "Mua sắm ngay" là quyết định của bạn, đã ghi vào ticket. PR sẵn sàng; QA walk sẽ chạy trên simulator trước khi merge.` |
+| 34.5 | | Giữ 1 giây rồi lặp. |
 
 ## Điều người xem phải nhận ra
 
 1. Bạn chỉ nói một câu với Thomas; mọi thứ còn lại Thomas làm.
 2. Thông điệp có địa chỉ: `to: "builder-TRA-142"`, và câu trả lời về đúng session gửi.
 3. Câu hỏi kỹ thuật không lên tới bạn; Thomas trả lời từ contract rồi báo lại.
-4. Handback về Thomas kèm receipt, và Thomas kiểm marker trước khi báo bạn.
+4. Quyết định UX thật thì Thomas quay về hỏi bạn, thu gọn thành A/B; bạn gõ một chữ.
+5. Quyết định được ghi vào ticket trước khi chuyển cho Builder, nên đọc lại được.
+6. Handback về Thomas kèm receipt, và Thomas kiểm marker trước khi báo bạn.
 
 ## Chỗ cần chủ site quyết
 
