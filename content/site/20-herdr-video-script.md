@@ -8,7 +8,7 @@ danh sách `agents · grouped` với chấm trạng thái, hàng tab, ô search,
 Sự thật lấy từ chính herdr (`herdr --help`, `herdr agent --help`): "terminal workspace manager
 for AI coding agents"; nhận diện agent trong pane và trạng thái của nó; socket API với các lệnh
 `herdr agent list/read/prompt/wait/start`; `herdr --remote <ssh-target>` và `herdr machine add`
-để gắn pane lên server. Lời thoại là viết mới; so sánh tmux là ý của chủ site.
+để gắn pane lên server. Lời thoại là viết mới. Không so sánh với công cụ khác.
 
 ## Ba phần
 
@@ -21,14 +21,14 @@ for AI coding agents"; nhận diện agent trong pane và trạng thái của n�
 | 5.0 | Chấm của `builder-tra-142` chuyển vàng "working", `rin` xám "idle", `builder-tra-143` đỏ "blocked". Pane chính đang là `thomas`. | Card: herdr nhận diện agent trong pane và trạng thái của nó: working, blocked, idle. |
 | 7.5 | Con trỏ bấm `builder-tra-143`; pane chính đổi sang session Codex đang chờ câu trả lời. | Card: Bấm một tên là đọc được pane đó. |
 
-### Phần 2 · vì sao không dừng ở tmux (9–19 s)
+### Phần 2 · Thomas đọc và chờ được pane của người khác (9–19 s)
 
 | t | Hình | Chữ trên hình |
 |---|---|---|
-| 9.0 | Màn hình chia đôi. Trái: một cửa sổ tmux tối giản, bốn ô chữ trôi, không tên, không trạng thái. Phải: danh sách agents của herdr với tên và chấm màu. | Card trái: tmux cho bạn các ô. · Card phải: herdr cho bạn tên, trạng thái, và một API. |
-| 12.0 | Trái: người dùng phải cuộn tay từng ô để biết ô nào đang kẹt. Phải: chấm đỏ tự sáng ở `builder-tra-143`. | Card: Không cần canh màn hình. |
-| 14.5 | Pane `thomas`: `⏺ Bash(herdr agent read builder-tra-143)` · `⎿ Empty state dùng widget chung hay vẽ riêng?` | Card: Thomas đọc được pane của mọi agent, không cần ai copy dán. |
-| 17.0 | Pane `thomas`: `⏺ Bash(herdr agent wait builder-tra-143 --state idle,blocked)` | Card: và chờ đúng tín hiệu, thay vì đoán. |
+| 9.0 | Danh sách agents phóng to: chấm đỏ tự sáng ở `builder-tra-143`, chữ `blocked` hiện cạnh tên. Không ai cuộn màn hình. | Card: Trạng thái pane là tín hiệu, không phải thứ phải ngồi canh. |
+| 12.0 | Pane `thomas`: `⏺ Bash(herdr agent read builder-tra-143)` · `⎿ Empty state dùng widget chung hay vẽ riêng?` | Card: Thomas đọc được pane của mọi agent, không cần ai copy dán. |
+| 15.0 | Pane `thomas`: `⏺ Bash(herdr agent wait builder-tra-143 --state idle,blocked)` · `⎿ blocked` | Card: và chờ đúng tín hiệu, thay vì đoán. |
+| 17.0 | Pane `thomas`: `⏺ Bash(herdr agent list)` · bốn dòng tên và trạng thái. | Card: Một API cho cả workspace. |
 
 ### Phần 3 · trong Astragentic (19–42 s)
 
@@ -46,7 +46,7 @@ for AI coding agents"; nhận diện agent trong pane và trạng thái của n�
 ## Điều người xem phải nhận ra
 
 1. herdr là một workspace cho agent: mỗi agent một pane có tên, có trạng thái, có API.
-2. Khác tmux ở chỗ tên, trạng thái và API, nên Thomas đọc và chờ được pane của người khác.
+2. Vì pane có tên, trạng thái và API, Thomas đọc và chờ được pane của người khác.
 3. Nhờ vậy các agent khác provider vẫn làm việc chung, và deploy làm ngay trong workspace.
 
 ## Chỗ cần chủ site quyết
@@ -55,8 +55,6 @@ for AI coding agents"; nhận diện agent trong pane và trạng thái của n�
   agent chạy `ssh` từ pane local? Tôi vẽ theo cách thật.
 - Ba lệnh deploy trong pane (`git pull`, `pnpm build`, `systemctl restart app`) là ví dụ; đổi
   sang lệnh anh dùng (Docker, Cloudflare, Coolify…) để người xem thấy quen.
-- So sánh tmux: giữ mức "tmux cho bạn các ô, herdr cho bạn tên, trạng thái và API", không nói
-  tmux kém; người đọc là dev, họ sẽ tự thấy.
 - Cần thêm hai ảnh thật: danh sách agents lúc có chấm blocked/idle (lấy đúng màu và chữ), và
   một pane Codex trong herdr.
 - Tên tab và tên space: dùng `astragentic`, `nizzy-ecom`, `prod-1` như trên, hay đổi.
