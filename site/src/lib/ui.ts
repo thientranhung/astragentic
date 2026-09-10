@@ -19,7 +19,7 @@ export const UI = {
   repoLink: { vi: 'GitHub ↗', en: 'GitHub ↗' },
   footerAdopt: { vi: 'Install', en: 'Adopt' },
   footerVersion: { vi: 'phiên bản', en: 'version' },
-  footerCited: { vi: 'dòng ledger đã buộc vào file', en: 'entries bound to a file' },
+  footerCited: { vi: 'bài học đo được đã thành luật trong harness', en: 'measured lessons now enforced by a harness file' },
   footerGenerated: { vi: 'số liệu sinh ngày', en: 'data generated' },
   skipToContent: { vi: 'Sang phần nội dung', en: 'Skip to content' },
 
