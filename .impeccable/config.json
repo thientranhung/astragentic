@@ -1,0 +1,170 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "site/video/dispatch/index.html"
+        ],
+        "createdAt": "2026-09-10T19:21:35.777Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation for the site videos; not a site page and outside DESIGN.md scope"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "site/video/dispatch/index.html"
+        ],
+        "createdAt": "2026-09-10T19:21:35.961Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation for the site videos; not a site page and outside DESIGN.md scope"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "site/video/dispatch/index.html"
+        ],
+        "createdAt": "2026-09-10T19:21:36.199Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation for the site videos; not a site page and outside DESIGN.md scope"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "site/video/dispatch/index.html"
+        ],
+        "createdAt": "2026-09-10T19:21:36.392Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation for the site videos; not a site page and outside DESIGN.md scope"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "site/video/dispatch/index.html"
+        ],
+        "createdAt": "2026-09-10T19:21:36.505Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation for the site videos; not a site page and outside DESIGN.md scope"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "site/video/dispatch/index.html"
+        ],
+        "createdAt": "2026-09-10T19:21:36.646Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation for the site videos; not a site page and outside DESIGN.md scope"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "site/video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-10T19:21:36.791Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation for the site videos; not a site page and outside DESIGN.md scope"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "site/video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-10T19:21:36.936Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation for the site videos; not a site page and outside DESIGN.md scope"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "site/video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-10T19:21:37.055Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation for the site videos; not a site page and outside DESIGN.md scope"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "site/video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-10T19:21:37.145Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation for the site videos; not a site page and outside DESIGN.md scope"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "site/video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-10T19:21:37.291Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation for the site videos; not a site page and outside DESIGN.md scope"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "site/video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-10T19:21:37.479Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation for the site videos; not a site page and outside DESIGN.md scope"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "site/video/hero/index.html"
+        ],
+        "createdAt": "2026-09-10T19:21:37.618Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation for the site videos; not a site page and outside DESIGN.md scope"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "site/video/hero/index.html"
+        ],
+        "createdAt": "2026-09-10T19:21:37.752Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation for the site videos; not a site page and outside DESIGN.md scope"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "site/video/hero/index.html"
+        ],
+        "createdAt": "2026-09-10T19:21:37.915Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation for the site videos; not a site page and outside DESIGN.md scope"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "site/video/hero/index.html"
+        ],
+        "createdAt": "2026-09-10T19:21:38.147Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation for the site videos; not a site page and outside DESIGN.md scope"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "site/video/hero/index.html"
+        ],
+        "createdAt": "2026-09-10T19:21:38.370Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation for the site videos; not a site page and outside DESIGN.md scope"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "site/video/hero/index.html"
+        ],
+        "createdAt": "2026-09-10T19:21:38.528Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation for the site videos; not a site page and outside DESIGN.md scope"
+      }
+    ]
+  }
+}
