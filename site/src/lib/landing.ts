@@ -175,7 +175,7 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
       },
       roles: {
         headline: 'Năm role, năm vòng đời session',
-        sub: 'Vòng đời session quyết định một role nhớ được gì.',
+        sub: 'Vòng đời session quyết định một agent nhớ được gì.',
       },
       features: {
         eyebrow: 'Tính năng',
