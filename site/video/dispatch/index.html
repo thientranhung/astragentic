@@ -42,7 +42,7 @@
       .bar .dots { display: flex; gap: 8px; }
       .bar .dots i { display: block; width: 12px; height: 12px; border-radius: 50%; background: #2c323c; }
       .bar .name { color: #d8dde6; font-weight: 600; }
-      .bar .sep { color: #7f838a; }
+      .bar .sep { color: #8b93a1; }
       .body { position: relative; flex: 1; overflow: hidden; padding: 22px 26px; }
       .scroll { position: relative; width: 100%; }
       .status {
@@ -70,10 +70,9 @@
       .line.input .prompt { color: #8b93a1; margin-right: 12px; }
       .line.input .typed { white-space: pre-wrap; }
       .cursor { display: inline-block; width: 11px; height: 24px; vertical-align: -4px; background: #d8dde6; margin-left: 2px; opacity: 0; }
-      .line.msg {
-        border-left: 3px solid #2f5da8; background: #121a2a; padding: 10px 16px; margin: 8px 0 12px; border-radius: 0 8px 8px 0; color: #dfe6f3;
-      }
-      .line.msg .from { display: block; font-size: 17px; color: #7fa2e6; margin-bottom: 4px; }
+      .mention { color: #7fa2e6; font-weight: 600; }
+      .line.preview { color: #98a1b0; }
+      .line.expanded { color: #dfe6f3; padding-left: 28px; }
       .line.q {
         border: 1px solid #3a4457; background: #141a25; padding: 12px 18px; margin: 8px 0 12px; border-radius: 8px; color: #e6eaf0;
       }
@@ -101,8 +100,8 @@
         position: absolute; left: 50%; bottom: 100%; margin-bottom: 12px; transform: translateX(-50%);
         display: block; white-space: nowrap; font-size: 18px; font-weight: 600;
       }
-      .comet.fwd .comet-label { color: #4f7fd6; }
-      .comet.back .comet-label { color: #3ecf8e; }
+      .comet.fwd .comet-label { color: #7fa2e6; }
+      .comet.back .comet-label { color: #6fe0ab; }
 
       /* ── arrival flash overlay, one per pane ─────────────────────────────── */
       .flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
@@ -128,12 +127,12 @@
             <div class="flash" id="flash-r"></div>
           </div>
         </div>
-        <div class="comet fwd" id="bridge-1"><div class="comet-streak"></div><div class="comet-label" id="bridge-1-label">SendMessage → builder-TRA-142</div><div class="comet-head"></div></div>
-        <div class="comet back" id="bridge-2"><div class="comet-streak"></div><div class="comet-label" id="bridge-2-label">TERMINAL:blocked → thomas</div><div class="comet-head"></div></div>
-        <div class="comet fwd" id="bridge-3"><div class="comet-streak"></div><div class="comet-label" id="bridge-3-label">SendMessage → builder-TRA-142</div><div class="comet-head"></div></div>
-        <div class="comet back" id="bridge-4"><div class="comet-streak"></div><div class="comet-label" id="bridge-4-label">TERMINAL:blocked → thomas</div><div class="comet-head"></div></div>
-        <div class="comet fwd" id="bridge-5"><div class="comet-streak"></div><div class="comet-label" id="bridge-5-label">SendMessage → builder-TRA-142</div><div class="comet-head"></div></div>
-        <div class="comet back" id="bridge-6"><div class="comet-streak"></div><div class="comet-label" id="bridge-6-label">TERMINAL:done → thomas</div><div class="comet-head"></div></div>
+        <div class="comet fwd" id="bridge-1" data-layout-allow-overflow data-layout-allow-overlap><div class="comet-streak"></div><div class="comet-label" id="bridge-1-label">@builder-TRA-142</div><div class="comet-head"></div></div>
+        <div class="comet back" id="bridge-2" data-layout-allow-overflow data-layout-allow-overlap><div class="comet-streak"></div><div class="comet-label" id="bridge-2-label">TERMINAL:blocked → thomas</div><div class="comet-head"></div></div>
+        <div class="comet fwd" id="bridge-3" data-layout-allow-overflow data-layout-allow-overlap><div class="comet-streak"></div><div class="comet-label" id="bridge-3-label">@builder-TRA-142</div><div class="comet-head"></div></div>
+        <div class="comet back" id="bridge-4" data-layout-allow-overflow data-layout-allow-overlap><div class="comet-streak"></div><div class="comet-label" id="bridge-4-label">TERMINAL:blocked → thomas</div><div class="comet-head"></div></div>
+        <div class="comet fwd" id="bridge-5" data-layout-allow-overflow data-layout-allow-overlap><div class="comet-streak"></div><div class="comet-label" id="bridge-5-label">@builder-TRA-142</div><div class="comet-head"></div></div>
+        <div class="comet back" id="bridge-6" data-layout-allow-overflow data-layout-allow-overlap><div class="comet-streak"></div><div class="comet-label" id="bridge-6-label">TERMINAL:done → thomas</div><div class="comet-head"></div></div>
       </section>
     </div>
 
@@ -143,8 +142,11 @@
       const tl = gsap.timeline({ paused: true });
 
       // ── the script (content/site/19-dispatch-video-script.md) ────────────
-      // kind: input (typed by the owner) · say (an agent's reply) · tool · out · msg
-      // (a cross-session message) · q (to-questionnaire) · launch · welcome · status · bridge
+      // kind: input (typed by the owner) · say (an agent's reply; a literal
+      // "@builder-TRA-142" substring renders as a highlighted mention) · tool · out
+      // · msg (a cross-session message: renders as a dim one-line preview, then the
+      // full body 0.5s later, as if ctrl+o had been pressed) · q (to-questionnaire)
+      // · launch · welcome · status · bridge
       const L = 'l', R = 'r';
       const S = [
         [0.4, L, 'input', 'TRA-142 sẵn sàng rồi, dispatch đi. Builder không được đụng module thanh toán, có gì hỏi lại.', { cps: 34 }],
@@ -159,8 +161,9 @@
         [6.9, R, 'launch', '$ claude --agent builder --model claude-sonnet-5 --effort medium'],
         [7.5, R, 'welcome'],
         [7.6, R, 'status', 'idle'],
-        [8.2, L, 'tool', 'SendMessage', 'to: "builder-TRA-142"'],
-        [8.6, L, 'out', 'Ticket TRA-142: màn hình Lịch sử đơn hàng thêm pull-to-refresh và empty state. Acceptance: kéo xuống gọi lại API orders, danh sách rỗng hiện EmptyState, flutter test pass. Không đụng module thanh toán. Write-set: lib/features/orders/*.'],
+        [7.9, L, 'tool', 'ListAgents', ''],
+        [8.05, L, 'out', 'builder-TRA-142 · idle'],
+        [8.2, L, 'say', 'Gửi cho @builder-TRA-142: Ticket TRA-142: màn hình Lịch sử đơn hàng thêm pull-to-refresh và empty state. Acceptance: kéo xuống gọi lại API orders, danh sách rỗng hiện EmptyState, flutter test pass. Không đụng module thanh toán. Write-set: lib/features/orders/*.'],
         [9.0, 'bridge', 1, L],
         [9.6, R, 'msg', 'thomas', 'Ticket TRA-142: màn hình Lịch sử đơn hàng thêm pull-to-refresh và empty state. Acceptance: kéo xuống gọi lại API orders, danh sách rỗng hiện EmptyState, flutter test pass. Không đụng module thanh toán. Write-set: lib/features/orders/*.'],
         [10.2, L, 'tool', 'Bash', "herdr pane run 7a3f '/mattpocock-skills:implement TRA-142'"],
@@ -181,8 +184,7 @@
         [17.2, L, 'tool', 'Bash', 'herdr agent read 7a3f'],
         [17.6, L, 'out', 'Empty state dùng widget EmptyState chung hay vẽ riêng?'],
         [18.2, L, 'say', 'Câu hỏi kỹ thuật, trả lời từ contract UI: mọi màn hình danh sách dùng EmptyState chung, không thêm asset mới.'],
-        [19.0, L, 'tool', 'SendMessage', 'to: "builder-TRA-142"'],
-        [19.3, L, 'out', 'Dùng EmptyState chung theo contract UI, không thêm asset. Tiếp tục.'],
+        [19.0, L, 'say', 'Gửi cho @builder-TRA-142: Dùng EmptyState chung theo contract UI, không thêm asset. Tiếp tục.'],
         [19.5, 'bridge', 3, L],
         [20.1, R, 'msg', 'thomas', 'Dùng EmptyState chung theo contract UI, không thêm asset. Tiếp tục.'],
         [20.2, R, 'status', 'working'],
@@ -206,8 +208,7 @@
         [29.2, L, 'status', 'working'],
         [29.3, L, 'say', 'Ghi quyết định vào ticket, chuyển cho Builder.'],
         [29.9, L, 'tool', 'Bash', 'gh issue comment 142 --body "Decision: B — thêm nút Mua sắm ngay về Home"'],
-        [30.3, L, 'tool', 'SendMessage', 'to: "builder-TRA-142"'],
-        [30.6, L, 'out', 'Chủ dự án chọn B: thêm nút "Mua sắm ngay" điều hướng về Home. Tiếp tục.'],
+        [30.3, L, 'say', 'Gửi cho @builder-TRA-142: Chủ dự án chọn B: thêm nút "Mua sắm ngay" điều hướng về Home. Tiếp tục.'],
         [30.8, 'bridge', 5, L],
         [31.4, R, 'msg', 'thomas', 'Chủ dự án chọn B: thêm nút "Mua sắm ngay" điều hướng về Home. Tiếp tục.'],
         [31.5, R, 'status', 'working'],
@@ -241,20 +242,55 @@
         el.className = 'line ' + (kind === 'tag' ? 'out' : kind);
         el.setAttribute('data-layout-allow-overflow', '');
         el.setAttribute('data-layout-allow-occlusion', '');
+        el.setAttribute('data-layout-allow-overlap', '');
         if (kind === 'input') {
           el.innerHTML = `<span class="prompt">&gt;</span><span class="typed" id="${el.id}-typed"></span><span class="cursor" id="${el.id}-cur"></span>`;
           // reserve the final height so the pane does not jump while typing
           const ghost = document.createElement('span'); ghost.className = 'typed'; ghost.style.visibility = 'hidden'; ghost.style.position = 'absolute'; ghost.textContent = ev[3];
           items.push({ t, pane, el, typed: ev[3], cps: ev[4].cps });
-        } else if (kind === 'say') { el.textContent = ev[3]; items.push({ t, pane, el }); }
+        } else if (kind === 'say') {
+          const text = ev[3];
+          const mention = '@builder-TRA-142';
+          if (text.includes(mention)) {
+            el.innerHTML = esc(text).split(mention).join(`<span class="mention">${mention}</span>`);
+          } else {
+            el.textContent = text;
+          }
+          items.push({ t, pane, el });
+        }
         else if (kind === 'tool') { el.innerHTML = `<b>${esc(ev[3])}</b>(${esc(ev[4])})`; items.push({ t, pane, el }); }
         else if (kind === 'out') { el.textContent = ev[3]; items.push({ t, pane, el }); }
-        else if (kind === 'tag') { el.innerHTML = `<span class="tag ${ev[3]}">TERMINAL:${ev[3]}</span>`; items.push({ t, pane, el }); }
-        else if (kind === 'msg') { el.innerHTML = `<span class="from">&lt;cross-session-message from="${esc(ev[3])}"&gt;</span>${esc(ev[4])}`; items.push({ t, pane, el }); }
-        else if (kind === 'q') { el.innerHTML = `<span class="head">${esc(ev[3])}</span>` + ev[4].map((o) => `<span class="opt">${esc(o)}</span>`).join('') + `<span class="opt">Chọn A/B:</span>`; items.push({ t, pane, el }); }
+        else if (kind === 'tag') { el.innerHTML = `<span class="tag ${ev[3]}" data-layout-allow-overlap>TERMINAL:${ev[3]}</span>`; items.push({ t, pane, el }); }
+        else if (kind === 'msg') {
+          // renders as a dim one-line preview, then (0.5s later) the expanded full body —
+          // mirrors Claude Code's real cross-session-message UI (ctrl+o to expand).
+          const from = ev[3];
+          const msgBody = ev[4];
+          const preview = document.createElement('div');
+          preview.id = `ln-${n++}`;
+          preview.className = 'line preview';
+          preview.setAttribute('data-layout-allow-overflow', '');
+          preview.setAttribute('data-layout-allow-occlusion', '');
+          preview.setAttribute('data-layout-allow-overlap', '');
+          const short = msgBody.length > 60 ? msgBody.slice(0, 60) + '…' : msgBody;
+          preview.textContent = `› Message from @${from}: ${short} (ctrl+o to expand)`;
+          scroll[pane].appendChild(preview);
+          items.push({ t, pane, el: preview });
+
+          const expanded = document.createElement('div');
+          expanded.id = `ln-${n++}`;
+          expanded.className = 'line expanded';
+          expanded.setAttribute('data-layout-allow-overflow', '');
+          expanded.setAttribute('data-layout-allow-occlusion', '');
+          expanded.setAttribute('data-layout-allow-overlap', '');
+          expanded.textContent = msgBody;
+          scroll[pane].appendChild(expanded);
+          items.push({ t: t + 0.5, pane, el: expanded });
+        }
+        else if (kind === 'q') { el.innerHTML = `<span class="head" data-layout-allow-overlap>${esc(ev[3])}</span>` + ev[4].map((o) => `<span class="opt" data-layout-allow-overlap>${esc(o)}</span>`).join('') + `<span class="opt" data-layout-allow-overlap>Chọn A/B:</span>`; items.push({ t, pane, el }); }
         else if (kind === 'launch') { el.className = 'line launch'; el.textContent = ev[3]; items.push({ t, pane, el }); }
         else if (kind === 'welcome') { el.className = 'line welcome'; el.innerHTML = `<b>Claude Code</b> · agent: builder · cwd ../wt/TRA-142`; items.push({ t, pane, el }); }
-        scroll[pane].appendChild(el);
+        if (kind !== 'msg') scroll[pane].appendChild(el);
       }
       // For typed inputs, fill the text now so layout is measured at final size, then
       // empty it; the timeline types it back in.
@@ -299,8 +335,8 @@
           // flash the receiving pane on arrival
           const pane = document.getElementById(`pane-${toPane}`);
           const flash = document.getElementById(`flash-${toPane}`);
-          tl.fromTo(pane, { borderColor: color }, { borderColor: '#262b34', duration: 0.6 }, arrive);
-          tl.fromTo(flash, { opacity: 0.18 }, { opacity: 0, duration: 0.6 }, arrive);
+          tl.fromTo(pane, { borderColor: color }, { borderColor: '#262b34', duration: 0.6, immediateRender: false }, arrive);
+          tl.fromTo(flash, { opacity: 0.18 }, { opacity: 0, duration: 0.6, immediateRender: false }, arrive);
           continue;
         }
         if (it.status) {

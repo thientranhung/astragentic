@@ -41,6 +41,60 @@
         ],
         "createdAt": "2026-09-10T07:16:35.975Z",
         "reason": "assistant: standalone HyperFrames terminal simulation with its own dark palette; not a site page and outside DESIGN.md scope"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "site/video/dispatch/index.html"
+        ],
+        "createdAt": "2026-09-10T07:18:40.602Z",
+        "reason": "assistant: same terminal-simulation exception as the site-relative entry; path as seen from the repo root"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "site/video/dispatch/index.html"
+        ],
+        "createdAt": "2026-09-10T07:18:40.733Z",
+        "reason": "assistant: same terminal-simulation exception as the site-relative entry; path as seen from the repo root"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "site/video/dispatch/index.html"
+        ],
+        "createdAt": "2026-09-10T07:18:40.942Z",
+        "reason": "assistant: same terminal-simulation exception as the site-relative entry; path as seen from the repo root"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "site/video/dispatch/index.html"
+        ],
+        "createdAt": "2026-09-10T07:18:41.268Z",
+        "reason": "assistant: same terminal-simulation exception as the site-relative entry; path as seen from the repo root"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "video/dispatch/index.html"
+        ],
+        "createdAt": "2026-09-10T07:41:39.238Z",
+        "reason": "assistant: terminal simulation sized for a 1920x1080 video frame, not the site type ramp"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "site/video/dispatch/index.html"
+        ],
+        "createdAt": "2026-09-10T07:41:40.305Z",
+        "reason": "assistant: terminal simulation sized for a 1920x1080 video frame, not the site type ramp"
       }
     ]
   }
