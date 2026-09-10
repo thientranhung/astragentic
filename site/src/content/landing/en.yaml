@@ -130,6 +130,12 @@ why:
   more: "Explore every design decision →"
 
 shots:
+  hero:
+    caption: "A simulated morning with Astragentic: open herdr, launch Thomas, ask how the project is going. Thomas reads the Linear board, reasons about which ticket to take, opens a Builder session, answers the technical question itself, then sends you a short report."
+    video:
+      mp4: /shots/hero.mp4
+      webm: /shots/hero.webm
+      poster: /shots/hero.jpg
   sendmessage:
     caption: "A simulated dispatch of TRA-142: you talk to Thomas, Thomas addresses the Builder by session name over cross-session messaging, answers the technical question itself, and brings the UX decision back to you."
     video:

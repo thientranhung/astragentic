@@ -130,6 +130,12 @@ why:
   more: "Khám phá toàn bộ lý do thiết kế →"
 
 shots:
+  hero:
+    caption: "Mô phỏng một buổi sáng với Astragentic: mở herdr, gọi Thomas, hỏi tiến độ. Thomas đọc board Linear, suy luận chọn ticket, mở session Builder, tự trả lời câu hỏi kỹ thuật, rồi gửi bạn báo cáo ngắn."
+    video:
+      mp4: /shots/hero.mp4
+      webm: /shots/hero.webm
+      poster: /shots/hero.jpg
   sendmessage:
     caption: "Mô phỏng một lượt dispatch TRA-142: bạn nói với Thomas, Thomas gọi Builder theo tên session bằng cross-session messaging, tự trả lời câu hỏi kỹ thuật, và đưa quyết định UX về cho bạn."
     video:

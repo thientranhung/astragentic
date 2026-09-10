@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Một ngày làm việc với Thomas</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/TextPlugin.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "JetBrainsMono Nerd Font";
+        src: local("JetBrainsMono NF Regular"), local("JetBrainsMono Nerd Font");
+        font-weight: 400;
+      }
+      @font-face {
+        font-family: "JetBrainsMono Nerd Font";
+        src: local("JetBrainsMono NF SemiBold"), local("JetBrainsMono Nerd Font SemiBold");
+        font-weight: 600;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0e0f14; }
+      body {
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", Menlo, ui-monospace, monospace;
+        color: #d8dde6;
+        font-size: 20px;
+        line-height: 30px;
+      }
+      #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+      .bg { position: absolute; inset: 0; background: #0e0f14; }
+      .clip { position: absolute; inset: 0; }
+
+      /* ── app chrome (from video/herdr) ─────────────────────────────── */
+      .app { position: absolute; inset: 0; display: flex; }
+
+      .sidebar { width: 340px; flex-shrink: 0; background: #13141b; border-right: 1px solid #262838; padding: 28px 0; display: flex; flex-direction: column; }
+      .section-label { text-transform: uppercase; font-size: 13px; letter-spacing: 0.08em; color: #888e99; padding: 0 24px; margin-bottom: 10px; }
+      .section-label.agents { margin-top: 30px; }
+      .space-row {
+        display: grid; grid-template-columns: 24px 1fr; grid-template-rows: auto auto;
+        align-items: center; padding: 10px 20px; margin: 0 4px 2px; border-radius: 6px;
+        white-space: nowrap;
+      }
+      .space-row.selected { background: rgba(167, 139, 250, 0.14); }
+      .space-row .dot { grid-column: 1; grid-row: 1; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; align-self: center; justify-self: center; }
+      .space-row .space-name { grid-column: 2; grid-row: 1; font-weight: 600; font-size: 17px; color: #e6eaf0; white-space: nowrap; }
+      .space-row .space-branch { grid-column: 2; grid-row: 2; font-size: 13px; color: #888e99; margin-top: 2px; white-space: nowrap; }
+
+      .agents-list { position: relative; }
+      .agent-row {
+        display: grid; grid-template-columns: 24px 1fr; grid-template-rows: auto auto;
+        align-items: center; padding: 9px 20px; margin: 0 4px 2px; border-radius: 6px; opacity: 0;
+        white-space: nowrap;
+      }
+      .agent-row .dot { grid-column: 1; grid-row: 1; width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; align-self: center; justify-self: center; background: #6b7280; border: 2px solid transparent; box-sizing: content-box; }
+      .agent-row .dot.state-working { background: #e0a83a; border-color: transparent; }
+      .agent-row .dot.state-blocked { background: #ff6b81; }
+      .agent-row .dot.state-done { background: #3ecf8e; }
+      .agent-row .dot.state-idle { background: transparent; border-color: #6b7280; }
+      .agent-row .agent-name { grid-column: 2; grid-row: 1; font-weight: 600; font-size: 20px; color: #e6eaf0; white-space: nowrap; }
+      .agent-row .agent-state { grid-column: 2; grid-row: 2; font-size: 16px; color: #929aa7; margin-top: 4px; white-space: nowrap; }
+
+      /* main area */
+      .main-area { flex: 1; display: flex; flex-direction: column; position: relative; background: #0e0f14; }
+      .tabs-row { height: 48px; flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding: 0 20px; border-bottom: 1px solid #262838; background: #13141b; }
+      .tab { padding: 7px 16px; border-radius: 6px; font-size: 15px; color: #8b93a1; opacity: 0; }
+      .tab.selected { background: rgba(167, 139, 250, 0.2); color: #e6eaf0; font-weight: 600; }
+      .tab-add { padding: 7px 12px; color: #888e99; font-size: 16px; }
+
+      .panes-wrap { flex: 1; position: relative; padding: 22px; }
+      .pane-box { position: absolute; }
+      .pane {
+        position: relative; height: 100%; display: flex; flex-direction: column;
+        background: #13141b; border: 1px solid #262838; border-radius: 10px;
+      }
+      .pane.focused { border-color: #a78bfa; }
+      .pane .title {
+        position: absolute; top: 0; left: 20px; transform: translateY(-50%);
+        background: #13141b; padding: 0 10px; font-size: 15px; font-weight: 600; color: #c7cbe0; z-index: 2;
+      }
+      .pane-body { position: relative; flex: 1; overflow: hidden; padding: 26px 26px 10px; }
+      .overlay { position: absolute; inset: 26px 26px 10px; }
+      .status-line { height: 40px; flex-shrink: 0; padding: 0 26px; display: flex; align-items: center; gap: 16px; border-top: 1px solid #1f242c; font-size: 15px; color: #888e99; opacity: 0; }
+      .status-line .bp { color: #3ecf8e; }
+
+      /* ── TUI line vocabulary (from video/dispatch) ─────────────────── */
+      .line { position: relative; width: 100%; opacity: 0; white-space: pre-wrap; word-break: break-word; margin-bottom: 8px; }
+      .line.say { color: #e6eaf0; }
+      .line.say::before, .line.tool::before { content: "⏺"; margin-right: 12px; }
+      .line.say::before { color: #d8dde6; }
+      .line.tool { color: #c3c9d3; }
+      .line.tool::before { color: #3ecf8e; }
+      .line.tool b { color: #e6eaf0; font-weight: 600; }
+      .line.out { color: #8b93a1; padding-left: 32px; }
+      .line.out::before { content: "⎿"; margin-right: 10px; color: #3b424d; }
+      .line.input {
+        border: 1px solid #2c323c; border-radius: 8px; padding: 10px 16px; margin: 8px 0 12px; color: #e6eaf0; background: #0e1116;
+      }
+      .line.input .prompt { color: #8b93a1; margin-right: 12px; }
+      .line.input .typed { white-space: pre-wrap; }
+      .cursor { display: inline-block; width: 11px; height: 22px; vertical-align: -4px; background: #d8dde6; margin-left: 2px; opacity: 0; }
+      .line.preview { color: #98a1b0; }
+      .line.expanded { color: #dfe6f3; padding-left: 26px; }
+      .line.hist { color: #797f89; }
+      .line.hist b { color: #838ba0; }
+      .line.hist.out { color: #797e87; }
+      .line.hist.preview { color: #6a6f79; }
+      .line.hist.expanded { color: #868c97; }
+      .welcome { color: #8b93a1; border: 1px solid #262b34; border-radius: 8px; padding: 10px 16px; margin-bottom: 12px; }
+      .welcome b { color: #e6eaf0; }
+      .shell-prompt { color: #8b93a1; }
+      .shell-prompt .typed { color: #d8dde6; }
+      .tag { display: inline-block; padding: 0 10px; border-radius: 6px; font-size: 16px; line-height: 26px; font-weight: 600; vertical-align: 1px; }
+      .tag.blocked { background: #3a1a17; color: #ff7a6b; }
+      .tag.done { background: #123326; color: #3ecf8e; }
+
+      /* ── card overlay, centred band over the main area, one visible at a time (from video/herdr) ── */
+      .card-overlay { position: absolute; left: 340px; right: 0; top: 50%; height: 0; max-width: 900px; margin: 0 auto; z-index: 6; }
+      .card {
+        position: absolute; left: 0; right: 0; top: 0; width: 100%; opacity: 0; transform: translateY(-50%);
+        background: rgba(19, 20, 27, 0.92); border: 1px solid #262838; border-radius: 10px;
+        padding: 18px 22px; font-size: 24px; line-height: 34px; color: #dfe6f3; text-align: center;
+      }
+      .card b { color: #ffffff; font-weight: 600; }
+
+      /* ── message comet between panes (from video/dispatch) ───────────── */
+      .comet { position: absolute; left: 0; top: 0; width: 20px; height: 20px; opacity: 0; z-index: 5; }
+      .comet-head { position: absolute; inset: 0; border-radius: 50%; border: 2px solid #0e0f14; }
+      .comet.fwd .comet-head { background: #4f7fd6; box-shadow: 0 0 0 6px rgba(79, 127, 214, .25); }
+      .comet.back .comet-head { background: #3ecf8e; box-shadow: 0 0 0 6px rgba(62, 207, 142, .25); }
+      .comet-streak { position: absolute; top: 50%; width: 200px; height: 5px; border-radius: 3px; transform: translateY(-50%); }
+      .comet.fwd .comet-streak { right: 100%; background: linear-gradient(to right, transparent, #4f7fd6); }
+      .comet.back .comet-streak { left: 100%; background: linear-gradient(to left, transparent, #3ecf8e); }
+      .flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; border-radius: 10px; }
+
+      /* ── board cut, full-frame image swap ─────────────────────────────── */
+      .board-overlay { position: absolute; inset: 0; z-index: 8; opacity: 0; background: #0e0f14; overflow: hidden; }
+      .board-wrap { position: absolute; top: 0; left: 0; width: 1920px; height: 1200px; margin-top: -60px; transform-origin: 0 0; }
+      .board-wrap img { position: absolute; inset: 0; width: 1920px; height: 1200px; display: block; }
+      .board-highlight {
+        position: absolute; left: 18px; top: 893px; width: 427px; height: 186px;
+        border: 3px solid #e53625; border-radius: 10px; opacity: 0;
+        box-shadow: 0 0 0 4000px rgba(6, 7, 10, 0.45), 0 0 24px rgba(229, 54, 37, 0.6);
+      }
+      .done-card {
+        position: absolute; left: 1362px; top: 300px; width: 340px; opacity: 0;
+        background: #14161d; border: 1px solid #2b3040; border-radius: 10px;
+        padding: 14px 16px; font-size: 17px; line-height: 24px; color: #dfe6f3;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+      }
+      .done-card .row { display: flex; align-items: flex-start; gap: 10px; }
+      .done-card .check {
+        flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; background: #123326;
+        color: #3ecf8e; font-size: 14px; line-height: 20px; text-align: center; font-weight: 700; margin-top: 2px;
+      }
+      .done-card .id { color: #8b93a1; font-size: 14px; margin-bottom: 2px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="60" data-width="1920" data-height="1080">
+      <div class="bg"></div>
+      <section id="scene" class="clip" data-start="0" data-duration="60" data-track-index="1">
+        <div class="app">
+          <!-- ── sidebar ─────────────────────────────────────────────── -->
+          <div class="sidebar">
+            <div class="section-label">spaces</div>
+            <div class="space-row selected">
+              <span class="dot" style="background:#a78bfa"></span>
+              <span class="space-name">inception</span>
+              <span class="space-branch">main</span>
+            </div>
+            <div class="space-row">
+              <span class="dot" style="background:#4f7fd6"></span>
+              <span class="space-name">shop-demo</span>
+              <span class="space-branch">main</span>
+            </div>
+
+            <div class="section-label agents">agents · grouped</div>
+            <div class="agents-list" id="agents-list" data-layout-allow-overlap></div>
+          </div>
+
+          <!-- ── main area ───────────────────────────────────────────── -->
+          <div class="main-area">
+            <div class="tabs-row">
+              <span class="tab" id="tab-thomas">thomas</span>
+              <span class="tab" id="tab-builder">builder-tra-200</span>
+              <span class="tab-add">+</span>
+            </div>
+            <div class="panes-wrap">
+              <!-- single full-width pane: 0–32.5s and 49.5–60s -->
+              <div class="pane-box" id="box-full" style="inset:0">
+                <div class="pane focused">
+                  <span class="title" id="title-full" data-layout-allow-overflow data-layout-allow-occlusion data-layout-allow-overlap>thomas</span>
+                  <div class="pane-body">
+                    <div class="overlay" id="shell-empty" style="opacity:1" data-layout-allow-overflow data-layout-allow-overlap>
+                      <div class="shell-prompt">~/inception $ <span class="typed" id="shell-typed" data-layout-allow-overlap>&nbsp;</span><span class="cursor" id="shell-cur" style="opacity:1"></span></div>
+                    </div>
+                    <div class="overlay" id="chat-log" style="opacity:0" data-layout-allow-overflow></div>
+                  </div>
+                  <div class="status-line" id="status-full"><span class="bp">▶▶ bypass permissions on</span><span>~/inception &gt; main</span></div>
+                </div>
+              </div>
+
+              <!-- split view: 32.5–49.5s -->
+              <div class="pane-box" id="box-split" style="inset:0;opacity:0;display:flex;gap:20px">
+                <div class="pane-box" style="position:relative;width:50%;height:100%">
+                  <div class="pane focused" id="pane-left">
+                    <span class="title" data-layout-allow-overflow data-layout-allow-occlusion data-layout-allow-overlap>thomas</span>
+                    <div class="pane-body"><div class="overlay" id="left-log" style="opacity:1" data-layout-allow-overflow></div></div>
+                    <div class="status-line" style="opacity:1"><span class="bp">▶▶ bypass permissions on</span><span>~/inception &gt; main</span></div>
+                    <div class="flash" id="flash-left"></div>
+                  </div>
+                </div>
+                <div class="pane-box" style="position:relative;width:50%;height:100%">
+                  <div class="pane" id="pane-right">
+                    <span class="title" data-layout-allow-overflow data-layout-allow-occlusion data-layout-allow-overlap>builder-tra-200</span>
+                    <div class="pane-body"><div class="overlay" id="right-log" style="opacity:1" data-layout-allow-overflow></div></div>
+                    <div class="status-line" style="opacity:1"><span class="bp">▶▶ bypass permissions on</span><span>~/wt/TRA-200 &gt; feat/TRA-200</span></div>
+                    <div class="flash" id="flash-right"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="comet fwd" id="comet-1" data-layout-allow-overflow data-layout-allow-overlap><div class="comet-streak"></div><div class="comet-head"></div></div>
+        <div class="comet back" id="comet-2" data-layout-allow-overflow data-layout-allow-overlap><div class="comet-streak"></div><div class="comet-head"></div></div>
+        <div class="comet fwd" id="comet-3" data-layout-allow-overflow data-layout-allow-overlap><div class="comet-streak"></div><div class="comet-head"></div></div>
+
+        <div class="board-overlay" id="board-overlay" data-layout-allow-overlap data-layout-allow-occlusion>
+          <div class="board-wrap" id="board-wrap" data-layout-allow-overflow>
+            <img src="assets/tracker-linear.jpg" alt="" />
+            <div class="board-highlight" id="board-highlight"></div>
+          </div>
+          <div class="done-card" id="done-card">
+            <div class="row">
+              <span class="check">✓</span>
+              <div>
+                <div class="id">TRA-200</div>
+                <div>App-id validation covers every surface</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-overlay" id="card-overlay" data-layout-allow-overlap data-layout-allow-occlusion></div>
+      </section>
+    </div>
+
+    <script>
+      gsap.registerPlugin(TextPlugin);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+      // ── sidebar agent rows ─────────────────────────────────────────────
+      const agentsList = document.getElementById('agents-list');
+      function addAgentRow(id, name, state, runtime) {
+        const row = document.createElement('div');
+        row.className = 'agent-row';
+        row.id = id;
+        row.setAttribute('data-layout-allow-overlap', '');
+        row.innerHTML = `<span class="dot state-${state}"></span><span class="agent-name" data-layout-allow-overlap>${esc(name)}</span><span class="agent-state" data-layout-allow-overlap>${state} · ${runtime}</span>`;
+        agentsList.appendChild(row);
+        return row;
+      }
+      const rowThomas = addAgentRow('row-thomas', 'thomas', 'working', 'claude');
+      const rowBuilder = addAgentRow('row-builder', 'builder-tra-200', 'working', 'claude');
+      function setDot(row, state, runtime) {
+        row.querySelector('.dot').className = 'dot state-' + state;
+        row.querySelector('.agent-state').textContent = state + ' · ' + runtime;
+      }
+
+      // ── cards, top-right, one visible at a time ─────────────────────────
+      const CARDS = [
+        [0.0, 'Một buổi sáng, mở herdr.'],
+        [6.9, 'Thomas là người đại diện của team. Bạn chỉ nói chuyện với Thomas.'],
+        [14.5, 'Thomas lên tracker trước khi trả lời.'],
+        [16.7, 'Board là nguồn sự thật. Thomas đọc nó thay bạn.'],
+        [21.3, 'Thomas không lấy ticket đầu hàng. Thomas đọc trạng thái, loại việc bị chặn, chọn việc mở đường.'],
+        [27.6, 'Bạn giữ quyền quyết định; một chữ là đủ.'],
+        [29.6, 'Claim trên board, mở worktree, mở session Builder.'],
+        [32.6, 'Mỗi agent một session, có tên, có trạng thái.'],
+        [34.6, 'Brief đi thẳng vào session của Builder.'],
+        [40.0, 'Builder kẹt, herdr báo, Thomas thấy ngay.'],
+        [42.5, 'Câu hỏi kỹ thuật, Thomas tự trả lời. Chỉ quyết định sản phẩm mới lên bạn.'],
+        [49.6, 'Thomas kiểm receipt trước khi báo cáo.'],
+        [52.6, 'Bạn nhận báo cáo, không nhận log.'],
+        [57.0, 'Mọi việc để lại dấu vết trên board.'],
+        [58.8, ''],
+      ];
+      const cardOverlay = document.getElementById('card-overlay');
+      const cardEls = CARDS.map(([t, html]) => {
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.innerHTML = html;
+        cardOverlay.appendChild(el);
+        return el;
+      });
+      const FADE = 0.25;
+      CARDS.forEach(([t], i) => {
+        const el = cardEls[i];
+        const next = CARDS[i + 1] ? CARDS[i + 1][0] : 60;
+        if (!CARDS[i][1]) return;
+        tl.to(el, { autoAlpha: 1, duration: FADE }, t);
+        tl.to(el, { autoAlpha: 0, duration: FADE }, next - FADE);
+      });
+
+      // ── generic "reveal a line" helper ──────────────────────────────────
+      function makeLine(kind, html) {
+        const el = document.createElement('div');
+        el.className = 'line ' + kind;
+        el.setAttribute('data-layout-allow-overflow', '');
+        el.setAttribute('data-layout-allow-occlusion', '');
+        el.setAttribute('data-layout-allow-overlap', '');
+        el.innerHTML = html;
+        return el;
+      }
+      function toolHtml(label, cmd) { return `<b>${esc(label)}</b>(${esc(cmd)})`; }
+
+      // ── scene 1: shell + launch command ──────────────────────────────
+      const shellEmpty = document.getElementById('shell-empty');
+      const shellTyped = document.getElementById('shell-typed');
+      const shellCur = document.getElementById('shell-cur');
+      const chatLog = document.getElementById('chat-log');
+      const titleFull = document.getElementById('title-full');
+      const statusFull = document.getElementById('status-full');
+      const tabThomas = document.getElementById('tab-thomas');
+      const tabBuilder = document.getElementById('tab-builder');
+
+      const LAUNCH_CMD = 'claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium';
+      const LAUNCH_CPS = 18;
+      const launchDur = LAUNCH_CMD.length / LAUNCH_CPS; // ~5.0s
+      const T_TYPE_START = 1.5;
+      const T_LAUNCH_END = T_TYPE_START + launchDur; // ~6.5
+      const T_WELCOME = T_LAUNCH_END + 0.5; // ~7.0
+
+      tl.to(shellTyped, { text: { value: LAUNCH_CMD }, duration: launchDur, ease: 'none' }, T_TYPE_START);
+      tl.to(shellEmpty, { opacity: 0, duration: 0.2 }, T_WELCOME);
+      tl.set(shellCur, { opacity: 0 }, T_WELCOME);
+      tl.to(chatLog, { opacity: 1, duration: 0.2 }, T_WELCOME);
+      tl.to(statusFull, { opacity: 1, duration: 0.2 }, T_WELCOME);
+      tl.to(tabThomas, { opacity: 1, duration: 0.2 }, T_WELCOME);
+      tl.call(() => tabThomas.classList.add('selected'), [], T_WELCOME);
+      tl.call(() => { setDot(rowThomas, 'working', 'claude'); }, [], T_WELCOME);
+      tl.to(rowThomas, { opacity: 1, duration: 0.25 }, T_WELCOME);
+
+      const welcomeEl = makeLine('welcome', '<b>Claude Code</b> · agent: thomas · claude-opus-5 · effort medium · cwd ~/inception');
+      welcomeEl.style.opacity = 1;
+      chatLog.appendChild(welcomeEl);
+
+      // ── scene 2 + scene 4 content, one continuous scroll container ──────
+      // items: { t, kind: 'input'|'say'|'tool'|'out'|'hist', ... }
+      const chatItems = [];
+      function addChat(t, kind, a, b, opts) {
+        opts = opts || {};
+        let el;
+        if (kind === 'input') {
+          el = makeLine('input', `<span class="prompt">&gt;</span><span class="typed" id="ci-${chatItems.length}"></span><span class="cursor" id="cc-${chatItems.length}"></span>`);
+          chatLog.appendChild(el);
+          chatItems.push({ t, el, typed: a, cps: opts.cps || 16 });
+        } else if (kind === 'say') {
+          el = makeLine('say', esc(a));
+          if (opts.hist) el.classList.add('hist');
+          chatLog.appendChild(el);
+          chatItems.push({ t, el, hist: opts.hist });
+        } else if (kind === 'tool') {
+          el = makeLine('tool', toolHtml(a, b));
+          if (opts.hist) el.classList.add('hist');
+          chatLog.appendChild(el);
+          chatItems.push({ t, el, hist: opts.hist });
+        } else if (kind === 'out') {
+          el = makeLine('out', esc(a));
+          if (opts.hist) el.classList.add('hist');
+          chatLog.appendChild(el);
+          chatItems.push({ t, el, hist: opts.hist });
+        }
+        return el;
+      }
+
+      addChat(9.5, 'input', 'Hello Thomas, dự án thế nào rồi? Tiếp tục triển khai nhé.', null, { cps: 16 });
+      const T_MSG1 = 9.5 + 'Hello Thomas, dự án thế nào rồi? Tiếp tục triển khai nhé.'.length / 16;
+
+      const T_TOOL1 = T_MSG1 + 0.8; // ~14.3
+      addChat(T_TOOL1, 'tool', 'Bash', 'linear issue list --project Inception --state "In Progress,Todo,Backlog"');
+      addChat(T_TOOL1 + 0.35, 'out', '7 issues');
+
+      const T_BOARD = T_TOOL1 + 2.2; // ~16.7 — board cut starts
+      const T_BOARD_END = T_BOARD + 5.0; // ~21.1 — back to pane; leaves a ~2.5s hold on the zoomed TRA-200 card
+
+      addChat(T_BOARD_END + 0.3, 'say', 'Tiến độ: 50 done, TRA-196 (bug APPTWEAK_FANOUT_MAX) đang In Progress, để Builder chạy tiếp. Todo chỉ có TRA-54 nhưng đang needs-info, chưa làm được. Backlog có 3 ticket needs-info nữa, tôi gom câu hỏi gửi bạn sau. TRA-200 là ticket duy nhất ready-for-agent và không bị chặn, nó mở đường cho TRA-179. Tôi dispatch TRA-200.');
+
+      const T_OK = T_BOARD_END + 6.7; // ~27.6
+      addChat(T_OK, 'input', 'ok', null, { cps: 10 });
+
+      const T_DISPATCH = T_OK + 1.5; // ~29.6
+      addChat(T_DISPATCH, 'tool', 'Bash', 'linear issue update TRA-200 --state "In Progress" --assignee builder');
+      addChat(T_DISPATCH + 0.35, 'out', 'updated');
+      addChat(T_DISPATCH + 0.7, 'tool', 'Bash', 'git worktree add ../wt/TRA-200 -b feat/TRA-200 main');
+      addChat(T_DISPATCH + 1.05, 'out', 'Preparing worktree');
+      addChat(T_DISPATCH + 1.4, 'tool', 'Bash', 'herdr agent start builder-tra-200 -- claude --agent builder --model claude-sonnet-5 --effort medium');
+      addChat(T_DISPATCH + 1.75, 'out', 'started');
+
+      const T_SPLIT = T_DISPATCH + 2.9; // ~32.5
+
+      // split-phase left-pane lines, replayed into chat-log as history once merged back
+      const T_MERGE = 49.5;
+      addChat(T_MERGE - 0.01, 'tool', 'Monitor', 'scripts/herdr-watch-terminal.sh builder-tra-200', { hist: true });
+      addChat(T_MERGE - 0.01, 'out', 'watching', { hist: true });
+      addChat(T_MERGE - 0.01, 'out', 'TERMINAL:blocked pane=builder-tra-200', { hist: true });
+      addChat(T_MERGE - 0.01, 'tool', 'Bash', 'herdr agent read builder-tra-200', { hist: true });
+      addChat(T_MERGE - 0.01, 'say', 'Câu hỏi kỹ thuật, có trong spec TRA-179: payload cũ thiếu app-id thì bỏ qua và ghi warning. Trả lời Builder, không cần làm phiền bạn.', { hist: true });
+
+      addChat(T_MERGE + 0.2, 'out', 'TERMINAL:done pane=builder-tra-200');
+      addChat(T_MERGE + 0.55, 'tool', 'Bash', 'scripts/check-simplify-markers.sh main feat/TRA-200');
+      addChat(T_MERGE + 0.9, 'out', 'exit 0');
+      addChat(T_MERGE + 1.25, 'tool', 'Bash', 'linear issue update TRA-200 --state Done');
+      addChat(T_MERGE + 1.6, 'out', 'updated');
+
+      const T_REPORT = T_MERGE + 3.1; // ~52.6
+      addChat(T_REPORT, 'say', 'TRA-200 xong: 3 commit, 17 test pass, receipt hợp lệ, đã chuyển Done. Builder hỏi một câu kỹ thuật, tôi trả lời theo spec TRA-179. Còn 4 ticket needs-info (TRA-54, TRA-182, TRA-183, TRA-141), tôi đã gom câu hỏi, bạn xem lúc rảnh. TRA-196 vẫn đang chạy.');
+
+      // ── measured scroll + reveal, chat-log ───────────────────────────
+      function runLog(container, paneEl, items, opts) {
+        opts = opts || {};
+        const paneH = container.parentElement.clientHeight;
+        let scrollY = 0;
+        for (const it of items) {
+          const bottom = it.el.offsetTop + it.el.offsetHeight;
+          const need = Math.max(0, bottom - paneH + 12);
+          if (need > scrollY) {
+            tl.to(container, { y: -need, duration: 0.35, ease: 'power2.out' }, it.t - 0.1);
+            scrollY = need;
+          }
+          if (it.hist) {
+            tl.set(it.el, { autoAlpha: 1 }, it.t);
+            continue;
+          }
+          if (it.typed !== undefined) {
+            const idx = items.indexOf(it);
+            const typedEl = it.el.querySelector('.typed');
+            const curEl = it.el.querySelector('.cursor');
+            const dur = it.typed.length / it.cps;
+            tl.to(it.el, { autoAlpha: 1, duration: 0.15 }, it.t - 0.25);
+            tl.set(curEl, { opacity: 1 }, it.t - 0.25);
+            tl.to(typedEl, { text: { value: it.typed }, duration: dur, ease: 'none' }, it.t);
+            tl.set(curEl, { opacity: 0 }, it.t + dur + 0.25);
+          } else {
+            tl.fromTo(it.el, { autoAlpha: 0, y: 6 }, { autoAlpha: 1, y: 0, duration: 0.2, ease: 'power2.out' }, it.t);
+          }
+        }
+      }
+      runLog(chatLog, document.getElementById('box-full'), chatItems);
+
+      // ── board cut: scene 2, board zoom on TRA-200 ────────────────────
+      const boardOverlay = document.getElementById('board-overlay');
+      const boardWrap = document.getElementById('board-wrap');
+      const boardHighlight = document.getElementById('board-highlight');
+      const doneCard = document.getElementById('done-card');
+
+      // TRA-200 card, board-wrap local space (1920x1200), matches .board-highlight above
+      const tra200Mid = { x: (18 + 445) / 2, y: (893 + 1079) / 2 };
+      const ZOOM = 2.2;
+      const zoomX = 960 - ZOOM * tra200Mid.x;
+      const zoomY = 540 - ZOOM * tra200Mid.y;
+
+      tl.set(boardWrap, { x: 0, y: 0, scale: 1 }, T_BOARD);
+      tl.set(boardHighlight, { autoAlpha: 0 }, T_BOARD);
+      tl.set(doneCard, { autoAlpha: 0 }, T_BOARD);
+      tl.to(boardOverlay, { autoAlpha: 1, duration: 0.2 }, T_BOARD);
+      tl.to(boardWrap, { x: zoomX, y: zoomY, scale: ZOOM, duration: 1.2, ease: 'power2.inOut' }, T_BOARD + 1.0);
+      tl.to(boardHighlight, { autoAlpha: 1, duration: 0.3 }, T_BOARD + 2.4);
+      tl.to(boardOverlay, { autoAlpha: 0, duration: 0.3 }, T_BOARD_END - 0.3);
+
+      // ── scene 3: split view ────────────────────────────────────────
+      const boxFull = document.getElementById('box-full');
+      const boxSplit = document.getElementById('box-split');
+      const leftLog = document.getElementById('left-log');
+      const rightLog = document.getElementById('right-log');
+
+      tl.to(boxFull, { autoAlpha: 0, duration: 0.3 }, T_SPLIT);
+      tl.to(boxSplit, { autoAlpha: 1, duration: 0.3 }, T_SPLIT);
+      tl.to(tabBuilder, { opacity: 1, duration: 0.2 }, T_SPLIT);
+      tl.call(() => { setDot(rowBuilder, 'working', 'claude'); }, [], T_SPLIT);
+      tl.to(rowBuilder, { opacity: 1, duration: 0.25 }, T_SPLIT);
+
+      // left-log: pre-populated history — only what has actually happened by
+      // the moment the pane splits (T_SPLIT). Everything scripted for later
+      // (the T_MERGE-0.01 hist replay lines, and anything after merge) must
+      // stay out of this snapshot or it reveals the story early and then
+      // duplicates once its own timed reveal (addLeft/runLog) fires.
+      chatItems.filter((it) => it.t < T_SPLIT).forEach((it) => {
+        const clone = it.el.cloneNode(true);
+        clone.classList.add('hist');
+        clone.style.opacity = 1;
+        if (it.typed !== undefined) {
+          clone.querySelector('.typed').textContent = it.typed;
+          const cur = clone.querySelector('.cursor');
+          if (cur) cur.style.opacity = 0;
+        }
+        leftLog.appendChild(clone);
+      });
+
+      // left pane: split-phase-only lines
+      const leftItems = [];
+      function addLeft(t, kind, a, b) {
+        const el = kind === 'tool' ? makeLine('tool', toolHtml(a, b)) : kind === 'out' ? makeLine('out', esc(a)) : makeLine('say', esc(a));
+        leftLog.appendChild(el);
+        leftItems.push({ t, el });
+        return el;
+      }
+      const T_BRIEF = T_SPLIT + 2.1; // ~34.6
+      addLeft(T_BRIEF + 0.3, 'tool', 'Monitor', 'scripts/herdr-watch-terminal.sh builder-tra-200');
+      addLeft(T_BRIEF + 0.65, 'out', 'watching');
+
+      const T_BLOCKED = 40.0;
+      const T_ANSWER = 42.5;
+      addLeft(T_ANSWER, 'out', 'TERMINAL:blocked pane=builder-tra-200');
+      addLeft(T_ANSWER + 0.35, 'tool', 'Bash', 'herdr agent read builder-tra-200');
+      addLeft(T_ANSWER + 0.7, 'say', 'Câu hỏi kỹ thuật, có trong spec TRA-179: payload cũ thiếu app-id thì bỏ qua và ghi warning. Trả lời Builder, không cần làm phiền bạn.');
+      runLog(leftLog, document.getElementById('pane-left'), leftItems);
+
+      // right pane: builder-tra-200 session
+      const rightItems = [];
+      function addRight(t, kind, a, b) {
+        let el;
+        if (kind === 'preview') {
+          el = makeLine('preview', esc(a));
+        } else if (kind === 'expanded') {
+          el = makeLine('expanded', esc(a));
+        } else if (kind === 'tag') {
+          el = makeLine('out', `<span class="tag ${a}" data-layout-allow-overlap>TERMINAL:${a}</span>`);
+        } else if (kind === 'tool') {
+          el = makeLine('tool', toolHtml(a, b));
+        } else if (kind === 'out') {
+          el = makeLine('out', esc(a));
+        } else {
+          el = makeLine('say', esc(a));
+        }
+        rightLog.appendChild(el);
+        rightItems.push({ t, el });
+        return el;
+      }
+
+      const BRIEF_MSG = 'Ticket TRA-200: app-id validation mới chỉ phủ featured surface, mở rộng cho mọi surface trong payload…';
+      addRight(T_BRIEF, 'preview', `› Message from @thomas: ${BRIEF_MSG} (ctrl+o to expand)`);
+      addRight(T_BRIEF + 0.5, 'expanded', BRIEF_MSG);
+
+      const T_WORK1 = T_BRIEF + 2.4; // ~37.0
+      addRight(T_WORK1, 'tool', 'Read', 'src/ingest/validation/app_id.py');
+      addRight(T_WORK1 + 0.6, 'tool', 'Edit', 'src/ingest/validation/app_id.py');
+      addRight(T_WORK1 + 1.2, 'tool', 'Bash', 'pytest tests/ingest/test_app_id.py');
+      addRight(T_WORK1 + 1.55, 'out', '14 passed');
+
+      addRight(T_BLOCKED, 'say', 'Surface "search" không có app-id trong payload cũ, bỏ qua hay coi là lỗi?');
+      addRight(T_BLOCKED + 0.4, 'tag', 'blocked');
+      tl.call(() => { setDot(rowBuilder, 'blocked', 'claude'); }, [], T_BLOCKED + 0.4);
+
+      const ANSWER_MSG = 'Payload cũ thiếu app-id thì bỏ qua và ghi warning, theo spec TRA-179. Tiếp tục.';
+      const T_RESUME = 46.0;
+      addRight(T_RESUME, 'preview', `› Message from @thomas: ${ANSWER_MSG} (ctrl+o to expand)`);
+      addRight(T_RESUME + 0.5, 'expanded', ANSWER_MSG);
+      tl.call(() => { setDot(rowBuilder, 'working', 'claude'); }, [], T_RESUME);
+
+      addRight(T_RESUME + 1.1, 'tool', 'Edit', 'src/ingest/validation/app_id.py');
+      addRight(T_RESUME + 1.7, 'tool', 'Bash', 'pytest tests/ingest/test_app_id.py');
+      addRight(T_RESUME + 2.05, 'out', '17 passed');
+      addRight(T_RESUME + 2.4, 'tool', 'Bash', 'git push');
+      addRight(T_RESUME + 2.75, 'tag', 'done');
+      tl.call(() => { setDot(rowBuilder, 'done', 'claude'); }, [], T_RESUME + 2.75);
+      runLog(rightLog, document.getElementById('pane-right'), rightItems);
+
+      // ── comets: message streaks between panes ────────────────────────
+      function fireComet(id, atTime, dir, fromPaneId, toPaneId) {
+        const c = document.getElementById(id);
+        const from = document.getElementById(fromPaneId).getBoundingClientRect();
+        const to = document.getElementById(toPaneId).getBoundingClientRect();
+        const y = from.top + from.height * 0.5;
+        const x0 = dir === 'fwd' ? from.right - 30 : from.left + 30;
+        const x1 = dir === 'fwd' ? to.left + 30 : to.right - 30;
+        tl.set(c, { x: x0, y: y - 10, autoAlpha: 0 }, atTime - 0.1);
+        tl.to(c, { autoAlpha: 1, duration: 0.1 }, atTime - 0.1);
+        tl.to(c, { x: x1, duration: 0.7, ease: 'power2.inOut' }, atTime);
+        tl.to(c, { autoAlpha: 0, duration: 0.15 }, atTime + 0.7);
+        const flashEl = document.getElementById(dir === 'fwd' ? 'flash-right' : 'flash-left');
+        const color = dir === 'fwd' ? '#4f7fd6' : '#3ecf8e';
+        tl.fromTo(flashEl, { opacity: 0.16, backgroundColor: color }, { opacity: 0, duration: 0.5, immediateRender: false }, atTime + 0.7);
+      }
+      fireComet('comet-1', T_BRIEF - 0.05, 'fwd', 'pane-left', 'pane-right');
+      fireComet('comet-2', T_BLOCKED + 0.5, 'back', 'pane-right', 'pane-left');
+      fireComet('comet-3', T_RESUME - 0.05, 'fwd', 'pane-left', 'pane-right');
+
+      // ── scene 4: merge back to single pane ────────────────────────────
+      tl.to(boxSplit, { autoAlpha: 0, duration: 0.3 }, T_MERGE);
+      tl.to(boxFull, { autoAlpha: 1, duration: 0.3 }, T_MERGE);
+      tl.to(tabBuilder, { opacity: 0, duration: 0.2 }, T_MERGE);
+      tl.call(() => tabBuilder.classList.remove('selected'), [], T_MERGE);
+
+      // ── final board cut: TRA-200 lands in Done ────────────────────────
+      const T_DONE_CUT = 57.0;
+      tl.set(boardWrap, { x: 0, y: 0, scale: 1 }, T_DONE_CUT);
+      tl.set(boardHighlight, { autoAlpha: 0 }, T_DONE_CUT);
+      tl.to(boardOverlay, { autoAlpha: 1, duration: 0.2 }, T_DONE_CUT);
+      tl.to(doneCard, { autoAlpha: 1, duration: 0.25 }, T_DONE_CUT + 0.2);
+      tl.to(doneCard, { autoAlpha: 0, duration: 0.2 }, T_DONE_CUT + 1.5);
+      tl.to(boardOverlay, { autoAlpha: 0, duration: 0.25 }, T_DONE_CUT + 1.7);
+
+      window.__timelines['main'] = tl;
+    </script>
+  </body>
+</html>

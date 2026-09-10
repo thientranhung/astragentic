@@ -139,6 +139,11 @@ const CARD_FRAME = 330;
           <a class="btn btn--ghost mono" href="#why">{copy.hero.secondary} →</a>
         </p>
       </div>
+      {/* One morning with the team, under the buttons: the whole loop the page then
+          explains section by section (script: content/site/21-hero-video-script.md). */}
+      {shots.hero && (
+        <Shot lang={lang} caption={shots.hero.caption} src={shots.hero.src} video={shots.hero.video} class="breakout hero-shot" />
+      )}
     </div>
   </section>
 
@@ -577,6 +582,9 @@ const CARD_FRAME = 330;
   }
   .hero-copy .cta {
     justify-content: center;
+  }
+  .hero :global(.hero-shot) {
+    margin-top: 3rem;
   }
   /* Capped below the global h1: the hero headline is a whole sentence, and at the
      global size it takes five lines and outweighs the diagram beside it (PRD §5). */
