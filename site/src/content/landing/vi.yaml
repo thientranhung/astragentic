@@ -111,7 +111,6 @@ explain:
     headline: "Astragentic chọn mattpocock-skills làm khung quản trị và phát triển dự án."
     paragraphs:
       - "Bộ skill của Matt Pocock bao trọn hai nửa của một dự án. Nửa quản trị: wayfinder định hướng, triage phân loại việc, grill hỏi cho ra yêu cầu, to-spec chốt spec, to-tickets cắt thành ticket. Nửa phát triển: implement theo TDD, code-review, simplify, diagnosing-bugs. Astragentic gắn từng skill vào đúng vai, nên Thomas quản trị và Builder thi công theo cùng một khung, từ yêu cầu đầu tiên tới PR cuối cùng."
-      - "Tôi chọn bộ này thay Superpowers vì nó đặt vòng hỏi đáp ở đầu, trước khi viết code, đúng chỗ dự án hay hỏng."
     items:
       - id: thomas
         title: "Thomas"
