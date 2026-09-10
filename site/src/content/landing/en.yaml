@@ -200,17 +200,17 @@ features:
 
 fit:
   headline: "Built for projects with many stories and many milestones."
-  body: "Astragentic is not for a single script or a weekend prototype. It pays off when the backlog is long, the milestones run back to back, and you need a team that holds steady for weeks. If your project is at that scale, the rest of this site is written for you."
-  fitsLabel: "Fits when"
-  notYetLabel: "Not yet when"
+  body: "Astragentic is process machinery: a tracker, dispatch, review gates, receipts. That machinery only pays for itself when the project is big enough to need it: many features, many sprints, a long backlog, milestones one after another, and a team that has to run steadily for weeks. On a small project the process would cost more than the work itself, and an ordinary agent session is enough."
+  fitsLabel: "A fit when"
+  notYetLabel: "Not needed when"
   fits:
-    - "The backlog is long, with stories still waiting their turn."
-    - "Milestones follow one another across several weeks."
-    - "You need a team that holds steady, not a single run."
+    - "The backlog is long and many stories are waiting their turn."
+    - "Milestones follow one another over weeks."
+    - "You need a team that runs steadily, not a single run."
   notYet:
-    - "A script that runs once and is done."
-    - "A prototype put together over a weekend."
-    - "A small change that finishes inside one session."
+    - "A small project, a few features, no sprints."
+    - "A script or a prototype to try an idea."
+    - "A contained change, done within one session."
 
 adopt:
   headline: "Install"

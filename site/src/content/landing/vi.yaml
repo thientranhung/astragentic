@@ -200,17 +200,17 @@ features:
 
 fit:
   headline: "Sinh ra cho dự án nhiều story, nhiều milestone."
-  body: "Astragentic không dành cho một script hay một prototype cuối tuần. Nó phát huy khi backlog dài, milestone nối tiếp, và bạn cần một đội chạy ổn định trong nhiều tuần. Nếu dự án của bạn ở quy mô đó, phần còn lại của site là dành cho bạn."
+  body: "Astragentic là một bộ máy quy trình: tracker, dispatch, review gate, receipt. Bộ máy đó chỉ trả lãi khi dự án đủ lớn để cần nó: nhiều feature, nhiều sprint, backlog dài, milestone nối tiếp, và một đội phải chạy ổn định trong nhiều tuần. Với một dự án nhỏ, chi phí quy trình sẽ lớn hơn chính việc cần làm, và một session agent bình thường là đủ."
   fitsLabel: "Hợp khi"
-  notYetLabel: "Chưa hợp khi"
+  notYetLabel: "Chưa cần khi"
   fits:
     - "Backlog dài, nhiều story còn chờ tới lượt."
     - "Milestone nối tiếp nhau qua nhiều tuần."
     - "Bạn cần một đội chạy ổn định, không phải một lượt chạy."
   notYet:
-    - "Một script chạy một lần rồi thôi."
-    - "Một prototype dựng trong cuối tuần."
-    - "Một thay đổi nhỏ, xong trong đúng một session."
+    - "Dự án nhỏ, vài feature, không có sprint."
+    - "Một script hay một prototype để thử ý tưởng."
+    - "Một thay đổi gọn, xong trong đúng một session."
 
 adopt:
   headline: "Install"
