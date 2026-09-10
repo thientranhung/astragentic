@@ -101,7 +101,7 @@ export const UI = {
     vi: '20 commit gần nhất có dòng Ledger:',
     en: 'The last 20 commits carrying a Ledger: line',
   },
-  readAll: { vi: 'Xem sáu bài học đã đo được →', en: 'See the six measured lessons →' },
+  readAll: { vi: 'Sáu bài học đã đo được →', en: 'The six measured lessons →' },
   wholeTable: { vi: 'Xem toàn bộ ledger →', en: 'View the full ledger →' },
 
   /* ── adopt ── */

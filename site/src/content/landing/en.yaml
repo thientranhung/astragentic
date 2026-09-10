@@ -2,7 +2,7 @@ hero:
   eyebrow: "Agentic engineering · **for multi-milestone projects** · v{{meta.version}}"
   headline: "An outsourcing team made of AI agents.\nRunning by process, **around the clock**, for **large projects**."
   sub: "Astragentic puts you in the client's seat at a complete software development unit: one representative to talk to, a team of agents with clearly defined roles to build, and an issue tracker at the centre so every piece of work leaves a trace. You keep the decisions and full oversight; the execution belongs to the team."
-  primary: "See the team at work ↓"
+  primary: "See how it works ↓"
   secondary: "Why Astragentic exists"
 
 explain:
@@ -20,7 +20,7 @@ explain:
         - "codex    --profile builder            # model and model_reasoning_effort live in the profile TOML"
         - "opencode --agent builder -m <provider>/<model>   # no effort flag"
     more:
-      label: "See the five roles →"
+      label: "Each role in detail →"
       href: "/en/roles/thomas"
 
   comms:
@@ -45,7 +45,7 @@ explain:
           - 'herdr agent prompt <pane-id> "<brief>"'
           - "herdr agent read   <pane-id>"
     more:
-      label: "See the dispatch-ticket skill →"
+      label: "The dispatch-ticket skill in detail →"
       href: "/en/skills/dispatch-ticket"
 
   roles:
@@ -103,7 +103,7 @@ explain:
       - text: "Every precondition as a queryable EDGE"
       - text: "A surface the OWNER can open and read without running a query"
     more:
-      label: "See the structure →"
+      label: "The structure in detail →"
       href: "/en/structure#coordination"
 
   method:
@@ -124,7 +124,7 @@ explain:
       - title: "Shared"
         text: "grilling · tdd · code-review · codebase-design · domain-modeling · research · prototype · diagnosing-bugs"
     more:
-      label: "See why I chose it →"
+      label: "Why mattpocock-skills →"
       href: "/en/why#why-mattpocock"
 
 why:
@@ -132,7 +132,7 @@ why:
   headline: "AI is now a real developer. Astragentic puts you in charge of that developer team."
   p1: "A coding agent today takes the work, writes the code, runs the tests and fixes until they pass, like an engineer sitting next to you. Once execution is no longer the bottleneck, the engineer's value moves elsewhere: setting the right requirement, making the right call, and keeping the whole process on course."
   p2: "Astragentic is built so that you do exactly that part. It organises agents into an outsourcing team under the familiar SDLC discipline, and redesigns dispatch, review and handback to exploit a speed and a volume no human team can sustain."
-  more: "Explore the design rationale →"
+  more: "All the design reasons →"
 
 shots:
   sendmessage:

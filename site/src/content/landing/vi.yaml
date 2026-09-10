@@ -2,7 +2,7 @@ hero:
   eyebrow: "Agentic engineering · **cho dự án nhiều milestone** · v{{meta.version}}"
   headline: "Một đội outsource bằng AI agent.\nVận hành đúng quy trình, **liên tục 24/7**, cho **những dự án lớn**."
   sub: "Astragentic đưa bạn vào vị trí khách hàng của một đơn vị phát triển phần mềm hoàn chỉnh: một người đại diện để trao đổi, một đội agent có vai trò rõ ràng để thi công, và một issue tracker làm trung tâm để mọi việc đều có dấu vết. Bạn giữ quyền quyết định và toàn quyền giám sát; phần thực thi thuộc về đội."
-  primary: "Xem đội vận hành ↓"
+  primary: "Xem cách hoạt động ↓"
   secondary: "Vì sao có Astragentic"
 
 explain:
@@ -20,7 +20,7 @@ explain:
         - "codex    --profile builder            # model + model_reasoning_effort nằm trong profile TOML"
         - "opencode --agent builder -m <provider>/<model>   # không có cờ effort"
     more:
-      label: "Xem năm vai →"
+      label: "Chi tiết từng vai →"
       href: "/vai/thomas"
 
   comms:
@@ -45,7 +45,7 @@ explain:
           - 'herdr agent prompt <pane-id> "<brief>"'
           - "herdr agent read   <pane-id>"
     more:
-      label: "Xem skill dispatch-ticket →"
+      label: "Chi tiết skill dispatch-ticket →"
       href: "/skills/dispatch-ticket"
 
   roles:
@@ -103,7 +103,7 @@ explain:
       - text: "Every precondition as a queryable EDGE"
       - text: "A surface the OWNER can open and read without running a query"
     more:
-      label: "Xem cấu trúc →"
+      label: "Chi tiết cấu trúc →"
       href: "/cau-truc#coordination"
 
   method:
@@ -124,7 +124,7 @@ explain:
       - title: "Dùng chung"
         text: "grilling · tdd · code-review · codebase-design · domain-modeling · research · prototype · diagnosing-bugs"
     more:
-      label: "Xem lý do chọn →"
+      label: "Lý do chọn mattpocock-skills →"
       href: "/vi-sao#why-mattpocock"
 
 why:
@@ -132,7 +132,7 @@ why:
   headline: "AI đã là một developer thực thụ. Astragentic đặt bạn vào vai người dẫn dắt đội developer đó."
   p1: "Coding agent hôm nay nhận việc, viết code, chạy test và sửa cho tới khi xanh, như một kỹ sư ngồi cạnh bạn. Khi thực thi không còn là nút thắt, giá trị của người kỹ sư chuyển sang chỗ khác: đặt yêu cầu đúng, quyết định đúng, và giữ cả quy trình đi đúng hướng."
   p2: "Astragentic được xây để bạn làm đúng phần đó. Nó tổ chức các agent thành một đội outsource theo kỷ luật SDLC quen thuộc, và thiết kế lại cách dispatch, review, handback để khai thác tốc độ và khối lượng mà một đội người không duy trì được."
-  more: "Tìm hiểu lý do thiết kế →"
+  more: "Toàn bộ lý do thiết kế →"
 
 shots:
   sendmessage:
