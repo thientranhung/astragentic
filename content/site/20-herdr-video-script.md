@@ -10,6 +10,17 @@ for AI coding agents"; nhận diện agent trong pane và trạng thái của n�
 `herdr agent list/read/prompt/wait/start`; `herdr --remote <ssh-target>` và `herdr machine add`
 để gắn pane lên server. Lời thoại là viết mới. Không so sánh với công cụ khác.
 
+## Ngôn ngữ hình (theo ảnh hero của herdr.dev, chủ site gửi 2026-09-10)
+
+- Nền rất tối, chữ mono; sidebar trái hai khối: `spaces` (tên project đậm, branch mờ bên
+  dưới, chấm màu trước tên) và `agents · grouped` (tên agent đậm, dòng dưới `trạng thái ·
+  runtime`, ví dụ `working · claude`, `idle · opencode`, `blocked · claude`, `done · codex`).
+- Màu chấm theo trạng thái: working vàng, idle vòng rỗng, blocked đỏ/hồng, done xanh ngọc.
+- Hàng tab trên cùng, tab đang chọn nền tím nhạt; pane có viền mảnh và tiêu đề gắn trên
+  viền (`claude`, `bun`), pane đang focus viền tím.
+- Status line trong pane Claude Code: đường dẫn, branch, ctx bar, dòng `bypass permissions`.
+- Video dựng lại đúng các vùng này với dữ liệu của Astragentic; không dùng ảnh thật của herdr.
+
 ## Ba phần
 
 ### Phần 1 · herdr là gì (0–9 s)
