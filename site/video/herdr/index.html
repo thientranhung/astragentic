@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>herdr — workspace cho agent</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/TextPlugin.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "JetBrainsMono Nerd Font";
+        src: local("JetBrainsMono NF Regular"), local("JetBrainsMono Nerd Font");
+        font-weight: 400;
+      }
+      @font-face {
+        font-family: "JetBrainsMono Nerd Font";
+        src: local("JetBrainsMono NF SemiBold"), local("JetBrainsMono Nerd Font SemiBold");
+        font-weight: 600;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0e0f14; }
+      body {
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", Menlo, ui-monospace, monospace;
+        color: #d8dde6;
+        font-size: 20px;
+        line-height: 30px;
+      }
+      #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+      .bg { position: absolute; inset: 0; background: #0e0f14; }
+      .clip { position: absolute; inset: 0; }
+
+      /* ── app chrome ─────────────────────────────────────────────────── */
+      .app { position: absolute; inset: 0; display: flex; }
+
+      /* sidebar */
+      .sidebar { width: 340px; flex-shrink: 0; background: #13141b; border-right: 1px solid #262838; padding: 28px 0; display: flex; flex-direction: column; }
+      .section-label { text-transform: uppercase; font-size: 13px; letter-spacing: 0.08em; color: #888e99; padding: 0 24px; margin-bottom: 10px; }
+      .section-label.agents { margin-top: 30px; }
+      .space-row {
+        display: grid; grid-template-columns: 24px 1fr; grid-template-rows: auto auto;
+        align-items: center; padding: 10px 20px; margin: 0 4px 2px; border-radius: 6px;
+        white-space: nowrap;
+      }
+      .space-row.selected { background: rgba(167, 139, 250, 0.14); }
+      .space-row .dot { grid-column: 1; grid-row: 1; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; align-self: center; justify-self: center; }
+      .space-row .space-name { grid-column: 2; grid-row: 1; font-weight: 600; font-size: 17px; color: #e6eaf0; white-space: nowrap; }
+      .space-row .space-branch { grid-column: 2; grid-row: 2; font-size: 13px; color: #888e99; margin-top: 2px; white-space: nowrap; }
+
+      .agents-list { position: relative; }
+      .agent-row {
+        display: grid; grid-template-columns: 24px 1fr; grid-template-rows: auto auto;
+        align-items: center; padding: 9px 20px; margin: 0 4px 2px; border-radius: 6px; opacity: 0;
+        white-space: nowrap;
+      }
+      .agent-row .dot { grid-column: 1; grid-row: 1; width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; align-self: center; justify-self: center; background: #6b7280; border: 2px solid transparent; box-sizing: content-box; }
+      .agent-row .dot.state-working { background: #e0a83a; border-color: transparent; }
+      .agent-row .dot.state-blocked { background: #ff6b81; }
+      .agent-row .dot.state-done { background: #3ecf8e; }
+      .agent-row .dot.state-idle { background: transparent; border-color: #6b7280; }
+      .agent-row .agent-name { grid-column: 2; grid-row: 1; font-weight: 600; font-size: 20px; color: #e6eaf0; white-space: nowrap; }
+      .agent-row .agent-state { grid-column: 2; grid-row: 2; font-size: 16px; color: #929aa7; margin-top: 4px; white-space: nowrap; }
+
+      .agents-group { position: absolute; top: 0; left: 0; width: 100%; }
+
+      /* main area */
+      .main-area { flex: 1; display: flex; flex-direction: column; position: relative; background: #0e0f14; padding-bottom: 140px; }
+      .tabs-row { height: 48px; flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding: 0 20px; border-bottom: 1px solid #262838; background: #13141b; }
+      .tab { padding: 7px 16px; border-radius: 6px; font-size: 15px; color: #8b93a1; }
+      .tab.selected { background: rgba(167, 139, 250, 0.2); color: #e6eaf0; font-weight: 600; }
+      .tab-add { padding: 7px 12px; color: #888e99; font-size: 16px; }
+
+      .panes-wrap { flex: 1; position: relative; padding: 22px; }
+      .pane-box { position: absolute; }
+      .pane {
+        position: relative; height: 100%; display: flex; flex-direction: column;
+        background: #13141b; border: 1px solid #262838; border-radius: 10px;
+      }
+      .pane.focused { border-color: #a78bfa; }
+      .pane .title {
+        position: absolute; top: 0; left: 20px; transform: translateY(-50%);
+        background: #13141b; padding: 0 10px; font-size: 15px; font-weight: 600; color: #c7cbe0; z-index: 2;
+      }
+      .pane-body { position: relative; flex: 1; overflow: hidden; padding: 30px 26px 10px; }
+      .overlay { position: absolute; inset: 30px 26px 10px; opacity: 0; }
+      .status-line { height: 40px; flex-shrink: 0; padding: 0 26px; display: flex; align-items: center; gap: 16px; border-top: 1px solid #1f242c; font-size: 15px; color: #888e99; opacity: 0; }
+      .status-line .bp { color: #3ecf8e; }
+
+      /* ── TUI line vocabulary (from dispatch composition) ─────────────── */
+      .line { position: relative; width: 100%; opacity: 0; white-space: pre-wrap; word-break: break-word; margin-bottom: 6px; }
+      .line.say { color: #e6eaf0; }
+      .line.say::before, .line.tool::before { content: "⏺"; margin-right: 12px; }
+      .line.say::before { color: #d8dde6; }
+      .line.tool { color: #c3c9d3; }
+      .line.tool::before { color: #3ecf8e; }
+      .line.tool b { color: #e6eaf0; font-weight: 600; }
+      .line.out { color: #8b93a1; padding-left: 32px; }
+      .line.out::before { content: "⎿"; margin-right: 10px; color: #3b424d; }
+      .line.preview { color: #98a1b0; }
+      .line.expanded { color: #dfe6f3; padding-left: 26px; }
+      .mention { color: #7fa2e6; font-weight: 600; }
+      .line.q { border: 1px solid #3a4457; background: #141a25; padding: 12px 18px; margin: 8px 0 12px; border-radius: 8px; color: #e6eaf0; }
+      .line.q .head { display: block; color: #7fa2e6; font-size: 16px; margin-bottom: 6px; }
+      .line.hist { color: #797f89; }
+      .line.hist b { color: #838ba0; }
+      .line.hist .mention { color: #667fac; }
+      .line.hist.out { color: #797e87; }
+
+      .codex-prompt { color: #c3c9d3; }
+      .codex-prompt::before { content: "›"; margin-right: 12px; color: #7fa2e6; }
+      .codex-working { color: #8b93a1; padding-left: 24px; }
+
+      /* ── card overlay, bottom band of the main area ──────────────────── */
+      .card-overlay { position: absolute; left: 340px; right: 0; bottom: 16px; max-width: 900px; margin: 0 auto; }
+      .card {
+        position: absolute; left: 0; right: 0; bottom: 0; width: 100%; opacity: 0;
+        background: rgba(19, 20, 27, 0.92); border: 1px solid #262838; border-radius: 10px;
+        padding: 18px 22px; font-size: 24px; line-height: 34px; color: #dfe6f3; text-align: center;
+      }
+      .card b { color: #ffffff; font-weight: 600; }
+
+      /* ── pointer ────────────────────────────────────────────────────── */
+      .pointer { position: absolute; top: 0; left: 0; width: 26px; height: 26px; opacity: 0; z-index: 5; transform-origin: 20% 15%; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="33" data-width="1920" data-height="1080">
+      <div class="bg"></div>
+      <section id="scene" class="clip" data-start="0" data-duration="33" data-track-index="1">
+        <div class="app">
+          <!-- ── sidebar ─────────────────────────────────────────────── -->
+          <div class="sidebar">
+            <div class="section-label">spaces</div>
+            <div class="space-row selected" id="space-astragentic">
+              <span class="dot" style="background:#a78bfa"></span>
+              <span class="space-name">astragentic</span>
+              <span class="space-branch">main</span>
+            </div>
+            <div class="space-row" id="space-shopdemo">
+              <span class="dot" style="background:#4f7fd6"></span>
+              <span class="space-name">shop-demo</span>
+              <span class="space-branch">main</span>
+            </div>
+
+            <div class="section-label agents">agents · grouped</div>
+            <div class="agents-list" id="agents-list">
+              <div class="agents-group" id="agents-astragentic" data-layout-allow-overlap></div>
+              <div class="agents-group" id="agents-shopdemo" style="opacity:0" data-layout-allow-overlap></div>
+            </div>
+          </div>
+
+          <!-- ── main area ───────────────────────────────────────────── -->
+          <div class="main-area">
+            <div class="tabs-row">
+              <span class="tab selected" id="tab-thomas">thomas</span>
+              <span class="tab" id="tab-builder143" style="opacity:0">builder-tra-143</span>
+              <span class="tab-add">+</span>
+            </div>
+            <div class="panes-wrap">
+              <!-- single full-width pane, used 0–16s -->
+              <div class="pane-box" id="box-full" style="inset:0">
+                <div class="pane focused">
+                  <span class="title" id="title-full" data-layout-allow-overflow data-layout-allow-occlusion>thomas</span>
+                  <div class="pane-body">
+                    <div class="overlay" id="full-empty" style="opacity:1"></div>
+                    <div class="overlay" id="full-intro"></div>
+                    <div class="overlay" id="full-codex"></div>
+                    <div class="overlay" id="full-convo" data-layout-allow-overflow></div>
+                  </div>
+                  <div class="status-line" id="status-full"><span class="bp">▶▶ bypass permissions on</span><span>~/astragentic &gt; main &gt; ctx ——— 12% 120k/1M</span></div>
+                </div>
+              </div>
+
+              <!-- split view, used from 16s on -->
+              <div class="pane-box" id="box-split" style="inset:0;opacity:0;display:flex;gap:20px">
+                <div class="pane-box" style="position:relative;width:50%;height:100%">
+                  <div class="pane focused">
+                    <span class="title" data-layout-allow-overflow data-layout-allow-occlusion>thomas</span>
+                    <div class="pane-body"><div class="overlay" id="left-scroll" style="opacity:1" data-layout-allow-overflow></div></div>
+                    <div class="status-line" style="opacity:1"><span class="bp">▶▶ bypass permissions on</span><span>~/astragentic &gt; main &gt; ctx ——— 15% 150k/1M</span></div>
+                  </div>
+                </div>
+                <div class="pane-box" style="position:relative;width:50%;height:100%">
+                  <div class="pane">
+                    <span class="title" id="title-right" data-layout-allow-overflow data-layout-allow-occlusion>builder-tra-143 · codex</span>
+                    <div class="pane-body">
+                      <div class="overlay" id="right-codex" style="opacity:1"></div>
+                      <div class="overlay" id="right-claude" data-layout-allow-overflow></div>
+                    </div>
+                    <div class="status-line" id="status-right"><span class="bp">▶▶ bypass permissions on</span><span>~/wt/tra-142 &gt; feat/tra-142 &gt; ctx ——— 8% 80k/1M</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-overlay" id="card-overlay" data-layout-allow-overlap data-layout-allow-occlusion></div>
+        <svg class="pointer" id="pointer" viewBox="0 0 26 26" data-layout-allow-overflow data-layout-allow-overlap>
+          <path d="M2 2 L2 20 L7.5 15.5 L11 23 L14.5 21.5 L11 14 L18 14 Z" fill="#f4f6fb" stroke="#0e0f14" stroke-width="1.4" stroke-linejoin="round"/>
+        </svg>
+      </section>
+    </div>
+
+    <script>
+      gsap.registerPlugin(TextPlugin);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+      // ── agents data (content/site/20-herdr-video-script.md, Ngôn ngữ hình) ──
+      const AGENTS_ASTRA = [
+        ['thomas', 'working', 'claude'],
+        ['builder-tra-142', 'working', 'claude'],
+        ['builder-tra-143', 'working', 'codex'],
+        ['rin', 'idle', 'claude'],
+        ['qa', 'idle', 'claude'],
+      ];
+      const AGENTS_SHOP = [
+        ['thomas', 'working', 'claude'],
+        ['builder-shop-17', 'working', 'claude'],
+        ['qa', 'idle', 'claude'],
+      ];
+
+      function buildAgentRows(container, list, idPrefix) {
+        const rows = [];
+        for (const [name, state, runtime] of list) {
+          const row = document.createElement('div');
+          row.className = 'agent-row';
+          row.id = `${idPrefix}-${name}`;
+          row.setAttribute('data-layout-allow-overlap', '');
+          row.innerHTML = `<span class="dot state-${state}"></span><span class="agent-name" data-layout-allow-overlap>${esc(name)}</span><span class="agent-state" data-layout-allow-overlap>${state} · ${runtime}</span>`;
+          container.appendChild(row);
+          rows.push(row);
+        }
+        return rows;
+      }
+      const astraRows = buildAgentRows(document.getElementById('agents-astragentic'), AGENTS_ASTRA, 'astra-row');
+      const shopRows = buildAgentRows(document.getElementById('agents-shopdemo'), AGENTS_SHOP, 'shop-row');
+      shopRows.forEach((row) => { row.style.opacity = 1; });
+
+      // ── cards, top-right, one visible at a time ──────────────────────
+      const CARDS = [
+        [0.0, '<b>herdr</b> · the runtime coding agents run on'],
+        [2.0, 'Mỗi agent một pane, có tên, có trạng thái.'],
+        [6.0, 'herdr tự nhận diện: working, blocked, done, idle.'],
+        [8.5, 'Bấm một tên là đọc được pane đó. Bạn là khách hàng, bạn xem được mọi pane.'],
+        [11.0, 'Watcher đọc trạng thái pane, Thomas biết ngay ai đang kẹt.'],
+        [13.0, 'Thomas đọc pane của Builder, không cần ai copy dán.'],
+        [16.0, 'Builder chạy Codex, không có cross-session messaging: Thomas nói qua herdr.'],
+        [20.0, 'Builder chạy Claude Code: Thomas nhắn thẳng. Cùng một workspace, hai runtime.'],
+        [23.0, 'Thomas chờ đúng tín hiệu, thay vì đoán.'],
+        [26.5, 'Mỗi project một space, một đội. Cùng lúc.'],
+        [29.5, 'Bạn nhìn thấy mọi pane. Thomas đọc được mọi pane.'],
+      ];
+      const cardOverlay = document.getElementById('card-overlay');
+      const cardEls = CARDS.map(([t, html]) => {
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.innerHTML = html;
+        cardOverlay.appendChild(el);
+        return el;
+      });
+      const FADE = 0.25;
+      CARDS.forEach(([t], i) => {
+        const el = cardEls[i];
+        const next = CARDS[i + 1] ? CARDS[i + 1][0] : 33;
+        tl.to(el, { autoAlpha: 1, duration: FADE }, t);
+        tl.to(el, { autoAlpha: 0, duration: FADE }, next - FADE);
+      });
+
+      // ── sidebar: agent rows stagger in at t=2 ─────────────────────────
+      astraRows.forEach((row, i) => {
+        tl.to(row, { opacity: 1, duration: 0.25 }, 2.0 + i * 0.15);
+      });
+
+      // builder-tra-143 dot: working → blocked at t=6
+      const row143 = document.getElementById('astra-row-builder-tra-143');
+      tl.call(() => {
+        row143.querySelector('.dot').className = 'dot state-blocked';
+        row143.querySelector('.agent-state').textContent = 'blocked · codex';
+      }, [], 6.0);
+
+      // ── full pane content states ──────────────────────────────────────
+      const fullEmpty = document.getElementById('full-empty');
+      const fullIntro = document.getElementById('full-intro');
+      const fullCodex = document.getElementById('full-codex');
+      const fullConvo = document.getElementById('full-convo');
+      const titleFull = document.getElementById('title-full');
+      const statusFull = document.getElementById('status-full');
+
+      // pre-session history: reads as an already-live session from t=0
+      const HIST = [
+        { kind: 'say', html: 'Claim TRA-142 trên tracker trước, rồi tạo branch và worktree.' },
+        { kind: 'tool', label: 'Bash', cmd: 'herdr pane create --workspace astragentic --tab TRA-142', out: 'pane 7a3f' },
+        { kind: 'say', html: 'Gửi cho <span class="mention">@builder-TRA-142</span>: Ticket TRA-142: màn hình Lịch sử đơn hàng thêm pull-to-refresh và empty state.' },
+        { kind: 'tool', label: 'Monitor', cmd: 'scripts/herdr-watch-terminal.sh 7a3f 3 3600 120', out: 'watching builder-tra-142' },
+      ];
+      function buildHistLines() {
+        const frag = document.createDocumentFragment();
+        for (const h of HIST) {
+          if (h.kind === 'say') {
+            const el = document.createElement('div');
+            el.className = 'line say hist';
+            el.style.opacity = 1;
+            el.innerHTML = h.html;
+            frag.appendChild(el);
+          } else {
+            const toolEl = document.createElement('div');
+            toolEl.className = 'line tool hist';
+            toolEl.style.opacity = 1;
+            toolEl.innerHTML = `<b>${esc(h.label)}</b>(${esc(h.cmd)})`;
+            frag.appendChild(toolEl);
+            const outEl = document.createElement('div');
+            outEl.className = 'line out hist';
+            outEl.style.opacity = 1;
+            outEl.textContent = h.out;
+            frag.appendChild(outEl);
+          }
+        }
+        return frag;
+      }
+      fullEmpty.appendChild(buildHistLines());
+      fullEmpty.setAttribute('data-layout-allow-overflow', '');
+
+      fullIntro.appendChild(buildHistLines());
+      fullIntro.setAttribute('data-layout-allow-overflow', '');
+      const introLine = document.createElement('div');
+      introLine.className = 'line say';
+      introLine.style.opacity = 1;
+      introLine.textContent = 'Session thomas · Claude Code · astragentic · main';
+      fullIntro.appendChild(introLine);
+
+      fullCodex.innerHTML = `<div class="line q" style="opacity:1"><span class="head">builder-tra-143 · codex · đang chờ</span>Empty state dùng widget chung hay vẽ riêng?</div>`;
+
+      // 0 → 2: empty. 2 → 8.5: thomas intro. 8.5 → 11: codex peek. 11 → 16: thomas convo.
+      tl.to(fullEmpty, { opacity: 0, duration: 0.2 }, 2.0);
+      tl.to(fullIntro, { opacity: 1, duration: 0.2 }, 2.0);
+      tl.to(statusFull, { opacity: 1, duration: 0.2 }, 2.0);
+
+      tl.to(fullIntro, { opacity: 0, duration: 0.2 }, 8.5);
+      tl.to(statusFull, { opacity: 0, duration: 0.2 }, 8.5);
+      tl.to(fullCodex, { opacity: 1, duration: 0.2 }, 8.5);
+      tl.call(() => { titleFull.textContent = 'builder-tra-143'; }, [], 8.5);
+      tl.call(() => {
+        document.getElementById('tab-thomas').classList.remove('selected');
+        document.getElementById('tab-builder143').style.opacity = 1;
+        document.getElementById('tab-builder143').classList.add('selected');
+      }, [], 8.5);
+
+      tl.to(fullCodex, { opacity: 0, duration: 0.2 }, 11.0);
+      tl.to(fullConvo, { opacity: 1, duration: 0.2 }, 11.0);
+      tl.to(statusFull, { opacity: 1, duration: 0.2 }, 11.0);
+      tl.call(() => { titleFull.textContent = 'thomas'; }, [], 11.0);
+      tl.call(() => {
+        document.getElementById('tab-thomas').classList.add('selected');
+        document.getElementById('tab-builder143').classList.remove('selected');
+      }, [], 11.0);
+
+      // full-convo lines (11 → 16)
+      const CONVO = [
+        [11.0, 'out', 'TERMINAL:blocked pane=builder-tra-143'],
+        [13.0, 'tool', 'Bash', 'herdr agent read builder-tra-143'],
+        [13.4, 'out', 'Empty state dùng widget chung hay vẽ riêng?'],
+        [16.0, 'tool', 'Bash', 'herdr agent prompt builder-tra-143 "Dùng EmptyState chung theo contract UI. Tiếp tục."'],
+      ];
+      function makeLine(kind, a, b) {
+        const el = document.createElement('div');
+        el.className = 'line ' + kind;
+        el.setAttribute('data-layout-allow-overflow', '');
+        el.setAttribute('data-layout-allow-overlap', '');
+        if (kind === 'tool') el.innerHTML = `<b>${esc(a)}</b>(${esc(b)})`;
+        else el.textContent = a;
+        return el;
+      }
+      CONVO.forEach(([t, kind, a, b]) => {
+        const el = makeLine(kind, a, b);
+        fullConvo.appendChild(el);
+        tl.fromTo(el, { autoAlpha: 0, y: 6 }, { autoAlpha: 1, y: 0, duration: 0.2, ease: 'power2.out' }, t);
+      });
+
+      // left pane (post-split): pre-populated with the same convo, plus the wait line at 23s
+      const leftScroll = document.getElementById('left-scroll');
+      CONVO.forEach(([t, kind, a, b]) => {
+        const histEl = makeLine(kind, a, b);
+        histEl.style.opacity = 1;
+        leftScroll.appendChild(histEl);
+      });
+      const waitLine = makeLine('tool', 'Bash', 'herdr agent wait builder-tra-143 --state idle,done');
+      waitLine.style.opacity = 0;
+      leftScroll.appendChild(waitLine);
+      tl.fromTo(waitLine, { autoAlpha: 0, y: 6 }, { autoAlpha: 1, y: 0, duration: 0.2, ease: 'power2.out' }, 23.0);
+
+      // ── split at 16s: crossfade full pane → split view ────────────────
+      const boxFull = document.getElementById('box-full');
+      const boxSplit = document.getElementById('box-split');
+      tl.to(boxFull, { autoAlpha: 0, duration: 0.3 }, 16.0);
+      tl.to(boxSplit, { autoAlpha: 1, duration: 0.3 }, 16.0);
+
+      // right pane: codex state (16 → 20)
+      const rightCodex = document.getElementById('right-codex');
+      const rightClaude = document.getElementById('right-claude');
+      const titleRight = document.getElementById('title-right');
+      const statusRight = document.getElementById('status-right');
+      statusRight.style.opacity = 0;
+
+      const codexHeader = document.createElement('div');
+      codexHeader.className = 'line say';
+      codexHeader.textContent = 'codex';
+      codexHeader.style.opacity = 1;
+      rightCodex.appendChild(codexHeader);
+
+      const codexPrompt = document.createElement('div');
+      codexPrompt.className = 'codex-prompt';
+      codexPrompt.style.opacity = 0;
+      codexPrompt.textContent = 'Dùng EmptyState chung theo contract UI. Tiếp tục.';
+      rightCodex.appendChild(codexPrompt);
+      tl.to(codexPrompt, { opacity: 1, duration: 0.2 }, 16.2);
+
+      const codexWorking = document.createElement('div');
+      codexWorking.className = 'codex-working';
+      codexWorking.style.opacity = 0;
+      codexWorking.textContent = 'working…';
+      rightCodex.appendChild(codexWorking);
+      tl.to(codexWorking, { opacity: 1, duration: 0.2 }, 16.6);
+
+      // right pane: swap to builder-tra-142 · claude at 20s
+      tl.call(() => { titleRight.textContent = 'builder-tra-142 · claude'; }, [], 20.0);
+      tl.to(rightCodex, { opacity: 0, duration: 0.2 }, 20.0);
+      tl.to(rightClaude, { opacity: 1, duration: 0.2 }, 20.0);
+      tl.to(statusRight, { opacity: 1, duration: 0.2 }, 20.0);
+
+      const preview = document.createElement('div');
+      preview.className = 'line preview';
+      preview.style.opacity = 0;
+      preview.setAttribute('data-layout-allow-occlusion', '');
+      preview.setAttribute('data-layout-allow-overlap', '');
+      preview.textContent = '› Message from @thomas: Dùng EmptyState chung theo contract UI. Tiếp t… (ctrl+o to expand)';
+      rightClaude.appendChild(preview);
+      tl.fromTo(preview, { autoAlpha: 0, y: 6 }, { autoAlpha: 1, y: 0, duration: 0.2 }, 20.0);
+
+      const expanded = document.createElement('div');
+      expanded.className = 'line expanded';
+      expanded.style.opacity = 0;
+      expanded.textContent = 'Dùng EmptyState chung theo contract UI. Tiếp tục.';
+      rightClaude.appendChild(expanded);
+      tl.fromTo(expanded, { autoAlpha: 0, y: 6 }, { autoAlpha: 1, y: 0, duration: 0.2 }, 20.5);
+
+      // wait / dot resolves red → amber → teal, 23 → 24.3
+      tl.call(() => {
+        row143.querySelector('.dot').className = 'dot state-working';
+        row143.querySelector('.agent-state').textContent = 'working · codex';
+      }, [], 23.6);
+      tl.call(() => {
+        row143.querySelector('.dot').className = 'dot state-done';
+        row143.querySelector('.agent-state').textContent = 'done · codex';
+      }, [], 24.3);
+
+      // ── space switch, 26.5 → 28.5 ──────────────────────────────────────
+      const spaceAstra = document.getElementById('space-astragentic');
+      const spaceShop = document.getElementById('space-shopdemo');
+      const groupAstra = document.getElementById('agents-astragentic');
+      const groupShop = document.getElementById('agents-shopdemo');
+
+      tl.call(() => { spaceAstra.classList.remove('selected'); spaceShop.classList.add('selected'); }, [], 26.5);
+      tl.to(groupAstra, { autoAlpha: 0, duration: 0.25 }, 26.5);
+      tl.to(groupShop, { autoAlpha: 1, duration: 0.25 }, 26.5);
+
+      tl.call(() => { spaceShop.classList.remove('selected'); spaceAstra.classList.add('selected'); }, [], 28.5);
+      tl.to(groupShop, { autoAlpha: 0, duration: 0.25 }, 28.5);
+      tl.to(groupAstra, { autoAlpha: 1, duration: 0.25 }, 28.5);
+
+      // ── pointer: click builder-tra-143 (8.5) and shop-demo (26.5) ─────
+      const pointer = document.getElementById('pointer');
+      const rootRect = document.getElementById('root').getBoundingClientRect();
+      function centerFor(el) {
+        const r = el.getBoundingClientRect();
+        return { x: r.left - rootRect.left + r.width * 0.28, y: r.top - rootRect.top + r.height * 0.5 };
+      }
+      function pointerClick(atTime, targetEl, highlightOnEl) {
+        const p = centerFor(targetEl);
+        tl.set(pointer, { x: p.x + 60, y: p.y - 60, autoAlpha: 0, scale: 1 }, atTime - 0.55);
+        tl.to(pointer, { autoAlpha: 1, duration: 0.15 }, atTime - 0.55);
+        tl.to(pointer, { x: p.x, y: p.y, duration: 0.4, ease: 'power2.out' }, atTime - 0.4);
+        tl.to(pointer, { scale: 0.85, duration: 0.15 }, atTime);
+        tl.to(pointer, { scale: 1, duration: 0.15 }, atTime + 0.15);
+        tl.call(() => highlightOnEl.classList.add('selected-hit'), [], atTime);
+        tl.to(highlightOnEl, { backgroundColor: 'rgba(167,139,250,0.22)', duration: 0.15 }, atTime);
+        tl.to(pointer, { autoAlpha: 0, duration: 0.2 }, atTime + 1.6);
+        tl.to(highlightOnEl, { backgroundColor: 'rgba(167,139,250,0)', duration: 0.3 }, atTime + 1.6);
+      }
+      pointerClick(8.5, row143, row143);
+      pointerClick(26.5, spaceShop, spaceShop);
+
+      window.__timelines['main'] = tl;
+    </script>
+  </body>
+</html>

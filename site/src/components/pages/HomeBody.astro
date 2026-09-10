@@ -262,7 +262,7 @@ const CARD_FRAME = 330;
           </div>
         )}
         {shots.herdr && (
-          <Shot lang={lang} caption={shots.herdr.caption} src={shots.herdr.src} class="breakout" />
+          <Shot lang={lang} caption={shots.herdr.caption} src={shots.herdr.src} video={shots.herdr.video} class="breakout" />
         )}
         {commsText[3] && <p class="lede lede--after-figure" set:html={hl(commsText[3])} />}
         {EX.comms.more && (

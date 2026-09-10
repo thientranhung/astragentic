@@ -95,6 +95,96 @@
         ],
         "createdAt": "2026-09-10T07:41:40.305Z",
         "reason": "assistant: terminal simulation sized for a 1920x1080 video frame, not the site type ramp"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-10T08:55:55.444Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-10T08:55:55.646Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-10T08:55:56.104Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-10T08:55:56.366Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-10T08:55:56.618Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "site/video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-10T08:55:56.763Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "site/video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-10T08:55:57.057Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "site/video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-10T08:55:57.359Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "site/video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-10T08:55:57.484Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "site/video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-10T08:55:57.838Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch"
       }
     ]
   }

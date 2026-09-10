@@ -137,7 +137,11 @@ shots:
       webm: /shots/dispatch.webm
       poster: /shots/dispatch.jpg
   herdr:
-    caption: "A herdr workspace with five panes running"
+    caption: "A simulated herdr workspace for one project: every agent has a named pane with a detected state, you click to read any of them, and Thomas reads and prompts through the CLI, including a Builder running Codex."
+    video:
+      mp4: /shots/herdr.mp4
+      webm: /shots/herdr.webm
+      poster: /shots/herdr.jpg
   tracker:
     caption: "The tracker board of a real project, 71 tickets"
 

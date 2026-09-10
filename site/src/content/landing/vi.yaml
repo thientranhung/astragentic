@@ -137,7 +137,11 @@ shots:
       webm: /shots/dispatch.webm
       poster: /shots/dispatch.jpg
   herdr:
-    caption: "Workspace herdr với năm pane đang chạy"
+    caption: "Mô phỏng workspace herdr của một dự án: mỗi agent một pane có tên và trạng thái, bạn bấm là đọc được, Thomas đọc và nhắn qua CLI, kể cả Builder chạy Codex."
+    video:
+      mp4: /shots/herdr.mp4
+      webm: /shots/herdr.webm
+      poster: /shots/herdr.jpg
   tracker:
     caption: "Board tracker của một dự án thật, 71 ticket"
 
