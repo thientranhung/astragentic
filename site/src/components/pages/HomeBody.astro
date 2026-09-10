@@ -519,17 +519,7 @@ const CARD_FRAME = 330;
     <div class="column">
       {copy.adopt.steps?.length ? (
         <div class="reqs install breakout">
-          <div class="install-head">
-            <p class="reqs-label mono">{UI.installLabel[lang]}</p>
-            <button
-              class="copy mono"
-              type="button"
-              data-copy
-              data-label={UI.copy[lang]}
-              data-done={UI.copied[lang]}
-              data-payload={copy.adopt.steps.flatMap((st) => st.lines).join('\n')}
-            >{UI.copy[lang]}</button>
-          </div>
+          <p class="reqs-label mono">{UI.installLabel[lang]}</p>
           <ol class="req-list install-list">
             {copy.adopt.steps.map((st, i) => (
               <li>
@@ -847,24 +837,6 @@ const CARD_FRAME = 330;
 
   /* Install: the same card as the tracker requirements, with a brand disc for the
      step number and the step's commands under its title. */
-  .install-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-  .install-head .copy {
-    flex: none;
-    border: 1px solid var(--ink-10);
-    background: var(--surface);
-    border-radius: var(--radius-control);
-    padding: 0.3rem 0.8rem;
-    font-size: var(--text-label);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-muted);
-    cursor: pointer;
-  }
   .install-list li {
     padding: 0.8rem 0 0.8rem 2.6rem;
   }
