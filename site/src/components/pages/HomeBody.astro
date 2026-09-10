@@ -308,9 +308,41 @@ const CARD_FRAME = 330;
     </section>
   )}
 
-  {/* ── 7 · The method underneath (explain §E) ──────────────────────────── */}
+  {/* ── 7 · How a ticket runs (right after the tracker it lives on) ─────── */}
+  <section class="screen screen--canvas" id="lifecycle">
+    <div class="column">
+      <h2>{copy.sections.lifecycle.headline}</h2>
+      <p class="sub">{copy.sections.lifecycle.sub}</p>
+    </div>
+    <div class="column">
+      <InteractiveDiagram slug="ticket-lifecycle" lang={lang} hrefMap={lifecycleMap} class="band" flow="sequence" />
+      <ol class="steps band">
+        {
+          perStage.map(({ stage, number, caption, hits }) => (
+            <li class:list={['step', hits.length > 0 && 'step--hit']}>
+              <a class="step-head" href={`${failuresRoute}#${stage}`}>
+                <span class="n mono">{number}</span>
+                <span class="stage mono" lang="en">{stage}</span>
+              </a>
+              <p class="step-line">{caption}</p>
+              {hits.length > 0 && (
+                <p class="hits">
+                  {hits.map((f) => (
+                    <a class="ast" href={`${failuresRoute}#${f.id.toLowerCase()}`}>{f.id}</a>
+                  ))}
+                </p>
+              )}
+            </li>
+          ))
+        }
+      </ol>
+      <a class="more-link" href={failuresRoute}>{UI.readAll[lang]}</a>
+    </div>
+  </section>
+
+  {/* ── 8 · The method underneath (explain §E) ──────────────────────────── */}
   {EX.method && (
-    <section class="screen screen--canvas explain" id="method">
+    <section class="screen screen--surface explain" id="method">
       <div class="column">
         <p class="eyebrow" lang="en">{EX.method.eyebrow}</p>
         <h2>{EX.method.headline}</h2>
@@ -336,8 +368,8 @@ const CARD_FRAME = 330;
     </section>
   )}
 
-  {/* ── 8 · Why it exists ───────────────────────────────────────────────── */}
-  <section class="screen screen--surface" id="why">
+  {/* ── 9 · Why it exists ───────────────────────────────────────────────── */}
+  <section class="screen screen--canvas" id="why">
     <div class="column">
       <h2>{copy.why.headline}</h2>
     </div>
@@ -350,8 +382,8 @@ const CARD_FRAME = 330;
     </div>
   </section>
 
-  {/* ── 9 · What it does ────────────────────────────────────────────────── */}
-  <section class="screen screen--canvas" id="features">
+  {/* ── 10 · What it does ────────────────────────────────────────────────── */}
+  <section class="screen screen--surface" id="features">
     <div class="column">
       <ul class="features band">
         {
@@ -410,38 +442,6 @@ const CARD_FRAME = 330;
           ))
         }
       </ul>
-    </div>
-  </section>
-
-  {/* ── 10 · How it runs ────────────────────────────────────────────────── */}
-  <section class="screen screen--surface" id="lifecycle">
-    <div class="column">
-      <h2>{copy.sections.lifecycle.headline}</h2>
-      <p class="sub">{copy.sections.lifecycle.sub}</p>
-    </div>
-    <div class="column">
-      <InteractiveDiagram slug="ticket-lifecycle" lang={lang} hrefMap={lifecycleMap} class="band" />
-      <ol class="steps band">
-        {
-          perStage.map(({ stage, number, caption, hits }) => (
-            <li class:list={['step', hits.length > 0 && 'step--hit']}>
-              <a class="step-head" href={`${failuresRoute}#${stage}`}>
-                <span class="n mono">{number}</span>
-                <span class="stage mono" lang="en">{stage}</span>
-              </a>
-              <p class="step-line">{caption}</p>
-              {hits.length > 0 && (
-                <p class="hits">
-                  {hits.map((f) => (
-                    <a class="ast" href={`${failuresRoute}#${f.id.toLowerCase()}`}>{f.id}</a>
-                  ))}
-                </p>
-              )}
-            </li>
-          ))
-        }
-      </ol>
-      <a class="more-link" href={failuresRoute}>{UI.readAll[lang]}</a>
     </div>
   </section>
 
