@@ -152,11 +152,11 @@ shots:
       - name: GitHub Issues
         adapter: github-issue-tracker
         src: /shots/tracker-github.jpg
-        note: "GitHub Projects · board mẫu"
+        note: "GitHub Projects, board mẫu"
       - name: Jira
         adapter: jira-issue-tracker
         src: /shots/tracker-jira.jpg
-        note: "Jira · board mẫu"
+        note: "board mẫu"
 
 features:
   - id: cross-vendor

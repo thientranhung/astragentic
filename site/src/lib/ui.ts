@@ -52,6 +52,8 @@ export const UI = {
   shotPending: { vi: 'ảnh thật · sẽ cập nhật', en: 'real screenshot · to come' },
   shotSimulated: { vi: 'mô phỏng', en: 'simulation' },
   deckLabel: { vi: 'Chọn tracker', en: 'Choose a tracker' },
+  wallOpen: { vi: 'mở lớn', en: 'open large' },
+  close: { vi: 'Đóng', en: 'Close' },
 
   /* ── diagrams ── */
   explore: { vi: 'Explore ↗', en: 'Explore ↗' },

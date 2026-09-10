@@ -1,0 +1,191 @@
+---
+// Three tracker boards hung on a gallery wall: white frame, mat, a placard under each
+// naming the adapter that drives it. Static by design — nothing moves, nothing loads
+// beyond three pictures — and a click opens the board at full width in a native
+// <dialog>, so a board a third of the frame wide is still readable.
+import { UI, type Lang } from '../lib/site';
+
+export interface WallCard {
+  name: string;
+  adapter: string;
+  src: string;
+  note?: string;
+}
+
+interface Props {
+  lang: Lang;
+  cards: WallCard[];
+  caption: string;
+  class?: string;
+}
+const { lang, cards, caption, class: extra = '' } = Astro.props;
+const uid = Math.random().toString(36).slice(2, 7);
+---
+
+<figure class:list={['wall', extra]}>
+  <div class="wall-row">
+    {cards.map((c, i) => (
+      <div class="hang">
+        <button class="frame" type="button" data-open={`${uid}-${i}`} aria-label={`${c.name} · ${UI.wallOpen[lang]}`}>
+          <span class="mat"><img src={c.src} alt={`${c.name}${c.note ? ` · ${c.note}` : ''}`} loading="lazy" decoding="async" /></span>
+        </button>
+        <p class="placard mono">
+          <b>{c.adapter}</b>
+          <span>{c.name}{c.note && ` · ${c.note}`}</span>
+        </p>
+        <dialog class="light" id={`${uid}-${i}`}>
+          <form method="dialog" class="light-bar">
+            <span class="mono"><b>{c.adapter}</b> · {c.name}{c.note && ` · ${c.note}`}</span>
+            <button class="mono" type="submit">{UI.close[lang]}</button>
+          </form>
+          {/* same file as the framed one, so it comes from cache; no lazy here, a
+              lazy image inside a closed dialog can stay blank for a beat */}
+          <img src={c.src} alt={`${c.name}${c.note ? ` · ${c.note}` : ''}`} decoding="async" />
+        </dialog>
+      </div>
+    ))}
+  </div>
+  <figcaption class="wall-cap">{caption}</figcaption>
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('.frame[data-open]').forEach((b) => {
+    b.addEventListener('click', () => {
+      const d = document.getElementById(b.dataset.open!) as HTMLDialogElement | null;
+      d?.showModal();
+    });
+  });
+  // click on the backdrop closes
+  document.querySelectorAll<HTMLDialogElement>('dialog.light').forEach((d) => {
+    d.addEventListener('click', (e) => { if (e.target === d) d.close(); });
+  });
+</script>
+
+<style>
+  .wall {
+    margin-block: 1.75rem 0;
+    padding: 0;
+  }
+  /* The wall: a warm dark grey band the frames sit on, like the room in the reference. */
+  .wall-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(1rem, 2.5vw, 2rem);
+    align-items: start;
+    padding: clamp(1.5rem, 3vw, 2.75rem) clamp(1.25rem, 3vw, 2.5rem);
+    background: color-mix(in srgb, var(--ink) 74%, var(--surface));
+    border-radius: var(--radius-card);
+  }
+  .hang {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+  }
+  .frame {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: var(--surface);
+    /* frame moulding: white, with the room's shadow on the wall */
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.6) inset,
+      0 18px 34px -14px rgba(0, 0, 0, 0.55),
+      0 4px 10px rgba(0, 0, 0, 0.25);
+    cursor: zoom-in;
+    transition: transform var(--motion-fast, 160ms) ease;
+  }
+  .frame:hover,
+  .frame:focus-visible {
+    transform: translateY(-2px);
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 3px;
+  }
+  .mat {
+    display: block;
+    padding: clamp(0.6rem, 1.4vw, 1.1rem);
+    border: 1px solid var(--ink-10);
+    margin: clamp(0.35rem, 0.8vw, 0.6rem);
+  }
+  .mat img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    object-position: top left;
+    border: 1px solid var(--ink-10);
+  }
+  .placard {
+    margin: 0;
+    background: var(--surface);
+    border-radius: var(--radius-badge);
+    padding: 0.35rem 0.6rem;
+    font-size: var(--text-label-sm);
+    line-height: 1.35;
+    color: var(--ink-62);
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    max-width: 100%;
+  }
+  .placard b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .wall-cap {
+    margin: 0.9rem 0 0;
+    font-size: var(--text-body-sm);
+    line-height: 1.45;
+    color: var(--ink-muted);
+    max-width: 62ch;
+  }
+  /* the lightbox */
+  .light {
+    width: min(96vw, var(--frame));
+    max-width: none;
+    max-height: 94vh;
+    margin: auto;
+    overflow: auto;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow: var(--shadow-island);
+  }
+  .light::backdrop {
+    background: rgba(20, 22, 26, 0.72);
+  }
+  .light-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 0.9rem;
+    border-bottom: 1px solid var(--ink-10);
+    font-size: var(--text-label);
+    color: var(--ink-muted);
+  }
+  .light-bar b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .light-bar button {
+    border: 1px solid var(--ink-10);
+    background: var(--surface);
+    border-radius: var(--radius-control);
+    padding: 0.25rem 0.7rem;
+    font-size: var(--text-label);
+    cursor: pointer;
+  }
+  .light img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  @media (max-width: 860px) {
+    .wall-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
