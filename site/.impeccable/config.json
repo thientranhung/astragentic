@@ -185,6 +185,96 @@
         ],
         "createdAt": "2026-09-10T08:55:57.838Z",
         "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "video/hero/index.html"
+        ],
+        "createdAt": "2026-09-10T17:21:53.903Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch and video/herdr"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "video/hero/index.html"
+        ],
+        "createdAt": "2026-09-10T17:21:53.937Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch and video/herdr"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "video/hero/index.html"
+        ],
+        "createdAt": "2026-09-10T17:21:53.971Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch and video/herdr"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "video/hero/index.html"
+        ],
+        "createdAt": "2026-09-10T17:21:54.003Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch and video/herdr"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "video/hero/index.html"
+        ],
+        "createdAt": "2026-09-10T17:21:54.037Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch and video/herdr"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "site/video/hero/index.html"
+        ],
+        "createdAt": "2026-09-10T17:21:54.070Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch and video/herdr"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "site/video/hero/index.html"
+        ],
+        "createdAt": "2026-09-10T17:21:54.104Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch and video/herdr"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "site/video/hero/index.html"
+        ],
+        "createdAt": "2026-09-10T17:21:54.140Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch and video/herdr"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "site/video/hero/index.html"
+        ],
+        "createdAt": "2026-09-10T17:21:54.177Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch and video/herdr"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "site/video/hero/index.html"
+        ],
+        "createdAt": "2026-09-10T17:21:54.210Z",
+        "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch and video/herdr"
       }
     ]
   }
