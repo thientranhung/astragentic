@@ -143,8 +143,20 @@ shots:
       webm: /shots/herdr.webm
       poster: /shots/herdr.jpg
   tracker:
-    caption: "Ba tracker, một cách làm việc: GitHub Issues, Jira và Linear đều có adapter riêng trong harness, Thomas nạp đúng adapter ở đầu session. Board Linear ở giữa là board thật của dự án Inception."
-    src: /shots/tracker.jpg
+    caption: "Ba tracker, một cách làm việc: GitHub Issues, Jira và Linear đều có adapter riêng trong harness, Thomas nạp đúng adapter ở đầu session. Board Linear là board thật của dự án Inception."
+    deck:
+      - name: Linear
+        adapter: linear-issue-tracker
+        src: /shots/tracker-linear.jpg
+        note: "board thật · dự án Inception"
+      - name: GitHub Issues
+        adapter: github-issue-tracker
+        src: /shots/tracker-github.jpg
+        note: "GitHub Projects · board mẫu"
+      - name: Jira
+        adapter: jira-issue-tracker
+        src: /shots/tracker-jira.jpg
+        note: "Jira · board mẫu"
 
 features:
   - id: cross-vendor

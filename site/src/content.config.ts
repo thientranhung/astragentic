@@ -186,6 +186,10 @@ const landing = defineCollection({
           caption: z.string().optional(),
           src: z.string().optional(),
           video: z.object({ mp4: z.string(), webm: z.string().optional(), poster: z.string().optional() }).optional(),
+          /** Several boards shown as a deck (TrackerDeck) instead of one picture. */
+          deck: z
+            .array(z.object({ name: z.string(), adapter: z.string(), src: z.string(), note: z.string().optional() }))
+            .optional(),
         }),
       )
       .optional(),

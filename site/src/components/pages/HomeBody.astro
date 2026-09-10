@@ -10,6 +10,7 @@ import InteractiveDiagram from '../InteractiveDiagram.astro';
 import AdoptBlock from '../AdoptBlock.astro';
 import CodeFrame from '../CodeFrame.astro';
 import Shot from '../Shot.astro';
+import TrackerDeck from '../TrackerDeck.astro';
 import { getPage } from '../../lib/pages';
 import { getLanding, panes } from '../../lib/landing';
 import { ACTIVE, ACTIVE_TABLE, HAS_UNSET, SAMPLE, ORCHESTRATOR_FILE } from '../../lib/orchestrator';
@@ -291,7 +292,9 @@ const CARD_FRAME = 330;
             ))}
           </ol>
         </div>
-        {shots.tracker && (
+        {shots.tracker?.deck?.length ? (
+          <TrackerDeck lang={lang} cards={shots.tracker.deck} caption={shots.tracker.caption} class="breakout" />
+        ) : shots.tracker && (
           <Shot lang={lang} caption={shots.tracker.caption} src={shots.tracker.src} class="breakout" />
         )}
         {/* Three inputs answer the query together, then the answer lands on the board,

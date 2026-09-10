@@ -76,6 +76,7 @@ export interface Shot {
   caption: string;
   src?: string;
   video?: { mp4: string; webm?: string; poster?: string };
+  deck?: { name: string; adapter: string; src: string; note?: string }[];
 }
 
 export interface Landing {

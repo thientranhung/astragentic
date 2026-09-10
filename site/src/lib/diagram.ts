@@ -70,9 +70,19 @@ function cropLegend(svg: string, box: Box): string {
   // of leading so the cap heights are not clipped.
   const cut = Math.round(Math.min(...tops) - 14);
   if (!Number.isFinite(cut) || cut <= 0 || cut >= box.h) return svg;
+  // The legend row can be wider than the drawing above it, and archify sizes the
+  // viewBox to the wider of the two. With the legend gone that slack sits to the right
+  // and the picture reads as left-aligned, so trim the width to the drawing's own
+  // right edge. Rects are enough: every node, lane and label mask is one.
+  const head = svg.slice(0, start);
+  const rights = [...head.matchAll(/<rect\b[^>]*\sx="(-?[\d.]+)"[^>]*\swidth="([\d.]+)"/g)].map(
+    (m) => Number(m[1]) + Number(m[2]),
+  );
+  const right = rights.length ? Math.ceil(Math.max(...rights) + 24) : box.w;
+  const w = right < box.w - 40 ? right : box.w;
   return svg.replace(
     /(<svg\b[^>]*\sviewBox=")[^"]+(")/,
-    `$1${box.x} ${box.y} ${box.w} ${cut}$2`,
+    `$1${box.x} ${box.y} ${w} ${cut}$2`,
   );
 }
 

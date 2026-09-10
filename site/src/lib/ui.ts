@@ -51,6 +51,7 @@ export const UI = {
    *  than a broken image (home order spec §3). */
   shotPending: { vi: 'ảnh thật · sẽ cập nhật', en: 'real screenshot · to come' },
   shotSimulated: { vi: 'mô phỏng', en: 'simulation' },
+  deckLabel: { vi: 'Chọn tracker', en: 'Choose a tracker' },
 
   /* ── diagrams ── */
   explore: { vi: 'Explore ↗', en: 'Explore ↗' },

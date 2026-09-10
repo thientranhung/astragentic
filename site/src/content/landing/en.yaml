@@ -143,8 +143,20 @@ shots:
       webm: /shots/herdr.webm
       poster: /shots/herdr.jpg
   tracker:
-    caption: "Three trackers, one way of working: GitHub Issues, Jira and Linear each have their own adapter in the harness, and Thomas loads the right one at session start. The Linear board in front is the real board of the Inception project."
-    src: /shots/tracker.jpg
+    caption: "Three trackers, one way of working: GitHub Issues, Jira and Linear each have their own adapter in the harness, and Thomas loads the right one at session start. The Linear board is the real board of the Inception project."
+    deck:
+      - name: Linear
+        adapter: linear-issue-tracker
+        src: /shots/tracker-linear.jpg
+        note: "real board · Inception project"
+      - name: GitHub Issues
+        adapter: github-issue-tracker
+        src: /shots/tracker-github.jpg
+        note: "GitHub Projects · sample board"
+      - name: Jira
+        adapter: jira-issue-tracker
+        src: /shots/tracker-jira.jpg
+        note: "Jira · sample board"
 
 features:
   - id: cross-vendor
