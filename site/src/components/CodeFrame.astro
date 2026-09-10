@@ -10,14 +10,23 @@ import { UI, type Lang } from '../lib/site';
 
 interface Props {
   /** One command per line. Kept English in both locales (PRD §4). */
-  lines: string[];
+  lines?: string[];
+  /** Numbered steps inside one frame: a brand disc with the step number, a title,
+   *  then that step's command lines. `lines` is ignored when this is given. */
+  steps?: { title: string; lines: string[] }[];
   lang: Lang;
   /** Mono caption above the pane. Omitted when the section heading already says it. */
   label?: string;
   class?: string;
 }
-const { lines, lang, label, class: extra = '' } = Astro.props;
-const payload = lines.join('\n');
+const { lines = [], steps, lang, label, class: extra = '' } = Astro.props;
+const payload = (steps ? steps.flatMap((st) => st.lines) : lines).join('\n');
+// The runner is the word the reader types; what follows is the thing being run.
+// Colouring the second half is the only syntax this site has.
+const cmd = (line: string) => {
+  const cut = line.indexOf(' ');
+  return { head: cut === -1 ? line : line.slice(0, cut), rest: cut === -1 ? '' : line.slice(cut) };
+};
 ---
 
 <div class:list={['frame', extra]}>
@@ -32,22 +41,30 @@ const payload = lines.join('\n');
       data-payload={payload}
     >{UI.copy[lang]}</button>
   </div>
-  <ol class="cmds codeframe">
-    {
-      lines.map((line) => {
-        // The runner is the word the reader types; what follows is the thing being
-        // run. Colouring the second half is the only syntax this site has.
-        const cut = line.indexOf(' ');
-        const head = cut === -1 ? line : line.slice(0, cut);
-        const rest = cut === -1 ? '' : line.slice(cut);
+  {steps ? (
+    <ol class="cmds codeframe codeframe--steps">
+      {steps.map((st, i) => (
+        <li class="step">
+          <p class="step-title"><span class="step-n mono">{i + 1}</span>{st.title}</p>
+          {st.lines.map((line) => {
+            const { head, rest } = cmd(line);
+            return <pre class="mono" lang="en">{head}<span class="cmd-key">{rest}</span></pre>;
+          })}
+        </li>
+      ))}
+    </ol>
+  ) : (
+    <ol class="cmds codeframe">
+      {lines.map((line) => {
+        const { head, rest } = cmd(line);
         return (
           <li>
             <pre class="mono" lang="en">{head}<span class="cmd-key">{rest}</span></pre>
           </li>
         );
-      })
-    }
-  </ol>
+      })}
+    </ol>
+  )}
 </div>
 
 <script>
@@ -143,5 +160,42 @@ const payload = lines.join('\n');
     white-space: pre-wrap;
     word-break: break-word;
     overflow-x: visible;
+  }
+  /* Numbered steps: the disc carries the count the headline promises, in place of
+     the line number. */
+  .codeframe--steps li::before {
+    content: none;
+  }
+  .step-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0 0 0.35rem;
+    font-family: var(--font-sans);
+    font-size: var(--text-ui);
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .step-n {
+    flex: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background: var(--brand-primary);
+    color: #fff;
+    font-size: var(--text-label-sm);
+    font-weight: 600;
+    display: grid;
+    place-items: center;
+  }
+  .codeframe--steps li {
+    padding: 0.55rem 0 0.35rem 1.1rem;
+  }
+  .codeframe--steps .step-title {
+    margin: 0 0 0.2rem;
+  }
+  .codeframe--steps pre {
+    padding-left: 2.1rem;
+    padding-block: 0.3rem;
   }
 </style>

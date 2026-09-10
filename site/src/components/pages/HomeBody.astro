@@ -518,18 +518,9 @@ const CARD_FRAME = 330;
     </div>
     <div class="column">
       {copy.adopt.steps?.length ? (
-        <ol class="install-steps breakout">
-          {copy.adopt.steps.map((st, i) => (
-            <li class="step">
-              <div class="step-head">
-                <span class="step-n mono">{i + 1}</span>
-                <h3 set:html={hl(st.title)} />
-              </div>
-              {st.note && <p class="step-note" set:html={hl(st.note)} />}
-              <CodeFrame lang={lang} lines={st.lines} />
-            </li>
-          ))}
-        </ol>
+        <div class="pane breakout">
+          <CodeFrame lang={lang} steps={copy.adopt.steps.map((st) => ({ title: st.title, lines: st.lines }))} />
+        </div>
       ) : (
         <AdoptBlock lang={lang} show="commands" />
       )}
@@ -735,47 +726,6 @@ const CARD_FRAME = 330;
   }
 
   /* ── the five tracker requirements, quoted ── */
-  /* Install: five numbered steps, each with its own command pane. The number is a
-     brand disc so the count the headline promises is visible at a glance. */
-  .install-steps {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 1.6rem;
-  }
-  .step-head {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.5rem;
-  }
-  .step-n {
-    flex: none;
-    width: 1.7rem;
-    height: 1.7rem;
-    border-radius: 50%;
-    background: var(--brand-primary);
-    color: #fff;
-    font-size: var(--text-label);
-    font-weight: 600;
-    display: grid;
-    place-items: center;
-  }
-  .step-head h3 {
-    margin: 0;
-    font-size: var(--text-h3);
-    font-weight: 600;
-  }
-  .step-note {
-    margin: 0 0 0.6rem 2.45rem;
-    font-size: var(--text-body-sm);
-    color: var(--ink-muted);
-  }
-  .step :global(.codeframe) {
-    margin: 0;
-  }
-
   /* §4: what Thomas does for the client, three rows under the caption. */
   .thomas {
     margin-top: 1.75rem;
