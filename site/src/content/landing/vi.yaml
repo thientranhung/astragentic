@@ -211,8 +211,22 @@ fit:
 
 adopt:
   eyebrow: "Install"
-  headline: "Bốn lệnh để đưa team vào repo của bạn."
-  sub: "Kiểm yêu cầu, cài harness vào repo, để Claude Code chạy bản thích nghi, rồi mở session Thomas. Từ đó mọi việc đi qua Thomas."
+  headline: "Năm bước để đưa team vào repo của bạn."
+  sub: "Kiểm yêu cầu, cài harness, để Claude Code thích nghi harness với repo, cấu hình mattpocock-skills một lần, rồi mở session Thomas. Từ đó mọi việc đi qua Thomas."
+  steps:
+    - title: "Kiểm máy có đủ tech stack chưa"
+      lines: ["./check-requirements.sh"]
+    - title: "Cài harness vào repo của bạn"
+      lines: ["./install.sh /path/to/your-repo"]
+    - title: "Để Claude Code thích nghi harness với repo"
+      note: "Đọc và thực thi ADAPT-HARNESS.md: đặt tên tracker, prefix ticket, đường dẫn docs."
+      lines: ["cd /path/to/your-repo", "claude \"Read .astraler/releases/2.8.0/ADAPT-HARNESS.md completely and execute it.\""]
+    - title: "Cấu hình mattpocock-skills cho repo, chạy một lần"
+      note: "Skill này khai tracker, bộ nhãn triage và chỗ để CONTEXT.md, ADR; các skill engineering sau đó đọc cấu hình này."
+      lines: ["claude", "/mattpocock-skills:setup-matt-pocock-skills"]
+    - title: "Mở session Thomas"
+      note: "Thomas đọc orchestrator.md, nhận workspace và bắt đầu điều phối."
+      lines: ["claude --agent thomas"]
   reqEyebrow: "Tech stack"
   reqHeadline: "Bảy thứ cần có trước khi cài."
   reqSub: "Bốn bắt buộc, một tuỳ chọn, một chọn một. Script `check-requirements.sh` kiểm tất cả cho bạn trước khi cài."

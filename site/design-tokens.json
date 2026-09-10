@@ -561,7 +561,7 @@
         }
       },
       "column": {
-        "$value": "680px",
+        "$value": "820px",
         "$extensions": {
           "site": {
             "cssVar": "--column"

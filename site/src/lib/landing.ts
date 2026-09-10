@@ -112,6 +112,7 @@ export interface Landing {
     reqSub?: string;
     reqTitle?: string;
     requirements?: Requirement[];
+    steps?: { title: string; note?: string; lines: string[] }[];
   };
   /** Keyed by the slug HomeBody asks for: sendmessage, herdr, tracker. */
   shots: Record<string, Shot>;

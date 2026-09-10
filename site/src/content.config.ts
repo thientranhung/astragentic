@@ -172,6 +172,10 @@ const landing = defineCollection({
         reqTitle: z.string().optional(),
         reqHeadline: z.string().optional(),
         reqSub: z.string().optional(),
+        /** Numbered install steps; each carries its own command lines. */
+        steps: z
+          .array(z.object({ title: z.string(), note: z.string().optional(), lines: z.array(z.string()) }))
+          .optional(),
         requirements: z
           .array(
             z.object({

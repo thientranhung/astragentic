@@ -211,8 +211,22 @@ fit:
 
 adopt:
   eyebrow: "Install"
-  headline: "Four commands to put the team into your repo."
-  sub: "Check the requirements, install the harness into the repo, let Claude Code run the adaptation, then open Thomas's session. From there, everything goes through Thomas."
+  headline: "Five steps to put the team into your repo."
+  sub: "Check the requirements, install the harness, let Claude Code adapt it to the repo, configure mattpocock-skills once, then open Thomas's session. From there, everything goes through Thomas."
+  steps:
+    - title: "Check the machine has the tech stack"
+      lines: ["./check-requirements.sh"]
+    - title: "Install the harness into your repo"
+      lines: ["./install.sh /path/to/your-repo"]
+    - title: "Let Claude Code adapt the harness to the repo"
+      note: "Reads and executes ADAPT-HARNESS.md: tracker name, ticket prefix, docs paths."
+      lines: ["cd /path/to/your-repo", "claude \"Read .astraler/releases/2.8.0/ADAPT-HARNESS.md completely and execute it.\""]
+    - title: "Configure mattpocock-skills for the repo, once"
+      note: "This skill declares the tracker, the triage label set and where CONTEXT.md and ADRs live; the engineering skills read that configuration afterwards."
+      lines: ["claude", "/mattpocock-skills:setup-matt-pocock-skills"]
+    - title: "Open Thomas's session"
+      note: "Thomas reads orchestrator.md, claims the workspace and starts routing work."
+      lines: ["claude --agent thomas"]
   reqEyebrow: "Tech stack"
   reqHeadline: "Seven things to have before you install."
   reqSub: "Four required, one optional, one pick-one. The `check-requirements.sh` script checks all of them for you before the install."
