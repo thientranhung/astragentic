@@ -1,5 +1,8 @@
 <!doctype html>
-<html lang="vi">
+<html
+  lang="vi"
+  data-composition-variables='[{"id":"lang","type":"enum","label":"Language","default":"vi","options":[{"value":"vi","label":"Tiếng Việt"},{"value":"en","label":"English"}]}]'
+>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=1920, height=1080" />
@@ -207,6 +210,63 @@
       const tl = gsap.timeline({ paused: true });
       const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+      // ── language: composition variable "lang" (vi default), render-time override
+      // via `--variables '{"lang":"en"}'`. Every human-language string lives here;
+      // tool lines, CLI commands, sidebar labels, state words, runtimes, pane titles
+      // and space names stay identical across languages and are NOT in this table. ──
+      const STRINGS = {
+        vi: {
+          title: 'herdr — workspace cho agent',
+          histSay0: 'Claim TRA-142 trên tracker trước, rồi tạo branch và worktree.',
+          histSay1: 'Gửi cho <span class="mention">@builder-TRA-142</span>: Ticket TRA-142: màn hình Lịch sử đơn hàng thêm pull-to-refresh và empty state.',
+          sessionIntro: 'Session thomas · Claude Code · astragentic · main',
+          codexQuestionHead: 'builder-tra-143 · codex · đang chờ',
+          codexQuestionBody: 'Empty state dùng widget chung hay vẽ riêng?',
+          builderMsg: 'Dùng EmptyState chung theo contract UI. Tiếp tục.',
+          messagePreview: '› Message from @thomas: Dùng EmptyState chung theo contract UI. Tiếp t… (ctrl+o to expand)',
+          cards: [
+            [0.0, '<b>herdr</b> · the runtime coding agents run on'],
+            [2.0, 'Mỗi agent một pane, có tên, có trạng thái.'],
+            [6.0, 'herdr tự nhận diện: working, blocked, done, idle.'],
+            [8.5, 'Bấm một tên là đọc được pane đó. Bạn là khách hàng, bạn xem được mọi pane.'],
+            [11.0, 'Watcher đọc trạng thái pane, Thomas biết ngay ai đang kẹt.'],
+            [13.0, 'Thomas đọc pane của Builder, không cần ai copy dán.'],
+            [16.0, 'Builder chạy Codex, không có cross-session messaging: Thomas nói qua herdr.'],
+            [20.0, 'Builder chạy Claude Code: Thomas nhắn thẳng. Cùng một workspace, hai runtime.'],
+            [23.0, 'Thomas chờ đúng tín hiệu, thay vì đoán.'],
+            [26.5, 'Mỗi project một space, một đội. Cùng lúc.'],
+            [29.5, 'Bạn nhìn thấy mọi pane. Thomas đọc được mọi pane.'],
+          ],
+        },
+        en: {
+          title: 'herdr — a workspace for agents',
+          histSay0: 'Claim TRA-142 on the tracker first, then make the branch and worktree.',
+          histSay1: 'Sent to <span class="mention">@builder-TRA-142</span>: Ticket TRA-142: Order History screen gets pull-to-refresh and an empty state.',
+          sessionIntro: 'Session thomas · Claude Code · astragentic · main',
+          codexQuestionHead: 'builder-tra-143 · codex · waiting',
+          codexQuestionBody: 'Shared empty-state widget, or a custom one?',
+          builderMsg: 'Use the shared EmptyState per the UI contract. Continue.',
+          messagePreview: '› Message from @thomas: Use the shared EmptyState per the UI cont… (ctrl+o to expand)',
+          cards: [
+            [0.0, '<b>herdr</b> · the runtime coding agents run on'],
+            [2.0, 'One pane per agent, each named, each with a state.'],
+            [6.0, 'herdr detects state on its own: working, blocked, done, idle.'],
+            [8.5, 'Click a name and you read that pane. You’re the client, you see every pane.'],
+            [11.0, 'A watcher reads pane state, so Thomas knows at once who’s stuck.'],
+            [13.0, 'Thomas reads the Builder’s pane, no one copies and pastes.'],
+            [16.0, 'Builder runs Codex, which has no cross-session messaging: Thomas talks through herdr.'],
+            [20.0, 'Builder runs Claude Code: Thomas messages directly. One workspace, two runtimes.'],
+            [23.0, 'Thomas waits for the right signal, instead of guessing.'],
+            [26.5, 'One space per project, one team. All at once.'],
+            [29.5, 'You see every pane. Thomas can read every pane.'],
+          ],
+        },
+      };
+      const LANG = (window.__hyperframes && window.__hyperframes.getVariables().lang) || 'vi';
+      const T = STRINGS[LANG] || STRINGS.vi;
+      document.documentElement.lang = LANG;
+      document.title = T.title;
+
       // ── agents data (content/site/20-herdr-video-script.md, Ngôn ngữ hình) ──
       const AGENTS_ASTRA = [
         ['thomas', 'working', 'claude'],
@@ -239,19 +299,7 @@
       shopRows.forEach((row) => { row.style.opacity = 1; });
 
       // ── cards, top-right, one visible at a time ──────────────────────
-      const CARDS = [
-        [0.0, '<b>herdr</b> · the runtime coding agents run on'],
-        [2.0, 'Mỗi agent một pane, có tên, có trạng thái.'],
-        [6.0, 'herdr tự nhận diện: working, blocked, done, idle.'],
-        [8.5, 'Bấm một tên là đọc được pane đó. Bạn là khách hàng, bạn xem được mọi pane.'],
-        [11.0, 'Watcher đọc trạng thái pane, Thomas biết ngay ai đang kẹt.'],
-        [13.0, 'Thomas đọc pane của Builder, không cần ai copy dán.'],
-        [16.0, 'Builder chạy Codex, không có cross-session messaging: Thomas nói qua herdr.'],
-        [20.0, 'Builder chạy Claude Code: Thomas nhắn thẳng. Cùng một workspace, hai runtime.'],
-        [23.0, 'Thomas chờ đúng tín hiệu, thay vì đoán.'],
-        [26.5, 'Mỗi project một space, một đội. Cùng lúc.'],
-        [29.5, 'Bạn nhìn thấy mọi pane. Thomas đọc được mọi pane.'],
-      ];
+      const CARDS = T.cards;
       const cardOverlay = document.getElementById('card-overlay');
       const cardEls = CARDS.map(([t, html]) => {
         const el = document.createElement('div');
@@ -290,9 +338,9 @@
 
       // pre-session history: reads as an already-live session from t=0
       const HIST = [
-        { kind: 'say', html: 'Claim TRA-142 trên tracker trước, rồi tạo branch và worktree.' },
+        { kind: 'say', html: T.histSay0 },
         { kind: 'tool', label: 'Bash', cmd: 'herdr pane create --workspace astragentic --tab TRA-142', out: 'pane 7a3f' },
-        { kind: 'say', html: 'Gửi cho <span class="mention">@builder-TRA-142</span>: Ticket TRA-142: màn hình Lịch sử đơn hàng thêm pull-to-refresh và empty state.' },
+        { kind: 'say', html: T.histSay1 },
         { kind: 'tool', label: 'Monitor', cmd: 'scripts/herdr-watch-terminal.sh 7a3f 3 3600 120', out: 'watching builder-tra-142' },
       ];
       function buildHistLines() {
@@ -327,10 +375,10 @@
       const introLine = document.createElement('div');
       introLine.className = 'line say';
       introLine.style.opacity = 1;
-      introLine.textContent = 'Session thomas · Claude Code · astragentic · main';
+      introLine.textContent = T.sessionIntro;
       fullIntro.appendChild(introLine);
 
-      fullCodex.innerHTML = `<div class="line q" style="opacity:1"><span class="head">builder-tra-143 · codex · đang chờ</span>Empty state dùng widget chung hay vẽ riêng?</div>`;
+      fullCodex.innerHTML = `<div class="line q" style="opacity:1"><span class="head">${esc(T.codexQuestionHead)}</span>${esc(T.codexQuestionBody)}</div>`;
 
       // 0 → 2: empty. 2 → 8.5: thomas intro. 8.5 → 11: codex peek. 11 → 16: thomas convo.
       tl.to(fullEmpty, { opacity: 0, duration: 0.2 }, 2.0);
@@ -360,8 +408,8 @@
       const CONVO = [
         [11.0, 'out', 'TERMINAL:blocked pane=builder-tra-143'],
         [13.0, 'tool', 'Bash', 'herdr agent read builder-tra-143'],
-        [13.4, 'out', 'Empty state dùng widget chung hay vẽ riêng?'],
-        [16.0, 'tool', 'Bash', 'herdr agent prompt builder-tra-143 "Dùng EmptyState chung theo contract UI. Tiếp tục."'],
+        [13.4, 'out', T.codexQuestionBody],
+        [16.0, 'tool', 'Bash', `herdr agent prompt builder-tra-143 "${T.builderMsg}"`],
       ];
       function makeLine(kind, a, b) {
         const el = document.createElement('div');
@@ -412,7 +460,7 @@
       const codexPrompt = document.createElement('div');
       codexPrompt.className = 'codex-prompt';
       codexPrompt.style.opacity = 0;
-      codexPrompt.textContent = 'Dùng EmptyState chung theo contract UI. Tiếp tục.';
+      codexPrompt.textContent = T.builderMsg;
       rightCodex.appendChild(codexPrompt);
       tl.to(codexPrompt, { opacity: 1, duration: 0.2 }, 16.2);
 
@@ -434,14 +482,14 @@
       preview.style.opacity = 0;
       preview.setAttribute('data-layout-allow-occlusion', '');
       preview.setAttribute('data-layout-allow-overlap', '');
-      preview.textContent = '› Message from @thomas: Dùng EmptyState chung theo contract UI. Tiếp t… (ctrl+o to expand)';
+      preview.textContent = T.messagePreview;
       rightClaude.appendChild(preview);
       tl.fromTo(preview, { autoAlpha: 0, y: 6 }, { autoAlpha: 1, y: 0, duration: 0.2 }, 20.0);
 
       const expanded = document.createElement('div');
       expanded.className = 'line expanded';
       expanded.style.opacity = 0;
-      expanded.textContent = 'Dùng EmptyState chung theo contract UI. Tiếp tục.';
+      expanded.textContent = T.builderMsg;
       rightClaude.appendChild(expanded);
       tl.fromTo(expanded, { autoAlpha: 0, y: 6 }, { autoAlpha: 1, y: 0, duration: 0.2 }, 20.5);
 
