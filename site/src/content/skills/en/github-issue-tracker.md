@@ -23,9 +23,11 @@ wherever pull requests are already being driven.
 
 One fact decides everything else: **GitHub Issues has no status field.** Status lives in two
 unsynced places. The label is the truth, and the Project `Status` column is a mirror somebody has
-to write. GitHub syncs neither to the other, so every status change is two writes, forever. That
-is the standing cost of the cheapest tracker to start on. Every trap on this page was paid for on
-a live project that moved from Linear to GitHub on 2026-08-21.
+to write.
+
+GitHub syncs neither to the other, so every status change is two writes, forever. That is the
+standing cost of the cheapest tracker to start on. Every trap on this page was paid for on a live
+project that moved from Linear to GitHub on 2026-08-21.
 <!-- source: harness/.agents/skills/github-issue-tracker/SKILL.md, harness/.agents/tracker-contract.md -->
 
 ## When Thomas reaches for it

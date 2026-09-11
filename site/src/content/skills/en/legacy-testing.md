@@ -14,6 +14,7 @@ updated: 2026-09-04
 
 `legacy-testing` is the doctrine for the case `tdd` does not cover. `tdd` writes a failing test
 first, and that assumes a **seam**, a place where you can substitute what the code depends on.
+
 Existing code often has none: the function reaches straight for the clock, the network, the
 database, or a module-level singleton. This skill fixes the order for that case, and it is the
 opposite of greenfield: characterise what the code does now, create a seam, then run `tdd`
@@ -21,13 +22,18 @@ normally with the characterisation tests as the net underneath.
 <!-- source: harness/.agents/skills/legacy-testing/SKILL.md -->
 
 The problem it removes is a Builder stalling on a ticket with nothing to write a test against,
-along with the two wrong exits from that stall. The first is a characterisation test that asserts
-what the code *should* do: it fails on day one and tells you nothing about what is safe to change.
-The second is worse and quieter, because a test that silently blesses a bug as intended is how a
-bug becomes a requirement. The discipline is a comment: assert the surprising value anyway, then
-mark it pinned-but-unjudged with a ticket reference, which keeps both readings alive. This skill
-is also why I treat brownfield as the default rather than the special case. Upstream agent skills
-assume a seam exists, and most repos that arrive do not have one.
+along with the two wrong exits from that stall.
+
+- **The first.** A characterisation test that asserts what the code *should* do: it fails on day
+  one and tells you nothing about what is safe to change.
+- **The second, worse and quieter.** A test that silently blesses a bug as intended, which is how
+  a bug becomes a requirement.
+
+The discipline is a comment: assert the surprising value anyway, then mark it pinned-but-unjudged
+with a ticket reference, which keeps both readings alive.
+
+This skill is also why I treat brownfield as the default rather than the special case. Upstream
+agent skills assume a seam exists, and most repos that arrive do not have one.
 <!-- source: harness/.agents/skills/legacy-testing/SKILL.md, README.md -->
 
 ## When Thomas reaches for it

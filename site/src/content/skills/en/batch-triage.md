@@ -13,24 +13,33 @@ updated: 2026-09-04
 ## What it does
 
 `batch-triage` is the one-pass version of triage, for a backlog that arrived with the repo. The
-plugin's `mattpocock-skills:triage` handles one item arriving now. An inherited backlog has a
+plugin's `mattpocock-skills:triage` handles one item arriving now; an inherited backlog has a
 different shape: hundreds of items of unknown age, written by people who have left the project,
-describing code that moved long ago. This skill classifies each item by reading the item's own
-text and the code it names, merges the duplicates the wording hides, marks the dead ones, and
-creates tracker tickets carrying labels and blocking edges. Its rule is **extract, never
-invent**: every classification cites the item's own text or the code it names, and an item that
-cannot be classified from evidence lands as `NEEDS-OWNER`, a valid outcome that costs one line.
+describing code that moved long ago.
+
+The skill handles each item in four steps:
+
+- **Classify** by reading the item's own text and the code it names.
+- **Merge duplicates** the wording hides.
+- **Mark the dead ones.**
+- **Create tracker tickets**, carrying labels and blocking edges.
+
+Its rule is **extract, never invent**: every classification cites the item's own text or the
+code it names, and an item that cannot be classified from evidence lands as `NEEDS-OWNER`, a
+valid outcome that costs one line.
 <!-- source: harness/.agents/skills/batch-triage/SKILL.md -->
 
 **An inherited backlog with no edges has no frontier.** That is the problem this skill handles,
 showing up as soon as Thomas adopts a repo. The frontier query returns every ticket whose blockers are all
 done and whose assignee is empty, so in a backlog where nothing blocks anything, every ticket
-looks ready at once and the ordering falls back to guesswork. The skill also carries a correction
-measured inside this harness. It used to ask for *"the code map"* in prose, which is why
-`CODE-MAP.md` survived for weeks as an artifact a filename grep called an orphan while a shipped
-skill wanted it on every run (AST-071). It now resolves each item against the current tree with
-`rg` and `git log`. That is what it should have said from the start, because a stale map is wrong
-exactly where triage needs it most: on code that moved or died.
+looks ready at once and the ordering falls back to guesswork.
+
+The skill also carries a correction measured inside this harness. It used to ask for *"the code
+map"* in prose, which is why `CODE-MAP.md` survived for weeks as an artifact a filename grep
+called an orphan while a shipped skill wanted it on every run (AST-071). It now resolves each
+item against the current tree with `rg` and `git log` — what it should have said from the
+start, because a stale map is wrong exactly where triage needs it most: on code that moved or
+died.
 <!-- source: RELEASE-NOTES.md (Astraler Harness 1.6.1), harness/.agents/memory/recurring-failure-modes.md -->
 
 ## When Thomas reaches for it
@@ -110,7 +119,9 @@ Pulled from `harness/.agents/memory/recurring-failure-modes.md`.
 `batch-triage` runs early, beside the other bootstrap phase Thomas owns: `/skills/bootstrap-glossary`
 seeds the vocabulary from the code, and `batch-triage` reads the backlog against that same code.
 Both are invoked by name, run once per repo, and end on owner review, so neither becomes work
-everyone assumes someone else ran. Its output feeds straight into the frontier query in
-`thomas.md`, which is what `/skills/dispatch-ticket` claims from. An item too big for one ticket
-moves to `mattpocock-skills:wayfinder` and a Shaper session; a single new item arriving later
-moves to `mattpocock-skills:triage`, not back here.
+everyone assumes someone else ran.
+
+Its output feeds straight into the frontier query in `thomas.md`, which is what
+`/skills/dispatch-ticket` claims from. An item too big for one ticket moves to
+`mattpocock-skills:wayfinder` and a Shaper session; a single new item arriving later moves to
+`mattpocock-skills:triage`, not back here.

@@ -23,9 +23,11 @@ Tôi truy cập tracker bằng `gh` CLI thay vì MCP server, vì `gh` đã xác 
 
 Một sự thật quyết định mọi thứ còn lại: **GitHub Issues không có trường trạng thái.** Trạng thái
 nằm ở hai nơi không đồng bộ với nhau. Label là sự thật, còn cột `Status` trên Project là bản sao
-phải có người ghi. GitHub không đồng bộ hai nơi đó, nên mỗi lần đổi trạng thái là hai lần ghi,
-vĩnh viễn. Đó là chi phí thường trực của cái tracker rẻ nhất để bắt đầu. Mọi cái bẫy trên trang
-này đều đã bị trả giá trên một dự án thật chuyển từ Linear sang GitHub ngày 2026-08-21.
+phải có người ghi.
+
+GitHub không đồng bộ hai nơi đó, nên mỗi lần đổi trạng thái là hai lần ghi, vĩnh viễn. Đó là chi
+phí thường trực của cái tracker rẻ nhất để bắt đầu. Mọi cái bẫy trên trang này đều đã bị trả giá
+trên một dự án thật chuyển từ Linear sang GitHub ngày 2026-08-21.
 <!-- source: harness/.agents/skills/github-issue-tracker/SKILL.md, harness/.agents/tracker-contract.md -->
 
 ## Khi nào Thomas gọi nó

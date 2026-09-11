@@ -21,13 +21,17 @@ tìm đường đi vòng.
 
 Sự thật quyết định cả trang này là **`idle` của OpenCode là một giá trị bịa.** `herdr agent
 explain` báo `fallback_reason: default_known_agent_idle_fallback`, và `agent wait --until idle`
-trả về rc=0 sau 8 ms trên một pane không ai đụng vào. Manifest của OpenCode có ba luật, so với
-mười hai của Claude và bảy của Codex, và chỉ phủ `blocked` với `working`. Vì vậy idle không phải
-thứ được phát hiện, nó là phần còn lại khi không luật nào khớp. Hệ quả thứ nhất: bộ chặn khởi
-động vẫn chạy được, còn phát hiện trạng thái kết thúc thì không. Hệ quả thứ hai đắt hơn: đọc
-transcript ở đây chỉ trả về ô nhập liệu và dòng chân trang, nên bước kiểm nền hai nguồn của giao
-thức chung co lại còn mỗi `pgrep`. Adapter này tồn tại để báo ra sự co lại đó, thay vì để nó đi
-qua như một câu trả lời bình thường.
+trả về rc=0 sau 8 ms trên một pane không ai đụng vào.
+
+Manifest của OpenCode có ba luật, so với mười hai của Claude và bảy của Codex, và chỉ phủ
+`blocked` với `working`. Vì vậy idle không phải thứ được phát hiện, nó là phần còn lại khi không
+luật nào khớp.
+
+- **Hệ quả thứ nhất.** Bộ chặn khởi động vẫn chạy được, còn phát hiện trạng thái kết thúc thì không.
+- **Hệ quả thứ hai, đắt hơn.** Đọc transcript ở đây chỉ trả về ô nhập liệu và dòng chân trang, nên
+  bước kiểm nền hai nguồn của giao thức chung co lại còn mỗi `pgrep`.
+
+Adapter này tồn tại để báo ra sự co lại đó, thay vì để nó đi qua như một câu trả lời bình thường.
 <!-- source: harness/.agents/skills/dispatch-ticket-opencode/SKILL.md -->
 
 ## Khi nào Thomas gọi nó

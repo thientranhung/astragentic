@@ -24,11 +24,14 @@ ngày 2026-08-21.
 
 Khác biệt lớn nhất so với mọi tracker khác là **bạn không gán một trạng thái, bạn lấy một
 transition.** Transition được định danh bằng số, riêng theo từng dự án, không liên tục và không
-đoán được, còn những trạng thái thêm sau lại mang id thấp. Vì vậy một transition id nhớ trong đầu
-là một lệnh ghi hợp lệ vào trạng thái bạn không định ghi: nó thành công, không có lỗi nào, và
-không truy vấn nào đánh dấu. Hãy đọc danh sách transition mỗi lần, vì chính cú gọi thêm đó *là*
-cái chốt, và nó rẻ hơn nhóm lỗi mà nó chặn. Đổi lại, lợi thế của Jira là thật: `Blocks` biểu diễn
-được trong một truy vấn JQL, nên frontier là một cú gọi thay vì vòng lặp N+1 mà GitHub ép.
+đoán được, còn những trạng thái thêm sau lại mang id thấp.
+
+Vì vậy một transition id nhớ trong đầu là một lệnh ghi hợp lệ vào trạng thái bạn không định ghi:
+nó thành công, không có lỗi nào, và không truy vấn nào đánh dấu. Hãy đọc danh sách transition mỗi
+lần, vì chính cú gọi thêm đó *là* cái chốt, và nó rẻ hơn nhóm lỗi mà nó chặn.
+
+Đổi lại, lợi thế của Jira là thật: `Blocks` biểu diễn được trong một truy vấn JQL, nên frontier là
+một cú gọi thay vì vòng lặp N+1 mà GitHub ép.
 <!-- source: harness/.agents/skills/jira-issue-tracker/SKILL.md -->
 
 ## Khi nào Thomas gọi nó

@@ -14,20 +14,27 @@ updated: 2026-09-04
 
 `legacy-testing` là bộ nguyên tắc cho đúng cái ca mà `tdd` không phủ. `tdd` viết một test đỏ
 trước, và điều đó giả định có sẵn một **seam**, tức một chỗ để bạn thay thế thứ mà code phụ thuộc
-vào. Code đang tồn tại thường không có chỗ nào như vậy: hàm gọi thẳng tới đồng hồ, tới mạng, tới
+vào.
+
+Code đang tồn tại thường không có chỗ nào như vậy: hàm gọi thẳng tới đồng hồ, tới mạng, tới
 database, hoặc tới một singleton ở cấp module. Skill này chốt thứ tự cho ca đó, và thứ tự ấy
 ngược với greenfield: characterise xem code đang làm gì, tạo một seam, rồi mới chạy `tdd` bình
 thường với các characterisation test làm lưới đỡ bên dưới.
 <!-- source: harness/.agents/skills/legacy-testing/SKILL.md -->
 
 Vấn đề nó gỡ là một Builder đứng khựng trên một ticket mà không có gì để viết test đối chiếu, cùng
-hai lối thoát sai khỏi cú khựng đó. Lối thứ nhất là một characterisation test khẳng định thứ code
-*đáng lẽ* phải làm: nó đỏ ngay ngày đầu và không cho bạn biết thứ nào an toàn để đổi. Lối thứ hai
-tệ hơn và im hơn, vì một test lặng lẽ phong một con bug thành chủ ý, và đó chính là cách một con
-bug trở thành một yêu cầu. Kỷ luật ở đây nằm trong một comment: cứ khẳng định đúng giá trị gây
-ngạc nhiên đó, rồi đánh dấu nó là đã ghim nhưng chưa phán kèm một mã ticket, để cả hai cách đọc
-cùng tồn tại. Skill này cũng là lý do tôi coi brownfield là mặc định chứ không phải ca đặc biệt.
-Các agent skill ở thượng nguồn đều giả định seam có sẵn, còn phần lớn repo đi tới thì không có.
+hai lối thoát sai khỏi cú khựng đó.
+
+- **Lối thứ nhất.** Một characterisation test khẳng định thứ code *đáng lẽ* phải làm: nó đỏ ngay
+  ngày đầu và không cho bạn biết thứ nào an toàn để đổi.
+- **Lối thứ hai, tệ hơn và im hơn.** Một test lặng lẽ phong một con bug thành chủ ý, và đó chính là
+  cách một con bug trở thành một yêu cầu.
+
+Kỷ luật ở đây nằm trong một comment: cứ khẳng định đúng giá trị gây ngạc nhiên đó, rồi đánh dấu nó
+là đã ghim nhưng chưa phán kèm một mã ticket, để cả hai cách đọc cùng tồn tại.
+
+Skill này cũng là lý do tôi coi brownfield là mặc định chứ không phải ca đặc biệt. Các agent skill
+ở thượng nguồn đều giả định seam có sẵn, còn phần lớn repo đi tới thì không có.
 <!-- source: harness/.agents/skills/legacy-testing/SKILL.md, README.md -->
 
 ## Khi nào Thomas gọi nó

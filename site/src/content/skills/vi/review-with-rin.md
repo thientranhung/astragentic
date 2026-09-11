@@ -14,21 +14,27 @@ updated: 2026-09-04
 
 Đây là công thức Thomas chạy để lấy ý kiến thứ hai tại một milestone: một spec đã chốt, một
 ticket hay PR sắp đóng, một epic đang khép lại. Nó resolve khoá artifact, mở một pane Herdr với
-detached worktree riêng tại đúng SHA đang được review, đóng gói cho Rin một bản brief gồm mode,
-đường dẫn spec hoặc ticket, acceptance criteria, một đoạn về ý định của chủ project, và với việc
-UI thì thêm con trỏ tới design guidelines cùng bằng chứng trình duyệt của Builder. Sau đó nó
-dispatch Rin, rồi thu về mọi thứ Rin ghi vào gate-file trước khi động vào bất cứ thứ gì khác.
+detached worktree riêng tại đúng SHA đang được review, rồi đóng gói brief cho Rin.
+
+Brief mang mode, đường dẫn spec hoặc ticket, acceptance criteria, một đoạn về ý định của chủ
+project, và với việc UI thì thêm con trỏ tới design guidelines cùng bằng chứng trình duyệt của
+Builder. Sau đó nó dispatch Rin, rồi thu về mọi thứ Rin ghi vào gate-file trước khi động vào bất
+cứ thứ gì khác.
 
 Điểm khác một lượt review PR bình thường là skill này cố ý chỉ chạy **một lần mỗi milestone**.
-Vấn đề nó đang trả lời là một vòng lặp. Một phiên bản trước của phương pháp cho phép các vòng
-review lặp lại, và một project chạy nó đo được 5 đến 14 vòng mỗi milestone, phần lớn là vòng
-review lại chính các bản vá trước đó. Vì vậy skill này coi phát hiện của Rin là lời khuyên mà
-Thomas phân loại đúng một lần. Những thứ blocking ở mức thiết kế đi thẳng lên chủ project như một
-quyết định, không bao giờ thành vòng thứ hai, còn lại gộp thành một work order gửi cho người sở
-hữu artifact. Cơ chế gate-file tồn tại vì một lý do liên quan: một lượt đọc pane trong Herdr âm
-thầm cắt cụt theo số dòng đang hiển thị mà vẫn báo thành công, trong khi báo cáo gate thường dài
-hơn 300 dòng, nên toàn bộ báo cáo phải rơi vào một file do Thomas đặt tên và kiểm lại trước mọi
-bước cleanup.
+Vấn đề nó đang trả lời là một vòng lặp: một phiên bản trước của phương pháp cho phép các vòng
+review lặp lại.
+
+**Số đo.** Một project chạy phiên bản cũ đo được 5 đến 14 vòng mỗi milestone, phần lớn là vòng
+review lại chính các bản vá trước đó.
+
+Vì vậy skill này coi phát hiện của Rin là lời khuyên mà Thomas phân loại đúng một lần. Những thứ
+blocking ở mức thiết kế đi thẳng lên chủ project như một quyết định, không bao giờ thành vòng thứ
+hai, còn lại gộp thành một work order gửi cho người sở hữu artifact.
+
+Cơ chế gate-file tồn tại vì một lý do liên quan: một lượt đọc pane trong Herdr âm thầm cắt cụt
+theo số dòng đang hiển thị mà vẫn báo thành công, trong khi báo cáo gate thường dài hơn 300 dòng.
+Vì vậy toàn bộ báo cáo phải rơi vào một file do Thomas đặt tên và kiểm lại trước mọi bước cleanup.
 <!-- source: harness/.agents/skills/review-with-rin/SKILL.md -->
 
 ## Khi nào Thomas gọi nó

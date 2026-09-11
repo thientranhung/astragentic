@@ -24,11 +24,14 @@ Everything here was measured on a live team-managed project that moved from Line
 
 The single biggest difference from every other tracker is that **you do not assign a status, you
 take a transition.** Transitions are identified by numeric ids that are project-specific,
-non-sequential and not guessable, and states added later take low ids. So a remembered transition
-id is a valid write to a state you did not mean: it succeeds, nothing errors, and no query flags
-it. Read the transitions every time, because the extra call *is* the guard, and it costs less
-than the class of bug it prevents. In exchange, Jira's advantage is real: `Blocks` is expressible
-in one JQL query, so the frontier is one call rather than the N+1 loop GitHub forces.
+non-sequential and not guessable, and states added later take low ids.
+
+So a remembered transition id is a valid write to a state you did not mean: it succeeds, nothing
+errors, and no query flags it. Read the transitions every time, because the extra call *is* the
+guard, and it costs less than the class of bug it prevents.
+
+In exchange, Jira's advantage is real: `Blocks` is expressible in one JQL query, so the frontier
+is one call rather than the N+1 loop GitHub forces.
 <!-- source: harness/.agents/skills/jira-issue-tracker/SKILL.md -->
 
 ## When Thomas reaches for it

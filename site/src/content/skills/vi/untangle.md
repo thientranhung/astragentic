@@ -16,18 +16,21 @@ updated: 2026-09-04
 `improve-codebase-architecture` cải thiện những ranh giới đã có, nhưng một số repo thì không có
 ranh giới nào: một module import ba mươi module khác, chu trình là chuyện thường, và mọi cú tái
 cấu trúc tử tế đều là một thay đổi không ai review nổi. Upstream gọi tên khoảng trống đó nhưng
-không lấp, nên đây là đường cho nó. Skill có năm nước đi: đọc đồ thị phụ thuộc thật, cắt ở chỗ đồ
-thị mỏng nhất, mỗi ticket một ranh giới theo hình expand-contract, xử lý chu trình bằng một trong
-ba nhát cắt, và dừng có chủ đích.
+không lấp, nên đây là đường cho nó.
+
+Skill có năm nước đi: đọc đồ thị phụ thuộc thật, cắt ở chỗ đồ thị mỏng nhất, mỗi ticket một ranh
+giới theo hình expand-contract, xử lý chu trình bằng một trong ba nhát cắt, và dừng có chủ đích.
 <!-- source: harness/.agents/skills/untangle/SKILL.md -->
 
 **Thứ nó chặn là cú refactor big-bang**, tức một branch phình lên hàng tuần, xung đột với tất cả,
 rồi bị bỏ hoặc bị merge mà không ai review. Mọi bước tồn tại để giữ công việc ở dạng từng mảnh
-ship được. Hai bước trong đó đi ngược bản năng. Bản năng thứ nhất là xông vào chỗ rối nhất, còn
-skill nói hãy bắt đầu ở một lá, vì một lá có thể được cấp ranh giới mà không phải dời gì khác, và
-nó chứng minh cách làm trên một thứ rẻ. Bản năng thứ hai là thêm cửa trước mới rồi xoá đường cũ
-trong cùng một ticket, còn skill tách hai việc ra, vì một ticket không merge được cho tới khi mọi
-caller đã chuyển chính là hình big-bang tái xuất ở tầng thấp hơn.
+ship được, và hai bước trong đó đi ngược bản năng.
+
+- **Bản năng thứ nhất** là xông vào chỗ rối nhất. Skill nói hãy bắt đầu ở một lá, vì một lá có thể
+  được cấp ranh giới mà không phải dời gì khác, và nó chứng minh cách làm trên một thứ rẻ.
+- **Bản năng thứ hai** là thêm cửa trước mới rồi xoá đường cũ trong cùng một ticket. Skill tách hai
+  việc ra, vì một ticket không merge được cho tới khi mọi caller đã chuyển chính là hình big-bang
+  tái xuất ở tầng thấp hơn.
 <!-- source: harness/.agents/skills/untangle/SKILL.md -->
 
 ## Khi nào Thomas gọi nó

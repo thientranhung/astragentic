@@ -21,13 +21,14 @@ cập Linear qua bộ công cụ MCP `linear-server` chứ không qua CLI. Mọi
 án thật chạy Linear tới 2026-08-21.
 <!-- source: harness/.agents/skills/linear-issue-tracker/SKILL.md -->
 
-Có hai thứ nên biết trước khi chọn Linear, và thứ nhất không liên quan tới mô hình dữ liệu. **Gói
-free ngừng nhận issue mới.** `save_issue` trả về *"You've exceeded the free issue limit"*. Lỗi đó
-không làm pipeline yếu đi, nó làm pipeline dừng, vì bước đầu tiên của phương pháp là `create`.
-Một dự án đâm vào đúng chỗ này và phải di trú ngay trong ngày. Yêu cầu 1 tới 5 nói về *mô hình*
-của một tracker, nhưng một tracker còn phải chịu nhận lệnh ghi, nên hãy kiểm trần của gói đang
-dùng trước. Thứ hai là giao thức claim, ở đây yếu hơn mức phương pháp giả định, và git mới là thứ
-gánh nó.
+Có hai thứ nên biết trước khi chọn Linear, và thứ nhất không liên quan tới mô hình dữ liệu.
+
+- **Gói free ngừng nhận issue mới.** `save_issue` trả về *"You've exceeded the free issue
+  limit"*. Lỗi đó không làm pipeline yếu đi, nó làm pipeline dừng, vì bước đầu tiên của phương
+  pháp là `create`. Một dự án đâm vào đúng chỗ này và phải di trú ngay trong ngày. Yêu cầu 1 tới 5
+  nói về *mô hình* của một tracker, nhưng một tracker còn phải chịu nhận lệnh ghi, nên hãy kiểm
+  trần của gói đang dùng trước.
+- **Giao thức claim yếu hơn mức phương pháp giả định**, và git mới là thứ gánh nó.
 <!-- source: harness/.agents/skills/linear-issue-tracker/SKILL.md -->
 
 ## Khi nào Thomas gọi nó

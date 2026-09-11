@@ -1,6 +1,6 @@
 ---
 title: reconcile-tracker
-oneLiner: "Đo tracker đối chiếu với git rồi báo ra bốn lớp lệch giữa hai nguồn."
+oneLiner: "Đo tracker đối chiếu với git rồi báo ra bốn loại lệch giữa hai nguồn."
 group: upkeep
 order: 1
 runtimes: [claude, codex, opencode]
@@ -13,24 +13,35 @@ updated: 2026-09-04
 ## Nó làm gì
 
 `reconcile-tracker` kéo về hai sự thật độc lập rồi so chúng: tracker nói trạng thái một ticket là
-gì, và git thật sự cho thấy chuyện gì đã xảy ra với ticket đó. Nửa phần git đến từ
-`scripts/ticket-git-facts.sh` (shell thuần, không mạng, không gọi tracker). Script này đếm số
-commit trên base branch có subject khớp một ticket id, tìm branch local nếu còn, và báo số commit
-chưa merge. Nửa phần tracker đến từ công cụ đọc mà tracker của project đó cung cấp. Thomas nối hai
-hàng bằng tay, vì cú nối đó cần phán đoán mà script không cấp được, rồi báo bốn lớp lệch: lagging
-(đã merge nhưng tracker không hay), phantom done (tracker bảo đã ship, git không thấy gì), stale
-claim (có assignee nhưng phía sau không có branch nào), và unclaimed in-progress (ticket kẹt ở
-trạng thái đang làm mà không ai giữ). Skill này không bao giờ ghi vào tracker, nó chỉ báo cáo.
+gì, và git thật sự cho thấy chuyện gì đã xảy ra với ticket đó.
+
+Nửa phần git đến từ `scripts/ticket-git-facts.sh` (shell thuần, không mạng, không gọi tracker).
+Script này đếm số commit trên base branch có subject khớp một ticket id, tìm branch local nếu
+còn, và báo số commit chưa merge. Nửa phần tracker đến từ công cụ đọc mà tracker của project đó
+cung cấp.
+
+Thomas nối hai hàng bằng tay, vì cú nối đó cần phán đoán mà script không cấp được, rồi báo bốn loại
+lệch:
+
+- **Lagging.** Đã merge nhưng tracker không hay.
+- **Phantom done.** Tracker bảo đã ship, git không thấy gì.
+- **Stale claim.** Có assignee nhưng phía sau không có branch nào.
+- **Unclaimed in-progress.** Ticket kẹt ở trạng thái đang làm mà không ai giữ.
+
+Skill này không bao giờ ghi vào tracker, nó chỉ báo cáo.
 <!-- source: harness/.agents/skills/reconcile-tracker/SKILL.md -->
 
 Kiểu hỏng mà skill này được dựng lên để chống rất cụ thể: một tracker chỉ được kiểm đối chiếu với
 chính nó. In-progress kèm một assignee vẫn còn trông y hệt nhau, dù ticket thật sự đang chạy hay
-dù cú merge kết thúc nó không bao giờ được ghi ngược lại. Trạng thái tự nó nhất quán trong cả hai
-trường hợp, nên riêng tracker không cho biết bạn đang nhìn trường hợp nào. Git là nguồn thứ hai,
-độc lập, để phá thế hoà, giống như giá trị kỳ vọng của một cái test phải nằm ngoài đoạn code
-mà nó kiểm. Skill này tồn tại vì một project thật đã đo trực tiếp: bốn ticket nằm in-progress với
-assignee vẫn còn sau khi code của chúng đã merge, cái cũ nhất trễ tròn một ngày, và không có gì
-trong đường ống báo lỗi để nói ra chuyện đó.
+dù cú merge kết thúc nó không bao giờ được ghi ngược lại.
+
+Trạng thái tự nó nhất quán trong cả hai trường hợp, nên riêng tracker không cho biết bạn đang nhìn
+trường hợp nào. Git là nguồn thứ hai, độc lập, để phá thế hoà, giống như giá trị kỳ vọng của một
+cái test phải nằm ngoài đoạn code mà nó kiểm.
+
+Skill này tồn tại vì một project thật đã đo trực tiếp: bốn ticket nằm in-progress với assignee vẫn
+còn sau khi code của chúng đã merge, cái cũ nhất trễ tròn một ngày, và không có gì trong đường ống
+báo lỗi để nói ra chuyện đó.
 <!-- source: harness/.agents/skills/reconcile-tracker/SKILL.md -->
 
 ## Khi nào Thomas gọi nó
@@ -74,8 +85,8 @@ hay `linear-issue-tracker`) quyết định cách đọc nửa phần tracker, n
 
 - Mọi lượt chạy đều nói ra `TICKET_PREFIX` một cách tường minh thay vì lùi về một phỏng đoán.
 - Ticket id từ tracker được kéo về trước khi `ticket-git-facts.sh` chạy, không phải sau.
-- Cả bốn lớp lệch đều được báo, kể cả `none` cho những lớp rỗng. Một lớp không được báo đọc ra y
-  hệt một lớp không được kiểm.
+- Cả bốn loại lệch đều được báo, kể cả `none` cho những loại rỗng. Một lớp không được báo đọc ra y
+  hệt một loại không được kiểm.
 - Một ticket đang bay khoẻ mạnh, tức có commit chưa merge, có branch còn tồn tại và có worktree, không
   bao giờ bị gắn cờ là lệch.
 - Không có gì được ghi vào tracker như hệ quả của chính lượt chạy này. Mọi bản vá là một hành động

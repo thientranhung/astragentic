@@ -14,22 +14,30 @@ updated: 2026-09-04
 
 Skill này dispatch lượt đi bộ sản phẩm của QA: gate phán hệ thống đang chạy thay vì phán cái
 diff. Nó dựa trên phần gate-file và dạng pane của `review-with-rin` chứ không chép lại, và thêm
-đúng một thứ mà một lượt đi bộ cần còn các gate khác thì không: một môi trường. Thomas tạo một
-gate worktree tại SHA đang review, khởi động app ở đó bằng đúng lệnh của project, đóng gói một
-bản brief (persona, trạng thái dữ liệu, mọi bề mặt đang hiển thị cùng một khái niệm chứ không chỉ
-các bề mặt đã đổi, design guidelines, đồng ý dùng trình duyệt, mọi thao tác ghi được cho phép, và
-danh sách verified-clean của lượt trước), dispatch QA như một pane gate, thu báo cáo, rồi tắt app
-và xác nhận port đã trống trước khi gỡ worktree.
+đúng một thứ mà một lượt đi bộ cần còn các gate khác thì không: một môi trường.
+
+Thomas tạo một gate worktree tại SHA đang review, khởi động app ở đó bằng đúng lệnh của project,
+rồi đóng gói một bản brief gồm:
+
+- **Persona và trạng thái dữ liệu.**
+- **Mọi bề mặt đang hiển thị cùng một khái niệm**, không chỉ các bề mặt đã đổi.
+- **Design guidelines.**
+- **Đồng ý dùng trình duyệt và mọi thao tác ghi được cho phép.**
+- **Danh sách verified-clean của lượt trước.**
+
+Từ đó nó dispatch QA như một pane gate, thu báo cáo, rồi tắt app và xác nhận port đã trống trước
+khi gỡ worktree.
 
 Vấn đề nó xử lý là: đọc một cái diff và dùng một sản phẩm là hai hành vi khác nhau, và một bộ test
 xanh không chứng minh được hành vi nào. Test khẳng định thứ ai đó đã nghĩ ra để khẳng định; còn
 thứ đang thiếu, sai thứ tự, không đọc nổi hay không với tới được trên màn hình thật thì đúng là
-thứ không ai viết assertion cho. Khoảng trống này không phải giả định: một phiên bản harness trước
-từng ship một agent đi bộ bằng trình duyệt qua vài bản phát hành mà nó chưa chạy lần nào, và ở một
-trường hợp khác, một project ghi nhận chín vòng fold cộng một cú merge trong nửa ngày mà QA chưa
-hề được dispatch. Nên skill này mang theo bộ đếm của riêng nó: quá mười cú merge chạm vào bề mặt
-người dùng thấy được kể từ lượt đi bộ gần nhất là một STOP, và "không cú nào chạm bề mặt" là câu
-trả lời hợp lệ, còn "chưa đếm" thì không.
+thứ không ai viết assertion cho.
+
+Khoảng trống này không phải giả định. Một phiên bản harness trước từng ship một agent đi bộ bằng
+trình duyệt qua vài bản phát hành mà nó chưa chạy lần nào; một project khác ghi nhận chín vòng fold
+cộng một cú merge trong nửa ngày mà QA chưa hề được dispatch. Nên skill này mang theo bộ đếm của
+riêng nó: quá mười cú merge chạm vào bề mặt người dùng thấy được kể từ lượt đi bộ gần nhất là một
+STOP, và "không cú nào chạm bề mặt" là câu trả lời hợp lệ, còn "chưa đếm" thì không.
 <!-- source: harness/.agents/skills/dispatch-qa-walk/SKILL.md -->
 
 ## Khi nào Thomas gọi nó

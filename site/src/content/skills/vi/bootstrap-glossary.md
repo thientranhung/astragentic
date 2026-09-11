@@ -15,23 +15,31 @@ updated: 2026-09-04
 `bootstrap-glossary` đọc bộ từ vựng mà một codebase đã cam kết theo: tên type, class và table
 trước, rồi tên module và thư mục, rồi tên hàm trên các bề mặt public, rồi giá trị enum, rồi những
 từ lặp lại trong comment và commit message. Nó chuyển các thuật ngữ có tần suất cao nhất thành mục
-từ điển. Mỗi mục có một định nghĩa rút ra từ cách code thật sự dùng thuật ngữ đó, một dòng
-`_Avoid_` gọi tên các từ đồng nghĩa mà nó đang thay thế, và một trích dẫn tới đúng file đã đọc ra
-nó. Phần định nghĩa đi vào `CONTEXT.md` theo đúng format mà `domain-modeling` và các skill cùng
+từ điển.
+
+Mỗi mục gồm:
+
+- **Định nghĩa** rút ra từ cách code thật sự dùng thuật ngữ đó.
+- **Dòng `_Avoid_`** gọi tên các từ đồng nghĩa mà nó đang thay thế.
+- **Trích dẫn** tới đúng file đã đọc ra nó.
+
+Phần định nghĩa đi vào `CONTEXT.md` theo đúng format mà `domain-modeling` và các skill cùng
 nhóm vốn đã trông đợi. Phần trích dẫn, chỗ nhập nhằng và trạng thái duyệt theo từng thuật ngữ đi
 vào một file riêng, `docs/agents/CONTEXT-review.md`, để vệt bằng chứng không bị nhầm thành chính
 bộ từ vựng.
 <!-- source: harness/.agents/skills/bootstrap-glossary/SKILL.md -->
 
 Thứ nó thay thế là một buổi phỏng vấn domain năm mươi câu ở đầu một project brownfield: tốn một
-tiếng của ai đó, và câu trả lời rồi cũng lệch khỏi thứ code thật sự làm. Bài toán khó hơn mà nó
-được dựng lên để chống thì ít lộ hơn: một bộ từ điển do agent viết mà trông như đã
-được xác nhận còn tệ hơn không có từ điển nào, vì các session sau sẽ coi văn xuôi nghe chắc chắn là
-sự thật đã chốt. Nên skill này rút ra chứ không bịa ra, và nó đánh dấu mọi thuật ngữ là
-`UNREVIEWED` cho tới khi chủ project nhìn qua. Dấu đó nằm ở chỗ nhìn thấy được, trong một header
-mà mọi người đọc đều thấy, vì bản thân trường trạng thái duyệt không tồn tại ở bất cứ đâu khác
-trong plugin mà nó nuôi, và chín skill phía sau nạp `CONTEXT.md` mà không có cách nào biết trường
-đó đang thiếu trừ khi header nói ra bằng chữ.
+tiếng của ai đó, và câu trả lời rồi cũng lệch khỏi thứ code thật sự làm.
+
+Bài toán khó hơn mà nó được dựng lên để chống thì ít lộ hơn: một bộ từ điển do agent viết mà trông
+như đã được xác nhận còn tệ hơn không có từ điển nào, vì các session sau sẽ coi văn xuôi nghe chắc
+chắn là sự thật đã chốt. Nên skill này rút ra chứ không bịa ra, và nó đánh dấu mọi thuật ngữ là
+`UNREVIEWED` cho tới khi chủ project nhìn qua.
+
+Dấu đó nằm ở chỗ nhìn thấy được, trong một header mà mọi người đọc đều thấy, vì bản thân trường
+trạng thái duyệt không tồn tại ở bất cứ đâu khác trong plugin mà nó nuôi, và chín skill phía sau
+nạp `CONTEXT.md` mà không có cách nào biết trường đó đang thiếu trừ khi header nói ra bằng chữ.
 <!-- source: harness/.agents/skills/bootstrap-glossary/SKILL.md -->
 
 ## Khi nào Thomas gọi nó
@@ -50,9 +58,10 @@ Kiểm hình dạng của repo trước khi ghi bất cứ thứ gì: một boun
 gốc; nhiều context thì một `CONTEXT-MAP.md` ở gốc cộng một `CONTEXT.md` bên trong mỗi context.
 Gieo một file gốc duy nhất lên một repo nhiều context sẽ trộn các bộ từ vựng không liên quan vào
 một tài liệu mà mọi người đọc phía sau đều coi là chuẩn, mà repo brownfield lại chính là loại dễ
-có nhiều context nhất. Đọc `CONTEXT-FORMAT.md` trước, vì `domain-modeling` và tám skill plugin
-khác tiêu thụ `CONTEXT.md` theo một hình dạng cố định, và một lượt gieo từ code sẽ sai chi tiết
-nếu thiếu nó.
+có nhiều context nhất.
+
+Đọc `CONTEXT-FORMAT.md` trước, vì `domain-modeling` và tám skill plugin khác tiêu thụ `CONTEXT.md`
+theo một hình dạng cố định, và một lượt gieo từ code sẽ sai chi tiết nếu thiếu nó.
 <!-- source: harness/.agents/skills/bootstrap-glossary/SKILL.md -->
 
 ## Nó để lại gì

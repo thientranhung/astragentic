@@ -22,12 +22,13 @@ measured on a live project that ran Linear until 2026-08-21.
 <!-- source: harness/.agents/skills/linear-issue-tracker/SKILL.md -->
 
 Two things are worth knowing before choosing Linear, and the first is not about the data model.
-**The free tier stops accepting new issues.** `save_issue` returns *"You've exceeded the free
-issue limit"*. That error does not degrade a pipeline, it stops one, because the first step of
-the method is `create`. A project hit this and had to migrate the same day. Requirements 1 to 5
-are about a tracker's model, but a tracker also has to accept a write, so check the ceiling of
-the tier you are on first. The second is the claim protocol, which is weaker here than the method
-assumes, and git is what carries it.
+
+- **The free tier stops accepting new issues.** `save_issue` returns *"You've exceeded the free
+  issue limit"*. That error does not degrade a pipeline, it stops one, because the first step of
+  the method is `create`. A project hit this and had to migrate the same day. Requirements 1 to 5
+  are about a tracker's model, but a tracker also has to accept a write, so check the ceiling of
+  the tier you are on first.
+- **The claim protocol is weaker here than the method assumes**, and git is what carries it.
 <!-- source: harness/.agents/skills/linear-issue-tracker/SKILL.md -->
 
 ## When Thomas reaches for it

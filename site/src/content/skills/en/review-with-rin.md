@@ -14,20 +14,27 @@ updated: 2026-09-04
 
 This is the recipe Thomas runs to get a second opinion at a milestone: a finalized spec, a
 ticket or PR closing, an epic wrapping up. It resolves an artifact key, opens a Herdr pane with
-its own detached worktree at the exact reviewed SHA, and packs Rin a brief with the mode, the
-spec or ticket path, the acceptance criteria, one paragraph of owner intent, and, for UI work,
-the design-guidelines pointer plus the Builder's browser evidence. It then dispatches her and
-collects whatever she writes to a gate-file before touching anything else.
+its own detached worktree at the exact reviewed SHA, then packs a brief for Rin.
+
+The brief carries the mode, the spec or ticket path, the acceptance criteria, one paragraph of
+owner intent, and, for UI work, the design-guidelines pointer plus the Builder's browser
+evidence. It then dispatches her and collects whatever she writes to a gate-file before touching
+anything else.
 
 What makes this different from a normal PR review is that it deliberately runs only **once per
-milestone**. The problem it answers is a loop. An earlier version of this method let review
-rounds repeat, and a project running it measured 5 to 14 rounds per milestone, much of that the
-loop re-reviewing its own earlier fixes. So this skill treats Rin's findings as advice Thomas
-classifies once. Design-level blockers go to the owner as a decision, never as a second round,
-and everything else becomes one work order to whoever owns the artifact. The gate-file mechanics
-exist for a related reason: a pane read in Herdr silently truncates to the visible row count
-while reporting success, and gate reports routinely run 300+ lines, so the full report has to
-land in a file Thomas names and verifies before any cleanup.
+milestone**. The problem it answers is a loop: an earlier version of this method let review
+rounds repeat.
+
+**Measurement.** A project running the earlier version measured 5 to 14 rounds per milestone,
+much of that the loop re-reviewing its own earlier fixes.
+
+So this skill treats Rin's findings as advice Thomas classifies once. Design-level blockers go to
+the owner as a decision, never as a second round, and everything else becomes one work order to
+whoever owns the artifact.
+
+The gate-file mechanics exist for a related reason: a pane read in Herdr silently truncates to
+the visible row count while reporting success, and gate reports routinely run 300+ lines. So the
+full report has to land in a file Thomas names and verifies before any cleanup.
 <!-- source: harness/.agents/skills/review-with-rin/SKILL.md -->
 
 ## When Thomas reaches for it

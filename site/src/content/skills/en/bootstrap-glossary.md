@@ -15,23 +15,31 @@ updated: 2026-09-04
 `bootstrap-glossary` reads the vocabulary a codebase has already committed to: type, class and
 table names first, then module and directory names, then function names on public surfaces, then
 enum values, then recurring words in comments and commit messages. It turns the highest-frequency
-terms into glossary entries. Each entry gets a definition derived from how the code actually uses
-the term, an `_Avoid_` line naming the synonyms it replaces, and a citation to the exact file it
-was read from. The definitions go into `CONTEXT.md` in the format `domain-modeling` and its
-sibling skills already expect. The citations, the ambiguities and the per-term review state go
-into a separate file, `docs/agents/CONTEXT-review.md`, so the evidence trail is never mistaken for
-the vocabulary itself.
+terms into glossary entries.
+
+Each entry gets:
+
+- **A definition** derived from how the code actually uses the term.
+- **An `_Avoid_` line** naming the synonyms it replaces.
+- **A citation** to the exact file it was read from.
+
+The definitions go into `CONTEXT.md` in the format `domain-modeling` and its sibling skills
+already expect. The citations, the ambiguities and the per-term review state go into a separate
+file, `docs/agents/CONTEXT-review.md`, so the evidence trail is never mistaken for the vocabulary
+itself.
 <!-- source: harness/.agents/skills/bootstrap-glossary/SKILL.md -->
 
 What it replaces is a fifty-question domain interview at the start of a brownfield project: an
-hour of someone's time, and the answers drift from what the code actually does anyway. The harder
-problem it is built against is quieter: an agent-authored glossary that looks
+hour of someone's time, and the answers drift from what the code actually does anyway.
+
+The harder problem it is built against is quieter: an agent-authored glossary that looks
 confirmed is worse than no glossary at all, because later sessions treat confident-sounding prose
 as settled fact. So this skill extracts rather than invents, and it marks every term `UNREVIEWED`
-until the owner has looked at it. That mark sits where it is visible, in a header any reader sees,
-because the review-state field itself does not exist anywhere else in the plugin this feeds, and
-nine downstream skills load `CONTEXT.md` with no way to know the field is missing unless the
-header says so in prose.
+until the owner has looked at it.
+
+That mark sits where it is visible, in a header any reader sees, because the review-state field
+itself does not exist anywhere else in the plugin this feeds, and nine downstream skills load
+`CONTEXT.md` with no way to know the field is missing unless the header says so in prose.
 <!-- source: harness/.agents/skills/bootstrap-glossary/SKILL.md -->
 
 ## When Thomas reaches for it
@@ -50,9 +58,10 @@ Check the repo's shape before writing anything: one bounded context gets one roo
 several contexts get a `CONTEXT-MAP.md` at the root plus one `CONTEXT.md` inside each context.
 Seeding a single root file across a multi-context repo merges unrelated vocabularies into a
 document every downstream reader treats as authoritative, and brownfield repos are the ones most
-likely to be multi-context. Read `CONTEXT-FORMAT.md` first, since `domain-modeling` and eight
-other plugin skills consume `CONTEXT.md` in a fixed shape, and a code-seeded pass gets the details
-wrong without it.
+likely to be multi-context.
+
+Read `CONTEXT-FORMAT.md` first, since `domain-modeling` and eight other plugin skills consume
+`CONTEXT.md` in a fixed shape, and a code-seeded pass gets the details wrong without it.
 <!-- source: harness/.agents/skills/bootstrap-glossary/SKILL.md -->
 
 ## What it leaves behind

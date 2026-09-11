@@ -14,21 +14,30 @@ updated: 2026-09-04
 
 This skill dispatches QA's product walk: the gate that judges the running system instead of the
 diff. It builds on `review-with-rin`'s gate-file setup and pane form rather than restating them,
-and adds the one thing a walk needs that no other gate does: an environment. Thomas creates a gate
-worktree at the reviewed SHA, starts the app there with the project's own command, packs a brief
-(persona, data state, every surface showing the same concept and not only the changed ones, design
-guidelines, browser consent, any authorized mutation, and the previous verified-clean list),
-dispatches QA as a gate pane, collects the report, then stops the app and confirms the port is
-free before removing the worktree.
+and adds the one thing a walk needs that no other gate does: an environment.
+
+Thomas creates a gate worktree at the reviewed SHA, starts the app there with the project's own
+command, then packs a brief with:
+
+- **Persona and data state.**
+- **Every surface showing the same concept**, not only the changed ones.
+- **Design guidelines.**
+- **Browser consent and any authorized mutation.**
+- **The previous verified-clean list.**
+
+From there it dispatches QA as a gate pane, collects the report, then stops the app and confirms
+the port is free before removing the worktree.
 
 The problem it handles is that reading a diff and using a product are different acts, and a green
 test suite proves neither. A test asserts what somebody thought to assert; what is missing,
 misordered, unreadable or unreachable on the actual screen is exactly what nobody wrote an
-assertion for. This gap is not hypothetical: an earlier harness version shipped a browser-walking
-agent across several releases that never ran once, and in a separate case a project logged nine
-fold rounds and a merge in half a day with QA never dispatched at all. So this skill carries its
-own counter: more than ten merges touching a user-visible surface since the last walk is a STOP,
-and "none touched a surface" is a valid answer while "not counted" is not.
+assertion for.
+
+This gap is not hypothetical. An earlier harness version shipped a browser-walking agent across
+several releases that never ran once; a separate project logged nine fold rounds and a merge in
+half a day with QA never dispatched at all. So this skill carries its own counter: more than ten
+merges touching a user-visible surface since the last walk is a STOP, and "none touched a surface"
+is a valid answer while "not counted" is not.
 <!-- source: harness/.agents/skills/dispatch-qa-walk/SKILL.md -->
 
 ## When Thomas reaches for it

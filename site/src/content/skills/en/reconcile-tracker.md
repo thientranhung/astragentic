@@ -13,25 +13,35 @@ updated: 2026-09-04
 ## What it does
 
 `reconcile-tracker` pulls two independent facts and compares them: what the tracker says a
-ticket's state is, and what git actually shows happened to that ticket. The git half comes from
-`scripts/ticket-git-facts.sh` (pure shell, no network, no tracker call). That script counts
-commits on the base branch whose subject matches a ticket id, finds the local branch if one
-still exists, and reports the unmerged count. The tracker half comes from whatever read tool the
-project's tracker exposes. Thomas joins the two rows by hand, because the join needs judgement a
-script cannot supply, and reports four drift classes: lagging (merged but the tracker never
-heard), phantom done (tracker says shipped, git shows nothing), stale claim (an assignee with no
-branch behind it), and unclaimed in-progress (a ticket stuck in the working state with no one
-holding it). This skill never writes to the tracker, it only reports.
+ticket's state is, and what git actually shows happened to that ticket.
+
+The git half comes from `scripts/ticket-git-facts.sh` (pure shell, no network, no tracker call).
+That script counts commits on the base branch whose subject matches a ticket id, finds the local
+branch if one still exists, and reports the unmerged count. The tracker half comes from whatever
+read tool the project's tracker exposes.
+
+Thomas joins the two rows by hand, because the join needs judgement a script cannot supply, and
+reports four drift classes:
+
+- **Lagging.** Merged but the tracker never heard.
+- **Phantom done.** Tracker says shipped, git shows nothing.
+- **Stale claim.** An assignee with no branch behind it.
+- **Unclaimed in-progress.** A ticket stuck in the working state with no one holding it.
+
+This skill never writes to the tracker, it only reports.
 <!-- source: harness/.agents/skills/reconcile-tracker/SKILL.md -->
 
 The failure this skill is built against is specific: a tracker checked only against itself.
 In-progress with a live assignee looks exactly the same whether the ticket is genuinely in
-flight or whether the merge that finished it was never written back. The state is internally
-consistent either way, so the tracker alone cannot tell you which one you are looking at. Git is
-the second, independent source that breaks the tie, the same way a test's expected value has to
-live outside the code it is checking. The skill exists because a live project measured this
-directly: four tickets sat in-progress with a live assignee after their code had already merged,
-the oldest by a full day, and nothing in the pipeline ever errored to say so.
+flight or whether the merge that finished it was never written back.
+
+The state is internally consistent either way, so the tracker alone cannot tell you which one you
+are looking at. Git is the second, independent source that breaks the tie, the same way a test's
+expected value has to live outside the code it is checking.
+
+The skill exists because a live project measured this directly: four tickets sat in-progress with
+a live assignee after their code had already merged, the oldest by a full day, and nothing in the
+pipeline ever errored to say so.
 <!-- source: harness/.agents/skills/reconcile-tracker/SKILL.md -->
 
 ## When Thomas reaches for it

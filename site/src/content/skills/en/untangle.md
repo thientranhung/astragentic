@@ -15,19 +15,23 @@ updated: 2026-09-04
 `untangle` is the refactor path for code with no boundaries to improve. The upstream skill
 `improve-codebase-architecture` improves boundaries that exist, but some repos have none: one
 module imports thirty others, cycles are normal, and any honest restructure is a change nobody
-can review. Upstream names that gap and does not fill it, so this is the path for it. The skill
-has five moves: read the real dependency graph, cut where the graph is thinnest, one boundary per
-ticket on an expand-contract shape, handle cycles by one of three cuts, and stop deliberately.
+can review. Upstream names that gap and does not fill it, so this is the path for it.
+
+The skill has five moves: read the real dependency graph, cut where the graph is thinnest, one
+boundary per ticket on an expand-contract shape, handle cycles by one of three cuts, and stop
+deliberately.
 <!-- source: harness/.agents/skills/untangle/SKILL.md -->
 
 **The failure it prevents is the big-bang refactor**, meaning a branch that grows for weeks,
 conflicts with everything, and gets abandoned or merged unreviewed. Every step exists to keep the
-work in pieces that ship. Two of them push against instinct. The first instinct is to attack the
-biggest tangle, while the skill says start at a leaf, because a leaf can be given a boundary
-without moving anything else and it proves the approach on something cheap. The second instinct
-is to add the new front door and delete the old paths in one ticket, while the skill splits them,
-because a ticket that cannot merge until every caller moves is the big-bang shape reappearing one
-level down.
+work in pieces that ship, and two of them push against instinct.
+
+- **The first instinct** is to attack the biggest tangle. The skill says start at a leaf, because
+  a leaf can be given a boundary without moving anything else, and it proves the approach on
+  something cheap.
+- **The second instinct** is to add the new front door and delete the old paths in one ticket. The
+  skill splits them, because a ticket that cannot merge until every caller moves is the big-bang
+  shape reappearing one level down.
 <!-- source: harness/.agents/skills/untangle/SKILL.md -->
 
 ## When Thomas reaches for it

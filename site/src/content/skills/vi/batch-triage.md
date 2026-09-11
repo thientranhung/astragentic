@@ -13,24 +13,33 @@ updated: 2026-09-04
 ## Nó làm gì
 
 `batch-triage` là phiên bản một lượt của triage, dành cho backlog có sẵn khi bạn nhận repo.
-`mattpocock-skills:triage` của plugin xử lý một item vừa tới. Một backlog thừa kế có hình dạng
+`mattpocock-skills:triage` của plugin xử lý một item vừa tới; một backlog thừa kế có hình dạng
 khác: hàng trăm item không rõ tuổi, do những người đã rời dự án viết, mô tả đoạn code đã dịch
-chuyển từ lâu. Skill này phân loại từng item bằng cách đọc chính văn bản của item và đoạn code
-item gọi tên, gộp các bản trùng mà cách diễn đạt đang che, đánh dấu item đã chết, rồi tạo ticket
-trên tracker kèm label và quan hệ blocking. Luật của nó là **rút ra, không bao giờ bịa ra**: mọi
-lượt phân loại đều trích văn bản của item hoặc code item gọi tên, và một item không phân loại được
-từ bằng chứng sẽ rơi vào `NEEDS-OWNER`, một kết quả hợp lệ tốn đúng một dòng.
+chuyển từ lâu.
+
+Skill này xử lý từng item theo bốn bước:
+
+- **Phân loại** bằng cách đọc chính văn bản của item và đoạn code item gọi tên.
+- **Gộp bản trùng** mà cách diễn đạt đang che.
+- **Đánh dấu item đã chết.**
+- **Tạo ticket trên tracker**, kèm label và quan hệ blocking.
+
+Luật của nó là **rút ra, không bao giờ bịa ra**: mọi lượt phân loại đều trích văn bản của item
+hoặc code item gọi tên, và một item không phân loại được từ bằng chứng sẽ rơi vào `NEEDS-OWNER`,
+một kết quả hợp lệ tốn đúng một dòng.
 <!-- source: harness/.agents/skills/batch-triage/SKILL.md -->
 
 **Một backlog thừa kế không có cạnh thì không có frontier.** Đó là vấn đề skill này xử lý, xuất
 hiện ngay khi Thomas nhận một repo mới. Câu truy vấn frontier trả về mọi ticket đã hết
 blocker và còn trống assignee, nên trong một backlog không gì chặn gì, mọi ticket đều trông như
-sẵn sàng cùng lúc và thứ tự rơi về phỏng đoán. Skill này còn mang theo một đính chính đo được
-ngay trong harness này. Trước đây nó yêu cầu *"the code map"* bằng văn xuôi, và đó là lý do
-`CODE-MAP.md` tồn tại nhiều tuần như một artifact mà một lượt grep theo tên file gọi là mồ côi,
-trong khi một skill đã ship cần nó mỗi lượt chạy (AST-071). Hiện nó resolve từng item đối chiếu
-với cây code hiện tại bằng `rg` và `git log`. Đó là điều nó lẽ ra phải nói từ đầu, vì một cái map
-cũ sẽ sai đúng chỗ triage cần nó nhất: trên đoạn code đã dời hoặc đã chết.
+sẵn sàng cùng lúc và thứ tự rơi về phỏng đoán.
+
+Skill này còn mang theo một đính chính đo được ngay trong harness này. Trước đây nó yêu cầu
+*"the code map"* bằng văn xuôi, và đó là lý do `CODE-MAP.md` tồn tại nhiều tuần như một artifact
+mà một lượt grep theo tên file gọi là mồ côi, trong khi một skill đã ship cần nó mỗi lượt chạy
+(AST-071). Hiện nó resolve từng item đối chiếu với cây code hiện tại bằng `rg` và `git log` —
+điều nó lẽ ra phải nói từ đầu, vì một cái map cũ sẽ sai đúng chỗ triage cần nó nhất: trên đoạn
+code đã dời hoặc đã chết.
 <!-- source: RELEASE-NOTES.md (Astraler Harness 1.6.1), harness/.agents/memory/recurring-failure-modes.md -->
 
 ## Khi nào Thomas gọi nó
@@ -64,7 +73,7 @@ cũ sẽ sai đúng chỗ triage cần nó nhất: trên đoạn code đã dời
 
 | Kết quả | Nơi nó nằm lại |
 |---|---|
-| Số đếm theo từng lớp | Bản báo cáo, phát hành trước khi động vào tracker, để chủ project thấy hình dạng backlog vừa thừa kế |
+| Số đếm theo từng nhóm | Bản báo cáo, phát hành trước khi động vào tracker, để chủ project thấy hình dạng backlog vừa thừa kế |
 | Các item `STALE` và `DONE` kèm bằng chứng | Chỉ nằm trong báo cáo. **Đóng ticket chờ chủ project quyết định**, vì đóng nhầm một item còn thật là sai lầm đắt nhất ở đây |
 | Các nhóm trùng lặp | Bản báo cáo, gộp theo đường code và theo triệu chứng chứ không theo tiêu đề |
 | Một item chưa đóng | Một ticket thật trên tracker, gắn label từ bộ từ vựng của project, ước lượng là một ticket hoặc một effort cần `wayfinder` |
@@ -96,7 +105,7 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`.
 
 - Mọi lượt phân loại đều trích văn bản của item hoặc code item gọi tên, và không có gì bị phân loại
   chỉ dựa vào tiêu đề.
-- Bản báo cáo số đếm theo lớp tới tay chủ project **trước** khi bất cứ ticket nào được tạo hay đóng.
+- Bản báo cáo số đếm theo nhóm tới tay chủ project **trước** khi bất cứ ticket nào được tạo hay đóng.
 - Không item `STALE` hay `DONE` nào bị đóng bởi chính lượt chạy này. Đó là đề xuất đang chờ chủ project.
 - Cạnh blocking được đặt ở mọi chỗ một item rõ ràng phụ thuộc vào item khác, vì một cạnh bỏ sót làm
   một ticket trở thành sẵn sàng quá sớm.
@@ -109,7 +118,9 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`.
 `batch-triage` chạy sớm, bên cạnh stage bootstrap còn lại mà Thomas sở hữu:
 `/skills/bootstrap-glossary` gieo bộ từ vựng từ code, còn `batch-triage` đọc backlog đối chiếu với
 đúng đoạn code đó. Cả hai đều gọi đích danh, chạy một lần cho mỗi repo, và kết thúc ở lượt duyệt
-của chủ project, nên không cái nào biến thành phần việc mà ai cũng tưởng người khác đã chạy. Kết
-quả của nó đi thẳng vào câu truy vấn frontier trong `thomas.md`, và đó là chỗ `/skills/dispatch-ticket`
-claim. Một item quá lớn cho một ticket thì chuyển sang `mattpocock-skills:wayfinder` và một session
-Shaper; một item mới tới sau này thì chuyển sang `mattpocock-skills:triage`, không quay lại đây.
+của chủ project, nên không cái nào biến thành phần việc mà ai cũng tưởng người khác đã chạy.
+
+Kết quả của nó đi thẳng vào câu truy vấn frontier trong `thomas.md`, và đó là chỗ
+`/skills/dispatch-ticket` claim. Một item quá lớn cho một ticket thì chuyển sang
+`mattpocock-skills:wayfinder` và một session Shaper; một item mới tới sau này thì chuyển sang
+`mattpocock-skills:triage`, không quay lại đây.

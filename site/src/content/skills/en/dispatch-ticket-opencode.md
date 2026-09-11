@@ -21,13 +21,16 @@ as limits rather than working around them.
 
 The fact that decides this whole page is that **OpenCode's `idle` is fabricated.** `herdr agent
 explain` reports `fallback_reason: default_known_agent_idle_fallback`, and `agent wait --until
-idle` returned rc=0 in 8 ms on a pane nobody had touched. Its manifest carries three rules
-against Claude's twelve and Codex's seven, covering only `blocked` and `working`. So idle is not
-detected, it is what is left when no rule matches. The first consequence: the start guard still
-works, terminal-state detection does not. The second one costs more: a transcript read here
-returns only the input box and the footer, so the shared protocol's two-source background check
-collapses to `pgrep` alone. This adapter exists to report that collapse instead of letting it
-pass as a normal answer.
+idle` returned rc=0 in 8 ms on a pane nobody had touched.
+
+Its manifest carries three rules against Claude's twelve and Codex's seven, covering only
+`blocked` and `working`. So idle is not detected, it is what is left when no rule matches.
+
+- **First consequence.** The start guard still works, terminal-state detection does not.
+- **Second consequence, and costlier.** A transcript read here returns only the input box and the
+  footer, so the shared protocol's two-source background check collapses to `pgrep` alone.
+
+This adapter exists to report that collapse instead of letting it pass as a normal answer.
 <!-- source: harness/.agents/skills/dispatch-ticket-opencode/SKILL.md -->
 
 ## When Thomas reaches for it
