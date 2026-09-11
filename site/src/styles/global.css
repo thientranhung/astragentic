@@ -531,11 +531,33 @@ hr {
 .read-body li {
   max-width: 66ch;
 }
+/* Long-form reading: looser leading than the landing (1.75 vs 1.55), a full line of
+   air between paragraphs, and inline code that sits inside the line instead of
+   breaking it; a 66ch column at 1.55 read as a wall of text (owner, 2026-09-11). */
 .read-body p,
 .read-body li,
 .prose p,
 .prose li {
   color: var(--ink-88);
+  line-height: var(--leading-prose);
+}
+.read-body p,
+.prose p {
+  margin-bottom: 1.6rem;
+}
+.read-body li + li,
+.prose li + li {
+  margin-top: 0.45rem;
+}
+.read-body p code,
+.read-body li code,
+.prose p code,
+.prose li code {
+  font-size: 0.82em;
+  padding: 0.02em 0.3em;
+  line-height: 1;
+  color: var(--ink-70);
+  border-color: transparent;
 }
 .read-body > :last-child {
   margin-bottom: 0;

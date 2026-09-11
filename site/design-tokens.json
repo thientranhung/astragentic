@@ -418,6 +418,14 @@
             "cssVar": "--leading-mono"
           }
         }
+      },
+      "prose": {
+        "$value": 1.75,
+        "$extensions": {
+          "site": {
+            "cssVar": "--leading-prose"
+          }
+        }
       }
     },
     "tracking": {
