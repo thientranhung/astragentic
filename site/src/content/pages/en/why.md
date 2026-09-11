@@ -72,9 +72,9 @@ to open a file to read it.
 | An agent asking back | Nowhere to ask | It asks inside the ticket, anyone can answer, then it carries on |
 | When a session closes | State goes with the context | The board is still there |
 
-That last row is where the way of working changes most: the agent no longer waits for one
-specific person. It asks on the ticket, whoever on the team can answer does, and it carries on. The
-AI becomes a member of the group rather than a tool you have to sit and watch.
+Those two comment rows are where the way of working changes most. The agent no longer waits for
+one specific person: it asks on the ticket, whoever on the team can answer does, and it carries on.
+The AI works as a member of the group rather than a tool you have to sit and watch.
 
 **Measurement.** AST-057, on a real project: one ticket looked blocked for hours after both of its
 blockers had merged, and four tickets wore a ready label while blocked. The frontier was computed
