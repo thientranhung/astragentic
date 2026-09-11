@@ -33,7 +33,7 @@
       .clip { position: absolute; inset: 0; }
 
       /* ── app chrome (from video/herdr) ─────────────────────────────── */
-      .app { position: absolute; inset: 0; display: flex; }
+      .app { position: absolute; top: 0; left: 0; right: 0; height: 930px; display: flex; }
 
       .sidebar { width: 340px; flex-shrink: 0; background: #13141b; border-right: 1px solid #262838; padding: 28px 0; display: flex; flex-direction: column; }
       .section-label { text-transform: uppercase; font-size: 13px; letter-spacing: 0.08em; color: #888e99; padding: 0 24px; margin-bottom: 10px; }
@@ -125,22 +125,24 @@
       .tag.blocked { background: #3a1a17; color: #ff7a6b; }
       .tag.done { background: #123326; color: #3ecf8e; }
 
-      /* ── card overlay, centred band over the main area, one visible at a time (from video/herdr) ── */
-      .card-overlay { position: absolute; left: 340px; right: 0; top: 50%; height: 0; max-width: 900px; margin: 0 auto; z-index: 6; }
-      .card {
-        position: absolute; left: 0; right: 0; top: 0; width: 100%; opacity: 0; transform: translateY(-50%);
-        background: #F2F3F6; border: none; border-radius: 10px;
-        box-shadow: 0 14px 36px rgba(0, 0, 0, .5), 0 2px 6px rgba(0, 0, 0, .35);
-        padding: 18px 28px; color: #14161A; text-align: center;
+      /* ── caption band, below the herdr workspace, one visible at a time ── */
+      .caption-band {
+        position: absolute; left: 0; right: 0; bottom: 0; height: 150px; z-index: 20;
+        background: #F2F3F6; border-top: 1px solid #D9DCE3; overflow: hidden;
+        display: grid; place-items: center; padding: 0 40px;
+      }
+      .caption {
+        grid-area: 1 / 1; opacity: 0;
+        max-width: 1500px; text-align: center;
         font-family: Inter, "SF Pro Text", -apple-system, system-ui, sans-serif;
-        font-size: 26px; line-height: 36px; font-weight: 500; letter-spacing: -0.005em;
+        font-size: 28px; line-height: 38px; font-weight: 500; color: #14161A; letter-spacing: -0.005em;
         display: flex; align-items: flex-start; justify-content: center;
       }
-      .card::before {
-        content: ""; display: inline-block; flex-shrink: 0; width: 10px; height: 10px; margin-top: 13px; margin-right: 12px;
+      .caption::before {
+        content: ""; display: inline-block; flex-shrink: 0; width: 10px; height: 10px; margin-top: 14px; margin-right: 12px;
         border-radius: 50%; background: #E53625;
       }
-      .card b { font-weight: 700; }
+      .caption b { font-weight: 700; }
 
       /* ── message comet between panes (from video/dispatch) ───────────── */
       .comet { position: absolute; left: 0; top: 0; width: 20px; height: 20px; opacity: 0; z-index: 5; }
@@ -152,9 +154,9 @@
       .comet.back .comet-streak { left: 100%; background: linear-gradient(to left, transparent, #3ecf8e); }
       .flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; border-radius: 10px; }
 
-      /* ── board cut, full-frame image swap ─────────────────────────────── */
-      .board-overlay { position: absolute; inset: 0; z-index: 8; opacity: 0; background: #0e0f14; overflow: hidden; }
-      .board-wrap { position: absolute; top: 0; left: 0; width: 1920px; height: 1200px; margin-top: -60px; transform-origin: 0 0; }
+      /* ── board cut, image swap that fills the top 930px, above the caption band ─ */
+      .board-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 150px; z-index: 8; opacity: 0; background: #0e0f14; overflow: hidden; }
+      .board-wrap { position: absolute; top: 0; left: 0; width: 1920px; height: 1200px; margin-top: -135px; transform-origin: 0 0; }
       .board-wrap img { position: absolute; inset: 0; width: 1920px; height: 1200px; display: block; }
       .board-highlight {
         position: absolute; border: 3px solid #e53625; border-radius: 10px; opacity: 0;
@@ -280,7 +282,7 @@
           </div>
         </div>
 
-        <div class="card-overlay" id="card-overlay" data-layout-allow-overlap data-layout-allow-occlusion></div>
+        <div class="caption-band" id="caption-band" data-layout-allow-overlap data-layout-allow-occlusion></div>
       </section>
     </div>
 
@@ -810,8 +812,9 @@
       // zoom that frames the Ready column, with Backlog and In progress partly visible
       const ZOOM = 1.6;
       const ZOOM_CX = 594, ZOOM_CY = 688; // region centre in board-wrap space
+      // board viewport is 1920×930 (top 930px, above the 150px caption band), so its centre is (960, 465)
       const zoomX = 960 - ZOOM * ZOOM_CX;
-      const zoomY = 540 - ZOOM * ZOOM_CY;
+      const zoomY = 465 - ZOOM * ZOOM_CY;
 
       tl.set(boardWrap, { x: 0, y: 0, scale: 1 }, T_BOARD);
       tl.set([hl244, hl251, hl262], { autoAlpha: 0 }, T_BOARD);
@@ -840,7 +843,7 @@
       // full herdr view, holds through the loop point
       const T_FULL = T_CUT_FADE + 0.3;
 
-      // ── caption cards, centred band, one visible at a time ────────────────
+      // ── captions, band below the workspace, one visible at a time ────────
       const CARDS = [
         [0.0, STR.captions[0]],
         [T_WELCOME - 0.1, STR.captions[1]],
@@ -857,24 +860,32 @@
         [T_DONE_CUT, STR.captions[12]],
         [T_FULL, STR.captions[13]],
       ];
-      const cardOverlay = document.getElementById('card-overlay');
+      const captionBand = document.getElementById('caption-band');
       const cardEls = CARDS.map(([t, html]) => {
         const el = document.createElement('div');
-        el.className = 'card';
+        el.className = 'caption';
         el.setAttribute('data-layout-allow-overlap', '');
         el.setAttribute('data-layout-allow-occlusion', '');
         el.innerHTML = html;
-        cardOverlay.appendChild(el);
+        captionBand.appendChild(el);
         return el;
       });
       const FADE = 0.25;
       const TOTAL_DURATION = 70;
+      // fade-out boundary uses the next trigger in chronological order, not array-declaration
+      // order: the builder/board timing chain interleaves so a later-declared caption (e.g. the
+      // ticket-close beat) can actually land earlier on the timeline than one declared before it.
+      const TRIGGER_TIMES = CARDS.map(([t]) => t).slice().sort((a, b) => a - b);
+      function nextTriggerAfter(t) {
+        for (const x of TRIGGER_TIMES) { if (x > t) return x; }
+        return TOTAL_DURATION;
+      }
       CARDS.forEach(([t], i) => {
         const el = cardEls[i];
-        const next = CARDS[i + 1] ? CARDS[i + 1][0] : TOTAL_DURATION;
         if (!CARDS[i][1]) return;
-        tl.to(el, { autoAlpha: 1, duration: FADE }, t);
-        tl.to(el, { autoAlpha: 0, duration: FADE }, next - FADE);
+        const next = nextTriggerAfter(t);
+        tl.fromTo(el, { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: FADE }, t);
+        tl.to(el, { autoAlpha: 0, y: -8, duration: FADE }, next - FADE);
       });
 
       window.__timelines['main'] = tl;
