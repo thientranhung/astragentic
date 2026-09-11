@@ -22,7 +22,7 @@ const { lang } = Astro.props;
 const page = await getPage(lang, 'structure');
 
 const stackRoute = ROUTES.stack[lang];
-const evidenceRoute = ROUTES.evidence[lang];
+const failuresRoute = ROUTES.failures[lang];
 const structureMap: Record<string, string> = {
   runtime: '#runtime',
   harness: '#harness',
@@ -34,7 +34,7 @@ const structureMap: Record<string, string> = {
   roles: roleHref(lang, 'thomas'),
   skills: ROUTES.skills[lang],
   hooks: ROUTES.hooks[lang],
-  ledger: evidenceRoute,
+  ledger: failuresRoute,
   tracker: termHref(lang, 'tracker'),
   herdr: `${stackRoute}#herdr`,
   worktrees: termHref(lang, 'worktree'),
@@ -95,7 +95,6 @@ const heading = lang === 'vi' ? 'Astragentic gồm bốn lớp' : 'Astragentic i
                   {meta.cited} <span class="slash">/</span> {meta.total}
                 </span>
                 <span class="count-label mono">{UI.footerCited[lang]}</span>
-                <a class="count-link mono" href={evidenceRoute}>{UI.openLedger[lang]}</a>
               </p>
             )}
           </li>

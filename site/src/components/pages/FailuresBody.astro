@@ -67,7 +67,7 @@ const perStage = ORDER.map((stage) => ({
                   size="lg"
                   costLine={failure.costLine}
                   anchorId={slug}
-                  href={`${ROUTES.evidence[lang]}#${slug}`}
+                  href={`#${slug}`}
                 />
                 <div class="prose-under">
                   <Prose html={page.sections[slug] ?? ''} class="read-body" />
@@ -80,9 +80,6 @@ const perStage = ORDER.map((stage) => ({
     ))
   }
 
-  <p class="tail">
-    <a class="more-link" href={ROUTES.evidence[lang]}>{UI.wholeTable[lang]}</a>
-  </p>
 </DocsLayout>
 
 <style>

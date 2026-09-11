@@ -1,5 +1,5 @@
 ---
-import { entryBody, entryExcerpt, entryHtml, ledgerHref, type LedgerRow } from '../lib/data';
+import { entryBody, entryExcerpt, entryHtml, hasLesson, ledgerHref, type LedgerRow } from '../lib/data';
 import { ROUTES, type Lang } from '../lib/site';
 
 interface Props {
@@ -11,7 +11,8 @@ interface Props {
   costLine?: string;
   /** One Vietnamese/English sentence of the writer's, already HTML. */
   noteHtml?: string;
-  /** Where the AST code points. Defaults to the ledger table row on /evidence. */
+  /** Where the AST code points. Defaults to the lesson on the failures page when the
+   *  row has one; otherwise the code is printed without a link. */
   href?: string;
   anchorId?: string;
   /** 'sm' cards on the rail sit in a 7-column grid; drop the excerpt there. */
@@ -20,7 +21,7 @@ interface Props {
 const { row, lang, size = 'lg', costLine, noteHtml, href, anchorId, compact = false } = Astro.props;
 
 const slug = row.id.toLowerCase();
-const target = href ?? `${ROUTES.evidence[lang]}#${slug}`;
+const target = href ?? (hasLesson(row.id) ? `${ROUTES.failures[lang]}#${slug}` : undefined);
 const body = entryExcerpt(row, size === 'lg' ? 460 : 150);
 const promoted = row.promotedOn ? `promoted ${row.promotedOn}` : row.status;
 ---
@@ -29,7 +30,7 @@ const promoted = row.promotedOn ? `promoted ${row.promotedOn}` : row.status;
   size === 'lg' ? (
     <article class="card card--lg" id={anchorId}>
       <header class="head">
-        <a href={target} class="ast id">{row.id}</a>
+        {target ? <a href={target} class="ast id">{row.id}</a> : <span class="ast id">{row.id}</span>}
         <span class="meta">{promoted}</span>
       </header>
 

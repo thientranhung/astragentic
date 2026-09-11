@@ -101,7 +101,6 @@ export async function getNavTree(lang: Lang): Promise<NavSection[]> {
       ),
     },
     { id: 'failures', label: UI.sideFailures[lang], href: ROUTES.failures[lang] },
-    { id: 'evidence', label: UI.sideEvidence[lang], href: ROUTES.evidence[lang] },
     { id: 'adopt', label: UI.sideAdopt[lang], href: ROUTES.adopt[lang] },
   ];
 }

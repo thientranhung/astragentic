@@ -7,7 +7,7 @@ import Diagram from '../Diagram.astro';
 import Prose from '../Prose.astro';
 import { getPage } from '../../lib/pages';
 import { HOOKS } from '../../lib/anchors';
-import { byId } from '../../lib/data';
+import { byId, hasLesson } from '../../lib/data';
 import { ROUTES, REPO, UI, type Lang } from '../../lib/site';
 
 interface Props {
@@ -15,7 +15,7 @@ interface Props {
 }
 const { lang } = Astro.props;
 const page = await getPage(lang, 'hooks');
-const evidenceRoute = ROUTES.evidence[lang];
+const failuresRoute = ROUTES.failures[lang];
 
 const heading =
   lang === 'vi'
@@ -65,7 +65,11 @@ const lede =
                 {`harness/${hook.script} ↗`}
               </a>
             )}
-            <a class="ast" href={`${evidenceRoute}#${hook.ast.toLowerCase()}`}>{hook.ast}</a>
+            {hasLesson(hook.ast) ? (
+              <a class="ast" href={`${failuresRoute}#${hook.ast.toLowerCase()}`}>{hook.ast}</a>
+            ) : (
+              <span class="ast">{hook.ast}</span>
+            )}
             {row && <span class="lesson" lang="en">{row.lesson}</span>}
           </p>
         </section>

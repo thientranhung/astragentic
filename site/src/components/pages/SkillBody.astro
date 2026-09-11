@@ -9,7 +9,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 import Diagram from '../Diagram.astro';
 import GroupBadge from '../GroupBadge.astro';
 import { catalogLine, skillHref, type GroupId } from '../../lib/skills';
-import { ledger } from '../../lib/data';
+import { hasLesson, ledger } from '../../lib/data';
 import { ROUTES, REPO, UI, type Lang } from '../../lib/site';
 import { render } from 'astro:content';
 
@@ -30,7 +30,7 @@ const alternate = { vi: skillHref('vi', name), en: skillHref('en', name) };
 
 // Ledger rows that name this skill: the failures that shaped the procedure.
 const cited = ledger.filter((row) => (row.citedBy ?? []).includes(name));
-const evidenceRoute = ROUTES.evidence[lang];
+const failuresRoute = ROUTES.failures[lang];
 ---
 
 <DocsLayout
@@ -101,7 +101,11 @@ const evidenceRoute = ROUTES.evidence[lang];
               <dt class="mono">{UI.colCited[lang]}</dt>
               <dd class="cites">
                 {cited.map((row) => (
-                  <a class="ast" href={`${evidenceRoute}#${row.id.toLowerCase()}`}>{row.id}</a>
+                  hasLesson(row.id) ? (
+                    <a class="ast" href={`${failuresRoute}#${row.id.toLowerCase()}`}>{row.id}</a>
+                  ) : (
+                    <span class="ast">{row.id}</span>
+                  )
                 ))}
               </dd>
             </div>

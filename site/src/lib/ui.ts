@@ -34,7 +34,6 @@ export const UI = {
   sideWhy: { vi: 'Vì sao', en: 'Why' },
   sideStack: { vi: 'Tech stack', en: 'Tech stack' },
   sideFailures: { vi: 'Bài học', en: 'Lessons' },
-  sideEvidence: { vi: 'Bằng chứng', en: 'Evidence' },
   sideAdopt: { vi: 'Install', en: 'Adopt' },
   roleKey: { vi: 'Màu role trong hình', en: 'Role colours in this figure' },
 
@@ -102,7 +101,6 @@ export const UI = {
     en: 'The last 20 commits carrying a Ledger: line',
   },
   readAll: { vi: 'Khám phá sáu bài học đã đo được →', en: 'Explore the six measured lessons →' },
-  wholeTable: { vi: 'Khám phá toàn bộ ledger →', en: 'Explore the full ledger →' },
 
   /* ── adopt ── */
   installIt: { vi: 'Deploy vào repo của bạn →', en: 'Deploy to your repo →' },
@@ -170,7 +168,6 @@ export const UI = {
   structureTitle: { vi: 'Cấu trúc', en: 'Structure' },
   structureAll: { vi: 'Khám phá cấu trúc →', en: 'Explore the structure →' },
   goodParts: { vi: 'Các phần hay', en: 'The good parts' },
-  openLedger: { vi: 'Mở ledger →', en: 'Open the ledger →' },
   layers: { vi: 'Bốn lớp', en: 'Four layers' },
 
   /* ── nav ── */

@@ -57,6 +57,8 @@ export interface Meta {
 
 export const ledger = load<LedgerRow[]>('ledger', []);
 export const failures = load<Failure[]>('failures', []);
+/** True when the ledger row has a lesson on the failures page, so an AST code can link there. */
+export const hasLesson = (id: string): boolean => failures.some((f) => f.id.toLowerCase() === id.toLowerCase());
 export const adopt = load<Adopt>('adopt', { prerequisites: [], commands: [] });
 export const commits = load<Commit[]>('commits', []);
 export const meta = load<Meta>('meta', {

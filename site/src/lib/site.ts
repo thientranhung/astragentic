@@ -11,8 +11,7 @@ export type PageKey =
   | 'why'
   | 'stack'
   | 'adopt'
-  | 'failures'
-  | 'evidence';
+  | 'failures';
 
 /** English is the primary language and lives at `/`; Vietnamese mirrors under `/vi/`
  *  with its own slugs (decided 2026-09-11, swapping the earlier vi-first layout).
@@ -28,7 +27,6 @@ export const ROUTES: Record<PageKey, Record<Lang, string>> = {
   stack: { vi: '/vi/tech-stack', en: '/tech-stack' },
   adopt: { vi: '/vi/cai', en: '/adopt' },
   failures: { vi: '/vi/loi', en: '/failures' },
-  evidence: { vi: '/vi/bang-chung', en: '/evidence' },
 };
 
 /** Seven items, in the order the reader asks the questions (home v2 spec §Nav): why the

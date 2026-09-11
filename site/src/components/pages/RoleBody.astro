@@ -28,7 +28,6 @@ const hrefMap = Object.fromEntries(
   ROLE_IDS.filter((other) => other !== id).map((other) => [other, roleHref(lang, other)]),
 );
 const alternate = { vi: roleHref('vi', id), en: roleHref('en', id) };
-const evidenceRoute = ROUTES.evidence[lang];
 // The SVG tag reads `session: per ticket`; a writer may drop the prefix. Print one form.
 const sessionTag = `session: ${role.sessionTag.replace(/^session:\s*/i, '')}`;
 ---
@@ -97,7 +96,6 @@ const sessionTag = `session: ${role.sessionTag.replace(/^session:\s*/i, '')}`;
               lang={lang}
               size="sm"
               compact={true}
-              href={`${evidenceRoute}#${row.id.toLowerCase()}`}
             />
           ))}
         </div>
