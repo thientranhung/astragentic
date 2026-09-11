@@ -220,6 +220,7 @@ adopt:
     - title: "Kiểm máy có đủ tech stack chưa"
       lines: ["./check-requirements.sh"]
     - title: "Cài harness vào repo của bạn"
+      note: "Chạy từ thư mục **Astragentic**, trỏ tới thư mục dự án. Lệnh chỉ chép một bản release vào `.astraler/releases/` của dự án đó, không sửa file nào của bạn. Một bản Astragentic cài được cho nhiều dự án; bạn chỉnh và nâng cấp harness ở một chỗ rồi cài lại cho từng dự án."
       lines: ["./install.sh /path/to/your-repo"]
     - title: "Để Claude Code thích nghi harness với repo"
       note: "Đọc và thực thi ADAPT-HARNESS.md: đặt tên tracker, prefix ticket, đường dẫn docs."

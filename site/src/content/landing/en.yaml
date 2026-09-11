@@ -220,6 +220,7 @@ adopt:
     - title: "Check the machine has the tech stack"
       lines: ["./check-requirements.sh"]
     - title: "Install the harness into your repo"
+      note: "Run it from the **Astragentic** folder, pointing at the project folder. It only copies one release into that project's `.astraler/releases/` and edits none of your files. One Astragentic checkout serves many projects; you tune and upgrade the harness in one place, then install it again per project."
       lines: ["./install.sh /path/to/your-repo"]
     - title: "Let Claude Code adapt the harness to the repo"
       note: "Reads and executes ADAPT-HARNESS.md: tracker name, ticket prefix, docs paths."
