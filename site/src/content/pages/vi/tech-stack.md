@@ -13,33 +13,37 @@ dựng chính trang này.
 Runtime gốc. Agent của cả năm role đều chạy được ở đây, và `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium` là câu lệnh mở đầu một
 session. Nếu bạn chỉ cài đúng một runtime thì phải là runtime này.
 
-Đây cũng là nơi tôi đặt hai hook quan trọng nhất, vì hai cơ chế tôi cần chỉ tồn tại ở đây. Thứ
-nhất là chỗ tách system prompt khỏi contract: `.claude/agents/<role>.md` là system prompt và
-sống sót qua compaction, còn `.agents/roles/<role>.md` vào session như một tool result và bị
-compaction tóm tắt đi trước tiên. Thứ hai là chính compaction: Codex và OpenCode không có cơ
-chế đó, nên `hook-contract-reload.py` chỉ đăng ký ở Claude Code, và đó là quyết định có chủ
-đích chứ không phải chỗ quên.
+Nó bắt buộc vì hai cơ chế sau chỉ tồn tại ở đây:
+
+- **System prompt tách khỏi contract.** `.claude/agents/<role>.md` là system prompt và sống sót
+  qua compaction, còn `.agents/roles/<role>.md` vào session như một tool result và bị compaction
+  tóm tắt đi trước tiên.
+- **Compaction.** Codex và OpenCode không có cơ chế đó, nên `hook-contract-reload.py` chỉ đăng ký
+  ở Claude Code, và đó là quyết định có chủ đích chứ không phải chỗ quên.
 
 ## codex
 
-Runtime tuỳ chọn, và lý do nó có mặt là cross-vendor arm. Không có vendor thứ hai thì arm đó
-không tồn tại, và arm là cơ chế có sản lượng bắt lỗi cao nhất trong hệ này.
+Runtime tuỳ chọn, có mặt vì cross-vendor arm. Không có vendor thứ hai thì arm đó không tồn tại,
+và arm là cơ chế có sản lượng bắt lỗi cao nhất trong hệ này.
 
-Ba thư mục mang phần Codex: `.codex/profiles/` là template khởi động pane cho từng role,
-`.codex/agents/` là hai helper agent chỉ đọc, và `.codex/hooks.json` đăng ký git guard. Chỗ cần
-để ý là thư mục cuối: Codex duyệt định nghĩa hook project-local theo hash, nên nếu chưa có
-quyết định trust thì guard vẫn nằm đó, vẫn trông như đã cài, và bị bỏ qua. Doctor kiểm phần
-đăng ký, còn xác nhận trust thì phải gõ `/hooks` trong Codex CLI.
+Ba thư mục mang phần Codex:
+
+- **`.codex/profiles/`.** Template khởi động pane cho từng role.
+- **`.codex/agents/`.** Hai helper agent chỉ đọc.
+- **`.codex/hooks.json`.** Đăng ký git guard.
+
+Giới hạn nằm ở thư mục cuối: Codex duyệt định nghĩa hook project-local theo hash, nên nếu chưa có
+quyết định trust thì guard vẫn nằm đó, vẫn trông như đã cài, và bị bỏ qua. Doctor kiểm phần đăng
+ký, còn xác nhận trust thì phải gõ `/hooks` trong Codex CLI.
 
 ## opencode
 
 Runtime thứ ba cho dispatch role, adapter nằm ở `.opencode/agents/`. Nó có mặt để
 `.agents/orchestrator.md` không bị kẹt vào đúng một vendor.
 
-OpenCode yếu hơn hai runtime kia ở một chỗ: một Builder chạy OpenCode không có hook tương đương
-`hook-git-guard.py`. Đó là một trong hai lý do luật thứ tự dọn dẹp phải nằm trong
-`dispatch-ticket/CLEANUP.md` trước, trong hook sau. Lý do còn lại là cả Claude lẫn Codex cũng
-có thể chạy với hook tắt.
+Giới hạn: một Builder chạy OpenCode không có hook tương đương `hook-git-guard.py`. Đó là một
+trong hai lý do luật thứ tự dọn dẹp phải nằm trong `dispatch-ticket/CLEANUP.md` trước, trong hook
+sau. Lý do còn lại là cả Claude lẫn Codex cũng có thể chạy với hook tắt.
 
 ## git-worktree
 
@@ -49,10 +53,13 @@ riêng tại `.claude/worktrees/<branch-slug>`, đường dẫn tuyệt đối v
 trong đó. Thomas, Rin và Builder khác đều chỉ đọc, không ai ghi.
 
 Chỗ dễ hiểu nhầm là worktree giữ cái gì. Nó giữ nội dung git được track và không giữ gì khác:
-nó không cô lập database container, không cô lập tiến trình nền, không cô lập thứ mà một công
-cụ ghi ra một đường dẫn cố định bên ngoài checkout. Xoá thì phải bằng `git worktree remove`,
-không bao giờ bằng `rm -rf`. Xoá thô để lại đăng ký trong `.git/worktrees/`, rồi lần `add` sau
-ở đúng đường dẫn đó sẽ bị từ chối.
+
+- **Database container.** Không bị cô lập.
+- **Tiến trình nền.** Không bị cô lập.
+- **Đường dẫn cố định ngoài checkout.** Bất cứ gì một công cụ ghi ra đó cũng không bị cô lập.
+
+Xoá thì phải bằng `git worktree remove`, không bao giờ bằng `rm -rf`. Xoá thô để lại đăng ký
+trong `.git/worktrees/`, rồi lần `add` sau ở đúng đường dẫn đó sẽ bị từ chối.
 
 ## herdr
 
@@ -61,23 +68,26 @@ và cho phép nhắc, chờ, đọc từng pane. Đây là thứ biến dispatch
 được.
 
 `dispatch-ticket` từ chối dispatch nếu `herdr-watchdog.sh` chưa chạy, và nó kiểm ngay ở lần
-dispatch đầu tiên. Còn đây là chỗ tôi phải học lại: AST-107 cho thấy `herdr agent wait` không
-đáng tin cho phần verdict. Bây giờ `herdr-watch-terminal.sh` chờ theo lát 60 giây và lấy
-verdict từ một lệnh `herdr agent get` mới tinh ở mỗi lát; wait bị hạ xuống thành giấc ngủ có
-thể ngắt. Độ trễ phát hiện xấu nhất là 60 giây, không phải cả session.
+dispatch đầu tiên. Giới hạn tôi phải học lại: AST-107 cho thấy `herdr agent wait` không đáng tin
+cho phần verdict. Bây giờ `herdr-watch-terminal.sh` chờ theo lát 60 giây và lấy verdict từ một
+lệnh `herdr agent get` mới tinh ở mỗi lát; wait bị hạ xuống thành giấc ngủ có thể ngắt. Độ trễ
+phát hiện xấu nhất là 60 giây, không phải cả session.
 
 ## mattpocock-skills
 
-Toàn bộ phần craft được thuê từ đây, floor `>= 1.2.3`, cài dưới dạng plugin. `wayfinder`,
-`grill-with-docs`, `to-spec`, `to-tickets`, `implement` và `code-review` là các bước có người
-gọi; `grilling`, `tdd`, `codebase-design`, `domain-modeling`, `research`, `prototype`,
-`diagnosing-bugs`, `wizard` và `resolving-merge-conflicts` là phần craft model tự gọi khi
-cần.
+Toàn bộ phần craft được thuê từ đây, floor `>= 1.2.3`, cài dưới dạng plugin.
+
+- **Bước có người gọi.** `wayfinder`, `grill-with-docs`, `to-spec`, `to-tickets`, `implement`,
+  `code-review`.
+- **Phần craft model tự gọi khi cần.** `grilling`, `tdd`, `codebase-design`, `domain-modeling`,
+  `research`, `prototype`, `diagnosing-bugs`, `wizard`, `resolving-merge-conflicts`.
 
 Lợi ích của việc cài một lần là cả team có craft, vì skill model-invoked không cần đấu dây gì
-thêm. Cái giá là `check-requirements.sh` fail cứng khi thiếu nó, và địa chỉ
-`/mattpocock-skills:<name>` nằm rải khắp các contract. Đổi method là viết lại contract chứ
-không phải sửa một dòng config.
+thêm.
+
+**Cái giá.** `check-requirements.sh` fail cứng khi thiếu nó, và địa chỉ
+`/mattpocock-skills:<name>` nằm rải khắp các contract. Đổi method là viết lại contract chứ không
+phải sửa một dòng config.
 
 ## trackers
 
@@ -87,22 +97,26 @@ status biểu diễn thế nào, claim ghi ở đâu, blocking edge diễn đạ
 
 Thứ cố định không phải adapter mà là `.agents/tracker-contract.md`: năm thứ mà pipeline cần ở
 bất kỳ tracker nào. Nhờ vậy Thomas đọc `docs/agents/issue-tracker.md`, biết dự án này dùng
-adapter nào, rồi lái y hệt nhau bất kể backend. Cái giá đã nêu ở trang vì sao: mỗi backend mang
-theo cái bẫy riêng, và GitHub Issues không có trường status thật nên status phải nằm trong
-label.
+adapter nào, rồi lái y hệt nhau bất kể backend.
+
+**Cái giá.** Đã nêu ở trang vì sao: mỗi backend mang theo cái bẫy riêng, và GitHub Issues không
+có trường status thật nên status phải nằm trong label.
 
 ## scripts
 
-Phần Python và Bash tôi tự viết. Ba script đại diện cho ba loại: `hook-git-guard.py` chặn
-trong lúc quyền còn đang được quyết; `herdr-watchdog.sh` chạy nền suốt session và phải
-đang chạy trước mọi dispatch; `ledger-index.sh` chạy sau khi payload đổi, không phải sau khi công
-việc đổi.
+Phần Python và Bash tôi tự viết. Ba script đại diện cho ba loại:
+
+- **`hook-git-guard.py`.** Chặn trong lúc quyền còn đang được quyết.
+- **`herdr-watchdog.sh`.** Chạy nền suốt session và phải đang chạy trước mọi dispatch.
+- **`ledger-index.sh`.** Chạy sau khi payload đổi, không phải sau khi công việc đổi.
 
 Luật tôi rút ra: mỗi script phải có một khoảnh khắc gọi và một người sở hữu. Script thiếu một
-trong hai là script không ai chạy cho tới khi mọi chuyện đã hỏng. Bản 2.5.0 là bằng chứng
-ngược: nó ship adapter mang id ticket thật của một dự án khác, một index đã cũ, và hai contract
-vượt hạn mức chữ. Ba loại lỗi, không loại nào nhìn thấy được bằng cách đọc, tất cả do một giờ làm
-việc cẩn thận trước đó sinh ra. Bản 2.5.1 là đúng ba cái vá đó và không có gì khác.
+trong hai là script không ai chạy cho tới khi mọi chuyện đã hỏng.
+
+**Cái giá.** Bản 2.5.0 là bằng chứng ngược: nó ship adapter mang id ticket thật của một dự án
+khác, một index đã cũ, và hai contract vượt hạn mức chữ. Ba loại lỗi, không loại nào nhìn thấy
+được bằng cách đọc, tất cả do một giờ làm việc cẩn thận trước đó sinh ra. Bản 2.5.1 là đúng ba
+cái vá đó và không có gì khác.
 
 ## archify
 

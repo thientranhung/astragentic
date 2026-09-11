@@ -30,12 +30,12 @@ breath: `/usr/bin/git add -A` and `git -c k=v add -A` slipped through, while `pr
 and blocks the harmless one teaches its own operator to route around it, which is worse than no
 guard.
 
-Limit: this is an accidental-misuse lint, not a boundary. Three
-adversarial gates each found a fresh way through, and the third concluded the matcher was not
-converging. The answer was to shrink its claim rather than grow its rules. It now recognises one
-shape, simple commands separated by unquoted operators, and stays silent on anything containing
-a substitution, heredoc, comment, reserved word, wrapper or interpreter. Silence there is the
-design, not a gap: a coverage claim that is not true is worse than no claim.
+**Limit.** This is an accidental-misuse lint, not a boundary. Three adversarial gates each found
+a fresh way through, and the third concluded the matcher was not converging. The answer was to
+shrink its claim rather than grow its rules. It now recognises one shape, simple commands
+separated by unquoted operators, and stays silent on anything containing a substitution,
+heredoc, comment, reserved word, wrapper or interpreter. Silence there is the design, not a gap:
+a coverage claim that is not true is worse than no claim.
 
 There is also a reason it is a `.py` file rather than a shell line crammed into `settings.json`.
 The old version was exactly that line: unreadable, unrunnable by hand, untestable, and it sat
@@ -54,12 +54,12 @@ load-bearing. Resources bound to a directory, by cwd or by a label derived from 
 name the project computed from it, cannot be matched once the directory is gone, so this has to
 run before `git worktree remove` and never after (AST-100, AST-101).
 
-This hook is dormant. Measured 2026-08-20 with the very
-logging I added to answer the question. Three worktrees were removed after the log's last write,
-one of them by a plain `git worktree remove`, and the number of `WorktreeRemove` events recorded
-was zero. Meanwhile the `SubagentStop` hook in the same file and the same session logged 27
-events in that same window. I confirmed it a second, independent way: the shared test container
-was still `Up (healthy)` after the removal, which a live hook would have stopped.
+**Measurement.** This hook is dormant. Measured 2026-08-20 with the very logging I added to
+answer the question. Three worktrees were removed after the log's last write, one of them by a
+plain `git worktree remove`, and the number of `WorktreeRemove` events recorded was zero.
+Meanwhile the `SubagentStop` hook in the same file and the same session logged 27 events in that
+same window. I confirmed it a second, independent way: the shared test container was still `Up
+(healthy)` after the removal, which a live hook would have stopped.
 
 The cause is not that the hook is broken, it is that the hook is never reached. `WorktreeRemove`
 hangs off the `EnterWorktree` / `ExitWorktree` tool path, and Thomas removes worktrees with `git
@@ -77,8 +77,8 @@ does not fire, ask whether the trigger was reached before concluding the mechani
 It fires immediately after a Claude Code session compacts, with `source: compact`, and it runs
 `scripts/hook-contract-reload.py`.
 
-The script re-arms exactly one thing: the path to the running role's contract, delivered through
-`hookSpecificOutput.additionalContext`, reaching the agent before it acts.
+The script re-arms exactly one thing: the path to the contract of the role the agent is running,
+delivered through `hookSpecificOutput.additionalContext`, reaching the agent before it acts.
 
 The failure behind it is AST-069, and the one-line form is that an instruction with no moment
 attached measures zero. The system prompt already says "Read `.agents/roles/<role>.md` now", and

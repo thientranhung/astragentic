@@ -16,8 +16,9 @@ bước nào hỏi có bao nhiêu Builder đang chạy.
 
 Tôi sửa bằng cách cho frontier query một mục tiêu chứ không chỉ một trigger: sau mỗi lần
 merge, router phải hỏi nên claim thêm bao nhiêu ticket, không chỉ hỏi ticket nào claim được.
-Cái giá là router bận hơn và thỉnh thoảng claim quá tay. Tôi chấp nhận đánh đổi đó, vì một
-slot ngồi không thì không phát ra tín hiệu nào.
+
+**Cái giá.** Router bận hơn và thỉnh thoảng claim quá tay. Tôi chấp nhận đánh đổi đó, vì một slot
+ngồi không thì không phát ra tín hiệu nào.
 
 ## AST-097
 
@@ -27,8 +28,9 @@ suýt báo ticket đó bỏ dở, trong khi Builder đang ở phút thứ hai m�
 
 Thứ cứu được tình huống này không phải protocol, mà là artifact tự mâu thuẫn: file bị sửa chỉ
 có thêm đúng một dòng comment. Từ đó tôi bỏ hoàn toàn niềm tin vào trạng thái pane, và mỗi
-chữ `done` phải đọc diff trước khi kết luận. Cái giá là mỗi lần đóng ticket tốn thêm một vòng
-đọc.
+chữ `done` phải đọc diff trước khi kết luận.
+
+**Cái giá.** Mỗi lần đóng ticket tốn thêm một vòng đọc.
 
 ## AST-092
 
@@ -38,17 +40,21 @@ session, mỗi lần 93 tới 433 dòng, không lần nào lấy lại được.
 
 Tôi đặt chốt chặn ngay tại bước nguy hiểm thay vì trông vào việc Builder commit cẩn thận hơn.
 Cleanup phải đọc `git status` của worktree trước khi xoá; thấy dirty là dừng và đưa lại cho
-người. Cái giá là worktree mồ côi tồn đọng và thỉnh thoảng phải dọn tay. So với mất một ngày
-làm việc thì giá đó rẻ.
+người.
+
+**Cái giá.** Worktree mồ côi tồn đọng và thỉnh thoảng phải dọn tay. So với mất một ngày làm việc
+thì giá đó rẻ.
 
 ## AST-015
 
-Một bước export commit thẳng secret đang dùng thật và PII của người mua vào file được track. Vòng review
-same-vendor đọc qua và cho pass. Vòng cross-vendor bắt được và xếp mức P1.
+Một bước export commit thẳng secret đang dùng thật và PII của người mua vào file được track. Vòng
+review same-vendor đọc qua và cho pass. Vòng cross-vendor bắt được và xếp mức P1.
 
 Đó là lý do cuối phase vẫn còn một vòng arm chạy bằng vendor khác, dù tốn thêm tiền và thời
 gian. Hai lăng kính bắt hai loại lỗi khác nhau, và loại mà same-vendor bỏ sót là loại đắt nhất
-khi lọt. Một giá trị đã chạm vào file được track thì coi như cháy và phải rotate. Phía sau
+khi lọt.
+
+**Cái giá.** Một giá trị đã chạm vào file được track thì coi như cháy và phải rotate. Phía sau
 không có phương án nào rẻ hơn.
 
 ## AST-074
@@ -59,8 +65,10 @@ artifact nào ghi lại chỗ thiếu đó.
 
 Không check nào chỉ nhìn tracker mà bắt được lỗi này, vì một trạng thái sai vẫn nhất quán với
 chính nó. Tracker phải được đối chiếu với Git sau mỗi lần merge, thay vì tự xác nhận chính
-nó. Cái giá là thêm một bước reconcile không ai vui khi chạy, và phần lớn thời gian nó
-không tìm ra gì.
+nó.
+
+**Cái giá.** Thêm một bước reconcile không ai vui khi chạy, và phần lớn thời gian nó không tìm ra
+gì.
 
 ## AST-056
 
@@ -71,5 +79,7 @@ ra tín hiệu nào.
 
 Một worktree cho mỗi Builder chỉ giải quyết va chạm ở checkout. Nó dời va chạm xuống merge,
 chỗ tìm ra muộn và phải xử tay. Vì vậy ticket phải khai write-set, và những ticket có
-write-set giao nhau bị xếp tuần tự kể cả khi không có gì buộc chúng theo thứ tự. Cái giá là số
-ticket chạy song song giảm xuống, đúng thứ mà cả hệ thống này tồn tại để tăng lên.
+write-set giao nhau bị xếp tuần tự kể cả khi không có gì buộc chúng theo thứ tự.
+
+**Cái giá.** Số ticket chạy song song giảm xuống, đúng thứ mà cả hệ thống này tồn tại để tăng
+lên.
