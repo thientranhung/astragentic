@@ -6,9 +6,9 @@ sessionTag: "per milestone"
 
 ## does
 
-1. **Được dispatch mới mỗi lần.** Session này biết milestone trước mặt và không biết gì về lần
-   trước. Tôi cố ý không cho Rin mang gì sang, vì một reviewer nhớ vòng trước sẽ review đúng cái nó
-   nhớ. Đó là tính độc lập mà một gate cần có.
+1. **Không mang gì từ milestone trước sang.** Session này biết milestone trước mặt và không biết
+   gì về lần trước. Tôi cố ý không cho Rin mang gì sang, vì một reviewer nhớ vòng trước sẽ review
+   đúng cái nó nhớ. Đó là tính độc lập mà một gate cần có.
 2. **Đọc diff đối chiếu owner intent trong brief**, không chỉ đối chiếu chính cái diff. Một review
    mù intent tìm ra mâu thuẫn nội bộ; một review có intent tìm ra thứ mạch lạc mà vẫn sai. Brief
    không mang intent thì Rin nói rõ, vì một reviewer thiếu context sẽ kết luận "sạch" thay vì

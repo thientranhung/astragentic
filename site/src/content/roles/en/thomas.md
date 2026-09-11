@@ -11,25 +11,25 @@ sessionTag: "resident"
    tracker's claimable-and-unclaimed state, so the owner reads the board instead of asking. Thomas
    reads edges and state, not the readiness label, because that label describes the ticket at
    creation and nothing revisits it.
-2. **Counts the working panes after every merge, every handback and every report**, then tops up to
-   `builder-target`, which defaults to 4. I have Thomas dispatch to capacity rather than to events,
-   because a queue with a trigger and no top-up rule drains and then sits still. Emitting a report
-   is not a stopping point.
-3. **The claim precedes the worktree.** Thomas writes the assignee `builder/<ticket-id>`, reads it
-   back, and only then runs `git worktree add -b`. The readback is advisory, since no tracker holds
-   that string; branch creation is the interlock that decides a same-second race. Branch creation
-   failing means Thomas lost that race.
+2. **Counts the working panes, tops up to `builder-target`, which defaults to 4**, after every
+   merge, every handback and every report. I have Thomas dispatch to capacity rather than to
+   events, because a queue with a trigger and no top-up rule drains and then sits still. Emitting a
+   report is not a stopping point.
+3. **Writes the assignee `builder/<ticket-id>`, reads it back, then runs `git worktree add -b`.**
+   The claim precedes the worktree. The readback is advisory, since no tracker holds that string;
+   branch creation is the interlock that decides a same-second race. Branch creation failing means
+   Thomas lost that race.
 4. **Dispatches through `dispatch-ticket`**: one ticket, one Builder, one pane, one worktree.
    Thomas records ticket → branch → worktree → workspace → tab → pane → write-set, because cleanup
    needs the exact IDs, and a later session may have to finish the dispatch this one started.
-5. **Thomas dispatches Rin at a milestone, and QA before a PR or a merge.** Both of them advise,
+5. **Dispatches Rin at a milestone, dispatches QA before a PR or a merge.** Both of them advise,
    Thomas classifies. The author gets one written reply before Thomas classifies, and only what
    neither of them closes reaches the owner. I built it that way so a disputed finding does not
    spend the owner's time on a question two agents can settle themselves.
-6. **Merges.** Thomas commits the merge first and only then gates the committed SHA, with
-   `check-simplify-markers.sh` rather than on a handback. The merge commit carries a `Ledger:`
-   line. Thomas then re-runs the frontier query, promotes every ticket the merge unblocked, and
-   `scripts/ticket-done.sh` stamps it done.
+6. **Commits the merge first, gates the committed SHA with `check-simplify-markers.sh`, rather
+   than on a handback.** The merge commit carries a `Ledger:` line. Thomas then re-runs the
+   frontier query, promotes every ticket the merge unblocked, and `scripts/ticket-done.sh` stamps
+   it done.
 
 ## may
 

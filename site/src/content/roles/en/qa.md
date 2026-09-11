@@ -18,18 +18,19 @@ sessionTag: "per walk"
    finishes are two different claims; do the endpoints behave as documented, error paths included;
    and data as experienced, meaning whether the numbers agree across the places that show them. Two
    screens printing different totals for one concept is the defect I built this role to catch.
-4. **Text first, pixels second.** A structural question, such as whether a control exists, whether
-   a link resolves, or how many rows there are, goes to the DOM or the accessibility tree. QA
-   captures pixels only where the judgement is visual: hierarchy, spacing, a state that reads
-   wrong. One viewport is the default, more when the change touches responsive layout.
+4. **Sends structural questions to the DOM or accessibility tree, captures pixels only where the
+   judgement is visual.** A structural question, such as whether a control exists, whether a link
+   resolves, or how many rows there are, goes to the DOM or the accessibility tree. QA captures
+   pixels only where the judgement is visual: hierarchy, spacing, a state that reads wrong. One
+   viewport is the default, more when the change touches responsive layout.
 5. **Opens the report with its plan**: persona, data state, surfaces and endpoints in scope
    including the unchanged ones, what correct means by path, and the journeys. Only after the plan
    comes what QA saw, in the order it saw it. The report separates broken from inconsistent, and a
    defect from an environment artifact.
-6. **COVERAGE GAPS are a first-class section**: mutations QA declined, screens QA could not reach,
-   judgements QA left aside in order to leave real data unread. Without that section a declined
-   walk and a clean one look identical. The full report goes to `$GATE_FILE`, the verified-clean
-   list to `$VERIFIED_CLEAN_FILE`, and a `qa(walk):` marker is committed at the walked head.
+6. **Sends the full report to `$GATE_FILE`, the verified-clean list to `$VERIFIED_CLEAN_FILE`, and
+   commits a `qa(walk):` marker at the walked head.** COVERAGE GAPS are a first-class section:
+   mutations QA declined, screens QA could not reach, judgements QA left aside in order to leave
+   real data unread. Without that section a declined walk and a clean one look identical.
 
 ## may
 

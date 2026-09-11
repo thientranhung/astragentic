@@ -10,21 +10,20 @@ sessionTag: "unbroken"
    the one who answers them. That is what this harness contributes, and it is also its sharpest
    risk: a proxy answering from its own judgement empties the frontier immediately, which looks
    like progress and is not progress.
-2. **Every answer carries a source**: the codebase, a prior ADR, `research`, `prototype`, or a
-   second opinion. The Shaper records which one. An answer with no source leaves the question open,
-   and open is the correct outcome. Thomas takes that question to the owner.
-3. **`to-spec`** turns the answered frontier into a spec that states what is being built and how it
-   will be known to work. The spec publishes at `needs-triage` and drops the label in the same turn
-   `to-spec` closes, because `ready-for-agent` is exactly the label Thomas's frontier query treats
-   as claimable.
-4. **It stops after Spec and waits.** `arm: spec` runs inside that pause. This is the only moment
-   where the spec exists and the tickets do not. I had to cut this pause in because the old
-   contract closed at "when to-tickets is done", so the gate had no window to run in: it silently
-   skipped two consecutive slices, the second a 44k spec with ten tickets.
-5. **A blocking finding is repaired in the spec, here, before any ticket is cut.** The Shaper
-   repairs, re-commits, and the second pass runs over the whole revised spec before Thomas releases
-   it.
-6. **`to-tickets`** once Thomas releases it: each ticket independently buildable, sized to one
+2. **Records a source for every answer**: the codebase, a prior ADR, `research`, `prototype`, or a
+   second opinion. An answer with no source leaves the question open, and open is the correct
+   outcome. Thomas takes that question to the owner.
+3. **Runs `to-spec`, turns the answered frontier into a spec** that states what is being built and
+   how it will be known to work. The spec publishes at `needs-triage` and drops the label in the
+   same turn `to-spec` closes, because `ready-for-agent` is exactly the label Thomas's frontier
+   query treats as claimable.
+4. **Stops after Spec so `arm: spec` can run inside that pause.** This is the only moment where the
+   spec exists and the tickets do not. I had to cut this pause in because the old contract closed
+   at "when to-tickets is done", so the gate had no window to run in: it silently skipped two
+   consecutive slices, the second a 44k spec with ten tickets.
+5. **Repairs a blocking finding in the spec, here, before any ticket is cut.** The Shaper repairs,
+   re-commits, and the second pass runs over the whole revised spec before Thomas releases it.
+6. **Runs `to-tickets` once Thomas releases it**: each ticket independently buildable, sized to one
    session, with its blocking edges set. Those edges outlive this session, because the frontier
    query reads them to decide which ticket is ready.
 

@@ -17,18 +17,19 @@ sessionTag: "per walk"
    API và contract có đúng như tài liệu không, kể cả nhánh lỗi; và data as experienced, tức các con
    số ở những nơi khác nhau có khớp nhau không. Hai màn hình in hai tổng khác nhau cho cùng một
    khái niệm là đúng defect mà tôi dựng role này để bắt.
-4. **Text trước, pixel sau.** Câu hỏi cấu trúc, chẳng hạn một control có tồn tại không, một link có
-   resolve không, có bao nhiêu dòng, thì hỏi DOM hoặc accessibility tree. QA chỉ chụp ảnh khi phán
-   đoán thuộc về thị giác: thứ bậc, khoảng cách, một trạng thái đọc lên thấy sai. Một viewport là
-   mặc định, thêm viewport khi thay đổi chạm responsive layout.
+4. **Hỏi DOM hoặc accessibility tree cho câu hỏi cấu trúc, chụp ảnh chỉ khi phán đoán thuộc thị
+   giác.** Câu hỏi cấu trúc, chẳng hạn một control có tồn tại không, một link có resolve không, có
+   bao nhiêu dòng, thì hỏi DOM hoặc accessibility tree. QA chỉ chụp ảnh khi phán đoán thuộc về thị
+   giác: thứ bậc, khoảng cách, một trạng thái đọc lên thấy sai. Một viewport là mặc định, thêm
+   viewport khi thay đổi chạm responsive layout.
 5. **Mở report bằng plan**: persona, tình trạng dữ liệu, bề mặt và endpoint trong scope kể cả những
    cái không đổi, "đúng" nghĩa là gì theo từng path, và các journey. Sau plan mới tới những gì QA
    thấy, theo đúng thứ tự đã thấy. Report tách broken khỏi inconsistent, và tách một defect khỏi
    một artifact của môi trường.
-6. **COVERAGE GAPS là một mục hạng nhất**: mutation QA từ chối, màn hình QA không mở được, phán
-   đoán QA bỏ lại để khỏi phải đọc dữ liệu thật. Thiếu mục đó thì một walk bị từ chối và một walk
-   sạch nhìn giống hệt nhau. Report đầy đủ ghi vào `$GATE_FILE`, verified-clean list vào
-   `$VERIFIED_CLEAN_FILE`, và một marker `qa(walk):` được commit ở head đã đi.
+6. **Ghi report đầy đủ vào `$GATE_FILE`, verified-clean list vào `$VERIFIED_CLEAN_FILE`, và commit
+   marker `qa(walk):` ở head đã đi.** COVERAGE GAPS là một mục hạng nhất: mutation QA từ chối, màn
+   hình QA không mở được, phán đoán QA bỏ lại để khỏi phải đọc dữ liệu thật. Thiếu mục đó thì một
+   walk bị từ chối và một walk sạch nhìn giống hệt nhau.
 
 ## may
 

@@ -6,24 +6,24 @@ sessionTag: "per ticket"
 
 ## does
 
-1. **`implement`.** The skill builds, runs typechecks and tests, then commits. The skill knows
-   nothing about acceptance criteria, so checking the ticket's criteria one by one is the Builder's
-   job, after the skill returns.
-2. **`code-review` with the exact `Base:` the brief carries.** "The increment" is not a git ref,
-   and without one the skill asks into a pane with nobody to answer. Both axes run once: Standards
-   is what this repo actually documents, Spec is what the ticket asked for. Where the repo
-   documents little, the Standards axis degrades into a generic review, and the Builder has to say
-   so. Silent degradation of that kind is the failure class this harness exists to catch.
-3. **The simplify pass** runs per the runtime supplement and leaves a `simplify(increment):` commit
+1. **Runs `implement`: builds, typechecks, tests, then commits.** The skill knows nothing about
+   acceptance criteria, so checking the ticket's criteria one by one is the Builder's job, after
+   the skill returns.
+2. **Runs `code-review` with the exact `Base:` the brief carries.** "The increment" is not a git
+   ref, and without one the skill asks into a pane with nobody to answer. Both axes run once:
+   Standards is what this repo actually documents, Spec is what the ticket asked for. Where the
+   repo documents little, the Standards axis degrades into a generic review, and the Builder has to
+   say so. Silent degradation of that kind is the failure class this harness exists to catch.
+3. **Runs the simplify pass per the runtime supplement, leaves a `simplify(increment):` commit**
    whose body names the pass that ran.
-4. **`arm: ticket`** runs from the Builder's own worktree and calls the other vendor. The Builder
+4. **Runs `arm: ticket` from the Builder's own worktree, calls the other vendor.** The Builder
    folds by class rather than by instance, and states what it leaves behind. The receipt is an
    empty commit at the head, so the receipt's parent is exactly the tree the gate read. I put the
    trigger here so the gate sits inside the tree it reads, instead of on Thomas's turn.
-5. **Every user-visible surface carries browser evidence**: what was looked at, at what viewport,
-   and what was seen. A correct diff can still produce a control that is technically right and
-   sinks below the visual hierarchy. A ticket that touches no surface skips this step, and the
-   Builder names that skip in the handback.
+5. **Captures browser evidence for every user-visible surface**: what was looked at, at what
+   viewport, and what was seen. A correct diff can still produce a control that is technically
+   right and sinks below the visual hierarchy. A ticket that touches no surface skips this step,
+   and the Builder names that skip in the handback.
 6. **Commit, push, then return to Thomas**: three actions in the last turn, not a description of an
    end state. Uncommitted work does not exist in git, and cleanup removes the worktree. Before
    returning, the Builder verifies itself with `scripts/check-simplify-markers.sh`.

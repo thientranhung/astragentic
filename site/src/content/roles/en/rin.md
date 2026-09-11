@@ -6,9 +6,10 @@ sessionTag: "per milestone"
 
 ## does
 
-1. **Dispatched fresh every time.** This session knows the milestone in front of it and nothing
-   about the last one. I deliberately let Rin carry nothing over, because a reviewer that remembers
-   the previous round reviews exactly what it remembers. That is the independence a gate needs.
+1. **Carries nothing over from the last milestone.** This session knows the milestone in front of
+   it and nothing about the last one. I deliberately let Rin carry nothing over, because a reviewer
+   that remembers the previous round reviews exactly what it remembers. That is the independence a
+   gate needs.
 2. **Reads the diff against the owner intent in its brief**, not only against the diff itself. An
    intent-blind review finds internal inconsistencies; an intent-loaded one finds work that is
    coherent and still wrong. Where the brief carries no intent Rin says so, because a reviewer

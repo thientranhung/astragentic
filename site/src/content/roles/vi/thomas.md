@@ -10,24 +10,23 @@ sessionTag: "resident"
    assignee còn trống. Thomas viết câu trả lời lên board, ở trạng thái claimable-and-unclaimed của
    tracker, để owner nhìn board là thấy. Thomas đọc edges và state, không đọc readiness label, vì
    label đó tả ticket lúc nó được tạo và không ai quay lại sửa.
-2. **Đếm pane đang chạy sau mỗi merge, mỗi handback, mỗi report**, rồi bù về `builder-target`, mặc
-   định 4. Tôi cho Thomas dispatch theo capacity chứ không theo sự kiện, vì một hàng đợi chỉ có
+2. **Đếm pane đang chạy, bù về `builder-target`, mặc định 4**, sau mỗi merge, mỗi handback, mỗi
+   report. Tôi cho Thomas dispatch theo capacity chứ không theo sự kiện, vì một hàng đợi chỉ có
    trigger mà không có luật bù sẽ cạn rồi nằm im. Phát ra một report không phải là điểm dừng.
-3. **Claim trước, worktree sau.** Thomas ghi assignee `builder/<ticket-id>`, đọc lại, rồi mới chạy
-   `git worktree add -b`. Readback chỉ có giá trị tư vấn vì không tracker nào giữ được chuỗi đó;
-   tạo branch mới là interlock quyết định một cuộc đua cùng giây. Tạo branch fail nghĩa là Thomas
-   thua cuộc đua đó.
+3. **Ghi assignee `builder/<ticket-id>`, đọc lại, rồi chạy `git worktree add -b`.** Claim trước,
+   worktree sau. Readback chỉ có giá trị tư vấn vì không tracker nào giữ được chuỗi đó; tạo branch
+   mới là interlock quyết định một cuộc đua cùng giây. Tạo branch fail nghĩa là Thomas thua cuộc
+   đua đó.
 4. **Dispatch qua `dispatch-ticket`**: một ticket, một Builder, một pane, một worktree. Thomas ghi
    lại ticket → branch → worktree → workspace → tab → pane → write-set, vì cleanup cần đúng ID, và
    một session sau có thể phải kết thúc cái dispatch mà session này bắt đầu.
-5. **Ở milestone Thomas dispatch Rin, trước PR hoặc merge thì dispatch QA.** Cả hai đưa lời khuyên,
-   Thomas phân loại. Tác giả được trả lời đúng một lần trước khi Thomas phân loại, và chỉ thứ nào
-   cả hai không đóng được mới tới owner. Tôi dựng như vậy để một finding tranh cãi không tiêu tốn
-   thời gian của owner cho câu hỏi mà hai agent tự giải quyết được.
-6. **Merge.** Thomas commit merge trước rồi mới gate trên SHA đã commit, bằng
-   `check-simplify-markers.sh` chứ không bằng lời hand-back. Merge commit mang một dòng `Ledger:`.
-   Xong thì Thomas chạy lại frontier query, promote mọi ticket vừa được mở khoá, và
-   `scripts/ticket-done.sh` đóng dấu hoàn tất.
+5. **Dispatch Rin ở milestone, dispatch QA trước PR hoặc merge.** Cả hai đưa lời khuyên, Thomas
+   phân loại. Tác giả được trả lời đúng một lần trước khi Thomas phân loại, và chỉ thứ nào cả hai
+   không đóng được mới tới owner. Tôi dựng như vậy để một finding tranh cãi không tiêu tốn thời
+   gian của owner cho câu hỏi mà hai agent tự giải quyết được.
+6. **Commit merge trước, gate trên SHA đã commit bằng `check-simplify-markers.sh`, chứ không bằng
+   lời hand-back.** Merge commit mang một dòng `Ledger:`. Xong thì Thomas chạy lại frontier query,
+   promote mọi ticket vừa được mở khoá, và `scripts/ticket-done.sh` đóng dấu hoàn tất.
 
 ## may
 
