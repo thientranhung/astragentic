@@ -39,6 +39,7 @@ each agent by hand.
 Cost: one more toolset to install, understand and upgrade, and every upgrade is an event the
 project has to absorb. And so far I have proven that each tool runs correctly; the whole loop from
 dispatch to merge with every gate firing on real work is still being measured.
+
 ## why-tracker
 
 The state of the work has to live somewhere an agent cannot keep in its context and you can open

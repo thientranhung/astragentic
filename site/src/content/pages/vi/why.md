@@ -38,6 +38,7 @@ agent.
 Cái giá: thêm một bộ công cụ phải cài, hiểu và nâng cấp, và mỗi bản nâng cấp là một sự kiện dự
 án phải hấp thụ. Và tới nay tôi mới chứng minh được từng công cụ chạy đúng; cả vòng từ dispatch
 tới merge với đủ gate trên việc thật vẫn đang được đo.
+
 ## why-tracker
 
 Trạng thái công việc phải sống ở một chỗ mà agent không giữ được trong context và bạn mở ra
