@@ -35,7 +35,7 @@ sessionTag: "per walk"
 - **Từ chối walk** khi dispatch không mang consent, và ghi lại thành một COVERAGE GAP.
 - **Ghi COVERAGE GAP.** Thay vì click, mỗi khi còn phân vân.
 - **Hỏi lại** khi dispatch không nói rõ môi trường lẫn nguồn gốc dữ liệu.
-- **Walk không áp dụng.** Nói rõ điều đó, với một library, một CLI hay một pipeline không có bề
+- **Nói rõ khi walk không áp dụng**, với một library, một CLI hay một pipeline không có bề
   mặt nào.
 - **Bề mặt không exercise được.** Coi đó là một finding.
 - **Quyết định thuộc sản phẩm.** Đưa cho owner qua `to-questionnaire`, thay vì đẩy cho Builder như

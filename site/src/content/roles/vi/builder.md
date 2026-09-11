@@ -33,8 +33,7 @@ sessionTag: "per ticket"
 - **Seam tự thân.** Tự tạo một seam nhỏ.
 - **Hỏi khi mơ hồ.** Hỏi Thomas khi brief thật sự mơ hồ. Một câu hỏi tốn một lượt trao đổi, một
   giả định sai tốn cả ticket.
-- **Phản hồi một finding.** Trả lời một finding mà Builder không đồng ý: bằng văn bản, một lần,
-  gửi Thomas.
+- **Phản hồi một finding không đồng ý** bằng văn bản, một lần, gửi Thomas.
 - **Trigger gate.** Chạy `arm: ticket` từ worktree của Builder. Đây là gate duy nhất có trigger
   nằm ở role này.
 - **Retract marker.** Retract một marker bằng dòng `Supersedes:`.
