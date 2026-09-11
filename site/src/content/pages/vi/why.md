@@ -98,15 +98,15 @@ Chúng không đủ để điều phối một team. Bốn điều còn thiếu 
 có tín hiệu nào báo ra.
 
 - **Checkout dùng chung.** Subagent chạy trong cùng worktree với session cha, nên nhiều agent kéo
-  HEAD của nhau đi. AST-016 bắt được một reviewer chỉ đọc đã `git switch` checkout của người khác.
+  HEAD của nhau đi. Một lần đo (`AST-016`) bắt được một reviewer chỉ đọc đã `git switch` checkout của người khác.
 - **Context dùng chung.** Một fork thừa kế nguyên context của cha, kèm cả những gì không ai định
-  trao. AST-006: fork thừa kế cả model của cha, nên việc đáng chạy bằng model rẻ lại chạy bằng model
-  đắt nhất. AST-119: một fork bên trong Builder gửi báo cáo kết thúc việc, gọi là handback, cho dispatcher dưới đúng tên Builder,
-  và Builder không hề thấy. AST-130: một fork ký marker `simplify(increment):` lên code do chính nó
+  trao. Một lần (`AST-006`), fork thừa kế cả model của cha, nên việc đáng chạy bằng model rẻ lại chạy bằng model
+  đắt nhất. Lần khác (`AST-119`), một fork bên trong Builder gửi báo cáo kết thúc việc, gọi là handback, cho dispatcher dưới đúng tên Builder,
+  và Builder không hề thấy. Và (`AST-130`) một fork ký marker `simplify(increment):` lên code do chính nó
   vừa commit, đúng form được phép.
 - **Không có tracker giữ trạng thái.** Trạng thái của subagent nằm trong context của session cha,
   mất đi khi session compact, và trong lúc tồn tại thì bạn không đọc được.
-- **Không có pane để nhìn.** AST-018: một lần dispatch chỉ được kể ra bằng chữ mà chưa từng được
+- **Không có pane để nhìn.** Một lần đo (`AST-018`): một lần dispatch chỉ được kể ra bằng chữ mà chưa từng được
   gọi. Một pane trong herdr là thứ đếm được; một subagent trong tiến trình thì không.
 - **Không có AI của hãng khác.** Subagent của Claude vẫn là Claude, nên không có lượt review chéo.
 
@@ -153,10 +153,10 @@ OpenAI.
 Lượt đọc lại đó gọi là arm. Cơ chế thì đơn giản: arm đọc cả repository, còn tác giả chỉ đọc ticket. Nên arm bắt được mâu thuẫn với
 chính tiêu chuẩn dự án đã khai, điều người viết code khó nhận ra vì đang làm theo yêu cầu của ticket.
 
-- **AST-015.** Một vòng review cùng hãng cho lọt một defect đem secret đang dùng thật và PII của
-  người mua vào file được track. Lượt đọc của hãng khác bắt được và xếp P1.
-- **AST-012.** Hai lăng kính bắt hai loại defect khác nhau, nên chúng chạy song song chứ không thay
-  thế nhau.
+- **Một defect lọt qua vòng cùng hãng** (`AST-015`): nó đem secret đang dùng thật và PII của người
+  mua vào file được track. Lượt đọc của hãng khác bắt được và xếp P1.
+- **Hai lăng kính bắt hai loại defect khác nhau** (`AST-012`), nên chúng chạy song song chứ không
+  thay thế nhau.
 - **Một ca trên diff lớn.** 6.904 dòng thêm mới trên 31 file đi qua lượt đọc cùng hãng bỏ sót ba
   test rỗng. Lượt đọc phạm vi ticket trên diff nhỏ hơn bắt được một deadlock thật mà bản vá của lượt
   trước vừa tạo ra.

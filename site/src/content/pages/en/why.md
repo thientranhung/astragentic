@@ -99,17 +99,17 @@ They are not enough to coordinate a team. The four things missing share one trai
 goes wrong, nothing signals it.
 
 - **A shared checkout.** A subagent runs in the same worktree as its parent session, so several
-  agents drag each other's HEAD around. AST-016 caught a read-only reviewer running `git switch` on
+  agents drag each other's HEAD around. One measurement (`AST-016`) caught a read-only reviewer running `git switch` on
   someone else's checkout.
 - **A shared context.** A fork inherits its parent's whole context, including what nobody meant to
-  hand over. AST-006: a fork inherited the parent's model, so a job meant for a cheap model ran on
-  the most expensive one. AST-119: a fork inside a Builder sent the
+  hand over. Once (`AST-006`), a fork inherited the parent's model, so a job meant for a cheap model ran on
+  the most expensive one. Another time (`AST-119`), a fork inside a Builder sent the
   end-of-work report, called a handback, to the dispatcher under the Builder's own name, and the
-  Builder never saw it. AST-130: a fork signed a
+  Builder never saw it. And (`AST-130`) a fork signed a
   `simplify(increment):` marker onto code it had just committed itself, in the permitted form.
 - **No tracker holding state.** A subagent's state lives in the parent session's context,
   disappears when the session compacts, and while it exists you cannot read it.
-- **No pane to look at.** AST-018: a dispatch was narrated in words and never actually called. A
+- **No pane to look at.** One measurement (`AST-018`): a dispatch was narrated in words and never actually called. A
   pane in herdr can be counted; an in-process subagent cannot.
 - **No AI from another vendor.** A Claude subagent is still Claude, so there is no cross review.
 
@@ -160,10 +160,10 @@ while the author only reads the ticket. So the arm
 catches contradictions with the project's own declared standards, which the author can hardly see
 while working to the ticket.
 
-- **AST-015.** A same-vendor review let through a defect that put a live secret and buyer PII into
-  a tracked file. The other vendor's pass caught it and filed it as P1.
-- **AST-012.** Two lenses catch two classes of defect, so they run side by side rather than replace
-  each other.
+- **A defect slipped through the same-vendor round** (`AST-015`): it put a live secret and buyer
+  PII into a tracked file. The other vendor's pass caught it and filed it as P1.
+- **Two lenses catch two classes of defect** (`AST-012`), so they run side by side rather than
+  replace each other.
 - **One case on a large diff.** 6,904 added lines across 31 files went through a same-vendor read
   that missed three empty tests. A ticket-scoped read on a smaller diff caught a real deadlock the
   previous round's patch had just created.
