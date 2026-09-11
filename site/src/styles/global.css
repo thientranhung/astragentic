@@ -315,7 +315,7 @@ hr {
 /* the one sub-line a section is allowed under its heading (PRD §5) */
 .sub {
   font-size: var(--text-h3);
-  line-height: 1.55;
+  line-height: 1.62;
   color: var(--ink-muted);
   max-width: 62ch;
   margin-bottom: 0;

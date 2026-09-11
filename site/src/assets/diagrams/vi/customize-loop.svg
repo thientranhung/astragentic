@@ -1,0 +1,170 @@
+<svg viewBox="0 0 1134 404" role="img" lang="en" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="classic" data-quality-profile="showcase">
+        <title id="archify-diagram-title">Tuỳ chỉnh một lần, cài lại mỗi lần</title>
+        <desc id="archify-diagram-description">Bất biến: một release đã stage không bao giờ đổi ở cùng VERSION, và việc stage không đụng file dự án; có thay đổi nghĩa là có VERSION mới.</desc>
+        <!-- Definitions -->
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" class="m-default" />
+          </marker>
+          <marker id="arrowhead-emphasis" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" class="m-emphasis" />
+          </marker>
+          <marker id="arrowhead-security" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" class="m-security" />
+          </marker>
+          <marker id="arrowhead-dashed" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" class="m-dashed" />
+          </marker>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" class="c-grid" stroke-width="0.5"/>
+          </pattern>
+        </defs>
+
+        <!-- Background Grid -->
+        <rect width="100%" height="100%" fill="url(#grid)" />
+
+        <!-- Swimlanes -->
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-0" x="40" y="52" width="1066" height="104" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="74" class="t-dim" font-size="10" font-weight="600">01 / Bản Astragentic của bạn</text>
+
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-1" x="40" y="176" width="1066" height="104" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="198" class="t-dim" font-size="10" font-weight="600">02 / Dự án của bạn</text>
+
+        <!-- Phase headers -->
+
+
+        <!-- Workflow groups -->
+
+
+        <!-- Edge paths -->
+        <path data-edge-from="adapt" data-edge-to="keep" data-edge-key="0" data-composition-points="564,243;592,243" d="M 564 243 L 592 243" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="bump" data-edge-to="install" data-edge-key="1" data-composition-points="376,119;404,119" d="M 376 119 L 404 119" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="edit" data-edge-to="bump" data-edge-key="2" data-composition-points="123,145;123,161;301,161;301,145" d="M 123 145 L 123 161 L 301 161 L 301 145" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="install" data-edge-to="adapt" data-edge-label="stage" data-edge-key="3" data-composition-points="486.5,145;486.5,161;1118,161;1118,201;486.5,201;486.5,217" d="M 486.5 145 L 486.5 161 L 1118 161 L 1118 201 L 486.5 201 L 486.5 217" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="keep" data-edge-to="run" data-edge-key="4" data-composition-points="757,243;785,243" d="M 757 243 L 785 243" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="observe" data-edge-to="edit" data-edge-label="lần sửa tiếp" data-edge-key="5" data-composition-points="1025.5,269;1025.5,296;214,296;214,119;198,119" d="M 1025.5 269 L 1025.5 296 L 214 296 L 214 119 L 198 119" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="run" data-edge-to="observe" data-edge-key="6" data-composition-points="855,269;855,285;1025.5,285;1025.5,269" d="M 855 269 L 855 285 L 1025.5 285 L 1025.5 269" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+
+        <!-- Nodes -->
+        <g id="node-edit" data-node-id="edit" data-node-label="Sửa scaffold" tabindex="0" role="button" aria-label="Focus Sửa scaffold, role · contract · skill · hook, Bản Astragentic của bạn" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="role · contract · skill · hook" data-node-context="Bản Astragentic của bạn">
+          <title>Sửa scaffold · role · contract · skill · hook · Bản Astragentic của bạn</title>
+          <rect x="48" y="93" width="150" height="52" rx="6" class="c-mask"/>
+          <rect x="48" y="93" width="150" height="52" rx="6" class="c-frontend" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(54 99) scale(0.6875)">
+            <rect x="2" y="3" width="12" height="10" rx="2"/>
+            <path d="M2 6.5h12"/>
+            <circle cx="4.1" cy="4.8" r=".7" class="sigil-fill"/>
+            <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="123" y="114" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Sửa scaffold</text>
+          <text data-detail="context" x="123" y="131" class="t-muted" font-size="7.8" text-anchor="middle">role · contract · skill · hook</text>
+        </g>
+
+        <g id="node-bump" data-node-id="bump" data-node-label="Tăng VERSION" tabindex="0" role="button" aria-label="Focus Tăng VERSION, thêm `# Astragentic &lt;version&gt;`, Bản Astragentic của bạn" aria-pressed="false" data-node-kind="backend" data-node-sublabel="thêm `# Astragentic &lt;version&gt;`" data-node-context="Bản Astragentic của bạn">
+          <title>Tăng VERSION · thêm `# Astragentic &lt;version&gt;` · Bản Astragentic của bạn</title>
+          <rect x="226" y="93" width="150" height="52" rx="6" class="c-mask"/>
+          <rect x="226" y="93" width="150" height="52" rx="6" class="c-backend" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(232 99) scale(0.6875)">
+            <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="301" y="114" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Tăng VERSION</text>
+          <text data-detail="context" x="301" y="131" class="t-muted" font-size="7.8" text-anchor="middle">thêm `# Astragentic &lt;version&gt;`</text>
+        </g>
+
+        <g id="node-install" data-node-id="install" data-node-label="./install.sh &lt;project&gt;" tabindex="0" role="button" aria-label="Focus ./install.sh &lt;project&gt;, chép vào `releases/&lt;version&gt;/`, Bản Astragentic của bạn" aria-pressed="false" data-node-kind="backend" data-node-sublabel="chép vào `releases/&lt;version&gt;/`" data-node-context="Bản Astragentic của bạn">
+          <title>./install.sh &lt;project&gt; · chép vào `releases/&lt;version&gt;/` · Bản Astragentic của bạn</title>
+          <rect x="404" y="93" width="165" height="52" rx="6" class="c-mask"/>
+          <rect x="404" y="93" width="165" height="52" rx="6" class="c-backend" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(410 99) scale(0.6875)">
+            <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="486.5" y="114" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">./install.sh &lt;project&gt;</text>
+          <text data-detail="context" x="486.5" y="131" class="t-muted" font-size="8" text-anchor="middle">chép vào `releases/&lt;version&gt;/`</text>
+        </g>
+
+        <g id="node-adapt" data-node-id="adapt" data-node-label="ADAPT-HARNESS.md" tabindex="0" role="button" aria-label="Focus ADAPT-HARNESS.md, so sánh với release đã áp dụng, Dự án của bạn" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="so sánh với release đã áp dụng" data-node-context="Dự án của bạn">
+          <title>ADAPT-HARNESS.md · so sánh với release đã áp dụng · Dự án của bạn</title>
+          <rect x="409" y="217" width="155" height="52" rx="6" class="c-mask"/>
+          <rect x="409" y="217" width="155" height="52" rx="6" class="c-frontend" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(415 223) scale(0.6875)">
+            <rect x="2" y="3" width="12" height="10" rx="2"/>
+            <path d="M2 6.5h12"/>
+            <circle cx="4.1" cy="4.8" r=".7" class="sigil-fill"/>
+            <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="486.5" y="238" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">ADAPT-HARNESS.md</text>
+          <text data-detail="context" x="486.5" y="255" class="t-muted" font-size="8" text-anchor="middle">so sánh với release đã áp dụng</text>
+        </g>
+
+        <g id="node-keep" data-node-id="keep" data-node-label="File của bạn được giữ" tabindex="0" role="button" aria-label="Focus File của bạn được giữ, giữ: orchestrator.md; báo lệch, Dự án của bạn" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="giữ: orchestrator.md; báo lệch" data-node-context="Dự án của bạn">
+          <title>File của bạn được giữ · giữ: orchestrator.md; báo lệch · Dự án của bạn</title>
+          <rect x="592" y="217" width="165" height="52" rx="6" class="c-mask"/>
+          <rect x="592" y="217" width="165" height="52" rx="6" class="c-frontend" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(598 223) scale(0.6875)">
+            <rect x="2" y="3" width="12" height="10" rx="2"/>
+            <path d="M2 6.5h12"/>
+            <circle cx="4.1" cy="4.8" r=".7" class="sigil-fill"/>
+            <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="674.5" y="238" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">File của bạn được giữ</text>
+          <text data-detail="context" x="674.5" y="255" class="t-muted" font-size="8" text-anchor="middle">giữ: orchestrator.md; báo lệch</text>
+        </g>
+
+        <g id="node-run" data-node-id="run" data-node-label="Chạy release mới" tabindex="0" role="button" aria-label="Focus Chạy release mới, ghi applied-version, Dự án của bạn" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="ghi applied-version" data-node-context="Dự án của bạn">
+          <title>Chạy release mới · ghi applied-version · Dự án của bạn</title>
+          <rect x="785" y="217" width="140" height="52" rx="6" class="c-mask"/>
+          <rect x="785" y="217" width="140" height="52" rx="6" class="c-frontend" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(791 223) scale(0.6875)">
+            <rect x="2" y="3" width="12" height="10" rx="2"/>
+            <path d="M2 6.5h12"/>
+            <circle cx="4.1" cy="4.8" r=".7" class="sigil-fill"/>
+            <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="855" y="238" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Chạy release mới</text>
+          <text data-detail="context" x="855" y="255" class="t-muted" font-size="8" text-anchor="middle">ghi applied-version</text>
+        </g>
+
+        <g id="node-observe" data-node-id="observe" data-node-label="Quan sát team" tabindex="0" role="button" aria-label="Focus Quan sát team, pane, receipt, bài học, Dự án của bạn" aria-pressed="false" data-node-kind="external" data-node-sublabel="pane, receipt, bài học" data-node-context="Dự án của bạn">
+          <title>Quan sát team · pane, receipt, bài học · Dự án của bạn</title>
+          <rect x="953" y="217" width="145" height="52" rx="6" class="c-mask"/>
+          <rect x="953" y="217" width="145" height="52" rx="6" class="c-external" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="external" class="semantic-sigil s-external" transform="translate(959 223) scale(0.6875)">
+            <rect x="2.5" y="5" width="8.5" height="8" rx="1.5"/>
+            <path d="M8 2.5h5.5V8M13.5 2.5 7.5 8.5"/>
+          </g>
+          <text data-node-label="" data-detail-anchor="" x="1025.5" y="238" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Quan sát team</text>
+          <text data-detail="context" x="1025.5" y="255" class="t-muted" font-size="8" text-anchor="middle">pane, receipt, bài học</text>
+        </g>
+
+        <!-- Edge labels -->
+
+
+
+        <g data-detail="context" data-edge-from="install" data-edge-to="adapt" data-edge-label="stage" data-edge-key="3">
+          <rect x="785.25" y="141" width="34" height="14" rx="3" class="c-mask"/>
+          <text x="802.25" y="151" class="t-muted" font-size="8" text-anchor="middle">stage</text>
+        </g>
+
+        <g data-detail="context" data-edge-from="observe" data-edge-to="edit" data-edge-label="lần sửa tiếp" data-edge-key="5">
+          <rect x="585.95" y="276" width="67.6" height="14" rx="3" class="c-mask"/>
+          <text x="619.75" y="286" class="t-muted" font-size="8" text-anchor="middle">lần sửa tiếp</text>
+        </g>
+
+
+        <!-- Legend -->
+        <g data-legend="" data-legend-bridge="">
+          <text x="20" y="304" class="t-primary" font-size="12" font-weight="650">Legend</text>
+          <g data-legend-semantic-kind="frontend" data-legend-kind="frontend" data-legend-label="User UI" data-legend-x="20" data-legend-baseline="324" data-legend-width="74">
+            <rect x="20" y="316" width="14" height="9" rx="2" class="c-frontend" stroke-width="1"/>
+            <text x="42" y="324" class="t-muted" font-size="7.5" font-weight="500">User UI</text>
+          </g>
+          <g data-legend-semantic-kind="backend" data-legend-kind="backend" data-legend-label="Agent logic" data-legend-x="101" data-legend-baseline="324" data-legend-width="91">
+            <rect x="101" y="316" width="14" height="9" rx="2" class="c-backend" stroke-width="1"/>
+            <text x="123" y="324" class="t-muted" font-size="7.5" font-weight="500">Agent logic</text>
+          </g>
+          <g data-legend-semantic-kind="external" data-legend-kind="external" data-legend-label="External system" data-legend-x="199" data-legend-baseline="324" data-legend-width="109">
+            <rect x="199" y="316" width="14" height="9" rx="2" class="c-external" stroke-width="1"/>
+            <text x="221" y="324" class="t-muted" font-size="7.5" font-weight="500">External system</text>
+          </g>
+        </g>
+      </svg>

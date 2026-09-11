@@ -1,5 +1,5 @@
 hero:
-  eyebrow: "Agentic engineering · **for multi-milestone projects** · v{{meta.version}}"
+  eyebrow: "Autonomous coding · **for multi-milestone projects** · v{{meta.version}}"
   headline: "An outsourcing team made of AI agents.\nRunning by process, **around the clock**, for **large projects**."
   sub: "Astragentic is a scaffold for running a team of AI agents on the orchestrator model: one representative to talk to, a team of agents with clear roles to build, and an issue tracker at the centre so every piece of work leaves a trace. The scaffold has the hardest parts of running many agents settled: inter-agent communication, SDLC discipline through skills, isolation through worktrees, gates before merge, cross-vendor review. The rest is yours: keep the decisions, and adapt the scaffold to how your team operates."
   primary: "Explore how it works ↓"
@@ -13,6 +13,14 @@ explain:
         - "claude   --dangerously-skip-permissions --agent builder --model <model> --effort <low|medium|high|xhigh|max>"
         - "codex    --profile builder            # model and model_reasoning_effort live in the profile TOML"
         - "opencode --agent builder -m <provider>/<model>   # no effort flag"
+
+  customize:
+    eyebrow: "Customise"
+    headline: "Astragentic is a scaffold: change it your way, reinstall it per project."
+    paragraphs:
+      - "No process can be imported intact, so Astragentic does not lock its process. Roles, contracts, skills and hooks are text files in your checkout: changing a rule in a contract, adding a skill, dropping a hook, all of it is editing a file."
+      - "The path from a change to a project is the release path. After editing, bump `VERSION` and add a section for that version to `RELEASE-NOTES.md`; `install.sh` refuses to copy changed content under an unchanged version number, so every installed release is immutable and can always be read back."
+      - "Inside the project, `ADAPT-HARNESS.md` runs a three-way comparison between the new release, the applied release and the live state of the repo. Your files such as `orchestrator.md` are never overwritten; diverged paths are reported instead. The team runs the new release, you watch the panes and receipts, then change it again. That loop is how Astragentic itself gets upgraded."
 
   comms:
     eyebrow: "How agents talk to each other"
@@ -209,7 +217,7 @@ fit:
 adopt:
   eyebrow: "Install"
   headline: "Five steps to put the team into your repo."
-  sub: "Check the requirements, install the harness, let Claude Code adapt it to the repo, configure mattpocock-skills once, then open Thomas's session. From there, everything goes through Thomas."
+  sub: "Astragentic installs from your checkout into each project folder, not onto the machine. One checkout serves many projects, and every customisation you make there reaches the projects by this same install path. Five steps: check the requirements, install the harness, let Claude Code adapt it to the repo, configure mattpocock-skills once, then open Thomas's session."
   steps:
     - title: "Check the machine has the tech stack"
       lines: ["./check-requirements.sh"]

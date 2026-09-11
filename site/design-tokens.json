@@ -396,7 +396,7 @@
     "leading": {
       "$type": "number",
       "body": {
-        "$value": 1.55,
+        "$value": 1.68,
         "$extensions": {
           "site": {
             "cssVar": "--leading-body"

@@ -1,0 +1,128 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Customize once, re-install every time",
+    "output": "customize-loop.html",
+    "quality_profile": "showcase",
+    "subtitle": "Immutable: a staged release never changes at the same VERSION, and staging touches no project file; a change means a new VERSION."
+  },
+  "lanes": [
+    {
+      "id": "checkout",
+      "label": "Astragentic checkout"
+    },
+    {
+      "id": "project",
+      "label": "Your project"
+    }
+  ],
+  "mainPath": [
+    "edit",
+    "bump",
+    "install",
+    "adapt",
+    "keep",
+    "run",
+    "observe"
+  ],
+  "nodes": [
+    {
+      "id": "edit",
+      "lane": "checkout",
+      "col": 0,
+      "type": "frontend",
+      "label": "Edit the scaffold",
+      "sublabel": "roles \u00b7 contracts \u00b7 skills \u00b7 hooks",
+      "width": 150
+    },
+    {
+      "id": "bump",
+      "lane": "checkout",
+      "col": 1,
+      "type": "backend",
+      "label": "Bump VERSION",
+      "sublabel": "adds `# Astragentic <version>`",
+      "width": 140
+    },
+    {
+      "id": "install",
+      "lane": "checkout",
+      "col": 2,
+      "type": "backend",
+      "label": "./install.sh <project>",
+      "sublabel": "stages `releases/<version>/`",
+      "width": 155
+    },
+    {
+      "id": "adapt",
+      "lane": "project",
+      "col": 2,
+      "type": "frontend",
+      "label": "ADAPT-HARNESS.md",
+      "sublabel": "compares vs. applied release",
+      "width": 135
+    },
+    {
+      "id": "keep",
+      "lane": "project",
+      "col": 3,
+      "type": "frontend",
+      "label": "Your files kept",
+      "sublabel": "kept: orchestrator.md; drift flagged",
+      "width": 158
+    },
+    {
+      "id": "run",
+      "lane": "project",
+      "col": 4,
+      "type": "frontend",
+      "label": "Runs new release",
+      "sublabel": "applied-version recorded",
+      "width": 125
+    },
+    {
+      "id": "observe",
+      "lane": "project",
+      "col": 5,
+      "type": "external",
+      "label": "Observe the team",
+      "sublabel": "panes, receipts, lessons",
+      "width": 125
+    }
+  ],
+  "edges": [
+    {
+      "from": "edit",
+      "to": "bump"
+    },
+    {
+      "from": "bump",
+      "to": "install"
+    },
+    {
+      "from": "install",
+      "to": "adapt",
+      "label": "stage",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "adapt",
+      "to": "keep"
+    },
+    {
+      "from": "keep",
+      "to": "run"
+    },
+    {
+      "from": "run",
+      "to": "observe"
+    },
+    {
+      "from": "observe",
+      "to": "edit",
+      "label": "next change"
+    }
+  ]
+}

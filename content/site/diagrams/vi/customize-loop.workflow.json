@@ -1,0 +1,128 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Tuỳ chỉnh một lần, cài lại mỗi lần",
+    "output": "customize-loop.html",
+    "quality_profile": "showcase",
+    "subtitle": "Bất biến: một release đã stage không bao giờ đổi ở cùng VERSION, và việc stage không đụng file dự án; có thay đổi nghĩa là có VERSION mới."
+  },
+  "lanes": [
+    {
+      "id": "checkout",
+      "label": "Bản Astragentic của bạn"
+    },
+    {
+      "id": "project",
+      "label": "Dự án của bạn"
+    }
+  ],
+  "mainPath": [
+    "edit",
+    "bump",
+    "install",
+    "adapt",
+    "keep",
+    "run",
+    "observe"
+  ],
+  "nodes": [
+    {
+      "id": "edit",
+      "lane": "checkout",
+      "col": 0,
+      "type": "frontend",
+      "label": "Sửa scaffold",
+      "sublabel": "role · contract · skill · hook",
+      "width": 150
+    },
+    {
+      "id": "bump",
+      "lane": "checkout",
+      "col": 1,
+      "type": "backend",
+      "label": "Tăng VERSION",
+      "sublabel": "thêm `# Astragentic <version>`",
+      "width": 150
+    },
+    {
+      "id": "install",
+      "lane": "checkout",
+      "col": 2,
+      "type": "backend",
+      "label": "./install.sh <project>",
+      "sublabel": "chép vào `releases/<version>/`",
+      "width": 165
+    },
+    {
+      "id": "adapt",
+      "lane": "project",
+      "col": 2,
+      "type": "frontend",
+      "label": "ADAPT-HARNESS.md",
+      "sublabel": "so sánh với release đã áp dụng",
+      "width": 155
+    },
+    {
+      "id": "keep",
+      "lane": "project",
+      "col": 3,
+      "type": "frontend",
+      "label": "File của bạn được giữ",
+      "sublabel": "giữ: orchestrator.md; báo lệch",
+      "width": 165
+    },
+    {
+      "id": "run",
+      "lane": "project",
+      "col": 4,
+      "type": "frontend",
+      "label": "Chạy release mới",
+      "sublabel": "ghi applied-version",
+      "width": 140
+    },
+    {
+      "id": "observe",
+      "lane": "project",
+      "col": 5,
+      "type": "external",
+      "label": "Quan sát team",
+      "sublabel": "pane, receipt, bài học",
+      "width": 145
+    }
+  ],
+  "edges": [
+    {
+      "from": "edit",
+      "to": "bump"
+    },
+    {
+      "from": "bump",
+      "to": "install"
+    },
+    {
+      "from": "install",
+      "to": "adapt",
+      "label": "stage",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "adapt",
+      "to": "keep"
+    },
+    {
+      "from": "keep",
+      "to": "run"
+    },
+    {
+      "from": "run",
+      "to": "observe"
+    },
+    {
+      "from": "observe",
+      "to": "edit",
+      "label": "lần sửa tiếp"
+    }
+  ]
+}

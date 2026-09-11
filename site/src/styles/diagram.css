@@ -421,6 +421,14 @@
 .idiagram--flow[data-seq] .diagram-svg [data-flow-from='tracker'] { --flow-ink: var(--ink); }
 .idiagram--flow[data-seq] .diagram-svg [data-flow-from='thomas'] { --flow-ink: var(--role-thomas); }
 .idiagram--flow[data-seq] .diagram-svg [data-flow-from='shaper'] { --flow-ink: var(--role-shaper); }
+/* customize-loop: the checkout side runs in brand red, the project side in ink */
+.idiagram--flow[data-seq] .diagram-svg [data-flow-from='edit'],
+.idiagram--flow[data-seq] .diagram-svg [data-flow-from='bump'],
+.idiagram--flow[data-seq] .diagram-svg [data-flow-from='install'] { --flow-ink: var(--brand-primary); }
+.idiagram--flow[data-seq] .diagram-svg [data-flow-from='adapt'],
+.idiagram--flow[data-seq] .diagram-svg [data-flow-from='keep'],
+.idiagram--flow[data-seq] .diagram-svg [data-flow-from='run'],
+.idiagram--flow[data-seq] .diagram-svg [data-flow-from='observe'] { --flow-ink: var(--ink); }
 .idiagram--flow[data-seq] .diagram-svg [data-flow-from='builder'] { --flow-ink: var(--role-builder); }
 .idiagram--flow[data-seq] .diagram-svg [data-flow-from='rin'] { --flow-ink: var(--role-rin); }
 .idiagram--flow[data-seq] .diagram-svg [data-flow-from='qa'] { --flow-ink: var(--role-qa); }

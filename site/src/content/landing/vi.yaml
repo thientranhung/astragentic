@@ -1,5 +1,5 @@
 hero:
-  eyebrow: "Agentic engineering · **cho dự án nhiều milestone** · v{{meta.version}}"
+  eyebrow: "Autonomous coding · **cho dự án nhiều milestone** · v{{meta.version}}"
   headline: "Một team outsource bằng AI agent.\nVận hành đúng quy trình, **liên tục 24/7**, cho **những dự án lớn**."
   sub: "Astragentic là một scaffold để vận hành team AI agent theo mô hình orchestrator: một người đại diện để trao đổi, một team agent với role rõ ràng để thi công, và một issue tracker làm trung tâm để mọi việc có dấu vết. Bộ khung đã giải quyết sẵn những phần khó nhất của việc điều hành nhiều agent: giao tiếp giữa các agent, kỷ luật SDLC bằng skill, cách ly bằng worktree, gate trước khi merge, review chéo vendor. Phần còn lại là của bạn: giữ quyền quyết định, và tuỳ biến bộ khung theo cách team của bạn vận hành."
   primary: "Khám phá cách hoạt động ↓"
@@ -13,6 +13,14 @@ explain:
         - "claude   --dangerously-skip-permissions --agent builder --model <model> --effort <low|medium|high|xhigh|max>"
         - "codex    --profile builder            # model + model_reasoning_effort nằm trong profile TOML"
         - "opencode --agent builder -m <provider>/<model>   # không có cờ effort"
+
+  customize:
+    eyebrow: "Tuỳ biến"
+    headline: "Astragentic là scaffold: sửa theo cách của bạn, cài lại cho từng dự án."
+    paragraphs:
+      - "Không quy trình nào nhập khẩu nguyên vẹn được, nên Astragentic không khoá quy trình. Role, contract, skill và hook là file văn bản trong bản checkout của bạn: đổi một luật trong contract, thêm một skill, bỏ một hook, đều là sửa file."
+      - "Đường đưa thay đổi tới dự án là đường phát hành. Sửa xong, tăng `VERSION` và thêm một mục cho bản đó trong `RELEASE-NOTES.md`; `install.sh` từ chối chép nội dung đã đổi dưới cùng một số phiên bản, nên mỗi bản release đã cài là bất biến và luôn đọc lại được."
+      - "Trong dự án, `ADAPT-HARNESS.md` so sánh ba chiều bản mới, bản đã áp dụng và trạng thái thật của repo. File của bạn như `orchestrator.md` không bao giờ bị đè; đường dẫn đã lệch được báo thay vì ghi đè. Team chạy bản mới, bạn quan sát pane và receipt, rồi sửa tiếp. Vòng này là cách chính Astragentic được nâng cấp."
 
   comms:
     eyebrow: "Giao tiếp giữa các agent"
@@ -209,7 +217,7 @@ fit:
 adopt:
   eyebrow: "Install"
   headline: "Năm bước để đưa team vào repo của bạn."
-  sub: "Kiểm yêu cầu, cài harness, để Claude Code thích nghi harness với repo, cấu hình mattpocock-skills một lần, rồi mở session Thomas. Từ đó mọi việc đi qua Thomas."
+  sub: "Astragentic cài từ bản checkout của bạn vào từng thư mục dự án, không cài vào máy. Một bản Astragentic phục vụ nhiều dự án, và mọi tuỳ biến bạn làm trên bản đó đi tới các dự án bằng đúng đường cài đặt này. Năm bước: kiểm yêu cầu, cài harness, để Claude Code thích nghi harness với repo, cấu hình mattpocock-skills một lần, rồi mở session Thomas."
   steps:
     - title: "Kiểm máy có đủ tech stack chưa"
       lines: ["./check-requirements.sh"]

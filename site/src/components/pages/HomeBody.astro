@@ -560,6 +560,20 @@ const CARD_FRAME = 330;
       </ul>
     </div>
   </section>
+
+  {/* ── Customise: the scaffold philosophy, drawn as the release loop ───── */}
+  {EX.customize && (
+    <section class="screen screen--surface explain" id="customize">
+      <div class="column">
+        <p class="eyebrow">{EX.customize.eyebrow}</p>
+        <h2>{EX.customize.headline}</h2>
+        {EX.customize.paragraphs?.map((line) => <p class="lede" set:html={hl(line)} />)}
+      </div>
+      <div class="column">
+        <InteractiveDiagram slug="customize-loop" lang={lang} class="band" flow="sequence" />
+      </div>
+    </section>
+  )}
 </BaseLayout>
 
 <style>
@@ -608,7 +622,7 @@ const CARD_FRAME = 330;
   }
   .hero-sub {
     font-size: var(--text-body);
-    line-height: 1.55;
+    line-height: 1.65;
     color: var(--ink-muted);
     max-width: 72ch;
     margin-bottom: 1.5rem;
@@ -627,7 +641,7 @@ const CARD_FRAME = 330;
      floor — so these sections stack instead of splitting. */
   .explain .lede {
     max-width: 72ch;
-    margin: 0 0 1.1rem;
+    margin: 0 0 1.45rem;
     font-size: var(--text-body);
     line-height: var(--leading-body);
   }
@@ -749,7 +763,7 @@ const CARD_FRAME = 330;
     display: block;
     max-width: 74ch;
     font-size: var(--text-body-sm);
-    line-height: 1.5;
+    line-height: 1.65;
     color: var(--ink-88);
   }
 
@@ -782,7 +796,7 @@ const CARD_FRAME = 330;
     margin: 1rem auto 0;
     max-width: 72ch;
     font-size: var(--text-body-sm);
-    line-height: 1.5;
+    line-height: 1.65;
     color: var(--ink-muted);
     text-align: center;
   }
@@ -997,7 +1011,7 @@ const CARD_FRAME = 330;
   }
   .feature-body {
     font-size: var(--text-body-sm);
-    line-height: 1.5;
+    line-height: 1.65;
     color: var(--ink-muted);
     margin: 0 0 1rem;
   }
