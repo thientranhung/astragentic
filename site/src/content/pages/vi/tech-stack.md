@@ -68,7 +68,7 @@ và cho phép nhắc, chờ, đọc từng pane. Đây là thứ biến dispatch
 được.
 
 `dispatch-ticket` từ chối dispatch nếu `herdr-watchdog.sh` chưa chạy, và nó kiểm ngay ở lần
-dispatch đầu tiên. Giới hạn tôi phải học lại: AST-107 cho thấy `herdr agent wait` không đáng tin
+dispatch đầu tiên. Giới hạn tôi phải học lại: `herdr agent wait` không đáng tin
 cho phần verdict. Bây giờ `herdr-watch-terminal.sh` chờ theo lát 60 giây và lấy verdict từ một
 lệnh `herdr agent get` mới tinh ở mỗi lát; wait bị hạ xuống thành giấc ngủ có thể ngắt. Độ trễ
 phát hiện xấu nhất là 60 giây, không phải cả session.

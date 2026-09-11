@@ -38,7 +38,7 @@ phải lỗ hổng: một tuyên bố phủ sóng không đúng sự thật còn
 
 Còn một lý do nó là file `.py` chứ không phải một dòng shell nhét trong `settings.json`. Bản cũ
 đúng là một dòng như vậy: không đọc được, không chạy tay được, không test được, và nó không
-được kích hoạt qua nhiều release trong lúc trông vẫn như đã cài (AST-102). Bản này chạy độc lập
+được kích hoạt qua nhiều release trong lúc trông vẫn như đã cài. Bản này chạy độc lập
 được, nên nó kiểm tra được.
 
 ## worktree-remove
@@ -51,7 +51,7 @@ phần harness biết: tiến trình có cwd thật nằm trong worktree, do `re
 reap. Sau đó là phần project tự khai, qua plug `.astraler/project/cleanup-worktree.sh`. Thứ tự
 này chịu lực. Tài nguyên buộc vào một thư mục, theo cwd hoặc theo label suy ra từ đường dẫn
 hoặc theo cái tên project tự tính từ nó, không còn khớp được sau khi thư mục biến mất, nên bước
-này phải chạy trước `git worktree remove`, không bao giờ sau (AST-100, AST-101).
+này phải chạy trước `git worktree remove`, không bao giờ sau.
 
 **Bằng chứng.** Hook này không còn được kích hoạt. Đo ngày 2026-08-20 bằng chính log tôi thêm vào để
 trả lời câu hỏi đó. Ba worktree bị gỡ sau lần ghi cuối của log, trong đó có một lệnh `git
@@ -67,7 +67,7 @@ nào để bắn. Một hook treo trên đường thi hành không ai đi qua th
 và nhìn từ bên ngoài hai thứ đó không phân biệt được.
 
 Vì vậy bước dọn thủ công vẫn bắt buộc trên mọi runtime, và lệnh trong hook vẫn phải giữ an toàn
-cho ngày nó được kích hoạt lại (AST-115). Bài học tồn tại lâu hơn chính cái hook này: khi một cơ
+cho ngày nó được kích hoạt lại. Bài học tồn tại lâu hơn chính cái hook này: khi một cơ
 chế không bắn, hãy hỏi trigger có được chạm tới không, trước khi kết luận cơ chế đã hỏng.
 
 ## session-start
@@ -78,7 +78,7 @@ Hook bắn ngay sau khi một session Claude Code compact, với `source: compac
 Script nạp lại đúng một thứ: đường dẫn contract của role agent đang đảm nhiệm, qua
 `hookSpecificOutput.additionalContext`, tới tay agent trước khi agent kịp hành động.
 
-Lỗi sinh ra nó là AST-069, và dạng một dòng là: một chỉ dẫn không gắn với khoảnh khắc nào thì
+Lỗi sinh ra nó, gọn trong một dòng: một chỉ dẫn không gắn với khoảnh khắc nào thì
 đo được bằng không. System prompt đã có sẵn dòng "Read `.agents/roles/<role>.md` now", và dòng
 đó đi qua compaction nguyên vẹn vì nó là system prompt. Thứ không đi qua được là chữ "now". Một
 agent vừa compact đọc bản tóm tắt của chính nó, thấy công việc đang dở, kết luận nó đang giữa

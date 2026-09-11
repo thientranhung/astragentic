@@ -3,7 +3,7 @@ title: "Astragentic"
 description: "Vì sao tôi dựng phần điều phối này, tôi đã chọn gì, và cái giá của từng lựa chọn."
 acts:
   - id: act-1
-    eyebrow: "AST-016 · promoted 2026-07-11"
+    eyebrow: "Đo ngày 2026-07-11 · đã thành luật"
     headline: "Ba agent trên một checkout làm mất việc mà không ném lỗi."
   - id: act-2
     eyebrow: "BẢY CHẶNG"
@@ -18,7 +18,7 @@ acts:
 
 ## act-1
 
-AST-016: ba session chạy trên cùng một checkout, không lỗi nào được ném ra, một buổi làm việc
+Ba session chạy trên cùng một checkout, không lỗi nào được ném ra, một buổi làm việc
 mất trắng và thêm một buổi nữa để tìm nguyên nhân.
 
 Cách chữa thô nhất: mọi agent được spawn mà có quyền chạy git đổi trạng thái đều phải có

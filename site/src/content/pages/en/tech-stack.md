@@ -69,7 +69,7 @@ look at, and it lets you prompt, wait on and read each one. This is what turns d
 something narrated into something countable.
 
 `dispatch-ticket` refuses to dispatch unless `herdr-watchdog.sh` is running, and it checks at the
-first dispatch. The limit I had to learn twice: AST-107 showed that `herdr agent wait` cannot be
+first dispatch. The limit I had to learn twice: `herdr agent wait` cannot be
 trusted for the verdict. Now `herdr-watch-terminal.sh` waits in 60-second slices and takes the
 verdict from a fresh `herdr agent get` on every slice, with the wait demoted to an interruptible
 sleep. Worst-case detection lag is 60 seconds rather than the whole session.

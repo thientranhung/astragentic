@@ -3,7 +3,7 @@ title: "Astragentic"
 description: "Why I built this coordination, what I chose, and what each choice costs."
 acts:
   - id: act-1
-    eyebrow: "AST-016 · promoted 2026-07-11"
+    eyebrow: "Measured 2026-07-11 · now a rule"
     headline: "Three agents on one checkout lose work without throwing an error."
   - id: act-2
     eyebrow: "SEVEN STAGES"
@@ -18,7 +18,7 @@ acts:
 
 ## act-1
 
-AST-016: three sessions on one checkout, no error thrown, one working session lost and another
+Three sessions on one checkout, no error thrown, one working session lost and another
 spent finding the cause.
 
 The fix: every spawned agent that can run state-changing git gets its own checkout, including

@@ -62,10 +62,10 @@ context của một session sẽ biến mất lúc session đó compact, và kh�
   GitHub Issues, Jira và Linear, nên bạn dùng tiếp board đang có. Trạng thái nằm ở đó nghĩa là câu
   "ticket nào đang sẵn sàng" là một truy vấn, không phải một trí nhớ.
 - **herdr giữ pane.** Mỗi Builder có một pane nhìn thấy được, và đây không phải chuyện thẩm mỹ:
-  AST-018 đo được một lần dispatch chỉ được kể ra bằng chữ chứ chưa từng chạy, không có tín hiệu
+  Tôi đo được một lần dispatch chỉ được kể ra bằng chữ chứ chưa từng chạy, không có tín hiệu
   nào để phân biệt. Một pane là thứ đếm được.
 - **git worktree giữ ranh giới ghi.** Mỗi ticket một checkout, và Builder là người ghi duy nhất
-  trong đó. AST-016 đo được điều ngược lại: nhiều agent chung một checkout thì HEAD của người này
+  trong đó. Lần khác tôi đo được điều ngược lại: nhiều agent chung một checkout thì HEAD của người này
   bị người kia kéo đi, và kể cả một reviewer chỉ đọc cũng `git switch` được checkout của người
   khác.
 

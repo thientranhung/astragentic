@@ -24,13 +24,14 @@ const slug = row.id.toLowerCase();
 const target = href ?? (hasLesson(row.id) ? `${ROUTES.failures[lang]}#${slug}` : undefined);
 const body = entryExcerpt(row, size === 'lg' ? 460 : 150);
 const promoted = row.promotedOn ? `promoted ${row.promotedOn}` : row.status;
+/* The incident number means nothing to a reader outside the project, so it is not printed
+   on the page any more (owner, 2026-09-11). The anchor keeps it, so a deep link still works. */
 ---
 
 {
   size === 'lg' ? (
     <article class="card card--lg" id={anchorId}>
       <header class="head">
-        {target ? <a href={target} class="ast id">{row.id}</a> : <span class="ast id">{row.id}</span>}
         <span class="meta">{promoted}</span>
       </header>
 
@@ -76,7 +77,6 @@ const promoted = row.promotedOn ? `promoted ${row.promotedOn}` : row.status;
     </article>
   ) : (
     <a class="card card--sm" href={target} id={anchorId}>
-      <span class="ast id">{row.id}</span>
       <span class="lesson-sm" lang="en">{row.lesson}</span>
       {!compact && <span class="excerpt mono" lang="en" set:html={entryHtml(body)} />}
     </a>

@@ -64,11 +64,11 @@ compacts, and nobody finds out that it went.
 - **The tracker holds work state.** Astragentic ships no tracker of its own; it ships adapters
   for GitHub Issues, Jira and Linear, so you keep the board you already run. State living there
   means "which ticket is ready" is a query rather than a memory.
-- **herdr holds the pane.** Each Builder gets a visible pane, and that is not cosmetic: AST-018
+- **herdr holds the pane.** Each Builder gets a visible pane, and that is not cosmetic: I
   measured a dispatch that was narrated in text and never actually called, with no liveness
   signal to tell the two apart. A pane is something you can count.
 - **git worktrees hold the write boundary.** One checkout per ticket, and the Builder is the
-  sole writer in it. AST-016 measured the opposite: agents sharing one checkout move HEAD under
+  sole writer in it. Another measurement showed the opposite: agents sharing one checkout move HEAD under
   each other, and even a read-only reviewer managed to `git switch` somebody else's checkout.
 
 **Trade-off.** Three external dependencies: a tracker you have to configure, herdr you have to

@@ -39,7 +39,7 @@ a coverage claim that is not true is worse than no claim.
 
 There is also a reason it is a `.py` file rather than a shell line crammed into `settings.json`.
 The old version was exactly that line: unreadable, unrunnable by hand, untestable, and it sat
-dormant across releases while looking installed (AST-102). This one runs standalone, which means
+dormant across releases while looking installed. This one runs standalone, which means
 it can be tested.
 
 ## worktree-remove
@@ -52,7 +52,7 @@ whose real cwd is inside the worktree, reaped by `reap-worktree-processes.sh`. T
 project declares, through the plug at `.astraler/project/cleanup-worktree.sh`. That order is
 load-bearing. Resources bound to a directory, by cwd or by a label derived from the path or by a
 name the project computed from it, cannot be matched once the directory is gone, so this has to
-run before `git worktree remove` and never after (AST-100, AST-101).
+run before `git worktree remove` and never after.
 
 **Evidence.** This hook is dormant. Measured 2026-08-20 with the very logging I added to
 answer the question. Three worktrees were removed after the log's last write, one of them by a
@@ -69,7 +69,7 @@ through fires exactly as often as a broken one, and from the outside the two are
 indistinguishable.
 
 So manual cleanup remains required on every runtime, and the hook's command has to be kept safe
-against the day it wakes (AST-115). The lesson outlives this particular hook: when a mechanism
+against the day it wakes. The lesson outlives this particular hook: when a mechanism
 does not fire, ask whether the trigger was reached before concluding the mechanism is broken.
 
 ## session-start
@@ -80,7 +80,7 @@ It fires immediately after a Claude Code session compacts, with `source: compact
 The script re-arms exactly one thing: the path to the contract of the role the agent is running,
 delivered through `hookSpecificOutput.additionalContext`, reaching the agent before it acts.
 
-The failure behind it is AST-069, and the one-line form is that an instruction with no moment
+The failure behind it, in one line: an instruction with no moment
 attached measures zero. The system prompt already says "Read `.agents/roles/<role>.md` now", and
 that line comes through compaction untouched because it is the system prompt. What does not come
 through is the word "now". A compacted agent reads its own summary, sees work underway,
