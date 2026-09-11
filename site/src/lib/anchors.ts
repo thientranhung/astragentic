@@ -192,12 +192,12 @@ export const WHY: WhyCard[] = [
   {
     id: 'why-tracker',
     question: {
-      vi: 'Vì sao tracker là nơi giữ trạng thái, không phải chat hay file?',
-      en: 'Why does the tracker hold the state, not chat or a file?',
+      vi: 'Vì sao issue tracker giữ trạng thái, không phải file markdown?',
+      en: 'Why does an issue tracker hold the state, not a markdown file?',
     },
     answer: {
-      vi: 'Board tồn tại lâu hơn mọi session và bạn mở ra là đọc được. Cái gì sẵn sàng là một câu truy vấn trên đó, nên một session đóng đi không mang theo thứ gì.',
-      en: 'The board outlives every session and you can open and read it. What is ready is a query against it, so a session can close without taking anything with it.',
+      vi: 'Ô tick trong file markdown phụ thuộc vào việc agent nhớ quay lại sửa. Status, assignee và blocking edge trên board là dữ liệu máy đọc được, và bạn mở board ra là thấy.',
+      en: 'A checkbox in a markdown file depends on the agent remembering to go back and edit it. Status, assignee and blocking edges on a board are machine-readable data, and you can open the board and see them.',
     },
   },
   {
