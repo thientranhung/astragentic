@@ -68,7 +68,13 @@ Cách làm phổ biến trước đó là để AI cắt việc thành file mark
 | Hai agent cùng nhận một việc | Không có gì chặn | Assignee là claim, ghi và đọc lại được |
 | Máy thao tác | Sửa văn bản tự do | CLI và MCP chính thức |
 | Duyệt hoặc yêu cầu sửa | Nhắn ở một chỗ khác | Comment ngay trên ticket |
+| Nhiều người cùng góp ý | Sửa chung một file, giẫm lên nhau | Mỗi người một comment, có tên, có thứ tự |
+| Agent hỏi lại | Không có chỗ để hỏi | Đặt câu hỏi ngay trong ticket, ai trả lời cũng được, rồi agent làm tiếp |
 | Khi session đóng | Trạng thái mất theo context | Board vẫn còn nguyên |
+
+Dòng cuối là chỗ thay đổi cách làm việc rõ nhất: agent không còn phải chờ đúng một người. Nó
+hỏi trên ticket, ai trong team trả lời được thì trả lời, và nó chạy tiếp. AI trở thành một thành
+viên trong nhóm chứ không phải một công cụ bạn phải ngồi canh.
 
 **Số đo.** AST-057, trên một dự án thật: một ticket trông như đang bị chặn suốt nhiều giờ sau khi
 cả hai blocker đã merge, và bốn ticket đeo nhãn sẵn sàng trong lúc đang bị chặn. Frontier được tính
