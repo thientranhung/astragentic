@@ -16,7 +16,7 @@ explain:
 
   customize:
     eyebrow: "Tuỳ biến"
-    headline: "Mỗi người một cách làm việc với AI. Astragentic là bộ khung để bạn dựng cách của mình."
+    headline: "Mỗi người một cách làm việc với AI. Astragentic là bộ khung cho người theo trường phái agent orchestration."
     paragraphs:
       - "Không có một cách làm việc với AI cho tất cả. Có team muốn đủ vòng SDLC với năm role và gate ở mỗi milestone; có team chỉ cần hai agent, một người đại diện và một người thi công; có team đổi tracker, đổi runtime, hay thêm một bước review riêng. Astragentic không chọn thay bạn: nó là scaffold, và mọi thành phần trong đó là để bạn giữ, bỏ hay viết lại."
       - "Tuỳ biến là sửa file trong bản checkout của bạn. Mỗi role là một contract, mỗi skill là một thư mục, mỗi hook là một script; bớt một role, thêm một skill, đổi một luật đều nằm trong tầm tay và không đụng tới phần còn lại."

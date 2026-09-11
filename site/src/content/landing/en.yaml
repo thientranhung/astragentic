@@ -16,7 +16,7 @@ explain:
 
   customize:
     eyebrow: "Customise"
-    headline: "Everyone works with AI differently. Astragentic is the scaffold for building your way."
+    headline: "Everyone works with AI differently. Astragentic is the scaffold for those who work by agent orchestration."
     paragraphs:
       - "There is no single way of working with AI. Some teams want the full SDLC loop with five roles and a gate at every milestone; some need two agents, a representative and a builder; some change the tracker, the runtime, or add a review step of their own. Astragentic does not choose for you: it is a scaffold, and every part of it is there for you to keep, drop or rewrite."
       - "Customising means editing files in your checkout. Each role is a contract, each skill a folder, each hook a script; removing a role, adding a skill or changing a rule is within reach and leaves the rest untouched."
