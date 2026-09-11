@@ -1,7 +1,7 @@
 hero:
   eyebrow: "Agentic engineering · **cho dự án nhiều milestone** · v{{meta.version}}"
   headline: "Một team outsource bằng AI agent.\nVận hành đúng quy trình, **liên tục 24/7**, cho **những dự án lớn**."
-  sub: "Astragentic đưa bạn vào vị trí khách hàng của một đơn vị phát triển phần mềm hoàn chỉnh: một người đại diện để trao đổi, một team agent với role rõ ràng để thi công, và một issue tracker làm trung tâm để mọi việc đều có dấu vết. Bạn giữ quyền quyết định và toàn quyền giám sát; phần thực thi thuộc về team."
+  sub: "Astragentic là một bộ khung để bạn điều hành một team AI agent theo lối orchestrator: một người đại diện để trao đổi, một team agent với role rõ ràng để thi công, một issue tracker làm trung tâm để mọi việc có dấu vết. Bộ khung giải quyết sẵn cách các agent giao tiếp, kỷ luật SDLC bằng skill, cách ly bằng worktree, gate trước khi merge và review chéo vendor. Bạn giữ quyền quyết định, và pha chế lại bộ khung theo cách làm việc của mình."
   primary: "Khám phá cách hoạt động ↓"
   secondary: "Hiểu rõ vì sao có Astragentic"
 

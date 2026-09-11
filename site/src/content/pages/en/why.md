@@ -31,10 +31,11 @@ correctly; Thomas can investigate when something goes wrong; and you watch how t
 which is how Astragentic itself gets improved. A runtime's subagents and agent teams hide inside
 the parent process and show none of that.
 
-The third mechanism is that Astragentic is not fixed. It is a scaffold: roles, contracts, skills
-and hooks are files in your repo, adjustable to how you want the team to run. It suits people who
-work as orchestrators, running a team of agents through one representative rather than prompting
-each agent by hand.
+Both mechanisms rest on one philosophy: Astragentic is not a closed product but a scaffold for
+working as an orchestrator. The scaffold settles the hard parts of running a team of agents: how
+the agents talk to each other, SDLC discipline through skills, isolation through worktrees, state
+on the tracker, gates before merge and cross-vendor review. Roles, contracts, skills and hooks are
+files in your repo, so you recompose how the team coordinates to fit your own way of working.
 
 Cost: one more toolset to install, understand and upgrade, and every upgrade is an event the
 project has to absorb. And so far I have proven that each tool runs correctly; the whole loop from

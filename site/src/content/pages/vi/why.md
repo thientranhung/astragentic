@@ -30,10 +30,11 @@ Thomas điều tra được khi có sự cố; và bạn quan sát được các
 Astragentic. Subagent và agent team của runtime ẩn bên trong tiến trình cha, không cho thấy điều
 đó.
 
-Cơ chế thứ ba là Astragentic không cố định. Nó là một scaffold: role, contract, skill và hook là
-file trong repo của bạn, chỉnh được theo cách bạn muốn team vận hành. Nó hợp với người làm việc
-theo lối orchestrator, điều hành một team agent qua một người đại diện, thay vì tự prompt từng
-agent.
+Hai cơ chế đó đứng trên một triết lý: Astragentic không phải một sản phẩm đóng mà là một bộ khung
+để làm việc theo lối orchestrator. Bộ khung giải quyết sẵn những phần khó của việc điều hành một
+team agent, gồm cách các agent giao tiếp với nhau, kỷ luật SDLC bằng skill, cách ly bằng worktree,
+trạng thái trên tracker, gate trước khi merge và review chéo vendor. Role, contract, skill và hook
+là file trong repo của bạn, nên bạn pha chế lại cách phối hợp theo phong cách làm việc của mình.
 
 Cái giá: thêm một bộ công cụ phải cài, hiểu và nâng cấp, và mỗi bản nâng cấp là một sự kiện dự
 án phải hấp thụ. Và tới nay tôi mới chứng minh được từng công cụ chạy đúng; cả vòng từ dispatch
