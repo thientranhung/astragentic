@@ -6,7 +6,7 @@
     "output": "layer-map.html",
     "quality_profile": "showcase",
     "views": [
-      { "id": "the-rented-method", "label": "Cạnh duy nhất", "focus": ["astragentic", "mattpocock_skills"], "note": "Astragentic dispatch session; phương pháp bên trong mỗi session là đi thuê, không phải tự xây." },
+      { "id": "the-one-edge", "label": "Cạnh duy nhất", "focus": ["astragentic", "mattpocock_skills"], "note": "Astragentic dispatch session; phương pháp bên trong mỗi session là dùng, không phải tự xây." },
       { "id": "same-layer", "label": "Cùng lớp, không xếp hạng", "focus": ["mattpocock_skills", "superpowers", "others"], "note": "Mỗi box phương pháp đứng cùng độ cao. Không đường nào chạm Superpowers hay others." }
     ]
   },
@@ -25,10 +25,10 @@
     { "kind": "region", "label": "PHƯƠNG PHÁP", "wraps": ["mattpocock_skills", "superpowers", "others"], "pad": 16 }
   ],
   "connections": [
-    { "from": "astragentic", "to": "mattpocock_skills", "label": "đi thuê", "variant": "emphasis", "fromSide": "left", "toSide": "left", "via": [[10, 497], [10, 97]] }
+    { "from": "astragentic", "to": "mattpocock_skills", "label": "dùng", "variant": "emphasis", "fromSide": "left", "toSide": "left", "via": [[28, 497], [28, 97]], "labelAt": [28, 397] }
   ],
   "cards": [
-    { "dot": "emerald", "title": "Một Lớp Là Của Ta", "items": ["Astragentic nằm dưới cùng, dispatch session dựa vào tracker", "Runtime nằm giữa — Claude Code, Codex, OpenCode, đổi cho nhau được", "Phương pháp nằm trên cùng, bên trong mỗi session, và Astragentic thuê đúng một cái"] },
+    { "dot": "emerald", "title": "Một Lớp Là Của Ta", "items": ["Astragentic nằm dưới cùng, dispatch session dựa vào tracker", "Runtime nằm giữa — Claude Code, Codex, OpenCode, đổi cho nhau được", "Phương pháp nằm trên cùng, bên trong mỗi session, và Astragentic dùng đúng một cái"] },
     { "dot": "cyan", "title": "Không Node Nào Được Ưu Tiên", "items": ["Mỗi node trong dải phương pháp cùng kích thước, cùng fill, cùng độ đậm", "mattpocock-skills không được nâng cấp hình ảnh chỉ vì Astragentic đang dùng nó", "Chỉ có cạnh đánh dấu quan hệ — không phải cái box"] },
     { "dot": "rose", "title": "Phần Còn Lại Đứng Cùng Độ Cao", "items": ["Không đường nào nối Astragentic tới Superpowers hay tới others", "Việc không có đường là chủ ý, không phải xúc phạm", "Cùng lớp, khác lựa chọn, không ai bị xếp hạng"] }
   ]

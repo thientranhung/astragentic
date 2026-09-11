@@ -6,7 +6,7 @@
     "output": "layer-map.html",
     "quality_profile": "showcase",
     "views": [
-      { "id": "the-rented-method", "label": "The one edge", "focus": ["astragentic", "mattpocock_skills"], "note": "Astragentic dispatches sessions; the method inside each session is rented, not built." },
+      { "id": "the-one-edge", "label": "The one edge", "focus": ["astragentic", "mattpocock_skills"], "note": "Astragentic dispatches sessions; the method inside each session is used, not built." },
       { "id": "same-layer", "label": "Same layer, no ranking", "focus": ["mattpocock_skills", "superpowers", "others"], "note": "Every method box sits at the same height. No line touches Superpowers or others." }
     ]
   },
@@ -25,10 +25,10 @@
     { "kind": "region", "label": "METHOD", "wraps": ["mattpocock_skills", "superpowers", "others"], "pad": 16 }
   ],
   "connections": [
-    { "from": "astragentic", "to": "mattpocock_skills", "label": "rents", "variant": "emphasis", "fromSide": "left", "toSide": "left", "via": [[10, 497], [10, 97]] }
+    { "from": "astragentic", "to": "mattpocock_skills", "label": "uses", "variant": "emphasis", "fromSide": "left", "toSide": "left", "via": [[28, 497], [28, 97]], "labelAt": [28, 397] }
   ],
   "cards": [
-    { "dot": "emerald", "title": "One Layer Is Ours", "items": ["Astragentic sits at the bottom, dispatching sessions against a tracker", "Runtimes sit in the middle — Claude Code, Codex, OpenCode, interchangeable", "Method sits on top, inside each session, and Astragentic rents exactly one"] },
+    { "dot": "emerald", "title": "One Layer Is Ours", "items": ["Astragentic sits at the bottom, dispatching sessions against a tracker", "Runtimes sit in the middle — Claude Code, Codex, OpenCode, interchangeable", "Method sits on top, inside each session, and Astragentic uses exactly one"] },
     { "dot": "cyan", "title": "No Node Promoted", "items": ["Every node in the method band is the same size, same fill, same weight", "mattpocock-skills gets no visual promotion for being the one Astragentic uses", "Only the edge marks the relationship — not the box"] },
     { "dot": "rose", "title": "The Rest Sit at the Same Height", "items": ["No line connects Astragentic to Superpowers or to others", "Their absence of a line is the point, not an insult", "Same layer, different choice, nobody ranked"] }
   ]

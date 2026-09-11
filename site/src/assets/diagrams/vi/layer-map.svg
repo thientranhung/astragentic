@@ -31,7 +31,7 @@
         <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="2" data-composition-frame-label="PHƯƠNG PHÁP" x="24" y="36" width="692" height="118" rx="12" class="c-region" stroke-width="1"/>
 
         <!-- Connection paths (before components for correct z-order) -->
-        <path data-edge-from="astragentic" data-edge-to="mattpocock_skills" data-edge-label="đi thuê" data-edge-key="0" data-composition-points="40,497;10,497;10,97;40,97" d="M 40 497 L 18 497 Q 10 497 10 489 L 10 105 Q 10 97 18 97 L 40 97" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="astragentic" data-edge-to="mattpocock_skills" data-edge-label="dùng" data-edge-key="0" data-composition-points="40,497;28,497;28,97;40,97" d="M 40 497 L 34 497 Q 28 497 28 491 L 28 103 Q 28 97 34 97 L 40 97" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
 
         <!-- Components -->
         <g id="node-astragentic" data-node-id="astragentic" data-node-label="Astragentic" tabindex="0" role="button" aria-label="Focus Astragentic, điều phối, ĐIỀU PHỐI" aria-pressed="false" data-node-kind="backend" data-node-sublabel="điều phối" data-node-context="ĐIỀU PHỐI">
@@ -118,9 +118,9 @@
         </g>
 
         <!-- Connection labels -->
-        <g data-detail="context" data-edge-from="astragentic" data-edge-to="mattpocock_skills" data-edge-label="đi thuê" data-edge-key="0">
-          <rect x="-11.8" y="277" width="43.6" height="14" rx="3" class="c-mask"/>
-          <text x="10" y="287" class="t-backend" font-size="8" text-anchor="middle">đi thuê</text>
+        <g data-detail="context" data-edge-from="astragentic" data-edge-to="mattpocock_skills" data-edge-label="dùng" data-edge-key="0">
+          <rect x="13" y="387" width="30" height="14" rx="3" class="c-mask"/>
+          <text x="28" y="397" class="t-backend" font-size="8" text-anchor="middle">dùng</text>
         </g>
 
         <!-- Boundary labels (foreground masks keep routes out of titles) -->
