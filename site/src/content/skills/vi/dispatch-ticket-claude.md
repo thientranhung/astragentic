@@ -35,9 +35,9 @@ Làm sai thứ tự sẽ sinh ra một trạng thái kết thúc giả mà mọi
 mạnh.
 
 Thứ tự này đến từ hai lỗi riêng biệt rơi vào cùng bốn bước. Tin nhắn giữa hai session không phải
-một lượt của người dùng, nên lệnh slash không bao giờ chạy (AST-112). Và một `SendMessage` chỉ có
+một lượt của người dùng, nên lệnh slash không bao giờ chạy. Và một `SendMessage` chỉ có
 phần thân vẫn tạo ra một lượt, nên watch arm quá sớm sẽ thấy *lượt đó* kết thúc rồi báo idle cho
-một Builder chưa hề bắt đầu (AST-114). Giờ thứ tự được ghi ngay tại chỗ dùng, không để người đọc tự
+một Builder chưa hề bắt đầu. Giờ thứ tự được ghi ngay tại chỗ dùng, không để người đọc tự
 suy.
 <!-- source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md -->
 
@@ -80,25 +80,25 @@ suy.
 
 Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Tất cả đều `promoted`.
 
-- **AST-112**: skill từng bảo Thomas gửi cả brief, kèm luôn lệnh slash, bằng một `SendMessage`,
+- **Brief và lệnh slash gộp vào một `SendMessage`.** Skill từng bảo Thomas gửi cả brief, kèm luôn lệnh slash, bằng một `SendMessage`,
   với lý do rằng nó tới nơi như một lượt người dùng. Câu đó sai, và nó tồn tại qua bốn bản phát
   hành. Đã sửa: phần thân đi bằng `SendMessage`, lệnh thì gõ.
-- **AST-055**: cùng một lỗi trong cùng một vòng cho ra một cú từ chối ồn ào ở pane Builder và
+- **Một khoảng trống hợp đồng giữa hai pane.** Cùng một lỗi trong cùng một vòng cho ra một cú từ chối ồn ào ở pane Builder và
   một cú thay thế im lặng ở pane Shaper, vì một hợp đồng có câu "chính cú fail là phát hiện" còn
   hợp đồng song song thì không. Giờ cả hai đều có, và đó là lý do bước kiểm echo là bằng chứng
   dương chứ không phải phép lịch sự.
-- **AST-114**: tách bước gửi thành hai bước làm cái watch arm nhầm vào bước còn lại. Đã sửa: arm
+- **Watch bị arm nhầm bước.** Tách bước gửi thành hai bước làm cái watch arm nhầm vào bước còn lại. Đã sửa: arm
   sau khi echo, không bao giờ arm sau phần thân.
-- **AST-107**: một `herdr agent wait` trần đặt trong Monitor vẫn chạy nhưng không phản hồi. Đo được nó
+- **Một wait trần bị treo mà không báo lỗi.** Một `herdr agent wait` trần đặt trong Monitor vẫn chạy nhưng không phản hồi. Đo được nó
   ngồi 10 phút 25 giây trước một pane vốn đã idle, trong khi một lệnh wait y hệt phát ra cùng
   phút đó trả về sau 0 giây. Đã sửa: Monitor bọc script canh, script cắt lệnh wait thành lát và
   lấy mọi phán quyết từ một `herdr agent get` mới.
-- **AST-108**: một Monitor không đặt `timeout_ms` cắt một ca canh dài một tiếng xuống năm phút,
+- **Thiếu `timeout_ms` cắt ngắn ca canh.** Một Monitor không đặt `timeout_ms` cắt một ca canh dài một tiếng xuống năm phút,
   nên ticket càng lớn thì khả năng cái watch đã biến mất càng cao. Đã sửa: cả hai trường đều
   tường minh trong mọi template, và thông báo `Monitor timed out` nghĩa là arm lại, không phải
   nhiễu.
-- **AST-097**: `TERMINAL:done` nghĩa là lượt đó đã kết thúc, không phải công việc đã xong.
-- **AST-036**: một worktree chỉ mang nội dung đã tracked, đúng thứ mà bước kiểm adapter ở trên
+- **Đọc nhầm `TERMINAL:done` là việc đã xong.** `TERMINAL:done` nghĩa là lượt đó đã kết thúc, không phải công việc đã xong.
+- **Worktree không mang file chưa tracked.** Một worktree chỉ mang nội dung đã tracked, đúng thứ mà bước kiểm adapter ở trên
   sinh ra để bắt.
 
 <!-- source: harness/.agents/memory/recurring-failure-modes.md -->

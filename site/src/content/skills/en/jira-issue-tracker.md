@@ -73,13 +73,13 @@ is one call rather than the N+1 loop GitHub forces.
 
 Pulled from `harness/.agents/memory/recurring-failure-modes.md`. Both are marked `promoted`.
 
-- **AST-057**: a frontier that is only computed is invisible to the one person who cannot
+- **A frontier computed but invisible to the dispatcher.** A frontier that is only computed is invisible to the one person who cannot
   compute it. The readiness state exists for the human, and an agent will not notice it missing
   because it re-derives readiness on demand. The contract fixes this by writing the computed
   answer back as state, in the same action that closes the last blocker, and by never reading a
   readiness label as a blocker. Readiness plus an open `is blocked by` link is a contradiction,
   so move the ticket back in the same action that adds the link.
-- **AST-074**: a tracker measured only against itself cannot detect its own drift. Four tickets
+- **A tracker measuring only itself missed drift.** A tracker measured only against itself cannot detect its own drift. Four tickets
   stayed claimed and in-progress after their code had merged, nothing errored, and the drift
   lived in the tracker's content, where no reachability check can see it. The fix is
   `reconcile-tracker`, which measures the tracker against git. It is read-only by a recorded

@@ -79,13 +79,13 @@ The ledger names no entry against this skill file. The two below are bound to
 `harness/.codex/profiles/*.config.toml`, the templates this skill's pre-dispatch check reads,
 and both are marked `promoted`.
 
-- **AST-040**: the package shipped `model = "gpt-5.1-codex"` in all four Codex profiles. It
+- **A profile shipped with a matching model id.** The package shipped `model = "gpt-5.1-codex"` in all four Codex profiles. It
   resolves on no account, and it failed at neither install, adaptation nor any doctor run,
   because the template and the profile copied from it agreed perfectly. It failed at the first
   cross-vendor call, at end of phase, looking like the provider being down. Fixed: ship no id,
   `model = ""` plus a comment naming where the real one comes from, and a doctor that misses on
   empty.
-- **AST-041**: a file called "the owner's" that also ships in the payload has two homes, and the
+- **A scaffold file got overwritten.** A file called "the owner's" that also ships in the payload has two homes, and the
   shipped one wins. Fixed: the profiles are scaffold, written when absent and never overwritten.
   That is why this skill reports drift instead of correcting it.
 

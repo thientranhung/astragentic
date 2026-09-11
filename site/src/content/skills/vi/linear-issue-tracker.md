@@ -69,14 +69,14 @@ Có hai thứ nên biết trước khi chọn Linear, và thứ nhất không li
 
 Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Cả hai đều `promoted`.
 
-- **AST-057**: một frontier chỉ được tính ra thì vô hình với đúng người không tính được nó. Đo
+- **Frontier tính ra nhưng vô hình với người dispatch.** Một frontier chỉ được tính ra thì vô hình với đúng người không tính được nó. Đo
   trên chính workspace này: **không một issue nào từng đi vào `Todo`**, và một ticket nằm lại
   `Backlog` hàng giờ sau khi cả hai cái chặn của nó đã merge. Nguyên nhân gốc nằm ở một skill của
   plugin: nó ghi một *label* sẵn sàng lúc tạo ticket rồi không bao giờ quay lại, nên hai cách
   biểu diễn độ sẵn sàng nằm cạnh nhau mà không cách nào trả lời được câu hỏi của người dispatch.
   Hợp đồng sửa việc này bằng cách ghi kết quả tính được trở lại thành trạng thái, và không bao
   giờ đọc một label sẵn sàng như một cái chặn.
-- **AST-074**: đẩy ticket lên frontier chỉ dựa vào cạnh chặn thì bao quá rộng. Điều đó đo lại
+- **Frontier promotion bỏ qua epic cha bị chặn.** Đẩy ticket lên frontier chỉ dựa vào cạnh chặn thì bao quá rộng. Điều đó đo lại
   được trên Linear khi ba ticket nổi lên như claim được ngay giữa một phase trước đó, vì một
   sub-issue không có cái chặn nào đọc ra là sẵn sàng ngay cả khi epic cha của nó đang bị chặn.
   Bản sửa giữ việc đẩy lên frontier làm phán đoán của người điều phối, ghi thẳng trong

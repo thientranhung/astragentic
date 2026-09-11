@@ -36,7 +36,7 @@ looks ready at once and the ordering falls back to guesswork.
 
 The skill also carries a correction measured inside this harness. It used to ask for *"the code
 map"* in prose, which is why `CODE-MAP.md` survived for weeks as an artifact a filename grep
-called an orphan while a shipped skill wanted it on every run (AST-071). It now resolves each
+called an orphan while a shipped skill wanted it on every run. It now resolves each
 item against the current tree with `rg` and `git log` — what it should have said from the
 start, because a stale map is wrong exactly where triage needs it most: on code that moved or
 died.
@@ -88,13 +88,13 @@ died.
 
 Pulled from `harness/.agents/memory/recurring-failure-modes.md`.
 
-- **AST-071** · promoted. Seven reachability checks asked whether a thing was named, whether a
+- **A map wrongly flagged as orphaned.** Seven reachability checks asked whether a thing was named, whether a
   path existed, whether an address was callable. None asked whether anything read what the package
   produced. `batch-triage` is the entry's counter-example: it asked for "the code map" in prose,
   so a filename grep declared that artifact an orphan while a shipped skill wanted it on every
   run. **A grep for a name is not a search for a consumer.** Fixed: check 8 requires a hand-written
   registry row naming a reader, and `batch-triage` reads the tree directly rather than a map.
-- **AST-050** · promoted. This is not the skill's own defect, but it landed on the file this skill
+- **A regex rewrite mangled three paths.** This is not the skill's own defect, but it landed on the file this skill
   loads first: a blanket regex rewriting `/triage` also rewrote three
   `docs/agents/triage-labels.md` paths into nonsense, because `\b` matched mid-path. Caught by
   reading the diff, not by any check.

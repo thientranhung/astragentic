@@ -30,7 +30,7 @@ lượt này.
 `codex-arm`.** Builder chạy arm Codex thì làm ngay trong worktree của chính nó, vì
 `codex exec review` chỉ đọc. Builder chạy arm này thì không được, vì `claude -p` là một agent đầy
 đủ, có Edit và Bash. Sao chép đường đi của Codex ở đây là trao checkout Builder đang dùng cho một
-reviewer biết ghi, tức dựng lại AST-016 trên cơ chế mới nhất.
+reviewer biết ghi, tức dựng lại đúng sự cố HEAD bị dời dưới chân nhau trên cơ chế mới nhất.
 <!-- source: harness/.agents/skills/codex-claude-arm/SKILL.md -->
 
 ## Khi nào Thomas gọi nó
@@ -73,15 +73,15 @@ reviewer biết ghi, tức dựng lại AST-016 trên cơ chế mới nhất.
 Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Cả ba đều đang ở trạng thái
 `promoted`.
 
-- **AST-016**: các agent dùng chung một checkout đã dời HEAD dưới chân nhau, kể cả một reviewer
+- **HEAD bị dời dưới chân nhau.** Các agent dùng chung một checkout đã dời HEAD dưới chân nhau, kể cả một reviewer
   chỉ đọc lỡ `git switch` HEAD của người khác. Đã sửa: cách ly là vô điều kiện với mọi agent
   được spawn mà có thể chạy lệnh git làm đổi trạng thái. Đó là lý do `claude -p` vẫn có
   worktree detached riêng ngay cả khi Builder đang đứng sẵn trong cây được review.
-- **AST-103**: arm lặng lẽ review một khoảng không có commit nào rồi trả về sạch, đo được hai
+- **Review rỗng báo sạch.** Arm lặng lẽ review một khoảng không có commit nào rồi trả về sạch, đo được hai
   lần trong hai ngày trên cùng một dự án, cả hai lần do người vận hành bắt chứ không phải gate.
   Đã sửa: khối setup thoát khác 0 khi `git rev-list --count` bằng 0, và dòng đầu output nêu
   khoảng review để một lượt review rỗng lộ ra ngay.
-- **AST-135**: điểm chạy phải đi theo artifact. Builder giờ tự chạy `arm: ticket` từ worktree của
+- **Điểm chạy phải theo artifact.** Builder giờ tự chạy `arm: ticket` từ worktree của
   chính nó, còn Thomas giữ `arm: spec` và `arm: slice`. Skill này cố tình không sao chép cú dời đó
   ở phạm vi ticket, và entry đó nói rõ vì sao.
 

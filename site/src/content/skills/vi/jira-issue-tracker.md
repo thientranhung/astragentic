@@ -73,13 +73,13 @@ một cú gọi thay vì vòng lặp N+1 mà GitHub ép.
 
 Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Cả hai đều `promoted`.
 
-- **AST-057**: một frontier chỉ được tính ra thì vô hình với đúng người không tính được nó.
+- **Frontier tính ra nhưng vô hình với người dispatch.** Một frontier chỉ được tính ra thì vô hình với đúng người không tính được nó.
   Trạng thái sẵn sàng tồn tại cho con người, và một agent sẽ không nhận ra nó thiếu, vì agent tự
   suy lại độ sẵn sàng bất cứ lúc nào. Hợp đồng sửa việc này bằng cách ghi kết quả tính được trở
   lại thành trạng thái, ngay trong hành động đóng cái chặn cuối cùng, và không bao giờ đọc một
   label "sẵn sàng" như một cái chặn. Sẵn sàng mà vẫn còn link `is blocked by` đang mở là một mâu
   thuẫn, nên hãy kéo ticket lùi lại ngay trong cùng hành động thêm link đó.
-- **AST-074**: một tracker chỉ được đo bằng chính nó thì không phát hiện được nó đang trôi. Bốn
+- **Tracker tự đo mình bỏ lỡ độ trôi.** Một tracker chỉ được đo bằng chính nó thì không phát hiện được nó đang trôi. Bốn
   ticket vẫn ở trạng thái đã claim và đang làm sau khi code đã merge, không có gì báo lỗi, và độ
   trôi nằm trong *nội dung* của tracker, chỗ mà không lớp kiểm reachability nào nhìn tới. Bản sửa
   là `reconcile-tracker`, đem tracker ra đo với git. Skill đó chỉ đọc theo một phán quyết được

@@ -75,15 +75,15 @@ STOP, và "không cú nào chạm bề mặt" là câu trả lời hợp lệ, c
 
 ## Lỗi đã biết
 
-- `AST-045`: một agent đi bộ bằng trình duyệt được ship qua vài bản phát hành mà chưa chạy lần nào;
+- **Ship xong nhưng không đấu dây với ai.** Một agent đi bộ bằng trình duyệt được ship qua vài bản phát hành mà chưa chạy lần nào;
   không hợp đồng nào sở hữu nó, không dispatcher nào gọi tên nó. Promoted, sửa bằng phần đấu dây
   (hợp đồng, dispatcher, kiểm tra reachability), không phải bằng chính cái file còn thiếu.
-- `AST-135`: hàng đợi dispatch của chính bên kiểm chứng thì vô hình với chính nó, nên điểm chạy phải
+- **Hàng đợi của chính mình vô hình với chính mình.** Hàng đợi dispatch của chính bên kiểm chứng thì vô hình với chính nó, nên điểm chạy phải
   bám theo artifact thay vì theo lịch. Promoted, được skill này và `thomas.md` trích dẫn.
-- `AST-046`: khi dời phần cơ chế của lượt đi bộ ra khỏi `review-with-rin`, ba dòng cũ vẫn đi theo,
+- **Dời chữ nhưng để lại tên cũ.** Khi dời phần cơ chế của lượt đi bộ ra khỏi `review-with-rin`, ba dòng cũ vẫn đi theo,
   vẫn gọi người đi bộ là "Rin" và gọi lượt đi bộ là "một mode". Promoted, chữ đã dời thì chưa về
   nhà mới cho tới khi được đọc lại trong ngữ cảnh mới.
-- `AST-100` / `AST-101` / `AST-115`: một app đang chạy rò tiến trình broker và container database
+- **Teardown lỡ tay dừng luôn container dùng chung.** Một app đang chạy rò tiến trình broker và container database
   sau mỗi lượt đi bộ; một lần teardown đặt sai phạm vi từng dừng luôn container test dùng chung mà
   mọi Builder đang chạy đều phụ thuộc vào đó. Promoted, cleanup chạy theo thứ tự: giết app, xác nhận
   port, teardown có giới hạn phạm vi, rồi mới `--force` cái worktree.

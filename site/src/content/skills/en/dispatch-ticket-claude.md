@@ -35,9 +35,9 @@ Getting them out of order produces a false terminal state that every downstream 
 healthy.
 
 That order comes from two separate defects landing on the same four steps. A peer message is not
-a user turn, so the slash command never fired (AST-112). And a body-only `SendMessage` still
+a user turn, so the slash command never fired. And a body-only `SendMessage` still
 produces a turn, so a watch armed too early sees *that* turn end and reports idle on a Builder
-that has not started (AST-114). The order is now stated at the point of use rather than left to
+that has not started. The order is now stated at the point of use rather than left to
 inference.
 <!-- source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md -->
 
@@ -81,25 +81,25 @@ inference.
 
 Pulled from `harness/.agents/memory/recurring-failure-modes.md`. All are marked `promoted`.
 
-- **AST-112**: the skill told Thomas to send the whole brief, slash command included, with one
+- **The brief and slash command merged into one `SendMessage`.** The skill told Thomas to send the whole brief, slash command included, with one
   `SendMessage`, on the stated ground that it arrives as a user turn. That sentence was false,
   and it shipped for four releases. Fixed: the body travels by `SendMessage`, the command is
   typed.
-- **AST-055**: the same defect in the same round produced a loud refusal in the Builder pane and
+- **A contract gap between two panes.** The same defect in the same round produced a loud refusal in the Builder pane and
   a silent substitute in the Shaper pane, because one contract carried "the failure IS the
   finding" and its counterpart did not. Both carry it now, and this is why the echo check is
   positive evidence rather than a courtesy.
-- **AST-114**: splitting submission into two steps left the watch armed against the wrong one.
+- **The watch armed against the wrong step.** Splitting submission into two steps left the watch armed against the wrong one.
   Fixed: arm after the echo, never after the body.
-- **AST-107**: a bare `herdr agent wait` inside a Monitor stayed alive and went deaf. It was
+- **A bare wait hung without reporting.** A bare `herdr agent wait` inside a Monitor stayed alive and went deaf. It was
   measured sitting 10m25s against a pane that was already idle, while an identical wait in the
   same minute returned in 0s. Fixed: the Monitor wraps the watcher script, which slices the wait
   and takes every verdict from a fresh `herdr agent get`.
-- **AST-108**: a Monitor with no `timeout_ms` caps an hour-long watch at five minutes, so the
+- **A missing `timeout_ms` cut the watch short.** A Monitor with no `timeout_ms` caps an hour-long watch at five minutes, so the
   bigger the ticket the likelier the watch is already gone. Fixed: both fields explicit in every
   template, and a `Monitor timed out` notification means re-arm, not noise.
-- **AST-097**: `TERMINAL:done` means the turn ended, not that the work finished.
-- **AST-036**: a worktree carries tracked content only, which is what the adapter check above
+- **Reading `TERMINAL:done` as work finished.** `TERMINAL:done` means the turn ended, not that the work finished.
+- **Worktrees don't carry untracked files.** A worktree carries tracked content only, which is what the adapter check above
   exists to catch.
 
 <!-- source: harness/.agents/memory/recurring-failure-modes.md -->

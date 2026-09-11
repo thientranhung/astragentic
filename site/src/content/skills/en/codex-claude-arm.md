@@ -29,7 +29,7 @@ The second difference is quieter and cost more: **the ticket scope is deliberate
 with `codex-arm`.** A Builder running the Codex arm does it inside its own worktree, because
 `codex exec review` only reads. A Builder running this arm may not, because `claude -p` is a full
 agent with Edit and Bash. Copying the Codex path here would hand a writing reviewer the Builder's
-live checkout, which is AST-016 rebuilt on the newest mechanism.
+live checkout, which rebuilds the same HEAD-clobbering failure on the newest mechanism.
 <!-- source: harness/.agents/skills/codex-claude-arm/SKILL.md -->
 
 ## When Thomas reaches for it
@@ -72,15 +72,15 @@ live checkout, which is AST-016 rebuilt on the newest mechanism.
 Pulled from `harness/.agents/memory/recurring-failure-modes.md`. All three are marked
 `promoted`.
 
-- **AST-016**: agents sharing one checkout moved HEAD under each other, including a read-only
+- **HEAD moved under another agent.** Agents sharing one checkout moved HEAD under each other, including a read-only
   reviewer that `git switch`ed someone else's HEAD. Fixed: isolation is unconditional for any
   spawned agent that can run state-changing git. That is why `claude -p` gets its own detached
   worktree even when the Builder is already standing in the reviewed tree.
-- **AST-103**: the arm silently reviewed a zero-commit range and returned clean, measured twice
+- **A vacuous review reported clean.** The arm silently reviewed a zero-commit range and returned clean, measured twice
   in two days on one project, both times caught by the operator rather than by the gate.
   Fixed: the setup block exits non-zero when `git rev-list --count` is 0, and the first line of
   output states the range so a vacuous review is visible at a glance.
-- **AST-135**: the run point had to follow the artifact. The Builder now runs `arm: ticket`
+- **The run point must follow the artifact.** The Builder now runs `arm: ticket`
   from its own worktree, while Thomas keeps `arm: spec` and `arm: slice`. This skill does not
   copy that move at ticket scope, and the entry says why.
 

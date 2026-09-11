@@ -72,12 +72,12 @@ This adapter exists to report that collapse instead of letting it pass as a norm
 
 Pulled from `harness/.agents/memory/recurring-failure-modes.md`. Both are marked `promoted`.
 
-- **AST-032**: a signal that cannot fail is not evidence. OpenCode supplies the purest instance
+- **A signal that cannot fail is not evidence.** OpenCode supplies the purest instance
   in the ledger: a fabricated `idle`, and a dead OpenCode process that still answered
   `interactive_ready: true` for at least one poll interval. The rule this earned is general.
   Detection quality is a per-runtime property that must be checked rather than assumed, and where
   a state has no rule behind it, verify-by-artifact is the only instrument that works.
-- **AST-097**: `TERMINAL:done` means the turn ended, not that the work finished, and `pgrep` is
+- **`TERMINAL:done` was read as work finished.** `TERMINAL:done` means the turn ended, not that the work finished, and `pgrep` is
   the source that answered wrong in the field. That matters more here than anywhere, because the
   transcript source that was supposed to corroborate it returns nothing on OpenCode.
 

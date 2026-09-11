@@ -71,14 +71,14 @@ Vì vậy toàn bộ báo cáo phải rơi vào một file do Thomas đặt tên
 
 ## Lỗi đã biết
 
-- `AST-030`: orchestrator ghi tên một runtime cho dòng `rin` mà runtime đó không có đường dispatch
+- **Một runtime bị ghi tên sai.** Orchestrator ghi tên một runtime cho dòng `rin` mà runtime đó không có đường dispatch
   nào, nên Rin thành không dispatch được. Promoted: ma trận launcher giờ là nhà duy nhất của mọi role.
-- `AST-033`: cách tra cũ "có tab ticket nào đang mở không?" trả lời "không" mọi lần ở một gate
+- **Một cách tra sai biến gate thành vô hình.** Cách tra cũ "có tab ticket nào đang mở không?" trả lời "không" mọi lần ở một gate
   spec, âm thầm biến mọi gate spec thành một subagent vô hình. Promoted, đã được thay bằng câu hỏi
   "có gọi được tên workspace không?"
-- `AST-043`: gate đòi bản brief mang theo "bằng chứng browser-verify của Builder", trong khi
+- **Gate đòi một bằng chứng chưa ai hứa tạo ra.** Gate đòi bản brief mang theo "bằng chứng browser-verify của Builder", trong khi
   `builder.md` chưa từng nhắc là phải tạo ra thứ đó. Promoted: hợp đồng nào nợ nó thì giờ đã nói ra.
-- `AST-032`: một pipeline sinh token có thể hỏng giữa ống mà vẫn thoát mã 0 dưới `set -e` trần, làm
+- **Pipeline hỏng giữa ống vẫn thoát mã 0.** Một pipeline sinh token có thể hỏng giữa ống mà vẫn thoát mã 0 dưới `set -e` trần, làm
   rỗng token freshness trong im lặng. Promoted, sửa bằng `set -euo pipefail` cộng một lượt kiểm độ dài.
 <!-- source: harness/.agents/memory/recurring-failure-modes.md -->
 

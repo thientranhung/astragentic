@@ -75,20 +75,20 @@ sản phẩm có.
 Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Mọi mục dưới đây đều ở trạng thái
 `promoted`: đã sửa và đã nằm trong hợp đồng mà trang này mô tả.
 
-- **AST-103**: companion resolve `HEAD` từ chính checkout nó đang chạy. Chỗ nào cái đó lệch với
+- **Base lệch checkout, review tự so với chính mình.** Companion resolve `HEAD` từ chính checkout nó đang chạy. Chỗ nào cái đó lệch với
   `--base` thì lượt chạy đem base branch so với chính nó và trả về sạch. Bị bắt hai lần, bởi người
   vận hành chứ không phải bởi gate. Đã sửa: in dải commit và file thành dòng output đầu tiên,
   dừng khi dải có 0 commit.
-- **AST-095**: companion thoát mã 0 khi lỗi cấu hình, và cache state khoá theo workspace root. Đã
+- **Thoát mã 0 khi cấu hình lỗi.** Companion thoát mã 0 khi lỗi cấu hình, và cache state khoá theo workspace root. Đã
   sửa: không bao giờ rẽ nhánh theo exit code, chỉ theo nội dung file output; không bao giờ dùng
   lại một đường dẫn gate worktree.
-- **AST-100**: mỗi lần gọi `codex-companion.mjs` lại sinh một tiến trình broker chạy lâu hơn cả
+- **Broker mồ côi tích lại qua các lượt review.** Mỗi lần gọi `codex-companion.mjs` lại sinh một tiến trình broker chạy lâu hơn cả
   lượt review, đo được 92 tiến trình mồ côi (~405 MB) trên hai project. Đã sửa: giết broker theo
   cwd thật trước khi gỡ gate worktree.
-- **AST-115**: một target teardown ở cấp project bị dùng làm bước release đã dừng luôn container
+- **Teardown cấp project giết luôn hạ tầng dùng chung.** Một target teardown ở cấp project bị dùng làm bước release đã dừng luôn container
   test-database dùng chung mà mọi Builder đang chạy đều phụ thuộc vào đó. Đã sửa: giới hạn release
   trong đúng worktree này, hoặc không release gì cả.
-- **AST-016**: một reviewer chỉ đọc nhưng có shell vẫn dịch được `HEAD` của agent khác bằng
+- **Reviewer chỉ đọc vẫn dời được HEAD người khác.** Một reviewer chỉ đọc nhưng có shell vẫn dịch được `HEAD` của agent khác bằng
   `git switch`. Đã sửa, và điều này chịu lực cho `codex-claude-arm`: `claude -p` là một agent đầy
   đủ, nên cả cánh tay ở phạm vi ticket cũng có detached worktree riêng.
 

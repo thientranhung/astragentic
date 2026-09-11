@@ -71,13 +71,13 @@ project that moved from Linear to GitHub on 2026-08-21.
 
 Pulled from `harness/.agents/memory/recurring-failure-modes.md`. Both are marked `promoted`.
 
-- **AST-057**: a frontier that is only computed is invisible to the one person who cannot
+- **A computed frontier the owner never sees.** A frontier that is only computed is invisible to the one person who cannot
   compute it. An agent re-runs the query on demand and never notices anything missing, while the
   owner opens the board and looks. Measured on a live project: zero issues had ever entered the
   unstarted state across the project's whole life. The contract fixes this in two halves. First,
   write the computed answer back as state. Second, never read a readiness label as a blocker.
   A merge step then has to be reported, where `none` is a valid report and silence is not.
-- **AST-074**: a tracker measured only against itself cannot detect its own drift. Four tickets
+- **A tracker measured only against itself can't see its own drift.** Four tickets
   sat claimed and in-progress with a live assignee after their code had merged, the oldest by a
   full day, and nothing errored. A wrong state is still perfectly consistent with itself, so the
   oracle has to be independent of what it measures. The fix is `reconcile-tracker` plus

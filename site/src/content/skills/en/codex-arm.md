@@ -75,20 +75,20 @@ Skipping it would have shipped a production 500 on the only unstick path the pro
 Pulled from `harness/.agents/memory/recurring-failure-modes.md`. All entries below are marked
 `promoted`: fixed and already in the contract this page describes.
 
-- **AST-103**: the companion resolves `HEAD` from the checkout it runs in. Where that disagrees
+- **A base mismatched with the checkout compares clean against itself.** The companion resolves `HEAD` from the checkout it runs in. Where that disagrees
   with `--base`, the run compares the base branch to itself and returns clean. Caught twice by
   the operator, not by the gate. Fixed: print the commit and file range as the first output line,
   stop on 0 commits.
-- **AST-095**: the companion exits 0 on configuration failure and caches state keyed to the
+- **Exits 0 on configuration failure.** The companion exits 0 on configuration failure and caches state keyed to the
   workspace root. Fixed: never branch on exit code, only on the output file's content; never
   reuse a gate worktree path.
-- **AST-100**: every `codex-companion.mjs` call spawned a broker process that outlived the
+- **Orphaned brokers piled up across reviews.** Every `codex-companion.mjs` call spawned a broker process that outlived the
   review, 92 orphans (~405 MB) measured across two projects. Fixed: kill the broker by real cwd
   before removing the gate worktree.
-- **AST-115**: a project-level teardown target used as the release step stopped the shared
+- **A project-level teardown killed shared infrastructure.** A project-level teardown target used as the release step stopped the shared
   test-database container every live Builder was standing on. Fixed: scope release to this
   worktree alone, or release nothing.
-- **AST-016**: a read-only reviewer with shell access still moved another agent's `HEAD` via
+- **A read-only reviewer still moved another agent's HEAD.** A read-only reviewer with shell access still moved another agent's `HEAD` via
   `git switch`. Fixed, and load-bearing for `codex-claude-arm`: `claude -p` is a full agent, so
   even the ticket-scope arm gets its own detached worktree.
 

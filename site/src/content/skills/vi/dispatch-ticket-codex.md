@@ -77,12 +77,12 @@ Ledger không có entry nào ghi tên file skill này. Hai entry dưới đây g
 `harness/.codex/profiles/*.config.toml`, chính các template mà bước kiểm trước dispatch của skill
 này đọc, và cả hai đều `promoted`.
 
-- **AST-040**: gói này từng ship `model = "gpt-5.1-codex"` trong cả bốn profile Codex. Nó không
+- **Profile ship kèm sẵn model id trùng khớp.** Gói này từng ship `model = "gpt-5.1-codex"` trong cả bốn profile Codex. Nó không
   resolve trên bất kỳ tài khoản nào, và nó không fail lúc cài, lúc adapt, hay ở bất kỳ lần chạy
   doctor nào, vì template và profile chép từ nó khớp nhau hoàn hảo. Nó fail ở cú gọi cross-vendor
   đầu tiên, tức cuối phase, và trông y như provider đang sập. Đã sửa: không ship id nào,
   `model = ""` kèm một comment nói id thật lấy từ đâu, và một doctor báo MISS khi trường rỗng.
-- **AST-041**: một file được gọi là "của chủ máy" mà vẫn nằm trong payload thì có hai nhà, và
+- **Một file scaffold bị ghi đè.** Một file được gọi là "của chủ máy" mà vẫn nằm trong payload thì có hai nhà, và
   bản được ship thắng. Đã sửa: profile là scaffold, chỉ ghi khi vắng và không bao giờ bị đè. Đó
   là lý do skill này báo lệch thay vì tự sửa.
 

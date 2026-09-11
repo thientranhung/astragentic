@@ -75,7 +75,7 @@ role nào, nên nó được với tới khi tình huống xuất hiện chứ k
 Có một entry trong `harness/.agents/memory/recurring-failure-modes.md` gọi tên skill này. Nó ở
 trạng thái `promoted`.
 
-- **AST-051**: một địa chỉ mà người gọi không dùng được thì sinh ra một thứ thay thế, không sinh
+- **Một địa chỉ mà agent không gọi được.** Một địa chỉ mà người gọi không dùng được thì sinh ra một thứ thay thế, không sinh
   ra lỗi. Một hợp đồng gọi tên một lượt chạy bằng lệnh slash, vốn là dạng *con người* gõ, và một
   agent không có bàn phím thì không gọi được. Hệ quả là hai Builder mỗi người tự làm một cú dọn
   dẹp thủ công, cả hai lần handback đều mô tả trung thực một lượt chạy có thật, và skill thật bắn

@@ -69,14 +69,14 @@ Two things are worth knowing before choosing Linear, and the first is not about 
 
 Pulled from `harness/.agents/memory/recurring-failure-modes.md`. Both are marked `promoted`.
 
-- **AST-057**: a frontier that is only computed is invisible to the one person who cannot
+- **A frontier computed but invisible to the dispatcher.** A frontier that is only computed is invisible to the one person who cannot
   compute it. Measured on this workspace: **zero issues had ever entered `Todo`**, and a ticket
   sat in `Backlog` for hours after both its blockers merged. The upstream cause is a plugin skill
   writing a readiness *label* at creation and never revisiting it, so two representations of
   readiness sit side by side and neither answers the dispatcher's question. The contract fixes
   this by writing the computed answer back as state, and by never reading a readiness label as a
   blocker.
-- **AST-074**: frontier promotion computed from blocking edges alone is over-inclusive. That was
+- **Frontier promotion missed a blocked parent epic.** Frontier promotion computed from blocking edges alone is over-inclusive. That was
   measured again on Linear when three tickets surfaced as claimable during an earlier phase,
   because a sub-issue with zero blockers reads ready even when its parent epic is blocked. The
   fix keeps promotion as the router's judgement, stated directly in `thomas.md`, rather than a

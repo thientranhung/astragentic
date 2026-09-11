@@ -70,14 +70,14 @@ trên một dự án thật chuyển từ Linear sang GitHub ngày 2026-08-21.
 
 Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Cả hai đều `promoted`.
 
-- **AST-057**: một frontier chỉ được tính ra thì vô hình với đúng người không tính được nó. Agent
+- **Frontier tính được nhưng chủ dự án không thấy.** Một frontier chỉ được tính ra thì vô hình với đúng người không tính được nó. Agent
   chạy lại truy vấn bất cứ lúc nào và không bao giờ nhận ra thiếu thứ gì, còn chủ dự án thì mở
   board ra nhìn. Đo trên một dự án thật: suốt cả đời dự án, không một issue nào từng đi qua trạng
   thái chưa bắt đầu. Hợp đồng sửa việc này bằng hai nửa. Nửa thứ nhất: ghi kết quả tính được trở
   lại thành trạng thái. Nửa thứ hai: không bao giờ đọc một label "sẵn sàng" như một cái chặn.
   Kèm theo là một bước ở merge bắt buộc phải báo cáo, trong đó `none` là báo cáo hợp lệ còn im
   lặng thì không.
-- **AST-074**: một tracker chỉ được đo bằng chính nó thì không phát hiện được nó đang trôi. Bốn
+- **Tracker tự đo chính nó nên không thấy mình trôi.** Bốn
   ticket nằm nguyên trạng thái đã claim, đang làm, có người nhận, sau khi code của chúng đã merge
   vào branch gốc, cái cũ nhất trễ trọn một ngày, và không có gì báo lỗi. Một trạng thái sai vẫn
   hoàn toàn nhất quán với chính nó, nên oracle phải độc lập với thứ nó đo. Bản sửa là

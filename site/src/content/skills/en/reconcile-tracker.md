@@ -69,13 +69,13 @@ stale-claim class is checking for. Which tracker adapter is in play (`github-iss
 
 ## Known failures
 
-- **AST-074**: a tracker measured only against itself cannot detect its own drift. Four tickets
+- **Self-comparison hid the drift.** A tracker measured only against itself cannot detect its own drift. Four tickets
   sat in-progress with a live assignee after their code had already merged, and nothing errored,
   because in-progress with an assignee is indistinguishable from a real in-flight ticket without
   a second source. The shipped fix is `reconcile-tracker` itself plus `ticket-git-facts.sh`,
   deliberately read-only so a wrong-but-tidy tracker never gets marked done on a fuzzy join key.
   <!-- source: harness/.agents/memory/recurring-failure-modes.md -->
-- **AST-127**: the runnable example in this skill's own doc called `ticket-git-facts.sh` without
+- **The doc's own example was wrong.** The runnable example in this skill's own doc called `ticket-git-facts.sh` without
   `TICKET_PREFIX` and labelled it "ALWAYS this form," eight lines above the sentence saying the
   variable is required, a command the script itself refuses. Fixed 2026-08-20. An earlier note
   blaming an adapted project for copying the bad example was itself wrong and was corrected in

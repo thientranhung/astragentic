@@ -77,7 +77,7 @@ so it is reached when the situation arises rather than wired into a phase.
 One entry in `harness/.agents/memory/recurring-failure-modes.md` names this skill. It is marked
 `promoted`.
 
-- **AST-051**: an address the caller cannot use produces a substitute, not an error. A contract
+- **An address the agent couldn't call.** An address the caller cannot use produces a substitute, not an error. A contract
   named a pass by a slash command, which is the form a *human* types, and an agent with no
   keyboard could not invoke it. So two Builders each performed a hand-rolled cleanup, both
   handbacks honestly described a pass that did happen, and the real skill fired later over the

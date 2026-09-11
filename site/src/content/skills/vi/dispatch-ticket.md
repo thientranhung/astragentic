@@ -82,19 +82,19 @@ và sự cô lập đó phủ mọi lệnh có ghi xuống đĩa, không riêng 
 Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Mọi mục dưới đây đều đang ở trạng
 thái `promoted`: đã sửa và đã nằm trong hợp đồng mà trang này mô tả.
 
-- **AST-016 / AST-027**: hai session root dùng chung một checkout, mất commit trong im lặng vì
+- **Checkout dùng chung làm mất commit.** Hai session root dùng chung một checkout, mất commit trong im lặng vì
   một `git switch` chạy song song. Đã sửa: mỗi session một worktree, không ngoại lệ.
-- **AST-036**: harness được allow-list nhưng chưa commit thì vô hình bên trong mọi worktree của
+- **Allow-list chưa commit thì vô hình.** Harness được allow-list nhưng chưa commit thì vô hình bên trong mọi worktree của
   Builder. Đã sửa: kiểm tra commit trước cú dispatch đầu tiên.
-- **AST-032 / AST-037**: một brief nhiều dòng dán vào composer mà không submit, và pane báo
+- **Brief dán vào mà chưa gửi.** Một brief nhiều dòng dán vào composer mà không submit, và pane báo
   `idle` trong lúc nó nằm đó chưa gửi. Đã sửa: bấm Enter tường minh sau khi dán, cộng thêm bắt
   watcher phải thấy trạng thái `working` rồi mới tin là lượt đã bắt đầu.
-- **AST-097**: `TERMINAL:done` nghĩa là lượt đã kết thúc, không phải việc đã xong; một Builder
+- **"Done" chỉ có nghĩa lượt đã kết thúc.** `TERMINAL:done` nghĩa là lượt đã kết thúc, không phải việc đã xong; một Builder
   đang đỗ ở background đọc ra thành done. Đã sửa: kiểm tiến trình OS và dòng status của runtime
   trước khi kết luận là xong.
-- **AST-124**: watcher theo lượt chỉ phủ một lượt rồi thoát; không có gì arm lại, và cú arm lại
+- **Watcher không tự arm lại.** Watcher theo lượt chỉ phủ một lượt rồi thoát; không có gì arm lại, và cú arm lại
   chính là bước hay bị bỏ ngay sau một tác vụ dài. Đã sửa: mỗi lượt mới có watcher mới.
-- **AST-092**: một Builder dừng trước khi commit để lại phần việc chỉ tồn tại trên đĩa;
+- **Dừng trước khi commit.** Một Builder dừng trước khi commit để lại phần việc chỉ tồn tại trên đĩa;
   `git worktree remove` xoá nó không nói gì. Đã sửa: "commit, push, rồi mới trả về" là ba hành
   động tách bạch.
 

@@ -81,19 +81,19 @@ writes to disk, not only git. <!-- source: harness/.agents/skills/dispatch-ticke
 Pulled from `harness/.agents/memory/recurring-failure-modes.md`. Everything below is marked
 `promoted`: fixed and already in the contract this page describes.
 
-- **AST-016 / AST-027**: two root sessions sharing one checkout silently lost commits to a
+- **Shared checkout lost commits.** Two root sessions sharing one checkout silently lost commits to a
   concurrent `git switch`. Fixed: one worktree per session, no exceptions.
-- **AST-036**: a harness allow-listed but not committed is invisible inside every Builder
+- **Uncommitted allow-list was invisible.** A harness allow-listed but not committed is invisible inside every Builder
   worktree. Fixed: a commit check before the first dispatch.
-- **AST-032 / AST-037**: a multi-line brief pastes into the composer without submitting, and the
+- **Pasted brief never submitted.** A multi-line brief pastes into the composer without submitting, and the
   pane reports `idle` while it sits unsent. Fixed: an explicit Enter after the paste, plus
   requiring the watcher to observe `working` before believing the turn began.
-- **AST-097**: `TERMINAL:done` means the turn ended, not that the work finished; a Builder
+- **"Done" only meant the turn ended.** `TERMINAL:done` means the turn ended, not that the work finished; a Builder
   parked on background work reads as done. Fixed: check OS processes and the runtime status line
   before concluding it finished.
-- **AST-124**: the per-turn watcher covers one turn and exits; nothing re-arms it, and the
+- **The watcher never re-armed.** The per-turn watcher covers one turn and exits; nothing re-arms it, and the
   re-arm is the step skipped right after a long task. Fixed: every new turn gets a new watcher.
-- **AST-092**: a Builder that stops before committing leaves work that only exists on disk;
+- **Work stopped before commit.** A Builder that stops before committing leaves work that only exists on disk;
   `git worktree remove` deletes it silently. Fixed: "commit, push, then return" as three
   separate actions.
 

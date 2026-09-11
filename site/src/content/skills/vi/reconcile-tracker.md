@@ -68,13 +68,13 @@ hay `linear-issue-tracker`) quyết định cách đọc nửa phần tracker, n
 
 ## Lỗi đã biết
 
-- **AST-074**: một tracker chỉ được đo đối chiếu với chính nó thì không tự phát hiện được độ lệch
+- **Tự so với chính mình che mất độ lệch.** Một tracker chỉ được đo đối chiếu với chính nó thì không tự phát hiện được độ lệch
   của nó. Bốn ticket nằm in-progress với assignee vẫn còn sau khi code của chúng đã merge, và
   không gì báo lỗi, vì in-progress kèm assignee không phân biệt được với một ticket đang bay thật
   nếu thiếu nguồn thứ hai. Bản vá được ship chính là `reconcile-tracker` cộng
   `ticket-git-facts.sh`, cố ý để chỉ đọc, để một tracker sai nhưng gọn không bao giờ bị đánh dấu
   done dựa trên một khoá nối mờ. <!-- source: harness/.agents/memory/recurring-failure-modes.md -->
-- **AST-127**: ví dụ chạy được ngay trong chính tài liệu của skill này gọi `ticket-git-facts.sh`
+- **Ví dụ trong chính tài liệu lại sai.** Ví dụ chạy được ngay trong chính tài liệu của skill này gọi `ticket-git-facts.sh`
   mà không có `TICKET_PREFIX` rồi dán nhãn "LUÔN dùng dạng này", nằm tám dòng phía trên câu nói
   rằng biến đó là bắt buộc, tức một lệnh mà chính script sẽ từ chối. Đã sửa 2026-08-20. Một ghi
   chú trước đó đổ lỗi cho một project đi mượn vì đã chép lại ví dụ hỏng thì bản thân nó cũng sai,

@@ -36,8 +36,7 @@ sẵn sàng cùng lúc và thứ tự rơi về phỏng đoán.
 
 Skill này còn mang theo một đính chính đo được ngay trong harness này. Trước đây nó yêu cầu
 *"the code map"* bằng văn xuôi, và đó là lý do `CODE-MAP.md` tồn tại nhiều tuần như một artifact
-mà một lượt grep theo tên file gọi là mồ côi, trong khi một skill đã ship cần nó mỗi lượt chạy
-(AST-071). Hiện nó resolve từng item đối chiếu với cây code hiện tại bằng `rg` và `git log` —
+mà một lượt grep theo tên file gọi là mồ côi, trong khi một skill đã ship cần nó mỗi lượt chạy. Hiện nó resolve từng item đối chiếu với cây code hiện tại bằng `rg` và `git log` —
 điều nó lẽ ra phải nói từ đầu, vì một cái map cũ sẽ sai đúng chỗ triage cần nó nhất: trên đoạn
 code đã dời hoặc đã chết.
 <!-- source: RELEASE-NOTES.md (Astraler Harness 1.6.1), harness/.agents/memory/recurring-failure-modes.md -->
@@ -87,14 +86,14 @@ code đã dời hoặc đã chết.
 
 Lấy từ `harness/.agents/memory/recurring-failure-modes.md`.
 
-- **AST-071** · promoted. Bảy lượt kiểm reachability hỏi xem một thứ có được gọi tên không, một
+- **Một map bị gắn nhãn mồ côi nhầm.** Bảy lượt kiểm reachability hỏi xem một thứ có được gọi tên không, một
   đường dẫn có tồn tại không, một địa chỉ có gọi được không. Không lượt nào hỏi có gì đọc thứ mà
   gói này tạo ra hay không. `batch-triage` là ví dụ ngược ngay trong mục đó: nó yêu cầu "the code
   map" bằng văn xuôi, nên một lượt grep theo tên file tuyên bố artifact ấy là mồ côi trong khi một
   skill đã ship cần nó mỗi lượt chạy. **Grep một cái tên không phải là đi tìm người tiêu thụ.** Đã
   sửa: check 8 đòi một dòng trong registry viết tay gọi tên người đọc, và `batch-triage` đọc thẳng
   cây code thay vì đọc một cái map.
-- **AST-050** · promoted. Đây không phải lỗi của chính skill này, nhưng nó rơi trúng file mà skill
+- **Một regex rewrite làm hỏng ba đường dẫn.** Đây không phải lỗi của chính skill này, nhưng nó rơi trúng file mà skill
   này nạp đầu tiên: một regex quét cả loạt để viết lại `/triage` đã viết luôn ba đường dẫn
   `docs/agents/triage-labels.md` thành vô nghĩa, vì `\b` khớp ở giữa đường dẫn. Bị bắt nhờ đọc
   diff, không phải nhờ lượt kiểm nào.

@@ -71,14 +71,14 @@ full report has to land in a file Thomas names and verifies before any cleanup.
 
 ## Known failures
 
-- `AST-030`: the orchestrator named a runtime for the `rin` row with no dispatch path, so Rin
+- **A runtime was named that had no dispatch path.** The orchestrator named a runtime for the `rin` row with no dispatch path, so Rin
   went undispatchable. Promoted: the launcher matrix is now the single home for every role.
-- `AST-033`: the old "is there a live ticket tab?" lookup answered "no" every time at a spec
+- **A bad lookup made a gate invisible.** The old "is there a live ticket tab?" lookup answered "no" every time at a spec
   gate, quietly turning every spec gate into an invisible subagent. Promoted, superseded by
   "can I name the workspace?"
-- `AST-043`: the gate asked the brief to carry "the Builder's browser-verify evidence," but
+- **The gate demanded evidence no one had promised to produce.** The gate asked the brief to carry "the Builder's browser-verify evidence," but
   `builder.md` never mentioned producing one. Promoted: the contract that owes it now says so.
-- `AST-032`: a token-generation pipeline could fail mid-pipe and exit 0 under bare `set -e`,
+- **A pipeline could fail mid-pipe yet exit 0.** A token-generation pipeline could fail mid-pipe and exit 0 under bare `set -e`,
   silently emptying the freshness token. Promoted, fixed by `set -euo pipefail` plus a length
   check.
 <!-- source: harness/.agents/memory/recurring-failure-modes.md -->

@@ -73,13 +73,13 @@ Adapter này tồn tại để báo ra sự co lại đó, thay vì để nó đ
 
 Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Cả hai đều `promoted`.
 
-- **AST-032**: một tín hiệu không thể fail thì không phải bằng chứng. OpenCode cho ví dụ thuần
+- **Một tín hiệu không thể fail thì không phải bằng chứng.** OpenCode cho ví dụ thuần
   nhất trong cả ledger: một `idle` bịa, và một tiến trình OpenCode đã chết vẫn trả lời
   `interactive_ready: true` suốt ít nhất một chu kỳ poll. Luật rút ra là luật chung. Chất lượng
   phát hiện trạng thái là thuộc tính riêng của từng runtime, phải kiểm chứ không được giả định,
   và ở đâu một trạng thái không có luật đứng sau thì xác minh bằng artifact là công cụ duy nhất
   còn chạy được.
-- **AST-097**: `TERMINAL:done` nghĩa là lượt đó đã kết thúc, không phải công việc đã xong, và
+- **`TERMINAL:done` bị đọc nhầm thành việc đã xong.** `TERMINAL:done` nghĩa là lượt đó đã kết thúc, không phải công việc đã xong, và
   `pgrep` chính là nguồn đã trả lời sai ngoài thực địa. Điều đó nặng ở đây hơn mọi nơi khác, vì
   nguồn transcript lẽ ra dùng để đối chứng lại không trả về gì trên OpenCode.
 

@@ -76,15 +76,15 @@ is a valid answer while "not counted" is not.
 
 ## Known failures
 
-- `AST-045`: a browser-walking agent shipped for several releases and never ran once; no
+- **Shipped but wired to nothing.** A browser-walking agent shipped for several releases and never ran once; no
   contract owned it, no dispatcher named it. Promoted, fixed by wiring (contract, dispatcher,
   reachability check), not by the missing file itself.
-- `AST-135`: the verifier's own dispatch queue was invisible to itself, so the run point had to
+- **Its own queue was invisible to itself.** The verifier's own dispatch queue was invisible to itself, so the run point had to
   follow the artifact instead of a schedule. Promoted, cited by this skill and `thomas.md`.
-- `AST-046`: moving the walk's mechanics out of `review-with-rin` carried three stale lines
+- **Moved text kept stale names.** Moving the walk's mechanics out of `review-with-rin` carried three stale lines
   still naming the walker "Rin" and calling the walk "a mode." Promoted, moved text is not
   re-homed until it is re-read in context.
-- `AST-100` / `AST-101` / `AST-115`: a running app leaks broker processes and database
+- **Teardown once stopped a shared container.** A running app leaks broker processes and database
   containers per walk; one badly scoped teardown once stopped a shared test container every
   live Builder stood on. Promoted, cleanup runs in order: kill the app, confirm the port,
   scoped teardown, then `--force` the worktree.
