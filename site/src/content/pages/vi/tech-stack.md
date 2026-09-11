@@ -75,7 +75,7 @@ phát hiện xấu nhất là 60 giây, không phải cả session.
 
 ## mattpocock-skills
 
-Toàn bộ phần craft được thuê từ đây, floor `>= 1.2.3`, cài dưới dạng plugin.
+Toàn bộ phần craft đến từ đây, phiên bản tối thiểu `>= 1.2.3`, cài dưới dạng plugin.
 
 - **Bước có người gọi.** `wayfinder`, `grill-with-docs`, `to-spec`, `to-tickets`, `implement`,
   `code-review`.

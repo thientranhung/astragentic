@@ -5,7 +5,7 @@ description: "Four layers: a runtime that runs the agent, a harness that holds t
 
 Astragentic is not a runtime and it is not a method. It sits between the two: underneath it,
 Claude Code or Codex or OpenCode running a model; above it, your real repository; and the method
-is rented from `mattpocock-skills`. What Astragentic writes itself is the coordination, and only
+comes from `mattpocock-skills`. What Astragentic writes itself is the coordination, and only
 that.
 
 I split it into four layers because each one answers a different question, and the question

@@ -76,7 +76,7 @@ sleep. Worst-case detection lag is 60 seconds rather than the whole session.
 
 ## mattpocock-skills
 
-The entire craft part is rented from here, floor `>= 1.2.3`, installed as a plugin.
+The entire craft part comes from here, minimum version `>= 1.2.3`, installed as a plugin.
 
 - **User-invoked steps.** `wayfinder`, `grill-with-docs`, `to-spec`, `to-tickets`, `implement`,
   `code-review`.

@@ -5,8 +5,8 @@ description: "Bốn lớp: runtime chạy agent, harness chứa role và luật,
 
 Astragentic không phải một runtime, cũng không phải một method. Nó nằm giữa hai thứ đó:
 bên dưới là Claude Code, Codex hoặc OpenCode đang chạy model, bên trên là repo thật của bạn,
-còn method thì tôi thuê ngoài từ `mattpocock-skills`. Phần Astragentic tự viết là phần điều
-phối, và chỉ phần đó.
+còn phương pháp thì dùng `mattpocock-skills`. Phần Astragentic tự viết là phần điều phối, và chỉ
+phần đó.
 
 Tôi chia làm bốn lớp vì mỗi lớp trả lời một câu hỏi khác nhau, và câu hỏi đó quyết định ai sở
 hữu file nào. Lớp runtime trả lời "agent này chạy bằng gì". Lớp harness trả lời "nó được phép

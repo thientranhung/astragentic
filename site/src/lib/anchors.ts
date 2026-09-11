@@ -132,8 +132,8 @@ export const STACK: StackItem[] = [
     id: 'mattpocock-skills',
     name: 'mattpocock-skills',
     line: {
-      vi: 'Phương pháp kỹ thuật tôi đi thuê: wayfinder, grill, spec, ticket, implement, review.',
-      en: 'The engineering method, rented: wayfinder, grill, spec, tickets, implement, review.',
+      vi: 'Phương pháp kỹ thuật của dự án: wayfinder, grill, spec, ticket, implement, review.',
+      en: "The project's engineering method: wayfinder, grill, spec, tickets, implement, review.",
     },
     required: true,
   },
