@@ -96,7 +96,7 @@ export const STACK: StackItem[] = [
     id: 'codex',
     name: 'Codex CLI',
     line: {
-      vi: 'Cánh tay cross-vendor: một vendor khác đọc lại diff trước khi nó merge.',
+      vi: 'Cánh tay cross-vendor: một AI của hãng khác (Codex) đọc lại diff trước khi nó merge.',
       en: 'The cross-vendor arm: a different vendor re-reads the diff before it merges.',
     },
     required: false,
@@ -105,7 +105,7 @@ export const STACK: StackItem[] = [
     id: 'opencode',
     name: 'OpenCode CLI',
     line: {
-      vi: 'Runtime thứ ba để dispatch vai, dùng khi bạn không muốn khoá vào một vendor.',
+      vi: 'Runtime thứ ba để dispatch role, dùng khi bạn không muốn khoá vào một hãng.',
       en: 'A third runtime for role dispatch, for when you would rather not be locked to one vendor.',
     },
     required: false,
@@ -225,8 +225,8 @@ export const WHY: WhyCard[] = [
   {
     id: 'why-cross-vendor',
     question: {
-      vi: 'Vì sao để một vendor khác đọc lại diff?',
-      en: 'Why let a second vendor read the diff?',
+      vi: 'Vì sao để một AI của hãng khác đọc lại diff?',
+      en: 'Why let an AI from another vendor read the diff?',
     },
     answer: {
       vi: 'Một model đọc lại diff của chính nó thì đọc lại luôn giả định của nó. Vendor khác không mang giả định đó, và receipt buộc vào đúng SHA đã được đọc.',

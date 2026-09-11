@@ -132,7 +132,7 @@ to fork a patch.
 
 ## why-cross-vendor
 
-After Claude has written and self-reviewed, a model from another vendor reads the diff. The
+After Claude has written and self-reviewed, a model from another vendor, here OpenAI's Codex, reads the diff. The
 mechanism: the arm reads the repository while the author reads the ticket, so it catches
 contradictions with the project's own declared standards, which the author cannot see while
 looking from the requirements side.

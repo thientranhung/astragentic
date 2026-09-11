@@ -1,7 +1,7 @@
 hero:
   eyebrow: "Autonomous coding · **for multi-milestone projects** · v{{meta.version}}"
   headline: "An outsourcing team made of AI agents.\nRunning by process, **around the clock**, for **large projects**."
-  sub: "Astragentic is a scaffold for running a team of AI agents on the orchestrator model: one representative to talk to, a team of agents with clear roles to build, and an issue tracker at the centre so every piece of work leaves a trace. The scaffold has the hardest parts of running many agents settled: inter-agent communication, SDLC discipline through skills, isolation through worktrees, gates before merge, cross-vendor review. The rest is yours: keep the decisions, and adapt the scaffold to how your team operates."
+  sub: "Astragentic is a scaffold for running a team of AI agents on the orchestrator model: one representative to talk to, a team of agents with clear roles to build, and an issue tracker at the centre so every piece of work leaves a trace. The scaffold has the hardest parts of running many agents settled: inter-agent communication, SDLC discipline through skills, isolation through worktrees, gates before merge, a cross review by an AI from another vendor (Codex re-reads what Claude wrote). The rest is yours: keep the decisions, and adapt the scaffold to how your team operates."
   primary: "Explore how it works ↓"
   secondary: "Understand why Astragentic exists"
 
@@ -69,7 +69,7 @@ explain:
         title: "Builder"
         tag: "building"
         session: "One session per ticket, in its own worktree, the only writer there."
-        body: "Implements, reviews the code on two axes, simplifies, then takes the cross-vendor review pass. It commits at every boundary, not only at handback."
+        body: "Implements, reviews the code on two axes, simplifies, then takes the cross review pass where Codex re-reads the diff. It commits at every boundary, not only at handback."
         href: "/roles/builder"
       - id: rin
         title: "Rin"
@@ -165,7 +165,7 @@ shots:
 
 features:
   - id: cross-vendor
-    title: "A review gate in two layers, from two vendors."
+    title: "A review gate in two layers, two AIs from two vendors."
     body: "Every ticket goes through a code review against Standards and Spec on Claude Code, then a cross-read on Codex. Two models from two vendors read the same diff before the merge, so quality does not rest on a single model."
     diagram: cross-vendor-arm
     crop: [builder, codex, head]

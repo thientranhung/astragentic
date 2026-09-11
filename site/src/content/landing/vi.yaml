@@ -1,7 +1,7 @@
 hero:
   eyebrow: "Autonomous coding · **cho dự án nhiều milestone** · v{{meta.version}}"
   headline: "Một team outsource bằng AI agent.\nVận hành đúng quy trình, **liên tục 24/7**, cho **những dự án lớn**."
-  sub: "Astragentic là một scaffold để vận hành team AI agent theo mô hình orchestrator: một người đại diện để trao đổi, một team agent với role rõ ràng để thi công, và một issue tracker làm trung tâm để mọi việc có dấu vết. Bộ khung đã giải quyết sẵn những phần khó nhất của việc điều hành nhiều agent: giao tiếp giữa các agent, kỷ luật SDLC bằng skill, cách ly bằng worktree, gate trước khi merge, review chéo vendor. Phần còn lại là của bạn: giữ quyền quyết định, và tuỳ biến bộ khung theo cách team của bạn vận hành."
+  sub: "Astragentic là một scaffold để vận hành team AI agent theo mô hình orchestrator: một người đại diện để trao đổi, một team agent với role rõ ràng để thi công, và một issue tracker làm trung tâm để mọi việc có dấu vết. Bộ khung đã giải quyết sẵn những phần khó nhất của việc điều hành nhiều agent: giao tiếp giữa các agent, kỷ luật SDLC bằng skill, cách ly bằng worktree, gate trước khi merge, review chéo bằng một AI của hãng khác (Codex đọc lại code Claude viết). Phần còn lại là của bạn: giữ quyền quyết định, và tuỳ biến bộ khung theo cách team của bạn vận hành."
   primary: "Khám phá cách hoạt động ↓"
   secondary: "Hiểu rõ vì sao có Astragentic"
 
@@ -69,7 +69,7 @@ explain:
         title: "Builder"
         tag: "thi công"
         session: "Một session mỗi ticket, trong worktree riêng, là người viết duy nhất ở đó."
-        body: "Implement, code review hai trục, simplify, rồi lượt review chéo vendor. Commit ở mỗi ranh giới, không chỉ lúc handback."
+        body: "Implement, code review hai trục, simplify, rồi lượt review chéo do Codex đọc lại. Commit ở mỗi ranh giới, không chỉ lúc handback."
         href: "/vi/vai/builder"
       - id: rin
         title: "Rin"
@@ -165,8 +165,8 @@ shots:
 
 features:
   - id: cross-vendor
-    title: "Review gate hai lớp, hai vendor."
-    body: "Mọi ticket đi qua code-review theo Standards và Spec trên Claude Code, rồi một lượt đọc chéo trên Codex. Hai model của hai vendor đọc cùng một diff trước khi merge, nên chất lượng không phụ thuộc vào một model duy nhất."
+    title: "Review gate hai lớp, hai AI của hai hãng."
+    body: "Mọi ticket đi qua code-review theo Standards và Spec trên Claude Code, rồi một lượt đọc chéo trên Codex. Hai model của hai hãng, Claude và Codex, đọc cùng một diff trước khi merge, nên chất lượng không phụ thuộc vào một model duy nhất."
     diagram: cross-vendor-arm
     crop: [builder, codex, head]
     href: /skills/codex-arm
@@ -184,7 +184,7 @@ features:
     href: /vai/thomas
   - id: runtime
     title: "Một quy trình, nhiều runtime."
-    body: "Claude Code là nền bắt buộc; Codex và OpenCode thêm vào khi bạn cần vendor thứ hai hay model khác. Role nào chạy trên runtime nào khai trong orchestrator.md; đổi runtime không đổi quy trình."
+    body: "Claude Code là nền bắt buộc; Codex và OpenCode thêm vào khi bạn cần AI của hãng thứ hai hay model khác. Role nào chạy trên runtime nào khai trong orchestrator.md; đổi runtime không đổi quy trình."
     diagram: structure
     crop: [runtime_claude, runtime_codex]
     href: /tech-stack#claude-code
@@ -244,7 +244,7 @@ adopt:
       href: "https://docs.anthropic.com/en/docs/claude-code"
     - name: "Codex CLI"
       tag: "optional"
-      role: "Vendor thứ hai cho lượt review chéo và runtime dự phòng. Thiếu **Codex**, team chạy chế độ một provider."
+      role: "AI của hãng thứ hai (OpenAI) cho lượt review chéo, và là runtime dự phòng. Thiếu **Codex**, team chạy chế độ một provider."
       href: "https://github.com/openai/codex"
     - name: "Git ≥ 2.5, có worktree"
       tag: "required"

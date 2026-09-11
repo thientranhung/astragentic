@@ -37,7 +37,7 @@ không cho thấy điều đó.
 
 Cả hai cơ chế đứng trên một nguyên tắc thiết kế: Astragentic là scaffold, không phải quy trình
 đóng. Bộ khung giải quyết sẵn giao tiếp giữa các agent, kỷ luật SDLC bằng skill, cách ly bằng
-worktree, trạng thái trên tracker, gate trước khi merge và review chéo vendor. Role, contract,
+worktree, trạng thái trên tracker, gate trước khi merge và review chéo bằng AI của hãng khác. Role, contract,
 skill và hook là file trong repo của bạn, nên bộ khung tuỳ biến được theo cách team của bạn vận
 hành.
 
@@ -129,7 +129,7 @@ vá.
 
 ## why-cross-vendor
 
-Sau khi Claude viết xong và tự review, một model của vendor khác đọc lại diff. Lý do cơ chế: arm
+Sau khi Claude viết xong và tự review, một model của hãng khác, ở đây là Codex của OpenAI, đọc lại diff. Lý do cơ chế: arm
 đọc repository trong khi tác giả đọc ticket, nên nó bắt được mâu thuẫn với chính tiêu chuẩn dự án
 đã khai, thứ người viết code không nhìn ra vì đang nhìn từ phía yêu cầu.
 
