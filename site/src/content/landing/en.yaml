@@ -6,22 +6,13 @@ hero:
   secondary: "Understand why Astragentic exists"
 
 explain:
-  agents:
-    eyebrow: "Agent"
-    headline: "Each agent is an independent runtime session with a role and a contract of its own."
-    paragraphs:
-      - "Every agent is a working session of Claude Code, Codex or OpenCode, launched from the command line with a defined role. It takes a task the way an employee does, hands back the result when it is finished, and can be cloned into several sessions running side by side: several Builders building at once, several QAs checking at once, like a real team."
-      - "Each role has a name of its own: Thomas, Shaper, Builder, Rin, QA. The name keeps the role from drifting across a long context, and it is the address for sending work, reading a pane, and attaching the right skills."
-      - "A role is a declaration file in each runtime’s own format, loaded into the system prompt when the session opens; runtime, model and effort per role are declared in one place, `orchestrator.md`. The path of each file is on the Structure page."
+  runtimes:
     commands:
       label: "Start an agent over the CLI on three runtimes"
       lines:
         - "claude   --dangerously-skip-permissions --agent builder --model <model> --effort <low|medium|high|xhigh|max>"
         - "codex    --profile builder            # model and model_reasoning_effort live in the profile TOML"
         - "opencode --agent builder -m <provider>/<model>   # no effort flag"
-    more:
-      label: "Meet the AI team →"
-      href: "/roles/thomas"
 
   comms:
     eyebrow: "How agents talk to each other"
@@ -45,6 +36,9 @@ explain:
   roles:
     eyebrow: "AI outsourcing team"
     headline: "What each agent does."
+    paragraphs:
+      - "Every member of the team is an agent: a **Claude Code**, **Codex** or **OpenCode** session opened from the command line with a fixed role. It takes work, hands back the result when it is done, and can be cloned: several Builders building at once, several QAs checking at once, like a real team."
+      - "Each role has a name of its own: Thomas, Shaper, Builder, Rin, QA. The name keeps the agent from drifting out of its role across a long context, and it is the address for sending work, reading a pane, and attaching the right skills."
     figureNote: "Thomas runs the whole team: takes your request, brings in the Shaper when a spec is needed, dispatches tickets to Builders, calls Rin’s gate at every milestone and QA’s walk before a merge, then reports back to you. Every arrow in the picture is one exchange there and back."
     models:
       label: "Model and effort per role"
@@ -131,19 +125,19 @@ why:
 
 shots:
   hero:
-    caption: "A simulated working session with Astragentic: open herdr, launch Thomas, ask how the project is going. Thomas reads the GitHub Issues board, finds three tickets that do not overlap, runs three Builders in parallel on three worktrees, answers the technical question itself, closes each ticket as it lands, then sends you a short report."
+    caption: "A working session with Astragentic: open herdr, launch Thomas, ask how the project is going. Thomas reads the GitHub Issues board, finds three tickets that do not overlap, runs three Builders in parallel on three worktrees, answers the technical question itself, closes each ticket as it lands, then sends you a short report."
     video:
       mp4: /shots/hero-en.mp4
       webm: /shots/hero-en.webm
       poster: /shots/hero-en.jpg
   sendmessage:
-    caption: "A simulated dispatch of TRA-142: you talk to Thomas, Thomas addresses the Builder by session name over cross-session messaging, answers the technical question itself, and brings the UX decision back to you."
+    caption: "One dispatch of TRA-142: you talk to Thomas, Thomas addresses the Builder by session name over cross-session messaging, answers the technical question itself, and brings the UX decision back to you."
     video:
       mp4: /shots/dispatch-en.mp4
       webm: /shots/dispatch-en.webm
       poster: /shots/dispatch-en.jpg
   herdr:
-    caption: "A simulated herdr workspace for one project: every agent has a named pane with a detected state, you click to read any of them, and Thomas reads and prompts through the CLI, including a Builder running Codex."
+    caption: "A herdr workspace for one project: every agent has a named pane with a detected state, you click to read any of them, and Thomas reads and prompts through the CLI, including a Builder running Codex."
     video:
       mp4: /shots/herdr-en.mp4
       webm: /shots/herdr-en.webm

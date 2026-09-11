@@ -182,6 +182,9 @@ const CARD_FRAME = 330;
       <div class="column">
         <p class="eyebrow">{EX.roles.eyebrow}</p>
         <h2>{EX.roles.headline}</h2>
+        {/* What an agent is, in two sentences, now that the reader has just watched
+            one at work in the hero video; the mechanics live on the Structure page. */}
+        {EX.roles.paragraphs?.map((line) => <p class="lede" set:html={hl(line)} />)}
       </div>
       <div class="column">
         {/* Five rows, not five columns: at a fifth of the band each card would be
@@ -512,6 +515,13 @@ const CARD_FRAME = 330;
     </div>
     <div class="column">
       <AdoptBlock lang={lang} requirements={copy.adopt.requirements} reqTitle={copy.adopt.reqTitle} show="requirements" />
+      {/* One role, declared once, launched on three runtimes: the launch lines sit
+          with the stack they need rather than with the definition of an agent. */}
+      {EX.runtimes?.commands && (
+        <div class="pane breakout">
+          <CodeFrame lang={lang} lines={panes(EX.runtimes.commands)[0].lines} label={panes(EX.runtimes.commands)[0].label} />
+        </div>
+      )}
     </div>
   </section>
 

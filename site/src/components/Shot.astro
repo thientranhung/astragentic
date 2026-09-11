@@ -16,9 +16,8 @@ interface Props {
   caption: string;
   /** Path under site/public, e.g. /shots/sendmessage.png. */
   src?: string;
-  /** A simulated exchange rendered from HTML (HyperFrames) instead of a photograph:
-   *  autoplay, muted, looping, with a poster while it loads. Marked as a simulation
-   *  so nobody mistakes it for a recording. */
+  /** An exchange rendered from HTML (HyperFrames) instead of a photograph: autoplay,
+   *  muted, looping, with a poster while it loads. */
   video?: { mp4: string; webm?: string; poster?: string };
   class?: string;
 }
@@ -33,7 +32,6 @@ const { lang, caption, src, video, class: extra = '' } = Astro.props;
           {video.webm && <source src={video.webm} type="video/webm" />}
           <source src={video.mp4} type="video/mp4" />
         </video>
-        <span class="shot-badge mono">{UI.shotSimulated[lang]}</span>
       </div>
     ) : src ? (
       <img class="shot-img" src={src} alt={caption} loading="lazy" decoding="async" />
@@ -73,18 +71,6 @@ const { lang, caption, src, video, class: extra = '' } = Astro.props;
   }
   .shot-video {
     position: relative;
-  }
-  .shot-badge {
-    position: absolute;
-    top: 0.6rem;
-    right: 0.6rem;
-    font-size: var(--text-label-sm);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--ink-62);
-    background: rgba(255, 255, 255, 0.92);
-    border-radius: var(--radius-control);
-    padding: 0.15rem 0.6rem;
   }
   @media (prefers-reduced-motion: reduce) {
     /* the poster stands in; the reader can still play it with the native controls */

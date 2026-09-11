@@ -6,22 +6,13 @@ hero:
   secondary: "Hiểu rõ vì sao có Astragentic"
 
 explain:
-  agents:
-    eyebrow: "Agent"
-    headline: "Mỗi agent là một session runtime độc lập, mang một role và một contract riêng."
-    paragraphs:
-      - "Mỗi agent là một session của Claude Code, Codex hoặc OpenCode, launch từ CLI với một role xác định. Nó nhận nhiệm vụ như một nhân viên, làm xong thì trả kết quả, và có thể nhân bản thành nhiều session chạy song song: nhiều Builder cùng thi công, nhiều QA cùng kiểm, giống một team thật."
-      - "Mỗi role có một tên riêng: Thomas, Shaper, Builder, Rin, QA. Tên riêng giữ cho agent không trôi khỏi role của mình trong context dài, và là địa chỉ để gửi việc, đọc pane, gắn đúng skill."
-      - "Mỗi role là một file khai báo theo chuẩn của từng runtime, nạp vào system prompt khi session mở; runtime, model và effort của từng role khai ở một chỗ, `orchestrator.md`. Đường dẫn từng file có ở trang Cấu trúc."
+  runtimes:
     commands:
-      label: "Start agent qua CLI trên ba runtime"
+      label: "Mở agent qua CLI trên ba runtime"
       lines:
         - "claude   --dangerously-skip-permissions --agent builder --model <model> --effort <low|medium|high|xhigh|max>"
         - "codex    --profile builder            # model + model_reasoning_effort nằm trong profile TOML"
         - "opencode --agent builder -m <provider>/<model>   # không có cờ effort"
-    more:
-      label: "Khám phá AI team →"
-      href: "/vi/vai/thomas"
 
   comms:
     eyebrow: "Giao tiếp giữa các agent"
@@ -45,6 +36,9 @@ explain:
   roles:
     eyebrow: "AI outsource team"
     headline: "Công việc của mỗi agent."
+    paragraphs:
+      - "Mỗi thành viên trong team là một agent: một session **Claude Code**, **Codex** hoặc **OpenCode** mở từ CLI với một role cố định. Nó nhận việc, làm xong thì trả kết quả, và có thể nhân bản: nhiều Builder cùng thi công, nhiều QA cùng kiểm, như một team thật."
+      - "Mỗi role có một tên riêng: Thomas, Shaper, Builder, Rin, QA. Tên riêng giữ agent không trôi khỏi role của mình trong context dài, và là địa chỉ để gửi việc, đọc pane, gắn đúng skill."
     figureNote: "Thomas quản trị cả team: nhận yêu cầu từ bạn, gọi Shaper khi cần spec, dispatch ticket cho Builder, gọi Rin gate ở mỗi milestone và QA walk trước khi merge, rồi báo lại bạn. Mỗi mũi tên trên hình là một lượt trao đổi đi và về."
     models:
       label: "Model và effort theo role"
@@ -131,19 +125,19 @@ why:
 
 shots:
   hero:
-    caption: "Mô phỏng một phiên làm việc với Astragentic: mở herdr, gọi Thomas, hỏi tiến độ. Thomas đọc board GitHub Issues, tìm ra ba ticket không giao nhau, mở ba Builder chạy song song trên ba worktree, tự trả lời câu hỏi kỹ thuật, đóng từng ticket khi xong, rồi gửi bạn báo cáo ngắn."
+    caption: "Một phiên làm việc với Astragentic: mở herdr, gọi Thomas, hỏi tiến độ. Thomas đọc board GitHub Issues, tìm ra ba ticket không giao nhau, mở ba Builder chạy song song trên ba worktree, tự trả lời câu hỏi kỹ thuật, đóng từng ticket khi xong, rồi gửi bạn báo cáo ngắn."
     video:
       mp4: /shots/hero.mp4
       webm: /shots/hero.webm
       poster: /shots/hero.jpg
   sendmessage:
-    caption: "Mô phỏng một lượt dispatch TRA-142: bạn nói với Thomas, Thomas gọi Builder theo tên session bằng cross-session messaging, tự trả lời câu hỏi kỹ thuật, và đưa quyết định UX về cho bạn."
+    caption: "Một lượt dispatch TRA-142: bạn nói với Thomas, Thomas gọi Builder theo tên session bằng cross-session messaging, tự trả lời câu hỏi kỹ thuật, và đưa quyết định UX về cho bạn."
     video:
       mp4: /shots/dispatch.mp4
       webm: /shots/dispatch.webm
       poster: /shots/dispatch.jpg
   herdr:
-    caption: "Mô phỏng workspace herdr của một dự án: mỗi agent một pane có tên và trạng thái, bạn bấm là đọc được, Thomas đọc và nhắn qua CLI, kể cả Builder chạy Codex."
+    caption: "Workspace herdr của một dự án: mỗi agent một pane có tên và trạng thái, bạn bấm là đọc được, Thomas đọc và nhắn qua CLI, kể cả Builder chạy Codex."
     video:
       mp4: /shots/herdr.mp4
       webm: /shots/herdr.webm

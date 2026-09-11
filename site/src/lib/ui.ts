@@ -52,7 +52,6 @@ export const UI = {
    *  says the picture is real and not yet taken, so the frame reads as a promise rather
    *  than a broken image (home order spec §3). */
   shotPending: { vi: 'ảnh thật · sẽ cập nhật', en: 'real screenshot · to come' },
-  shotSimulated: { vi: 'mô phỏng', en: 'simulation' },
   deckLabel: { vi: 'Chọn tracker', en: 'Choose a tracker' },
   wallOpen: { vi: 'mở lớn', en: 'open large' },
   close: { vi: 'Đóng', en: 'Close' },
