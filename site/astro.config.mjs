@@ -16,15 +16,34 @@ export default defineConfig({
   integrations: [mdx()],
   // /kien-truc and /en/architecture were pass-3 names for what is now /cau-truc
   // (build spec 4 §3). Astro emits a redirect page for each, so old links still land.
+  // English moved to `/` and Vietnamese under `/vi/` on 2026-09-11; every address
+  // from the vi-first layout still lands.
   redirects: {
-    '/kien-truc': '/cau-truc',
-    '/en/architecture': '/en/structure',
+    '/kien-truc': '/vi/cau-truc',
+    '/en/architecture': '/structure',
+    '/en': '/',
+    '/en/structure': '/structure',
+    '/en/why': '/why',
+    '/en/adopt': '/adopt',
+    '/en/failures': '/failures',
+    '/en/evidence': '/evidence',
+    '/en/hooks': '/hooks',
+    '/en/tech-stack': '/tech-stack',
+    '/en/skills': '/skills',
+    '/en/skills/[slug]': '/skills/[slug]',
+    '/en/roles/[id]': '/roles/[id]',
+    '/cau-truc': '/vi/cau-truc',
+    '/vi-sao': '/vi/vi-sao',
+    '/cai': '/vi/cai',
+    '/loi': '/vi/loi',
+    '/bang-chung': '/vi/bang-chung',
+    '/vai/[id]': '/vi/vai/[id]',
   },
-  // Vietnamese is the primary language and lives at `/`; English mirrors under `/en/`.
-  // Route files are explicit (loi.astro / en/failures.astro) because the Vietnamese
+  // English is the primary language and lives at `/`; Vietnamese mirrors under `/vi/`.
+  // Route files are explicit (vi/loi.astro / failures.astro) because the Vietnamese
   // slugs are not transliterations of the English ones.
   i18n: {
-    defaultLocale: 'vi',
+    defaultLocale: 'en',
     locales: ['vi', 'en'],
     routing: {
       prefixDefaultLocale: false,

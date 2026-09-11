@@ -21,7 +21,7 @@ explain:
         - "opencode --agent builder -m <provider>/<model>   # no effort flag"
     more:
       label: "Meet the AI team →"
-      href: "/en/roles/thomas"
+      href: "/roles/thomas"
 
   comms:
     eyebrow: "How agents talk to each other"
@@ -40,7 +40,7 @@ explain:
           - "herdr agent read   <pane-id>"
     more:
       label: "Learn more about dispatch →"
-      href: "/en/skills/dispatch-ticket"
+      href: "/skills/dispatch-ticket"
 
   roles:
     eyebrow: "AI outsourcing team"
@@ -56,31 +56,31 @@ explain:
         tag: "your representative"
         session: "A resident session, alive across many tickets."
         body: "Holds the tracker, runs the frontier query, claims, dispatches and merges. It is the only role still there once a Builder has closed its session, so every durable piece of state belongs to Thomas. It comes back to you at the decisions that matter."
-        href: "/en/roles/thomas"
+        href: "/roles/thomas"
       - id: shaper
         title: "Shaper"
         tag: "shaping"
         session: "One unbroken session end to end, never compacted."
         body: "Runs grill-with-docs, to-spec and to-tickets in that order, and stops after the spec for you to approve."
-        href: "/en/roles/shaper"
+        href: "/roles/shaper"
       - id: builder
         title: "Builder"
         tag: "building"
         session: "One session per ticket, in its own worktree, the only writer there."
         body: "Implements, reviews the code on two axes, simplifies, then takes the cross-vendor review pass. It commits at every boundary, not only at handback."
-        href: "/en/roles/builder"
+        href: "/roles/builder"
       - id: rin
         title: "Rin"
         tag: "the gate"
         session: "One session per milestone, in a separate worktree at the exact SHA under review."
         body: "Reads only, and writes exactly one file: the gate report. One pass per milestone, never a loop."
-        href: "/en/roles/rin"
+        href: "/roles/rin"
       - id: qa
         title: "QA"
         tag: "acceptance"
         session: "One session per walk, with the product running for real in its own worktree."
         body: "Uses the product the way a user does and never reads the diff. Read-only by default; every write needs your permission, one at a time."
-        href: "/en/roles/qa"
+        href: "/roles/qa"
 
   tracker:
     eyebrow: "The issue tracker"
@@ -99,7 +99,7 @@ explain:
       - text: "A surface the OWNER can open and read without running a query"
     more:
       label: "Explore the structure →"
-      href: "/en/structure#coordination"
+      href: "/structure#coordination"
 
   method:
     eyebrow: "mattpocock-skills"
@@ -120,7 +120,7 @@ explain:
         text: "grilling · tdd · code-review · codebase-design · domain-modeling · research · prototype · diagnosing-bugs"
     more:
       label: "Learn more about the choice →"
-      href: "/en/why#why-mattpocock"
+      href: "/why#why-mattpocock"
 
 why:
   eyebrow: "Why"

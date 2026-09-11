@@ -14,19 +14,21 @@ export type PageKey =
   | 'failures'
   | 'evidence';
 
-/** One table owns every route. Nav, LangSwitch and the pages all read from here,
+/** English is the primary language and lives at `/`; Vietnamese mirrors under `/vi/`
+ *  with its own slugs (decided 2026-09-11, swapping the earlier vi-first layout).
+ *  One table owns every route. Nav, LangSwitch and the pages all read from here,
  *  so a Vietnamese slug and its English twin can never drift apart. */
 export const ROUTES: Record<PageKey, Record<Lang, string>> = {
-  home: { vi: '/', en: '/en' },
-  structure: { vi: '/cau-truc', en: '/en/structure' },
-  roles: { vi: '/vai/thomas', en: '/en/roles/thomas' },
-  skills: { vi: '/skills', en: '/en/skills' },
-  hooks: { vi: '/hooks', en: '/en/hooks' },
-  why: { vi: '/vi-sao', en: '/en/why' },
-  stack: { vi: '/tech-stack', en: '/en/tech-stack' },
-  adopt: { vi: '/cai', en: '/en/adopt' },
-  failures: { vi: '/loi', en: '/en/failures' },
-  evidence: { vi: '/bang-chung', en: '/en/evidence' },
+  home: { vi: '/vi', en: '/' },
+  structure: { vi: '/vi/cau-truc', en: '/structure' },
+  roles: { vi: '/vi/vai/thomas', en: '/roles/thomas' },
+  skills: { vi: '/vi/skills', en: '/skills' },
+  hooks: { vi: '/vi/hooks', en: '/hooks' },
+  why: { vi: '/vi/vi-sao', en: '/why' },
+  stack: { vi: '/vi/tech-stack', en: '/tech-stack' },
+  adopt: { vi: '/vi/cai', en: '/adopt' },
+  failures: { vi: '/vi/loi', en: '/failures' },
+  evidence: { vi: '/vi/bang-chung', en: '/evidence' },
 };
 
 /** Seven items, in the order the reader asks the questions (home v2 spec §Nav): why the

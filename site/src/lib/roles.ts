@@ -58,7 +58,7 @@ export const ROLE_SKILLS: Record<RoleId, string[]> = {
 };
 
 export function roleHref(lang: Lang, id: string): string {
-  return lang === 'vi' ? `/vai/${id}` : `/en/roles/${id}`;
+  return lang === 'vi' ? `/vi/vai/${id}` : `/roles/${id}`;
 }
 
 export function roleContractHref(id: RoleId): string {

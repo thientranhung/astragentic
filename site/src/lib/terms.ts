@@ -11,11 +11,11 @@ import type { Lang } from './site';
  *  dictionary page in both locales, and gets no language switch, because there is
  *  nothing to switch to. */
 export const TERM_VI: Record<string, string> = {
-  tracker: '/vi-sao#why-tracker',
-  frontier: '/cau-truc#coordination',
-  'blocking-edge': '/cau-truc#coordination',
-  claim: '/cau-truc#coordination',
-  worktree: '/vai/builder',
+  tracker: '/vi/vi-sao#why-tracker',
+  frontier: '/vi/cau-truc#coordination',
+  'blocking-edge': '/vi/cau-truc#coordination',
+  claim: '/vi/cau-truc#coordination',
+  worktree: '/vi/vai/builder',
 };
 
 export const dictionaryHref = (slug: string) => `/dictionary/${slug}`;

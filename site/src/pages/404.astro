@@ -1,22 +1,22 @@
 ---
-// One 404 for both languages. A static host serves this same file for /khong-co and
-// for /en/anything, so the page ships Vietnamese — the site's primary language — and a
-// three-line script swaps it to English when the address that missed was under /en/.
-// With scripting off a Vietnamese reader is still right, and an English reader still
+// One 404 for both languages. A static host serves this same file for /anything and
+// for /vi/anything, so the page ships English — the site's primary language — and a
+// three-line script swaps it to Vietnamese when the address that missed was under /vi/.
+// With scripting off an English reader is still right, and a Vietnamese reader still
 // gets two working links.
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { ROUTES, UI } from '../lib/site';
 ---
 
-<BaseLayout title={`404 — ${UI.notFoundTitle.vi}`} lang="vi" dualChrome>
+<BaseLayout title={`404 — ${UI.notFoundTitle.en}`} lang="en" dualChrome>
   <section class="screen screen--canvas miss">
     <div class="column">
       <p class="code mono">404</p>
-      <h1 data-t-title>{UI.notFoundTitle.vi}</h1>
-      <p class="sub" data-t-line>{UI.notFoundLine.vi}</p>
+      <h1 data-t-title>{UI.notFoundTitle.en}</h1>
+      <p class="sub" data-t-line>{UI.notFoundLine.en}</p>
       <p class="ways">
-        <a class="more-link" href={ROUTES.home.vi} data-t-home>{UI.notFoundHome.vi}</a>
-        <a class="more-link" href={ROUTES.skills.vi} data-t-skills>{UI.notFoundSkills.vi}</a>
+        <a class="more-link" href={ROUTES.home.en} data-t-home>{UI.notFoundHome.en}</a>
+        <a class="more-link" href={ROUTES.skills.en} data-t-skills>{UI.notFoundSkills.en}</a>
       </p>
     </div>
   </section>
@@ -25,30 +25,30 @@ import { ROUTES, UI } from '../lib/site';
 <script
   is:inline
   define:vars={{
-    en: {
-      title: UI.notFoundTitle.en,
-      line: UI.notFoundLine.en,
-      home: UI.notFoundHome.en,
-      skills: UI.notFoundSkills.en,
-      homeHref: ROUTES.home.en,
-      skillsHref: ROUTES.skills.en,
+    vi: {
+      title: UI.notFoundTitle.vi,
+      line: UI.notFoundLine.vi,
+      home: UI.notFoundHome.vi,
+      skills: UI.notFoundSkills.vi,
+      homeHref: ROUTES.home.vi,
+      skillsHref: ROUTES.skills.vi,
     },
   }}
 >
-  if (location.pathname === '/en' || location.pathname.startsWith('/en/')) {
-    document.documentElement.lang = 'en';
-    document.querySelectorAll('[data-chrome="vi"]').forEach((n) => (n.hidden = true));
-    document.querySelectorAll('[data-chrome="en"]').forEach((n) => (n.hidden = false));
+  if (location.pathname === '/vi' || location.pathname.startsWith('/vi/')) {
+    document.documentElement.lang = 'vi';
+    document.querySelectorAll('[data-chrome="en"]').forEach((n) => (n.hidden = true));
+    document.querySelectorAll('[data-chrome="vi"]').forEach((n) => (n.hidden = false));
     const set = (sel, text, href) => {
       const node = document.querySelector(sel);
       if (!node) return;
       node.textContent = text;
       if (href) node.setAttribute('href', href);
     };
-    set('[data-t-title]', en.title);
-    set('[data-t-line]', en.line);
-    set('[data-t-home]', en.home, en.homeHref);
-    set('[data-t-skills]', en.skills, en.skillsHref);
+    set('[data-t-title]', vi.title);
+    set('[data-t-line]', vi.line);
+    set('[data-t-home]', vi.home, vi.homeHref);
+    set('[data-t-skills]', vi.skills, vi.skillsHref);
   }
 </script>
 

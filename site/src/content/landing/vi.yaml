@@ -21,7 +21,7 @@ explain:
         - "opencode --agent builder -m <provider>/<model>   # không có cờ effort"
     more:
       label: "Khám phá AI team →"
-      href: "/vai/thomas"
+      href: "/vi/vai/thomas"
 
   comms:
     eyebrow: "Giao tiếp giữa các agent"
@@ -40,7 +40,7 @@ explain:
           - "herdr agent read   <pane-id>"
     more:
       label: "Hiểu rõ hơn về dispatch →"
-      href: "/skills/dispatch-ticket"
+      href: "/vi/skills/dispatch-ticket"
 
   roles:
     eyebrow: "AI outsource team"
@@ -56,31 +56,31 @@ explain:
         tag: "người đại diện"
         session: "Session thường trực, sống qua nhiều ticket."
         body: "Giữ tracker, chạy frontier query, claim, dispatch và merge. Là agent duy nhất còn ở đó khi Builder đã đóng session, nên mọi trạng thái bền đều thuộc Thomas. Hỏi lại bạn ở những quyết định quan trọng."
-        href: "/vai/thomas"
+        href: "/vi/vai/thomas"
       - id: shaper
         title: "Shaper"
         tag: "định hình"
         session: "Một session liền mạch từ đầu tới cuối, không compact."
         body: "Chạy grill-with-docs, to-spec, to-tickets theo thứ tự, dừng sau spec để bạn duyệt."
-        href: "/vai/shaper"
+        href: "/vi/vai/shaper"
       - id: builder
         title: "Builder"
         tag: "thi công"
         session: "Một session mỗi ticket, trong worktree riêng, là người viết duy nhất ở đó."
         body: "Implement, code review hai trục, simplify, rồi lượt review chéo vendor. Commit ở mỗi ranh giới, không chỉ lúc handback."
-        href: "/vai/builder"
+        href: "/vi/vai/builder"
       - id: rin
         title: "Rin"
         tag: "gate"
         session: "Một session mỗi milestone, worktree tách riêng tại đúng SHA được review."
         body: "Chỉ đọc và viết đúng một file: báo cáo gate. Một vòng mỗi milestone, không lặp."
-        href: "/vai/rin"
+        href: "/vi/vai/rin"
       - id: qa
         title: "QA"
         tag: "nghiệm thu"
         session: "Một session mỗi lượt walk, với sản phẩm đang chạy thật trong worktree riêng."
         body: "Dùng sản phẩm như người dùng, không đọc diff. Mặc định chỉ đọc, mọi thao tác ghi cần bạn cho phép từng lần."
-        href: "/vai/qa"
+        href: "/vi/vai/qa"
 
   tracker:
     eyebrow: "Issue tracker"

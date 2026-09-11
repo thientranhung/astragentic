@@ -11,7 +11,7 @@ interface Props {
   hrefs?: Record<Lang, string>;
 }
 const { lang, page, hrefs } = Astro.props;
-const langs: Lang[] = ['vi', 'en'];
+const langs: Lang[] = ['en', 'vi'];
 const target = (code: Lang) => hrefs?.[code] ?? (page ? ROUTES[page][code] : '#');
 ---
 

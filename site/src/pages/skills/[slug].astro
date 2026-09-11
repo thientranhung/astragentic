@@ -3,12 +3,14 @@ import { getCollection } from 'astro:content';
 import SkillBody from '../../components/pages/SkillBody.astro';
 import { getSkillCards } from '../../lib/skills';
 
-/** One page per skill name, always — the catalog is the source of the list, and the
- *  content file fills it in when the writer has landed it. */
+/** English twin of /skills/<name>. A flat `<name>.md` left over from pass 1 counts as
+ *  English until the writers finish moving files into `skills/en/`. */
 export async function getStaticPaths() {
-  const cards = await getSkillCards('vi');
+  const cards = await getSkillCards('en');
   const entries = await getCollection('skills');
-  const find = (name: string) => entries.find((entry) => entry.id === `vi/${name}`);
+  const find = (name: string) =>
+    entries.find((entry) => entry.id === `en/${name}`) ??
+    entries.find((entry) => entry.id === name);
   return cards.map((card) => ({
     params: { slug: card.name },
     props: { name: card.name, line: card.line, group: card.group, entry: find(card.name) },
@@ -18,4 +20,4 @@ export async function getStaticPaths() {
 const { name, line, group, entry } = Astro.props;
 ---
 
-<SkillBody lang="vi" name={name} line={line} group={group} entry={entry} />
+<SkillBody lang="en" name={name} line={line} group={group} entry={entry} />
