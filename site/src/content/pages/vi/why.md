@@ -78,7 +78,7 @@ hiệu nào báo ra.
 Checkout dùng chung. Subagent chạy trong cùng worktree với session cha, nên nhiều agent kéo HEAD
 của nhau đi. AST-016 bắt được một reviewer chỉ đọc đã `git switch` checkout của người khác.
 
-Context dùng chung. Một fork thừa kế nguyên context của cha, kèm những thứ không ai định trao.
+Context dùng chung. Một fork thừa kế nguyên context của cha, kèm cả những gì không ai định trao.
 AST-006: fork thừa kế cả model của cha, nên một việc đáng chạy bằng model rẻ lại chạy bằng model
 đắt nhất. AST-119: một fork bên trong Builder gửi handback cho dispatcher dưới đúng tên Builder,
 và Builder không hề thấy. AST-130: một fork ký marker `simplify(increment):` lên code do chính nó
