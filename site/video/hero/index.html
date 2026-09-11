@@ -1,5 +1,8 @@
 <!doctype html>
-<html lang="vi">
+<html
+  lang="vi"
+  data-composition-variables='[{"id":"lang","type":"enum","label":"Language","default":"vi","options":[{"value":"vi","label":"Vietnamese"},{"value":"en","label":"English"}]}]'
+>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=1920, height=1080" />
@@ -150,12 +153,12 @@
         box-shadow: 0 0 0 4000px rgba(6, 7, 10, 0.45), 0 0 24px rgba(229, 54, 37, 0.6);
       }
       .done-card {
-        position: absolute; left: 1362px; width: 340px; opacity: 0;
+        position: absolute; left: 1546px; width: 300px; opacity: 0;
         background: #14161d; border: 1px solid #2b3040; border-radius: 10px;
         padding: 14px 16px; font-size: 17px; line-height: 24px; color: #dfe6f3;
         box-shadow: 0 12px 30px rgba(0,0,0,0.5);
       }
-      .done-card.working { left: 900px; }
+      .done-card.working { left: 800px; }
       .done-card .row { display: flex; align-items: flex-start; gap: 10px; }
       .done-card .check {
         flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; background: #123326;
@@ -175,7 +178,7 @@
             <div class="section-label">spaces</div>
             <div class="space-row selected">
               <span class="dot" style="background:#a78bfa"></span>
-              <span class="space-name">inception</span>
+              <span class="space-name">orbit-commerce</span>
               <span class="space-branch">main</span>
             </div>
             <div class="space-row">
@@ -201,13 +204,13 @@
                   <span class="title" id="title-full" data-layout-allow-overflow data-layout-allow-occlusion data-layout-allow-overlap>thomas</span>
                   <div class="pane-body">
                     <div class="overlay" id="shell-empty" style="opacity:1" data-layout-allow-overflow data-layout-allow-overlap>
-                      <div class="shell-prompt">~/inception $ <span class="typed" id="shell-typed" data-layout-allow-overlap>&nbsp;</span><span class="cursor" id="shell-cur" style="opacity:1"></span></div>
+                      <div class="shell-prompt">~/orbit-commerce $ <span class="typed" id="shell-typed" data-layout-allow-overlap>&nbsp;</span><span class="cursor" id="shell-cur" style="opacity:1"></span></div>
                     </div>
                     <div class="overlay" id="chat-log" style="opacity:0" data-layout-allow-overflow></div>
                   </div>
                   <div class="status-block" id="status-full">
-                    <div class="row1">[Opus 5·medium] 📁 inception | 🌿 main</div>
-                    <div class="row2"><span class="bp">▶▶ bypass permissions on</span>&nbsp;&nbsp;~/inception &gt; main</div>
+                    <div class="row1">[Opus 5·medium] 📁 orbit-commerce | 🌿 main</div>
+                    <div class="row2"><span class="bp">▶▶ bypass permissions on</span>&nbsp;&nbsp;~/orbit-commerce &gt; main</div>
                   </div>
                 </div>
               </div>
@@ -219,8 +222,8 @@
                     <span class="title" data-layout-allow-overflow data-layout-allow-occlusion data-layout-allow-overlap>thomas</span>
                     <div class="pane-body"><div class="overlay" id="quad-left-log" style="opacity:1" data-layout-allow-overflow></div></div>
                     <div class="status-block" style="opacity:1">
-                      <div class="row1">[Opus 5·medium] 📁 inception | 🌿 main</div>
-                      <div class="row2"><span class="bp">▶▶ bypass permissions on</span>&nbsp;&nbsp;~/inception &gt; main</div>
+                      <div class="row1">[Opus 5·medium] 📁 orbit-commerce | 🌿 main</div>
+                      <div class="row2"><span class="bp">▶▶ bypass permissions on</span>&nbsp;&nbsp;~/orbit-commerce &gt; main</div>
                     </div>
                     <div class="flash" id="flash-quad-left"></div>
                   </div>
@@ -235,35 +238,35 @@
 
         <div class="board-overlay" id="board-overlay" data-layout-allow-overlap data-layout-allow-occlusion>
           <div class="board-wrap" id="board-wrap" data-layout-allow-overflow>
-            <img src="assets/tracker-linear.jpg" alt="" />
-            <div class="board-highlight" id="hl-196"></div>
-            <div class="board-highlight" id="hl-200"></div>
-            <div class="board-highlight" id="hl-204"></div>
+            <img src="assets/tracker-github.jpg" alt="" />
+            <div class="board-highlight" id="hl-244"></div>
+            <div class="board-highlight" id="hl-251"></div>
+            <div class="board-highlight" id="hl-262"></div>
           </div>
-          <div class="done-card" id="card-196" style="top:260px">
+          <div class="done-card" id="card-244" style="top:372px">
             <div class="row">
               <span class="check">✓</span>
               <div>
-                <div class="id">TRA-196</div>
-                <div>APPTWEAK_FANOUT_MAX fixed, receipt hợp lệ</div>
+                <div class="id">#244</div>
+                <div id="card-244-text">Copy validation covers every page, valid receipt</div>
               </div>
             </div>
           </div>
-          <div class="done-card" id="card-200" style="top:420px">
+          <div class="done-card" id="card-251" style="top:558px">
             <div class="row">
               <span class="check">✓</span>
               <div>
-                <div class="id">TRA-200</div>
-                <div>App-id validation covers every surface</div>
+                <div class="id">#251</div>
+                <div id="card-251-text">Provider routing picks correctly by region/stock</div>
               </div>
             </div>
           </div>
-          <div class="done-card working" id="card-204" style="top:550px">
+          <div class="done-card working" id="card-262" style="top:372px">
             <div class="row">
               <span class="check">●</span>
               <div>
-                <div class="id">TRA-204</div>
-                <div>Đang chuẩn hoá window cho movers/rank</div>
+                <div class="id">#262</div>
+                <div id="card-262-text">Adding IP-based rate limiting to the public API</div>
               </div>
             </div>
           </div>
@@ -278,6 +281,89 @@
       window.__timelines = window.__timelines || {};
       const tl = gsap.timeline({ paused: true });
       const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+      // ── language strings ──────────────────────────────────────────────
+      const STRINGS = {
+        vi: {
+          title: 'Một ngày làm việc với Thomas',
+          greeting: 'Hello Thomas, dự án thế nào rồi? Tiếp tục triển khai nhé.',
+          reasoning:
+            'In progress đã có 4 ticket đang có người làm, không đụng. Ready có 8. #256 email templates chờ branding assets, #268 search indexing chưa có write-set, để lại. #244, #251 và #262 nằm ở ba module khác nhau: dashboard, fulfillment, api. Không giao nhau, tôi mở ba Builder chạy song song, mỗi Builder một worktree.',
+          okInput: 'ok',
+          brief244: 'Ticket #244: dashboard copy chưa validate trước khi publish, viết validate theo write-set src/dashboard/copy/validate.ts…',
+          brief251: 'Ticket #251: chọn provider fulfillment theo region/stock đang sai logic, sửa theo write-set src/fulfillment/routing.ts…',
+          brief262: 'Ticket #262: public API chưa có rate limit, thêm theo write-set src/api/rate_limit.ts…',
+          blockedQuestion: 'Request không có API key thì rate limit theo IP hay từ chối luôn?',
+          thomasAnswer:
+            'Câu hỏi kỹ thuật, có trong body #262: không có key thì áp limit theo IP, 60 req/phút. Trả lời Builder, không cần làm phiền bạn.',
+          answerMsg: 'Không có key thì limit theo IP, 60 req/phút, theo body #262. Tiếp tục.',
+          report:
+            'Báo cáo: #244 và #251 xong, receipt hợp lệ, đã đóng issue. #262 đang chạy, tôi sẽ báo khi xong. Builder #262 hỏi một câu kỹ thuật, tôi trả lời theo body issue. #256 và #268 chưa đủ điều kiện, tôi đã ghi câu hỏi vào issue, bạn xem lúc rảnh.',
+          card244: 'Copy validation phủ mọi trang, receipt hợp lệ',
+          card251: 'Provider routing chọn đúng theo region/stock',
+          card262: 'Đang thêm rate limit theo IP cho public API',
+          receiptValid: 'receipt hợp lệ',
+          captions: [
+            'Mở herdr, gọi Thomas.',
+            'Thomas là người đại diện của team. Bạn chỉ nói chuyện với Thomas.',
+            'Thomas lên tracker trước khi trả lời.',
+            'Board là nguồn sự thật. Thomas đọc nó thay bạn.',
+            'Thomas không lấy ticket đầu hàng. Thomas đọc trạng thái, loại việc bị chặn, tìm ra ba ticket không giao nhau, chạy song song.',
+            'Bạn giữ quyền quyết định; một chữ là đủ.',
+            'Ba lần claim, ba worktree, ba session Builder.',
+            'Mỗi Builder một session, một worktree, một brief.',
+            'Một Builder kẹt, herdr báo, Thomas thấy ngay.',
+            'Câu hỏi kỹ thuật, Thomas tự trả lời. Chỉ quyết định sản phẩm mới lên bạn.',
+            'Xong cái nào, Thomas kiểm receipt và đóng cái đó. Không chờ cả ba.',
+            'Bạn nhận báo cáo, không nhận log.',
+            'Mọi việc để lại dấu vết trên board.',
+            '',
+          ],
+        },
+        en: {
+          title: 'A day of work with Thomas',
+          greeting: "Hello Thomas, how's the project going? Go ahead and keep building.",
+          reasoning:
+            "In progress already has four tickets with people on them, leave those alone. Ready has eight. #256 email templates is waiting on branding assets, #268 search indexing has no write-set yet, leave those too. #244, #251, and #262 sit in three different modules: dashboard, fulfillment, api. No overlap, so I'm opening three Builders in parallel, one worktree each.",
+          okInput: 'ok',
+          brief244: "Ticket #244: dashboard copy isn't validated before publish, write validation per write-set src/dashboard/copy/validate.ts…",
+          brief251: 'Ticket #251: fulfillment provider selection by region/stock has the wrong logic, fix per write-set src/fulfillment/routing.ts…',
+          brief262: "Ticket #262: the public API has no rate limiting, add it per write-set src/api/rate_limit.ts…",
+          blockedQuestion: 'If a request has no API key, rate limit by IP or reject outright?',
+          thomasAnswer:
+            "Technical question, it's in the #262 body: no key means limit by IP, 60 requests a minute. Answering the Builder, no need to bother you.",
+          answerMsg: 'No key means limit by IP, 60 requests a minute, per the #262 body. Continue.',
+          report:
+            "Report: #244 and #251 are done, receipts valid, issues closed. #262 is still running, I'll report when it's done. Builder #262 asked a technical question, I answered per the issue body. #256 and #268 aren't ready yet, I've logged the questions on the issues, take a look when you're free.",
+          card244: 'Copy validation covers every page, valid receipt',
+          card251: 'Provider routing picks correctly by region/stock',
+          card262: 'Adding IP-based rate limiting to the public API',
+          receiptValid: 'receipt valid',
+          captions: [
+            'Open herdr, call Thomas.',
+            "Thomas represents the team. You only talk to Thomas.",
+            'Thomas checks the tracker before replying.',
+            "The board is the source of truth. Thomas reads it so you don't have to.",
+            "Thomas doesn't grab the first ticket. Thomas reads the status, rules out blocked work, and finds three tickets that don't overlap, run in parallel.",
+            'You keep the call; one word is enough.',
+            'Three claims, three worktrees, three Builder sessions.',
+            'Each Builder gets one session, one worktree, one brief.',
+            'A Builder gets stuck, herdr flags it, Thomas sees it right away.',
+            'Technical question, Thomas answers it. Only product decisions come to you.',
+            'As each one finishes, Thomas checks the receipt and closes it. No waiting for all three.',
+            "You get a report, not a log.",
+            'Every piece of work leaves a trace on the board.',
+            '',
+          ],
+        },
+      };
+      const LANG = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables().lang) || 'vi';
+      const STR = STRINGS[LANG] || STRINGS.vi;
+      document.documentElement.lang = LANG;
+      document.title = STR.title;
+      document.getElementById('card-244-text').textContent = STR.card244;
+      document.getElementById('card-251-text').textContent = STR.card251;
+      document.getElementById('card-262-text').textContent = STR.card262;
 
       // ── sidebar agent rows ─────────────────────────────────────────────
       const agentsList = document.getElementById('agents-list');
@@ -416,63 +502,67 @@
       tl.call(() => { setDot(rowThomas, 'working', 'claude'); }, [], T_WELCOME);
       tl.to(rowThomas, { opacity: 1, duration: 0.25 }, T_WELCOME);
 
-      const welcomeEl = makeLine('welcome', '<b>Claude Code</b> · agent: thomas · claude-opus-5 · effort medium · cwd ~/inception');
+      const welcomeEl = makeLine('welcome', '<b>Claude Code</b> · agent: thomas · claude-opus-5 · effort medium · cwd ~/orbit-commerce');
       welcomeEl.style.opacity = 1;
       chatLog.appendChild(welcomeEl);
 
       // ── scene 2: greeting, tracker read, board zoom, reasoning, ok ───────
       const main = makeLog(chatLog);
-      main.input(9.5, 'Hello Thomas, dự án thế nào rồi? Tiếp tục triển khai nhé.', 16);
-      const T_MSG1_END = 9.5 + 'Hello Thomas, dự án thế nào rồi? Tiếp tục triển khai nhé.'.length / 16;
+      main.input(9.5, STR.greeting, 16);
+      const T_MSG1_END = 9.5 + STR.greeting.length / 16;
 
       const T_TOOL1 = T_MSG1_END + 0.8;
-      main.tool(T_TOOL1, 'Bash', 'linear issue list --project Inception --state "In Progress,Todo,Backlog"');
-      main.out(T_TOOL1 + 0.35, '7 issues');
+      main.tool(T_TOOL1, 'Bash', 'gh issue list --repo orion/orbit-commerce --state open');
+      main.out(T_TOOL1 + 0.35, '35 open');
 
-      const T_BOARD = T_TOOL1 + 2.2;
-      const T_BOARD_END = T_BOARD + 7.2;
+      const T_TOOL1B = T_TOOL1 + 1.4;
+      main.tool(T_TOOL1B, 'Bash', `gh project item-list 4 --owner orion --format json | jq '.[] | select(.status=="Ready")'`);
+      main.out(T_TOOL1B + 0.35, '8 items');
+
+      const T_BOARD = T_TOOL1B + 1.4;
+      const T_BOARD_END = T_BOARD + 6.9;
 
       const T_TOOL2 = T_BOARD_END + 0.3;
-      main.tool(T_TOOL2, 'Bash', 'linear issue view TRA-196 TRA-200 TRA-204 --fields write-set');
-      main.out(T_TOOL2 + 0.35, 'TRA-196 src/jobs/fanout/* · TRA-200 src/ingest/validation/* · TRA-204 src/rank/movers/*');
+      main.tool(T_TOOL2, 'Bash', 'gh issue view 244 251 262 --json body,labels,title');
+      main.out(T_TOOL2 + 0.35, '244 src/dashboard/copy/* · 251 src/fulfillment/routing/* · 262 src/api/rate_limit/*');
 
       const T_REASON = T_TOOL2 + 1.0;
-      main.say(T_REASON, 'Tiến độ: 50 done. Bốn ticket đang needs-info (TRA-54, TRA-182, TRA-183, TRA-141), tôi gom câu hỏi gửi bạn sau. Ba ticket làm được ngay: TRA-196 bug fan-out đang In Progress nhưng chưa có session nào chạy, TRA-200 ready-for-agent và mở đường cho TRA-179, TRA-204 không bị chặn. Write-set của ba ticket nằm ở ba module khác nhau, không giao nhau, nên tôi mở ba Builder chạy song song, mỗi Builder một worktree.');
+      main.say(T_REASON, STR.reasoning);
 
       const T_OK = T_REASON + 6.5;
-      main.input(T_OK, 'ok', 10);
+      main.input(T_OK, STR.okInput, 10);
 
       // ── scene 3: three claims, three worktrees, three dispatches ─────────
       const BUILDERS = [
         {
-          id: '196', ticket: 'TRA-196', branch: 'builder/TRA-196', folder: 'tra-196', wt: 'tra-196',
+          id: '244', ticket: '#244', branch: 'builder/244', folder: '244', wt: '244',
           status2: 'ctx 18% | ↑52k ↓4k tok | $1.45 | ⏱ 5m 20s',
-          path: 'src/jobs/fanout/sweep.py', testFile: 'tests/jobs/test_fanout.py', testPass: '9 passed',
-          brief: 'Ticket TRA-196: bug fan-out gửi trùng job khi retry, sửa theo write-set src/jobs/fanout/sweep.py…',
+          path: 'src/dashboard/copy/validate.ts', testCmd: 'pnpm vitest run src/dashboard/copy', testPass: '11 passed',
+          brief: STR.brief244,
         },
         {
-          id: '200', ticket: 'TRA-200', branch: 'builder/TRA-200', folder: 'tra-200', wt: 'tra-200',
+          id: '251', ticket: '#251', branch: 'builder/251', folder: '251', wt: '251',
           status2: 'ctx 12% | ↑41k ↓3k tok | $1.20 | ⏱ 4m 10s',
-          path: 'src/ingest/validation/app_id.py', testFile: 'tests/ingest/test_app_id.py', testPass: '14 passed', testPass2: '17 passed',
-          brief: 'Ticket TRA-200: app-id validation mới chỉ phủ featured surface, mở rộng cho mọi surface trong payload…',
-          blocked: true,
+          path: 'src/fulfillment/routing.ts', testCmd: 'pnpm vitest run src/fulfillment', testPass: '8 passed',
+          brief: STR.brief251,
         },
         {
-          id: '204', ticket: 'TRA-204', branch: 'builder/TRA-204', folder: 'tra-204', wt: 'tra-204',
+          id: '262', ticket: '#262', branch: 'builder/262', folder: '262', wt: '262',
           status2: 'ctx 9% | ↑33k ↓2k tok | $0.95 | ⏱ 3m 40s',
-          path: 'src/rank/movers/window.py', testFile: 'tests/rank/test_movers.py',
-          brief: 'Ticket TRA-204: MOVERS/RANK thiếu mốc thời gian per-row, chuẩn hoá window theo write-set src/rank/movers/window.py…',
+          path: 'src/api/rate_limit.ts', testCmd: 'pnpm vitest run src/api/rate_limit', testPass: '5 passed',
+          brief: STR.brief262,
+          blocked: true,
         },
       ];
 
       const T_DISPATCH = T_OK + 1.5;
       BUILDERS.forEach((b, i) => {
         const base = T_DISPATCH + i * 1.0;
-        main.tool(base, 'Bash', `linear issue update ${b.ticket} --state "In Progress" --assignee builder`);
+        main.tool(base, 'Bash', `gh issue edit ${b.id} --add-assignee builder --add-label in-progress`);
         main.out(base + 0.3, 'updated');
-        main.tool(base + 0.6, 'Bash', `git worktree add ../wt/${b.ticket} -b ${b.branch} main`);
+        main.tool(base + 0.6, 'Bash', `git worktree add ../wt/${b.id} -b ${b.branch} main`);
         main.out(base + 0.9, 'Preparing worktree');
-        main.tool(base + 1.2, 'Bash', `herdr agent start builder-tra-${b.id} -- claude --agent builder --model claude-sonnet-5 --effort medium`);
+        main.tool(base + 1.2, 'Bash', `herdr agent start builder-${b.id} -- claude --agent builder --model claude-sonnet-5 --effort medium`);
         main.out(base + 1.5, 'started');
         b.tStarted = base + 1.5;
       });
@@ -482,10 +572,10 @@
       // sidebar rows + tabs, one per builder, at the moment each session starts
       const tabAdd = document.querySelector('.tab-add');
       BUILDERS.forEach((b) => {
-        const row = addAgentRow('row-builder-' + b.id, 'builder-tra-' + b.id, 'working', 'claude');
+        const row = addAgentRow('row-builder-' + b.id, 'builder-' + b.id, 'working', 'claude');
         const tabEl = document.createElement('span');
         tabEl.className = 'tab';
-        tabEl.textContent = 'builder-tra-' + b.id;
+        tabEl.textContent = 'builder-' + b.id;
         tabEl.style.opacity = 0;
         tabAdd.parentElement.insertBefore(tabEl, tabAdd);
         b.rowEl = row;
@@ -506,7 +596,7 @@
         box.style.cssText = 'position:relative;flex:1;min-height:0';
         box.innerHTML = `
           <div class="pane compact" id="pane-b${b.id}">
-            <span class="title" data-layout-allow-overflow data-layout-allow-occlusion data-layout-allow-overlap>builder-tra-${b.id}</span>
+            <span class="title" data-layout-allow-overflow data-layout-allow-occlusion data-layout-allow-overlap>builder-${b.id}</span>
             <div class="pane-body"><div class="overlay" id="log-b${b.id}" style="opacity:1" data-layout-allow-overflow></div></div>
             <div class="status-block" id="status-b${b.id}" style="opacity:1">
               <div class="row1">[Sonnet 5·medium] 📁 ${esc(b.folder)} | 🌿 ${esc(b.branch)} | 🌳 ${esc(b.wt)}</div>
@@ -541,7 +631,7 @@
       const left = makeLog(quadLeftLog);
 
       const T_MONITOR = T_SPLIT + 0.3;
-      left.tool(T_MONITOR, 'Monitor', 'scripts/herdr-watch-terminal.sh builder-tra-196 builder-tra-200 builder-tra-204');
+      left.tool(T_MONITOR, 'Monitor', 'scripts/herdr-watch-terminal.sh builder-244 builder-251 builder-262');
       left.out(T_MONITOR + 0.35, 'watching 3 panes');
 
       // ── briefs: comet from thomas to each Builder, 0.6s apart ────────────
@@ -572,12 +662,12 @@
 
       const paneQuadLeft = document.getElementById('pane-quad-left');
 
-      const T_BRIEF_196 = T_SPLIT + 2.1;
-      const T_BRIEF_200 = T_BRIEF_196 + 0.6;
-      const T_BRIEF_204 = T_BRIEF_200 + 0.6;
-      BUILDERS[0].tBrief = T_BRIEF_196;
-      BUILDERS[1].tBrief = T_BRIEF_200;
-      BUILDERS[2].tBrief = T_BRIEF_204;
+      const T_BRIEF_244 = T_SPLIT + 2.1;
+      const T_BRIEF_251 = T_BRIEF_244 + 0.6;
+      const T_BRIEF_262 = T_BRIEF_251 + 0.6;
+      BUILDERS[0].tBrief = T_BRIEF_244;
+      BUILDERS[1].tBrief = T_BRIEF_251;
+      BUILDERS[2].tBrief = T_BRIEF_262;
 
       BUILDERS.forEach((b) => {
         b.log.preview(b.tBrief, `› Message from @thomas: ${b.brief} (ctrl+o to expand)`);
@@ -590,88 +680,89 @@
       BUILDERS[1].tWork = BUILDERS[1].tBrief + 2.8;
       BUILDERS[2].tWork = BUILDERS[2].tBrief + 3.2;
 
-      // TRA-196: no block, finishes first
-      const b196 = BUILDERS[0];
-      b196.log.tool(b196.tWork, 'Read', b196.path);
-      b196.log.tool(b196.tWork + 0.6, 'Edit', b196.path);
-      b196.log.tool(b196.tWork + 1.2, 'Bash', `pytest ${b196.testFile}`);
-      b196.log.out(b196.tWork + 1.55, b196.testPass);
-      b196.log.tool(b196.tWork + 1.9, 'Bash', 'git push');
-      b196.log.tag(b196.tWork + 2.25, 'done');
-      const T_DONE_196 = b196.tWork + 2.25;
-      tl.call(() => { setDot(b196.rowEl, 'done', 'claude'); }, [], T_DONE_196);
+      // #244: no block, finishes first
+      const b244 = BUILDERS[0];
+      b244.log.tool(b244.tWork, 'Read', b244.path);
+      b244.log.tool(b244.tWork + 0.6, 'Edit', b244.path);
+      b244.log.tool(b244.tWork + 1.2, 'Bash', b244.testCmd);
+      b244.log.out(b244.tWork + 1.55, b244.testPass);
+      b244.log.tool(b244.tWork + 1.9, 'Bash', 'git push');
+      b244.log.tag(b244.tWork + 2.25, 'done');
+      const T_DONE_244 = b244.tWork + 2.25;
+      tl.call(() => { setDot(b244.rowEl, 'done', 'claude'); }, [], T_DONE_244);
 
-      // TRA-200: blocked mid-way, resumes, finishes second
-      const b200 = BUILDERS[1];
-      b200.log.tool(b200.tWork, 'Read', b200.path);
-      b200.log.tool(b200.tWork + 0.6, 'Edit', b200.path);
-      b200.log.tool(b200.tWork + 1.2, 'Bash', `pytest ${b200.testFile}`);
-      b200.log.out(b200.tWork + 1.55, b200.testPass);
+      // #251: no block, finishes second
+      const b251 = BUILDERS[1];
+      b251.log.tool(b251.tWork, 'Read', b251.path);
+      b251.log.tool(b251.tWork + 0.6, 'Edit', b251.path);
+      b251.log.tool(b251.tWork + 1.2, 'Bash', b251.testCmd);
+      b251.log.out(b251.tWork + 1.55, b251.testPass);
+      b251.log.tool(b251.tWork + 1.9, 'Bash', 'git push');
+      b251.log.tag(b251.tWork + 2.25, 'done');
+      const T_DONE_251 = b251.tWork + 2.25;
+      tl.call(() => { setDot(b251.rowEl, 'done', 'claude'); }, [], T_DONE_251);
 
-      const T_BLOCKED = b200.tWork + 3.0;
-      b200.log.say(T_BLOCKED, 'Surface "search" không có app-id trong payload cũ, bỏ qua hay coi là lỗi?');
-      b200.log.tag(T_BLOCKED + 0.4, 'blocked');
-      tl.call(() => { setDot(b200.rowEl, 'blocked', 'claude'); }, [], T_BLOCKED + 0.4);
+      // #262: blocked mid-way, resumes, still working at the end of this cut
+      const b262 = BUILDERS[2];
+      b262.log.tool(b262.tWork, 'Read', b262.path);
+      b262.log.tool(b262.tWork + 0.6, 'Edit', b262.path);
+      b262.log.tool(b262.tWork + 1.2, 'Bash', b262.testCmd);
+      b262.log.out(b262.tWork + 1.55, b262.testPass);
+
+      const T_BLOCKED = b262.tWork + 3.0;
+      b262.log.say(T_BLOCKED, STR.blockedQuestion);
+      b262.log.tag(T_BLOCKED + 0.4, 'blocked');
+      tl.call(() => { setDot(b262.rowEl, 'blocked', 'claude'); }, [], T_BLOCKED + 0.4);
 
       const T_ANSWER = T_BLOCKED + 2.4;
-      left.out(T_ANSWER, 'TERMINAL:blocked pane=builder-tra-200');
-      left.tool(T_ANSWER + 0.35, 'Bash', 'herdr agent read builder-tra-200');
-      left.say(T_ANSWER + 0.7, 'Câu hỏi kỹ thuật, có trong spec TRA-179: payload cũ thiếu app-id thì bỏ qua và ghi warning. Trả lời Builder, không cần làm phiền bạn.');
-      fireComet(T_BLOCKED + 0.5, 'back', b200.paneEl, paneQuadLeft, b200.flashEl);
+      left.out(T_ANSWER, 'TERMINAL:blocked pane=builder-262');
+      left.tool(T_ANSWER + 0.35, 'Bash', 'herdr agent read builder-262');
+      left.say(T_ANSWER + 0.7, STR.thomasAnswer);
+      fireComet(T_BLOCKED + 0.5, 'back', b262.paneEl, paneQuadLeft, b262.flashEl);
 
       const T_RESUME = T_ANSWER + 3.4;
-      const ANSWER_MSG = 'Payload cũ thiếu app-id thì bỏ qua và ghi warning, theo spec TRA-179. Tiếp tục.';
-      b200.log.preview(T_RESUME, `› Message from @thomas: ${ANSWER_MSG} (ctrl+o to expand)`);
-      b200.log.expanded(T_RESUME + 0.5, ANSWER_MSG);
-      fireComet(T_RESUME - 0.05, 'fwd', paneQuadLeft, b200.paneEl, b200.flashEl);
-      tl.call(() => { setDot(b200.rowEl, 'working', 'claude'); }, [], T_RESUME);
+      const ANSWER_MSG = STR.answerMsg;
+      b262.log.preview(T_RESUME, `› Message from @thomas: ${ANSWER_MSG} (ctrl+o to expand)`);
+      b262.log.expanded(T_RESUME + 0.5, ANSWER_MSG);
+      fireComet(T_RESUME - 0.05, 'fwd', paneQuadLeft, b262.paneEl, b262.flashEl);
+      tl.call(() => { setDot(b262.rowEl, 'working', 'claude'); }, [], T_RESUME);
 
-      b200.log.tool(T_RESUME + 1.1, 'Edit', b200.path);
-      b200.log.tool(T_RESUME + 1.7, 'Bash', `pytest ${b200.testFile}`);
-      b200.log.out(T_RESUME + 2.05, b200.testPass2);
-      b200.log.tool(T_RESUME + 2.4, 'Bash', 'git push');
-      b200.log.tag(T_RESUME + 2.75, 'done');
-      const T_DONE_200 = T_RESUME + 2.75;
-      tl.call(() => { setDot(b200.rowEl, 'done', 'claude'); }, [], T_DONE_200);
-
-      // TRA-204: keeps working, never finishes in this cut
-      const b204 = BUILDERS[2];
-      b204.log.tool(b204.tWork, 'Read', b204.path);
-      b204.log.tool(b204.tWork + 0.6, 'Edit', b204.path);
-      b204.log.tool(b204.tWork + 9.0, 'Bash', `pytest ${b204.testFile}`);
-      b204.log.out(b204.tWork + 9.35, '6 passed, 3 failed');
-      b204.log.tool(b204.tWork + 9.9, 'Edit', b204.path);
+      b262.log.tool(T_RESUME + 1.1, 'Edit', b262.path);
+      b262.log.tool(T_RESUME + 1.7, 'Bash', b262.testCmd);
+      b262.log.out(T_RESUME + 2.05, '4 passed, 2 failed');
+      b262.log.tool(T_RESUME + 2.6, 'Edit', b262.path);
+      // #262 never finishes in this cut
 
       // ── thomas closes tickets as they land, without waiting for all three ──
-      const T_CLOSE_196 = T_RESUME + 1.0;
-      left.out(T_CLOSE_196, 'TERMINAL:done pane=builder-tra-196');
-      left.tool(T_CLOSE_196 + 0.35, 'Bash', 'scripts/check-simplify-markers.sh main builder/TRA-196');
-      left.out(T_CLOSE_196 + 0.7, 'exit 0');
-      left.tool(T_CLOSE_196 + 1.05, 'Bash', 'linear issue update TRA-196 --state Done');
-      left.out(T_CLOSE_196 + 1.4, 'updated');
+      const T_CLOSE_244 = T_DONE_244 + 1.0;
+      left.out(T_CLOSE_244, 'TERMINAL:done pane=builder-244');
+      left.tool(T_CLOSE_244 + 0.35, 'Bash', 'scripts/check-simplify-markers.sh main builder/244');
+      left.out(T_CLOSE_244 + 0.7, 'exit 0');
+      left.tool(T_CLOSE_244 + 1.05, 'Bash', `gh issue close 244 --comment "${STR.receiptValid}"`);
+      left.out(T_CLOSE_244 + 1.4, 'closed');
 
-      const T_CLOSE_200 = T_DONE_200 + 1.75;
-      left.out(T_CLOSE_200, 'TERMINAL:done pane=builder-tra-200');
-      left.tool(T_CLOSE_200 + 0.35, 'Bash', 'scripts/check-simplify-markers.sh main builder/TRA-200');
-      left.out(T_CLOSE_200 + 0.7, 'exit 0');
-      left.tool(T_CLOSE_200 + 1.05, 'Bash', 'linear issue update TRA-200 --state Done');
-      left.out(T_CLOSE_200 + 1.4, 'updated');
+      const T_CLOSE_251 = T_DONE_251 + 1.0;
+      left.out(T_CLOSE_251, 'TERMINAL:done pane=builder-251');
+      left.tool(T_CLOSE_251 + 0.35, 'Bash', 'scripts/check-simplify-markers.sh main builder/251');
+      left.out(T_CLOSE_251 + 0.7, 'exit 0');
+      left.tool(T_CLOSE_251 + 1.05, 'Bash', `gh issue close 251 --comment "${STR.receiptValid}"`);
+      left.out(T_CLOSE_251 + 1.4, 'closed');
 
       // ── merge back to a single thomas pane ────────────────────────────
-      const T_MERGE = T_CLOSE_200 + 3.4;
+      const T_MERGE = T_RESUME + 3.4;
       tl.to(boxQuad, { autoAlpha: 0, duration: 0.3 }, T_MERGE);
       tl.to(boxFull, { autoAlpha: 1, duration: 0.3 }, T_MERGE);
       BUILDERS.forEach((b) => { tl.to(b.tabEl, { opacity: 0, duration: 0.2 }, T_MERGE); });
 
       // replay of split-only events into the merged chat log, filtered to the merge cut
       const REPLAY = [
-        ['tool', 'Monitor', 'scripts/herdr-watch-terminal.sh builder-tra-196 builder-tra-200 builder-tra-204'],
+        ['tool', 'Monitor', 'scripts/herdr-watch-terminal.sh builder-244 builder-251 builder-262'],
         ['out', 'watching 3 panes'],
-        ['out', 'TERMINAL:blocked pane=builder-tra-200'],
-        ['say', 'Câu hỏi kỹ thuật, có trong spec TRA-179: payload cũ thiếu app-id thì bỏ qua và ghi warning. Trả lời Builder, không cần làm phiền bạn.'],
-        ['out', 'TERMINAL:done pane=builder-tra-196'],
-        ['out', 'TERMINAL:done pane=builder-tra-200'],
-        ['out', 'linear issue update TRA-196, TRA-200 --state Done'],
+        ['out', 'TERMINAL:done pane=builder-244'],
+        ['out', 'TERMINAL:done pane=builder-251'],
+        ['out', 'TERMINAL:blocked pane=builder-262'],
+        ['say', STR.thomasAnswer],
+        ['out', `gh issue close 244 251 --comment "${STR.receiptValid}"`],
       ];
       REPLAY.forEach(([kind, a, b]) => {
         if (kind === 'tool') main.tool(T_MERGE - 0.01, a, b, { hist: true });
@@ -680,61 +771,61 @@
       });
 
       const T_REPORT = T_MERGE + 0.5;
-      main.say(T_REPORT, 'Sáng nay: TRA-196 và TRA-200 xong, receipt hợp lệ, đã chuyển Done. TRA-204 đang chạy, tôi sẽ báo khi xong. Builder TRA-200 hỏi một câu kỹ thuật, tôi trả lời theo spec TRA-179. Bốn ticket needs-info tôi đã gom câu hỏi, bạn xem lúc rảnh.');
+      main.say(T_REPORT, STR.report);
 
       runLog(chatLog, boxFull, main.items);
       runLog(quadLeftLog, paneQuadLeft, left.items);
       BUILDERS.forEach((b) => { runLog(b.logEl, b.paneEl, b.log.items); });
 
-      // ── board cut, scene 2: wide, then zoom across Backlog/Todo/In Progress ─
+      // ── board cut, scene 2: wide, then zoom into the Ready column ─
       const boardOverlay = document.getElementById('board-overlay');
       const boardWrap = document.getElementById('board-wrap');
-      const hl196 = document.getElementById('hl-196');
-      const hl200 = document.getElementById('hl-200');
-      const hl204 = document.getElementById('hl-204');
+      const hl244 = document.getElementById('hl-244');
+      const hl251 = document.getElementById('hl-251');
+      const hl262 = document.getElementById('hl-262');
 
       // raw source image is 1600×1000; board-wrap renders it at 1920×1200 (×1.2)
       const S = 1.2;
       function boxFromImage(x0, y0, x1, y1) {
         return { left: x0 * S, top: y0 * S, width: (x1 - x0) * S, height: (y1 - y0) * S };
       }
-      const box196 = boxFromImage(763, 155, 1105, 295);
-      const box200 = { left: 18, top: 893, width: 427, height: 186 }; // reuses v1's measured TRA-200 box
-      const box204 = boxFromImage(23, 305, 363, 445);
-      [[hl196, box196], [hl200, box200], [hl204, box204]].forEach(([el, b]) => {
+      const box244 = boxFromImage(352, 310, 648, 443);
+      const box251 = boxFromImage(352, 442, 648, 573);
+      const box262 = boxFromImage(352, 705, 648, 836);
+      [[hl244, box244], [hl251, box251], [hl262, box262]].forEach(([el, b]) => {
         el.style.left = b.left + 'px';
         el.style.top = b.top + 'px';
         el.style.width = b.width + 'px';
         el.style.height = b.height + 'px';
       });
 
-      // zoom that frames all three columns (Backlog, Todo, In Progress)
-      const ZOOM = 1.05;
-      const ZOOM_CX = 678, ZOOM_CY = 606; // region centre in board-wrap space
+      // zoom that frames the Ready column, with Backlog and In progress partly visible
+      const ZOOM = 1.6;
+      const ZOOM_CX = 594, ZOOM_CY = 688; // region centre in board-wrap space
       const zoomX = 960 - ZOOM * ZOOM_CX;
       const zoomY = 540 - ZOOM * ZOOM_CY;
 
       tl.set(boardWrap, { x: 0, y: 0, scale: 1 }, T_BOARD);
-      tl.set([hl196, hl200, hl204], { autoAlpha: 0 }, T_BOARD);
+      tl.set([hl244, hl251, hl262], { autoAlpha: 0 }, T_BOARD);
       tl.to(boardOverlay, { autoAlpha: 1, duration: 0.2 }, T_BOARD);
       tl.to(boardWrap, { x: zoomX, y: zoomY, scale: ZOOM, duration: 1.2, ease: 'power2.inOut' }, T_BOARD + 1.0);
-      tl.to(hl196, { autoAlpha: 1, duration: 0.3 }, T_BOARD + 2.4);
-      tl.to(hl200, { autoAlpha: 1, duration: 0.3 }, T_BOARD + 3.1);
-      tl.to(hl204, { autoAlpha: 1, duration: 0.3 }, T_BOARD + 3.8);
+      tl.to(hl244, { autoAlpha: 1, duration: 0.3 }, T_BOARD + 2.4);
+      tl.to(hl251, { autoAlpha: 1, duration: 0.3 }, T_BOARD + 3.1);
+      tl.to(hl262, { autoAlpha: 1, duration: 0.3 }, T_BOARD + 3.8);
       tl.to(boardOverlay, { autoAlpha: 0, duration: 0.3 }, T_BOARD_END - 0.3);
 
-      // ── final board cut: TRA-196 + TRA-200 in Done, TRA-204 in In Progress ──
-      const card196 = document.getElementById('card-196');
-      const card200 = document.getElementById('card-200');
-      const card204 = document.getElementById('card-204');
+      // ── final board cut: #244 + #251 in Done, #262 in In progress ──
+      const card244 = document.getElementById('card-244');
+      const card251 = document.getElementById('card-251');
+      const card262 = document.getElementById('card-262');
       const T_DONE_CUT = T_REPORT + 4.0;
       tl.set(boardWrap, { x: 0, y: 0, scale: 1 }, T_DONE_CUT);
-      tl.set([hl196, hl200, hl204], { autoAlpha: 0 }, T_DONE_CUT);
-      tl.set([card196, card200, card204], { autoAlpha: 0 }, T_DONE_CUT);
+      tl.set([hl244, hl251, hl262], { autoAlpha: 0 }, T_DONE_CUT);
+      tl.set([card244, card251, card262], { autoAlpha: 0 }, T_DONE_CUT);
       tl.to(boardOverlay, { autoAlpha: 1, duration: 0.2 }, T_DONE_CUT);
-      tl.to(card196, { autoAlpha: 1, duration: 0.25 }, T_DONE_CUT + 0.2);
-      tl.to(card200, { autoAlpha: 1, duration: 0.25 }, T_DONE_CUT + 0.45);
-      tl.to(card204, { autoAlpha: 1, duration: 0.25 }, T_DONE_CUT + 0.7);
+      tl.to(card244, { autoAlpha: 1, duration: 0.25 }, T_DONE_CUT + 0.2);
+      tl.to(card251, { autoAlpha: 1, duration: 0.25 }, T_DONE_CUT + 0.45);
+      tl.to(card262, { autoAlpha: 1, duration: 0.25 }, T_DONE_CUT + 0.7);
       const T_CUT_FADE = T_DONE_CUT + 2.0;
       tl.to(boardOverlay, { autoAlpha: 0, duration: 0.25 }, T_CUT_FADE);
 
@@ -743,20 +834,20 @@
 
       // ── caption cards, centred band, one visible at a time ────────────────
       const CARDS = [
-        [0.0, 'Một buổi sáng, mở herdr.'],
-        [T_WELCOME - 0.1, 'Thomas là người đại diện của team. Bạn chỉ nói chuyện với Thomas.'],
-        [T_TOOL1, 'Thomas lên tracker trước khi trả lời.'],
-        [T_BOARD + 0.2, 'Board là nguồn sự thật. Thomas đọc nó thay bạn.'],
-        [T_REASON, 'Thomas không lấy ticket đầu hàng. Thomas đọc trạng thái, loại việc bị chặn, tìm ra ba ticket không giao nhau, chạy song song.'],
-        [T_OK, 'Bạn giữ quyền quyết định; một chữ là đủ.'],
-        [T_DISPATCH, 'Ba lần claim, ba worktree, ba session Builder.'],
-        [T_SPLIT, 'Mỗi Builder một session, một worktree, một brief.'],
-        [T_BLOCKED + 0.4, 'Một Builder kẹt, herdr báo, Thomas thấy ngay.'],
-        [T_ANSWER, 'Câu hỏi kỹ thuật, Thomas tự trả lời. Chỉ quyết định sản phẩm mới lên bạn.'],
-        [T_CLOSE_196, 'Xong cái nào, Thomas kiểm receipt và đóng cái đó. Không chờ cả ba.'],
-        [T_REPORT, 'Bạn nhận báo cáo, không nhận log.'],
-        [T_DONE_CUT, 'Mọi việc để lại dấu vết trên board.'],
-        [T_FULL, ''],
+        [0.0, STR.captions[0]],
+        [T_WELCOME - 0.1, STR.captions[1]],
+        [T_TOOL1, STR.captions[2]],
+        [T_BOARD + 0.2, STR.captions[3]],
+        [T_REASON, STR.captions[4]],
+        [T_OK, STR.captions[5]],
+        [T_DISPATCH, STR.captions[6]],
+        [T_SPLIT, STR.captions[7]],
+        [T_BLOCKED + 0.4, STR.captions[8]],
+        [T_ANSWER, STR.captions[9]],
+        [T_CLOSE_244, STR.captions[10]],
+        [T_REPORT, STR.captions[11]],
+        [T_DONE_CUT, STR.captions[12]],
+        [T_FULL, STR.captions[13]],
       ];
       const cardOverlay = document.getElementById('card-overlay');
       const cardEls = CARDS.map(([t, html]) => {

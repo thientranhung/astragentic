@@ -10,7 +10,7 @@ Nguyên liệu dùng lại:
 - Khung herdr (sidebar `spaces`, `agents · grouped`, tab, pane, status line) từ `video/herdr`.
 - TUI Claude Code, dòng preview `› Message from @thomas: … (ctrl+o to expand)`, các dòng
   `⏺ Bash(...)`, `⏺ Monitor(...)`, `⎿ TERMINAL:blocked` từ `video/dispatch`.
-- Board: ảnh thật `public/shots/tracker-linear.jpg` (project Inception trên Linear). Đoạn
+- Board (bản 1–2): ảnh `public/shots/tracker-linear.jpg`; từ bản 3 là `tracker-github.jpg`, xem cuối file. Đoạn
   zoom là GSAP scale + translate lên ảnh, không dựng lại board.
 - Space đặt theo tên dự án được cài Astragentic: `inception · main` (không phải `astragentic`,
   vì Astragentic là bộ cài vào dự án khác). Space thứ hai mờ bên dưới: `shop-demo · main`.
@@ -39,7 +39,7 @@ Pane Thomas giữ status line như bản 1 (`~/inception · main · bypass permi
 
 | t | Hình | Card |
 |---|---|---|
-| 0.0 | Cửa sổ herdr tối: `spaces` có `inception · main` (chọn) và `shop-demo · main`; `agents · grouped` trống; hàng tab `+`; pane chính là shell trống với prompt `~/inception $`. | Một buổi sáng, mở herdr. |
+| 0.0 | Cửa sổ herdr tối: `spaces` có `inception · main` (chọn) và `shop-demo · main`; `agents · grouped` trống; hàng tab `+`; pane chính là shell trống với prompt `~/inception $`. | Mở herdr, gọi Thomas. |
 | 1.5 | Gõ theo nhịp người: `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium` rồi Enter. | |
 | 5.0 | Màn hình chào Claude Code hiện trong pane; tab đổi tên `thomas`; sidebar `agents` thêm `thomas` với `working · claude`, chấm vàng. | Thomas là người đại diện của team. Bạn chỉ nói chuyện với Thomas. |
 
@@ -74,13 +74,13 @@ Pane Thomas giữ status line như bản 1 (`~/inception · main · bypass permi
 
 | t | Hình | Card |
 |---|---|---|
-| 58.0 | Pane chính gộp lại một pane `thomas`. `⏺` Thomas gửi bạn: `Sáng nay: TRA-196 và TRA-200 xong, receipt hợp lệ, đã chuyển Done. TRA-204 đang chạy, tôi sẽ báo khi xong. Builder TRA-200 hỏi một câu kỹ thuật, tôi trả lời theo spec TRA-179. Bốn ticket needs-info tôi đã gom câu hỏi, bạn xem lúc rảnh.` | Bạn nhận báo cáo, không nhận log. |
+| 58.0 | Pane chính gộp lại một pane `thomas`. `⏺` Thomas gửi bạn: `Báo cáo: TRA-196 và TRA-200 xong, receipt hợp lệ, đã chuyển Done. TRA-204 đang chạy, tôi sẽ báo khi xong. Builder TRA-200 hỏi một câu kỹ thuật, tôi trả lời theo spec TRA-179. Bốn ticket needs-info tôi đã gom câu hỏi, bạn xem lúc rảnh.` | Bạn nhận báo cáo, không nhận log. |
 | 63.0 | Cắt sang board: hai thẻ TRA-196 và TRA-200 dựng chồng lên cột Done với dấu xanh, TRA-204 ở cột In Progress với chấm vàng, 2 giây. | Mọi việc để lại dấu vết trên board. |
 | 66.0 | Toàn cảnh herdr: `thomas` working, hai Builder done, một Builder working. Giữ 1,5 giây rồi lặp. | |
 
 ## Điều người xem phải nhận ra
 
-1. Bắt đầu một ngày chỉ là mở herdr và gọi Thomas bằng một lệnh.
+1. Bắt đầu chỉ là mở herdr và gọi Thomas bằng một lệnh.
 2. Bạn nói chuyện tự nhiên; Thomas lên board đọc trước rồi mới trả lời.
 3. Thomas suy luận để tìm việc: loại ticket bị chặn, tìm ra ba ticket không giao nhau, chạy song song.
 4. Ba Builder, ba worktree, ba status line; Thomas trả lời câu kỹ thuật, đóng từng ticket khi xong.
@@ -93,3 +93,31 @@ Pane Thomas giữ status line như bản 1 (`~/inception · main · bypass permi
 - Bản 2: ba ticket song song để gây ấn tượng về khả năng điều hành; status line Builder có
   model, runtime, git branch, thư mục worktree theo ảnh mẫu.
 - Độ dài không quan trọng, truyền tải được là chính. Vị trí dưới hai nút hero.
+
+## Bản 3 (2026-09-11): board GitHub Issues thay cho Linear
+
+Chủ site yêu cầu đổi ảnh board trong video hero sang GitHub Issues (`public/shots/tracker-github.jpg`,
+board mẫu "Orion Commerce", repo `orbit-commerce`). Mọi thứ khác giữ nguyên bản 2; chỉ đổi dữ liệu:
+
+- Space: `orbit-commerce · main` (chọn), `shop-demo · main`. Prompt shell `~/orbit-commerce $`.
+- Lệnh tracker: `gh issue list --repo orion/orbit-commerce --state open` · `⎿ 35 open`, rồi
+  `gh project item-list … --format json | jq '.[] | select(.status=="Ready")'` · `⎿ 8 items`.
+  Claim: `gh issue edit 244 --add-assignee builder --add-label in-progress`. Đóng:
+  `gh issue close 244 --comment "receipt hợp lệ"`. Worktree: `git worktree add ../wt/244 -b builder/244 main`.
+- Ba ticket chọn từ cột Ready: `#244 Add dashboard copy validation`, `#251 Refine provider routing rules`,
+  `#262 Add rate limiting to public API`. Suy luận của Thomas: `In progress đã có 4 ticket đang có người
+  làm, không đụng. Ready có 8. #256 email templates chờ branding assets, #268 search indexing chưa có
+  write-set, để lại. #244, #251 và #262 nằm ở ba module khác nhau: dashboard, fulfillment, api.
+  Không giao nhau, tôi mở ba Builder chạy song song, mỗi Builder một worktree.`
+- Zoom board vào cột Ready, viền sáng lần lượt quanh #244, #251, #262.
+- Agent: `builder-244`, `builder-251`, `builder-262`. Status line: `📁 244 | 🌿 builder/244 | 🌳 244`.
+- Write-set / file: #244 `src/dashboard/copy/validate.ts`, #251 `src/fulfillment/routing.ts`,
+  #262 `src/api/rate_limit.ts`; test `pnpm vitest run src/<module>`.
+- Builder #262 kẹt: `Request không có API key thì rate limit theo IP hay từ chối luôn?` Thomas:
+  `Câu hỏi kỹ thuật, có trong body #262: không có key thì áp limit theo IP, 60 req/phút. Trả lời
+  Builder, không cần làm phiền bạn.` Reply: `Không có key thì limit theo IP, 60 req/phút, theo body #262. Tiếp tục.`
+- Thứ tự xong: #244 trước, rồi #251; #262 vẫn chạy đến cuối.
+- Báo cáo cuối: `Báo cáo: #244 và #251 xong, receipt hợp lệ, đã đóng issue. #262 đang chạy, tôi sẽ báo
+  khi xong. Builder #262 hỏi một câu kỹ thuật, tôi trả lời theo body issue. #256 và #268 chưa đủ điều
+  kiện, tôi đã ghi câu hỏi vào issue, bạn xem lúc rảnh.`
+- Board cuối: #244 và #251 chồng lên cột Done với dấu xanh, #262 chồng lên cột In progress với chấm vàng.

@@ -275,6 +275,114 @@
         ],
         "createdAt": "2026-09-10T17:21:54.210Z",
         "reason": "assistant: standalone HyperFrames terminal/app simulation, same exception as video/dispatch and video/herdr"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "video/dispatch/index.html"
+        ],
+        "createdAt": "2026-09-11T02:29:56.460Z",
+        "reason": "assistant: the light streak carrying a message between panes is the video's motion cue, made vivid at the owner's request 2026-09-10; not a UI surface"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "site/video/dispatch/index.html"
+        ],
+        "createdAt": "2026-09-11T02:29:56.501Z",
+        "reason": "assistant: the light streak carrying a message between panes is the video's motion cue, made vivid at the owner's request 2026-09-10; not a UI surface"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-11T02:29:56.543Z",
+        "reason": "assistant: the light streak carrying a message between panes is the video's motion cue, made vivid at the owner's request 2026-09-10; not a UI surface"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "site/video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-11T02:29:56.589Z",
+        "reason": "assistant: the light streak carrying a message between panes is the video's motion cue, made vivid at the owner's request 2026-09-10; not a UI surface"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "video/hero/index.html"
+        ],
+        "createdAt": "2026-09-11T02:29:56.629Z",
+        "reason": "assistant: the light streak carrying a message between panes is the video's motion cue, made vivid at the owner's request 2026-09-10; not a UI surface"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "site/video/hero/index.html"
+        ],
+        "createdAt": "2026-09-11T02:29:56.665Z",
+        "reason": "assistant: the light streak carrying a message between panes is the video's motion cue, made vivid at the owner's request 2026-09-10; not a UI surface"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          "video/dispatch/index.html"
+        ],
+        "createdAt": "2026-09-11T02:52:14.965Z",
+        "reason": "assistant: terminal simulation video uses the owner's real terminal font (JetBrainsMono Nerd Font) so the frames match Claude Code as seen on their machine; not a site page"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          "site/video/dispatch/index.html"
+        ],
+        "createdAt": "2026-09-11T02:52:15.150Z",
+        "reason": "assistant: terminal simulation video uses the owner's real terminal font (JetBrainsMono Nerd Font) so the frames match Claude Code as seen on their machine; not a site page"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          "video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-11T02:52:15.252Z",
+        "reason": "assistant: terminal simulation video uses the owner's real terminal font (JetBrainsMono Nerd Font) so the frames match Claude Code as seen on their machine; not a site page"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          "site/video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-11T02:52:15.530Z",
+        "reason": "assistant: terminal simulation video uses the owner's real terminal font (JetBrainsMono Nerd Font) so the frames match Claude Code as seen on their machine; not a site page"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          "video/hero/index.html"
+        ],
+        "createdAt": "2026-09-11T02:52:15.781Z",
+        "reason": "assistant: terminal simulation video uses the owner's real terminal font (JetBrainsMono Nerd Font) so the frames match Claude Code as seen on their machine; not a site page"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          "site/video/hero/index.html"
+        ],
+        "createdAt": "2026-09-11T02:52:15.912Z",
+        "reason": "assistant: terminal simulation video uses the owner's real terminal font (JetBrainsMono Nerd Font) so the frames match Claude Code as seen on their machine; not a site page"
       }
     ]
   }

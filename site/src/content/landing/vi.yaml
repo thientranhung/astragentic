@@ -131,7 +131,7 @@ why:
 
 shots:
   hero:
-    caption: "Mô phỏng một buổi sáng với Astragentic: mở herdr, gọi Thomas, hỏi tiến độ. Thomas đọc board Linear, tìm ra ba ticket không giao nhau, mở ba Builder chạy song song trên ba worktree, tự trả lời câu hỏi kỹ thuật, đóng từng ticket khi xong, rồi gửi bạn báo cáo ngắn."
+    caption: "Mô phỏng một phiên làm việc với Astragentic: mở herdr, gọi Thomas, hỏi tiến độ. Thomas đọc board GitHub Issues, tìm ra ba ticket không giao nhau, mở ba Builder chạy song song trên ba worktree, tự trả lời câu hỏi kỹ thuật, đóng từng ticket khi xong, rồi gửi bạn báo cáo ngắn."
     video:
       mp4: /shots/hero.mp4
       webm: /shots/hero.webm
