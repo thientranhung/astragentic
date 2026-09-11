@@ -20,10 +20,10 @@ export type PageKey =
 export const ROUTES: Record<PageKey, Record<Lang, string>> = {
   home: { vi: '/vi', en: '/' },
   structure: { vi: '/vi/cau-truc', en: '/structure' },
-  roles: { vi: '/vi/vai/thomas', en: '/roles/thomas' },
+  roles: { vi: '/vi/role/thomas', en: '/roles/thomas' },
   skills: { vi: '/vi/skills', en: '/skills' },
   hooks: { vi: '/vi/hooks', en: '/hooks' },
-  why: { vi: '/vi/vi-sao', en: '/why' },
+  why: { vi: '/vi/cach-tiep-can', en: '/why' },
   stack: { vi: '/vi/tech-stack', en: '/tech-stack' },
   adopt: { vi: '/vi/cai', en: '/adopt' },
   failures: { vi: '/vi/loi', en: '/failures' },

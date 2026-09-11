@@ -34,12 +34,14 @@ export default defineConfig({
     '/en/skills/[slug]': '/skills/[slug]',
     '/en/roles/[id]': '/roles/[id]',
     '/cau-truc': '/vi/cau-truc',
-    '/vi-sao': '/vi/vi-sao',
+    '/vi-sao': '/vi/cach-tiep-can',
+    '/vi/vi-sao': '/vi/cach-tiep-can',
     '/cai': '/vi/cai',
     '/loi': '/vi/loi',
     '/bang-chung': '/vi/loi',
     '/vi/bang-chung': '/vi/loi',
-    '/vai/[id]': '/vi/vai/[id]',
+    '/vai/[id]': '/vi/role/[id]',
+    '/vi/vai/[id]': '/vi/role/[id]',
   },
   // English is the primary language and lives at `/`; Vietnamese mirrors under `/vi/`.
   // Route files are explicit (vi/loi.astro / failures.astro) because the Vietnamese

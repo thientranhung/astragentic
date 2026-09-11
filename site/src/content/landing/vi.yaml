@@ -56,31 +56,31 @@ explain:
         tag: "người đại diện"
         session: "Session thường trực, kéo dài qua nhiều ticket."
         body: "Giữ tracker, chạy frontier query, claim, dispatch và merge. Là agent duy nhất còn ở đó khi Builder đã đóng session, nên mọi trạng thái bền đều thuộc Thomas. Hỏi lại bạn ở những quyết định quan trọng."
-        href: "/vi/vai/thomas"
+        href: "/vi/role/thomas"
       - id: shaper
         title: "Shaper"
         tag: "định hình"
         session: "Một session liền mạch từ đầu tới cuối, không compact."
         body: "Chạy grill-with-docs, to-spec, to-tickets theo thứ tự, dừng sau spec để bạn duyệt."
-        href: "/vi/vai/shaper"
+        href: "/vi/role/shaper"
       - id: builder
         title: "Builder"
         tag: "thi công"
         session: "Một session mỗi ticket, trong worktree riêng, là người viết duy nhất ở đó."
         body: "Implement, code review hai trục, simplify, rồi lượt review chéo do Codex đọc lại. Commit ở mỗi ranh giới, không chỉ lúc handback."
-        href: "/vi/vai/builder"
+        href: "/vi/role/builder"
       - id: rin
         title: "Rin"
         tag: "gate"
         session: "Một session mỗi milestone, worktree tách riêng tại đúng SHA được review."
         body: "Chỉ đọc và viết đúng một file: báo cáo gate. Một vòng mỗi milestone, không lặp."
-        href: "/vi/vai/rin"
+        href: "/vi/role/rin"
       - id: qa
         title: "QA"
         tag: "nghiệm thu"
         session: "Một session mỗi lượt walk, với sản phẩm đang chạy thật trong worktree riêng."
         body: "Dùng sản phẩm như người dùng, không đọc diff. Mặc định chỉ đọc, mọi thao tác ghi cần bạn cho phép từng lần."
-        href: "/vi/vai/qa"
+        href: "/vi/role/qa"
 
   tracker:
     eyebrow: "Issue tracker"
@@ -126,7 +126,7 @@ explain:
         text: "grilling · tdd · code-review · codebase-design · domain-modeling · research · prototype · diagnosing-bugs"
     more:
       label: "Hiểu rõ hơn lý do chọn →"
-      href: "/vi/vi-sao#why-mattpocock"
+      href: "/vi/cach-tiep-can#why-mattpocock"
 
 why:
   eyebrow: "Cách tiếp cận"
