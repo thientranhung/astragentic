@@ -48,7 +48,7 @@ explain:
     figureNote: "Thomas runs the whole team: takes your request, brings in the Shaper when a spec is needed, dispatches tickets to Builders, calls Rin’s gate at every milestone and QA’s walk before a merge, then reports back to you. Every arrow in the picture is one exchange there and back."
     models:
       label: "Model and effort per role"
-      intro: "Each role runs on the model and effort its work needs. Thomas and Shaper reason at length, so they run Opus, Shaper at high effort because grilling and spec are where the thinking happens; Builder and QA build and test, so they run Sonnet for speed and cost; Rin gates on Opus at medium effort."
+      intro: "Each role runs on the model and effort its work needs. Thomas and Shaper reason at length, so they run Opus, Shaper at high effort. Builder and QA need speed and low cost, so they run Sonnet. Rin gates on Opus at medium effort."
       note: "This table is read straight from `.agents/orchestrator.md` in your repo. Change one row and that role's runtime, model or effort changes at the next dispatch, with no edit to the role contract."
     items:
       - id: thomas
@@ -239,7 +239,7 @@ adopt:
       lines: ["claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium"]
   reqEyebrow: "Tech stack"
   reqHeadline: "Seven things to have before you install."
-  reqSub: "Four required, one optional, one pick-one. The `check-requirements.sh` script checks all of them for you before the install."
+  reqSub: "Five required, one optional, one pick-one-of-three. The `check-requirements.sh` script checks all of them for you before the install."
   reqTitle: "Required tech stack"
   requirements:
     - name: "Claude Code CLI"

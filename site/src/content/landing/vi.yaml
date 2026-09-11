@@ -173,35 +173,35 @@ features:
     body: "Mọi ticket đi qua code-review theo Standards và Spec trên Claude Code, rồi một lượt đọc chéo trên Codex. Hai model của hai hãng, Claude và Codex, đọc cùng một diff trước khi merge, nên chất lượng không phụ thuộc vào một model duy nhất."
     diagram: cross-vendor-arm
     crop: [builder, codex, head]
-    href: /skills/codex-arm
+    href: /vi/skills/codex-arm
   - id: tracker
     title: "Vận hành liên tục quanh issue tracker."
     body: "Mọi yêu cầu, spec và ticket đều nằm trên tracker. Review phát hiện việc mới thì ghi thành ticket mới. Team chạy 24/7 mà không cần bạn ngồi canh, và không có việc nào rơi ra ngoài hệ thống."
     diagram: frontier-query
     crop: [frontier_query, board]
-    href: /cau-truc#coordination
+    href: /vi/cau-truc#coordination
   - id: roles
     title: "Team có tên, có role, có contract."
     body: "Thomas đại diện, Shaper định hình, Builder thi công, Rin giữ gate, QA nghiệm thu. Mỗi role có contract và system context riêng, nên trách nhiệm rõ và không ai làm thay việc của ai. Claude Code, Codex và OpenCode đều hỗ trợ agent profile ở mức này."
     diagram: five-roles
     crop: [shaper, builder]
-    href: /vai/thomas
+    href: /vi/role/thomas
   - id: runtime
     title: "Một quy trình, nhiều runtime."
     body: "Claude Code là nền bắt buộc; Codex và OpenCode thêm vào khi bạn cần AI của hãng thứ hai hay model khác. Role nào chạy trên runtime nào khai trong orchestrator.md; đổi runtime không đổi quy trình."
     diagram: structure
     crop: [runtime_claude, runtime_codex]
-    href: /tech-stack#claude-code
+    href: /vi/tech-stack#claude-code
   - id: models
     title: "Đúng model cho đúng việc."
     body: "Sonnet cho Builder và QA, nơi cần nhanh và rẻ; Opus cho Thomas, Shaper và Rin, nơi cần suy luận dài. Chi phí và chất lượng cân theo từng role thay vì một model cho tất cả."
-    href: /vai/builder
+    href: /vi/role/builder
   - id: oversight
     title: "Toàn quyền giám sát, không cần ra tay."
     body: "Board tracker, pane herdr, thiết kế và quyết định đều đọc lại được. Thomas hỏi lại bạn ở những điểm quan trọng: UI/UX, lựa chọn tech stack. Bạn quyết, team làm."
     diagram: hub-and-spokes
     crop: [tra139, tra142]
-    href: /vai/thomas
+    href: /vi/role/thomas
 
 fit:
   eyebrow: "Quy mô phù hợp"
@@ -239,7 +239,7 @@ adopt:
       lines: ["claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium"]
   reqEyebrow: "Tech stack"
   reqHeadline: "Bảy thứ cần có trước khi cài."
-  reqSub: "Bốn bắt buộc, một tuỳ chọn, một chọn một. Script `check-requirements.sh` kiểm tất cả cho bạn trước khi cài."
+  reqSub: "Năm thứ bắt buộc, một tuỳ chọn, một chọn một trong ba. Script `check-requirements.sh` kiểm tất cả cho bạn trước khi cài."
   reqTitle: "Tech stack cần có"
   requirements:
     - name: "Claude Code CLI"

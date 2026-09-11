@@ -17,7 +17,7 @@ export const UI = {
     en: 'Astragentic: an agent outsourcing unit that puts the engineer in the client\'s seat.',
   },
   repoLink: { vi: 'GitHub ↗', en: 'GitHub ↗' },
-  footerAdopt: { vi: 'Install', en: 'Adopt' },
+  footerAdopt: { vi: 'Install', en: 'Install' },
   footerVersion: { vi: 'phiên bản', en: 'version' },
   footerCited: { vi: 'bài học đo được đã thành luật trong harness', en: 'measured lessons now enforced by a harness file' },
   footerGenerated: { vi: 'số liệu sinh ngày', en: 'data generated' },
@@ -34,7 +34,7 @@ export const UI = {
   sideWhy: { vi: 'Cách tiếp cận', en: 'Approach' },
   sideStack: { vi: 'Tech stack', en: 'Tech stack' },
   sideFailures: { vi: 'Bài học', en: 'Lessons' },
-  sideAdopt: { vi: 'Install', en: 'Adopt' },
+  sideAdopt: { vi: 'Install', en: 'Install' },
   roleKey: { vi: 'Màu role trong hình', en: 'Role colours in this figure' },
 
   /* ── hero strip ── */
