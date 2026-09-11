@@ -147,7 +147,10 @@ trong `to-tickets`, cách xử lý đúng là để contract tính tới nó tha
 Sau khi Claude viết xong và tự review, một model của hãng khác đọc lại diff. Ở đây là Codex của
 OpenAI.
 
-Lượt đọc lại đó gọi là arm. Cơ chế thì đơn giản: arm đọc cả repository, còn tác giả chỉ đọc ticket. Nên arm bắt được mâu thuẫn với
+Lượt đọc lại đó gọi là arm, và đây là review chéo chứ không phải tranh luận: hai model không cãi
+nhau để thuyết phục ai, mỗi bên đọc và kết luận độc lập, cả hai kết luận đều được giữ lại.
+
+Cơ chế thì đơn giản: arm đọc cả repository, còn tác giả chỉ đọc ticket. Nên arm bắt được mâu thuẫn với
 chính tiêu chuẩn dự án đã khai, điều người viết code khó nhận ra vì đang làm theo yêu cầu của ticket.
 
 - **Một defect lọt qua vòng cùng hãng**: nó đem secret đang dùng thật và PII của người

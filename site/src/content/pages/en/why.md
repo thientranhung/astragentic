@@ -152,8 +152,10 @@ a patch.
 After Claude has written and self-reviewed, a model from another vendor reads the diff. Here that
 is OpenAI's Codex.
 
-That second read is called the arm. The mechanism is simple: the arm reads the whole repository
-while the author only reads the ticket. So the arm
+That second read is called the arm, and it is a cross review rather than a debate: the two models
+do not argue to persuade anyone. Each reads and concludes on its own, and both verdicts are kept.
+
+The mechanism is simple: the arm reads the whole repository while the author only reads the ticket. So the arm
 catches contradictions with the project's own declared standards, which the author can hardly see
 while working to the ticket.
 

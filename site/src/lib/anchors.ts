@@ -225,8 +225,8 @@ export const WHY: WhyCard[] = [
   {
     id: 'why-cross-vendor',
     question: {
-      vi: 'Một AI của hãng khác đọc lại diff trước khi merge',
-      en: 'An AI from another vendor re-reads the diff before merge',
+      vi: 'Review chéo: một AI của hãng khác đọc lại diff',
+      en: 'Cross review: an AI from another vendor re-reads the diff',
     },
     answer: {
       vi: 'Một model đọc lại diff của chính nó thì đọc lại luôn giả định của nó. Vendor khác không mang giả định đó, và receipt buộc vào đúng SHA đã được đọc.',
