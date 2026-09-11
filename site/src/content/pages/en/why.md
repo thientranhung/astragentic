@@ -1,6 +1,6 @@
 ---
-title: "Why"
-description: "Five questions about the design of Astragentic, a scaffold for autonomous coding: why it is needed, why the tracker holds the state, why subagents do not coordinate the team, why mattpocock-skills, why a second vendor reads the diff."
+title: "Approach"
+description: "The approach behind Astragentic, a scaffold for autonomous coding: the orchestrator agent model, the issue tracker as state, why coordination does not live in subagents, the mattpocock-skills method, and the second-vendor read."
 ---
 
 Astragentic is built for autonomous coding: a team of AI agents runs the build on its own, while
@@ -8,9 +8,10 @@ people keep direction and decisions. Every team works its own way, and no proces
 intact, so Astragentic is designed as a scaffold: a frame for running a team of AI agents that has
 the hard parts settled, with every component open for you to adapt.
 
-The five questions below are the five largest design decisions in that scaffold. Every answer
-follows the same frame: a one-line answer, the mechanism, the measurement on record where there
-is one, and the cost. Measurements carry an AST-xxx code and have a matching lesson on the Lessons page.
+This page is the approach behind that scaffold: the five largest design decisions, each with its
+mechanism, the measurement on record where there is one, and the cost. These are my choices on my
+own projects, not a template you must follow; change whatever does not fit how you work.
+Measurements carry an AST-xxx code and have a matching lesson on the Lessons page.
 
 ## why-astragentic
 
@@ -46,30 +47,22 @@ dispatch to merge with every gate firing on real work is still being measured.
 
 ## why-tracker
 
-The state of the work has to be stored somewhere outside an agent's context that you can open
-and read. An issue tracker is the only place that satisfies both, which is why ADR-0001 calls it
-the team's coordination substrate, not a notebook.
+The state of the work has to sit outside an agent's context and be readable by you. An issue
+tracker is the only place that satisfies both, which is why ADR-0001 calls it the team's
+coordination substrate.
 
-The common approach before this was to let the AI slice work into markdown files and track status
-with checkboxes inside them. That breaks at both ends. On the agent's side, it has to remember to
-go back and edit the right line after finishing, and that is the step most often skipped: the code
-is merged while the box is still unticked, or the reverse. On your side, knowing where the project
-stands means opening a file and reading it, and a few hundred lines of checklist do not tell you
-what is running and what is waiting.
+The common approach before this was to let the AI slice work into markdown files and track it
+with checkboxes.
 
-An issue tracker replaces the checkbox with fields that are built in and machine-readable. Status,
-assignee and blocking edges are structured data, read and written over an API, so "what is waiting
-on what" is a query rather than a memory. The frontier query answers "what is ready right now".
-The assignee is the claim: writing a name on the ticket before creating the worktree is what keeps
-two concurrent sessions apart, with no lock file, no queue, and no dispatcher in the middle
-deciding who goes first.
-
-All three supported platforms ship an official CLI or MCP server, so agents operate through
-documented commands instead of inventing a syntax over a text file. On the human side, the board
-is an interface every developer already knows: you open a ticket, read what the agent wrote for it,
-approve it or leave a comment asking for changes, right where the work sits. The whole exchange and
-the change history are recorded by the platform, not narrated by the agent. The board also outlives
-every session: a session can close, compact or stop mid-flight and the state is still there.
+| | Markdown file | Issue tracker |
+|---|---|---|
+| Updating status | The agent must remember to tick the box | One status field, changed by one command |
+| Checking progress | Open the file, read a few hundred lines | Open the board, look at the columns |
+| Dependencies | Written into prose | Blocking edges, queryable |
+| Two agents taking one job | Nothing stops them | The assignee is a claim, written and read back |
+| Machine access | Free-form text editing | Official CLI and MCP |
+| Approving or asking for changes | A message somewhere else | A comment on the ticket itself |
+| When a session closes | State goes with the context | The board is still there |
 
 Measurement: AST-057, on a real project, one ticket looked blocked for hours after both of its
 blockers had merged, and four tickets wore a ready label while blocked. The frontier was computed
@@ -77,11 +70,10 @@ correctly but existed only in the agent's context. So the contract carries both 
 computed, write the answer back to the tracker, and never read a ready label as if it were state.
 
 Cost: Astragentic inherits every limit of the tracker you use. No tracker has an assignee field
-designed to hold `builder/<ticket-id>`. GitHub Issues has no real status field, so status lives
-in labels and the Project board column is a copy that has to be kept in sync. Each adapter
-therefore has its own workaround. And because the tracker holds state rather than passively
-recording it, it can drift from reality; `reconcile-tracker` measures the tracker against git,
-never against the tracker itself.
+designed to hold `builder/<ticket-id>`. GitHub Issues has no real status field, so status lives in
+labels and the Project board column is a copy that has to be kept in sync. And because the tracker
+holds state rather than passively recording it, it can drift from reality; `reconcile-tracker`
+measures the tracker against git, never against the tracker itself.
 
 ## why-not-subagents
 

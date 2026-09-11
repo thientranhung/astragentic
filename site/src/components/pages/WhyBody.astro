@@ -73,6 +73,44 @@ const KEYED = new Set(['hub-and-spokes', 'cross-vendor-arm', 'frontier-query', '
   .body {
     margin-top: 0.5rem;
   }
+  /* A compare table reads faster than the same contrast written as prose; the first
+     column carries the aspect, so it is the one that gets the weight. */
+  .body :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.4rem 0 1.6rem;
+    font-size: var(--text-body-sm);
+    line-height: 1.5;
+  }
+  .body :global(th),
+  .body :global(td) {
+    border-bottom: 1px solid var(--ink-10);
+    padding: 0.7rem 1.5rem 0.7rem 0;
+    text-align: left;
+    vertical-align: top;
+  }
+  .body :global(th:last-child),
+  .body :global(td:last-child) {
+    padding-right: 0;
+  }
+  .body :global(table + p) {
+    margin-top: 1.6rem;
+  }
+  .body :global(thead th) {
+    font-size: var(--text-label-sm);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    font-weight: 600;
+  }
+  .body :global(tbody td:first-child) {
+    color: var(--ink);
+    font-weight: 600;
+    width: 24%;
+  }
+  .body :global(tbody td:nth-child(2)) {
+    color: var(--ink-muted);
+  }
   .figure {
     margin-top: 1rem;
   }

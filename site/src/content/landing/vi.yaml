@@ -3,7 +3,7 @@ hero:
   headline: "Một team outsource bằng AI agent.\nVận hành đúng quy trình, **liên tục 24/7**, cho **những dự án lớn**."
   sub: "Astragentic là một scaffold để vận hành team AI agent theo mô hình orchestrator: một người đại diện để trao đổi, một team agent với role rõ ràng để thi công, và một issue tracker (GitHub Issues, Jira hoặc Linear) làm trung tâm để mọi việc có dấu vết. Bộ khung đã giải quyết sẵn những phần khó nhất của việc điều hành nhiều agent: giao tiếp giữa các agent, kỷ luật SDLC bằng skill, cách ly bằng worktree, gate trước khi merge, review chéo bằng một AI của hãng khác (Codex đọc lại code Claude viết). Phần còn lại là của bạn: giữ quyền quyết định, và tuỳ biến bộ khung theo cách team của bạn vận hành."
   primary: "Khám phá cách hoạt động ↓"
-  secondary: "Hiểu rõ vì sao có Astragentic"
+  secondary: "Đọc cách tiếp cận của Astragentic"
 
 explain:
   runtimes:
@@ -125,11 +125,11 @@ explain:
       href: "/vi/vi-sao#why-mattpocock"
 
 why:
-  eyebrow: "Vì sao"
+  eyebrow: "Cách tiếp cận"
   headline: "AI đã là một developer thực thụ. Astragentic đặt bạn vào vị trí người dẫn dắt team developer đó."
   p1: "Coding agent hôm nay nhận việc, viết code, chạy test và sửa cho tới khi xanh, như một kỹ sư ngồi cạnh bạn. Khi thực thi không còn là nút thắt, giá trị của người kỹ sư chuyển sang chỗ khác: đặt yêu cầu đúng, quyết định đúng, và giữ cả quy trình đi đúng hướng."
   p2: "Astragentic được xây để bạn làm đúng phần đó. Nó tổ chức các agent thành một team outsource theo kỷ luật SDLC quen thuộc, và thiết kế lại cách dispatch, review, handback để khai thác tốc độ và khối lượng mà một team người không duy trì được."
-  more: "Khám phá toàn bộ lý do thiết kế →"
+  more: "Khám phá toàn bộ cách tiếp cận →"
 
 shots:
   hero:

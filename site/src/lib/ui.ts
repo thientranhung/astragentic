@@ -31,7 +31,7 @@ export const UI = {
   sideRoles: { vi: 'Role', en: 'Roles' },
   sideSkills: { vi: 'Skills', en: 'Skills' },
   sideHooks: { vi: 'Hooks', en: 'Hooks' },
-  sideWhy: { vi: 'Vì sao', en: 'Why' },
+  sideWhy: { vi: 'Cách tiếp cận', en: 'Approach' },
   sideStack: { vi: 'Tech stack', en: 'Tech stack' },
   sideFailures: { vi: 'Bài học', en: 'Lessons' },
   sideAdopt: { vi: 'Install', en: 'Adopt' },
@@ -155,7 +155,7 @@ export const UI = {
   hooksAll: { vi: 'Khám phá bốn hook →', en: 'Explore all four hooks →' },
 
   /* ── why ── */
-  whyTitle: { vi: 'Vì sao', en: 'Why' },
+  whyTitle: { vi: 'Cách tiếp cận', en: 'Approach' },
   whyAll: { vi: 'Khám phá năm lý do thiết kế →', en: 'Explore the five design decisions →' },
 
   /* ── tech stack ── */

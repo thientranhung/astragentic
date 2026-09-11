@@ -1,6 +1,6 @@
 ---
-title: "Vì sao"
-description: "Năm câu hỏi về thiết kế của Astragentic, một scaffold cho autonomous coding: vì sao cần nó, vì sao tracker giữ trạng thái, vì sao không dùng subagent để điều phối, vì sao chọn mattpocock-skills, vì sao để một vendor khác đọc lại diff."
+title: "Cách tiếp cận"
+description: "Cách tiếp cận đứng sau Astragentic, một scaffold cho autonomous coding: mô hình orchestrator agent, issue tracker giữ trạng thái, vì sao không đặt điều phối vào subagent, phương pháp mattpocock-skills, và lượt đọc lại của một AI hãng khác."
 ---
 
 Astragentic hướng tới autonomous coding: một team AI agent tự vận hành phần thi công, còn con
@@ -8,9 +8,10 @@ người giữ định hướng và quyết định. Mỗi team có một cách 
 nhập khẩu nguyên vẹn được, nên Astragentic được thiết kế như một scaffold: một bộ khung điều hành
 team AI agent đã giải quyết sẵn những phần khó, còn mọi thành phần trong đó đều mở để bạn tuỳ biến.
 
-Năm câu dưới đây là năm quyết định thiết kế lớn nhất của bộ khung đó. Mỗi câu trả lời theo cùng
-một khung: trả lời trong một dòng, cơ chế, số đo đã ghi nhận khi có, và cái giá phải trả. Số đo
-mang mã AST-xxx và có bài học tương ứng ở trang Bài học.
+Trang này là cách tiếp cận đứng sau bộ khung đó: năm quyết định thiết kế lớn nhất, mỗi quyết định
+kèm cơ chế, số đo đã ghi nhận khi có, và cái giá phải trả. Đây là lựa chọn của tôi trên dự án của
+tôi, không phải khuôn mẫu bắt buộc; phần nào không hợp với cách bạn làm việc thì sửa. Số đo mang
+mã AST-xxx và có bài học tương ứng ở trang Bài học.
 
 ## why-astragentic
 
@@ -47,28 +48,20 @@ tới merge với đủ gate trên việc thật vẫn đang được đo.
 
 ## why-tracker
 
-Trạng thái công việc cần được lưu ở một nơi nằm ngoài context của agent và bạn mở ra là đọc
-được. Issue tracker là nơi duy nhất thoả cả hai điều kiện, nên ADR-0001 gọi nó là nền điều phối
-của team chứ không phải sổ ghi chép.
+Trạng thái công việc cần nằm ngoài context của agent và bạn mở ra là đọc được. Issue tracker là
+nơi duy nhất thoả cả hai, nên ADR-0001 gọi nó là nền điều phối của team.
 
-Cách làm phổ biến trước đó là để AI cắt việc ra thành file markdown và quản lý trạng thái bằng
-ô tick trong file. Cách đó hỏng ở hai đầu. Về phía agent, nó phải nhớ quay lại sửa đúng dòng đó
-sau khi làm xong, và đây là việc bị bỏ quên thường xuyên nhất: code đã merge nhưng ô tick vẫn
-trống, hoặc ngược lại. Về phía bạn, muốn biết dự án đang ở đâu thì phải mở file ra đọc, và một
-danh sách vài trăm dòng không cho biết cái gì đang chạy, cái gì đang chờ.
+Cách làm phổ biến trước đó là để AI cắt việc thành file markdown và theo dõi bằng ô tick.
 
-Issue tracker thay ô tick bằng những trường có sẵn và máy đọc được. Status, assignee và blocking
-edge là dữ liệu có cấu trúc, đọc và ghi qua API, nên "cái gì đang chờ cái gì" là một câu truy vấn
-chứ không phải trí nhớ. Frontier query trả lời "cái gì sẵn sàng ngay bây giờ". Assignee làm claim:
-ghi tên lên ticket trước khi tạo worktree là thứ giữ cho hai session đồng thời không đụng nhau,
-không cần lock file, không cần queue, không cần một dispatcher đứng giữa quyết ai đi trước.
-
-Ba nền tảng được hỗ trợ đều có CLI hoặc MCP server chính thức, nên agent thao tác bằng lệnh có
-tài liệu thay vì tự chế cú pháp trên một file văn bản. Còn ở phía người, board là giao diện mà
-developer nào cũng đã quen: bạn mở ticket, đọc phần agent viết cho ticket đó, duyệt hoặc để lại
-comment yêu cầu sửa, ngay tại chỗ công việc đang nằm. Toàn bộ trao đổi và lịch sử thay đổi do nền
-tảng ghi lại, không phải do agent tự thuật lại. Board cũng tồn tại lâu hơn mọi session: một session
-đóng lại, compact hay dừng giữa chừng thì trạng thái vẫn còn nguyên ở đó.
+| | File markdown | Issue tracker |
+|---|---|---|
+| Cập nhật trạng thái | Agent phải nhớ quay lại sửa ô tick | Một trường status, đổi bằng một lệnh |
+| Xem tiến độ | Mở file, đọc vài trăm dòng | Mở board, nhìn cột |
+| Phụ thuộc giữa các việc | Nằm trong câu chữ | Blocking edge, truy vấn được |
+| Hai agent cùng nhận một việc | Không có gì chặn | Assignee là claim, ghi và đọc lại được |
+| Máy thao tác | Sửa văn bản tự do | CLI và MCP chính thức |
+| Duyệt hoặc yêu cầu sửa | Nhắn ở một chỗ khác | Comment ngay trên ticket |
+| Khi session đóng | Trạng thái mất theo context | Board vẫn còn nguyên |
 
 Số đo: AST-057, trên một dự án thật, một ticket trông như đang bị chặn suốt nhiều giờ sau khi cả
 hai blocker của nó đã merge, và bốn ticket đeo nhãn sẵn sàng trong lúc đang bị chặn. Frontier
@@ -78,10 +71,9 @@ trạng thái.
 
 Cái giá: Astragentic thừa kế nguyên giới hạn của tracker bạn đang dùng. Không tracker nào có ô
 assignee thiết kế để chứa `builder/<ticket-id>`. GitHub Issues không có trường status thật, nên
-status được lưu trong label và cột trên Project board chỉ là bản sao phải giữ đồng bộ. Mỗi adapter
-vì thế có workaround riêng. Và vì tracker là nơi giữ trạng thái chứ không phải bản ghi thụ động,
-nó lệch được với thực tế; `reconcile-tracker` đo tracker bằng git, không bao giờ đo tracker bằng
-chính tracker.
+status được lưu trong label và cột trên Project board chỉ là bản sao phải giữ đồng bộ. Và vì
+tracker là nơi giữ trạng thái chứ không phải bản ghi thụ động, nó lệch được với thực tế;
+`reconcile-tracker` đo tracker bằng git, không bao giờ đo tracker bằng chính tracker.
 
 ## why-not-subagents
 

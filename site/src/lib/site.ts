@@ -33,7 +33,7 @@ export const ROUTES: Record<PageKey, Record<Lang, string>> = {
  *  thing exists, then what it is made of, then how to install it. */
 export const NAV: { key: PageKey; label: Record<Lang, string> }[] = [
   { key: 'home', label: { vi: 'Trang chủ', en: 'Home' } },
-  { key: 'why', label: { vi: 'Vì sao', en: 'Why' } },
+  { key: 'why', label: { vi: 'Cách tiếp cận', en: 'Approach' } },
   { key: 'structure', label: { vi: 'Cấu trúc', en: 'Structure' } },
   { key: 'roles', label: { vi: 'Role', en: 'Roles' } },
   { key: 'skills', label: { vi: 'Skills', en: 'Skills' } },

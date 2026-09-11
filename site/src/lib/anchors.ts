@@ -181,8 +181,8 @@ export const WHY: WhyCard[] = [
   {
     id: 'why-astragentic',
     question: {
-      vi: 'Vì sao cần Astragentic khi coding agent đã tự làm được việc?',
-      en: 'Why Astragentic, when a coding agent already does the work?',
+      vi: 'Mô hình orchestrator agent: bạn định hướng, Thomas điều phối',
+      en: 'The orchestrator agent model: you set direction, Thomas coordinates',
     },
     answer: {
       vi: 'Coding agent đã đảm nhận được phần thi công; thời gian còn dồn vào trả lời và review chúng. Thomas nhận phần đó để bạn tập trung định hướng và quyết định.',
@@ -192,8 +192,8 @@ export const WHY: WhyCard[] = [
   {
     id: 'why-tracker',
     question: {
-      vi: 'Vì sao issue tracker giữ trạng thái, không phải file markdown?',
-      en: 'Why does an issue tracker hold the state, not a markdown file?',
+      vi: 'Issue tracker giữ trạng thái, không phải file markdown',
+      en: 'The issue tracker holds the state, not a markdown file',
     },
     answer: {
       vi: 'Ô tick trong file markdown phụ thuộc vào việc agent nhớ quay lại sửa. Status, assignee và blocking edge trên board là dữ liệu máy đọc được, và bạn mở board ra là thấy.',
@@ -203,8 +203,8 @@ export const WHY: WhyCard[] = [
   {
     id: 'why-not-subagents',
     question: {
-      vi: 'Vì sao không dùng subagent của Claude Code để điều phối?',
-      en: 'Why not coordinate with Claude Code subagents?',
+      vi: 'Subagent không phải chỗ đặt điều phối',
+      en: 'Subagents are not where coordination belongs',
     },
     answer: {
       vi: 'Subagent dùng chung checkout và context với session cha, không có tracker giữ trạng thái, không có pane để nhìn. Khi một nhánh im lặng thì không còn chỗ nào đọc ra điều đó.',
@@ -214,8 +214,8 @@ export const WHY: WhyCard[] = [
   {
     id: 'why-mattpocock',
     question: {
-      vi: 'Vì sao chọn mattpocock-skills làm phương pháp?',
-      en: 'Why mattpocock-skills as the method?',
+      vi: 'mattpocock-skills là phương pháp Astragentic đi thuê',
+      en: 'mattpocock-skills is the method Astragentic rents',
     },
     answer: {
       vi: 'Phương pháp này lặp ở đầu quy trình, chốt quyết định trước khi viết code. Astragentic không viết lại phần đó, chỉ bọc điều phối quanh nó.',
@@ -225,8 +225,8 @@ export const WHY: WhyCard[] = [
   {
     id: 'why-cross-vendor',
     question: {
-      vi: 'Vì sao để một AI của hãng khác đọc lại diff?',
-      en: 'Why let an AI from another vendor read the diff?',
+      vi: 'Một AI của hãng khác đọc lại diff trước khi merge',
+      en: 'An AI from another vendor re-reads the diff before merge',
     },
     answer: {
       vi: 'Một model đọc lại diff của chính nó thì đọc lại luôn giả định của nó. Vendor khác không mang giả định đó, và receipt buộc vào đúng SHA đã được đọc.',
