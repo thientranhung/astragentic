@@ -279,6 +279,38 @@ hr {
   border-radius: 50%;
   background: var(--brand-primary);
 }
+
+/* The same marker for the other labels that open a block: the card headings on the
+   install and tracker cards, the two columns of the fit list, the may / may-not headings
+   on a role page, the required / optional tag on the tech stack, and the skills footer.
+   One vocabulary, so a label reads as a label wherever it appears (owner, 2026-09-11). */
+.reqs-label,
+.fit-head,
+.col-head,
+.foot-label,
+.thomas-label,
+.parts-label,
+.need,
+.label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.reqs-label::before,
+.fit-head::before,
+.col-head::before,
+.foot-label::before,
+.thomas-label::before,
+.parts-label::before,
+.need::before,
+.label::before {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand-primary);
+}
 /* the hero eyebrow sits centred; keep the dot with it */
 .hero-copy .eyebrow {
   justify-content: center;
