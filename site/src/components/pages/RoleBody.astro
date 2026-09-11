@@ -169,8 +169,20 @@ const sessionTag = `session: ${role.sessionTag.replace(/^session:\s*/i, '')}`;
     color: var(--ink-muted);
     margin: 0 0 0.7rem;
   }
+  /* Permission reads by colour before it reads by word: what the role may do is green,
+     what it may never do is the defect red (owner, 2026-09-12). The shared `.col-head`
+     dot in global.css is brand red, so both columns override it here. */
+  .col .col-head {
+    color: var(--role-builder);
+  }
+  .col .col-head::before {
+    background: var(--role-builder);
+  }
   .col--not .col-head {
     color: var(--defect);
+  }
+  .col--not .col-head::before {
+    background: var(--defect);
   }
 
   .count {
