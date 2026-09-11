@@ -563,6 +563,69 @@ hr {
   margin-bottom: 0;
 }
 
+/* Scannable technical essay (owner, 2026-09-11): a run-in subhead every few paragraphs,
+   lists where the sentence enumerates, a bold lead-in carrying each point, and a compare
+   table instead of prose. These live here rather than in a page component so every
+   reading page gets the same rhythm, and so a component that passes the class straight
+   to <Prose> is not silently left out by Astro's style scoping. */
+.read-body h3 {
+  font-family: var(--font-sans);
+  font-size: var(--text-ui);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink);
+  margin: 2.2rem 0 0.8rem;
+}
+.read-body ul,
+.read-body ol {
+  margin: 0 0 1.6rem;
+  padding-left: 1.15rem;
+  max-width: 72ch;
+}
+.read-body li {
+  margin-bottom: 0.7rem;
+}
+.read-body li::marker {
+  color: var(--ink-22);
+}
+.read-body strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+.read-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.4rem 0 1.6rem;
+  font-size: var(--text-body-sm);
+  line-height: 1.5;
+}
+.read-body th,
+.read-body td {
+  border-bottom: 1px solid var(--ink-10);
+  padding: 0.7rem 1.5rem 0.7rem 0;
+  text-align: left;
+  vertical-align: top;
+}
+.read-body th:last-child,
+.read-body td:last-child {
+  padding-right: 0;
+}
+.read-body thead th {
+  font-size: var(--text-label-sm);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+.read-body tbody td:first-child {
+  color: var(--ink);
+  font-weight: 600;
+  width: 24%;
+}
+.read-body table + p {
+  margin-top: 1.6rem;
+}
+
 /* A diagram uses the whole column. `.figure` — the wrapper the page bodies already put
    round a full-width picture — is the one thing allowed through the surface padding as
    well, so the drawing is as wide as the card holding it and the text is not. */
