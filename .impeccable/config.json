@@ -164,6 +164,33 @@
         ],
         "createdAt": "2026-09-10T19:21:38.528Z",
         "reason": "assistant: standalone HyperFrames terminal/app simulation for the site videos; not a site page and outside DESIGN.md scope"
+      },
+      {
+        "rule": "overused-font",
+        "value": "*",
+        "files": [
+          "site/video/dispatch/index.html"
+        ],
+        "createdAt": "2026-09-11T07:18:40.375Z",
+        "reason": "assistant: the video caption band uses the site's own sans face (Inter Variable per design-tokens.json) so narration reads as Astragentic; the site's type choice is not decided in the video files"
+      },
+      {
+        "rule": "overused-font",
+        "value": "*",
+        "files": [
+          "site/video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-11T07:18:40.595Z",
+        "reason": "assistant: the video caption band uses the site's own sans face (Inter Variable per design-tokens.json) so narration reads as Astragentic; the site's type choice is not decided in the video files"
+      },
+      {
+        "rule": "overused-font",
+        "value": "*",
+        "files": [
+          "site/video/hero/index.html"
+        ],
+        "createdAt": "2026-09-11T07:18:40.737Z",
+        "reason": "assistant: the video caption band uses the site's own sans face (Inter Variable per design-tokens.json) so narration reads as Astragentic; the site's type choice is not decided in the video files"
       }
     ]
   }
