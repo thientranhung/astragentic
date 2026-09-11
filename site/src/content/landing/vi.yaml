@@ -93,7 +93,7 @@ explain:
       - text: "A surface the OWNER can open and read without running a query"
     more:
       label: "Khám phá cấu trúc →"
-      href: "/cau-truc#coordination"
+      href: "/vi/cau-truc#coordination"
 
   method:
     eyebrow: "mattpocock-skills"
@@ -114,7 +114,7 @@ explain:
         text: "grilling · tdd · code-review · codebase-design · domain-modeling · research · prototype · diagnosing-bugs"
     more:
       label: "Hiểu rõ hơn lý do chọn →"
-      href: "/vi-sao#why-mattpocock"
+      href: "/vi/vi-sao#why-mattpocock"
 
 why:
   eyebrow: "Vì sao"
