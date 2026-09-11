@@ -1,7 +1,7 @@
 hero:
   eyebrow: "Autonomous coding · **for multi-milestone projects** · v{{meta.version}}"
   headline: "An outsourcing team made of AI agents.\nRunning by process, **around the clock**, for **large projects**."
-  sub: "Astragentic is a scaffold for running a team of AI agents on the orchestrator model: one representative to talk to, a team of agents with clear roles to build, and an issue tracker at the centre so every piece of work leaves a trace. The scaffold has the hardest parts of running many agents settled: inter-agent communication, SDLC discipline through skills, isolation through worktrees, gates before merge, a cross review by an AI from another vendor (Codex re-reads what Claude wrote). The rest is yours: keep the decisions, and adapt the scaffold to how your team operates."
+  sub: "Astragentic is a scaffold for running a team of AI agents on the orchestrator model: one representative to talk to, a team of agents with clear roles to build, and an issue tracker (GitHub Issues, Jira or Linear) at the centre so every piece of work leaves a trace. The scaffold has the hardest parts of running many agents settled: inter-agent communication, SDLC discipline through skills, isolation through worktrees, gates before merge, a cross review by an AI from another vendor (Codex re-reads what Claude wrote). The rest is yours: keep the decisions, and adapt the scaffold to how your team operates."
   primary: "Explore how it works ↓"
   secondary: "Understand why Astragentic exists"
 
