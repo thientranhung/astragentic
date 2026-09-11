@@ -23,9 +23,10 @@ arm always calls the *other* vendor, so on a Codex root it calls Claude.
 The thing worth knowing before anything else is a boundary, not a step: **a Codex root cannot host
 the gate at all.** The gate is a Herdr pane on the root provider's runtime, and no Codex adapter
 can host one, so a `rin` row in `orchestrator.md` naming Codex is a misconfigured row. Raise it
-with the owner rather than working around it. What a Codex root contributes is this pass. The
-second difference is quieter and cost more: **the ticket scope is deliberately not symmetric with
-`codex-arm`.** A Builder running the Codex arm does it inside its own worktree, because
+with the owner rather than working around it. What a Codex root contributes is this pass.
+
+The second difference is quieter and cost more: **the ticket scope is deliberately not symmetric
+with `codex-arm`.** A Builder running the Codex arm does it inside its own worktree, because
 `codex exec review` only reads. A Builder running this arm may not, because `claude -p` is a full
 agent with Edit and Bash. Copying the Codex path here would hand a writing reviewer the Builder's
 live checkout, which is AST-016 rebuilt on the newest mechanism.

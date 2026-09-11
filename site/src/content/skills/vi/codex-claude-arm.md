@@ -23,12 +23,14 @@ lại*, nên trên session gốc Codex nó gọi Claude.
 Thứ cần biết trước tiên là một ranh giới, không phải một bước: **một session gốc Codex không host
 được cái gate.** Gate là một pane Herdr chạy trên runtime của provider gốc, và không adapter Codex
 nào host được nó, nên một dòng `rin` trong `orchestrator.md` ghi Codex là một dòng cấu hình sai.
-Hãy mang nó lên hỏi chủ dự án thay vì tìm cách lách. Thứ một session gốc Codex đóng góp được là lượt
-này. Điểm khác thứ hai kín đáo hơn và đắt hơn: **phạm vi ticket ở đây cố tình không đối xứng với
-`codex-arm`.** Builder chạy arm Codex thì làm ngay trong worktree của chính nó, vì `codex exec review`
-chỉ đọc. Builder chạy arm này thì không được, vì `claude -p` là một agent đầy đủ, có Edit và Bash.
-Sao chép đường đi của Codex ở đây là trao checkout Builder đang dùng cho một reviewer biết ghi,
-tức dựng lại AST-016 trên cơ chế mới nhất.
+Hãy mang nó lên hỏi chủ dự án thay vì tìm cách lách. Thứ một session gốc Codex đóng góp được là
+lượt này.
+
+Điểm khác thứ hai kín đáo hơn và đắt hơn: **phạm vi ticket ở đây cố tình không đối xứng với
+`codex-arm`.** Builder chạy arm Codex thì làm ngay trong worktree của chính nó, vì
+`codex exec review` chỉ đọc. Builder chạy arm này thì không được, vì `claude -p` là một agent đầy
+đủ, có Edit và Bash. Sao chép đường đi của Codex ở đây là trao checkout Builder đang dùng cho một
+reviewer biết ghi, tức dựng lại AST-016 trên cơ chế mới nhất.
 <!-- source: harness/.agents/skills/codex-claude-arm/SKILL.md -->
 
 ## Khi nào Thomas gọi nó

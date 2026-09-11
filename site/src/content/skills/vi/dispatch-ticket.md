@@ -14,11 +14,21 @@ updated: 2026-09-04
 ## Nó làm gì
 
 `dispatch-ticket` là chuỗi thao tác Thomas chạy mỗi lần một ticket đi từ "claim được" sang "đang
-có Builder làm thật": claim nó trên tracker, cắt branch và worktree, mở tab kèm pane trong Herdr,
-in ra bản dispatch đã resolve, giao brief, rồi arm watcher trước khi đi tiếp. Chín bước, luôn theo
-đúng thứ tự đó. Bước nào không ai kiểm là bước bị bỏ trong im lặng, và harness này chạy song song
-vài chuỗi như vậy cùng lúc, nên im lặng ở đây nghĩa là một Builder ngồi không trong một pane không
-ai nhìn. <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
+có Builder làm thật". Chín bước, luôn theo đúng thứ tự đó:
+
+- **Preflight** ở lần dispatch đầu của session: watchdog đang chạy, payload đã commit.
+- **Resolve dòng orchestrator**: runtime, model, effort, và write-set.
+- **Claim ticket, rồi cắt branch và worktree**, theo đúng thứ tự đó.
+- **Mở tab kèm pane** trong Herdr, gate trên `foreground_cwd`.
+- **In ra bản dispatch đã resolve**, rồi launch bằng skill của runtime tương ứng.
+- **Giao brief**, dòng đầu là slash command của pha đó.
+- **Arm watcher ngay sau khi submit**: hai việc này là một, không phải hai.
+- **Rẽ nhánh theo exit status của watcher**, không bao giờ theo mỗi pane status.
+- **Nghiệm thu bằng artifact**, rồi cleanup.
+
+Bước nào không ai kiểm là bước bị bỏ trong im lặng, và harness này chạy song song vài chuỗi như
+vậy cùng lúc, nên im lặng ở đây nghĩa là một Builder ngồi không trong một pane không ai nhìn.
+<!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
 
 Điểm khác của nó nằm ở chỗ đặt ranh giới: **claim xảy ra trước khi worktree tồn tại.** Ticket được
 gán trên tracker trước, nên hai session Thomas cùng nhặt trên frontier sẽ thấy claim của nhau thay vì

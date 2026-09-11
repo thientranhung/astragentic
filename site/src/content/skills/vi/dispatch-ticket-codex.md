@@ -12,22 +12,30 @@ updated: 2026-09-04
 
 ## Nó làm gì
 
-`dispatch-ticket-codex` là nửa Codex của `dispatch-ticket`. Skill dùng chung giữ phần định danh,
-chốt input, luật worktree, khuôn brief, cách gửi, cách canh, simplify và dọn dẹp. Adapter này thêm
-đúng ba thứ: bảng lệnh launch cho các dòng Codex, bước kiểm profile trước khi dispatch, và
-những sự thật đã đo được về cách Codex tự báo trạng thái của nó. Đây là adapter mỏng nhất trong ba
-adapter runtime, và mỏng là có chủ đích. Với Codex, skill dùng chung đã sở hữu sẵn phần gửi brief
-và phần canh; điều này được kiểm lại chứ không phải giả định, trong một đợt quét tìm hướng dẫn cũ
-còn sót.
+`dispatch-ticket-codex` là nửa Codex của `dispatch-ticket`. Skill dùng chung giữ:
+
+- **Định danh và chốt input.**
+- **Luật worktree.**
+- **Khuôn brief, cách gửi và cách canh.**
+- **Simplify và dọn dẹp.**
+
+Adapter này thêm đúng ba thứ: bảng lệnh launch cho các dòng Codex, bước kiểm profile trước khi
+dispatch, và những sự thật đã đo được về cách Codex tự báo trạng thái của nó. Đây là adapter mỏng
+nhất trong ba adapter runtime, và mỏng là có chủ đích. Với Codex, skill dùng chung đã sở hữu sẵn
+phần gửi brief và phần canh; điều này được kiểm lại chứ không phải giả định, trong một đợt quét tìm
+hướng dẫn cũ còn sót.
 <!-- source: harness/.agents/skills/dispatch-ticket-codex/SKILL.md, RELEASE-NOTES.md -->
 
-Điểm khác ở đây là chỗ cấu hình nằm. Trên Claude, model và effort đi theo CLI; trên Codex
-thì không. Các profile đứng sau `codex --profile <role>` là file **cục bộ theo máy** nằm dưới
-`${CODEX_HOME:-$HOME/.codex}/`, effort là một trường TOML (`model_reasoning_effort`) vì Codex
-không có cờ `--effort`, và `--yolo` đã cũ từ v0.147.0, thay bằng
-`--dangerously-bypass-approvals-and-sandbox`. Nên bước kiểm trước dispatch không phải nghi thức:
-đó là chỗ duy nhất lựa chọn runtime của chủ máy và dòng trong `orchestrator.md` được đem ra đối
-chiếu.
+Điểm khác ở đây là chỗ cấu hình nằm. Trên Claude, model và effort đi theo CLI; trên Codex thì
+không:
+
+- **Profile cục bộ theo máy.** File đứng sau `codex --profile <role>` nằm dưới
+  `${CODEX_HOME:-$HOME/.codex}/`.
+- **Effort là một trường TOML** (`model_reasoning_effort`), vì Codex không có cờ `--effort`.
+- **`--yolo` đã cũ từ v0.147.0**, thay bằng `--dangerously-bypass-approvals-and-sandbox`.
+
+Nên bước kiểm trước dispatch không phải nghi thức: đó là chỗ duy nhất lựa chọn runtime của chủ máy
+và dòng trong `orchestrator.md` được đem ra đối chiếu.
 <!-- source: harness/.agents/skills/dispatch-ticket-codex/SKILL.md -->
 
 ## Khi nào Thomas gọi nó

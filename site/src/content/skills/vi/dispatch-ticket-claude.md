@@ -12,20 +12,33 @@ updated: 2026-09-04
 
 ## Nó làm gì
 
-`dispatch-ticket-claude` là nửa Claude Code của `dispatch-ticket`. Skill dùng chung giữ phần định
-danh, chốt input, luật worktree, khuôn brief, cách gửi, cách canh, simplify và dọn dẹp. Skill này
-thêm bảng lệnh launch, bước kiểm trước khi dispatch, thứ tự gửi brief và những sự thật đã đo
-được của runtime Claude. Nó là adapter, không phải một giao thức thứ hai. Hãy đọc `dispatch-ticket`
-trước, vì mọi thứ không viết ở đây đều lấy từ đó.
+`dispatch-ticket-claude` là nửa Claude Code của `dispatch-ticket`. Skill dùng chung giữ:
+
+- **Định danh và chốt input.**
+- **Luật worktree.**
+- **Khuôn brief, cách gửi và cách canh.**
+- **Simplify và dọn dẹp.**
+
+Skill này thêm bảng lệnh launch, bước kiểm trước khi dispatch, thứ tự gửi brief và những sự thật
+đã đo được của runtime Claude. Nó là adapter, không phải một giao thức thứ hai. Hãy đọc
+`dispatch-ticket` trước, vì mọi thứ không viết ở đây đều lấy từ đó.
 <!-- source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md -->
 
-Xương sống của file là bốn hành động theo một thứ tự cố định: gửi phần thân brief bằng
-`SendMessage`, gõ lệnh slash trần vào pane, xác nhận nó đã echo, rồi mới arm Monitor. Làm sai thứ
-tự sẽ sinh ra một trạng thái kết thúc giả mà mọi lớp kiểm phía sau đều đọc thành khoẻ mạnh. Thứ tự
-này đến từ hai lỗi riêng biệt rơi vào cùng bốn bước. Tin nhắn giữa hai session không phải một lượt
-của người dùng, nên lệnh slash không bao giờ chạy (AST-112). Và một `SendMessage` chỉ có phần thân
-vẫn tạo ra một lượt, nên watch arm quá sớm sẽ thấy *lượt đó* kết thúc rồi báo idle cho một Builder
-chưa hề bắt đầu (AST-114). Giờ thứ tự được ghi ngay tại chỗ dùng, không để người đọc tự suy.
+Xương sống của file là bốn hành động theo một thứ tự cố định:
+
+- **Gửi phần thân brief** bằng `SendMessage`.
+- **Gõ lệnh slash trần** vào pane.
+- **Xác nhận nó đã echo.**
+- **Arm Monitor.**
+
+Làm sai thứ tự sẽ sinh ra một trạng thái kết thúc giả mà mọi lớp kiểm phía sau đều đọc thành khoẻ
+mạnh.
+
+Thứ tự này đến từ hai lỗi riêng biệt rơi vào cùng bốn bước. Tin nhắn giữa hai session không phải
+một lượt của người dùng, nên lệnh slash không bao giờ chạy (AST-112). Và một `SendMessage` chỉ có
+phần thân vẫn tạo ra một lượt, nên watch arm quá sớm sẽ thấy *lượt đó* kết thúc rồi báo idle cho
+một Builder chưa hề bắt đầu (AST-114). Giờ thứ tự được ghi ngay tại chỗ dùng, không để người đọc tự
+suy.
 <!-- source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md -->
 
 ## Khi nào Thomas gọi nó

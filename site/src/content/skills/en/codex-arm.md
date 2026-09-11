@@ -23,9 +23,11 @@ It does not decide *when* to run. That cadence, and the two-pass cap, belong to 
 
 The reason it exists: a same-vendor reviewer and a cross-vendor one catch different defect
 classes, because the author reads the ticket and the arm reads the repository. This has been
-measured directly. The first per-ticket arm run caught a destructive reset authorizing outside its
-write transaction, something the author's own mutation-testing pass had missed. The very next
-pass, over the fix for that finding, caught a real deadlock cycle the fix itself had introduced.
+measured directly.
+
+The first per-ticket arm run caught a destructive reset authorizing outside its write
+transaction, something the author's own mutation-testing pass had missed. The very next pass,
+over the fix for that finding, caught a real deadlock cycle the fix itself had introduced.
 Skipping it would have shipped a production 500 on the only unstick path the product had.
 <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
 

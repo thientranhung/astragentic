@@ -12,20 +12,33 @@ updated: 2026-09-04
 
 ## What it does
 
-`dispatch-ticket-claude` is the Claude Code half of `dispatch-ticket`. The shared skill owns
-binding identity, input resolution, the worktree law, the brief format, submission, watching,
-simplify and cleanup. This one adds the launcher matrix, the pre-dispatch check, the submission
-order and the measured runtime facts for Claude. It is an adapter, not a second protocol. Read
-`dispatch-ticket` first, because everything not stated here comes from there.
+`dispatch-ticket-claude` is the Claude Code half of `dispatch-ticket`. The shared skill owns:
+
+- **Binding identity and input resolution.**
+- **The worktree law.**
+- **The brief format, submission and watching.**
+- **Simplify and cleanup.**
+
+This one adds the launcher matrix, the pre-dispatch check, the submission order and the measured
+runtime facts for Claude. It is an adapter, not a second protocol. Read `dispatch-ticket` first,
+because everything not stated here comes from there.
 <!-- source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md -->
 
-The spine of the file is four actions in one fixed order: the body via `SendMessage`, the bare
-slash command typed into the pane, confirm it echoed, then arm the Monitor. Getting them out of
-order produces a false terminal state that every downstream check reads as healthy. That order
-comes from two separate defects landing on the same four steps. A peer message is not a user turn,
-so the slash command never fired (AST-112). And a body-only `SendMessage` still produces a turn,
-so a watch armed too early sees *that* turn end and reports idle on a Builder that has not started
-(AST-114). The order is now stated at the point of use rather than left to inference.
+The spine of the file is four actions in one fixed order:
+
+- **The body** via `SendMessage`.
+- **The bare slash command** typed into the pane.
+- **Confirm it echoed.**
+- **Arm the Monitor.**
+
+Getting them out of order produces a false terminal state that every downstream check reads as
+healthy.
+
+That order comes from two separate defects landing on the same four steps. A peer message is not
+a user turn, so the slash command never fired (AST-112). And a body-only `SendMessage` still
+produces a turn, so a watch armed too early sees *that* turn end and reports idle on a Builder
+that has not started (AST-114). The order is now stated at the point of use rather than left to
+inference.
 <!-- source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md -->
 
 ## When Thomas reaches for it

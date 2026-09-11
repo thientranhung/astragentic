@@ -22,11 +22,13 @@ không quyết định *khi nào* chạy. Nhịp đó, cùng với trần hai l�
 <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
 
 Lý do nó tồn tại: reviewer cùng vendor và reviewer khác vendor bắt được hai lớp lỗi khác nhau, vì
-người viết đọc theo ticket còn cánh tay đọc theo repository. Điều này đã được đo trực tiếp. Lượt
-arm theo ticket đầu tiên bắt được một cú reset có tính phá huỷ đang tự cấp quyền ra ngoài write
-transaction của nó, thứ mà chính lượt mutation-testing của tác giả đã bỏ sót. Ngay lượt kế tiếp,
-chạy trên bản vá cho phát hiện đó, lại bắt được một vòng deadlock thật do chính bản vá ấy tạo ra.
-Bỏ qua nó là đã ship một lỗi 500 lên production, đúng trên con đường gỡ kẹt duy nhất mà sản phẩm có.
+người viết đọc theo ticket còn cánh tay đọc theo repository. Điều này đã được đo trực tiếp.
+
+Lượt arm theo ticket đầu tiên bắt được một cú reset có tính phá huỷ đang tự cấp quyền ra ngoài
+write transaction của nó, thứ mà chính lượt mutation-testing của tác giả đã bỏ sót. Ngay lượt kế
+tiếp, chạy trên bản vá cho phát hiện đó, lại bắt được một vòng deadlock thật do chính bản vá ấy
+tạo ra. Bỏ qua nó là đã ship một lỗi 500 lên production, đúng trên con đường gỡ kẹt duy nhất mà
+sản phẩm có.
 <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
 
 ## Khi nào Thomas gọi nó

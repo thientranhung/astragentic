@@ -14,11 +14,20 @@ updated: 2026-09-04
 ## What it does
 
 `dispatch-ticket` is the sequence Thomas runs every time a ticket goes from "claimable" to "a
-Builder is actually working on it": claim it on the tracker, cut a branch and worktree, open a
-Herdr tab and pane, print the resolved dispatch, hand over the brief, then arm a watcher before
-moving on. Nine steps, always in that order. A step nobody checks is a step that gets skipped
-silently, and this harness runs several of these sequences in parallel, so silently here means a
-Builder idle in a pane nobody is watching.
+Builder is actually working on it." Nine steps, always in that order:
+
+- **Preflight** on the session's first dispatch: watchdog running, payload committed.
+- **Resolve the orchestrator row**: runtime, model, effort, and the write-set.
+- **Claim the ticket, then cut the branch and worktree**, in that order.
+- **Open a Herdr tab and pane**, gated on `foreground_cwd`.
+- **Print the resolved dispatch**, then launch through the runtime's own skill.
+- **Hand over the brief**, its first line the phase's slash command.
+- **Arm the watcher right after submitting**: those are one action, not two.
+- **Branch on the watcher's exit status**, never on pane status alone.
+- **Verify by artifact**, then clean up.
+
+A step nobody checks is a step that gets skipped silently, and this harness runs several of these
+sequences in parallel, so silently here means a Builder idle in a pane nobody is watching.
 <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
 
 What is different about it is where the boundary sits: **the claim happens before the worktree

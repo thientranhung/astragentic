@@ -12,22 +12,31 @@ updated: 2026-09-04
 
 ## What it does
 
-`dispatch-ticket-codex` is the Codex half of `dispatch-ticket`. The shared skill owns binding
-identity, input resolution, the worktree law, the brief format, submission, watching, simplify
-and cleanup. This adapter adds three things and no more: the launcher matrix for Codex rows, the
-pre-dispatch profile verification, and the measured facts about how Codex reports its own state.
-It is the thinnest of the three runtime adapters, and that is deliberate. For Codex the shared
-skill already owns submission and watching; that was verified rather than assumed, during a doc
-sweep looking for stale instructions.
+`dispatch-ticket-codex` is the Codex half of `dispatch-ticket`. The shared skill owns:
+
+- **Binding identity and input resolution.**
+- **The worktree law.**
+- **The brief format, submission and watching.**
+- **Simplify and cleanup.**
+
+This adapter adds three things and no more: the launcher matrix for Codex rows, the pre-dispatch
+profile verification, and the measured facts about how Codex reports its own state. It is the
+thinnest of the three runtime adapters, and that is deliberate. For Codex the shared skill already
+owns submission and watching; that was verified rather than assumed, during a doc sweep looking
+for stale instructions.
 <!-- source: harness/.agents/skills/dispatch-ticket-codex/SKILL.md, RELEASE-NOTES.md -->
 
 What is different here is where the configuration lives. On Claude the model and effort ride on
-the command line; on Codex they do not. The profiles behind `codex --profile <role>` are
-**machine-local** files under `${CODEX_HOME:-$HOME/.codex}/`, effort is a TOML field
-(`model_reasoning_effort`) because Codex has no `--effort` flag, and `--yolo` has been stale
-since v0.147.0 in favour of `--dangerously-bypass-approvals-and-sandbox`. So the pre-dispatch
-check is not ceremony: it is the only place the owner's runtime choices and the
-`orchestrator.md` row are ever compared.
+the command line; on Codex they do not:
+
+- **Machine-local profiles.** The file behind `codex --profile <role>` lives under
+  `${CODEX_HOME:-$HOME/.codex}/`.
+- **Effort is a TOML field** (`model_reasoning_effort`), because Codex has no `--effort` flag.
+- **`--yolo` has been stale since v0.147.0**, in favour of
+  `--dangerously-bypass-approvals-and-sandbox`.
+
+So the pre-dispatch check is not ceremony: it is the only place the owner's runtime choices and
+the `orchestrator.md` row are ever compared.
 <!-- source: harness/.agents/skills/dispatch-ticket-codex/SKILL.md -->
 
 ## When Thomas reaches for it
