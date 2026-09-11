@@ -47,7 +47,9 @@ const KEYED = new Set(['hub-and-spokes', 'cross-vendor-arm', 'frontier-query', '
       <section class="read-section" id={why.id}>
         <h2>{why.question[lang]}</h2>
         {page.sections[why.id] ? (
-          <Prose html={page.sections[why.id]} class="read-body body" />
+          <div class="body">
+            <Prose html={page.sections[why.id]} class="read-body" />
+          </div>
         ) : (
           <p class="answer">{why.answer[lang]}</p>
         )}
