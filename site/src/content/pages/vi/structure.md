@@ -24,7 +24,7 @@ Codex có mặt để làm nhân chứng. Cross-vendor arm cần một model c�
 nên nếu chỉ có một runtime thì arm đó không tồn tại. OpenCode là lựa chọn thứ ba cho role
 Builder khi bạn cần.
 
-Cái giá của việc đứng trên ba runtime là enforcement không đều nhau. `hook-git-guard.py` được
+Cái giá của việc dựa trên ba runtime là enforcement không đều nhau. `hook-git-guard.py` được
 đăng ký ở Claude Code qua `.claude/settings.json` và ở Codex qua `.codex/hooks.json`. Một
 Builder chạy OpenCode không có hook tương đương, và cả Claude lẫn Codex đều có thể chạy với
 hook tắt hoặc chưa được trust. Vì vậy luật thứ tự dọn dẹp phải nằm trong contract trước, trong
@@ -32,10 +32,11 @@ hook sau. Hook đứng sau, không phải hàng rào.
 
 ## harness
 
-Đây là thứ `install.sh` mang vào repo của bạn: năm role, mười sáu skill, bốn hook, và ledger
-lỗi. Role không chia theo chức danh mà chia theo tuổi thọ session, vì tuổi thọ session quyết
-định agent ở role đó còn nhớ được gì. Thomas sống suốt session. Shaper sống đúng một session không đứt.
-Builder sống một ticket. Rin sống một vòng. QA sống một chuyến đi.
+`install.sh` mang vào repo của bạn năm role, mười sáu skill, bốn hook, và ledger lỗi. Role không
+chia theo chức danh mà chia theo tuổi thọ session, vì tuổi thọ session quyết định agent ở role đó
+còn nhớ được gì. Session của Thomas chạy thường trực. Shaper chạy đúng một session không đứt
+quãng. Builder một session cho mỗi ticket, Rin một session cho mỗi milestone, QA một session cho
+mỗi lượt walk.
 
 Mỗi role có hai file, và chỗ đặt luật quan trọng hơn nội dung luật. `.claude/agents/<role>.md`
 là system prompt, chỉ mang bốn dòng. `.agents/roles/<role>.md` là contract đầy đủ, vào session
@@ -59,7 +60,7 @@ câu "ticket nào đang sẵn sàng" là một truy vấn, không phải một t
 
 herdr giữ pane. Mỗi Builder có một pane nhìn thấy được, và đây không phải chuyện thẩm mỹ:
 AST-018 đo được một lần dispatch chỉ được kể ra bằng chữ chứ chưa từng chạy, không có tín hiệu
-sống nào để phân biệt. Một pane là thứ đếm được.
+nào để phân biệt. Một pane là thứ đếm được.
 
 git worktree giữ ranh giới ghi. Mỗi ticket một checkout, và Builder là người ghi duy nhất
 trong đó. AST-016 đo được điều ngược lại: nhiều agent chung một checkout thì HEAD của người
@@ -104,12 +105,12 @@ bảng chứ không bị lọc đi.
 
 Sau khi Claude viết xong, một model của vendor khác đọc lại diff và để lại receipt buộc vào
 đúng SHA nó đã đọc. Lý do không phải là đa dạng cho vui: một lần review cùng vendor đã cho lọt
-một defect đem secret sống và PII vào file được track, và chính vòng cross-vendor bắt được nó
+một defect đem secret đang dùng thật và PII vào file được track, và chính vòng cross-vendor bắt được nó
 ở mức P1.
 
 ### Tracker là substrate giữ trạng thái
 
-Trạng thái công việc sống trên tracker của chính dự án, không nằm trong một file plan trong
+Trạng thái công việc được lưu trên tracker của chính dự án, không nằm trong một file plan trong
 branch. Khác biệt kiểm chứng được: một file plan không trả lời được câu "ticket nào đang sẵn
 sàng ngay bây giờ", còn một truy vấn trên blocking edge và assignee thì trả lời được.
 
@@ -123,4 +124,4 @@ không cần lock file hay dispatcher trung tâm nào.
 
 Mỗi ticket đi qua ba tầng đúng một lượt: `code-review` trên hai trục Standards và Spec, rồi
 simplify pass, rồi cross-vendor arm. Hệ trước đó đo được 5 tới 14 vòng review cho một ticket,
-phần lớn vòng sau dùng để dọn thứ vòng trước để lại. Tôi bỏ vòng lặp và giữ nguyên độ nặng.
+phần lớn vòng sau dùng để dọn phần vòng trước để lại. Tôi bỏ vòng lặp và giữ nguyên độ nặng.

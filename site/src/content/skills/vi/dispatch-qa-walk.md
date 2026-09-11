@@ -77,7 +77,7 @@ trả lời hợp lệ, còn "chưa đếm" thì không.
   nhà mới cho tới khi được đọc lại trong ngữ cảnh mới.
 - `AST-100` / `AST-101` / `AST-115`: một app đang chạy rò tiến trình broker và container database
   sau mỗi lượt đi bộ; một lần teardown đặt sai phạm vi từng dừng luôn container test dùng chung mà
-  mọi Builder đang sống đều đứng trên đó. Promoted, cleanup chạy theo thứ tự: giết app, xác nhận
+  mọi Builder đang chạy đều phụ thuộc vào đó. Promoted, cleanup chạy theo thứ tự: giết app, xác nhận
   port, teardown có giới hạn phạm vi, rồi mới `--force` cái worktree.
 <!-- source: harness/.agents/memory/recurring-failure-modes.md -->
 

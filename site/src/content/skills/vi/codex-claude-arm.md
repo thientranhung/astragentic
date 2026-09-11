@@ -27,7 +27,7 @@ Hãy mang nó lên hỏi chủ dự án thay vì tìm cách lách. Thứ một s
 này. Điểm khác thứ hai kín đáo hơn và đắt hơn: **phạm vi ticket ở đây cố tình không đối xứng với
 `codex-arm`.** Builder chạy arm Codex thì làm ngay trong worktree của chính nó, vì `codex exec review`
 chỉ đọc. Builder chạy arm này thì không được, vì `claude -p` là một agent đầy đủ, có Edit và Bash.
-Sao chép đường đi của Codex ở đây là trao checkout đang sống của Builder cho một reviewer biết ghi,
+Sao chép đường đi của Codex ở đây là trao checkout Builder đang dùng cho một reviewer biết ghi,
 tức dựng lại AST-016 trên cơ chế mới nhất.
 <!-- source: harness/.agents/skills/codex-claude-arm/SKILL.md -->
 

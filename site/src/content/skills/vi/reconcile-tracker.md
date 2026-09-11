@@ -24,12 +24,12 @@ trạng thái đang làm mà không ai giữ). Skill này không bao giờ ghi v
 <!-- source: harness/.agents/skills/reconcile-tracker/SKILL.md -->
 
 Kiểu hỏng mà skill này được dựng lên để chống rất cụ thể: một tracker chỉ được kiểm đối chiếu với
-chính nó. In-progress kèm một assignee đang sống trông y hệt nhau, dù ticket thật sự đang chạy hay
+chính nó. In-progress kèm một assignee vẫn còn trông y hệt nhau, dù ticket thật sự đang chạy hay
 dù cú merge kết thúc nó không bao giờ được ghi ngược lại. Trạng thái tự nó nhất quán trong cả hai
 trường hợp, nên riêng tracker không cho biết bạn đang nhìn trường hợp nào. Git là nguồn thứ hai,
-độc lập, để phá thế hoà, giống như giá trị kỳ vọng của một cái test phải sống bên ngoài đoạn code
+độc lập, để phá thế hoà, giống như giá trị kỳ vọng của một cái test phải nằm ngoài đoạn code
 mà nó kiểm. Skill này tồn tại vì một project thật đã đo trực tiếp: bốn ticket nằm in-progress với
-assignee đang sống sau khi code của chúng đã merge, cái cũ nhất trễ tròn một ngày, và không có gì
+assignee vẫn còn sau khi code của chúng đã merge, cái cũ nhất trễ tròn một ngày, và không có gì
 trong đường ống báo lỗi để nói ra chuyện đó.
 <!-- source: harness/.agents/skills/reconcile-tracker/SKILL.md -->
 
@@ -58,7 +58,7 @@ hay `linear-issue-tracker`) quyết định cách đọc nửa phần tracker, n
 ## Lỗi đã biết
 
 - **AST-074**: một tracker chỉ được đo đối chiếu với chính nó thì không tự phát hiện được độ lệch
-  của nó. Bốn ticket nằm in-progress với assignee đang sống sau khi code của chúng đã merge, và
+  của nó. Bốn ticket nằm in-progress với assignee vẫn còn sau khi code của chúng đã merge, và
   không gì báo lỗi, vì in-progress kèm assignee không phân biệt được với một ticket đang bay thật
   nếu thiếu nguồn thứ hai. Bản vá được ship chính là `reconcile-tracker` cộng
   `ticket-git-facts.sh`, cố ý để chỉ đọc, để một tracker sai nhưng gọn không bao giờ bị đánh dấu
@@ -76,7 +76,7 @@ hay `linear-issue-tracker`) quyết định cách đọc nửa phần tracker, n
 - Ticket id từ tracker được kéo về trước khi `ticket-git-facts.sh` chạy, không phải sau.
 - Cả bốn lớp lệch đều được báo, kể cả `none` cho những lớp rỗng. Một lớp không được báo đọc ra y
   hệt một lớp không được kiểm.
-- Một ticket đang bay khoẻ mạnh, tức có commit chưa merge, có branch sống và có worktree, không
+- Một ticket đang bay khoẻ mạnh, tức có commit chưa merge, có branch còn tồn tại và có worktree, không
   bao giờ bị gắn cờ là lệch.
 - Không có gì được ghi vào tracker như hệ quả của chính lượt chạy này. Mọi bản vá là một hành động
   riêng, làm sau, do Thomas làm tay.

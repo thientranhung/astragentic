@@ -80,11 +80,11 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Mọi mục dư�
 - **AST-095**: companion thoát mã 0 khi lỗi cấu hình, và cache state khoá theo workspace root. Đã
   sửa: không bao giờ rẽ nhánh theo exit code, chỉ theo nội dung file output; không bao giờ dùng
   lại một đường dẫn gate worktree.
-- **AST-100**: mỗi lần gọi `codex-companion.mjs` lại sinh một tiến trình broker sống lâu hơn cả
+- **AST-100**: mỗi lần gọi `codex-companion.mjs` lại sinh một tiến trình broker chạy lâu hơn cả
   lượt review, đo được 92 tiến trình mồ côi (~405 MB) trên hai project. Đã sửa: giết broker theo
   cwd thật trước khi gỡ gate worktree.
 - **AST-115**: một target teardown ở cấp project bị dùng làm bước release đã dừng luôn container
-  test-database dùng chung mà mọi Builder đang sống đều đứng trên đó. Đã sửa: giới hạn release
+  test-database dùng chung mà mọi Builder đang chạy đều phụ thuộc vào đó. Đã sửa: giới hạn release
   trong đúng worktree này, hoặc không release gì cả.
 - **AST-016**: một reviewer chỉ đọc nhưng có shell vẫn dịch được `HEAD` của agent khác bằng
   `git switch`. Đã sửa, và điều này chịu lực cho `codex-claude-arm`: `claude -p` là một agent đầy
@@ -98,7 +98,7 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Mọi mục dư�
 - Có mặt một dòng `Tests:`, ghi `RAN` hoặc nêu tên lý do không chạy.
 - Vendor được ghi trong vệt merge khớp với vendor thật sự đã chạy, và không bao giờ tính một lượt
   cùng vendor thành lượt cross-vendor.
-- Không gate worktree nào sống quá lượt review của nó. Tài nguyên được giải phóng trước khi gỡ,
+- Không gate worktree nào tồn tại lâu hơn lượt review của nó. Tài nguyên được giải phóng trước khi gỡ,
   trên mọi nhánh đường.
 - Một phát hiện blocking ở lượt 1 phải có lượt 2 chạy trên bản vá, không phải một phán đoán cảm
   tính rằng có thể bỏ qua.

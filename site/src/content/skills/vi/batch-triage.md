@@ -56,7 +56,7 @@ cũ sẽ sai đúng chỗ triage cần nó nhất: trên đoạn code đã dời
 - Thomas sở hữu skill này như một stage. Đây là skill do người gọi, chạy một lần cho mỗi repo và
   chạy lại khi đã cũ, và kết thúc ở lượt duyệt của chủ project. Một skill do người gọi không tự gọi
   được skill khác, đó là lý do vai này tồn tại. <!-- source: harness/.agents/roles/thomas.md -->
-- Có một adapter tracker đang hoạt động, vì các item còn sống sẽ trở thành ticket thật. Chọn adapter
+- Có một adapter tracker đang hoạt động, vì các item chưa đóng sẽ trở thành ticket thật. Chọn adapter
   nào (`github-issue-tracker`, `jira-issue-tracker`, `linear-issue-tracker`) không đổi cách phân
   loại, chỉ đổi cách ghi ticket. <!-- source: harness/.agents/roles/thomas.md -->
 
@@ -67,7 +67,7 @@ cũ sẽ sai đúng chỗ triage cần nó nhất: trên đoạn code đã dời
 | Số đếm theo từng lớp | Bản báo cáo, phát hành trước khi động vào tracker, để chủ project thấy hình dạng backlog vừa thừa kế |
 | Các item `STALE` và `DONE` kèm bằng chứng | Chỉ nằm trong báo cáo. **Đóng ticket chờ chủ project quyết định**, vì đóng nhầm một item còn thật là sai lầm đắt nhất ở đây |
 | Các nhóm trùng lặp | Bản báo cáo, gộp theo đường code và theo triệu chứng chứ không theo tiêu đề |
-| Một item còn sống | Một ticket thật trên tracker, gắn label từ bộ từ vựng của project, ước lượng là một ticket hoặc một effort cần `wayfinder` |
+| Một item chưa đóng | Một ticket thật trên tracker, gắn label từ bộ từ vựng của project, ước lượng là một ticket hoặc một effort cần `wayfinder` |
 | Một phụ thuộc rõ ràng của item này lên item kia | Một cạnh blocking trên tracker, đúng thứ câu truy vấn frontier đọc |
 | Một item mà bằng chứng không phân định được | `NEEDS-OWNER` trong báo cáo, một dòng, không đoán |
 | Ô assignee của mọi ticket vừa tạo | Để **trống**. Gán assignee là hành động claim, và nó thuộc về Thomas lúc dispatch |

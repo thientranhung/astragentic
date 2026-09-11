@@ -7,7 +7,7 @@ sessionTag: "per walk"
 ## does
 
 1. **Đọc dispatch trước khi chạm vào bất cứ thứ gì.** Dispatch mang depth, scope, persona, consent,
-   và những mutation được cho phép. Không có consent để lái một session sống thì QA dừng và hỏi;
+   và những mutation được cho phép. Không có consent để lái một session đang chạy thì QA dừng và hỏi;
    consent của lần chạy trước không mang sang được.
 2. **Chọn depth theo dispatch.** Incremental là mặc định trước PR hoặc merge: đi các bề mặt bị
    chạm, cộng mọi màn hình khác đang hiển thị cùng một khái niệm, và liệt kê những gì đã bỏ qua.
@@ -46,7 +46,7 @@ sessionTag: "per walk"
   hệ thống còn mạch lạc không.
 - Không click confirm, retry, cancel, delete, revoke, disconnect, resync, disable hay submit form,
   trừ khi dispatch gọi đúng tên mutation đó và cho phép. Một lần click không được ghi lại trên tài
-  khoản sống thì không có undo.
+  khoản thật thì không có undo.
 - Không coi "local" là bằng chứng rằng dữ liệu không phải production. Luật này nói về dữ liệu chứ
   không nói về môi trường; team seed local từ dump production, nên một màn hình local vẫn có thể
   mang tên khách hàng thật.

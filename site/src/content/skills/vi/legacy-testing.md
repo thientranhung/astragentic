@@ -26,7 +26,7 @@ hai lối thoát sai khỏi cú khựng đó. Lối thứ nhất là một chara
 tệ hơn và im hơn, vì một test lặng lẽ phong một con bug thành chủ ý, và đó chính là cách một con
 bug trở thành một yêu cầu. Kỷ luật ở đây nằm trong một comment: cứ khẳng định đúng giá trị gây
 ngạc nhiên đó, rồi đánh dấu nó là đã ghim nhưng chưa phán kèm một mã ticket, để cả hai cách đọc
-cùng còn sống. Skill này cũng là lý do tôi coi brownfield là mặc định chứ không phải ca đặc biệt.
+cùng tồn tại. Skill này cũng là lý do tôi coi brownfield là mặc định chứ không phải ca đặc biệt.
 Các agent skill ở thượng nguồn đều giả định seam có sẵn, còn phần lớn repo đi tới thì không có.
 <!-- source: harness/.agents/skills/legacy-testing/SKILL.md, README.md -->
 
@@ -82,7 +82,7 @@ xuất hiện, và lúc nhận repo thì không cần đấu dây gì ngoài vi�
 - Một cái seam mà Builder không biện minh được bên trong một ticket đã được báo lên Thomas như một
   kết quả, chứ không bị ép qua dưới áp lực ticket.
 - Các characterisation test được cho nghỉ dần khi test hành vi tiếp quản đường của chúng, thay vì
-  tích lại thành một bộ test thứ hai sống mãi.
+  tích lại thành một bộ test thứ hai tồn tại mãi.
 
 <!-- source: harness/.agents/skills/legacy-testing/SKILL.md -->
 

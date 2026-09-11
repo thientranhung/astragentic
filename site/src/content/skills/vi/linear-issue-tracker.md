@@ -103,6 +103,6 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Cả hai đều 
 frontier là `list_issues` với điều kiện chưa ai nhận, trạng thái chưa kết thúc và không còn
 `blockedBy` nào dang dở → `dispatch-ticket` claim ticket thắng cuộc bằng `assignee: "me"`, và
 `git worktree add -b` quyết mọi cuộc đua trong cùng một giây → merge kéo ticket sang `Done` và
-kéo thứ nó vừa mở khoá sang `Todo` → `reconcile-tracker` đem kết quả ra đo với git. Hai adapter
+kéo ticket nó vừa mở khoá sang `Todo` → `reconcile-tracker` đem kết quả ra đo với git. Hai adapter
 cùng nhóm là `github-issue-tracker` và `jira-issue-tracker`, và `.agents/tracker-contract.md`
-đứng trên cả ba.
+áp dụng cho cả ba.

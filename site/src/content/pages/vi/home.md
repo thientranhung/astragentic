@@ -29,9 +29,9 @@ làm việc mất trắng.
 ## act-2
 
 Ban đầu quy trình chỉ có hai stage: agent làm, tôi review. Review kéo từ năm tới mười bốn
-vòng, và phần lớn vòng sau dùng để dọn thứ vòng trước để lại. Reviewer không phải chỗ hỏng.
-Chỗ hỏng nằm xa hơn về phía đầu: những quyết định chưa từng được chốt đi thẳng vào code, rồi
-bị chốt ở điểm đắt nhất của quy trình.
+vòng, và phần lớn vòng sau dùng để dọn phần vòng trước để lại. Lỗi không nằm ở reviewer.
+Lỗi nằm ở khâu trước đó: những quyết định chưa từng được chốt được đưa thẳng vào code, rồi
+mới chốt ở khâu tốn kém nhất của quy trình.
 
 Tôi đẩy vòng lặp lên đầu quy trình và cắt phần còn lại thành bảy stage có tên. Bảy stage có
 tên để mỗi lỗi đo được gắn vào đúng một stage; không có tên thì lần sau lỗi rơi vào chỗ không

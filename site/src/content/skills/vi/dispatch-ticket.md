@@ -93,7 +93,7 @@ thái `promoted`: đã sửa và đã nằm trong hợp đồng mà trang này m
 ## Đang chạy đúng nếu
 
 - Watchdog được xác nhận đang chạy trước cú dispatch đầu tiên của session, không phải mặc định là có.
-- `.astraler/state/dispatch-record.json` có một entry cho mọi ticket đang sống, kèm write-set.
+- `.astraler/state/dispatch-record.json` có một entry cho mọi ticket đang mở, kèm write-set.
 - Mọi brief đã gửi đều có watcher arm ngay trong cùng hành động đó, không phải một bước riêng
   làm sau.
 - Nhãn tab và nhãn pane khớp với role đã dispatch (`builder:<id>` so với `spec:<id>`,

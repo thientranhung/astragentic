@@ -44,7 +44,7 @@ bước cleanup.
 ## Cần sẵn gì
 
 - Bạn là Thomas, vì đây là công thức chỉ dành cho Thomas.
-- Herdr với tới được và workspace gọi được tên. Một daemon đang sống không đủ làm bằng chứng, và
+- Herdr với tới được và workspace gọi được tên. Một daemon đang chạy không đủ làm bằng chứng, và
   nếu không gọi được tên workspace thì đó là STOP, không phải lùi về dùng subagent.
 - Có launcher cho runtime ghi ở dòng `rin` trong `orchestrator.md`. Thiếu adapter cho runtime cần
   dùng thì cũng là một STOP báo lên chủ project.
@@ -67,7 +67,7 @@ bước cleanup.
 
 - `AST-030`: orchestrator ghi tên một runtime cho dòng `rin` mà runtime đó không có đường dispatch
   nào, nên Rin thành không dispatch được. Promoted: ma trận launcher giờ là nhà duy nhất của mọi role.
-- `AST-033`: cách tra cũ "có tab ticket nào đang sống không?" trả lời "không" mọi lần ở một gate
+- `AST-033`: cách tra cũ "có tab ticket nào đang mở không?" trả lời "không" mọi lần ở một gate
   spec, âm thầm biến mọi gate spec thành một subagent vô hình. Promoted, đã được thay bằng câu hỏi
   "có gọi được tên workspace không?"
 - `AST-043`: gate đòi bản brief mang theo "bằng chứng browser-verify của Builder", trong khi
@@ -95,7 +95,7 @@ Một ticket đi qua worktree của `/skills/dispatch-ticket`, và khi nó sẵn
 không, và bằng chứng trình duyệt có chống lưng cho mọi thay đổi UI không. Thứ Rin không phán được,
 tức sản phẩm đang chạy có còn liền mạch không, là việc của `dispatch-qa-walk`. Khi các phát hiện
 đã được gộp và kiểm lại, `/skills/codex-arm` nhận SHA cuối cho lượt cross-vendor trước khi bất cứ
-thứ gì được merge. Bản thân role `rin` sống trong các khái niệm ở `/dictionary/role`, và toàn bộ
+thứ gì được merge. Bản thân role `rin` nằm trong các khái niệm ở `/dictionary/role`, và toàn bộ
 việc này diễn ra bên trong một `/dictionary/gate`, trên một `/dictionary/worktree` mà không ai
 ngoài Rin ghi vào.
 <!-- source: harness/.agents/skills/review-with-rin/SKILL.md -->

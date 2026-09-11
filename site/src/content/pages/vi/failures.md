@@ -43,7 +43,7 @@ làm việc thì giá đó rẻ.
 
 ## AST-015
 
-Một bước export commit thẳng secret sống và PII của người mua vào file được track. Vòng review
+Một bước export commit thẳng secret đang dùng thật và PII của người mua vào file được track. Vòng review
 same-vendor đọc qua và cho pass. Vòng cross-vendor bắt được và xếp mức P1.
 
 Đó là lý do cuối phase vẫn còn một vòng arm chạy bằng vendor khác, dù tốn thêm tiền và thời
@@ -53,7 +53,7 @@ không có phương án nào rẻ hơn.
 
 ## AST-074
 
-Bốn ticket nằm in-progress với assignee sống sau khi code đã merge, ticket cũ nhất trễ trọn
+Bốn ticket nằm in-progress với assignee vẫn còn sau khi code đã merge, ticket cũ nhất trễ trọn
 một ngày. Không có gì báo lỗi: merge chạy, phần ghi frontier ngược lại thì không, và không
 artifact nào ghi lại chỗ thiếu đó.
 

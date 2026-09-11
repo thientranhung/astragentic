@@ -22,7 +22,7 @@ sessionTag: "unbroken"
 5. **Blocking finding được sửa trong spec, ở đây, trước khi cắt bất kỳ ticket nào.** Shaper sửa,
    re-commit, và pass thứ hai chạy trên toàn bộ spec đã sửa trước khi Thomas release.
 6. **`to-tickets`** khi Thomas release: mỗi ticket build được độc lập, cỡ vừa một session, blocking
-   edges đặt đúng. Edges sống lâu hơn session này, vì frontier query đọc chúng để quyết ticket nào
+   edges đặt đúng. Edges tồn tại lâu hơn session này, vì frontier query đọc chúng để quyết ticket nào
    đã sẵn sàng.
 
 ## may

@@ -68,7 +68,7 @@ chưa hề bắt đầu (AST-114). Giờ thứ tự được ghi ngay tại ch�
 Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Tất cả đều `promoted`.
 
 - **AST-112**: skill từng bảo Thomas gửi cả brief, kèm luôn lệnh slash, bằng một `SendMessage`,
-  với lý do rằng nó tới nơi như một lượt người dùng. Câu đó sai, và nó sống qua bốn bản phát
+  với lý do rằng nó tới nơi như một lượt người dùng. Câu đó sai, và nó tồn tại qua bốn bản phát
   hành. Đã sửa: phần thân đi bằng `SendMessage`, lệnh thì gõ.
 - **AST-055**: cùng một lỗi trong cùng một vòng cho ra một cú từ chối ồn ào ở pane Builder và
   một cú thay thế im lặng ở pane Shaper, vì một hợp đồng có câu "chính cú fail là phát hiện" còn
@@ -76,7 +76,7 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Tất cả đề
   dương chứ không phải phép lịch sự.
 - **AST-114**: tách bước gửi thành hai bước làm cái watch arm nhầm vào bước còn lại. Đã sửa: arm
   sau khi echo, không bao giờ arm sau phần thân.
-- **AST-107**: một `herdr agent wait` trần đặt trong Monitor vẫn sống nhưng điếc. Đo được nó
+- **AST-107**: một `herdr agent wait` trần đặt trong Monitor vẫn chạy nhưng không phản hồi. Đo được nó
   ngồi 10 phút 25 giây trước một pane vốn đã idle, trong khi một lệnh wait y hệt phát ra cùng
   phút đó trả về sau 0 giây. Đã sửa: Monitor bọc script canh, script cắt lệnh wait thành lát và
   lấy mọi phán quyết từ một `herdr agent get` mới.

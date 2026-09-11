@@ -1,6 +1,6 @@
 ---
 title: "Hook"
-description: "Bốn hook, ba script. Một hook chặn lệnh git nguy hiểm, một hook nạp lại contract sau compact, một hook ghi log, và một hook tôi đo được là đang ngủ."
+description: "Bốn hook, ba script. Một hook chặn lệnh git nguy hiểm, một hook nạp lại contract sau compact, một hook ghi log, và một hook tôi đo được là không còn được kích hoạt."
 ---
 
 Bốn hook đăng ký ở `harness/.claude/settings.json`, riêng git guard đăng ký thêm ở
@@ -9,7 +9,7 @@ Bốn hook đăng ký ở `harness/.claude/settings.json`, riêng git guard đă
 ở mọi runtime, còn hook thì có thể bị tắt, có thể chưa được trust, và có thể treo trên một
 đường thi hành không ai đi qua.
 
-Trường hợp cuối không phải giả thuyết. Một trong bốn hook dưới đây đang ngủ, tôi đo được điều
+Trường hợp cuối không phải giả thuyết. Một trong bốn hook dưới đây không còn được kích hoạt, tôi đo được điều
 đó, và tôi để nguyên nó ở đây thay vì lặng lẽ gỡ đi.
 
 ## pre-tool-use
@@ -32,13 +32,13 @@ chính người dùng nó cách đi vòng, và như vậy tệ hơn không có g
 Giới hạn: đây là lint chống nhầm tay, không phải hàng rào. Ba
 lượt gate đối kháng, mỗi lượt tìm ra một đường mới đi xuyên qua nó, và lượt thứ ba kết luận
 matcher này không hội tụ. Câu trả lời là thu nhỏ tuyên bố lại chứ không phải thêm luật. Bây giờ
-nó nhận đúng một hình dạng, là các lệnh đơn ngăn nhau bằng toán tử không nằm trong ngoặc, và im
+nó chỉ chấp nhận đúng một dạng lệnh, là các lệnh đơn ngăn nhau bằng toán tử không nằm trong ngoặc, và im
 lặng trước mọi thứ có substitution, heredoc, comment, từ khoá, wrapper hay interpreter. Im lặng
 ở đó là thiết kế, không phải lỗ hổng: một tuyên bố phủ sóng không đúng sự thật còn tệ hơn không
 tuyên bố gì.
 
 Còn một lý do nó là file `.py` chứ không phải một dòng shell nhét trong `settings.json`. Bản cũ
-đúng là một dòng như vậy: không đọc được, không chạy tay được, không test được, và nó nằm ngủ
+đúng là một dòng như vậy: không đọc được, không chạy tay được, không test được, và nó không được kích hoạt
 qua nhiều release trong lúc trông vẫn như đã cài (AST-102). Bản này chạy độc lập được, nên nó
 kiểm tra được.
 
@@ -54,12 +54,12 @@ này chịu lực. Tài nguyên buộc vào một thư mục, theo cwd hoặc th
 hoặc theo cái tên project tự tính từ nó, không còn khớp được sau khi thư mục biến mất, nên bước
 này phải chạy trước `git worktree remove`, không bao giờ sau (AST-100, AST-101).
 
-Hook này đang ngủ. Đo ngày 2026-08-20 bằng chính log tôi
+Hook này không còn được kích hoạt. Đo ngày 2026-08-20 bằng chính log tôi
 thêm vào để trả lời câu hỏi đó. Ba worktree bị gỡ sau lần ghi cuối của log, trong đó có một
 lệnh `git worktree remove` trần, và số sự kiện `WorktreeRemove` ghi được là không. Trong khi đó
 hook `SubagentStop` nằm cùng file, cùng session, ghi được 27 sự kiện trong cùng cửa sổ thời
 gian ấy. Tôi kiểm lại theo một đường độc lập: container test dùng chung vẫn `Up (healthy)` sau
-lần gỡ, mà một hook còn sống thì đã dừng nó.
+lần gỡ, mà một hook đang chạy thì đã dừng nó.
 
 Nguyên nhân không phải hook hỏng, mà là hook không được chạm tới. `WorktreeRemove` treo trên
 đường tool `EnterWorktree` / `ExitWorktree`, còn Thomas gỡ worktree bằng `git worktree remove`
@@ -68,7 +68,7 @@ nào để bắn. Một hook treo trên đường thi hành không ai đi qua th
 và nhìn từ bên ngoài hai thứ đó không phân biệt được.
 
 Vì vậy bước dọn thủ công vẫn bắt buộc trên mọi runtime, và lệnh trong hook vẫn phải giữ an toàn
-cho ngày nó tỉnh dậy (AST-115). Bài học sống lâu hơn chính cái hook này: khi một cơ chế không
+cho ngày nó được kích hoạt lại (AST-115). Bài học tồn tại lâu hơn chính cái hook này: khi một cơ chế không
 bắn, hãy hỏi trigger có được chạm tới không, trước khi kết luận cơ chế đã hỏng.
 
 ## session-start
@@ -106,7 +106,7 @@ tại đọc stdin và lấy đúng trường.
 
 Đây là hook rẻ nhất trong bốn cái, và nó trả lại giá trị lớn nhất ở một chỗ không ai thiết kế
 trước. Nó là nhóm đối chứng. 27 sự kiện nó ghi được trong cùng cửa sổ thời gian là thứ biến
-"không quan sát được gì" thành bằng chứng cho việc `WorktreeRemove` đang ngủ. Không có chúng
+"không quan sát được gì" thành bằng chứng cho việc `WorktreeRemove` không còn được kích hoạt. Không có chúng
 thì quan sát đó không phân biệt được với "toàn bộ hook đã bị tắt", và kết luận đầu tiên, rằng
 hook đã hỏng, được rút ra khi chưa có nhóm đối chứng nào.
 

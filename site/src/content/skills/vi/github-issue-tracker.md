@@ -22,7 +22,7 @@ Tôi truy cập tracker bằng `gh` CLI thay vì MCP server, vì `gh` đã xác 
 <!-- source: harness/.agents/skills/github-issue-tracker/SKILL.md -->
 
 Một sự thật quyết định mọi thứ còn lại: **GitHub Issues không có trường trạng thái.** Trạng thái
-sống ở hai nơi không đồng bộ với nhau. Label là sự thật, còn cột `Status` trên Project là bản sao
+nằm ở hai nơi không đồng bộ với nhau. Label là sự thật, còn cột `Status` trên Project là bản sao
 phải có người ghi. GitHub không đồng bộ hai nơi đó, nên mỗi lần đổi trạng thái là hai lần ghi,
 vĩnh viễn. Đó là chi phí thường trực của cái tracker rẻ nhất để bắt đầu. Mọi cái bẫy trên trang
 này đều đã bị trả giá trên một dự án thật chuyển từ Linear sang GitHub ngày 2026-08-21.
@@ -102,6 +102,6 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Cả hai đều 
 `thomas.md` đọc `issue-tracker.md` của dự án lúc mở session → file đó gọi tên adapter này → truy
 vấn frontier chạy dưới dạng một lệnh liệt kê cộng một vòng lặp N+1, vì GitHub không có ngôn ngữ
 truy vấn → `dispatch-ticket` claim ticket thắng cuộc bằng `--add-assignee @me` → merge đóng issue
-và ghi `todo` cho thứ nó vừa mở khoá, trong cùng một lượt → `reconcile-tracker` đem kết quả ra đo
+và ghi `todo` cho ticket nó vừa mở khoá, trong cùng một lượt → `reconcile-tracker` đem kết quả ra đo
 với git. Hai adapter cùng nhóm là `jira-issue-tracker` và `linear-issue-tracker`, và
-`.agents/tracker-contract.md` đứng trên cả ba.
+`.agents/tracker-contract.md` áp dụng cho cả ba.

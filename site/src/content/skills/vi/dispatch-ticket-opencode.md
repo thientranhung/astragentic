@@ -58,7 +58,7 @@ qua như một câu trả lời bình thường.
 
 | Chuyện gì đã xảy ra | Nó nằm lại ở đâu |
 |---|---|
-| Lần launch | `herdr agent start "<role>-<ticket-id>" --kind opencode`, agent được nhận diện, tiến trình xác nhận còn sống bằng `pgrep` |
+| Lần launch | `herdr agent start "<role>-<ticket-id>" --kind opencode`, agent được nhận diện, tiến trình xác nhận đang chạy bằng `pgrep` |
 | Tư thế quyền hạn | `--auto` cộng với `permission: { "*": allow }` của chính agent, hai thứ cộng lại nghĩa là không giới hạn |
 | Một bước kiểm kết thúc bị suy giảm | Một báo cáo suy giảm, viết như khi báo runtime rơi về dự phòng, không phải một phán quyết một nguồn im lặng |
 | Mọi phần còn lại: brief, watch, phán quyết, dọn dẹp | Giao thức dùng chung `dispatch-ticket` |

@@ -103,7 +103,7 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Cả hai đều 
 
 `thomas.md` đọc `issue-tracker.md` của dự án lúc mở session → file đó gọi tên adapter này →
 frontier là một truy vấn JQL → `dispatch-ticket` claim ticket thắng cuộc bằng cách đặt assignee,
-rồi git quyết mọi cuộc đua trong cùng một giây → merge lấy transition sang Done và kéo thứ nó
+rồi git quyết mọi cuộc đua trong cùng một giây → merge lấy transition sang Done và kéo ticket nó
 vừa mở khoá sang trạng thái sẵn sàng → `reconcile-tracker` đem kết quả ra đo với git. Hai adapter
 cùng nhóm là `github-issue-tracker` và `linear-issue-tracker`, và `.agents/tracker-contract.md`
-đứng trên cả ba.
+áp dụng cho cả ba.

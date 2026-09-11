@@ -88,14 +88,14 @@ status biểu diễn thế nào, claim ghi ở đâu, blocking edge diễn đạ
 Thứ cố định không phải adapter mà là `.agents/tracker-contract.md`: năm thứ mà pipeline cần ở
 bất kỳ tracker nào. Nhờ vậy Thomas đọc `docs/agents/issue-tracker.md`, biết dự án này dùng
 adapter nào, rồi lái y hệt nhau bất kể backend. Cái giá đã nêu ở trang vì sao: mỗi backend mang
-theo cái bẫy riêng, và GitHub Issues không có trường status thật nên status phải sống trong
+theo cái bẫy riêng, và GitHub Issues không có trường status thật nên status phải nằm trong
 label.
 
 ## scripts
 
 Phần Python và Bash tôi tự viết. Ba script đại diện cho ba loại: `hook-git-guard.py` chặn
 trong lúc quyền còn đang được quyết; `herdr-watchdog.sh` chạy nền suốt session và phải
-sống trước mọi dispatch; `ledger-index.sh` chạy sau khi payload đổi, không phải sau khi công
+đang chạy trước mọi dispatch; `ledger-index.sh` chạy sau khi payload đổi, không phải sau khi công
 việc đổi.
 
 Luật tôi rút ra: mỗi script phải có một khoảnh khắc gọi và một người sở hữu. Script thiếu một

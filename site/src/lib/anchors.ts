@@ -196,7 +196,7 @@ export const WHY: WhyCard[] = [
       en: 'Why does the tracker hold the state, not chat or a file?',
     },
     answer: {
-      vi: 'Board sống lâu hơn mọi session và bạn mở ra là đọc được. Cái gì sẵn sàng là một câu truy vấn trên đó, nên một session đóng đi không mang theo thứ gì.',
+      vi: 'Board tồn tại lâu hơn mọi session và bạn mở ra là đọc được. Cái gì sẵn sàng là một câu truy vấn trên đó, nên một session đóng đi không mang theo thứ gì.',
       en: 'The board outlives every session and you can open and read it. What is ready is a query against it, so a session can close without taking anything with it.',
     },
   },

@@ -56,7 +56,7 @@ explain:
       - id: thomas
         title: "Thomas"
         tag: "người đại diện"
-        session: "Session thường trực, sống qua nhiều ticket."
+        session: "Session thường trực, kéo dài qua nhiều ticket."
         body: "Giữ tracker, chạy frontier query, claim, dispatch và merge. Là agent duy nhất còn ở đó khi Builder đã đóng session, nên mọi trạng thái bền đều thuộc Thomas. Hỏi lại bạn ở những quyết định quan trọng."
         href: "/vi/vai/thomas"
       - id: shaper
@@ -88,7 +88,7 @@ explain:
     eyebrow: "Issue tracker"
     headline: "Mọi việc đi qua tracker, nên không việc nào lạc hướng."
     paragraphs:
-      - "Trạng thái công việc sống trên tracker, không trong chat hay trí nhớ của một agent. Thomas hỏi tracker cái gì đã sẵn sàng; bạn mở board là đọc được."
+      - "Trạng thái công việc được lưu trên tracker, không trong chat hay trí nhớ của một agent. Thomas hỏi tracker cái gì đã sẵn sàng; bạn mở board là đọc được."
       - "Không còn danh sách task trong file markdown với ô checked mà agent phải nhớ sửa. Ticket có id, status, assignee, blocking edge; đọc và ghi qua API, ai hỏi cũng nhận cùng một câu trả lời."
       - "Claim là một dòng assignee ghi và đọc lại được, nên nhiều Builder chạy song song. Issue phát sinh giữa chừng thành ticket mới, không rơi mất trong tin nhắn."
       - "Một ticket là một branch, một worktree, một PR, cùng mã ticket trong tên. Mỗi Builder một worktree; merge xong thì ticket đóng, worktree dọn."
@@ -206,7 +206,7 @@ fit:
   fitsLabel: "Hợp khi"
   notYetLabel: "Chưa cần khi"
   fits:
-    - "Có roadmap nhiều release; codebase còn sống nhiều tháng sau khi ra mắt."
+    - "Có roadmap nhiều release; codebase còn được sửa nhiều tháng sau khi ra mắt."
     - "Nhiều module hay hệ con (app, backend, admin, tích hợp) làm song song."
     - "Việc phụ thuộc nhau, cần thứ tự; có người dùng thật, regression là rủi ro."
   notYet:
