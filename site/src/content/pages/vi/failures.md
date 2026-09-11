@@ -47,7 +47,7 @@ Một bước export commit thẳng secret sống và PII của người mua và
 same-vendor đọc qua và cho pass. Vòng cross-vendor bắt được và xếp mức P1.
 
 Đó là lý do cuối phase vẫn còn một vòng arm chạy bằng vendor khác, dù tốn thêm tiền và thời
-gian. Hai lăng kính bắt hai lớp lỗi khác nhau, và lớp mà same-vendor bỏ sót là lớp đắt nhất
+gian. Hai lăng kính bắt hai loại lỗi khác nhau, và loại mà same-vendor bỏ sót là loại đắt nhất
 khi lọt. Một giá trị đã chạm vào file được track thì coi như cháy và phải rotate. Phía sau
 không có phương án nào rẻ hơn.
 

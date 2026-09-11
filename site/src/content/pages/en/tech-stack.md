@@ -10,7 +10,7 @@ myself or picked to build this site.
 
 ## claude-code
 
-The root runtime. All five roles run here, and `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium` is the line that opens a
+The root runtime. Agents in all five roles run here, and `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium` is the line that opens a
 session. If you install exactly one runtime, make it this one.
 
 It is also where I put the two most important hooks, because the two mechanisms I need only
@@ -37,7 +37,7 @@ registration; confirming trust means typing `/hooks` in the Codex CLI.
 The third runtime option for role dispatch, with adapters in `.opencode/agents/`. It exists so
 `.agents/orchestrator.md` is not pinned to a single vendor.
 
-I will state plainly where it is weaker than the other two: an OpenCode Builder has no
+OpenCode is weaker than the other two in one place: an OpenCode Builder has no
 equivalent of `hook-git-guard.py`. That is one of the two reasons the cleanup-ordering rule has
 to live in `dispatch-ticket/CLEANUP.md` first and in a hook second. The other reason is that
 Claude and Codex can both run with hooks disabled.
@@ -69,10 +69,10 @@ interruptible sleep. Worst-case detection lag is 60 seconds rather than the whol
 
 ## mattpocock-skills
 
-The entire craft layer is rented from here, floor `>= 1.2.3`, installed as a plugin.
+The entire craft part is rented from here, floor `>= 1.2.3`, installed as a plugin.
 `wayfinder`, `grill-with-docs`, `to-spec`, `to-tickets`, `implement` and `code-review` are the
 user-invoked steps; `grilling`, `tdd`, `codebase-design`, `domain-modeling`, `research`,
-`prototype`, `diagnosing-bugs`, `wizard` and `resolving-merge-conflicts` are the craft layer the
+`prototype`, `diagnosing-bugs`, `wizard` and `resolving-merge-conflicts` are the craft part the
 model reaches for on its own.
 
 The benefit of installing it once is that the whole team gets the craft, because model-invoked
@@ -95,8 +95,8 @@ has to live in a label.
 
 ## scripts
 
-The Python and Bash I wrote myself. Three scripts stand for three kinds: `hook-git-guard.py` is
-a blocking layer running while permission is still being decided; `herdr-watchdog.sh` runs in
+The Python and Bash I wrote myself. Three scripts stand for three kinds: `hook-git-guard.py`
+blocks while permission is still being decided; `herdr-watchdog.sh` runs in
 the background all session and has to be alive before any dispatch; `ledger-index.sh` runs after
 the payload changes, not after work happens.
 
@@ -113,7 +113,7 @@ Every diagram on this site is built with `archify`. The source is JSON at
 `content/site/diagrams/<slug>.<type>.json`, and the output is standalone HTML with inline SVG,
 so one diagram is both clickable in the page and readable outside it.
 
-I chose to describe diagrams as data rather than draw them because this site is bilingual. Each
+Diagrams are described as data rather than drawn by hand, because this site is bilingual. Each
 diagram has a translation at `content/site/diagrams/vi/` covering the title, labels, edge
 labels, lane names and notes, while role names, skill names, commands, AST ids and filenames
 stay as they are. Drawn by hand twice, the two copies diverge on the third edit.

@@ -1,6 +1,6 @@
 ---
 title: "Cấu trúc"
-description: "Bốn lớp: runtime chạy agent, harness chứa vai và luật, coordination giữ trạng thái, dưới cùng là repo của bạn. Astragentic chỉ là lớp ở giữa."
+description: "Bốn lớp: runtime chạy agent, harness chứa role và luật, coordination giữ trạng thái, dưới cùng là repo của bạn. Astragentic chỉ là lớp ở giữa."
 ---
 
 Astragentic không phải một runtime, cũng không phải một method. Nó là lớp nằm giữa hai thứ đó:
@@ -10,34 +10,34 @@ phối, và chỉ phần đó.
 
 Tôi chia làm bốn lớp vì mỗi lớp trả lời một câu hỏi khác nhau, và câu hỏi đó quyết định ai sở
 hữu file nào. Lớp runtime trả lời "agent này chạy bằng gì". Lớp harness trả lời "nó được phép
-làm gì". Lớp coordination trả lời "các agent đang ở đâu". Lớp cuối trả lời "dự án này thật ra
-là gì", và đó là phần Astragentic không bao giờ được trả lời thay bạn.
+làm gì". Lớp coordination trả lời "các agent đang ở đâu". Lớp cuối trả lời "dự án này là gì",
+và đó là phần Astragentic không bao giờ được trả lời thay bạn.
 
 ## runtime
 
-Ba runtime, và vai nào chạy trên runtime nào là một dòng trong `.agents/orchestrator.md`, file
-của bạn, upgrade không bao giờ đè lên. Claude Code là runtime gốc: cả năm vai đều chạy được ở
+Ba runtime, và agent ở role nào chạy trên runtime nào là một dòng trong `.agents/orchestrator.md`, file
+của bạn, upgrade không bao giờ đè lên. Claude Code là runtime gốc: agent của cả năm role đều chạy được ở
 đây. Codex và OpenCode là tuỳ chọn, và chúng có mặt vì lý do cụ thể chứ không phải để danh
 sách dài thêm.
 
 Codex có mặt để làm nhân chứng. Cross-vendor arm cần một model của vendor khác đọc lại diff,
-nên nếu chỉ có một runtime thì arm đó không tồn tại. OpenCode là lựa chọn thứ ba cho vai
+nên nếu chỉ có một runtime thì arm đó không tồn tại. OpenCode là lựa chọn thứ ba cho role
 Builder khi bạn cần.
 
 Cái giá của việc đứng trên ba runtime là enforcement không đều nhau. `hook-git-guard.py` được
 đăng ký ở Claude Code qua `.claude/settings.json` và ở Codex qua `.codex/hooks.json`. Một
 Builder chạy OpenCode không có hook tương đương, và cả Claude lẫn Codex đều có thể chạy với
 hook tắt hoặc chưa được trust. Vì vậy luật thứ tự dọn dẹp phải nằm trong contract trước, trong
-hook sau. Hook là lớp thứ hai, không phải hàng rào.
+hook sau. Hook đứng sau, không phải hàng rào.
 
 ## harness
 
-Đây là thứ `install.sh` mang vào repo của bạn: năm vai, mười sáu skill, bốn hook, và ledger
-lỗi. Vai không chia theo chức danh mà chia theo tuổi thọ session, vì tuổi thọ session quyết
-định vai đó còn nhớ được gì. Thomas sống suốt session. Shaper sống đúng một session không đứt.
+Đây là thứ `install.sh` mang vào repo của bạn: năm role, mười sáu skill, bốn hook, và ledger
+lỗi. Role không chia theo chức danh mà chia theo tuổi thọ session, vì tuổi thọ session quyết
+định agent ở role đó còn nhớ được gì. Thomas sống suốt session. Shaper sống đúng một session không đứt.
 Builder sống một ticket. Rin sống một vòng. QA sống một chuyến đi.
 
-Mỗi vai có hai file, và chỗ đặt luật quan trọng hơn nội dung luật. `.claude/agents/<role>.md`
+Mỗi role có hai file, và chỗ đặt luật quan trọng hơn nội dung luật. `.claude/agents/<role>.md`
 là system prompt, chỉ mang bốn dòng. `.agents/roles/<role>.md` là contract đầy đủ, vào session
 qua tool Read nên nó nằm trong context như một tool result.
 
@@ -73,7 +73,7 @@ worktree.
 
 Lớp dưới cùng là repo của bạn, và luật ở đây là Astragentic không biết gì về nó ngoài những
 thứ chính bạn khai. `docs/agents/issue-tracker.md` nói dùng tracker nào.
-`.agents/orchestrator.md` nói vai nào chạy runtime nào, model nào. `CONTEXT.md` giữ từ vựng
+`.agents/orchestrator.md` nói agent ở role nào chạy runtime nào, model nào. `CONTEXT.md` giữ từ vựng
 miền, và ADR giữ những quyết định đã chốt. Không file nào trong số đó bị release ghi đè.
 
 Ranh giới này tôi học được ở chỗ đắt nhất là lúc dọn worktree. Harness biết đúng một thứ mà

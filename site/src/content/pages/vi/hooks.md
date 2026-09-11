@@ -4,8 +4,8 @@ description: "Bốn hook, ba script. Một hook chặn lệnh git nguy hiểm, m
 ---
 
 Bốn hook đăng ký ở `harness/.claude/settings.json`, riêng git guard đăng ký thêm ở
-`harness/.codex/hooks.json`. Nguyên tắc chung của cả bốn là hook chỉ làm lớp thứ hai, còn
-contract là lớp thứ nhất. Luật nào quan trọng thì phải nằm trong contract, vì contract được đọc
+`harness/.codex/hooks.json`. Nguyên tắc chung của cả bốn là hook luôn đứng sau, contract luôn
+đứng trước. Luật nào quan trọng thì phải nằm trong contract, vì contract được đọc
 ở mọi runtime, còn hook thì có thể bị tắt, có thể chưa được trust, và có thể treo trên một
 đường thi hành không ai đi qua.
 
@@ -29,7 +29,7 @@ chứng minh bản regex vừa cho lọt vừa quá tay trong cùng một hơi t
 chỉ vì chứa mấy chữ đó. Một guard vừa trượt trường hợp thật vừa chặn trường hợp vô hại thì dạy
 chính người dùng nó cách đi vòng, và như vậy tệ hơn không có guard.
 
-Tôi muốn nói chính xác về giới hạn của nó. Đây là lint chống nhầm tay, không phải hàng rào. Ba
+Giới hạn: đây là lint chống nhầm tay, không phải hàng rào. Ba
 lượt gate đối kháng, mỗi lượt tìm ra một đường mới đi xuyên qua nó, và lượt thứ ba kết luận
 matcher này không hội tụ. Câu trả lời là thu nhỏ tuyên bố lại chứ không phải thêm luật. Bây giờ
 nó nhận đúng một hình dạng, là các lệnh đơn ngăn nhau bằng toán tử không nằm trong ngoặc, và im
@@ -54,7 +54,7 @@ này chịu lực. Tài nguyên buộc vào một thư mục, theo cwd hoặc th
 hoặc theo cái tên project tự tính từ nó, không còn khớp được sau khi thư mục biến mất, nên bước
 này phải chạy trước `git worktree remove`, không bao giờ sau (AST-100, AST-101).
 
-Phần tiếp theo tôi phải nói thẳng: hook này đang ngủ. Đo ngày 2026-08-20 bằng chính log tôi
+Hook này đang ngủ. Đo ngày 2026-08-20 bằng chính log tôi
 thêm vào để trả lời câu hỏi đó. Ba worktree bị gỡ sau lần ghi cuối của log, trong đó có một
 lệnh `git worktree remove` trần, và số sự kiện `WorktreeRemove` ghi được là không. Trong khi đó
 hook `SubagentStop` nằm cùng file, cùng session, ghi được 27 sự kiện trong cùng cửa sổ thời
@@ -76,7 +76,7 @@ bắn, hãy hỏi trigger có được chạm tới không, trước khi kết l
 Hook bắn ngay sau khi một session Claude Code compact, với `source: compact`, và nó chạy
 `scripts/hook-contract-reload.py`.
 
-Script nạp lại đúng một thứ: đường dẫn contract của vai đang chạy, qua
+Script nạp lại đúng một thứ: đường dẫn contract của role đang chạy, qua
 `hookSpecificOutput.additionalContext`, tới tay agent trước khi agent kịp hành động.
 
 Lỗi sinh ra nó là AST-069, và dạng một dòng là: một chỉ dẫn không gắn với khoảnh khắc nào thì
@@ -110,5 +110,5 @@ trước. Nó là nhóm đối chứng. 27 sự kiện nó ghi được trong c�
 thì quan sát đó không phân biệt được với "toàn bộ hook đã bị tắt", và kết luận đầu tiên, rằng
 hook đã hỏng, được rút ra khi chưa có nhóm đối chứng nào.
 
-Ngoài vai trò đó, hook còn ghi lại lúc một Builder chết, thứ mà nếu không có log thì chỉ hiện
+Ngoài chức năng đó, hook còn ghi lại lúc một Builder chết, thứ mà nếu không có log thì chỉ hiện
 ra dưới dạng một pane im lặng.

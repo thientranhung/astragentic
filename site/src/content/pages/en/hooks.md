@@ -4,8 +4,8 @@ description: "Four hooks, three scripts. One blocks dangerous git, one re-arms t
 ---
 
 Four hooks are registered in `harness/.claude/settings.json`, and the git guard is registered
-again in `harness/.codex/hooks.json`. The principle behind all four is that the hook is the
-second layer and the contract is the first. A rule that matters has to live in the contract,
+again in `harness/.codex/hooks.json`. The principle behind all four is that the hook always
+comes after and the contract always comes first. A rule that matters has to live in the contract,
 because the contract is read on every runtime, while a hook can be disabled, can be untrusted,
 and can be bolted to an execution path nobody walks through.
 
@@ -30,7 +30,7 @@ breath: `/usr/bin/git add -A` and `git -c k=v add -A` slipped through, while `pr
 and blocks the harmless one teaches its own operator to route around it, which is worse than no
 guard.
 
-I want to be exact about the limit. This is an accidental-misuse lint, not a boundary. Three
+Limit: this is an accidental-misuse lint, not a boundary. Three
 adversarial gates each found a fresh way through, and the third concluded the matcher was not
 converging. The answer was to shrink its claim rather than grow its rules. It now recognises one
 shape, simple commands separated by unquoted operators, and stays silent on anything containing
@@ -54,7 +54,7 @@ load-bearing. Resources bound to a directory, by cwd or by a label derived from 
 name the project computed from it, cannot be matched once the directory is gone, so this has to
 run before `git worktree remove` and never after (AST-100, AST-101).
 
-The next part I have to say straight: this hook is dormant. Measured 2026-08-20 with the very
+This hook is dormant. Measured 2026-08-20 with the very
 logging I added to answer the question. Three worktrees were removed after the log's last write,
 one of them by a plain `git worktree remove`, and the number of `WorktreeRemove` events recorded
 was zero. Meanwhile the `SubagentStop` hook in the same file and the same session logged 27

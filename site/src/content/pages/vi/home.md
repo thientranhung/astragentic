@@ -1,6 +1,6 @@
 ---
 title: "Astragentic"
-description: "Vì sao tôi dựng lớp điều phối này, tôi đã chọn gì, và cái giá của từng lựa chọn."
+description: "Vì sao tôi dựng phần điều phối này, tôi đã chọn gì, và cái giá của từng lựa chọn."
 acts:
   - id: act-1
     eyebrow: "AST-016 · promoted 2026-07-11"
@@ -18,13 +18,13 @@ acts:
 
 ## act-1
 
-Tôi từng chạy ba session trên cùng một checkout và không lỗi nào được ném ra. Một buổi chiều
-làm việc biến mất, và tôi mất thêm một buổi nữa để tìm ra nguyên nhân.
+AST-016: ba session chạy trên cùng một checkout, không lỗi nào được ném ra, một buổi làm việc
+mất trắng và thêm một buổi nữa để tìm nguyên nhân.
 
-Tôi chọn cách chữa thô nhất: mọi agent được spawn mà có quyền chạy git đổi trạng thái đều
-phải có checkout riêng, kể cả agent chỉ đọc. Ngoại lệ "chỉ đọc" chính là giả định tôi đã tin,
-và nó sai. Cái giá là mỗi Builder tốn thêm một worktree trên đĩa và vài giây setup. Tôi trả
-giá đó vì buổi chiều kia đắt hơn nhiều.
+Cách chữa thô nhất: mọi agent được spawn mà có quyền chạy git đổi trạng thái đều phải có
+checkout riêng, kể cả agent chỉ đọc. Ngoại lệ "chỉ đọc" là giả định gây ra sự cố này. Cái giá
+là mỗi Builder tốn thêm một worktree trên đĩa và vài giây setup, rẻ hơn nhiều so với một buổi
+làm việc mất trắng.
 
 ## act-2
 

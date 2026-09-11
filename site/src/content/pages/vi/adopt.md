@@ -7,7 +7,7 @@ Bộ cài này cố tình không tự sửa project của bạn. `./install.sh` 
 vào `.astraler/releases/<version>` rồi dừng ở đó. Phần tích hợp do một agent chạy ngay trong
 repo của bạn thực hiện, sau khi nó đọc build command, agent config và trạng thái Git thật.
 
-Tôi tách thành hai bước vì một bộ cài kiểu chép đè sẽ luôn đè nhầm file. Nó không phân biệt
+Tôi tách thành hai bước vì một bộ cài chép đè sẽ luôn đè nhầm file. Nó không phân biệt
 được thứ thuộc về harness, thứ thuộc về project và thứ do owner sở hữu. Cái giá là bạn phải
 chạy thêm một session agent và đọc kỹ những gì nó định làm, thay vì gõ một lệnh rồi bỏ đi.
 

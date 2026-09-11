@@ -10,7 +10,7 @@ dựng chính trang này.
 
 ## claude-code
 
-Runtime gốc. Cả năm vai đều chạy được ở đây, và `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium` là câu lệnh mở đầu một
+Runtime gốc. Agent của cả năm role đều chạy được ở đây, và `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium` là câu lệnh mở đầu một
 session. Nếu bạn chỉ cài đúng một runtime thì phải là runtime này.
 
 Đây cũng là nơi tôi đặt hai hook quan trọng nhất, vì hai cơ chế tôi cần chỉ tồn tại ở đây. Thứ
@@ -25,7 +25,7 @@ chế đó, nên `hook-contract-reload.py` chỉ đăng ký ở Claude Code, và
 Runtime tuỳ chọn, và lý do nó có mặt là cross-vendor arm. Không có vendor thứ hai thì arm đó
 không tồn tại, và arm là cơ chế có sản lượng bắt lỗi cao nhất trong hệ này.
 
-Ba thư mục mang phần Codex: `.codex/profiles/` là template khởi động pane cho từng vai,
+Ba thư mục mang phần Codex: `.codex/profiles/` là template khởi động pane cho từng role,
 `.codex/agents/` là hai helper agent chỉ đọc, và `.codex/hooks.json` đăng ký git guard. Chỗ cần
 để ý là thư mục cuối: Codex duyệt định nghĩa hook project-local theo hash, nên nếu chưa có
 quyết định trust thì guard vẫn nằm đó, vẫn trông như đã cài, và bị bỏ qua. Doctor kiểm phần
@@ -33,10 +33,10 @@ quyết định trust thì guard vẫn nằm đó, vẫn trông như đã cài, 
 
 ## opencode
 
-Runtime thứ ba cho dispatch vai, adapter nằm ở `.opencode/agents/`. Nó có mặt để
+Runtime thứ ba cho dispatch role, adapter nằm ở `.opencode/agents/`. Nó có mặt để
 `.agents/orchestrator.md` không bị kẹt vào đúng một vendor.
 
-Tôi nói rõ chỗ nó yếu hơn hai runtime kia: một Builder chạy OpenCode không có hook tương đương
+OpenCode yếu hơn hai runtime kia ở một chỗ: một Builder chạy OpenCode không có hook tương đương
 `hook-git-guard.py`. Đó là một trong hai lý do luật thứ tự dọn dẹp phải nằm trong
 `dispatch-ticket/CLEANUP.md` trước, trong hook sau. Lý do còn lại là cả Claude lẫn Codex cũng
 có thể chạy với hook tắt.
@@ -68,13 +68,13 @@ thể ngắt. Độ trễ phát hiện xấu nhất là 60 giây, không phải 
 
 ## mattpocock-skills
 
-Toàn bộ lớp craft được thuê từ đây, floor `>= 1.2.3`, cài dưới dạng plugin. `wayfinder`,
+Toàn bộ phần craft được thuê từ đây, floor `>= 1.2.3`, cài dưới dạng plugin. `wayfinder`,
 `grill-with-docs`, `to-spec`, `to-tickets`, `implement` và `code-review` là các bước có người
 gọi; `grilling`, `tdd`, `codebase-design`, `domain-modeling`, `research`, `prototype`,
-`diagnosing-bugs`, `wizard` và `resolving-merge-conflicts` là lớp craft được model tự gọi khi
+`diagnosing-bugs`, `wizard` và `resolving-merge-conflicts` là phần craft model tự gọi khi
 cần.
 
-Lợi ích của việc cài một lần là cả đội có craft, vì skill model-invoked không cần đấu dây gì
+Lợi ích của việc cài một lần là cả team có craft, vì skill model-invoked không cần đấu dây gì
 thêm. Cái giá là `check-requirements.sh` fail cứng khi thiếu nó, và địa chỉ
 `/mattpocock-skills:<name>` nằm rải khắp các contract. Đổi method là viết lại contract chứ
 không phải sửa một dòng config.
@@ -93,15 +93,15 @@ label.
 
 ## scripts
 
-Phần Python và Bash tôi tự viết. Ba script đại diện cho ba kiểu: `hook-git-guard.py` là lớp
-chặn chạy trong lúc quyền còn đang được quyết; `herdr-watchdog.sh` chạy nền suốt session và phải
+Phần Python và Bash tôi tự viết. Ba script đại diện cho ba loại: `hook-git-guard.py` chặn
+trong lúc quyền còn đang được quyết; `herdr-watchdog.sh` chạy nền suốt session và phải
 sống trước mọi dispatch; `ledger-index.sh` chạy sau khi payload đổi, không phải sau khi công
 việc đổi.
 
 Luật tôi rút ra: mỗi script phải có một khoảnh khắc gọi và một người sở hữu. Script thiếu một
 trong hai là script không ai chạy cho tới khi mọi chuyện đã hỏng. Bản 2.5.0 là bằng chứng
 ngược: nó ship adapter mang id ticket thật của một dự án khác, một index đã cũ, và hai contract
-vượt hạn mức chữ. Ba lớp lỗi, không lớp nào nhìn thấy được bằng cách đọc, tất cả do một giờ làm
+vượt hạn mức chữ. Ba loại lỗi, không loại nào nhìn thấy được bằng cách đọc, tất cả do một giờ làm
 việc cẩn thận trước đó sinh ra. Bản 2.5.1 là đúng ba cái vá đó và không có gì khác.
 
 ## archify
@@ -110,7 +110,7 @@ Mọi diagram trên trang này được dựng bằng `archify`. Nguồn là JSO
 `content/site/diagrams/<slug>.<type>.json`, đầu ra là HTML đứng độc lập cùng SVG nhúng, nên một
 hình vừa bấm được trên trang vừa đọc được ngoài trang.
 
-Tôi chọn cách mô tả diagram bằng dữ liệu thay vì vẽ tay vì trang này song ngữ. Mỗi diagram có
+Diagram được mô tả bằng dữ liệu thay vì vẽ tay, vì trang này song ngữ. Mỗi diagram có
 một bản dịch ở `content/site/diagrams/vi/`, dịch title, label, nhãn edge, tên lane và note, giữ
-nguyên tên vai, tên skill, lệnh, mã AST và tên file. Vẽ tay hai lần thì hai bản sẽ lệch nhau ở
+nguyên tên role, tên skill, lệnh, mã AST và tên file. Vẽ tay hai lần thì hai bản sẽ lệch nhau ở
 lần sửa thứ ba.

@@ -1,6 +1,6 @@
 ---
 title: "Astragentic"
-description: "Why I built this coordination layer, what I chose, and what each choice costs."
+description: "Why I built this coordination, what I chose, and what each choice costs."
 acts:
   - id: act-1
     eyebrow: "AST-016 · promoted 2026-07-11"
@@ -18,13 +18,13 @@ acts:
 
 ## act-1
 
-I ran three sessions against one checkout and nothing threw an error. An afternoon of work
-vanished, and it took me another afternoon to find the cause.
+AST-016: three sessions on one checkout, no error thrown, one working session lost and another
+spent finding the cause.
 
-I took the blunt fix: every spawned agent that can run state-changing git gets its own
-checkout, including the ones that only read. The read-only exemption was the assumption I had
-believed, and it was wrong. The cost is one more worktree on disk per Builder and a few seconds
-of setup. I pay it, because that afternoon cost more.
+The fix: every spawned agent that can run state-changing git gets its own checkout, including
+the ones that only read. The read-only exemption was the assumption that caused this. The cost
+is one more worktree on disk per Builder and a few seconds of setup, cheap next to a lost
+session.
 
 ## act-2
 

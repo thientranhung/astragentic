@@ -16,8 +16,8 @@ must never answer on your behalf.
 
 ## runtime
 
-Three runtimes, and which role runs on which one is a row in `.agents/orchestrator.md`, your own
-file, never overwritten by an upgrade. Claude Code is the root runtime: all five roles run here.
+Three runtimes, and which runtime the agent in each role runs on is a row in `.agents/orchestrator.md`, your own
+file, never overwritten by an upgrade. Claude Code is the root runtime: agents in all five roles run here.
 Codex and OpenCode are optional, and they are present for specific reasons rather than to make a
 list longer.
 
@@ -29,7 +29,7 @@ The cost of standing on three runtimes is that enforcement is uneven. `hook-git-
 registered on Claude Code through `.claude/settings.json` and on Codex through
 `.codex/hooks.json`. An OpenCode Builder has no equivalent hook, and either Claude or Codex may
 be running with hooks disabled or untrusted. So the cleanup-ordering rule has to live in the
-contract first and in the hook second. The hook is a second layer, not a fence.
+contract first and in the hook second. The hook comes after, not a fence.
 
 ## harness
 
