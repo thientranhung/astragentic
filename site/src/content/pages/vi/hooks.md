@@ -53,7 +53,7 @@ này chịu lực. Tài nguyên buộc vào một thư mục, theo cwd hoặc th
 hoặc theo cái tên project tự tính từ nó, không còn khớp được sau khi thư mục biến mất, nên bước
 này phải chạy trước `git worktree remove`, không bao giờ sau (AST-100, AST-101).
 
-**Số đo.** Hook này không còn được kích hoạt. Đo ngày 2026-08-20 bằng chính log tôi thêm vào để
+**Bằng chứng.** Hook này không còn được kích hoạt. Đo ngày 2026-08-20 bằng chính log tôi thêm vào để
 trả lời câu hỏi đó. Ba worktree bị gỡ sau lần ghi cuối của log, trong đó có một lệnh `git
 worktree remove` trần, và số sự kiện `WorktreeRemove` ghi được là không. Trong khi đó hook
 `SubagentStop` nằm cùng file, cùng session, ghi được 27 sự kiện trong cùng cửa sổ thời gian ấy.

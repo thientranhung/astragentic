@@ -35,7 +35,7 @@ settled went straight into code, and got settled at the most expensive point in 
 
 I moved the loop to the front and cut what was left into seven named stages. The seven stages
 are named so that every measured failure attaches to exactly one of them; without names, the
-next failure lands somewhere nobody can point at. The cost is a longer pipeline, and three of
+next failure lands somewhere nobody can point at. The trade-off: a longer pipeline, and three of
 the seven are still empty because I have not measured a failure in them.
 
 ## act-3

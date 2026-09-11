@@ -25,7 +25,7 @@ What makes this different from a normal PR review is that it deliberately runs o
 milestone**. The problem it answers is a loop: an earlier version of this method let review
 rounds repeat.
 
-**Measurement.** A project running the earlier version measured 5 to 14 rounds per milestone,
+**Evidence.** A project running the earlier version measured 5 to 14 rounds per milestone,
 much of that the loop re-reviewing its own earlier fixes.
 
 So this skill treats Rin's findings as advice Thomas classifies once. Design-level blockers go to

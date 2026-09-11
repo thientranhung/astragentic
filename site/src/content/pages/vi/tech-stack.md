@@ -85,7 +85,7 @@ Toàn bộ phần craft được thuê từ đây, floor `>= 1.2.3`, cài dướ
 Lợi ích của việc cài một lần là cả team có craft, vì skill model-invoked không cần đấu dây gì
 thêm.
 
-**Cái giá.** `check-requirements.sh` fail cứng khi thiếu nó, và địa chỉ
+**Đánh đổi.** `check-requirements.sh` fail cứng khi thiếu nó, và địa chỉ
 `/mattpocock-skills:<name>` nằm rải khắp các contract. Đổi method là viết lại contract chứ không
 phải sửa một dòng config.
 
@@ -99,7 +99,7 @@ Thứ cố định không phải adapter mà là `.agents/tracker-contract.md`: 
 bất kỳ tracker nào. Nhờ vậy Thomas đọc `docs/agents/issue-tracker.md`, biết dự án này dùng
 adapter nào, rồi lái y hệt nhau bất kể backend.
 
-**Cái giá.** Đã nêu ở trang vì sao: mỗi backend mang theo cái bẫy riêng, và GitHub Issues không
+**Đánh đổi.** Đã nêu ở trang vì sao: mỗi backend mang theo cái bẫy riêng, và GitHub Issues không
 có trường status thật nên status phải nằm trong label.
 
 ## scripts
@@ -113,7 +113,7 @@ Phần Python và Bash tôi tự viết. Ba script đại diện cho ba loại:
 Luật tôi rút ra: mỗi script phải có một khoảnh khắc gọi và một người sở hữu. Script thiếu một
 trong hai là script không ai chạy cho tới khi mọi chuyện đã hỏng.
 
-**Cái giá.** Bản 2.5.0 là bằng chứng ngược: nó ship adapter mang id ticket thật của một dự án
+**Đánh đổi.** Bản 2.5.0 là bằng chứng ngược: nó ship adapter mang id ticket thật của một dự án
 khác, một index đã cũ, và hai contract vượt hạn mức chữ. Ba loại lỗi, không loại nào nhìn thấy
 được bằng cách đọc, tất cả do một giờ làm việc cẩn thận trước đó sinh ra. Bản 2.5.1 là đúng ba
 cái vá đó và không có gì khác.

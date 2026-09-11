@@ -87,7 +87,7 @@ The entire craft part is rented from here, floor `>= 1.2.3`, installed as a plug
 The benefit of installing it once is that the whole team gets the craft, because model-invoked
 skills need no wiring.
 
-**Cost.** `check-requirements.sh` fails hard without it, and the address
+**Trade-off.** `check-requirements.sh` fails hard without it, and the address
 `/mattpocock-skills:<name>` is spread across every contract. Changing method means rewriting
 contracts, not editing one config line.
 
@@ -102,7 +102,7 @@ What is fixed is not the adapter but `.agents/tracker-contract.md`: the five thi
 needs of any tracker. So Thomas reads `docs/agents/issue-tracker.md`, learns which adapter this
 project uses, and drives it identically regardless of backend.
 
-**Cost.** Stated on the why page: every backend brings its own traps, and GitHub Issues has no
+**Trade-off.** Stated on the why page: every backend brings its own traps, and GitHub Issues has no
 real status field, so status has to live in a label.
 
 ## scripts
@@ -117,7 +117,7 @@ The Python and Bash I wrote myself. Three scripts stand for three kinds:
 The rule I took from it: every script needs a calling moment and an owner. A script missing
 either one is a script nobody runs until something has already gone wrong.
 
-**Cost.** Release 2.5.0 is the evidence against: it shipped adapters naming another project's
+**Trade-off.** Release 2.5.0 is the evidence against: it shipped adapters naming another project's
 real ticket ids, a stale index, and two contracts over their word budget. Three classes of
 defect, none of them visible by reading, all introduced by careful work an hour earlier. Release
 2.5.1 is exactly those three fixes and nothing else.

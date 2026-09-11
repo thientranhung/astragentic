@@ -12,7 +12,7 @@ I split it into two steps because a copy-over installer always overwrites the wr
 cannot tell what belongs to the harness from what belongs to the project and what the owner
 owns.
 
-**Cost.** You run one more agent session and read what it intends to do, instead of typing one
+**Trade-off.** You run one more agent session and read what it intends to do, instead of typing one
 command and walking away.
 
 ## brownfield
@@ -28,4 +28,4 @@ These four skills exist because real repos are rarely clean.
 - **`untangle`.** For repos with no module boundaries left to improve, where a clean restructure
   would arrive as one diff nobody can review.
 
-**Cost.** Shared across all four: this is work you finish before the first ticket can run.
+**Trade-off.** Shared across all four: this is work you finish before the first ticket can run.

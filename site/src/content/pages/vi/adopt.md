@@ -10,7 +10,7 @@ repo của bạn thực hiện, sau khi nó đọc build command, agent config v
 Tôi tách thành hai bước vì một bộ cài chép đè sẽ luôn đè nhầm file. Nó không phân biệt
 được thứ thuộc về harness, thứ thuộc về project và thứ do owner sở hữu.
 
-**Cái giá.** Bạn phải chạy thêm một session agent và đọc kỹ những gì nó định làm, thay vì gõ một
+**Đánh đổi.** Bạn phải chạy thêm một session agent và đọc kỹ những gì nó định làm, thay vì gõ một
 lệnh rồi bỏ đi.
 
 ## brownfield
@@ -26,4 +26,4 @@ Bốn skill dưới đây có mặt vì repo thật hiếm khi sạch.
 - **`untangle`.** Dành cho repo không còn module boundary nào để cải thiện, nơi một cú restructure
   sạch sẽ tạo ra một diff không ai review nổi.
 
-**Cái giá.** Chung cho cả bốn: đây là việc phải làm xong trước khi ticket đầu tiên chạy được.
+**Đánh đổi.** Chung cho cả bốn: đây là việc phải làm xong trước khi ticket đầu tiên chạy được.

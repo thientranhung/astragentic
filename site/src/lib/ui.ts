@@ -56,12 +56,11 @@ export const UI = {
   close: { vi: 'Đóng', en: 'Close' },
 
   /* ── diagrams ── */
-  explore: { vi: 'Explore ↗', en: 'Explore ↗' },
-  /** The explore pages are archify's own standalone build: they open in a new tab and
-   *  their chrome is English even when the labels are Vietnamese. Say so before the
-   *  click, not after (PRD §4). */
+  explore: { vi: 'Xem sơ đồ đầy đủ ↗', en: 'Open the full diagram ↗' },
+  /** The explore pages are archify's own standalone build and open in a new tab. The
+   *  note used to add that their chrome is English; the owner cut that as noise. */
   exploreNote: {
-    vi: 'mở tab mới · giao diện tiếng Anh',
+    vi: 'mở tab mới',
     en: 'opens in a new tab',
   },
   /** Replaces archify's `aria-label="Focus …"` on a node that navigates. */

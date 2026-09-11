@@ -214,11 +214,11 @@ export const WHY: WhyCard[] = [
   {
     id: 'why-mattpocock',
     question: {
-      vi: 'mattpocock-skills là phương pháp Astragentic đi thuê',
-      en: 'mattpocock-skills is the method Astragentic rents',
+      vi: 'Phương pháp phát triển đến từ mattpocock-skills',
+      en: 'The engineering method comes from mattpocock-skills',
     },
     answer: {
-      vi: 'Phương pháp này lặp ở đầu quy trình, chốt quyết định trước khi viết code. Astragentic không viết lại phần đó, chỉ bọc điều phối quanh nó.',
+      vi: 'Phương pháp này hỏi cho hết ở đầu quy trình, nên quyết định được chốt trước khi viết code. Astragentic không viết lại phần đó, chỉ bọc điều phối quanh nó.',
       en: 'This method loops at the start of the process and settles decisions before code is written. Astragentic does not rewrite that part; it wraps coordination around it.',
     },
   },

@@ -54,7 +54,7 @@ load-bearing. Resources bound to a directory, by cwd or by a label derived from 
 name the project computed from it, cannot be matched once the directory is gone, so this has to
 run before `git worktree remove` and never after (AST-100, AST-101).
 
-**Measurement.** This hook is dormant. Measured 2026-08-20 with the very logging I added to
+**Evidence.** This hook is dormant. Measured 2026-08-20 with the very logging I added to
 answer the question. Three worktrees were removed after the log's last write, one of them by a
 plain `git worktree remove`, and the number of `WorktreeRemove` events recorded was zero.
 Meanwhile the `SubagentStop` hook in the same file and the same session logged 27 events in that

@@ -22,8 +22,8 @@ AST-016: ba session chạy trên cùng một checkout, không lỗi nào đượ
 mất trắng và thêm một buổi nữa để tìm nguyên nhân.
 
 Cách chữa thô nhất: mọi agent được spawn mà có quyền chạy git đổi trạng thái đều phải có
-checkout riêng, kể cả agent chỉ đọc. Ngoại lệ "chỉ đọc" là giả định gây ra sự cố này. Cái giá
-là mỗi Builder tốn thêm một worktree trên đĩa và vài giây setup, rẻ hơn nhiều so với một buổi
+checkout riêng, kể cả agent chỉ đọc. Ngoại lệ "chỉ đọc" là giả định gây ra sự cố này. Đánh
+đổi: mỗi Builder tốn thêm một worktree trên đĩa và vài giây setup, rẻ hơn nhiều so với một buổi
 làm việc mất trắng.
 
 ## act-2
@@ -35,7 +35,7 @@ mới chốt ở khâu tốn kém nhất của quy trình.
 
 Tôi đẩy vòng lặp lên đầu quy trình và cắt phần còn lại thành bảy stage có tên. Bảy stage có
 tên để mỗi lỗi đo được gắn vào đúng một stage; không có tên thì lần sau lỗi rơi vào chỗ không
-ai chỉ ra được. Cái giá là quy trình dài hơn, và ba trong bảy stage vẫn trống vì tôi chưa đo
+ai chỉ ra được. Đánh đổi: quy trình dài hơn, và ba trong bảy stage vẫn trống vì tôi chưa đo
 được lỗi nào ở đó.
 
 ## act-3

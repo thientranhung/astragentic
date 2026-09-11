@@ -25,7 +25,7 @@ Codex is there to be a witness. The cross-vendor arm needs a model from a differ
 read the diff back, so with one runtime that arm does not exist. OpenCode is a third option for
 the Builder role when you want it.
 
-**Cost.** Standing on three runtimes makes enforcement uneven. `hook-git-guard.py` is registered
+**Trade-off.** Standing on three runtimes makes enforcement uneven. `hook-git-guard.py` is registered
 on Claude Code through `.claude/settings.json` and on Codex through `.codex/hooks.json`. An
 OpenCode Builder has no equivalent hook, and either Claude or Codex may be running with hooks
 disabled or untrusted. So the cleanup-ordering rule has to live in the contract first and in the
@@ -48,7 +48,7 @@ Each role has two files, and where a rule sits matters more than what it says.
 is the full contract, and it enters the session through the Read tool, so it lives in context as
 a tool result.
 
-**Measurement.** I measured this on one long session that compacted once: the four lines in the
+**Evidence.** I measured this on one long session that compacted once: the four lines in the
 system prompt were obeyed all session, every rule outside it was violated, and none of the
 violations was noticed until the owner asked. The correlation was total. That is not an attention
 failure, it is the context budget behaving exactly as built. So those four lines stay fixed at
@@ -71,7 +71,7 @@ compacts, and nobody finds out that it went.
   sole writer in it. AST-016 measured the opposite: agents sharing one checkout move HEAD under
   each other, and even a read-only reviewer managed to `git switch` somebody else's checkout.
 
-**Cost.** Three external dependencies: a tracker you have to configure, herdr you have to
+**Trade-off.** Three external dependencies: a tracker you have to configure, herdr you have to
 install, and disk for every worktree.
 
 ## project
@@ -92,7 +92,7 @@ one thing every worktree can allocate: processes rooted in it. Everything else b
 project: a database, a port registration, a container, a broker, a lease on a shared cluster. The
 harness cannot name any of those without naming one project's stack.
 
-**Measurement.** For four releases it did exactly that: a compose label and a broker process
+**Evidence.** For four releases it did exactly that: a compose label and a broker process
 hardwired at five separate call sites. A project on a different stack read "cleanup exists" and
 released nothing. Measured downstream in one night: 43 orphaned processes, 3,405 leftover
 databases taking 25 GB, load average 123, one Builder killed by the OS.

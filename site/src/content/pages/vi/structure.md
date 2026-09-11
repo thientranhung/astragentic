@@ -24,7 +24,7 @@ Codex có mặt để làm nhân chứng. Cross-vendor arm cần một model c�
 nếu chỉ có một runtime thì arm đó không tồn tại. OpenCode là lựa chọn thứ ba cho role Builder khi
 bạn cần.
 
-**Cái giá.** Dựa trên ba runtime khiến enforcement không đều nhau. `hook-git-guard.py` được đăng
+**Đánh đổi.** Dựa trên ba runtime khiến enforcement không đều nhau. `hook-git-guard.py` được đăng
 ký ở Claude Code qua `.claude/settings.json` và ở Codex qua `.codex/hooks.json`. Một Builder chạy
 OpenCode không có hook tương đương, và cả Claude lẫn Codex đều có thể chạy với hook tắt hoặc chưa
 được trust. Vì vậy luật thứ tự dọn dẹp phải nằm trong contract trước, trong hook sau. Hook đứng
@@ -46,7 +46,7 @@ Mỗi role có hai file, và chỗ đặt luật quan trọng hơn nội dung lu
 là system prompt, chỉ mang bốn dòng. `.agents/roles/<role>.md` là contract đầy đủ, vào session
 qua tool Read nên nó nằm trong context như một tool result.
 
-**Số đo.** Tôi đo được điều này trong một session dài có compact đúng một lần: bốn dòng trong
+**Bằng chứng.** Tôi đo được điều này trong một session dài có compact đúng một lần: bốn dòng trong
 system prompt được tuân đúng cả session, còn mọi luật nằm ngoài nó đều bị vi phạm, và không vi
 phạm nào được phát hiện cho tới lúc chủ dự án hỏi. Tương quan là tuyệt đối. Đó không phải chuyện
 agent lơ đãng, đó là budget context hoạt động đúng như thiết kế. Vì vậy bốn dòng đó cố định ở
@@ -69,7 +69,7 @@ context của một session sẽ biến mất lúc session đó compact, và kh�
   bị người kia kéo đi, và kể cả một reviewer chỉ đọc cũng `git switch` được checkout của người
   khác.
 
-**Cái giá.** Ba dependency ngoài: một tracker phải cấu hình, một herdr phải cài, và disk cho mỗi
+**Đánh đổi.** Ba dependency ngoài: một tracker phải cấu hình, một herdr phải cài, và disk cho mỗi
 worktree.
 
 ## project
@@ -89,7 +89,7 @@ mọi worktree đều cấp phát, là tiến trình có cwd nằm trong đó. M
 database, port đã đăng ký, container, broker, lease trên cluster dùng chung. Harness không thể
 gọi tên bất kỳ thứ nào trong số đó mà không gọi tên stack của đúng một dự án.
 
-**Số đo.** Suốt bốn release nó đã làm đúng chuyện đó: một compose label và một tiến trình broker
+**Bằng chứng.** Suốt bốn release nó đã làm đúng chuyện đó: một compose label và một tiến trình broker
 được hardcode ở năm chỗ gọi khác nhau. Một project chạy stack khác đọc thấy dòng chữ "đã có
 cleanup" rồi không giải phóng gì cả. Đo được ở downstream trong một đêm: 43 tiến trình mồ côi,
 3.405 database thừa chiếm 25 GB, load average 123, một Builder bị hệ điều hành giết.

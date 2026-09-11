@@ -17,7 +17,7 @@ bước nào hỏi có bao nhiêu Builder đang chạy.
 Tôi sửa bằng cách cho frontier query một mục tiêu chứ không chỉ một trigger: sau mỗi lần
 merge, router phải hỏi nên claim thêm bao nhiêu ticket, không chỉ hỏi ticket nào claim được.
 
-**Cái giá.** Router bận hơn và thỉnh thoảng claim quá tay. Tôi chấp nhận đánh đổi đó, vì một slot
+**Đánh đổi.** Router bận hơn và thỉnh thoảng claim quá tay. Tôi chấp nhận đánh đổi đó, vì một slot
 ngồi không thì không phát ra tín hiệu nào.
 
 ## AST-097
@@ -30,7 +30,7 @@ Thứ cứu được tình huống này không phải protocol, mà là artifact
 có thêm đúng một dòng comment. Từ đó tôi bỏ hoàn toàn niềm tin vào trạng thái pane, và mỗi
 chữ `done` phải đọc diff trước khi kết luận.
 
-**Cái giá.** Mỗi lần đóng ticket tốn thêm một vòng đọc.
+**Đánh đổi.** Mỗi lần đóng ticket tốn thêm một vòng đọc.
 
 ## AST-092
 
@@ -42,7 +42,7 @@ Tôi đặt chốt chặn ngay tại bước nguy hiểm thay vì trông vào vi
 Cleanup phải đọc `git status` của worktree trước khi xoá; thấy dirty là dừng và đưa lại cho
 người.
 
-**Cái giá.** Worktree mồ côi tồn đọng và thỉnh thoảng phải dọn tay. So với mất một ngày làm việc
+**Đánh đổi.** Worktree mồ côi tồn đọng và thỉnh thoảng phải dọn tay. So với mất một ngày làm việc
 thì giá đó rẻ.
 
 ## AST-015
@@ -54,7 +54,7 @@ review same-vendor đọc qua và cho pass. Vòng cross-vendor bắt được v�
 gian. Hai lăng kính bắt hai loại lỗi khác nhau, và loại mà same-vendor bỏ sót là loại đắt nhất
 khi lọt.
 
-**Cái giá.** Một giá trị đã chạm vào file được track thì coi như cháy và phải rotate. Phía sau
+**Đánh đổi.** Một giá trị đã chạm vào file được track thì coi như cháy và phải rotate. Phía sau
 không có phương án nào rẻ hơn.
 
 ## AST-074
@@ -67,7 +67,7 @@ Không check nào chỉ nhìn tracker mà bắt được lỗi này, vì một t
 chính nó. Tracker phải được đối chiếu với Git sau mỗi lần merge, thay vì tự xác nhận chính
 nó.
 
-**Cái giá.** Thêm một bước reconcile không ai vui khi chạy, và phần lớn thời gian nó không tìm ra
+**Đánh đổi.** Thêm một bước reconcile không ai vui khi chạy, và phần lớn thời gian nó không tìm ra
 gì.
 
 ## AST-056
@@ -81,5 +81,5 @@ Một worktree cho mỗi Builder chỉ giải quyết va chạm ở checkout. N�
 chỗ tìm ra muộn và phải xử tay. Vì vậy ticket phải khai write-set, và những ticket có
 write-set giao nhau bị xếp tuần tự kể cả khi không có gì buộc chúng theo thứ tự.
 
-**Cái giá.** Số ticket chạy song song giảm xuống, đúng thứ mà cả hệ thống này tồn tại để tăng
+**Đánh đổi.** Số ticket chạy song song giảm xuống, đúng thứ mà cả hệ thống này tồn tại để tăng
 lên.
