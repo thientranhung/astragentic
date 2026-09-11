@@ -102,12 +102,15 @@ silent no-op is indistinguishable from a successful release.
 
 ## good-parts
 
-### An append-only failure ledger
+### The defect ledger: how the harness learns
 
-Every time something breaks I write a line into an append-only file, each one numbered
-`AST-<n>`, never renumbered and never deleted. There are {{meta.total}} lines today, and
-{{meta.cited}} of them are bound to a file that makes someone act differently now. The rest stay
-in the table rather than being filtered out.
+Every time something breaks, the incident is written as one line in an append-only file, with a
+fixed id, never renumbered and never deleted. A line that yields a rule puts that rule into a file
+agents actually read, so the whole team behaves differently next time. A line that yields nothing
+yet stays in the table rather than being filtered out.
+
+This is where the harness learns from its own failures: a failure does not fade with memory, it
+becomes either a rule or an open record.
 
 ### The cross-vendor arm binds to one SHA
 
@@ -131,6 +134,5 @@ collision after both have written code, and it needs no lock file and no central
 ### Review runs exactly one round
 
 Every ticket passes three layers exactly once: `code-review` on both axes, Standards and Spec;
-then the simplify pass; then the cross-vendor arm. The prior system measured 5 to 14 review
-rounds per ticket, with most of the later ones clearing up what the earlier ones left behind. I
-removed the loop and kept the weight.
+then the simplify pass; then the cross-vendor read. Three bounded passes keep the rigour without
+letting the number of rounds multiply.

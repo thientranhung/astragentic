@@ -99,19 +99,20 @@ reap tiến trình. Một project không cấp phát gì ngoài git thì vẫn p
 
 ## good-parts
 
-### Ledger lỗi chỉ thêm, không sửa
+### Ledger lỗi: cơ chế tự học của harness
 
-Mỗi lần có thứ hỏng, tôi ghi một dòng vào một file chỉ thêm, mỗi dòng một mã `AST-<n>` không
-bao giờ được đánh số lại hay xoá đi. Hiện có {{meta.total}} dòng, và {{meta.cited}} trong số
-đó đã buộc vào một file đang bắt ai đó làm khác đi hôm nay. Phần còn lại vẫn nằm nguyên trong
-bảng chứ không bị lọc đi.
+Mỗi lần có thứ hỏng, sự cố được ghi một dòng vào một file chỉ thêm, có mã cố định, không bao giờ
+đánh số lại hay xoá đi. Dòng nào rút ra được luật thì luật đó đi vào một file mà agent thật sự
+đọc, nên lần sau cả team làm khác đi. Dòng chưa rút ra được gì vẫn nằm nguyên đó chứ không bị lọc.
+
+Đây là chỗ harness học từ chính lỗi của nó: lỗi không biến mất theo trí nhớ, nó thành luật hoặc
+thành hồ sơ chờ.
 
 ### Cross-vendor arm chốt trên đúng SHA
 
-Sau khi Claude viết xong, một model của vendor khác đọc lại diff và để lại receipt buộc vào
-đúng SHA nó đã đọc. Lý do không phải là đa dạng cho vui: một lần review cùng vendor đã cho lọt
-một defect đem secret đang dùng thật và PII vào file được track, và chính vòng cross-vendor bắt
-được nó ở mức P1.
+Sau khi Claude viết xong, một model của hãng khác đọc lại diff và để lại receipt buộc vào đúng
+SHA nó đã đọc. Lý do không phải là đa dạng cho vui: một model đọc lại diff của chính nó thì đọc
+lại luôn giả định của nó, còn model của hãng khác không mang giả định đó.
 
 ### Tracker là substrate giữ trạng thái
 
@@ -128,5 +129,5 @@ không cần lock file hay dispatcher trung tâm nào.
 ### Review chạy đúng một vòng
 
 Mỗi ticket đi qua ba tầng đúng một lượt: `code-review` trên hai trục Standards và Spec, rồi
-simplify pass, rồi cross-vendor arm. Hệ trước đó đo được 5 tới 14 vòng review cho một ticket,
-phần lớn vòng sau dùng để dọn phần vòng trước để lại. Tôi bỏ vòng lặp và giữ nguyên độ nặng.
+simplify pass, rồi lượt đọc chéo của hãng khác. Ba tầng có biên rõ, nên độ chặt giữ nguyên mà số
+vòng không tự nhân lên.
