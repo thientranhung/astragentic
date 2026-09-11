@@ -13,9 +13,6 @@ The five parts below are the five largest design decisions in that scaffold: the
 evidence on record, and the trade-off. These are my choices on my own projects, not a template you
 have to follow.
 
-Codes like `AST-057` are incident numbers from the project's own defect log. Each one is a failure
-that was measured, dated and fixed; the [Lessons](/failures) page tells the six worth reading.
-
 ## why-astragentic
 
 A coding agent today can carry the build: it takes work, writes code, runs tests, returns results.
@@ -79,7 +76,7 @@ Those two comment rows are where the way of working changes most. The agent no l
 one specific person: it asks on the ticket, whoever on the team can answer does, and it carries on.
 The AI works as a member of the group rather than a tool you have to sit and watch.
 
-**Evidence.** On a real project (`AST-057`), one ticket looked blocked for hours after both of its
+**Evidence.** On a real project, one ticket looked blocked for hours after both of its
 blockers had merged, and four tickets wore a ready label while still blocked. The list of work that
 can start now, called the frontier, was computed correctly but existed only in the agent's
 context. So the contract carries both halves: once
@@ -99,17 +96,17 @@ They are not enough to coordinate a team. The four things missing share one trai
 goes wrong, nothing signals it.
 
 - **A shared checkout.** A subagent runs in the same worktree as its parent session, so several
-  agents drag each other's HEAD around. One measurement (`AST-016`) caught a read-only reviewer running `git switch` on
+  agents drag each other's HEAD around. I caught a read-only reviewer running `git switch` on
   someone else's checkout.
 - **A shared context.** A fork inherits its parent's whole context, including what nobody meant to
-  hand over. Once (`AST-006`), a fork inherited the parent's model, so a job meant for a cheap model ran on
-  the most expensive one. Another time (`AST-119`), a fork inside a Builder sent the
+  hand over. A fork once inherited the parent's model, so a job meant for a cheap model ran on
+  the most expensive one. Another time, a fork inside a Builder sent the
   end-of-work report, called a handback, to the dispatcher under the Builder's own name, and the
-  Builder never saw it. And (`AST-130`) a fork signed a
+  Builder never saw it. And a fork signed a
   `simplify(increment):` marker onto code it had just committed itself, in the permitted form.
 - **No tracker holding state.** A subagent's state lives in the parent session's context,
   disappears when the session compacts, and while it exists you cannot read it.
-- **No pane to look at.** One measurement (`AST-018`): a dispatch was narrated in words and never actually called. A
+- **No pane to look at.** A dispatch was narrated in words and never actually called. A
   pane in herdr can be counted; an in-process subagent cannot.
 - **No AI from another vendor.** A Claude subagent is still Claude, so there is no cross review.
 
@@ -160,9 +157,9 @@ while the author only reads the ticket. So the arm
 catches contradictions with the project's own declared standards, which the author can hardly see
 while working to the ticket.
 
-- **A defect slipped through the same-vendor round** (`AST-015`): it put a live secret and buyer
+- **A defect slipped through the same-vendor round**: it put a live secret and buyer
   PII into a tracked file. The other vendor's pass caught it and filed it as P1.
-- **Two lenses catch two classes of defect** (`AST-012`), so they run side by side rather than
+- **Two lenses catch two classes of defect**, so they run side by side rather than
   replace each other.
 - **One case on a large diff.** 6,904 added lines across 31 files went through a same-vendor read
   that missed three empty tests. A ticket-scoped read on a smaller diff caught a real deadlock the

@@ -13,9 +13,6 @@ Astragentic là một scaffold: bộ khung đã giải quyết sẵn những ph�
 Năm phần dưới đây là năm quyết định thiết kế lớn nhất của bộ khung: cơ chế, bằng chứng đo được,
 và đánh đổi. Đây là lựa chọn của tôi trên dự án của tôi, không phải khuôn mẫu bắt buộc.
 
-Những chỗ ghi mã dạng `AST-057` là số hiệu sự cố trong sổ lỗi của dự án. Mỗi mã ứng với một lần
-hỏng đã đo được, có ngày và có cách chữa; trang [Bài học](/vi/loi) kể sáu trường hợp đáng đọc nhất.
-
 ## why-astragentic
 
 Coding agent hôm nay đã đủ sức đảm nhận phần thi công: nhận việc, viết code, chạy test, trả kết
@@ -79,7 +76,7 @@ Hai dòng về comment là chỗ thay đổi cách làm việc rõ nhất. Agent
 người: nó đặt câu hỏi trên ticket, ai trong team trả lời được thì trả lời, rồi nó chạy tiếp. AI
 làm việc như một thành viên trong nhóm chứ không phải một công cụ bạn phải ngồi canh.
 
-**Bằng chứng.** Trên một dự án thật (`AST-057`), một ticket trông như đang bị chặn suốt nhiều giờ
+**Bằng chứng.** Trên một dự án thật, một ticket trông như đang bị chặn suốt nhiều giờ
 sau khi cả hai blocker đã merge, và bốn ticket đeo nhãn sẵn sàng trong lúc vẫn đang bị chặn. Danh
 sách việc làm được ngay, gọi là frontier, được tính đúng nhưng chỉ tồn tại trong context của agent.
 Vì vậy contract mang cả hai nửa: tính xong thì ghi câu trả lời ngược lại lên tracker, và không đọc
@@ -98,15 +95,15 @@ Chúng không đủ để điều phối một team. Bốn điều còn thiếu 
 có tín hiệu nào báo ra.
 
 - **Checkout dùng chung.** Subagent chạy trong cùng worktree với session cha, nên nhiều agent kéo
-  HEAD của nhau đi. Một lần đo (`AST-016`) bắt được một reviewer chỉ đọc đã `git switch` checkout của người khác.
+  HEAD của nhau đi. Tôi bắt được một reviewer chỉ đọc đã `git switch` checkout của người khác.
 - **Context dùng chung.** Một fork thừa kế nguyên context của cha, kèm cả những gì không ai định
-  trao. Một lần (`AST-006`), fork thừa kế cả model của cha, nên việc đáng chạy bằng model rẻ lại chạy bằng model
-  đắt nhất. Lần khác (`AST-119`), một fork bên trong Builder gửi báo cáo kết thúc việc, gọi là handback, cho dispatcher dưới đúng tên Builder,
-  và Builder không hề thấy. Và (`AST-130`) một fork ký marker `simplify(increment):` lên code do chính nó
+  trao. Có lần fork thừa kế cả model của cha, nên việc đáng chạy bằng model rẻ lại chạy bằng model
+  đắt nhất. Lần khác, một fork bên trong Builder gửi báo cáo kết thúc việc, gọi là handback, cho dispatcher dưới đúng tên Builder,
+  và Builder không hề thấy. Và một fork ký marker `simplify(increment):` lên code do chính nó
   vừa commit, đúng form được phép.
 - **Không có tracker giữ trạng thái.** Trạng thái của subagent nằm trong context của session cha,
   mất đi khi session compact, và trong lúc tồn tại thì bạn không đọc được.
-- **Không có pane để nhìn.** Một lần đo (`AST-018`): một lần dispatch chỉ được kể ra bằng chữ mà chưa từng được
+- **Không có pane để nhìn.** Có lần một lượt dispatch chỉ được kể ra bằng chữ mà chưa từng được
   gọi. Một pane trong herdr là thứ đếm được; một subagent trong tiến trình thì không.
 - **Không có AI của hãng khác.** Subagent của Claude vẫn là Claude, nên không có lượt review chéo.
 
@@ -153,9 +150,9 @@ OpenAI.
 Lượt đọc lại đó gọi là arm. Cơ chế thì đơn giản: arm đọc cả repository, còn tác giả chỉ đọc ticket. Nên arm bắt được mâu thuẫn với
 chính tiêu chuẩn dự án đã khai, điều người viết code khó nhận ra vì đang làm theo yêu cầu của ticket.
 
-- **Một defect lọt qua vòng cùng hãng** (`AST-015`): nó đem secret đang dùng thật và PII của người
+- **Một defect lọt qua vòng cùng hãng**: nó đem secret đang dùng thật và PII của người
   mua vào file được track. Lượt đọc của hãng khác bắt được và xếp P1.
-- **Hai lăng kính bắt hai loại defect khác nhau** (`AST-012`), nên chúng chạy song song chứ không
+- **Hai lăng kính bắt hai loại defect khác nhau**, nên chúng chạy song song chứ không
   thay thế nhau.
 - **Một ca trên diff lớn.** 6.904 dòng thêm mới trên 31 file đi qua lượt đọc cùng hãng bỏ sót ba
   test rỗng. Lượt đọc phạm vi ticket trên diff nhỏ hơn bắt được một deadlock thật mà bản vá của lượt
