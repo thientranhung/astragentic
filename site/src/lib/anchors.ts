@@ -203,12 +203,12 @@ export const WHY: WhyCard[] = [
   {
     id: 'why-not-subagents',
     question: {
-      vi: 'Subagent không phải chỗ đặt điều phối',
-      en: 'Subagents are not where coordination belongs',
+      vi: 'Subagent và agent team tốt trong một session; điều phối thì không nằm ở đó',
+      en: 'Subagents and agent teams are good inside one session; coordination is not',
     },
     answer: {
-      vi: 'Subagent dùng chung checkout và context với session cha, không có tracker giữ trạng thái, không có pane để nhìn. Khi một nhánh im lặng thì không còn chỗ nào đọc ra điều đó.',
-      en: 'Subagents share the parent session’s checkout and context, with no tracker holding state and no pane to look at. When a branch goes quiet there is nowhere left to read that from.',
+      vi: 'Astragentic vẫn dùng cả hai: subagent trong session Builder, agent team khi Thomas khảo sát. Nhưng chúng chạy ẩn trong tiến trình cha, nên không phải chỗ đặt điều phối cả team.',
+      en: 'Astragentic uses both: subagents inside a Builder session, agent teams when Thomas surveys. But they run hidden in the parent process, so they are not where a team’s coordination belongs.',
     },
   },
   {

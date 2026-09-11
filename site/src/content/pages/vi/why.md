@@ -89,31 +89,42 @@ chứ không phải bản ghi thụ động, nó lệch được với thực t�
 
 ## why-not-subagents
 
-Claude Code có subagent và agent team, và chúng chạy tốt cho việc bên trong một session.
+Claude Code có subagent và agent team. Cả hai chạy tốt bên trong một session, và Astragentic vẫn
+dùng chúng: Builder spawn subagent cho việc đọc và báo cáo, còn Thomas dùng cả hai khi cần khảo
+sát hay lên plan.
 
-Chúng không đủ để điều phối một team. Bốn điều còn thiếu có chung một đặc điểm: khi có lỗi, không
-có tín hiệu nào báo ra.
+Câu hỏi hay gặp là: đã có hai thứ đó thì cần gì thêm một bộ điều phối nữa.
+
+Ranh giới nằm ở phạm vi. Subagent và agent team điều phối công việc **bên trong một session**.
+Thứ một team cần là điều phối **qua nhiều session**, và quan sát được từng session một. Với cách
+làm việc tôi muốn, nhìn thấy agent đang làm gì, sai ở đâu, lệch hướng lúc nào, một tiến trình
+chạy ẩn không đủ.
+
+Khi đặt điều phối vào subagent, bốn điều dưới đây thiếu, và chúng thiếu theo cùng một kiểu: khi
+có lỗi, không có tín hiệu nào báo ra.
 
 - **Checkout dùng chung.** Subagent chạy trong cùng worktree với session cha, nên nhiều agent kéo
   HEAD của nhau đi. Tôi bắt được một reviewer chỉ đọc đã `git switch` checkout của người khác.
 - **Context dùng chung.** Một fork thừa kế nguyên context của cha, kèm cả những gì không ai định
   trao. Có lần fork thừa kế cả model của cha, nên việc đáng chạy bằng model rẻ lại chạy bằng model
-  đắt nhất. Lần khác, một fork bên trong Builder gửi báo cáo kết thúc việc, gọi là handback, cho dispatcher dưới đúng tên Builder,
-  và Builder không hề thấy. Và một fork ký marker `simplify(increment):` lên code do chính nó
-  vừa commit, đúng form được phép.
+  đắt nhất. Lần khác, một fork bên trong Builder gửi báo cáo kết thúc việc, gọi là handback, cho
+  dispatcher dưới đúng tên Builder, và Builder không hề thấy. Và một fork ký marker
+  `simplify(increment):` lên code do chính nó vừa commit, đúng form được phép.
 - **Không có tracker giữ trạng thái.** Trạng thái của subagent nằm trong context của session cha,
   mất đi khi session compact, và trong lúc tồn tại thì bạn không đọc được.
 - **Không có pane để nhìn.** Có lần một lượt dispatch chỉ được kể ra bằng chữ mà chưa từng được
   gọi. Một pane trong herdr là thứ đếm được; một subagent trong tiến trình thì không.
-- **Không có AI của hãng khác.** Subagent của Claude vẫn là Claude, nên không có lượt review chéo.
 
-Astragentic vẫn dùng fork bên trong Builder cho việc chỉ báo cáo, với một luật: fork phải có
-`isolation: "worktree"` và không được nhắn cho dispatcher.
+Và còn một điều nữa: subagent của Claude vẫn là Claude, nên không có lượt review chéo từ một hãng
+khác.
 
-**Đánh đổi.** Bạn phải cài herdr và cấu hình một tracker, hai dependency mà subagent không cần. Mỗi
-Builder tốn một worktree trên đĩa và vài giây setup. Mỗi lần dispatch tốn một lượt ghi và một lượt
-đọc trên tracker. Quy trình dài hơn, nhiều tên hơn phải nhớ. Tôi chọn trả giá đó vì lỗi im lặng đắt
-hơn nhiều.
+Vì vậy Astragentic để subagent làm đúng việc của nó, bên trong một session, với một luật: fork
+phải có `isolation: "worktree"` và không được nhắn cho dispatcher.
+
+**Đánh đổi.** Bạn phải cài herdr và cấu hình một tracker, hai dependency mà subagent không cần.
+Mỗi Builder tốn một worktree trên đĩa và vài giây setup. Mỗi lần dispatch tốn một lượt ghi và một
+lượt đọc trên tracker. Quy trình dài hơn, nhiều tên hơn phải nhớ. Tôi chọn trả giá đó vì lỗi im
+lặng đắt hơn nhiều.
 
 ## why-mattpocock
 

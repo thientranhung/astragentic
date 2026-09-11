@@ -90,31 +90,41 @@ tracker against git.
 
 ## why-not-subagents
 
-Claude Code has subagents and agent teams, and they work well for work inside one session.
+Claude Code has subagents and agent teams. Both work well inside one session, and Astragentic uses
+them: a Builder spawns subagents for reading and reporting, and Thomas uses both when it needs to
+survey or plan.
 
-They are not enough to coordinate a team. The four things missing share one trait: when something
-goes wrong, nothing signals it.
+The question that follows is why any coordination layer is needed on top of that.
+
+The line is scope. Subagents and agent teams coordinate work **inside one session**. What a team
+needs is coordination **across sessions**, with each session open to inspection. For the way I want
+to work, seeing what an agent is doing, where it goes wrong, when it drifts, a hidden process is
+not enough.
+
+Put the coordination inside subagents and four things go missing, all in the same way: when
+something goes wrong, nothing signals it.
 
 - **A shared checkout.** A subagent runs in the same worktree as its parent session, so several
   agents drag each other's HEAD around. I caught a read-only reviewer running `git switch` on
   someone else's checkout.
 - **A shared context.** A fork inherits its parent's whole context, including what nobody meant to
-  hand over. A fork once inherited the parent's model, so a job meant for a cheap model ran on
-  the most expensive one. Another time, a fork inside a Builder sent the
-  end-of-work report, called a handback, to the dispatcher under the Builder's own name, and the
-  Builder never saw it. And a fork signed a
-  `simplify(increment):` marker onto code it had just committed itself, in the permitted form.
+  hand over. A fork once inherited the parent's model, so a job meant for a cheap model ran on the
+  most expensive one. Another time, a fork inside a Builder sent the end-of-work report, called a
+  handback, to the dispatcher under the Builder's own name, and the Builder never saw it. And a
+  fork signed a `simplify(increment):` marker onto code it had just committed itself, in the
+  permitted form.
 - **No tracker holding state.** A subagent's state lives in the parent session's context,
   disappears when the session compacts, and while it exists you cannot read it.
-- **No pane to look at.** A dispatch was narrated in words and never actually called. A
-  pane in herdr can be counted; an in-process subagent cannot.
-- **No AI from another vendor.** A Claude subagent is still Claude, so there is no cross review.
+- **No pane to look at.** A dispatch was once narrated in words and never actually called. A pane
+  in herdr can be counted; an in-process subagent cannot.
 
-Astragentic still uses forks inside a Builder for report-only work, under one rule: the fork must
-have `isolation: "worktree"` and must never message the dispatcher.
+And one more: a Claude subagent is still Claude, so there is no cross review from another vendor.
 
-**Trade-off.** You have to install herdr and configure a tracker, two dependencies a subagent does not
-need. Each Builder costs a worktree on disk and a few seconds of setup. Each dispatch costs one
+So Astragentic lets subagents do what they are good at, inside one session, under one rule: the
+fork must have `isolation: "worktree"` and must never message the dispatcher.
+
+**Trade-off.** You have to install herdr and configure a tracker, two dependencies a subagent does
+not need. Each Builder costs a worktree on disk and a few seconds of setup. Each dispatch costs one
 write and one read on the tracker. The process is longer and there are more names to remember. I
 pay that because silent failures cost far more.
 
