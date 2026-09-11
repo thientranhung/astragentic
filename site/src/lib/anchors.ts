@@ -185,8 +185,8 @@ export const WHY: WhyCard[] = [
       en: 'Why Astragentic, when a coding agent already does the work?',
     },
     answer: {
-      vi: 'Coding agent đã là một đội outsource tốt; thứ còn tốn thời gian là trả lời và review chúng. Thomas nhận phần đó, bạn chỉ còn định hướng và quyết định.',
-      en: 'A coding agent is already a good outsourced team; what still costs time is answering and reviewing it. Thomas takes that part, leaving you direction and decisions.',
+      vi: 'Coding agent đã đảm nhận được phần thi công; thời gian còn dồn vào trả lời và review chúng. Thomas nhận phần đó để bạn tập trung định hướng và quyết định.',
+      en: 'A coding agent can carry the build; the time now goes to answering and reviewing it. Thomas takes that part so you can focus on direction and decisions.',
     },
   },
   {

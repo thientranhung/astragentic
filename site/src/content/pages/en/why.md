@@ -3,9 +3,9 @@ title: "Why"
 description: "Five questions about Astragentic's design: why it is needed, why the tracker holds the state, why subagents do not coordinate the team, why mattpocock-skills, why a second vendor reads the diff."
 ---
 
-Nobody works by someone else's philosophy. People take a reference and remake it their own way.
-So Astragentic does not impose a process; it offers a scaffold, a frame for running a team of AI
-agents as an orchestrator, and every part of it is there for you to remake.
+Every team works its own way, and no process can be imported intact. Astragentic is therefore
+designed as a scaffold: a frame for running a team of AI agents that has the hard parts settled,
+with every component open for you to adapt.
 
 The five questions below are the five largest design decisions in that scaffold. Every answer
 follows the same frame: a one-line answer, the mechanism, the measurement on record where there
@@ -13,33 +13,31 @@ is one, and the cost. Measurements carry an AST-xxx code and have a matching les
 
 ## why-astragentic
 
-A coding agent today is already a good outsourced team: it takes work, writes code, runs tests,
-returns results. The engineer is left with the guiding role. That role still costs time in two
-places: answering the questions an agent raises while it works, and reviewing the quality of what
-it returns.
+A coding agent today can carry the build: it takes work, writes code, runs tests, returns results.
+The engineer moves into a directing role. Two tasks still take most of the time: answering the
+questions an agent raises while it works, and reviewing the quality of what comes back.
 
-Both share one bottleneck. The agent's questions usually run deeper than the technical knowledge
-of the person receiving them, so to answer, that person takes the question to another AI and
-copies the answer back. Prompting one AI to answer another is no different from letting the AI
-settle it alone; the human in the middle only adds latency. Astragentic removes that middle step.
+Both converge on one bottleneck. An agent's technical questions usually exceed the expertise of
+the person directing it, so the common workaround is to take the question to another AI and relay
+the answer. The human becomes a relay, and the decision is in practice made by AI. Astragentic
+removes that relay.
 
-The first mechanism is Thomas, an assistant that knows the project. Thomas reads the artifacts
-agents return, chooses among the solutions and tech stacks they propose, answers technical
-questions, and brings to you only the decisions that are genuinely yours: product direction,
-UI/UX, priorities. You sit in the client's seat: set the direction, use your own engineering
-sense to notice when the team drifts, and get most of your time back.
+The first mechanism: Thomas, the team's representative. Thomas holds the project context, reads
+the artifacts agents return, weighs the proposed options and tech stacks, answers technical
+questions, and escalates only the decisions that are yours to make: product direction, user
+experience, priorities. You work as the client of a development unit: set requirements, follow
+progress, and step in when the team drifts.
 
-The second mechanism is a team with roles, running in plain sight. Every agent is a named session
-with a pane in herdr, leaving its work history in that session. You see whether they work
-correctly; Thomas can investigate when something goes wrong; and you watch how they coordinate,
-which is how Astragentic itself gets improved. A runtime's subagents and agent teams hide inside
-the parent process and show none of that.
+The second mechanism: a team with roles, operating in the open. Every agent is a named session
+with its own pane in herdr, and its work history stays in that session. You can watch what each
+agent does, Thomas can trace an incident, and the way agents coordinate becomes data for improving
+the scaffold itself. Subagents and agent teams inside a runtime run hidden in the parent process
+and show none of this.
 
-Both mechanisms rest on one philosophy: Astragentic is a scaffold, not an imposed process. The
-scaffold settles the hard parts of running a team of agents: how
-the agents talk to each other, SDLC discipline through skills, isolation through worktrees, state
-on the tracker, gates before merge and cross-vendor review. Roles, contracts, skills and hooks are
-files in your repo, so you recompose how the team coordinates to fit your own way of working.
+Both mechanisms rest on one design principle: Astragentic is a scaffold, not a closed process.
+The scaffold settles inter-agent communication, SDLC discipline through skills, isolation through
+worktrees, state on the tracker, gates before merge and cross-vendor review. Roles, contracts,
+skills and hooks are files in your repo, so the scaffold adapts to how your team operates.
 
 Cost: one more toolset to install, understand and upgrade, and every upgrade is an event the
 project has to absorb. And so far I have proven that each tool runs correctly; the whole loop from

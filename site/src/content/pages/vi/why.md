@@ -3,9 +3,9 @@ title: "Vì sao"
 description: "Năm câu hỏi về thiết kế của Astragentic: vì sao cần nó, vì sao tracker giữ trạng thái, vì sao không dùng subagent để điều phối, vì sao chọn mattpocock-skills, vì sao để một vendor khác đọc lại diff."
 ---
 
-Không ai làm việc theo triết lý của người khác. Người ta tham khảo, rồi chế lại theo cách của
-mình. Vì vậy Astragentic không áp đặt một quy trình; nó đem đến một scaffold, một bộ khung để điều
-hành team AI agent theo lối orchestrator, và mọi phần trong đó là để bạn chế lại.
+Mỗi team có một cách làm việc riêng, và không quy trình nào nhập khẩu nguyên vẹn được. Astragentic
+vì thế được thiết kế như một scaffold: một bộ khung điều hành team AI agent đã giải quyết sẵn
+những phần khó, còn mọi thành phần trong đó đều mở để bạn tuỳ biến.
 
 Năm câu dưới đây là năm quyết định thiết kế lớn nhất của bộ khung đó. Mỗi câu trả lời theo cùng
 một khung: trả lời trong một dòng, cơ chế, số đo đã ghi nhận khi có, và cái giá phải trả. Số đo
@@ -13,32 +13,32 @@ mang mã AST-xxx và có bài học tương ứng ở trang Bài học.
 
 ## why-astragentic
 
-Coding agent hôm nay đã là một đội outsource tốt: nhận việc, viết code, chạy test, trả kết quả.
-Người kỹ sư chỉ còn giữ vai trò dẫn đường. Nhưng vai trò đó vẫn tốn thời gian ở hai chỗ: trả lời
-câu hỏi agent đặt ra trong lúc làm, và review chất lượng việc agent trả về.
+Coding agent hôm nay đã đủ sức đảm nhận phần thi công: nhận việc, viết code, chạy test, trả kết
+quả. Người kỹ sư chuyển sang vai trò định hướng. Nhưng hai việc vẫn chiếm phần lớn thời gian: trả
+lời những câu hỏi agent đặt ra trong lúc làm, và review chất lượng kết quả trả về.
 
-Hai chỗ đó có cùng một điểm nghẽn. Câu hỏi agent đặt ra thường sâu hơn kiến thức kỹ thuật của
-người nhận, nên để trả lời, người nhận đem câu hỏi đi hỏi một AI khác rồi chép câu trả lời quay
-lại. Prompt qua một AI để trả lời một AI không khác gì để AI tự giải quyết; con người ở giữa chỉ
-thêm độ trễ. Astragentic bỏ khâu trung gian đó.
+Cả hai dồn vào cùng một điểm nghẽn. Câu hỏi kỹ thuật của agent thường vượt quá chuyên môn của
+người điều hành, nên cách xử lý phổ biến là mang câu hỏi sang một AI khác rồi chuyển câu trả lời
+về. Khi đó con người chỉ còn là khâu trung chuyển, và việc ra quyết định trên thực tế đã do AI
+thực hiện. Astragentic loại bỏ khâu trung chuyển đó.
 
-Cơ chế thứ nhất là Thomas, một trợ lý hiểu dự án. Thomas đọc artifact agent trả về, chọn giữa các
-solution và tech stack agent đề xuất, trả lời câu hỏi kỹ thuật, và chỉ đưa lên bạn những quyết
-định thật sự thuộc về bạn: hướng sản phẩm, UI/UX, thứ tự ưu tiên. Bạn đứng ở vị trí khách hàng
-của team: định hướng sản phẩm, dùng nghiệp vụ của mình để nhận ra khi team đi lệch, và có lại phần
-lớn thời gian.
+Cơ chế thứ nhất: Thomas, người đại diện của team. Thomas nắm ngữ cảnh dự án, đọc artifact các
+agent trả về, đánh giá các phương án và tech stack được đề xuất, trả lời câu hỏi kỹ thuật, và chỉ
+chuyển lên bạn những quyết định thuộc thẩm quyền của bạn: hướng sản phẩm, trải nghiệm người dùng,
+thứ tự ưu tiên. Bạn làm việc như khách hàng của một đơn vị phát triển: đặt yêu cầu, theo dõi tiến
+độ, và can thiệp khi thấy team đi lệch.
 
-Cơ chế thứ hai là một team có role, chạy hiện hữu. Mỗi agent là một session có tên, có pane trong
-herdr, để lại lịch sử làm việc trong chính session đó. Bạn nhìn thấy chúng làm đúng hay sai;
-Thomas điều tra được khi có sự cố; và bạn quan sát được cách chúng phối hợp để nâng cấp chính
-Astragentic. Subagent và agent team của runtime ẩn bên trong tiến trình cha, không cho thấy điều
-đó.
+Cơ chế thứ hai: một team có role, vận hành công khai. Mỗi agent là một session có tên, có pane
+riêng trong herdr, và để lại lịch sử làm việc ngay trong session đó. Bạn quan sát được từng agent
+làm gì, Thomas truy vết được khi có sự cố, và cách các agent phối hợp trở thành dữ liệu để cải
+tiến chính bộ khung. Subagent hay agent team bên trong một runtime chạy ẩn trong tiến trình cha và
+không cho thấy điều đó.
 
-Hai cơ chế đó đứng trên một triết lý: Astragentic là scaffold, không phải quy trình áp đặt. Bộ
-khung giải quyết sẵn những phần khó của việc điều hành một
-team agent, gồm cách các agent giao tiếp với nhau, kỷ luật SDLC bằng skill, cách ly bằng worktree,
-trạng thái trên tracker, gate trước khi merge và review chéo vendor. Role, contract, skill và hook
-là file trong repo của bạn, nên bạn pha chế lại cách phối hợp theo phong cách làm việc của mình.
+Cả hai cơ chế đứng trên một nguyên tắc thiết kế: Astragentic là scaffold, không phải quy trình
+đóng. Bộ khung giải quyết sẵn giao tiếp giữa các agent, kỷ luật SDLC bằng skill, cách ly bằng
+worktree, trạng thái trên tracker, gate trước khi merge và review chéo vendor. Role, contract,
+skill và hook là file trong repo của bạn, nên bộ khung tuỳ biến được theo cách team của bạn vận
+hành.
 
 Cái giá: thêm một bộ công cụ phải cài, hiểu và nâng cấp, và mỗi bản nâng cấp là một sự kiện dự
 án phải hấp thụ. Và tới nay tôi mới chứng minh được từng công cụ chạy đúng; cả vòng từ dispatch
