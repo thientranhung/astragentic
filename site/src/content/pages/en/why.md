@@ -1,165 +1,134 @@
 ---
 title: "Why"
-description: "Five questions I had to answer for myself: why this layer, why I rent the method from mattpocock, why subagents are not the coordination layer, why the tracker, why a second vendor."
+description: "Five questions about Astragentic's design: why it is needed, why the tracker holds the state, why subagents do not coordinate the team, why mattpocock-skills, why a second vendor reads the diff."
 ---
 
-These five are the questions I get asked most, and they are also the five places I have changed
-my mind at least once. Every answer states its cost, because a choice with no cost is usually a
-choice nobody has tried.
+The five questions below are the five largest design decisions in Astragentic. Every answer
+follows the same frame: a one-line answer, the mechanism, the measurement on record, and the
+cost. Measurements carry an AST-xxx code and have a matching lesson on the Lessons page.
 
 ## why-astragentic
 
-One agent working alone needs no coordination layer. One agent, one branch, no coordination
-problem, and if that is where you are, stay there.
+One agent in one branch needs no coordination. The trouble starts with the second agent on the
+same repo: sessions overwrite each other's work without an error, review drags on round after
+round, and at the end of the day nobody can say exactly what ran.
 
-The trouble starts with the second and third agents, on a real codebase. The failures at that
-point are quiet: agents overwrite each other with no exception thrown, review runs round after
-round, and by the end nobody can say exactly what actually ran. I lost an afternoon of work in
-precisely that way: three sessions against one checkout, no errors, work gone, and then another
-afternoon spent working out the cause.
+Astragentic makes those failures structurally hard, instead of something to watch for by eye.
+Every Builder has its own worktree, so nobody overwrites anybody. A claim is one assignee line
+on the tracker, so two sessions cannot take the same job. The result is a commit and a receipt,
+not the report of the agent that just did the work.
 
-Astragentic exists to make those failures structurally hard rather than something you watch for
-by eye every time. Isolation is a git worktree, not a house rule. The claim is a row on a
-tracker, not a sentence in a chat. The evidence is a commit and a receipt, not the report of the
-agent that just did the work.
+Measurement: AST-016, three sessions on one checkout, no error thrown, one working session lost
+and another spent finding the cause. Since then isolation is unconditional, read-only agents
+included.
 
-The cost comes in two parts. First: this is another layer to install, understand and upgrade,
-and every upgrade is an event the project has to absorb. Second, and it matters more: this loop
-has never run all the way through, from dispatch to merge with every gate firing, on live work
-inside this repo. Proving the tooling is correct and proving the loop is correct are two
-different claims, and I have only done the first.
-
-## why-mattpocock
-
-Astragentic writes no method of its own. It rents `mattpocock-skills` for the whole craft layer
-(`wayfinder`, `grill-with-docs`, `to-spec`, `to-tickets`, `implement`, `code-review`) and wraps
-the coordination layer around it. Version 1.0.0 removed the 19 skills that had been vendored
-into this repo so the upstream plugin could own them, and ADR-0001 records that decision.
-
-The reason is one short line in that ADR: that method loops at the front of the process, and I
-had been looping at the end. Two weeks of field use produced plans that took 5 to 14 review-gate
-rounds. Round 2 added a lock, round 3 cut it as false comfort, and round 8 was still repairing a
-sentence round 2 had left behind. The reviewer was not where it broke. It broke upstream:
-decisions that had never been settled went straight into code and got settled at the most
-expensive point in the process. In that system `grilling` runs until the frontier of open
-decisions is empty, and every review is a single bounded pass with no convergence condition.
-
-On Superpowers, since that question always arrives attached to this one: it is a very good
-system and my team genuinely uses it on another project. It simply sits at a different layer. It
-packs the method and the coordination into one session: 14 skills, no roles, one `SessionStart`
-hook, and work state living in a plan file inside the branch. Astragentic puts the state on a
-tracker and splits roles along session boundaries. Superpowers carries the back half of the
-spine well, and in places better; the front half has no equivalent of `to-tickets` producing
-tracker tickets with blocking edges, and that tracker is the coordination substrate here.
-Running both in one repo is not a problem of surplus skills either. It is two orchestrators
-reaching for the same place: two worktree schemes, two state substrates, and a bootstrap that
-teaches "do not pause to check in with your human partner" running straight into the handback
-protocol here.
-
-Renting has a real cost. `check-requirements.sh` fails hard without `mattpocock-skills >=
-1.2.3`. The address `/mattpocock-skills:<name>` is hardcoded across the contracts, so changing
-method means rewriting contracts rather than editing config. And I can patch the seam but not
-the plugin: AST-057 is a defect inside `to-tickets`, and the right answer here was to teach the
-contract to live with it rather than to fork a patched copy.
-
-## why-not-subagents
-
-Claude Code has subagents and it has agent teams, and they work. The question is not whether
-they are usable, it is whether they can be the coordination layer. I tried, and the five missing
-things are missing in the same way: none of them raise a signal when they go wrong.
-
-The checkout is shared. A subagent runs in the same worktree as its parent session. AST-016
-measured the consequence: agents sharing one checkout pull each other's HEAD around, and the
-case that caught it was a read-only reviewer that `git switch`ed somebody else's checkout. "This
-one only reads" was the exemption I had believed, and it was wrong. Isolation became
-unconditional after that.
-
-The context window is shared too. A fork inherits the parent's whole context, and with it things
-I did not mean to hand over. AST-006: a fork inherited the parent's model too, overriding the
-declared model ladder, so work that deserved a cheap model ran on the most expensive one with
-nobody declaring anything. Worse, a fork inherits the dispatcher's address. AST-119 records a
-fork inside a Builder sending the dispatcher a handback that arrived on that socket under that
-name, and the Builder could not see it happen. The message carried a true technical fact about
-the branch that the Builder itself did not know, so it could neither be dismissed as noise nor
-trusted as testimony. AST-130 is the next step of the same class: a fork signed a
-`simplify(increment):` marker over code it had committed itself, in the sanctioned form, caught
-by no check, noticed only because the Builder saw a commit it had not made.
-
-No tracker holds the state. A subagent's state lives in the parent session's context, which
-means it vanishes when the session compacts, and while it is alive the owner cannot see it. The
-owner does not run queries. They open the board and look. A frontier that is only computed and
-never written back serves every agent perfectly and is invisible to the one person who cannot
-compute it (AST-057).
-
-There is no pane to look at, and this is the one that hurts most because it is the quietest.
-AST-018 measured a dispatch that was narrated in text and never called; narrating a tool call is
-not calling it, and no liveness signal separated the two. In one long downstream session that
-compacted once, a ticket was dispatched as an in-process subagent instead of a visible pane, and
-nobody noticed until the owner asked. A pane is countable. An in-process subagent is not.
-
-And there is no second vendor: a subagent of Claude is still Claude. The cross-vendor arm needs
-a model from another vendor to read the artifact, and no spawn mechanism inside one runtime
-produces that.
-
-Astragentic still uses forks inside a Builder for report-only work, and the rule that comes with
-them is that such a fork gets `isolation: "worktree"` and must never message the dispatcher.
-Subagents do useful work. They are just the wrong place to put the coordination layer.
-
-This way costs more, and it costs plainly. You have to install herdr and you have to have a
-properly configured tracker, two external dependencies a subagent does not need. Every Builder
-costs a worktree on disk and a few seconds of setup. Every dispatch costs an extra tracker write
-and a readback. There is also a cost no instrument measures: a longer pipeline and more names to
-hold in your head. I pay it, because that vanished afternoon cost more.
+Cost: one more toolset to install, understand and upgrade, and every upgrade is an event the
+project has to absorb. And one thing said plainly: so far I have proven that each tool runs
+correctly; the whole loop from dispatch to merge with every gate firing on real work is still
+being measured.
 
 ## why-tracker
 
-Work state has to live somewhere an agent cannot hold in its context and the owner can open and
-look at. The tracker is the only place that satisfies both, which is why ADR-0001 calls it the
-coordination substrate rather than a record.
+The state of the work has to live somewhere an agent cannot keep in its context and you can open
+and read. The tracker is the only place that satisfies both, which is why ADR-0001 calls it the
+team's coordination substrate, not a notebook.
 
-Three things come from it. Blocking edges give a dependency graph, so "what is waiting on what"
-is data rather than memory. The frontier query answers "what is ready right now." And the
-assignee is the claim: writing a name onto a ticket before its worktree exists is what keeps two
-concurrent sessions off each other, with no lock file, no queue, and no central dispatcher
-deciding who goes first.
+Astragentic takes three things from the tracker. Blocking edges form a dependency graph, so
+"what is waiting on what" is data rather than memory. The frontier query answers "what is ready
+right now". The assignee is the claim: writing a name on the ticket before creating the worktree
+is what keeps two concurrent sessions apart, with no lock file, no queue, and no dispatcher in
+the middle deciding who goes first.
 
-But a frontier that is only computed is invisible to whoever cannot compute it. AST-057 measured
-this on a live project: across that project's entire life, no issue had ever entered the
-unstarted state, and one ticket sat looking blocked for hours after both its blockers had
-merged. Four tickets wore the ready label while blocked. No check the harness runs had ever
-looked there; the owner caught it by comparing two boards by eye. So the contract now carries
-both halves: write the computed answer back as state, and never read a readiness label as a
-blocker.
+Measurement: AST-057, on a real project, one ticket looked blocked for hours after both of its
+blockers had merged, and four tickets wore a ready label while blocked. The frontier was computed
+correctly but only inside the agent's head. So the contract carries both halves: once computed,
+write the answer back to the tracker, and never read a ready label as if it were state.
 
-The cost is that I inherit every limitation of whichever tracker you already run. No tracker has
-an assignee field designed to hold `builder/<ticket-id>`. GitHub Issues has no real status
-field, so status lives in a label and the Project board column is a mirror somebody has to keep
-in sync. Every adapter therefore carries its own workarounds and its own measured traps. And
-because the tracker is a substrate rather than a passive record, it can drift from reality: a
-ticket can say `in-progress` with a live assignee long after its branch merged. That is what
-`reconcile-tracker` is for, and it measures the tracker against git, never against itself,
-because a wrong tracker state is perfectly self-consistent.
+Cost: Astragentic inherits every limit of the tracker you use. No tracker has an assignee field
+designed to hold `builder/<ticket-id>`. GitHub Issues has no real status field, so status lives
+in labels and the Project board column is a copy that has to be kept in sync. Each adapter
+therefore has its own workaround. And because the tracker holds state rather than passively
+recording it, it can drift from reality; `reconcile-tracker` measures the tracker against git,
+never against the tracker itself.
+
+## why-not-subagents
+
+Claude Code has subagents and agent teams, and they work well for work inside one session. They
+are not enough to coordinate a team, because the four things missing are missing in the same
+way: they give no signal when something goes wrong.
+
+A shared checkout. A subagent runs in the same worktree as its parent session, so several agents
+drag each other's HEAD around. AST-016 caught a read-only reviewer running `git switch` on
+someone else's checkout.
+
+A shared context. A fork inherits its parent's whole context, including things nobody meant to
+hand over. AST-006: a fork inherited the parent's model too, so a job meant for a cheap model ran
+on the most expensive one. AST-119: a fork inside a Builder sent a handback to the dispatcher
+under the Builder's own name, and the Builder never saw it. AST-130: a fork signed a
+`simplify(increment):` marker onto code it had just committed itself, in the permitted form, and
+it only surfaced because the Builder saw a commit it had not made.
+
+No tracker holding state. A subagent's state lives in the parent session's context, disappears
+when the session compacts, and while it lives you cannot see it.
+
+No pane to look at. AST-018: a dispatch was narrated in words and never actually called, and
+nothing distinguished the two. A pane in herdr can be counted; an in-process subagent cannot.
+
+And no second vendor: a Claude subagent is still Claude, so there is no cross-vendor review.
+
+Astragentic still uses forks inside a Builder for report-only work, under one rule: the fork
+must have `isolation: "worktree"` and must never message the dispatcher.
+
+Cost: you have to install herdr and configure a tracker, two dependencies a subagent does not
+need. Each Builder costs a worktree on disk and a few seconds of setup; each dispatch costs one
+write and one read on the tracker. The process is longer and there are more names to remember. I
+pay that because silent failures cost far more.
+
+## why-mattpocock
+
+Astragentic does not write its own method. The craft, from survey to spec, tickets, implement
+and code review, is `mattpocock-skills` (`wayfinder`, `grill-with-docs`, `to-spec`,
+`to-tickets`, `implement`, `code-review`). Astragentic wraps coordination around it. Release
+1.0.0 removed 19 skills once vendored into the repo to make room for the upstream plugin;
+ADR-0001 records that decision.
+
+The reason is where the loop sits. This method loops at the start of the process: `grilling`
+runs until no open question is left, and every review after that is a bounded pass. The old way
+looped at the end: unsettled decisions went straight into code and were settled in review, the
+most expensive point.
+
+Measurement: two weeks of real use produced plans that went through 5 to 14 review rounds. Round
+2 added a lock, round 3 removed it as false comfort, and round 8 was still fixing a sentence
+round 2 left behind. The reviewer was not the fault; decisions settled too late were.
+
+On Superpowers, the question usually asked alongside: it is a good system and my team uses it on
+other projects. It packs method and coordination into one session, keeps state in a plan file on
+the branch, and has nothing equivalent to `to-tickets` producing tickets with blocking edges on
+the tracker. Running both in one repo is two coordinators fighting over the same ground, so
+Astragentic does not combine them.
+
+Cost: a real dependency. `check-requirements.sh` fails hard without `mattpocock-skills >=
+1.2.3`. The `/mattpocock-skills:<name>` addresses live in the contracts, so changing the method
+means rewriting contracts. And Astragentic can only patch the seams, not the plugin: AST-057 is
+a defect inside `to-tickets`, and the right answer is to teach the contract to live with it, not
+to fork a patch.
 
 ## why-cross-vendor
 
-After Claude has finished and reviewed its own work, a model from a different vendor reads the
-diff. That sounds redundant until you have the numbers.
+After Claude has written and self-reviewed, a model from another vendor reads the diff. The
+mechanism: the arm reads the repository while the author reads the ticket, so it catches
+contradictions with the project's own declared standards, which the author cannot see while
+looking from the requirements side.
 
-AST-015: a same-vendor correctness review passed a defect that committed live secrets and buyer
-PII into a tracked file, and the cross-vendor pass caught it and filed it P1. AST-012 draws the
-general form: the two lenses catch different classes of defect, so they exist alongside each
-other rather than replacing each other. Another case, measured on a large diff: a slice-scope
-payload of 6,904 added lines across 31 files went through a same-vendor skim that missed three
-hollow tests in a day, while a ticket-scope pass on a smaller diff caught a real deadlock that
-the previous pass's own fix had just introduced.
+Measurement: AST-015, a same-vendor review let through a defect that put a live secret and buyer
+PII into a tracked file; the cross-vendor pass caught it and filed it as P1. AST-012 draws the
+general point: two lenses catch two classes of defect, so they run side by side rather than
+replace each other. Another case on a large diff: 6,904 added lines across 31 files went through
+a same-vendor read that missed three empty tests, while a ticket-scoped read on a smaller diff
+caught a real deadlock the previous round's patch had just created.
 
-The mechanism is simple: the arm reads the repository while the author reads the ticket. So what
-it wins at is internal inconsistency against a project's own stated standard, which is exactly
-what the person who wrote the code cannot see, because they are looking from the requirement
-side.
-
-The cost is invocation friction, and that friction is real. Quoting and argv differ between
-runtimes. The direct `codex exec` path has been observed to hang silently, so it needs a timeout
-and a dispatcher watching it. The sharpest one is scope: if `--base` and the resolved `HEAD`
-disagree, the companion can compare a branch to itself and come back clean having reviewed zero
-commits. So every scope prints its range header before anyone is allowed to trust the verdict.
+Cost: friction at call time. Quoting and argv differ between runtimes. `codex exec` has hung
+silently before, so it needs a timeout and a dispatcher standing watch. The most dangerous part
+is scope: if `--base` and `HEAD` resolve differently, the companion compares a branch with itself
+and returns clean on zero commits. So every read prints its range line before the verdict is
+trusted.

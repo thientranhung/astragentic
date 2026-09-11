@@ -181,55 +181,55 @@ export const WHY: WhyCard[] = [
   {
     id: 'why-astragentic',
     question: {
-      vi: 'Vì sao phải thêm một lớp nữa?',
-      en: 'Why add another layer at all?',
+      vi: 'Vì sao cần Astragentic khi coding agent đã tự làm được việc?',
+      en: 'Why Astragentic, when a coding agent already does the work?',
     },
     answer: {
-      vi: 'Một agent, một session thì không cần lớp nào cả. Đến agent thứ ba, trạng thái bắt đầu sống trong đầu từng session, và thứ gì rơi ra thì không ai biết là đã rơi.',
-      en: 'One agent in one session needs no layer at all. By the third, state lives inside each session’s head, and whatever falls out falls out unnoticed.',
-    },
-  },
-  {
-    id: 'why-mattpocock',
-    question: {
-      vi: 'Vì sao là mattpocock-skills, không phải Superpowers?',
-      en: 'Why mattpocock-skills and not Superpowers?',
-    },
-    answer: {
-      vi: 'mattpocock-skills là phương pháp kỹ thuật tôi đi thuê: wayfinder, grill, spec, ticket, implement, review. Astragentic không viết lại phần đó, nó chỉ thêm lớp điều phối bên trên.',
-      en: 'mattpocock-skills is the engineering method I rent: wayfinder, grill, spec, tickets, implement, review. Astragentic does not rewrite that part; it adds the orchestration above it.',
-    },
-  },
-  {
-    id: 'why-not-subagents',
-    question: {
-      vi: 'Vì sao không chỉ dùng subagent của Claude Code?',
-      en: 'Why not just use Claude Code subagents?',
-    },
-    answer: {
-      vi: 'Subagent dùng chung một checkout và thừa hưởng context của người gọi. Không có tracker giữ trạng thái, không có pane để nhìn, nên khi một branch im lặng thì không còn chỗ nào đọc ra điều đó.',
-      en: 'Subagents share one checkout and inherit the caller’s context. There is no tracker holding state and no pane to look at, so when a branch goes quiet there is nowhere left to read that from.',
+      vi: 'Một agent trong một branch thì không cần điều phối. Từ agent thứ hai trên cùng một repo, các session ghi đè nhau mà không báo lỗi, và không ai nói được cái gì đã chạy.',
+      en: 'One agent in one branch needs no coordination. From the second agent on the same repo, sessions overwrite each other without an error, and nobody can say what ran.',
     },
   },
   {
     id: 'why-tracker',
     question: {
-      vi: 'Vì sao tracker là nơi giữ trạng thái?',
-      en: 'Why does the tracker hold the state?',
+      vi: 'Vì sao tracker là nơi giữ trạng thái, không phải chat hay file?',
+      en: 'Why does the tracker hold the state, not chat or a file?',
     },
     answer: {
-      vi: 'Board sống lâu hơn mọi session. Cái gì sẵn để làm là một câu truy vấn trên đó, nên một session chết đi không mang theo thứ gì.',
-      en: 'The board outlives every session. What is ready to work on is a query against it, so a session can die without taking anything with it.',
+      vi: 'Board sống lâu hơn mọi session và bạn mở ra là đọc được. Cái gì sẵn sàng là một câu truy vấn trên đó, nên một session đóng đi không mang theo thứ gì.',
+      en: 'The board outlives every session and you can open and read it. What is ready is a query against it, so a session can close without taking anything with it.',
+    },
+  },
+  {
+    id: 'why-not-subagents',
+    question: {
+      vi: 'Vì sao không dùng subagent của Claude Code để điều phối?',
+      en: 'Why not coordinate with Claude Code subagents?',
+    },
+    answer: {
+      vi: 'Subagent dùng chung checkout và context với session cha, không có tracker giữ trạng thái, không có pane để nhìn. Khi một nhánh im lặng thì không còn chỗ nào đọc ra điều đó.',
+      en: 'Subagents share the parent session’s checkout and context, with no tracker holding state and no pane to look at. When a branch goes quiet there is nowhere left to read that from.',
+    },
+  },
+  {
+    id: 'why-mattpocock',
+    question: {
+      vi: 'Vì sao chọn mattpocock-skills làm phương pháp?',
+      en: 'Why mattpocock-skills as the method?',
+    },
+    answer: {
+      vi: 'Phương pháp này lặp ở đầu quy trình, chốt quyết định trước khi viết code. Astragentic không viết lại phần đó, chỉ bọc điều phối quanh nó.',
+      en: 'This method loops at the start of the process and settles decisions before code is written. Astragentic does not rewrite that part; it wraps coordination around it.',
     },
   },
   {
     id: 'why-cross-vendor',
     question: {
-      vi: 'Vì sao để một vendor khác đọc lại?',
+      vi: 'Vì sao để một vendor khác đọc lại diff?',
       en: 'Why let a second vendor read the diff?',
     },
     answer: {
-      vi: 'Một mô hình đọc lại diff của chính nó thì đọc lại luôn cả giả định của nó. Một vendor khác không mang theo giả định đó, và receipt buộc vào đúng SHA đã được đọc.',
+      vi: 'Một model đọc lại diff của chính nó thì đọc lại luôn giả định của nó. Vendor khác không mang giả định đó, và receipt buộc vào đúng SHA đã được đọc.',
       en: 'A model re-reading its own diff re-reads its own assumptions with it. A second vendor does not carry them, and the receipt is bound to the SHA that was actually read.',
     },
   },
