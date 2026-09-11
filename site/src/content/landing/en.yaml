@@ -1,7 +1,7 @@
 hero:
   eyebrow: "Agentic engineering · **for multi-milestone projects** · v{{meta.version}}"
   headline: "An outsourcing team made of AI agents.\nRunning by process, **around the clock**, for **large projects**."
-  sub: "Astragentic is a scaffold for running a team of AI agents as an orchestrator: one representative to talk to, a team of agents with clear roles to build, and an issue tracker at the centre so every piece of work leaves a trace. The scaffold settles how agents talk to each other, SDLC discipline through skills, isolation through worktrees, gates before merge and cross-vendor review. You keep the decisions, and recompose the scaffold to fit your own way of working."
+  sub: "Astragentic is a scaffold for running a team of AI agents as an orchestrator: one representative to talk to, a team of agents with clear roles to build, and an issue tracker at the centre so every piece of work leaves a trace. The scaffold settles how agents talk to each other, SDLC discipline through skills, isolation through worktrees, gates before merge and cross-vendor review. You keep the decisions, and remake the scaffold to fit your own way of working: it is a reference to remake, not a process imposed."
   primary: "Explore how it works ↓"
   secondary: "Understand why Astragentic exists"
 

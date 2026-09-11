@@ -3,7 +3,11 @@ title: "Vì sao"
 description: "Năm câu hỏi về thiết kế của Astragentic: vì sao cần nó, vì sao tracker giữ trạng thái, vì sao không dùng subagent để điều phối, vì sao chọn mattpocock-skills, vì sao để một vendor khác đọc lại diff."
 ---
 
-Năm câu dưới đây là năm quyết định thiết kế lớn nhất của Astragentic. Mỗi câu trả lời theo cùng
+Không ai làm việc theo triết lý của người khác. Người ta tham khảo, rồi chế lại theo cách của
+mình. Vì vậy Astragentic không áp đặt một quy trình; nó đem đến một scaffold, một bộ khung để điều
+hành team AI agent theo lối orchestrator, và mọi phần trong đó là để bạn chế lại.
+
+Năm câu dưới đây là năm quyết định thiết kế lớn nhất của bộ khung đó. Mỗi câu trả lời theo cùng
 một khung: trả lời trong một dòng, cơ chế, số đo đã ghi nhận khi có, và cái giá phải trả. Số đo
 mang mã AST-xxx và có bài học tương ứng ở trang Bài học.
 
@@ -30,8 +34,8 @@ Thomas điều tra được khi có sự cố; và bạn quan sát được các
 Astragentic. Subagent và agent team của runtime ẩn bên trong tiến trình cha, không cho thấy điều
 đó.
 
-Hai cơ chế đó đứng trên một triết lý: Astragentic không phải một sản phẩm đóng mà là một bộ khung
-để làm việc theo lối orchestrator. Bộ khung giải quyết sẵn những phần khó của việc điều hành một
+Hai cơ chế đó đứng trên một triết lý: Astragentic là scaffold, không phải quy trình áp đặt. Bộ
+khung giải quyết sẵn những phần khó của việc điều hành một
 team agent, gồm cách các agent giao tiếp với nhau, kỷ luật SDLC bằng skill, cách ly bằng worktree,
 trạng thái trên tracker, gate trước khi merge và review chéo vendor. Role, contract, skill và hook
 là file trong repo của bạn, nên bạn pha chế lại cách phối hợp theo phong cách làm việc của mình.

@@ -3,7 +3,11 @@ title: "Why"
 description: "Five questions about Astragentic's design: why it is needed, why the tracker holds the state, why subagents do not coordinate the team, why mattpocock-skills, why a second vendor reads the diff."
 ---
 
-The five questions below are the five largest design decisions in Astragentic. Every answer
+Nobody works by someone else's philosophy. People take a reference and remake it their own way.
+So Astragentic does not impose a process; it offers a scaffold, a frame for running a team of AI
+agents as an orchestrator, and every part of it is there for you to remake.
+
+The five questions below are the five largest design decisions in that scaffold. Every answer
 follows the same frame: a one-line answer, the mechanism, the measurement on record where there
 is one, and the cost. Measurements carry an AST-xxx code and have a matching lesson on the Lessons page.
 
@@ -31,8 +35,8 @@ correctly; Thomas can investigate when something goes wrong; and you watch how t
 which is how Astragentic itself gets improved. A runtime's subagents and agent teams hide inside
 the parent process and show none of that.
 
-Both mechanisms rest on one philosophy: Astragentic is not a closed product but a scaffold for
-working as an orchestrator. The scaffold settles the hard parts of running a team of agents: how
+Both mechanisms rest on one philosophy: Astragentic is a scaffold, not an imposed process. The
+scaffold settles the hard parts of running a team of agents: how
 the agents talk to each other, SDLC discipline through skills, isolation through worktrees, state
 on the tracker, gates before merge and cross-vendor review. Roles, contracts, skills and hooks are
 files in your repo, so you recompose how the team coordinates to fit your own way of working.
