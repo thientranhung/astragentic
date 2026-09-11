@@ -383,6 +383,42 @@
         ],
         "createdAt": "2026-09-11T02:52:15.912Z",
         "reason": "assistant: terminal simulation video uses the owner's real terminal font (JetBrainsMono Nerd Font) so the frames match Claude Code as seen on their machine; not a site page"
+      },
+      {
+        "rule": "overused-font",
+        "value": "*",
+        "files": [
+          "video/hero/index.html"
+        ],
+        "createdAt": "2026-09-11T04:09:22.088Z",
+        "reason": "assistant: the video caption card uses the site's own sans face so the narration reads as Astragentic, not the terminal; the site's type choice is decided in design-tokens.json, not here"
+      },
+      {
+        "rule": "overused-font",
+        "value": "*",
+        "files": [
+          "site/video/hero/index.html"
+        ],
+        "createdAt": "2026-09-11T04:09:22.778Z",
+        "reason": "assistant: the video caption card uses the site's own sans face so the narration reads as Astragentic, not the terminal; the site's type choice is decided in design-tokens.json, not here"
+      },
+      {
+        "rule": "overused-font",
+        "value": "*",
+        "files": [
+          "video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-11T04:09:23.320Z",
+        "reason": "assistant: the video caption card uses the site's own sans face so the narration reads as Astragentic, not the terminal; the site's type choice is decided in design-tokens.json, not here"
+      },
+      {
+        "rule": "overused-font",
+        "value": "*",
+        "files": [
+          "site/video/herdr/index.html"
+        ],
+        "createdAt": "2026-09-11T04:09:23.840Z",
+        "reason": "assistant: the video caption card uses the site's own sans face so the narration reads as Astragentic, not the terminal; the site's type choice is decided in design-tokens.json, not here"
       }
     ]
   }

@@ -116,10 +116,20 @@
       .card-overlay { position: absolute; left: 340px; right: 0; top: 50%; height: 0; max-width: 900px; margin: 0 auto; z-index: 4; }
       .card {
         position: absolute; left: 0; right: 0; top: 0; width: 100%; opacity: 0; transform: translateY(-50%);
-        background: rgba(19, 20, 27, 0.92); border: 1px solid #262838; border-radius: 10px;
-        padding: 18px 22px; font-size: 24px; line-height: 34px; color: #dfe6f3; text-align: center;
+        display: inline-flex; align-items: flex-start; justify-content: center;
+        background: #F2F3F6; border-radius: 10px;
+        box-shadow: 0 14px 36px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.35);
+        padding: 18px 28px;
+        font-family: Inter, "SF Pro Text", -apple-system, system-ui, sans-serif;
+        font-size: 26px; line-height: 36px; font-weight: 500; letter-spacing: -0.005em;
+        color: #14161A; text-align: center;
       }
-      .card b { color: #ffffff; font-weight: 600; }
+      .card::before {
+        content: ""; display: inline-block; flex: 0 0 auto;
+        width: 10px; height: 10px; margin-right: 12px; margin-top: 13px;
+        border-radius: 50%; background: #E53625;
+      }
+      .card b { font-weight: 700; }
 
       /* ── pointer ────────────────────────────────────────────────────── */
       .pointer { position: absolute; top: 0; left: 0; width: 26px; height: 26px; opacity: 0; z-index: 5; transform-origin: 20% 15%; }
