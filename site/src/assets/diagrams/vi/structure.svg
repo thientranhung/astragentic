@@ -30,7 +30,7 @@
 
         <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="2" data-composition-frame-label="COORDINATION" x="16" y="416" width="648" height="118" rx="12" class="c-region" stroke-width="1"/>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="3" data-composition-frame-label="DỰ ÁN CỦA ANH EM" x="626" y="606" width="268" height="118" rx="12" class="c-region" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="3" data-composition-frame-label="DỰ ÁN CỦA BẠN" x="626" y="606" width="268" height="118" rx="12" class="c-region" stroke-width="1"/>
 
         <!-- Connection paths (before components for correct z-order) -->
         <path data-edge-from="runtime_claude" data-edge-to="roles" data-edge-key="0" data-composition-points="225,134;225,192;116,192;116,250" d="M 225 134 L 225 184 Q 225 192 217 192 L 124 192 Q 116 192 116 200 L 116 250" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
@@ -77,14 +77,14 @@
         <text data-detail="context" x="665" y="111" class="t-muted" font-size="9" text-anchor="middle">runtime</text>
         </g>
 
-        <g id="node-roles" data-node-id="roles" data-node-label="Vai" tabindex="0" role="button" aria-label="Focus Vai, Thomas · Shaper · Builder · Rin · QA, HARNESS" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Thomas · Shaper · Builder · Rin · QA" data-node-context="HARNESS">
-          <title>Vai · Thomas · Shaper · Builder · Rin · QA · HARNESS</title>
+        <g id="node-roles" data-node-id="roles" data-node-label="Role" tabindex="0" role="button" aria-label="Focus Role, Thomas · Shaper · Builder · Rin · QA, HARNESS" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Thomas · Shaper · Builder · Rin · QA" data-node-context="HARNESS">
+          <title>Role · Thomas · Shaper · Builder · Rin · QA · HARNESS</title>
           <rect x="40" y="250" width="180" height="74" rx="6" class="c-mask"/>
           <rect x="40" y="250" width="180" height="74" rx="6" class="c-backend" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(46 256) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="130" y="285" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Vai</text>
+          <text data-node-label="" data-detail-anchor="" x="130" y="285" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Role</text>
         <text data-detail="context" x="130" y="301" class="t-muted" font-size="7.9" text-anchor="middle">Thomas · Shaper · Builder · Rin · QA</text>
         </g>
 
@@ -157,8 +157,8 @@
         <text data-detail="context" x="550" y="491" class="t-muted" font-size="9" text-anchor="middle">mỗi ticket một checkout</text>
         </g>
 
-        <g id="node-project" data-node-id="project" data-node-label="Dự Án Của Anh Em" tabindex="0" role="button" aria-label="Focus Dự Án Của Anh Em, repo · CONTEXT.md · ADR, DỰ ÁN CỦA ANH EM" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="repo · CONTEXT.md · ADR" data-node-context="DỰ ÁN CỦA ANH EM">
-          <title>Dự Án Của Anh Em · repo · CONTEXT.md · ADR · DỰ ÁN CỦA ANH EM</title>
+        <g id="node-project" data-node-id="project" data-node-label="Dự Án Của Bạn" tabindex="0" role="button" aria-label="Focus Dự Án Của Bạn, repo · CONTEXT.md · ADR, DỰ ÁN CỦA BẠN" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="repo · CONTEXT.md · ADR" data-node-context="DỰ ÁN CỦA BẠN">
+          <title>Dự Án Của Bạn · repo · CONTEXT.md · ADR · DỰ ÁN CỦA BẠN</title>
           <rect x="650" y="630" width="220" height="74" rx="6" class="c-mask"/>
           <rect x="650" y="630" width="220" height="74" rx="6" class="c-frontend" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(656 636) scale(0.6875)">
@@ -167,7 +167,7 @@
             <circle cx="4.1" cy="4.8" r=".7" class="sigil-fill"/>
             <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="760" y="665" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Dự Án Của Anh Em</text>
+          <text data-node-label="" data-detail-anchor="" x="760" y="665" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Dự Án Của Bạn</text>
         <text data-detail="context" x="760" y="681" class="t-muted" font-size="9" text-anchor="middle">repo · CONTEXT.md · ADR</text>
         </g>
 
@@ -204,9 +204,9 @@
           <text data-boundary-label="" x="24" y="433" class="t-cloud" font-size="9" font-weight="600">COORDINATION</text>
         </g>
 
-        <g data-graph-role="structural-frame-label" data-composition-frame-id="3" data-composition-frame-kind="region" data-composition-frame-label="DỰ ÁN CỦA ANH EM">
-          <rect data-graph-role="structural-frame-label-mask" x="630" y="610" width="96.39999999999999" height="16" rx="3" class="c-mask"/>
-          <text data-boundary-label="" x="634" y="623" class="t-cloud" font-size="9" font-weight="600">DỰ ÁN CỦA ANH EM</text>
+        <g data-graph-role="structural-frame-label" data-composition-frame-id="3" data-composition-frame-kind="region" data-composition-frame-label="DỰ ÁN CỦA BẠN">
+          <rect data-graph-role="structural-frame-label-mask" x="630" y="610" width="80.2" height="16" rx="3" class="c-mask"/>
+          <text data-boundary-label="" x="634" y="623" class="t-cloud" font-size="9" font-weight="600">DỰ ÁN CỦA BẠN</text>
         </g>
 
         <!-- Legend -->

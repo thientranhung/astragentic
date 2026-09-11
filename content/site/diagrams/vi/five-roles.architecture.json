@@ -2,7 +2,7 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Năm Vai, Năm Vòng Đời Session",
+    "title": "Năm Role, Năm Vòng Đời Session",
     "output": "five-roles.html",
     "quality_profile": "showcase",
     "views": [
@@ -169,9 +169,9 @@
       "dot": "emerald",
       "title": "Song Song, Không Phải Thứ Bậc",
       "items": [
-        "Vai đi theo ranh giới session, không theo cấp bậc — mỗi bước trên spine cần một agent đóng vai người ở bước đó",
+        "Role đi theo ranh giới session, không theo cấp bậc — mỗi bước trên spine cần một agent đảm nhận role của người ở bước đó",
         "Nhiều Builder có thể được dispatch cùng lúc, mỗi cái là người viết duy nhất trong worktree của mình",
-        "Thomas là vai duy nhất mà một session Builder, Rin hay QA handback về"
+        "Thomas là role duy nhất mà một session Builder, Rin hay QA handback về"
       ]
     },
     {

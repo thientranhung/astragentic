@@ -13,7 +13,7 @@
           "hooks",
           "project"
         ],
-        "note": "Mọi lệnh Bash đi qua hook trước khi chạm vào repo của anh em."
+        "note": "Mọi lệnh Bash đi qua hook trước khi chạm vào repo của bạn."
       },
       {
         "id": "shared-state",
@@ -55,7 +55,7 @@
     {
       "id": "roles",
       "type": "backend",
-      "label": "Vai",
+      "label": "Role",
       "sublabel": "Thomas · Shaper · Builder · Rin · QA",
       "pos": [40, 250],
       "size": [180, 74]
@@ -111,7 +111,7 @@
     {
       "id": "project",
       "type": "frontend",
-      "label": "Dự Án Của Anh Em",
+      "label": "Dự Án Của Bạn",
       "sublabel": "repo · CONTEXT.md · ADR",
       "pos": [650, 630],
       "size": [220, 74]
@@ -138,7 +138,7 @@
     },
     {
       "kind": "region",
-      "label": "DỰ ÁN CỦA ANH EM",
+      "label": "DỰ ÁN CỦA BẠN",
       "wraps": ["project"],
       "pad": 24
     }
@@ -197,7 +197,7 @@
       "title": "Runtime Là Lựa Chọn, Không Phải Ràng Buộc",
       "items": [
         "Claude Code, Codex, và OpenCode đều lái cùng một bộ khung bên dưới",
-        "Vai, skill, hook, và ledger không phụ thuộc runtime — không cái nào ở đây chỉ chạy được với Claude",
+        "Role, skill, hook và ledger không phụ thuộc runtime — không cái nào ở đây chỉ chạy được với Claude",
         "Đổi runtime giữa chừng chỉ đổi người cầm lái, không đổi bộ khung"
       ]
     },
@@ -206,8 +206,8 @@
       "title": "Ledger Không Phải Là Log",
       "items": [
         "Mọi receipt của hook và mọi quyết định gate đều vào memory/ledger, không chỉ ra stdout",
-        "Skill và vai được đọc lúc bắt đầu session, không đóng cứng vào một binary",
-        "16 skill dùng lại được cho mọi vai cần đến chúng"
+        "Skill và role được đọc lúc bắt đầu session, không đóng cứng vào một binary",
+        "16 skill dùng lại được cho mọi role cần đến chúng"
       ]
     },
     {
@@ -216,7 +216,7 @@
       "items": [
         "Tracker là nền state; pane herdr và worktree đều dùng xong là bỏ",
         "Mọi claim được ghi vào tracker trước khi worktree kịp tạo ra",
-        "Hook gác cửa ranh giới giữa bộ khung và repo project thật của anh em"
+        "Hook gác cửa ranh giới giữa bộ khung và repo project thật của bạn"
       ]
     }
   ]

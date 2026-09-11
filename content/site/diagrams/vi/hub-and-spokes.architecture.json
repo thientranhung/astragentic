@@ -12,7 +12,7 @@
         "focus": [
           "thomas"
         ],
-        "note": "Thomas là vai duy nhất còn ở đây khi một session kết thúc."
+        "note": "Thomas là role duy nhất còn ở đây khi một session kết thúc."
       },
       {
         "id": "five-panes",
@@ -178,7 +178,7 @@
       "dot": "cyan",
       "title": "Một Hub, Nhiều Pane",
       "items": [
-        "Thomas thường trực — vai duy nhất còn ở đây khi một session kết thúc",
+        "Thomas thường trực — role duy nhất còn ở đây khi một session kết thúc",
         "Mỗi lần dispatch mở một pane riêng và một git worktree riêng",
         "Tracker, không phải pane, mới là thứ cả năm nhánh dùng chung"
       ]

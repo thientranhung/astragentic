@@ -144,7 +144,7 @@
       "col": 1,
       "type": "backend",
       "label": "hook-contract-reload.py",
-      "sublabel": "nạp lại contract của vai",
+      "sublabel": "nạp lại contract của role",
       "width": 180
     },
     {
@@ -211,7 +211,7 @@
       "items": [
         "PreToolUse gác mọi lệnh Bash, trước khi nó chạm tới shell",
         "WorktreeRemove giải phóng pane và process mà một worktree đang giữ",
-        "SessionStart(compact) nạp lại contract của vai bị mất sau compact; SubagentStop chỉ log lần thoát"
+        "SessionStart(compact) nạp lại contract của role bị mất sau compact; SubagentStop chỉ log lần thoát"
       ]
     },
     {

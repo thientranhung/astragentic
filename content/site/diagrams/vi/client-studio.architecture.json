@@ -2,7 +2,7 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Một ticket đi qua đội, tracker ở giữa",
+    "title": "Một ticket đi qua team, tracker ở giữa",
     "output": "client-studio.html",
     "quality_profile": "showcase",
     "viewBox": [1320, 650],
@@ -17,7 +17,7 @@
         "id": "the-centre",
         "label": "Trung tâm là gì",
         "focus": ["thomas", "tracker", "shaper", "builder"],
-        "note": "Mỗi vai đều chuyển việc qua tracker, không nói chuyện trực tiếp với nhau."
+        "note": "Mỗi agent ở role đó đều chuyển việc qua tracker, không nói chuyện trực tiếp với nhau."
       }
     ]
   },
@@ -31,7 +31,7 @@
     { "id": "qa", "type": "external", "label": "QA", "sublabel": "chạy sản phẩm thật", "pos": [870, 438], "size": [180, 64] }
   ],
   "boundaries": [
-    { "kind": "region", "label": "Đội outsource Astragentic", "wraps": ["thomas", "tracker", "shaper", "builder", "rin", "qa"], "pad": 40 }
+    { "kind": "region", "label": "Team outsource Astragentic", "wraps": ["thomas", "tracker", "shaper", "builder", "rin", "qa"], "pad": 40 }
   ],
   "connections": [
     { "id": "client-thomas", "from": "client", "to": "thomas", "label": "yêu cầu", "variant": "emphasis", "fromSide": "right", "toSide": "left" },
@@ -51,7 +51,7 @@
       "Mọi ticket, spec, và gate đều đi qua đúng một ghế đó"
     ] },
     { "dot": "emerald", "title": "Tracker Là Trung Tâm", "items": [
-      "Mỗi vai chuyển việc qua tracker, không nói chuyện trực tiếp với nhau",
+      "Mỗi agent ở role đó chuyển việc qua tracker, không nói chuyện trực tiếp với nhau",
       "Thomas dispatch từ đó, Builder commit ngược lại vào đó",
       "Một bản ghi chung — không phải năm cuộc trò chuyện riêng"
     ] },

@@ -32,7 +32,7 @@
       "col": 1,
       "type": "backend",
       "label": "hook-contract-reload.py",
-      "sublabel": "nạp lại contract của vai",
+      "sublabel": "nạp lại contract của role",
       "width": 180
     }
   ],
