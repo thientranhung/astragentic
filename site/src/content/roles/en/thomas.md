@@ -1,6 +1,6 @@
 ---
 title: "Thomas"
-tagline: "Thomas is the only agent still here when a Builder's session has closed, so the durable state belongs to this role."
+tagline: "Thomas is the team's representative: it takes your requirements, picks work off the tracker, dispatches it to Builders and reports back."
 sessionTag: "resident"
 ---
 

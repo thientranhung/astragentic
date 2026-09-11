@@ -1,6 +1,6 @@
 ---
 title: "Shaper"
-tagline: "The Shaper runs one unbroken session, because the whole scope has to sit in context at once."
+tagline: "The Shaper turns a raw requirement into a spec and slices it into tickets, asking everything before anyone writes a line of code."
 sessionTag: "unbroken"
 ---
 

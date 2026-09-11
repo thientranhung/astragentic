@@ -1,6 +1,6 @@
 ---
 title: "Rin"
-tagline: "Rin runs one round per milestone, in a detached worktree at the exact SHA under review."
+tagline: "Rin is the gate before merge: it re-reads a milestone's work and says plainly whether it is fit to go on."
 sessionTag: "per milestone"
 ---
 

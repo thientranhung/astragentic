@@ -1,6 +1,6 @@
 ---
 title: "Rin"
-tagline: "Rin chạy một vòng mỗi milestone, trong worktree detached tại đúng SHA được review."
+tagline: "Rin là cửa chặn trước merge: đọc lại phần việc của một milestone và nói rõ nó đã đủ điều kiện đi tiếp hay chưa."
 sessionTag: "per milestone"
 ---
 

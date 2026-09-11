@@ -1,6 +1,6 @@
 ---
 title: "Builder"
-tagline: "Builder nhận một ticket và một worktree, và là người viết duy nhất trong đó."
+tagline: "Builder thi công một ticket: viết code, chạy test, tự review, rồi trả kết quả kèm bằng chứng."
 sessionTag: "per ticket"
 ---
 

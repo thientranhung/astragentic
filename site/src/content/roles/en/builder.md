@@ -1,6 +1,6 @@
 ---
 title: "Builder"
-tagline: "The Builder takes one ticket and one worktree, and is the sole writer in it."
+tagline: "The Builder implements one ticket: writes the code, runs the tests, reviews its own work, and hands back the result with its evidence."
 sessionTag: "per ticket"
 ---
 

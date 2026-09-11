@@ -1,6 +1,6 @@
 ---
 title: "Shaper"
-tagline: "Shaper chạy một session không đứt, vì toàn bộ phạm vi phải nằm trong context cùng lúc."
+tagline: "Shaper biến một yêu cầu thô thành spec rồi cắt thành ticket, hỏi cho hết trước khi ai đó viết dòng code đầu tiên."
 sessionTag: "unbroken"
 ---
 

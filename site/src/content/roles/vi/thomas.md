@@ -1,6 +1,6 @@
 ---
 title: "Thomas"
-tagline: "Thomas là agent duy nhất còn ở đó khi session của Builder đã đóng, nên mọi trạng thái bền thuộc về role này."
+tagline: "Thomas là người đại diện của team: nhận yêu cầu từ bạn, chọn việc trên tracker, dispatch cho Builder và báo kết quả về."
 sessionTag: "resident"
 ---
 

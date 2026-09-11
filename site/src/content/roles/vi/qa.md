@@ -1,6 +1,6 @@
 ---
 title: "QA"
-tagline: "QA dùng sản phẩm đang chạy như một người dùng, và không đọc diff."
+tagline: "QA nghiệm thu trên sản phẩm đang chạy, dùng như một người dùng thật chứ không đọc code."
 sessionTag: "per walk"
 ---
 

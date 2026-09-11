@@ -1,6 +1,6 @@
 ---
 title: "QA"
-tagline: "QA uses the running product like a user, and does not read the diff."
+tagline: "QA signs off on the running product, using it like a real user rather than reading the code."
 sessionTag: "per walk"
 ---
 
