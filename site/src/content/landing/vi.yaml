@@ -1,7 +1,7 @@
 hero:
   eyebrow: "Autonomous coding · **cho dự án nhiều milestone** · v{{meta.version}}"
   headline: "Một team outsource bằng AI agent.\nVận hành đúng quy trình, **liên tục 24/7**, cho **những dự án lớn**."
-  sub: "Astragentic là một scaffold để vận hành team AI agent theo mô hình orchestrator: một người đại diện để trao đổi, một team agent với role rõ ràng để thi công, và một issue tracker (GitHub Issues, Jira hoặc Linear) làm trung tâm để mọi việc có dấu vết. Bộ khung đã giải quyết sẵn những phần khó nhất của việc điều hành nhiều agent: giao tiếp giữa các agent, kỷ luật SDLC bằng skill, cách ly bằng worktree, gate trước khi merge, review chéo bằng một AI của hãng khác (Codex đọc lại code Claude viết). Phần còn lại là của bạn: giữ quyền quyết định, và tuỳ biến bộ khung theo cách team của bạn vận hành."
+  sub: "Astragentic là scaffold để vận hành một team AI agent theo mô hình orchestrator. Bạn trao đổi với một người đại diện, team thi công theo role, và mọi việc đi qua issue tracker: GitHub Issues, Jira hoặc Linear. Những phần khó của việc điều hành nhiều agent đã được giải quyết sẵn; phần còn lại là của bạn."
   primary: "Khám phá cách hoạt động ↓"
   secondary: "Đọc cách tiếp cận của Astragentic"
 
@@ -18,29 +18,27 @@ explain:
     eyebrow: "Tuỳ biến"
     headline: "Mỗi người một cách làm việc với AI. Astragentic là bộ khung cho người theo trường phái agent orchestration."
     paragraphs:
-      - "Không có một cách làm việc với AI cho tất cả. Có team muốn đủ vòng SDLC với năm role và gate ở mỗi milestone; có team chỉ cần hai agent, một người đại diện và một người thi công; có team đổi tracker, đổi runtime, hay thêm một bước review riêng. Astragentic không chọn thay bạn: nó là scaffold, và mọi thành phần trong đó là để bạn giữ, bỏ hay viết lại."
-      - "Tuỳ biến là sửa file trong bản checkout của bạn. Mỗi role là một contract, mỗi skill là một thư mục, mỗi hook là một script; bớt một role, thêm một skill, đổi một luật đều nằm trong tầm tay và không đụng tới phần còn lại."
-      - "Astragentic có sẵn đường phát hành để đưa những thay đổi đó tới các dự án đang dùng. Sửa xong, tăng `VERSION`, ghi một mục trong `RELEASE-NOTES.md`, rồi cài lại bằng `install.sh`. Trong dự án, bước thích nghi so sánh bản mới với bản đang chạy và giữ nguyên các file thuộc về bạn, như `orchestrator.md`. Nâng cấp bộ khung của bạn theo cách này bao nhiêu lần cũng được, và mỗi dự án nhận được đúng bản bạn muốn."
+      - "Không có một cách làm việc với AI đúng cho tất cả. Astragentic không chọn thay bạn."
+    bullets:
+      - "**Đủ vòng SDLC**: năm role, gate ở mỗi milestone, QA walk trước khi merge."
+      - "**Tối giản**: hai agent, một người đại diện và một người thi công."
+      - "**Theo hạ tầng của bạn**: đổi tracker, đổi runtime, thêm một bước review riêng."
+    paragraphsAfter:
+      - "Tuỳ biến là sửa file trong bản checkout của bạn. Mỗi role là một contract, mỗi skill là một thư mục, mỗi hook là một script."
+      - "Đường đưa thay đổi tới dự án là đường phát hành: tăng `VERSION`, ghi một mục trong `RELEASE-NOTES.md`, rồi cài lại bằng `install.sh`. Bước thích nghi trong dự án so bản mới với bản đang chạy và giữ nguyên các file thuộc về bạn, như `orchestrator.md`."
 
   comms:
     eyebrow: "Giao tiếp giữa các agent"
     headline: "Dispatch một ticket là mở một cuộc trao đổi có địa chỉ."
     paragraphs:
-      - "Ticket là một issue trên tracker: một **task**, một **feature** hay một **requirement** đã được cắt đủ nhỏ để một Builder hoàn thành trong một session. Mỗi ticket mang một id ổn định trong tiêu đề, một trạng thái, một assignee, và các blocking edge tới việc phải xong trước. Shaper tạo ticket từ spec bằng skill `to-tickets`; Thomas chỉ dispatch những ticket đã sẵn sàng."
-      - "Thomas dispatch theo skill `dispatch-ticket`: claim trên tracker, tạo branch và worktree, mở pane herdr, launch agent theo role, gửi brief, đặt watcher. Chuỗi ticket → assignee → pane → worktree → branch → PR là một-một, nên nhiều Builder làm song song mà không giẫm lên nhau."
-      - "Khi các agent cùng chạy Claude Code, kênh chính là cross-session messaging có sẵn của Claude Code. Mỗi session Claude Code có một tên; Thomas tra tên session của Builder bằng ListAgents rồi gửi cho đúng tên đó. Ở session nhận, thông điệp hiện thành một dòng preview `› Message from @thomas: …`, mở rộng bằng ctrl+o, và câu trả lời đi ngược về đúng session đã gửi. Builder bị chặn thì hỏi; Thomas đọc câu hỏi, trả lời qua đúng kênh đó, rồi đặt Monitor mới chờ tín hiệu làm xong. Nhờ vậy vòng dispatch, hỏi, đáp, handback chạy liền mạch mà không cần người ngồi canh."
-      - "herdr là mặt phẳng nhìn thấy và là đường dự phòng: mỗi agent một pane có tên, watcher báo working, blocked, idle. Thomas đọc pane bằng `herdr agent read` khi một session im lặng, và điều Builder trên Codex hay OpenCode qua herdr CLI, nơi không có cross-session messaging."
-      - "Phân loại câu hỏi là điều đưa bạn từ human-in-the-loop sang human-on-the-loop. Câu hỏi kỹ thuật thường gặp, Thomas trả lời thay bạn từ contract, spec và tracker. Chỉ quyết định thiết kế thật sự mới đi lên bạn qua `to-questionnaire`, dưới dạng câu hỏi trả lời được. Bạn không đứng trong vòng lặp ở từng bước; bạn đứng trên vòng lặp và can thiệp khi có việc cần bạn."
-    commands:
-      - label: "Điều một Builder trên Codex qua herdr"
-        lines:
-          - 'herdr agent start "builder-TRA-142" --kind codex --pane <id> -- codex --profile builder'
-          - 'herdr agent prompt <pane-id> "<brief>"'
-          - "herdr agent read   <pane-id>"
-    more:
-      label: "Hiểu rõ hơn về dispatch →"
-      href: "/vi/skills/dispatch-ticket"
-
+      - "Ticket là một issue trên tracker, cắt đủ nhỏ để một Builder hoàn thành trong một session. Nó mang một id ổn định, một trạng thái, một assignee, và các blocking edge tới việc phải xong trước."
+      - "Thomas dispatch theo skill `dispatch-ticket`: claim trên tracker, tạo branch và worktree, mở pane herdr, launch agent theo role, gửi brief, đặt watcher. Chuỗi ticket → assignee → pane → worktree → branch → PR là một-một, nên nhiều Builder chạy song song mà không giẫm lên nhau."
+      - "Giữa các session Claude Code, kênh chính là cross-session messaging có sẵn. Mỗi session có một tên; Thomas tra tên bằng ListAgents rồi gửi thẳng. Ở đầu nhận, thông điệp hiện thành dòng preview `› Message from @thomas: …`, mở rộng bằng ctrl+o, và câu trả lời đi ngược về đúng session đã gửi."
+      - "herdr là mặt phẳng nhìn thấy và là đường dự phòng: mỗi agent một pane có tên, watcher báo working, blocked, idle. Thomas đọc pane bằng `herdr agent read` khi một session im lặng, và điều Builder trên Codex hay OpenCode qua herdr CLI."
+    bullets:
+      - "**Câu hỏi kỹ thuật**: Thomas trả lời thay bạn, từ contract, spec và tracker."
+      - "**Quyết định thiết kế**: đi lên bạn qua `to-questionnaire`, dưới dạng câu hỏi trả lời được."
+      - "**Vị trí của bạn**: đứng trên vòng lặp, không đứng trong từng bước của nó."
   roles:
     eyebrow: "AI outsource team"
     headline: "Công việc của mỗi agent."
@@ -50,7 +48,7 @@ explain:
     figureNote: "Thomas quản trị cả team: nhận yêu cầu từ bạn, gọi Shaper khi cần spec, dispatch ticket cho Builder, gọi Rin gate ở mỗi milestone và QA walk trước khi merge, rồi báo lại bạn. Mỗi mũi tên trên hình là một lượt trao đổi đi và về."
     models:
       label: "Model và effort theo role"
-      intro: "Agent của mỗi role chạy trên model và effort hợp với việc của role đó. Thomas và Shaper suy luận dài nên dùng Opus, Shaper ở effort high vì grill và spec là chỗ tốn suy nghĩ nhất; Builder và QA thi công và kiểm thử nên dùng Sonnet cho nhanh và rẻ; Rin gate trên Opus ở effort medium."
+      intro: "Agent của mỗi role chạy trên model và effort hợp với việc của role đó. Thomas và Shaper suy luận dài nên dùng Opus, Shaper ở effort high. Builder và QA cần nhanh và rẻ nên dùng Sonnet. Rin gate trên Opus ở effort medium."
       note: "Bảng này đọc thẳng từ `.agents/orchestrator.md` trong repo của bạn. Đổi một dòng là đổi runtime, model hay effort của role đó ở lần dispatch kế tiếp, không cần sửa contract của role."
     items:
       - id: thomas
@@ -89,10 +87,12 @@ explain:
     headline: "Mọi việc đi qua tracker, nên không việc nào lạc hướng."
     paragraphs:
       - "Trạng thái công việc được lưu trên tracker, không trong chat hay trí nhớ của một agent. Thomas hỏi tracker cái gì đã sẵn sàng; bạn mở board là đọc được."
-      - "Không còn danh sách task trong file markdown với ô checked mà agent phải nhớ sửa. Ticket có id, status, assignee, blocking edge; đọc và ghi qua API, ai hỏi cũng nhận cùng một câu trả lời."
-      - "Claim là một dòng assignee ghi và đọc lại được, nên nhiều Builder chạy song song. Issue phát sinh giữa chừng thành ticket mới, không rơi mất trong tin nhắn."
-      - "Một ticket là một branch, một worktree, một PR, cùng mã ticket trong tên. Mỗi Builder một worktree; merge xong thì ticket đóng, worktree dọn."
-      - "Mỗi ticket giữ nội dung việc, cách làm, câu hỏi đã hỏi, receipt đã commit. Bạn hiểu một việc bằng cách mở ticket. GitHub Issues, Jira, Linear đều dùng được; không có công cụ mới phải học."
+    bullets:
+      - "**Ticket là dữ liệu**: id, status, assignee, blocking edge, đọc và ghi qua API. Không còn ô tick trong file markdown mà agent phải nhớ sửa."
+      - "**Claim là một dòng assignee** ghi và đọc lại được, nên nhiều Builder chạy song song."
+      - "**Một ticket là một branch, một worktree, một PR**, cùng mã ticket trong tên. Merge xong thì ticket đóng, worktree dọn."
+      - "**Ticket giữ cả câu chuyện**: nội dung việc, cách làm, câu hỏi đã hỏi, receipt đã commit. Bạn hiểu một việc bằng cách mở ticket."
+      - "**Không có công cụ mới phải học**: GitHub Issues, Jira, Linear đều dùng được."
     items:
       - text: "A stable ticket id in the TITLE"
       - text: "A status with five states — Backlog / Todo / In Progress / Done / Won't fix"
@@ -107,7 +107,11 @@ explain:
     eyebrow: "mattpocock-skills"
     headline: "Astragentic chọn mattpocock-skills làm khung quản trị và phát triển dự án."
     paragraphs:
-      - "Bộ skill của Matt Pocock bao trọn hai nửa của một dự án. Nửa quản trị: wayfinder định hướng, triage phân loại việc, grill hỏi cho ra yêu cầu, to-spec chốt spec, to-tickets cắt thành ticket. Nửa phát triển: implement theo TDD, code-review, simplify, diagnosing-bugs. Astragentic gắn từng skill vào đúng role, nên Thomas quản trị và Builder thi công theo cùng một khung, từ yêu cầu đầu tiên tới PR cuối cùng."
+      - "Bộ skill của Matt Pocock bao trọn hai nửa của một dự án, và Astragentic gắn từng skill vào đúng role."
+    bullets:
+      - "**Nửa quản trị**: wayfinder định hướng, triage phân loại việc, grill hỏi cho ra yêu cầu, to-spec chốt spec, to-tickets cắt thành ticket."
+      - "**Nửa phát triển**: implement theo TDD, code-review, simplify, diagnosing-bugs."
+      - "**Một khung cho cả hai**: Thomas quản trị và Builder thi công theo cùng một phương pháp, từ yêu cầu đầu tiên tới PR cuối cùng."
     items:
       - id: thomas
         title: "Thomas"
@@ -127,8 +131,8 @@ explain:
 why:
   eyebrow: "Cách tiếp cận"
   headline: "AI đã là một developer thực thụ. Astragentic đặt bạn vào vị trí người dẫn dắt team developer đó."
-  p1: "Coding agent hôm nay nhận việc, viết code, chạy test và sửa cho tới khi xanh, như một kỹ sư ngồi cạnh bạn. Khi thực thi không còn là nút thắt, giá trị của người kỹ sư chuyển sang chỗ khác: đặt yêu cầu đúng, quyết định đúng, và giữ cả quy trình đi đúng hướng."
-  p2: "Astragentic được xây để bạn làm đúng phần đó. Nó tổ chức các agent thành một team outsource theo kỷ luật SDLC quen thuộc, và thiết kế lại cách dispatch, review, handback để khai thác tốc độ và khối lượng mà một team người không duy trì được."
+  p1: "Coding agent hôm nay nhận việc, viết code, chạy test và sửa cho tới khi xanh. Khi thực thi không còn là nút thắt, giá trị của người kỹ sư chuyển sang chỗ khác: đặt yêu cầu đúng, quyết định đúng, giữ quy trình đi đúng hướng."
+  p2: "Astragentic được xây để bạn làm đúng phần đó. Nó tổ chức các agent thành một team outsource theo kỷ luật SDLC quen thuộc, và thiết kế lại cách dispatch, review, handback để khai thác tốc độ mà một team người không duy trì được."
   more: "Khám phá toàn bộ cách tiếp cận →"
 
 shots:
@@ -202,7 +206,7 @@ features:
 fit:
   eyebrow: "Quy mô phù hợp"
   headline: "Dành cho dự án dài hơi, nhiều phần, chạy song song."
-  body: "Một dự án lớn không lớn vì có sprint hay story. Nó lớn vì bốn thứ: sống lâu (nhiều release, codebase còn sửa nhiều tháng sau ra mắt), rộng (nhiều module hay hệ con làm cùng lúc), phụ thuộc (việc này phải xong trước việc kia), và rủi ro (có người dùng thật, regression gây thiệt hại). Astragentic có đúng bốn cơ chế cho bốn thứ đó: tracker và receipt giữ trạng thái ngoài trí nhớ agent, claim và worktree cho nhiều Builder chạy song song, blocking edge và frontier query giữ thứ tự, Rin gate và QA walk chặn trước khi merge. Thiếu cả bốn thì bộ máy này là thừa, một session agent bình thường là đủ."
+  body: "Một dự án lớn không lớn vì có sprint hay story. Nó lớn vì sống lâu, rộng, có phụ thuộc và có rủi ro, và Astragentic có đúng một cơ chế cho mỗi thứ: tracker và receipt giữ trạng thái ngoài trí nhớ agent, claim và worktree cho nhiều Builder chạy song song, blocking edge và frontier query giữ thứ tự, Rin gate và QA walk chặn trước khi merge. Thiếu cả bốn thì một session agent bình thường là đủ."
   fitsLabel: "Hợp khi"
   notYetLabel: "Chưa cần khi"
   fits:
@@ -217,7 +221,7 @@ fit:
 adopt:
   eyebrow: "Install"
   headline: "Năm bước để đưa team vào repo của bạn."
-  sub: "Astragentic cài từ bản checkout của bạn vào từng thư mục dự án, không cài vào máy. Một bản Astragentic phục vụ nhiều dự án, và mọi tuỳ biến bạn làm trên bản đó đi tới các dự án bằng đúng đường cài đặt này. Năm bước: kiểm yêu cầu, cài harness, để Claude Code thích nghi harness với repo, cấu hình mattpocock-skills một lần, rồi mở session Thomas."
+  sub: "Astragentic cài từ bản checkout của bạn vào từng thư mục dự án, không cài vào máy. Một bản phục vụ nhiều dự án, và mọi tuỳ biến đi tới các dự án bằng đúng đường cài đặt này."
   steps:
     - title: "Kiểm máy có đủ tech stack chưa"
       lines: ["./check-requirements.sh"]

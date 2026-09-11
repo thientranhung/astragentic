@@ -1,7 +1,7 @@
 hero:
   eyebrow: "Autonomous coding · **for multi-milestone projects** · v{{meta.version}}"
   headline: "An outsourcing team made of AI agents.\nRunning by process, **around the clock**, for **large projects**."
-  sub: "Astragentic is a scaffold for running a team of AI agents on the orchestrator model: one representative to talk to, a team of agents with clear roles to build, and an issue tracker (GitHub Issues, Jira or Linear) at the centre so every piece of work leaves a trace. The scaffold has the hardest parts of running many agents settled: inter-agent communication, SDLC discipline through skills, isolation through worktrees, gates before merge, a cross review by an AI from another vendor (Codex re-reads what Claude wrote). The rest is yours: keep the decisions, and adapt the scaffold to how your team operates."
+  sub: "Astragentic is a scaffold for running a team of AI agents on the orchestrator model. You talk to one representative, the team builds by role, and every piece of work goes through an issue tracker: GitHub Issues, Jira or Linear. The hard parts of running many agents are settled; the rest is yours."
   primary: "Explore how it works ↓"
   secondary: "Read the Astragentic approach"
 
@@ -18,29 +18,27 @@ explain:
     eyebrow: "Customise"
     headline: "Everyone works with AI differently. Astragentic is the scaffold for those who work by agent orchestration."
     paragraphs:
-      - "There is no single way of working with AI. Some teams want the full SDLC loop with five roles and a gate at every milestone; some need two agents, a representative and a builder; some change the tracker, the runtime, or add a review step of their own. Astragentic does not choose for you: it is a scaffold, and every part of it is there for you to keep, drop or rewrite."
-      - "Customising means editing files in your checkout. Each role is a contract, each skill a folder, each hook a script; removing a role, adding a skill or changing a rule is within reach and leaves the rest untouched."
-      - "Astragentic ships a release path to carry those changes to the projects already using it. After editing, bump `VERSION`, add an entry to `RELEASE-NOTES.md`, then reinstall with `install.sh`. Inside the project, the adaptation step compares the new release with the one running and keeps the files that belong to you, such as `orchestrator.md`. Upgrade your scaffold this way as often as you like, and every project receives exactly the version you intend."
+      - "There is no single right way to work with AI. Astragentic does not choose for you."
+    bullets:
+      - "**The full SDLC loop**: five roles, a gate at every milestone, a QA walk before merge."
+      - "**The minimal shape**: two agents, one representative and one builder."
+      - "**Your own stack**: swap the tracker, swap the runtime, add a review step of your own."
+    paragraphsAfter:
+      - "Customising means editing files in your checkout. Each role is a contract, each skill a folder, each hook a script."
+      - "The path from a change to a project is the release path: bump `VERSION`, add an entry to `RELEASE-NOTES.md`, then reinstall with `install.sh`. Inside the project the adaptation step compares the new release with the one running and keeps the files that belong to you, such as `orchestrator.md`."
 
   comms:
     eyebrow: "How agents talk to each other"
     headline: "Dispatching a ticket opens a conversation with an address."
     paragraphs:
-      - "A ticket is an issue on the tracker: a **task**, a **feature** or a **requirement** sliced small enough for one Builder to finish in one session. Each ticket carries a stable id in its title, a status, an assignee, and blocking edges to the work that must land first. Shaper creates tickets from the spec with the `to-tickets` skill; Thomas dispatches only the ones that are ready."
-      - "Thomas dispatches through the `dispatch-ticket` skill: claim on the tracker, create the branch and worktree, open a herdr pane, launch the role, send the brief, arm the watcher. The chain ticket → assignee → pane → worktree → branch → PR is one-to-one, so several Builders work in parallel without treading on each other."
-      - "When the roles all run Claude Code, the main channel is Claude Code’s built-in cross-session messaging. Every Claude Code session has a name; Thomas looks up the Builder’s with ListAgents and sends to exactly that name. In the receiving session the message shows up as a one-line preview, `› Message from @thomas: …`, expanded with ctrl+o, and the answer travels back into the session that sent it. A blocked Builder asks; Thomas reads the question, answers through that same channel, then sets a fresh Monitor and waits for the signal that the work is done. That is how the loop of dispatch, question, answer and handback runs unbroken, with nobody sitting and watching it."
-      - "herdr is the visible plane and the fallback path: one named pane per role, a watcher reporting working, blocked, idle. Thomas reads a pane with `herdr agent read` when a session falls silent, and steers a Builder on Codex or OpenCode through the herdr CLI, where there is no cross-session messaging."
-      - "Sorting the questions is what moves you from human-in-the-loop to human-on-the-loop. The routine technical questions Thomas answers for you, out of the contract, the spec and the tracker. Only a real design decision comes up to you through `to-questionnaire`, in the form of a question you can answer. You are not standing inside the loop at every step; you are standing on top of it and stepping in when something needs you."
-    commands:
-      - label: "Driving a Builder on Codex through herdr"
-        lines:
-          - 'herdr agent start "builder-TRA-142" --kind codex --pane <id> -- codex --profile builder'
-          - 'herdr agent prompt <pane-id> "<brief>"'
-          - "herdr agent read   <pane-id>"
-    more:
-      label: "Learn more about dispatch →"
-      href: "/skills/dispatch-ticket"
-
+      - "A ticket is an issue on the tracker, sliced small enough for one Builder to finish in one session. It carries a stable id, a status, an assignee, and blocking edges to the work that must land first."
+      - "Thomas dispatches with the `dispatch-ticket` skill: claim on the tracker, create the branch and worktree, open a herdr pane, launch the agent for the role, send the brief, set a watcher. The chain ticket → assignee → pane → worktree → branch → PR is one to one, so many Builders run in parallel without stepping on each other."
+      - "Between Claude Code sessions the main channel is built-in cross-session messaging. Every session has a name; Thomas looks it up with ListAgents and sends straight to it. On the receiving side the message appears as the preview line `› Message from @thomas: …`, expands with ctrl+o, and the reply travels back to the session that sent it."
+      - "herdr is the visible plane and the fallback: one named pane per agent, with a watcher reporting working, blocked, idle. Thomas reads a pane with `herdr agent read` when a session goes quiet, and drives Builders on Codex or OpenCode through the herdr CLI."
+    bullets:
+      - "**Technical questions**: Thomas answers them for you, from the contract, the spec and the tracker."
+      - "**Design decisions**: these come up to you through `to-questionnaire`, as a question you can answer."
+      - "**Where you stand**: on the loop, not inside every step of it."
   roles:
     eyebrow: "AI outsourcing team"
     headline: "What each agent does."
@@ -85,14 +83,16 @@ explain:
         href: "/roles/qa"
 
   tracker:
-    eyebrow: "The issue tracker"
-    headline: "Every piece of work passes through the tracker, so none of it drifts."
+    eyebrow: "Issue tracker"
+    headline: "Every piece of work goes through the tracker, so none of it drifts."
     paragraphs:
-      - "The state of the work lives on the tracker, not in a chat or in one agent's memory. Thomas asks the tracker what is ready; you open the board and read it."
-      - "No more task lists in markdown with checkboxes an agent has to remember to tick. A ticket has an id, a status, an assignee, blocking edges; read and written through an API, so everyone gets the same answer."
-      - "A claim is an assignee line written and read back, so several Builders run in parallel. An issue found mid-work becomes a new ticket instead of getting lost in a message."
-      - "One ticket is one branch, one worktree, one PR, all named after the ticket. One worktree per Builder; once merged, the ticket closes and the worktree is cleaned up."
-      - "Each ticket keeps what the work was, how it was done, the questions asked, the receipt committed. You understand a piece of work by opening its ticket. GitHub Issues, Jira and Linear all work; there is no new tool to learn."
+      - "The state of the work is stored on the tracker, not in chat or in an agent's memory. Thomas asks the tracker what is ready; you open the board and read it."
+    bullets:
+      - "**A ticket is data**: id, status, assignee, blocking edges, read and written over an API. No more checkboxes in a markdown file that an agent has to remember to tick."
+      - "**A claim is one assignee line**, written and read back, so many Builders run in parallel."
+      - "**One ticket is one branch, one worktree, one PR**, carrying the same ticket id. After merge the ticket closes and the worktree is cleaned up."
+      - "**A ticket holds the whole story**: the work, the approach, the questions asked, the receipts committed. You understand a piece of work by opening its ticket."
+      - "**No new tool to learn**: GitHub Issues, Jira and Linear all work."
     items:
       - text: "A stable ticket id in the TITLE"
       - text: "A status with five states — Backlog / Todo / In Progress / Done / Won't fix"
@@ -105,9 +105,13 @@ explain:
 
   method:
     eyebrow: "mattpocock-skills"
-    headline: "Astragentic adopts mattpocock-skills as its framework for running and building a project."
+    headline: "Astragentic runs on mattpocock-skills for both halves of a project."
     paragraphs:
-      - "Matt Pocock’s skill set covers both halves of a project. The management half: wayfinder sets direction, triage sorts the work, grill draws out the requirement, to-spec pins the spec, to-tickets cuts it into tickets. The development half: implement with TDD, code-review, simplify, diagnosing-bugs. Astragentic assigns each skill to the right role, so Thomas manages and the Builder builds inside one framework, from the first requirement to the last PR."
+      - "Matt Pocock's skills cover both halves of a project, and Astragentic attaches each skill to the right role."
+    bullets:
+      - "**The management half**: wayfinder sets direction, triage sorts the work, grill draws out the requirements, to-spec settles the spec, to-tickets slices it into tickets."
+      - "**The engineering half**: implement by TDD, code-review, simplify, diagnosing-bugs."
+      - "**One method for both**: Thomas manages and Builder builds by the same rules, from the first requirement to the last PR."
     items:
       - id: thomas
         title: "Thomas"
@@ -127,8 +131,8 @@ explain:
 why:
   eyebrow: "Approach"
   headline: "AI is now a real developer. Astragentic puts you in charge of that developer team."
-  p1: "A coding agent today takes the work, writes the code, runs the tests and fixes until they pass, like an engineer sitting next to you. Once execution is no longer the bottleneck, the engineer's value moves elsewhere: setting the right requirement, making the right call, and keeping the whole process on course."
-  p2: "Astragentic is built so that you do exactly that part. It organises agents into an outsourcing team under the familiar SDLC discipline, and redesigns dispatch, review and handback to exploit a speed and a volume no human team can sustain."
+  p1: "A coding agent today takes the work, writes the code, runs the tests and fixes until they pass. Once execution is no longer the bottleneck, the engineer's value moves elsewhere: setting the right requirement, making the right call, keeping the process on course."
+  p2: "Astragentic is built so that you do exactly that part. It organises agents into an outsourcing team under the familiar SDLC discipline, and redesigns dispatch, review and handback for a speed no human team can sustain."
   more: "Explore every design decision →"
 
 shots:
@@ -202,7 +206,7 @@ features:
 fit:
   eyebrow: "The right size of project"
   headline: "For long-lived projects with many parts running in parallel."
-  body: "A project is not large because it has sprints or stories. It is large for four reasons: it lives long (several releases, a codebase still edited months after launch), it is wide (several modules or subsystems worked on at once), it has dependencies (this must finish before that), and it carries risk (real users, regressions that cost). Astragentic has exactly four mechanisms for those four things: the tracker and receipts keep state outside any agent's memory, claims and worktrees let several Builders run in parallel, blocking edges and the frontier query keep the order, Rin's gate and QA's walk stop a merge before it hurts. Without all four, this machinery is overhead, and an ordinary agent session is enough."
+  body: "A project is not large because it has sprints or stories. It is large because it is long-lived, wide, dependent and risky, and Astragentic has one mechanism for each: the tracker and receipts keep state outside any agent's memory, claims and worktrees let several Builders run in parallel, blocking edges and the frontier query keep the order, Rin's gate and QA's walk stop a merge before it hurts. Without all four, an ordinary agent session is enough."
   fitsLabel: "A fit when"
   notYetLabel: "Not needed when"
   fits:
@@ -217,7 +221,7 @@ fit:
 adopt:
   eyebrow: "Install"
   headline: "Five steps to put the team into your repo."
-  sub: "Astragentic installs from your checkout into each project folder, not onto the machine. One checkout serves many projects, and every customisation you make there reaches the projects by this same install path. Five steps: check the requirements, install the harness, let Claude Code adapt it to the repo, configure mattpocock-skills once, then open Thomas's session."
+  sub: "Astragentic installs from your checkout into each project folder, not onto the machine. One checkout serves many projects, and every customisation you make there reaches them by this same install path."
   steps:
     - title: "Check the machine has the tech stack"
       lines: ["./check-requirements.sh"]

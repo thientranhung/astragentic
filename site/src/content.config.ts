@@ -129,6 +129,12 @@ const landing = defineCollection({
           headline: z.string().optional(),
           paragraphs: z.array(z.string()).optional(),
           commands: z.union([pane, z.array(pane)]).optional(),
+          /** A short claim-first list under the prose: each entry is one line, and the
+           *  lead-in before its colon is set in the ink of the sentence (scannable
+           *  technical essay, owner 2026-09-11). */
+          bullets: z.array(z.string()).optional(),
+          /** Prose that resumes after the bullets. */
+          paragraphsAfter: z.array(z.string()).optional(),
           items: z
             .array(
               z.object({

@@ -185,6 +185,11 @@ const CARD_FRAME = 330;
         {/* What an agent is, in two sentences, now that the reader has just watched
             one at work in the hero video; the mechanics live on the Structure page. */}
         {EX.roles.paragraphs?.map((line) => <p class="lede" set:html={hl(line)} />)}
+        {EX.roles.bullets && (
+          <ul class="lede-list">
+            {EX.roles.bullets.map((line) => <li set:html={hl(line)} />)}
+          </ul>
+        )}
       </div>
       <div class="column">
         {/* Five rows, not five columns: at a fifth of the band each card would be
@@ -287,6 +292,11 @@ const CARD_FRAME = 330;
           <Shot lang={lang} caption={shots.herdr.caption} src={shots.herdr.src} video={shots.herdr.video} class="breakout" />
         )}
         {commsText[3] && <p class="lede lede--after-figure" set:html={hl(commsText[3])} />}
+        {EX.comms.bullets && (
+          <ul class="lede-list">
+            {EX.comms.bullets.map((line) => <li set:html={hl(line)} />)}
+          </ul>
+        )}
         {EX.comms.more && (
           <a class="more-link" href={EX.comms.more.href}>{EX.comms.more.label}</a>
         )}
@@ -303,6 +313,11 @@ const CARD_FRAME = 330;
       </div>
       <div class="column">
         {EX.tracker.paragraphs?.map((line) => <p class="lede" set:html={hl(line)} />)}
+        {EX.tracker.bullets && (
+          <ul class="lede-list">
+            {EX.tracker.bullets.map((line) => <li set:html={hl(line)} />)}
+          </ul>
+        )}
         {/* The five requirements are lifted out of tracker-contract.md and stay in the
             file's own words: a translated requirement is a different requirement. */}
         <div class="reqs breakout">
@@ -370,6 +385,11 @@ const CARD_FRAME = 330;
       </div>
       <div class="column">
         {EX.method.paragraphs?.map((line) => <p class="lede" set:html={hl(line)} />)}
+        {EX.method.bullets && (
+          <ul class="lede-list">
+            {EX.method.bullets.map((line) => <li set:html={hl(line)} />)}
+          </ul>
+        )}
         <dl class="method-map breakout">
           {EX.method.items?.map((item) => (
             <div class="mrow has-dot" data-role={item.id}>
@@ -568,6 +588,12 @@ const CARD_FRAME = 330;
         <p class="eyebrow">{EX.customize.eyebrow}</p>
         <h2>{EX.customize.headline}</h2>
         {EX.customize.paragraphs?.map((line) => <p class="lede" set:html={hl(line)} />)}
+        {EX.customize.bullets && (
+          <ul class="lede-list">
+            {EX.customize.bullets.map((line) => <li set:html={hl(line)} />)}
+          </ul>
+        )}
+        {EX.customize.paragraphsAfter?.map((line) => <p class="lede" set:html={hl(line)} />)}
       </div>
       <div class="column">
         <InteractiveDiagram slug="customize-loop" lang={lang} class="band" flow="sequence" />
@@ -645,6 +671,29 @@ const CARD_FRAME = 330;
     margin: 0 0 1.45rem;
     font-size: var(--text-body);
     line-height: var(--leading-body);
+  }
+  /* Claim-first list: the sentence's own ink, a hairline marker, one line per point. */
+  .lede-list {
+    max-width: 72ch;
+    margin: 0 0 1.6rem;
+    padding-left: 1.15rem;
+    list-style: disc;
+    font-size: var(--text-body);
+    line-height: 1.65;
+    color: var(--ink-88);
+  }
+  .lede-list li {
+    margin-bottom: 0.55rem;
+  }
+  .lede-list li::marker {
+    color: var(--ink-22);
+  }
+  .lede-list :global(strong) {
+    color: var(--ink);
+    font-weight: 700;
+  }
+  .lede-list :global(code) {
+    white-space: nowrap;
   }
   .explain .lede:first-child {
     margin-top: 1.75rem;

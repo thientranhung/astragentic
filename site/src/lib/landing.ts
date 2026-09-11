@@ -60,6 +60,10 @@ export interface Explain {
   eyebrow: string;
   headline: string;
   paragraphs?: string[];
+  /** A short list under the prose; the lead-in before the colon is emphasised. */
+  bullets?: string[];
+  /** Prose that resumes after the bullets. */
+  paragraphsAfter?: string[];
   commands?: Pane | Pane[];
   items?: ExplainItem[];
   more?: { label: string; href: string };
