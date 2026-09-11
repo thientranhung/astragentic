@@ -76,10 +76,9 @@ Those two comment rows are where the way of working changes most. The agent no l
 one specific person: it asks on the ticket, whoever on the team can answer does, and it carries on.
 The AI works as a member of the group rather than a tool you have to sit and watch.
 
-**Evidence.** On a real project, one ticket looked blocked for hours after both of its
-blockers had merged, and four tickets wore a ready label while still blocked. The list of work that
-can start now, called the frontier, was computed correctly but existed only in the agent's
-context. So the contract carries both halves: once
+One detail is easy to miss: the list of work that can start now, called the frontier, has to be
+written back. Computed only inside an agent's context, it is invisible when you open the board, and
+a ticket whose blockers have merged still looks blocked. So the contract carries both halves: once
 computed, write the answer back to the tracker, and never read a ready label as if it were state.
 
 **Trade-off.** Astragentic inherits the limits of the tracker you use. No tracker has an assignee field
@@ -141,9 +140,9 @@ The reason is where the loop sits.
 - **The common way loops at the end.** Unsettled decisions go into the code and get settled in
   review. That is the most expensive point, and the number of rounds has no natural stop.
 
-**Evidence.** On the projects I measured, a plan run the second way went through 5 to 14 review
-rounds, most of the later ones cleaning up what the earlier ones left behind. The reviewer was not
-the cause; decisions settled too late were.
+The difference is where the stopping point is. Asking everything up front has one: no open
+questions left. Settling in review has none, because each round raises new questions, and the later
+rounds mostly clean up what the earlier ones left behind.
 
 **On Superpowers**, the question usually asked alongside: it is a good system and my team uses it
 on other projects. It packs method and coordination into one session, keeps state in a plan file on

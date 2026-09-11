@@ -53,10 +53,9 @@ này chịu lực. Tài nguyên buộc vào một thư mục, theo cwd hoặc th
 hoặc theo cái tên project tự tính từ nó, không còn khớp được sau khi thư mục biến mất, nên bước
 này phải chạy trước `git worktree remove`, không bao giờ sau.
 
-**Bằng chứng.** Hook này không còn được kích hoạt. Đo ngày 2026-08-20 bằng chính log tôi thêm vào để
-trả lời câu hỏi đó. Ba worktree bị gỡ sau lần ghi cuối của log, trong đó có một lệnh `git
-worktree remove` trần, và số sự kiện `WorktreeRemove` ghi được là không. Trong khi đó hook
-`SubagentStop` nằm cùng file, cùng session, ghi được 27 sự kiện trong cùng cửa sổ thời gian ấy.
+**Vì sao biết.** Hook này không còn được kích hoạt, và tôi xác nhận bằng log: worktree bị gỡ,
+kể cả bằng lệnh `git worktree remove` trần, mà không sự kiện `WorktreeRemove` nào được ghi, trong
+khi một hook khác nằm cùng file vẫn ghi bình thường trong cùng khoảng thời gian đó.
 Tôi kiểm lại theo một đường độc lập: container test dùng chung vẫn `Up (healthy)` sau lần gỡ, mà
 một hook đang chạy thì đã dừng nó.
 

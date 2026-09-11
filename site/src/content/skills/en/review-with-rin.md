@@ -25,8 +25,8 @@ What makes this different from a normal PR review is that it deliberately runs o
 milestone**. The problem it answers is a loop: an earlier version of this method let review
 rounds repeat.
 
-**Evidence.** A project running the earlier version measured 5 to 14 rounds per milestone,
-much of that the loop re-reviewing its own earlier fixes.
+Without a stopping point the rounds multiply, and most of the later ones re-review the earlier
+rounds' own fixes.
 
 So this skill treats Rin's findings as advice Thomas classifies once. Design-level blockers go to
 the owner as a decision, never as a second round, and everything else becomes one work order to

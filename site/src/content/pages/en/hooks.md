@@ -54,11 +54,9 @@ load-bearing. Resources bound to a directory, by cwd or by a label derived from 
 name the project computed from it, cannot be matched once the directory is gone, so this has to
 run before `git worktree remove` and never after.
 
-**Evidence.** This hook is dormant. Measured 2026-08-20 with the very logging I added to
-answer the question. Three worktrees were removed after the log's last write, one of them by a
-plain `git worktree remove`, and the number of `WorktreeRemove` events recorded was zero.
-Meanwhile the `SubagentStop` hook in the same file and the same session logged 27 events in that
-same window. I confirmed it a second, independent way: the shared test container was still `Up
+**How I know.** This hook is dormant, confirmed from the logs: worktrees were removed, one of
+them by a plain `git worktree remove`, and not one `WorktreeRemove` event was recorded, while
+another hook in the same file kept logging normally over the same window. I confirmed it a second, independent way: the shared test container was still `Up
 (healthy)` after the removal, which a live hook would have stopped.
 
 The cause is not that the hook is broken, it is that the hook is never reached. `WorktreeRemove`

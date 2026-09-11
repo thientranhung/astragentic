@@ -25,8 +25,8 @@ cứ thứ gì khác.
 Vấn đề nó đang trả lời là một vòng lặp: một phiên bản trước của phương pháp cho phép các vòng
 review lặp lại.
 
-**Bằng chứng.** Một project chạy phiên bản cũ đo được 5 đến 14 vòng mỗi milestone, phần lớn là vòng
-review lại chính các bản vá trước đó.
+Không có điểm dừng thì số vòng review tự nhân lên, và phần lớn vòng sau là review lại chính các
+bản vá của vòng trước.
 
 Vì vậy skill này coi phát hiện của Rin là lời khuyên mà Thomas phân loại đúng một lần. Những thứ
 blocking ở mức thiết kế đi thẳng lên chủ project như một quyết định, không bao giờ thành vòng thứ

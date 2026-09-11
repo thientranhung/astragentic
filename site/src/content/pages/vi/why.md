@@ -76,11 +76,10 @@ Hai dòng về comment là chỗ thay đổi cách làm việc rõ nhất. Agent
 người: nó đặt câu hỏi trên ticket, ai trong team trả lời được thì trả lời, rồi nó chạy tiếp. AI
 làm việc như một thành viên trong nhóm chứ không phải một công cụ bạn phải ngồi canh.
 
-**Bằng chứng.** Trên một dự án thật, một ticket trông như đang bị chặn suốt nhiều giờ
-sau khi cả hai blocker đã merge, và bốn ticket đeo nhãn sẵn sàng trong lúc vẫn đang bị chặn. Danh
-sách việc làm được ngay, gọi là frontier, được tính đúng nhưng chỉ tồn tại trong context của agent.
-Vì vậy contract mang cả hai nửa: tính xong thì ghi câu trả lời ngược lại lên tracker, và không đọc
-nhãn sẵn sàng như thể nó là trạng thái.
+Một chi tiết dễ bỏ sót: danh sách việc làm được ngay, gọi là frontier, phải được ghi lại. Nếu nó
+chỉ được tính trong context của agent thì bạn mở board ra không thấy, và ticket đã hết blocker vẫn
+trông như đang bị chặn. Vì vậy contract mang cả hai nửa: tính xong thì ghi câu trả lời ngược lại
+lên tracker, và không đọc nhãn sẵn sàng như thể nó là trạng thái.
 
 **Đánh đổi.** Astragentic thừa kế giới hạn của tracker bạn đang dùng. Không tracker nào có ô assignee
 thiết kế để chứa `builder/<ticket-id>`. GitHub Issues không có trường status thật, nên status nằm
@@ -139,9 +138,9 @@ Lý do nằm ở chỗ vòng lặp được đặt ở đâu.
 - **Cách làm thường gặp lặp ở cuối.** Quyết định chưa chốt được đưa vào code, rồi mới chốt ở
   review. Đó là khâu tốn kém nhất, và số vòng review không có điểm dừng tự nhiên.
 
-**Bằng chứng.** Trên các dự án tôi đo, một plan theo cách lặp ở cuối đi qua 5 tới 14 vòng review,
-phần lớn vòng sau dùng để dọn thứ vòng trước để lại. Nguyên nhân không nằm ở reviewer mà ở chỗ
-quyết định được chốt quá muộn.
+Khác biệt nằm ở chỗ dừng. Hỏi cho hết ở đầu thì có điểm dừng: hết câu hỏi mở là xong. Chốt ở
+review thì không, vì mỗi vòng lại sinh câu hỏi mới, và vòng sau chủ yếu dọn thứ vòng trước để
+lại.
 
 **Về Superpowers**, câu hay được hỏi kèm: đó là một hệ tốt và team của tôi có dùng ở dự án khác.
 Nó gói phương pháp và điều phối vào chung một session, trạng thái nằm trong file plan trên branch,

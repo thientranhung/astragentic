@@ -46,11 +46,10 @@ Mỗi role có hai file, và chỗ đặt luật quan trọng hơn nội dung lu
 là system prompt, chỉ mang bốn dòng. `.agents/roles/<role>.md` là contract đầy đủ, vào session
 qua tool Read nên nó nằm trong context như một tool result.
 
-**Bằng chứng.** Tôi đo được điều này trong một session dài có compact đúng một lần: bốn dòng trong
-system prompt được tuân đúng cả session, còn mọi luật nằm ngoài nó đều bị vi phạm, và không vi
-phạm nào được phát hiện cho tới lúc chủ dự án hỏi. Tương quan là tuyệt đối. Đó không phải chuyện
-agent lơ đãng, đó là budget context hoạt động đúng như thiết kế. Vì vậy bốn dòng đó cố định ở
-bốn, và phần còn lại được nạp lại bằng hook chứ không bằng lời nhắc.
+Khác biệt này quyết định luật nào còn hiệu lực sau compact: thứ nằm trong system prompt thì còn,
+thứ nằm ngoài thì không, và agent không hề biết mình vừa mất luật. Đó không phải chuyện agent lơ
+đãng, đó là budget context hoạt động đúng như thiết kế. Vì vậy bốn dòng đó cố định ở bốn, và phần
+còn lại được nạp lại bằng hook chứ không bằng lời nhắc.
 
 ## coordination
 
@@ -89,10 +88,9 @@ mọi worktree đều cấp phát, là tiến trình có cwd nằm trong đó. M
 database, port đã đăng ký, container, broker, lease trên cluster dùng chung. Harness không thể
 gọi tên bất kỳ thứ nào trong số đó mà không gọi tên stack của đúng một dự án.
 
-**Bằng chứng.** Suốt bốn release nó đã làm đúng chuyện đó: một compose label và một tiến trình broker
-được hardcode ở năm chỗ gọi khác nhau. Một project chạy stack khác đọc thấy dòng chữ "đã có
-cleanup" rồi không giải phóng gì cả. Đo được ở downstream trong một đêm: 43 tiến trình mồ côi,
-3.405 database thừa chiếm 25 GB, load average 123, một Builder bị hệ điều hành giết.
+Rủi ro cụ thể: một bước dọn dẹp viết cứng theo stack của một dự án sẽ đọc đúng cú pháp nhưng
+không giải phóng gì trên dự án dùng stack khác. Khi đó tiến trình mồ côi và database thừa tích lại
+âm thầm cho tới lúc máy hết tài nguyên.
 
 Nên bây giờ project tự khai bước dọn riêng thành một plug chạy được ở
 `.astraler/project/cleanup-worktree.sh`, và `release-worktree-resources.sh` gọi nó sau khi đã

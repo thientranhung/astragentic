@@ -48,11 +48,10 @@ Each role has two files, and where a rule sits matters more than what it says.
 is the full contract, and it enters the session through the Read tool, so it lives in context as
 a tool result.
 
-**Evidence.** I measured this on one long session that compacted once: the four lines in the
-system prompt were obeyed all session, every rule outside it was violated, and none of the
-violations was noticed until the owner asked. The correlation was total. That is not an attention
-failure, it is the context budget behaving exactly as built. So those four lines stay fixed at
-four, and the rest is re-armed by a hook rather than by a reminder.
+That difference decides which rules survive a compaction: what sits in the system prompt does,
+what sits outside it does not, and the agent has no way of knowing it just lost a rule. That is not
+an attention failure, it is the context budget behaving exactly as built. So those four lines stay
+fixed at four, and the rest is re-armed by a hook rather than by a reminder.
 
 ## coordination
 
@@ -92,10 +91,9 @@ one thing every worktree can allocate: processes rooted in it. Everything else b
 project: a database, a port registration, a container, a broker, a lease on a shared cluster. The
 harness cannot name any of those without naming one project's stack.
 
-**Evidence.** For four releases it did exactly that: a compose label and a broker process
-hardwired at five separate call sites. A project on a different stack read "cleanup exists" and
-released nothing. Measured downstream in one night: 43 orphaned processes, 3,405 leftover
-databases taking 25 GB, load average 123, one Builder killed by the OS.
+The concrete risk: a cleanup step hardwired to one project's stack reads as correct on another
+one and releases nothing. Orphaned processes and leftover databases then pile up quietly until the
+machine runs out of room.
 
 So the project now declares its own release step as an executable plug at
 `.astraler/project/cleanup-worktree.sh`, and `release-worktree-resources.sh` calls it after the
