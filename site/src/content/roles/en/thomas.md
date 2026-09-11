@@ -1,6 +1,6 @@
 ---
 title: "Thomas"
-tagline: "Thomas is the only role still here when a Builder's session has closed, so the durable state sits with this role."
+tagline: "Thomas is the only agent still here when a Builder's session has closed, so the durable state belongs to this role."
 sessionTag: "resident"
 ---
 
