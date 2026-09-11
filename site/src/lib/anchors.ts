@@ -185,8 +185,8 @@ export const WHY: WhyCard[] = [
       en: 'Why Astragentic, when a coding agent already does the work?',
     },
     answer: {
-      vi: 'Một agent trong một branch thì không cần điều phối. Từ agent thứ hai trên cùng một repo, các session ghi đè nhau mà không báo lỗi, và không ai nói được cái gì đã chạy.',
-      en: 'One agent in one branch needs no coordination. From the second agent on the same repo, sessions overwrite each other without an error, and nobody can say what ran.',
+      vi: 'Coding agent đã là một đội outsource tốt; thứ còn tốn thời gian là trả lời và review chúng. Thomas nhận phần đó, bạn chỉ còn định hướng và quyết định.',
+      en: 'A coding agent is already a good outsourced team; what still costs time is answering and reviewing it. Thomas takes that part, leaving you direction and decisions.',
     },
   },
   {

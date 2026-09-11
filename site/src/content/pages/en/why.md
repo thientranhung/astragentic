@@ -4,29 +4,41 @@ description: "Five questions about Astragentic's design: why it is needed, why t
 ---
 
 The five questions below are the five largest design decisions in Astragentic. Every answer
-follows the same frame: a one-line answer, the mechanism, the measurement on record, and the
-cost. Measurements carry an AST-xxx code and have a matching lesson on the Lessons page.
+follows the same frame: a one-line answer, the mechanism, the measurement on record where there
+is one, and the cost. Measurements carry an AST-xxx code and have a matching lesson on the Lessons page.
 
 ## why-astragentic
 
-One agent in one branch needs no coordination. The trouble starts with the second agent on the
-same repo: sessions overwrite each other's work without an error, review drags on round after
-round, and at the end of the day nobody can say exactly what ran.
+A coding agent today is already a good outsourced team: it takes work, writes code, runs tests,
+returns results. The engineer is left with the guiding role. That role still costs time in two
+places: answering the questions an agent raises while it works, and reviewing the quality of what
+it returns.
 
-Astragentic makes those failures structurally hard, instead of something to watch for by eye.
-Every Builder has its own worktree, so nobody overwrites anybody. A claim is one assignee line
-on the tracker, so two sessions cannot take the same job. The result is a commit and a receipt,
-not the report of the agent that just did the work.
+Both share one bottleneck. The agent's questions usually run deeper than the technical knowledge
+of the person receiving them, so to answer, that person takes the question to another AI and
+copies the answer back. Prompting one AI to answer another is no different from letting the AI
+settle it alone; the human in the middle only adds latency. Astragentic removes that middle step.
 
-Measurement: AST-016, three sessions on one checkout, no error thrown, one working session lost
-and another spent finding the cause. Since then isolation is unconditional, read-only agents
-included.
+The first mechanism is Thomas, an assistant that knows the project. Thomas reads the artifacts
+agents return, chooses among the solutions and tech stacks they propose, answers technical
+questions, and brings to you only the decisions that are genuinely yours: product direction,
+UI/UX, priorities. You sit in the client's seat: set the direction, use your own engineering
+sense to notice when the team drifts, and get most of your time back.
+
+The second mechanism is a team with roles, running in plain sight. Every agent is a named session
+with a pane in herdr, leaving its work history in that session. You see whether they work
+correctly; Thomas can investigate when something goes wrong; and you watch how they coordinate,
+which is how Astragentic itself gets improved. A runtime's subagents and agent teams hide inside
+the parent process and show none of that.
+
+The third mechanism is that Astragentic is not fixed. It is a scaffold: roles, contracts, skills
+and hooks are files in your repo, adjustable to how you want the team to run. It suits people who
+work as orchestrators, running a team of agents through one representative rather than prompting
+each agent by hand.
 
 Cost: one more toolset to install, understand and upgrade, and every upgrade is an event the
-project has to absorb. And one thing said plainly: so far I have proven that each tool runs
-correctly; the whole loop from dispatch to merge with every gate firing on real work is still
-being measured.
-
+project has to absorb. And so far I have proven that each tool runs correctly; the whole loop from
+dispatch to merge with every gate firing on real work is still being measured.
 ## why-tracker
 
 The state of the work has to live somewhere an agent cannot keep in its context and you can open
