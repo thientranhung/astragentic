@@ -32,7 +32,7 @@ so a watch armed too early sees *that* turn end and reports idle on a Builder th
 
 | What is in front of you | Reach for |
 |---|---|
-| A claimed ticket, and `orchestrator.md` says the role runs on Claude | `dispatch-ticket` + `dispatch-ticket-claude` |
+| A claimed ticket, and `orchestrator.md` says the agent in this role runs on Claude | `dispatch-ticket` + `dispatch-ticket-claude` |
 | The same, on Codex or OpenCode | `dispatch-ticket-codex` / `dispatch-ticket-opencode` |
 | A Builder or Shaper, that is, a write role | Launch with `--dangerously-skip-permissions` |
 | Rin or QA, that is, a review role | Launch without it; Rin has no fallback row |

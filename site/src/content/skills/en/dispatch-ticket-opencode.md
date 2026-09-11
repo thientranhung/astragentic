@@ -34,7 +34,7 @@ pass as a normal answer.
 
 | What is in front of you | Reach for |
 |---|---|
-| A claimed ticket, and `orchestrator.md` says the role runs on OpenCode | `dispatch-ticket` + `dispatch-ticket-opencode` |
+| A claimed ticket, and `orchestrator.md` says the agent in this role runs on OpenCode | `dispatch-ticket` + `dispatch-ticket-opencode` |
 | A Builder or Shaper pane | `opencode --agent <role> -m <provider>/<model> --auto` |
 | An OpenCode row with a non-blank Effort cell | Stop and ask the owner, because effort is unreachable here |
 | A pane that reports `idle` | Read the artifact, because that state carries no rule behind it |

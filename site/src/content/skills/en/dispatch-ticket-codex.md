@@ -34,7 +34,7 @@ check is not ceremony: it is the only place the owner's runtime choices and the
 
 | What is in front of you | Reach for |
 |---|---|
-| A claimed ticket, and `orchestrator.md` says the role runs on Codex | `dispatch-ticket` + `dispatch-ticket-codex` |
+| A claimed ticket, and `orchestrator.md` says the agent in this role runs on Codex | `dispatch-ticket` + `dispatch-ticket-codex` |
 | A Builder, Shaper or QA pane on Codex | `codex --profile <role> --dangerously-bypass-approvals-and-sandbox` |
 | A `rin` row naming Codex | Stop. A Codex root cannot host the gate (`codex-claude-arm`) |
 | The profile is missing or has drifted from the template | Hand the owner the exact copy and diff commands; never provision silently |
