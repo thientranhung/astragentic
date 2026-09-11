@@ -18,7 +18,7 @@ transition, hai toạ độ mà một session không tự tìm ra được, các
 ngược của chúng, việc ghi đè trọn trường description, và những thứ chỉ con người mới đổi được.
 Phần thuộc dự án ở lại trong dự án: site, `cloudId`, project key và bảng transition id đều nằm
 trong `docs/agents/issue-tracker.md` của dự án đó. Tôi truy cập Jira qua bộ công cụ MCP của
-Atlassian. Mọi thứ ở đây đo trên một dự án thật, kiểu team-managed, chuyển từ Linear sang Jira
+Atlassian. Mọi thứ ở đây đo trên một dự án thật, team-managed, chuyển từ Linear sang Jira
 ngày 2026-08-21.
 <!-- source: harness/.agents/skills/jira-issue-tracker/SKILL.md -->
 

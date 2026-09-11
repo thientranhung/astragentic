@@ -34,7 +34,7 @@ qua như một câu trả lời bình thường.
 
 | Thứ đang ở trước mặt | Gọi cái này |
 |---|---|
-| Một ticket đã claim, và `orchestrator.md` ghi vai này chạy trên OpenCode | `dispatch-ticket` + `dispatch-ticket-opencode` |
+| Một ticket đã claim, và `orchestrator.md` ghi agent ở role này chạy trên OpenCode | `dispatch-ticket` + `dispatch-ticket-opencode` |
 | Một pane Builder hoặc Shaper | `opencode --agent <role> -m <provider>/<model> --auto` |
 | Một dòng OpenCode có ô Effort không trống | Dừng và hỏi chủ dự án, vì effort không dùng được ở đây |
 | Một pane báo `idle` | Đọc artifact, vì trạng thái đó không có luật nào đứng sau |
@@ -44,7 +44,7 @@ qua như một câu trả lời bình thường.
 
 ## Cần sẵn gì
 
-- **Adapter của vai có mặt trong worktree**: `test -f <worktree-path>/.opencode/agents/<role>.md`.
+- **Adapter của role có mặt trong worktree**: `test -f <worktree-path>/.opencode/agents/<role>.md`.
   Xác nhận nó resolve bằng `opencode debug agent <role>` chạy từ cwd của worktree, không bao giờ
   bằng `opencode agent list --pure`, vì lệnh đó không liệt kê agent cấp dự án.
 - **cwd của pane là gốc worktree hoặc một thư mục con của nó**, vì OpenCode đi ngược lên từ thư

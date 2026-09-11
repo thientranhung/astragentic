@@ -32,20 +32,20 @@ chưa hề bắt đầu (AST-114). Giờ thứ tự được ghi ngay tại ch�
 
 | Tình huống trước mặt bạn | Gọi cái nào |
 |---|---|
-| Một ticket đã claim, và `orchestrator.md` ghi vai này chạy trên Claude | `dispatch-ticket` + `dispatch-ticket-claude` |
+| Một ticket đã claim, và `orchestrator.md` ghi agent ở role này chạy trên Claude | `dispatch-ticket` + `dispatch-ticket-claude` |
 | Cũng vậy, nhưng trên Codex hoặc OpenCode | `dispatch-ticket-codex` / `dispatch-ticket-opencode` |
-| Builder hoặc Shaper, tức vai có ghi | Launch kèm `--dangerously-skip-permissions` |
-| Rin hoặc QA, tức vai review | Launch không kèm; Rin không có dòng dự phòng nào |
+| Builder hoặc Shaper, tức role có ghi | Launch kèm `--dangerously-skip-permissions` |
+| Rin hoặc QA, tức role review | Launch không kèm; Rin không có dòng dự phòng nào |
 | Monitor báo `blocked` | Đọc pane, trả lời bằng `SendMessage`, arm một Monitor **mới** |
 
 <!-- source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md -->
 
 ## Cần sẵn gì
 
-- **Adapter của vai có mặt trong worktree**: `test -f <worktree-path>/.claude/agents/<role>.md`.
+- **Adapter của role có mặt trong worktree**: `test -f <worktree-path>/.claude/agents/<role>.md`.
   Thiếu nghĩa là payload chưa được commit hoặc đã bị gitignore, và đây đúng là file mà
   `claude --agent <role>` sẽ nạp.
-- **Dòng `orchestrator.md` của vai này đã chốt**, có model và, chỉ khi dòng đó đặt, có effort.
+- **Dòng `orchestrator.md` của role này đã chốt**, có model và, chỉ khi dòng đó đặt, có effort.
   Model và effort lấy từ dòng đó, không lấy từ trí nhớ.
 - **Tên session của Builder tra được** bằng `ListAgents`, vì `SendMessage` gọi session theo tên.
 - **Thứ đặt trong Monitor là `herdr-watch-terminal.sh`.** Monitor là kênh chuyển tin; script
@@ -94,7 +94,7 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Tất cả đề
 
 - Bốn hành động diễn ra đúng thứ tự, và echo được đọc trước khi arm Monitor.
 - Ba Builder đang chạy nghĩa là ba Monitor, mỗi pane một cái, mỗi cái một description riêng.
-- Vai review launch không kèm `--dangerously-skip-permissions`, vai ghi thì có kèm.
+- Agent ở role review launch không kèm `--dangerously-skip-permissions`, agent ở role ghi thì có kèm.
 - Mọi thông báo đều được kiểm lại bằng `herdr agent get <pane-id>` trước khi ai đó hành động.
 - Không tin bất kỳ `idle` nào cho tới khi bộ chặn khởi động đã thấy `working` trước. Ô soạn thảo
   Claude trống khớp luật idle, nên một brief chưa gửi đọc ra thành một Builder xong tức thì.

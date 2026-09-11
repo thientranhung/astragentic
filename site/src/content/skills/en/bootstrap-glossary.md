@@ -23,9 +23,9 @@ into a separate file, `docs/agents/CONTEXT-review.md`, so the evidence trail is 
 the vocabulary itself.
 <!-- source: harness/.agents/skills/bootstrap-glossary/SKILL.md -->
 
-What it replaces is a fifty-question domain interview at the start of a brownfield project, the
-kind where nobody has an hour free and the answers drift from what the code actually does anyway.
-But the harder problem it is built against is quieter: an agent-authored glossary that looks
+What it replaces is a fifty-question domain interview at the start of a brownfield project: an
+hour of someone's time, and the answers drift from what the code actually does anyway. The harder
+problem it is built against is quieter: an agent-authored glossary that looks
 confirmed is worse than no glossary at all, because later sessions treat confident-sounding prose
 as settled fact. So this skill extracts rather than invents, and it marks every term `UNREVIEWED`
 until the owner has looked at it. That mark sits where it is visible, in a header any reader sees,

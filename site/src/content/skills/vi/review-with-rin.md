@@ -66,7 +66,7 @@ bước cleanup.
 ## Lỗi đã biết
 
 - `AST-030`: orchestrator ghi tên một runtime cho dòng `rin` mà runtime đó không có đường dispatch
-  nào, nên Rin thành không dispatch được. Promoted: ma trận launcher giờ là nhà duy nhất của mọi vai.
+  nào, nên Rin thành không dispatch được. Promoted: ma trận launcher giờ là nhà duy nhất của mọi role.
 - `AST-033`: cách tra cũ "có tab ticket nào đang sống không?" trả lời "không" mọi lần ở một gate
   spec, âm thầm biến mọi gate spec thành một subagent vô hình. Promoted, đã được thay bằng câu hỏi
   "có gọi được tên workspace không?"
@@ -84,7 +84,7 @@ bước cleanup.
   gate worktree bị gỡ.
 - Có một marker `rin(gate):` nằm tại head đã review, với `Scope:`, `Verdict:` và `Report:` đã điền.
 - Thomas thật sự có bác hoặc hoãn ít nhất một phát hiện trong các gate gần đây. Một chuỗi không bác
-  cái nào là dấu hiệu anh ấy đang chuyển tiếp nhãn của Rin chứ không phải đang phân loại chúng.
+  cái nào là dấu hiệu Thomas đang chuyển tiếp nhãn của Rin chứ không phải đang phân loại chúng.
 - Không gì được merge trước khi cánh tay cross-vendor chạy trên SHA cuối.
 <!-- source: harness/.agents/skills/review-with-rin/SKILL.md -->
 
@@ -95,7 +95,7 @@ Một ticket đi qua worktree của `/skills/dispatch-ticket`, và khi nó sẵn
 không, và bằng chứng trình duyệt có chống lưng cho mọi thay đổi UI không. Thứ Rin không phán được,
 tức sản phẩm đang chạy có còn liền mạch không, là việc của `dispatch-qa-walk`. Khi các phát hiện
 đã được gộp và kiểm lại, `/skills/codex-arm` nhận SHA cuối cho lượt cross-vendor trước khi bất cứ
-thứ gì được merge. Bản thân vai `rin` sống trong các khái niệm ở `/dictionary/role`, và toàn bộ
+thứ gì được merge. Bản thân role `rin` sống trong các khái niệm ở `/dictionary/role`, và toàn bộ
 việc này diễn ra bên trong một `/dictionary/gate`, trên một `/dictionary/worktree` mà không ai
 ngoài Rin ghi vào.
 <!-- source: harness/.agents/skills/review-with-rin/SKILL.md -->

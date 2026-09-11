@@ -48,11 +48,11 @@ và sự cô lập đó phủ mọi lệnh có ghi xuống đĩa, không riêng 
   chỉ chứa nội dung đã tracked, nên một file `.agents/roles/builder.md` còn untracked nghĩa là
   Builder khởi động mà không có hợp đồng nào.
   <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
-- `.agents/orchestrator.md` có một dòng thật (runtime, model, effort) cho vai sắp dispatch. Một
+- `.agents/orchestrator.md` có một dòng thật (runtime, model, effort) cho role sắp dispatch. Một
   dòng ghi `<set-me>` nghĩa là chưa quyết, và chưa quyết là dừng ngay tại lúc dispatch.
   <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
-- Đọc hợp đồng của vai sắp dispatch trước (`builder.md` cho một Builder), vì skill này chỉ mang
-  phần cơ chế, không nói vai đó phải làm gì với cơ chế ấy.
+- Đọc hợp đồng của role sắp dispatch trước (`builder.md` cho một Builder), vì skill này chỉ mang
+  phần cơ chế, không nói role đó phải làm gì với cơ chế ấy.
   <!-- source: harness/.agents/roles/builder.md -->
 
 ## Nó để lại gì
@@ -96,7 +96,7 @@ thái `promoted`: đã sửa và đã nằm trong hợp đồng mà trang này m
 - `.astraler/state/dispatch-record.json` có một entry cho mọi ticket đang sống, kèm write-set.
 - Mọi brief đã gửi đều có watcher arm ngay trong cùng hành động đó, không phải một bước riêng
   làm sau.
-- Nhãn tab và nhãn pane khớp với vai đã dispatch (`builder:<id>` so với `spec:<id>`,
+- Nhãn tab và nhãn pane khớp với role đã dispatch (`builder:<id>` so với `spec:<id>`,
   `qa:<id>`, `rin:<id>`), vì tiền tố sai thì watchdog không nhìn thấy.
 - Cleanup chỉ gỡ worktree sau khi `git status --short` trống và `check-simplify-markers.sh` xanh.
 
@@ -105,8 +105,8 @@ thái `promoted`: đã sửa và đã nằm trong hợp đồng mà trang này m
 ## Nó nằm ở đâu trong chuỗi
 
 Câu truy vấn frontier (nằm trong `thomas.md`) quyết định ticket nào tới lượt → `dispatch-ticket`
-claim nó và đặt một vai `builder` vào pane → Builder chạy vòng khép kín của riêng nó
+claim nó và đặt một role `builder` vào pane → Builder chạy vòng khép kín của riêng nó
 (`implement` → review → simplify → `/skills/codex-arm`) rồi handback → `CLEANUP.md` của
 `dispatch-ticket` thu hồi worktree sau khi artifact đã được kiểm → cửa milestone đi qua
-`/skills/review-with-rin` trước khi merge. `thomas` và `builder` là hai hợp đồng vai mà skill
+`/skills/review-with-rin` trước khi merge. `thomas` và `builder` là hai hợp đồng role mà skill
 này nằm ở giữa.

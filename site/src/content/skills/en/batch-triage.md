@@ -22,8 +22,8 @@ invent**: every classification cites the item's own text or the code it names, a
 cannot be classified from evidence lands as `NEEDS-OWNER`, a valid outcome that costs one line.
 <!-- source: harness/.agents/skills/batch-triage/SKILL.md -->
 
-The problem it handles shows up on Thomas's first day on an adopted repo: **an inherited backlog
-with no edges has no frontier.** The frontier query returns every ticket whose blockers are all
+**An inherited backlog with no edges has no frontier.** That is the problem this skill handles,
+showing up as soon as Thomas adopts a repo. The frontier query returns every ticket whose blockers are all
 done and whose assignee is empty, so in a backlog where nothing blocks anything, every ticket
 looks ready at once and the ordering falls back to guesswork. The skill also carries a correction
 measured inside this harness. It used to ask for *"the code map"* in prose, which is why

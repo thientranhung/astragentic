@@ -23,9 +23,9 @@ vào một file riêng, `docs/agents/CONTEXT-review.md`, để vệt bằng ch�
 bộ từ vựng.
 <!-- source: harness/.agents/skills/bootstrap-glossary/SKILL.md -->
 
-Thứ nó thay thế là một buổi phỏng vấn domain năm mươi câu ở đầu một project brownfield, loại buổi
-mà không ai rảnh một tiếng và câu trả lời rồi cũng lệch khỏi thứ code thật sự làm. Nhưng bài toán
-khó hơn mà nó được dựng lên để chống thì kín đáo hơn: một bộ từ điển do agent viết mà trông như đã
+Thứ nó thay thế là một buổi phỏng vấn domain năm mươi câu ở đầu một project brownfield: tốn một
+tiếng của ai đó, và câu trả lời rồi cũng lệch khỏi thứ code thật sự làm. Bài toán khó hơn mà nó
+được dựng lên để chống thì ít lộ hơn: một bộ từ điển do agent viết mà trông như đã
 được xác nhận còn tệ hơn không có từ điển nào, vì các session sau sẽ coi văn xuôi nghe chắc chắn là
 sự thật đã chốt. Nên skill này rút ra chứ không bịa ra, và nó đánh dấu mọi thuật ngữ là
 `UNREVIEWED` cho tới khi chủ project nhìn qua. Dấu đó nằm ở chỗ nhìn thấy được, trong một header

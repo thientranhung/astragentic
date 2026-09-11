@@ -34,11 +34,11 @@ chiếu.
 
 | Tình huống trước mặt bạn | Gọi cái nào |
 |---|---|
-| Một ticket đã claim, và `orchestrator.md` ghi vai này chạy trên Codex | `dispatch-ticket` + `dispatch-ticket-codex` |
+| Một ticket đã claim, và `orchestrator.md` ghi agent ở role này chạy trên Codex | `dispatch-ticket` + `dispatch-ticket-codex` |
 | Một pane Builder, Shaper hoặc QA trên Codex | `codex --profile <role> --dangerously-bypass-approvals-and-sandbox` |
 | Một dòng `rin` ghi Codex | Dừng lại. Session gốc Codex không host được gate (`codex-claude-arm`) |
 | Profile thiếu hoặc đã lệch khỏi template | Đưa chủ máy đúng lệnh copy và diff; không bao giờ tự tạo trong im lặng |
-| Một file `.codex/agents/*.toml` trông như đáp án | Không phải. Đó là subagent spawn được, không phải pane của một vai |
+| Một file `.codex/agents/*.toml` trông như đáp án | Không phải. Đó là subagent spawn được, không phải pane của một role |
 
 <!-- source: harness/.agents/skills/dispatch-ticket-codex/SKILL.md -->
 
@@ -57,7 +57,7 @@ chiếu.
 | Kết quả | Nơi nó nằm lại |
 |---|---|
 | Lần launch | `herdr agent start "<role>-<ticket-id>" --kind codex`, kèm cờ profile |
-| Danh tính vai, model và effort | File TOML cục bộ theo máy, không phải CLI |
+| Danh tính role, model và effort | File TOML cục bộ theo máy, không phải CLI |
 | Một phát hiện lệch | Một báo cáo cho chủ máy, kèm lệnh copy và diff, trước mọi lần dispatch |
 | Mọi thứ còn lại, gồm brief, watch, phán quyết và dọn dẹp | Giao thức dùng chung `dispatch-ticket` |
 

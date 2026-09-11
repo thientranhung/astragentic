@@ -32,8 +32,8 @@ caller đã chuyển chính là hình big-bang tái xuất ở tầng thấp hơ
 
 ## Khi nào Thomas gọi nó
 
-Không ai dispatch skill này. Đây là craft do model tự gọi, được chào cho hai vai và không thuộc
-vai nào, nên nó được với tới khi tình huống xuất hiện chứ không nối cứng vào một phase.
+Không ai dispatch skill này. Đây là craft do model tự gọi, được chào cho hai role và không thuộc
+role nào, nên nó được với tới khi tình huống xuất hiện chứ không nối cứng vào một phase.
 
 | Thứ đang ở trước mặt | Gọi cái này |
 |---|---|

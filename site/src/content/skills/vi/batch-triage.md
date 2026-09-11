@@ -22,8 +22,8 @@ lượt phân loại đều trích văn bản của item hoặc code item gọi 
 từ bằng chứng sẽ rơi vào `NEEDS-OWNER`, một kết quả hợp lệ tốn đúng một dòng.
 <!-- source: harness/.agents/skills/batch-triage/SKILL.md -->
 
-Vấn đề nó xử lý xuất hiện ngay ngày đầu Thomas làm việc trên một repo mới nhận: **một backlog
-thừa kế không có cạnh thì không có frontier.** Câu truy vấn frontier trả về mọi ticket đã hết
+**Một backlog thừa kế không có cạnh thì không có frontier.** Đó là vấn đề skill này xử lý, xuất
+hiện ngay khi Thomas nhận một repo mới. Câu truy vấn frontier trả về mọi ticket đã hết
 blocker và còn trống assignee, nên trong một backlog không gì chặn gì, mọi ticket đều trông như
 sẵn sàng cùng lúc và thứ tự rơi về phỏng đoán. Skill này còn mang theo một đính chính đo được
 ngay trong harness này. Trước đây nó yêu cầu *"the code map"* bằng văn xuôi, và đó là lý do
