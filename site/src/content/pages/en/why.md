@@ -1,11 +1,12 @@
 ---
 title: "Why"
-description: "Five questions about Astragentic's design: why it is needed, why the tracker holds the state, why subagents do not coordinate the team, why mattpocock-skills, why a second vendor reads the diff."
+description: "Five questions about the design of Astragentic, a scaffold for autonomous coding: why it is needed, why the tracker holds the state, why subagents do not coordinate the team, why mattpocock-skills, why a second vendor reads the diff."
 ---
 
-Every team works its own way, and no process can be imported intact. Astragentic is therefore
-designed as a scaffold: a frame for running a team of AI agents that has the hard parts settled,
-with every component open for you to adapt.
+Astragentic is built for autonomous coding: a team of AI agents runs the build on its own, while
+people keep direction and decisions. Every team works its own way, and no process can be imported
+intact, so Astragentic is designed as a scaffold: a frame for running a team of AI agents that has
+the hard parts settled, with every component open for you to adapt.
 
 The five questions below are the five largest design decisions in that scaffold. Every answer
 follows the same frame: a one-line answer, the mechanism, the measurement on record where there

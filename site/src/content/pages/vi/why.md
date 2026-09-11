@@ -1,11 +1,12 @@
 ---
 title: "Vì sao"
-description: "Năm câu hỏi về thiết kế của Astragentic: vì sao cần nó, vì sao tracker giữ trạng thái, vì sao không dùng subagent để điều phối, vì sao chọn mattpocock-skills, vì sao để một vendor khác đọc lại diff."
+description: "Năm câu hỏi về thiết kế của Astragentic, một scaffold cho autonomous coding: vì sao cần nó, vì sao tracker giữ trạng thái, vì sao không dùng subagent để điều phối, vì sao chọn mattpocock-skills, vì sao để một vendor khác đọc lại diff."
 ---
 
-Mỗi team có một cách làm việc riêng, và không quy trình nào nhập khẩu nguyên vẹn được. Astragentic
-vì thế được thiết kế như một scaffold: một bộ khung điều hành team AI agent đã giải quyết sẵn
-những phần khó, còn mọi thành phần trong đó đều mở để bạn tuỳ biến.
+Astragentic hướng tới autonomous coding: một team AI agent tự vận hành phần thi công, còn con
+người giữ định hướng và quyết định. Mỗi team có một cách làm việc riêng, và không quy trình nào
+nhập khẩu nguyên vẹn được, nên Astragentic được thiết kế như một scaffold: một bộ khung điều hành
+team AI agent đã giải quyết sẵn những phần khó, còn mọi thành phần trong đó đều mở để bạn tuỳ biến.
 
 Năm câu dưới đây là năm quyết định thiết kế lớn nhất của bộ khung đó. Mỗi câu trả lời theo cùng
 một khung: trả lời trong một dòng, cơ chế, số đo đã ghi nhận khi có, và cái giá phải trả. Số đo
