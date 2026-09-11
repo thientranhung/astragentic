@@ -33,7 +33,7 @@
       .clip { position: absolute; inset: 0; }
 
       /* ── app chrome ─────────────────────────────────────────────────── */
-      .app { position: absolute; inset: 0; display: flex; }
+      .app { position: absolute; top: 0; left: 0; right: 0; height: 930px; display: flex; }
 
       /* sidebar */
       .sidebar { width: 340px; flex-shrink: 0; background: #13141b; border-right: 1px solid #262838; padding: 28px 0; display: flex; flex-direction: column; }
@@ -112,24 +112,23 @@
       .codex-prompt::before { content: "›"; margin-right: 12px; color: #7fa2e6; }
       .codex-working { color: #8b93a1; padding-left: 24px; }
 
-      /* ── card overlay, bottom band of the main area ──────────────────── */
-      .card-overlay { position: absolute; left: 340px; right: 0; top: 50%; height: 0; max-width: 900px; margin: 0 auto; z-index: 4; }
-      .card {
-        position: absolute; left: 0; right: 0; top: 0; width: 100%; opacity: 0; transform: translateY(-50%);
+      /* ── caption band, below the herdr workspace ──────────────────────── */
+      .caption-band { position: absolute; left: 0; right: 0; top: 930px; height: 150px; background: #F2F3F6; border-top: 1px solid #D9DCE3; z-index: 4; }
+      .caption-overlay { position: relative; width: 100%; height: 100%; }
+      .caption {
+        position: absolute; left: 0; right: 0; top: 50%; opacity: 0;
         display: inline-flex; align-items: flex-start; justify-content: center;
-        background: #F2F3F6; border-radius: 10px;
-        box-shadow: 0 14px 36px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.35);
-        padding: 18px 28px;
+        max-width: 1500px; margin: 0 auto;
         font-family: Inter, "SF Pro Text", -apple-system, system-ui, sans-serif;
-        font-size: 26px; line-height: 36px; font-weight: 500; letter-spacing: -0.005em;
+        font-size: 28px; line-height: 38px; font-weight: 500; letter-spacing: -0.005em;
         color: #14161A; text-align: center;
       }
-      .card::before {
+      .caption::before {
         content: ""; display: inline-block; flex: 0 0 auto;
-        width: 10px; height: 10px; margin-right: 12px; margin-top: 13px;
+        width: 10px; height: 10px; margin-right: 12px; margin-top: 14px;
         border-radius: 50%; background: #E53625;
       }
-      .card b { font-weight: 700; }
+      .caption b { font-weight: 700; }
 
       /* ── pointer ────────────────────────────────────────────────────── */
       .pointer { position: absolute; top: 0; left: 0; width: 26px; height: 26px; opacity: 0; z-index: 5; transform-origin: 20% 15%; }
@@ -207,7 +206,9 @@
           </div>
         </div>
 
-        <div class="card-overlay" id="card-overlay" data-layout-allow-overlap data-layout-allow-occlusion></div>
+        <div class="caption-band">
+          <div class="caption-overlay" id="caption-overlay" data-layout-allow-overlap data-layout-allow-occlusion></div>
+        </div>
         <svg class="pointer" id="pointer" viewBox="0 0 26 26" data-layout-allow-overflow data-layout-allow-overlap>
           <path d="M2 2 L2 20 L7.5 15.5 L11 23 L14.5 21.5 L11 14 L18 14 Z" fill="#f4f6fb" stroke="#0e0f14" stroke-width="1.4" stroke-linejoin="round"/>
         </svg>
@@ -308,22 +309,23 @@
       const shopRows = buildAgentRows(document.getElementById('agents-shopdemo'), AGENTS_SHOP, 'shop-row');
       shopRows.forEach((row) => { row.style.opacity = 1; });
 
-      // ── cards, top-right, one visible at a time ──────────────────────
+      // ── captions, band below the workspace, one visible at a time ────
       const CARDS = T.cards;
-      const cardOverlay = document.getElementById('card-overlay');
-      const cardEls = CARDS.map(([t, html]) => {
+      const captionOverlay = document.getElementById('caption-overlay');
+      const captionEls = CARDS.map(([t, html]) => {
         const el = document.createElement('div');
-        el.className = 'card';
+        el.className = 'caption';
         el.innerHTML = html;
-        cardOverlay.appendChild(el);
+        captionOverlay.appendChild(el);
+        gsap.set(el, { yPercent: -50 });
         return el;
       });
       const FADE = 0.25;
       CARDS.forEach(([t], i) => {
-        const el = cardEls[i];
+        const el = captionEls[i];
         const next = CARDS[i + 1] ? CARDS[i + 1][0] : 33;
-        tl.to(el, { autoAlpha: 1, duration: FADE }, t);
-        tl.to(el, { autoAlpha: 0, duration: FADE }, next - FADE);
+        tl.fromTo(el, { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: FADE }, t);
+        tl.to(el, { autoAlpha: 0, y: -8, duration: FADE }, next - FADE);
       });
 
       // ── sidebar: agent rows stagger in at t=2 ─────────────────────────
