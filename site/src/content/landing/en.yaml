@@ -16,11 +16,11 @@ explain:
 
   customize:
     eyebrow: "Customise"
-    headline: "Astragentic is a scaffold: change it your way, reinstall it per project."
+    headline: "Everyone works with AI differently. Astragentic is the scaffold for building your way."
     paragraphs:
-      - "No process can be imported intact, so Astragentic does not lock its process. Roles, contracts, skills and hooks are text files in your checkout: changing a rule in a contract, adding a skill, dropping a hook, all of it is editing a file."
-      - "The path from a change to a project is the release path. After editing, bump `VERSION` and add a section for that version to `RELEASE-NOTES.md`; `install.sh` refuses to copy changed content under an unchanged version number, so every installed release is immutable and can always be read back."
-      - "Inside the project, `ADAPT-HARNESS.md` runs a three-way comparison between the new release, the applied release and the live state of the repo. Your files such as `orchestrator.md` are never overwritten; diverged paths are reported instead. The team runs the new release, you watch the panes and receipts, then change it again. That loop is how Astragentic itself gets upgraded."
+      - "There is no single way of working with AI. Some teams want the full SDLC loop with five roles and a gate at every milestone; some need two agents, a representative and a builder; some change the tracker, the runtime, or add a review step of their own. Astragentic does not choose for you: it is a scaffold, and every part of it is there for you to keep, drop or rewrite."
+      - "Customising means editing files in your checkout. Each role is a contract, each skill a folder, each hook a script; removing a role, adding a skill or changing a rule is within reach and leaves the rest untouched."
+      - "Astragentic ships a release path to carry those changes to the projects already using it. After editing, bump `VERSION`, add an entry to `RELEASE-NOTES.md`, then reinstall with `install.sh`. Inside the project, the adaptation step compares the new release with the one running and keeps the files that belong to you, such as `orchestrator.md`. Upgrade your scaffold this way as often as you like, and every project receives exactly the version you intend."
 
   comms:
     eyebrow: "How agents talk to each other"
