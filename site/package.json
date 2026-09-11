@@ -11,7 +11,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "data": "node scripts/build-data.mjs",
-    "tokens": "node scripts/build-tokens.mjs"
+    "tokens": "node scripts/build-tokens.mjs",
+    "deploy": "astro build && wrangler deploy"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.0",
@@ -24,5 +25,8 @@
   },
   "allowScripts": {
     "esbuild": true
+  },
+  "devDependencies": {
+    "wrangler": "4.131.0"
   }
 }

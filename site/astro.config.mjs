@@ -9,7 +9,7 @@ const host = process.env.HOST || undefined;
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://astragentic.dev',
+  site: 'https://astragentic.thisistool.com',
   // The dev toolbar is position:fixed, so it lands in the middle of a full-page
   // screenshot and hides whatever it covers. Off.
   devToolbar: { enabled: false },
