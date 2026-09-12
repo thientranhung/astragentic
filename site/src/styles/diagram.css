@@ -464,3 +464,76 @@
   .idiagram--flow .diagram-svg .a-flow-reply { display: none; }
   .idiagram--flow .diagram-svg .a-flow-label > text { animation: none; }
 }
+
+/* ── the phone treatment ─────────────────────────────────────────────────────────
+   Shared by Diagram.astro and InteractiveDiagram.astro. A drawing laid out for a
+   1120px band and shrunk to a 341px phone renders its labels at 3px, which is a
+   picture of a diagram rather than a diagram. So below the breakpoint the drawing
+   keeps a workable width and the window scrolls over it, with a fading right edge and
+   a line saying so. Excluded: the inert hero art, and the landing card thumbnails,
+   which are deliberately small and carry no caption. */
+/* Above the breakpoint the drawing fits, so neither the scroller nor the hint exist. */
+.swipe {
+  display: none;
+}
+
+@media (max-width: 780px) {
+  .diagram--read .dscroll,
+  .idiagram:not(.idiagram--inert) .dscroll {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .diagram--read .dscroll::-webkit-scrollbar,
+  .idiagram:not(.idiagram--inert) .dscroll::-webkit-scrollbar {
+    display: none;
+  }
+  .diagram--read .diagram-svg,
+  .idiagram:not(.idiagram--inert) .diagram-svg {
+    min-width: 640px;
+  }
+  /* The edge is a mask, not a coloured overlay: the drawing's pane is white on the
+     canvas and grey inside a white section, so anything painted on top would have to
+     guess which. Masking fades the drawing itself and lets whatever is behind show
+     through, correct on both grounds. It retreats as the reader reaches the far side;
+     where scroll-driven animation is unsupported the fade simply stays, which is the
+     safe half of the trade. */
+  .diagram--read .dscroll,
+  .idiagram:not(.idiagram--inert) .dscroll {
+    mask-image: linear-gradient(to right, #000 calc(100% - var(--diagram-edge)), transparent);
+    animation: diagram-edge linear both;
+    animation-timeline: scroll(self inline);
+  }
+  .diagram--read .swipe,
+  .idiagram:not(.idiagram--inert) .swipe {
+    display: block;
+    margin: 0.6rem 0 0;
+    font-size: var(--text-label-sm);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  /* A caption already closes the figure; the hint goes above it, not after it. */
+  .idiagram:not(.idiagram--inert) .cap,
+  .diagram--read .diagram-caption {
+    margin-top: 0.5rem;
+  }
+}
+
+/* Registered so it can be animated at all: an unregistered custom property has no
+   type, and an untyped property cannot tween. */
+@property --diagram-edge {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 56px;
+}
+@keyframes diagram-edge {
+  /* the full fade until the last stretch of the scroll, then out of the way */
+  0%,
+  80% {
+    --diagram-edge: 56px;
+  }
+  100% {
+    --diagram-edge: 0px;
+  }
+}

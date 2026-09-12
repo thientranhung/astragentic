@@ -212,13 +212,20 @@ const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` 
   data-hrefs={inert ? undefined : JSON.stringify(hrefMap)}
   style={style}
 >
-  {
-    svg ? (
-      <div class="diagram-svg" style={svgStyle} set:html={svg} />
-    ) : (
-      <div class="diagram-placeholder mono">{title ?? slug}</div>
-    )
-  }
+  {/* The scroller is this inner box, not the figure, so the edge fade below can sit on
+      the figure and stay put while the drawing slides under it. */}
+  <div class="dscroll">
+    {
+      svg ? (
+        <div class="diagram-svg" style={svgStyle} set:html={svg} />
+      ) : (
+        <div class="diagram-placeholder mono">{title ?? slug}</div>
+      )
+    }
+  </div>
+  {/* A diagram wider than a phone is cut at the right edge, and a cut with no fade and
+      no word reads as a broken picture rather than a scrollable one. */}
+  <p class="swipe mono">{UI.swipeDiagram[lang]}</p>
   {seqCss && <style set:html={seqCss} />}
   {!inert && <div class="tip mono" role="status" hidden />}
   {
@@ -364,12 +371,5 @@ const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` 
   }
 
   /* Mobile: the diagram keeps its aspect ratio and scrolls sideways in its frame. */
-  @media (max-width: 780px) {
-    .idiagram:not(.idiagram--inert) {
-      overflow-x: auto;
-    }
-    .idiagram:not(.idiagram--inert) .diagram-svg {
-      min-width: 640px;
-    }
-  }
+
 </style>

@@ -71,7 +71,7 @@ export const UI = {
   },
 
   /* ── landing feature cards ── */
-  featureMore: { vi: 'Read more →', en: 'Read more →' },
+  featureMore: { vi: 'Đọc tiếp →', en: 'Read more →' },
   /** Column heads on the role table, read out of orchestrator.md. "Runtime", "Model"
    *  and "Effort" are the file's own column names and stay English in both locales. */
   colRole: { vi: 'Role', en: 'Role' },
@@ -172,6 +172,14 @@ export const UI = {
   /* ── nav ── */
   repoAria: { vi: 'Astragentic trên GitHub', en: 'Astragentic on GitHub' },
   langAria: { vi: 'Ngôn ngữ', en: 'Language' },
+  /** The phone-width disclosure that holds the seven destinations. */
+  menu: { vi: 'Menu', en: 'Menu' },
+  /** Under a diagram too wide for the screen it is being read on. */
+  swipeDiagram: { vi: 'Vuốt ngang để xem hết sơ đồ', en: 'Scroll sideways for the whole diagram' },
+  /** Under a screen capture on a phone, where the text inside it is too small to read. */
+  shotZoom: { vi: 'Mở toàn màn hình để đọc rõ chữ', en: 'Open fullscreen to read the text' },
+  /** On the button that does it. */
+  shotFullLabel: { vi: 'Toàn màn hình', en: 'Fullscreen' },
 
   /* ── 404 ── */
   notFoundCode: { vi: '404', en: '404' },

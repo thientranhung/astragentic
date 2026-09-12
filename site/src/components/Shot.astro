@@ -32,6 +32,23 @@ const { lang, caption, src, video, class: extra = '' } = Astro.props;
           {video.webm && <source src={video.webm} type="video/webm" />}
           <source src={video.mp4} type="video/mp4" />
         </video>
+        {/* The recording is a 1920px screen: at phone width its terminal type lands
+            under 4px, and no amount of layout fixes that. Fullscreen is the answer, so
+            it gets a button of its own rather than living inside the control bar the
+            reader has to go looking through. */}
+        <button class="shot-full mono" type="button" aria-label={UI.shotZoom[lang]}>
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
+            <path
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M6 1.8H1.8V6M10 1.8h4.2V6M6 14.2H1.8V10M10 14.2h4.2V10"
+            />
+          </svg>
+          <span>{UI.shotFullLabel[lang]}</span>
+        </button>
       </div>
     ) : src ? (
       <img class="shot-img" src={src} alt={caption} loading="lazy" decoding="async" />
@@ -43,6 +60,44 @@ const { lang, caption, src, video, class: extra = '' } = Astro.props;
   }
   <figcaption class="shot-cap">{caption}</figcaption>
 </figure>
+
+<script>
+  /* Two things, both only below the breakpoint. Native controls, because they are how a
+     reader pauses a loop they are trying to read. And a fullscreen button of our own,
+     because fullscreen is the only thing that makes a 1920px capture legible on a phone
+     and it should not be buried in the control bar. iOS Safari puts fullscreen on the
+     video element under a webkit name rather than the standard one, so both are tried;
+     if neither exists the button is not drawn at all. */
+  type IosVideo = HTMLVideoElement & { webkitEnterFullscreen?: () => void };
+
+  const narrow = window.matchMedia('(max-width: 780px)');
+
+  const goFull = (wrap: HTMLElement) => {
+    const v = wrap.querySelector('video') as IosVideo | null;
+    if (!v) return;
+    if (wrap.requestFullscreen) void wrap.requestFullscreen().catch(() => v.webkitEnterFullscreen?.());
+    else v.webkitEnterFullscreen?.();
+  };
+
+  document.querySelectorAll<HTMLElement>('.shot-video').forEach((wrap) => {
+    const video = wrap.querySelector('video') as IosVideo | null;
+    const button = wrap.querySelector<HTMLButtonElement>('.shot-full');
+    if (!video || !button) return;
+
+    const supported = Boolean(wrap.requestFullscreen || video.webkitEnterFullscreen);
+    if (!supported) button.remove();
+    else button.addEventListener('click', () => goFull(wrap));
+
+    const apply = () => {
+      video.controls = narrow.matches;
+      /* Controls own the tap once they are drawn, so the button hands the gesture back:
+         it is the one place on the picture that means "make this bigger". */
+      wrap.dataset.narrow = narrow.matches ? '' : 'no';
+    };
+    apply();
+    narrow.addEventListener('change', apply);
+  });
+</script>
 
 <style>
   .shot {
@@ -71,6 +126,40 @@ const { lang, caption, src, video, class: extra = '' } = Astro.props;
   }
   .shot-video {
     position: relative;
+  }
+  /* Wide screens read the capture as drawn; the button would be furniture. */
+  .shot-full {
+    display: none;
+  }
+  @media (max-width: 780px) {
+    .shot-full {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      min-height: 36px;
+      padding-inline: 0.65rem;
+      border: 0;
+      border-radius: var(--radius-control);
+      font-family: var(--font-mono);
+      font-size: var(--text-label-sm);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      /* The capture underneath is a dark terminal and its brightness moves, so the
+         button carries its own ground rather than trusting the frame. */
+      color: var(--surface);
+      background: rgb(14 15 20 / 72%);
+      backdrop-filter: blur(6px);
+      cursor: pointer;
+    }
+    .shot-full:active {
+      background: rgb(14 15 20 / 88%);
+    }
+    .shot-full svg {
+      display: block;
+    }
   }
   @media (prefers-reduced-motion: reduce) {
     /* the poster stands in; the reader can still play it with the native controls */

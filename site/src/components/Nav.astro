@@ -19,17 +19,29 @@ const { lang, page, alternate } = Astro.props;
 <header class="nav-bar">
   <nav class="column-wide nav">
     <Wordmark href={ROUTES.home[lang]} tag="by Astraler" />
-    <ul class="items">
-      {
-        NAV.map((item) => (
-          <li>
-            <a href={ROUTES[item.key][lang]} class={item.key === page ? 'on' : undefined}>
-              {item.label[lang]}
-            </a>
-          </li>
-        ))
-      }
-    </ul>
+    {/* One list, two shapes. Above 860px the <details> is display:contents, so the
+        links are grid items on the bar exactly as before. Below it the summary becomes
+        a button and the same list drops as a panel — the seven destinations do not
+        shrink, the bar does. It ships open so a reader with scripting off still has
+        navigation; the script below closes it once we know the screen is narrow, the
+        same contract SiteNav runs on. */}
+    <details class="menu" open>
+      <summary class="menu-btn mono" aria-label={UI.menu[lang]}>
+        <span class="menu-word">{UI.menu[lang]}</span>
+        <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>
+      </summary>
+      <ul class="items">
+        {
+          NAV.map((item) => (
+            <li>
+              <a href={ROUTES[item.key][lang]} class={item.key === page ? 'on' : undefined}>
+                {item.label[lang]}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </details>
     <div class="right">
       {(page || alternate) && <LangSwitch lang={lang} page={page} hrefs={alternate} />}
       <a href={REPO} target="_blank" rel="noreferrer" class="gh" aria-label={UI.repoAria[lang]}>
@@ -44,6 +56,33 @@ const { lang, page, alternate } = Astro.props;
     </div>
   </nav>
 </header>
+
+<script is:inline>
+  /* The bar ships with its menu open, which is the right state on a wide screen, where
+     the summary is not drawn and the list is the bar itself. Below the breakpoint the
+     list is a panel, so close it as soon as we know the width. Escape and a tap outside
+     close it too; a tap on a link needs no handler because the page navigates away. */
+  (function () {
+    var menu = document.querySelector('.nav-bar .menu');
+    if (!menu) return;
+    var wide = window.matchMedia('(min-width: 861px)');
+    var sync = function () {
+      menu.open = wide.matches;
+    };
+    sync();
+    wide.addEventListener('change', sync);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && menu.open && !wide.matches) {
+        menu.open = false;
+        var btn = menu.querySelector('summary');
+        if (btn) btn.focus();
+      }
+    });
+    document.addEventListener('click', function (e) {
+      if (!wide.matches && menu.open && !menu.contains(e.target)) menu.open = false;
+    });
+  })();
+</script>
 
 <style>
   /* 56px, sticky: the two rails in Read mode hang off the bottom of this bar, so its
@@ -147,32 +186,132 @@ const { lang, page, alternate } = Astro.props;
     display: block;
   }
 
-  /* Two rows, not a drawer: seven links are readable stacked, and a hamburger would
-     hide the whole site behind one tap. */
+  /* The disclosure is inert above the breakpoint: display:contents dissolves it,
+     so the list below is a grid item on the bar and nothing about the wide layout
+     changes. */
+  .menu {
+    display: contents;
+  }
+  .menu-btn {
+    display: none;
+  }
+
+  /* Below the breakpoint the bar used to wrap the links onto a second row. Measured
+     across the range, that second row is itself two rows from 830px down, so the bar
+     stood 141px tall — 17% of a 393x852 phone, charged again on every scroll because
+     the bar is sticky. The links do not get smaller here, the bar does: the same list
+     becomes a panel under a 52px row, and the whole range behaves one way. */
   @media (max-width: 860px) {
     .nav {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      row-gap: 0.35rem;
-      column-gap: 1rem;
-      align-items: center;
-      height: auto;
-      padding-block: 0.6rem 0.3rem;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      row-gap: 0;
+      column-gap: 0.55rem;
+      height: var(--header-h);
+      padding-block: 0;
     }
-    .wordmark {
-      grid-area: 1 / 1;
+    .wordmark,
+    .right,
+    .menu {
+      grid-area: auto;
     }
     .right {
-      grid-area: 1 / 2;
+      justify-self: end;
+      gap: 0.35rem;
+    }
+    .gh {
+      width: 40px;
+      height: 40px;
+      margin-right: -0.45rem;
+    }
+
+    .menu {
+      display: block;
       justify-self: end;
     }
+    .menu-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      height: 40px;
+      padding-inline: 0.6rem;
+      border: 1px solid var(--ink-10);
+      border-radius: var(--radius-badge);
+      font-size: var(--text-label);
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+      cursor: pointer;
+      list-style: none;
+    }
+    .menu-btn::-webkit-details-marker {
+      display: none;
+    }
+    .menu[open] .menu-btn {
+      color: var(--ink);
+      border-color: var(--ink-22);
+      background: var(--surface-2);
+    }
+    /* Three rules, not a glyph: the button has a word next to it, so the mark only has
+       to say "this opens", and it turns into a cross to say "this closes". */
+    .bars {
+      display: grid;
+      gap: 3px;
+      width: 14px;
+    }
+    .bars i {
+      display: block;
+      height: 1.5px;
+      background: currentColor;
+      transition: transform var(--motion-drawer, 160ms) var(--ease-out, ease);
+    }
+    .menu[open] .bars i:nth-child(1) {
+      transform: translateY(4.5px) rotate(45deg);
+    }
+    .menu[open] .bars i:nth-child(2) {
+      transform: scaleX(0);
+    }
+    .menu[open] .bars i:nth-child(3) {
+      transform: translateY(-4.5px) rotate(-45deg);
+    }
+
     .items {
-      grid-area: 2 / 1 / 3 / -1;
-      gap: 0 1.15rem;
+      position: absolute;
+      inset-inline: 0;
+      top: 100%;
+      display: block;
+      gap: 0;
+      overflow: auto;
+      max-height: calc(100dvh - var(--header-h));
+      padding: 0.35rem clamp(1rem, 2.5vw, 1.75rem) 0.9rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--ink-10);
+      box-shadow: 0 14px 28px -18px rgb(17 17 17 / 28%);
+    }
+    .items li + li {
+      border-top: 1px solid var(--rule);
     }
     .items a {
-      min-height: 38px;
-      padding-block: 0.55rem;
+      display: flex;
+      min-height: 46px;
+      padding: 0.1rem 0.15rem;
+      border-top: 0;
+      border-bottom: 0;
+      box-shadow: none;
+    }
+    /* The bar under a word does not read as "you are here" in a stacked list, where
+       every row already has a rule above it. The mark moves to the left edge. */
+    .items a.on {
+      color: var(--brand-primary-hover);
+      margin-inline: calc(-1 * clamp(1rem, 2.5vw, 1.75rem));
+      padding-inline: clamp(1rem, 2.5vw, 1.75rem);
+      background: var(--brand-primary-soft);
+      box-shadow: inset 2px 0 0 var(--brand-primary);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bars i {
+      transition: none;
     }
   }
 </style>

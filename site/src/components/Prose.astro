@@ -10,3 +10,22 @@ const { html, lead = false, class: extra = '' } = Astro.props;
 ---
 
 {html && <div class:list={['prose', lead && 'prose-lead', extra]} set:html={html} />}
+
+<script>
+  /* A three-column compare table at 393px gives its first column about 60px, so every
+     cell in it breaks into four lines. Below the breakpoint the table stacks into one
+     row per record, and a stacked cell needs to carry its own column name — markdown
+     writes no such attribute, so the heading row is copied onto the cells here. CSS
+     does the rest; with scripting off the table stays exactly as it was. */
+  document.querySelectorAll<HTMLTableElement>('.read-body table, .prose table').forEach((table) => {
+    const heads = [...table.querySelectorAll('thead th')].map((th) => th.textContent?.trim() ?? '');
+    if (!heads.length) return;
+    table.dataset.stack = '';
+    table.querySelectorAll('tbody tr').forEach((row) => {
+      [...row.children].forEach((cell, i) => {
+        /* The first cell is the record's own name, not a value under a column head. */
+        if (i > 0 && heads[i]) (cell as HTMLElement).dataset.col = heads[i];
+      });
+    });
+  });
+</script>

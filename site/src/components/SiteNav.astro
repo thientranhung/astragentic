@@ -260,6 +260,17 @@ const tree = await getNavTree(lang);
     color: var(--ink-muted);
   }
 
+  /* The rail's rows are the width of the card, so they are easy to hit sideways and
+     thin vertically — 26px for a leaf. A finger needs the other axis too. */
+  @media (pointer: coarse) {
+    .top {
+      min-height: 40px;
+    }
+    .leaf {
+      min-height: 38px;
+    }
+  }
+
   @media (max-width: 900px) {
     .rail-shell {
       border: 1px solid var(--ink-10);

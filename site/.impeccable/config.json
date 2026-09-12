@@ -419,6 +419,12 @@
         ],
         "createdAt": "2026-09-11T04:09:23.840Z",
         "reason": "assistant: the video caption card uses the site's own sans face so the narration reads as Astragentic, not the terminal; the site's type choice is decided in design-tokens.json, not here"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#000",
+        "createdAt": "2026-09-12T04:56:40.108Z",
+        "reason": "assistant: #000 here is a mask channel, not paint — it is the opaque stop of the linear-gradient that fades the scrollable diagram's right edge, so it never reaches a pixel as colour"
       }
     ]
   }

@@ -115,3 +115,13 @@
 
   --ease-out: cubic-bezier(0, 0, 0.58, 1);
 }
+
+/* The bar is three different heights, and --header-h is what the rest of the page
+   measures against: the sticky rails hang off it and every heading's scroll-margin is
+   computed from it. Left at one value, an anchor jump on a phone lands the heading
+   underneath the bar. Measured on the rendered bar, not guessed. */
+@media (max-width: 860px) {
+  :root {
+    --header-h: 52px;
+  }
+}

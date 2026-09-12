@@ -74,11 +74,6 @@ const cmd = (line: string) => {
     color: var(--ink-muted);
     margin: 0 0 0.85rem;
   }
-  /* With no caption the button is the whole row, and it belongs at the pane's right
-     edge rather than its left. */
-  @media (pointer: coarse) {
-  }
-
   /* No padding here: the global `.codeframe` rule owns it, and it is what clears the
      30px window bar above the first line. */
   .cmds {

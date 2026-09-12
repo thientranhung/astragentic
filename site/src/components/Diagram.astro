@@ -63,14 +63,22 @@ const exploreHref = localised ? `/explore/vi/${slug}.html` : `/explore/${slug}.h
 const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` : undefined;
 ---
 
-<figure class:list={['diagram', extra]} data-diagram={slug}>
-  {
-    svg ? (
-      <div class="diagram-svg" style={svgStyle} set:html={svg} />
-    ) : (
-      <div class="diagram-placeholder mono">{title ?? slug}</div>
-    )
-  }
+{/* `diagram--read` is the figure a reader is meant to read, as opposed to the
+    thumbnails on the landing cards, which are pictures of a picture. Only the first
+    kind gets the phone treatment below: shrunk to 341px this drawing's labels measure
+    3px, so it keeps its own width and the window scrolls over it. The caption is what
+    tells the two apart — a thumbnail has none. */}
+<figure class:list={['diagram', caption && 'diagram--read', extra]} data-diagram={slug}>
+  <div class="dscroll">
+    {
+      svg ? (
+        <div class="diagram-svg" style={svgStyle} set:html={svg} />
+      ) : (
+        <div class="diagram-placeholder mono">{title ?? slug}</div>
+      )
+    }
+  </div>
+  {caption && <p class="swipe mono">{UI.swipeDiagram[lang]}</p>}
   {
     caption && (
       <figcaption class="mono diagram-caption">
