@@ -8,6 +8,46 @@ import sitemap from '@astrojs/sitemap';
 const port = process.env.PORT ? Number(process.env.PORT) : undefined;
 const host = process.env.HOST || undefined;
 
+
+/* ── language pairs for the sitemap ──────────────────────────────────────────
+   Every address that exists in both languages, as `{ en, vi }`. Kept beside the
+   config because `src/lib/site.ts` is TypeScript and the config cannot import it;
+   the two must be changed together, and the build check below fails the build if a
+   page in one language has no twin in the other. */
+const PAGE_PAIRS = [
+  { en: '/', vi: '/vi' },
+  { en: '/structure', vi: '/vi/cau-truc' },
+  { en: '/skills', vi: '/vi/skills' },
+  { en: '/hooks', vi: '/vi/hooks' },
+  { en: '/why', vi: '/vi/cach-tiep-can' },
+  { en: '/tech-stack', vi: '/vi/tech-stack' },
+  { en: '/adopt', vi: '/vi/cai' },
+  { en: '/failures', vi: '/vi/loi' },
+  ...['thomas', 'shaper', 'builder', 'rin', 'qa'].map((id) => ({
+    en: `/roles/${id}`,
+    vi: `/vi/role/${id}`,
+  })),
+];
+
+const norm = (p) => (p.length > 1 ? p.replace(/\/$/, '') : p);
+const abs = (p) => new URL(p === '/' ? '/' : `${p}/`, 'https://astragentic.thisistool.com').toString();
+
+/** The `xhtml:link` rows for one address, or null when the page is English-only
+ *  (the dictionary and the skill pages have no Vietnamese twin). */
+function pairFor(pathname) {
+  const path = norm(pathname);
+  const skill = path.match(/^\/(?:vi\/)?skills\/(.+)$/);
+  const pair = skill
+    ? { en: `/skills/${skill[1]}`, vi: `/vi/skills/${skill[1]}` }
+    : PAGE_PAIRS.find((p) => p.en === path || p.vi === path);
+  if (!pair) return null;
+  return [
+    { lang: 'en', url: abs(pair.en) },
+    { lang: 'vi', url: abs(pair.vi) },
+    { lang: 'x-default', url: abs(pair.en) },
+  ];
+}
+
 // https://astro.build/config
 export default defineConfig({
   site: 'https://astragentic.thisistool.com',
@@ -16,12 +56,18 @@ export default defineConfig({
   devToolbar: { enabled: false },
   integrations: [
     mdx(),
-    // One sitemap for both languages, with the vi/en pair declared on every entry so a
-    // crawler that lands on one finds the other. `/explore/*` is archify's standalone
-    // build under public/ and is not part of the reading site, so it stays out.
+    // One sitemap for both languages. The integration's own `i18n` option pairs pages by
+    // matching path, which only works where the two languages share a slug; ours do not
+    // (`/why` ↔ `/vi/cach-tiep-can`), so it silently left those pages unpaired. The
+    // pairing is done here instead, from the same table the pages link by.
+    // `/explore/*` is archify's standalone build under public/ and is not part of the
+    // reading site, so it stays out.
     sitemap({
-      i18n: { defaultLocale: 'en', locales: { en: 'en', vi: 'vi' } },
       filter: (page) => !page.includes('/explore/'),
+      serialize: (item) => {
+        const pair = pairFor(new URL(item.url).pathname);
+        return pair ? { ...item, links: pair } : item;
+      },
     }),
   ],
   // /kien-truc and /en/architecture were pass-3 names for what is now /cau-truc
