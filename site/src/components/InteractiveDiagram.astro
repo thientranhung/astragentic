@@ -80,7 +80,7 @@ if (lang === 'vi' && !localised && english) {
 }
 const raw = localised ?? english ?? null;
 const localisedOk = Boolean(localised) || lang === 'en';
-const exploreHref = localisedOk && lang === 'vi' ? `/explore/vi/${slug}.html` : `/explore/${slug}.html`;
+const exploreHref = localisedOk && lang === 'vi' ? `/explore/vi/${slug}` : `/explore/${slug}`;
 
 /** Add `is-link` / `is-active` to the node groups, and — for a node that leads
  *  somewhere — replace the semantics archify drew. Its nodes are `role="button"` with

@@ -49,6 +49,30 @@ function pairFor(pathname) {
 }
 
 // https://astro.build/config
+/* The standalone diagram pages are plain files in public/, so their real name ends in
+ * `.html`. Cloudflare's asset layer strips that on the way out: /explore/hooks.html
+ * answers 307 and sends the reader to /explore/hooks, which is the better public URL
+ * and the one the components now link to. Nothing does that locally — Vite serves
+ * public/ verbatim — so without this the "open the full diagram" link is a 404 on the
+ * dev server and a 200 in production, which is the worst way round for a link the owner
+ * reviews locally. Dev only; the built output is untouched.
+ */
+function exploreExtensionless() {
+  return {
+    name: 'astragentic:explore-extensionless',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use((req, _res, next) => {
+        const [path, query = ''] = (req.url ?? '').split('?');
+        if (path.startsWith('/explore/') && !path.endsWith('/') && !/\.[a-z0-9]+$/i.test(path)) {
+          req.url = `${path}.html${query ? `?${query}` : ''}`;
+        }
+        next();
+      });
+    },
+  };
+}
+
 export default defineConfig({
   site: 'https://astragentic.thisistool.com',
   // The dev toolbar is position:fixed, so it lands in the middle of a full-page
@@ -110,7 +134,7 @@ export default defineConfig({
     },
   },
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), exploreExtensionless()],
   },
   server: {
     port,
