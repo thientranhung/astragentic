@@ -7,6 +7,7 @@ import Prose from '../Prose.astro';
 import { getPage } from '../../lib/pages';
 import { meta } from '../../lib/data';
 import { UI, type Lang } from '../../lib/site';
+import { getSkillCards } from '../../lib/skills';
 import catalog from '../../data/skill-catalog.json';
 
 interface Props {
@@ -15,10 +16,17 @@ interface Props {
 const { lang } = Astro.props;
 const page = await getPage(lang, 'adopt');
 
-// Brownfield skills come from the catalog, not from prose — one source, no drift.
-const brownfield = (catalog as { name: string; kind: string; oneLiner: string; group: string }[])
-  .filter((item) => item.group === 'brownfield' || item.group === 'entry')
-  .filter((item) => item.kind === 'skill');
+// Which four skills these are comes from the catalog, so the list cannot drift from the
+// harness. What each one says comes from the locale's own skill page — the catalog's
+// oneLiner is English, and reading it straight put four English paragraphs on the
+// Vietnamese page, next to the same four already translated above them.
+const names = new Set(
+  (catalog as { name: string; kind: string; group: string }[])
+    .filter((item) => item.kind === 'skill')
+    .filter((item) => item.group === 'brownfield' || item.group === 'entry')
+    .map((item) => item.name),
+);
+const brownfield = (await getSkillCards(lang)).filter((card) => names.has(card.name));
 ---
 
 <DocsLayout
@@ -42,7 +50,7 @@ const brownfield = (catalog as { name: string; kind: string; oneLiner: string; g
         brownfield.map((item) => (
           <li>
             <p class="name mono" lang="en">{item.name}</p>
-            <p class="one" lang="en">{item.oneLiner}</p>
+            <p class="one" lang={item.fallback ? 'en' : undefined}>{item.line}</p>
           </li>
         ))
       }

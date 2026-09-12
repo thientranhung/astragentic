@@ -7,7 +7,7 @@ import Diagram from '../Diagram.astro';
 import Prose from '../Prose.astro';
 import { getPage } from '../../lib/pages';
 import { HOOKS } from '../../lib/anchors';
-import { byId, hasLesson } from '../../lib/data';
+import { byId, hasLesson, lessonOf } from '../../lib/data';
 import { ROUTES, REPO, UI, type Lang } from '../../lib/site';
 
 interface Props {
@@ -65,12 +65,17 @@ const lede =
                 {`harness/${hook.script} ↗`}
               </a>
             )}
-            {hasLesson(hook.ast) ? (
-              <a class="ast" href={`${failuresRoute}#${hook.ast.toLowerCase()}`}>{hook.ast}</a>
-            ) : (
-              <span class="ast">{hook.ast}</span>
-            )}
-            {row && <span class="lesson" lang="en">{row.lesson}</span>}
+            {/* The ledger's filing number used to sit here in front of the lesson. It
+                says nothing to a reader outside the harness, so the lesson itself is
+                the link now (owner, 2026-09-12). */}
+            {row &&
+              (hasLesson(hook.ast) ? (
+                <a class="lesson" lang="en" href={`${failuresRoute}#${hook.ast.toLowerCase()}`}>
+                  {lessonOf(row)}
+                </a>
+              ) : (
+                <span class="lesson" lang="en">{lessonOf(row)}</span>
+              ))}
           </p>
         </section>
       );

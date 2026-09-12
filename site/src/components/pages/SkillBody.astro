@@ -9,7 +9,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 import Diagram from '../Diagram.astro';
 import GroupBadge from '../GroupBadge.astro';
 import { catalogLine, skillHref, type GroupId } from '../../lib/skills';
-import { hasLesson, ledger } from '../../lib/data';
+import { hasLesson, ledger, lessonOf } from '../../lib/data';
 import { ROUTES, REPO, UI, type Lang } from '../../lib/site';
 import { render } from 'astro:content';
 
@@ -100,11 +100,15 @@ const failuresRoute = ROUTES.failures[lang];
             <div>
               <dt class="mono">{UI.colCited[lang]}</dt>
               <dd class="cites">
+                {/* What this skill was written against, named by what was learned
+                    rather than by the ledger's filing number (owner, 2026-09-12). */}
                 {cited.map((row) => (
                   hasLesson(row.id) ? (
-                    <a class="ast" href={`${failuresRoute}#${row.id.toLowerCase()}`}>{row.id}</a>
+                    <a class="cite" lang="en" href={`${failuresRoute}#${row.id.toLowerCase()}`}>
+                      {lessonOf(row)}
+                    </a>
                   ) : (
-                    <span class="ast">{row.id}</span>
+                    <span class="cite" lang="en">{lessonOf(row)}</span>
                   )
                 ))}
               </dd>
@@ -151,13 +155,15 @@ const failuresRoute = ROUTES.failures[lang];
     color: var(--ink);
     overflow-wrap: anywhere;
   }
+  /* A column of sentences, not a row of chips: each cite is now the lesson it stands
+     for, and lessons do not sit side by side. */
   .cites {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
+    display: grid;
+    gap: 0.55rem;
   }
-  .cites .ast {
-    font-size: var(--text-label);
+  .cites .cite {
+    font-size: var(--text-body-sm);
+    line-height: 1.45;
   }
 
   .read-body :global(h2) {

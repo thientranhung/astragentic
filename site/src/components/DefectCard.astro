@@ -1,5 +1,5 @@
 ---
-import { entryBody, entryExcerpt, entryHtml, hasLesson, ledgerHref, type LedgerRow } from '../lib/data';
+import { entryBody, entryExcerpt, entryHtml, hasLesson, ledgerHref, lessonOf, type LedgerRow } from '../lib/data';
 import { ROUTES, type Lang } from '../lib/site';
 
 interface Props {
@@ -7,8 +7,6 @@ interface Props {
   lang: Lang;
   /** 'lg' breaks the reading column (screen 1, /loi). 'sm' hangs under a stage. */
   size?: 'lg' | 'sm';
-  /** English cost line from failures.json, printed under the entry on /loi. */
-  costLine?: string;
   /** One Vietnamese/English sentence of the writer's, already HTML. */
   noteHtml?: string;
   /** Where the AST code points. Defaults to the lesson on the failures page when the
@@ -18,7 +16,7 @@ interface Props {
   /** 'sm' cards on the rail sit in a 7-column grid; drop the excerpt there. */
   compact?: boolean;
 }
-const { row, lang, size = 'lg', costLine, noteHtml, href, anchorId, compact = false } = Astro.props;
+const { row, lang, size = 'lg', noteHtml, href, anchorId, compact = false } = Astro.props;
 
 const slug = row.id.toLowerCase();
 const target = href ?? (hasLesson(row.id) ? `${ROUTES.failures[lang]}#${slug}` : undefined);
@@ -36,18 +34,19 @@ const promoted = row.promotedOn ? `promoted ${row.promotedOn}` : row.status;
       </header>
 
       {/* Entry title and body stay verbatim English in both locales (spec §1 rule 3). */}
-      <h3 class="lesson" lang="en">{row.lesson}</h3>
+      <h3 class="lesson" lang="en">{lessonOf(row)}</h3>
       <blockquote class="entry mono" lang="en" set:html={entryHtml(body)} />
 
-      {costLine && <p class="cost" lang="en">{costLine}</p>}
+      {/* The cost line from failures.json used to print here: "measured once, one
+          project — 2 of 4 slots idle…". That is a measurement taken inside somebody's
+          repository, and it does not belong on a public page (owner, 2026-09-11). The
+          Vietnamese entry below already carries what the incident cost. */}
       {noteHtml && <div class="note" set:html={noteHtml} />}
 
       <footer class="foot mono">
         <a href={ledgerHref(row)} target="_blank" rel="noreferrer" class="src">
           INDEX.md:{row.indexLine}
         </a>
-        <span class="dot">·</span>
-        <span>{row.words} words</span>
         {row.refs.length > 0 && (
           <>
             <span class="dot">·</span>
@@ -77,7 +76,7 @@ const promoted = row.promotedOn ? `promoted ${row.promotedOn}` : row.status;
     </article>
   ) : (
     <a class="card card--sm" href={target} id={anchorId}>
-      <span class="lesson-sm" lang="en">{row.lesson}</span>
+      <span class="lesson-sm" lang="en">{lessonOf(row)}</span>
       {!compact && <span class="excerpt mono" lang="en" set:html={entryHtml(body)} />}
     </a>
   )
@@ -131,14 +130,6 @@ const promoted = row.promotedOn ? `promoted ${row.promotedOn}` : row.status;
     line-height: 1.62;
     white-space: pre-wrap;
     color: var(--ink);
-  }
-
-  .cost {
-    font-family: var(--font-mono);
-    font-size: var(--text-mono);
-    line-height: 1.6;
-    color: var(--ink-muted);
-    margin: 0 0 1.1rem;
   }
 
   .note {

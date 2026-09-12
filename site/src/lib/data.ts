@@ -71,6 +71,24 @@ export const meta = load<Meta>('meta', {
 
 export const byId = new Map(ledger.map((row) => [row.id, row]));
 
+/** The lesson as the reader should see it.
+ *
+ *  The ledger's INDEX.md keeps its summary column to a fixed width and cuts anything
+ *  longer mid-word — `…worktree born in the wrong place, hour-long mi…`. That is right
+ *  for a table the harness reads and wrong for a card on a page, where it reads as a
+ *  rendering fault. The entry's own `### AST-028 — <lesson> · promoted <date>` heading
+ *  carries the sentence whole, so a cut row is repaired from it. Nothing is rewritten:
+ *  when the heading is missing or says the same thing, the index line stands. */
+export function lessonOf(row: LedgerRow | undefined): string {
+  if (!row) return '';
+  if (!row.lesson.endsWith('…')) return row.lesson;
+  const heading = /^###\s+\S+\s+—\s+([\s\S]*?)(?:\s+·\s+[^\n·]*)?\s*$/m.exec(
+    row.entry?.split('\n')[0] ?? '',
+  );
+  const full = heading?.[1]?.trim();
+  return full && full.length > row.lesson.length - 1 ? full : row.lesson;
+}
+
 /** The generator keeps the `### AST-016 — … · promoted …` heading at the top of `entry`.
  *  The card and the drawer print that title themselves, so drop the heading line. */
 export function entryBody(row: LedgerRow | undefined): string {
@@ -84,7 +102,18 @@ export function entryExcerpt(row: LedgerRow | undefined, maxChars = 260): string
   if (body.length <= maxChars) return body;
   const cut = body.slice(0, maxChars);
   const stop = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('; '));
-  return (stop > 80 ? cut.slice(0, stop + 1) : cut.trimEnd()) + ' …';
+  if (stop > 80) return `${cut.slice(0, stop + 1)} …`;
+  /* No sentence ended in range, so the cut falls wherever the character count landed —
+     which was mid-word ("…hour-long mi …"). Step back to the last space, then past any
+     word too small to carry the end of a sentence, so the excerpt breaks on a word the
+     reader can finish in their head. */
+  let end = cut.lastIndexOf(' ');
+  if (end < 0) return `${cut.trimEnd()} …`;
+  const trailing = /(\s|[-–—,;:([{"'`])+$/;
+  let text = cut.slice(0, end).replace(trailing, '');
+  const last = text.slice(text.lastIndexOf(' ') + 1);
+  if (last.length <= 3 && text.length > 80) text = text.slice(0, text.lastIndexOf(' ')).replace(trailing, '');
+  return `${text} …`;
 }
 
 /** Ledger entries are markdown prose. Render only the inline bits we meet there:
