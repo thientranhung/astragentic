@@ -398,13 +398,10 @@ const CARD_FRAME = 330;
                 <span class="stage mono" lang="en">{stage}</span>
               </a>
               <p class="step-line">{caption}</p>
-              {hits.length > 0 && (
-                <p class="hits">
-                  {hits.map((f) => (
-                    <a class="ast" href={`${failuresRoute}#${f.id.toLowerCase()}`}>{f.id}</a>
-                  ))}
-                </p>
-              )}
+              {/* The ledger's internal ids used to hang here as chips. They are the
+                  harness's own filing numbers: a reader has no way to read "AST-131",
+                  and the stage head above already links to what was learned at this
+                  step (owner, 2026-09-12). */}
             </li>
           ))
         }
@@ -658,8 +655,10 @@ const CARD_FRAME = 330;
      where the reader has already met the five roles it names — so the first screen
      gets the vertical room the drawing was taking instead. */
   .hero-screen {
-    /* the video's caption already closes the hero; the next section brings its own 3.5rem */
-    padding-block: 5rem 1.5rem;
+    /* The eyebrow used to open 81px below the bar, which reads as the page not having
+       started yet. The video's caption already closes the hero, and the next section
+       brings its own padding, so only the top is spent here. */
+    padding-block: clamp(1.75rem, 2.6vw, 2.5rem) 1.5rem;
   }
   .hero-copy {
     max-width: 780px;
@@ -1247,16 +1246,6 @@ const CARD_FRAME = 330;
     margin: 0.5rem 0 0;
     color: var(--ink-muted);
   }
-  .hits {
-    margin: 0.45rem 0 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-  }
-  .hits .ast {
-    font-size: var(--text-label-sm);
-  }
-
   /* ── fits / does not fit yet ── */
   .fit-head {
     font-size: var(--text-micro);

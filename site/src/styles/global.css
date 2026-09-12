@@ -111,6 +111,19 @@ h3 {
   text-wrap: balance;
 }
 
+/* Balance equalises line lengths, which is what a wide heading wants and the wrong
+   instinct in a 319px column: it shortens the first line to match the second and breaks
+   the heading mid-phrase. Measured on the landing cards — "Toàn quyền giám sát, không
+   cần ra tay." came out as "Toàn quyền giám / sát, …", splitting the verb. `pretty`
+   fills the line and only guards the last one against a stranded word. */
+@media (max-width: 620px) {
+  h1,
+  h2,
+  h3 {
+    text-wrap: pretty;
+  }
+}
+
 /* Spec 6 §4: the serif survives in one place per page — the title — because that is
    where the site still has to sound like itself. */
 h1 {
@@ -266,18 +279,27 @@ hr {
   color: var(--ink-62);
   margin: 0 0 1.1rem;
   /* The eyebrow is the line that sets up each section, and its ink is deliberately
-     quiet; the brand dot in front is what makes it read as a marker, not a caption. */
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
+     quiet; the brand dot in front is what makes it read as a marker, not a caption.
+     Inline flow, not flex: the hero eyebrow carries a bold run inside it, and under
+     flex each run became its own column that wrapped on its own — at 393px that put a
+     stray "·" on one line and the version on another. The dot keeps its place through
+     a hanging indent, so a wrapped eyebrow lines up under its own first word. */
+  display: block;
+  padding-left: calc(8px + 0.55rem);
+  text-indent: calc(-8px - 0.55rem);
 }
 .eyebrow::before {
   content: '';
-  flex: none;
+  display: inline-block;
+  vertical-align: middle;
   width: 8px;
   height: 8px;
+  margin-right: 0.55rem;
   border-radius: 50%;
   background: var(--brand-primary);
+  /* The dot is decoration between two words; without this it inherits the negative
+     first-line indent and drifts left of the text it marks. */
+  text-indent: 0;
 }
 
 /* The same marker for the other labels that open a block: the card headings on the
@@ -311,9 +333,12 @@ hr {
   border-radius: 50%;
   background: var(--brand-primary);
 }
-/* the hero eyebrow sits centred; keep the dot with it */
+/* the hero eyebrow sits centred; keep the dot with it, and drop the hanging indent —
+   a centred line has no left edge to hang from */
 .hero-copy .eyebrow {
-  justify-content: center;
+  text-align: center;
+  padding-left: 0;
+  text-indent: 0;
 }
 
 /* Pass 2 removed the eyebrow hairline: screens are separated by ground, not by rules. */
@@ -369,8 +394,14 @@ hr {
    keep their pass-2 names; only the two grounds changed.
    ───────────────────────────────────────────────────────────────────────── */
 
+/* The bands alternate ground colour, so adjacent sections each pay their own padding
+   and the reader crosses the sum: 56 + 56 was 112px of empty between the last line of
+   one section and the first of the next, the same on a 393px phone as on a 1440px
+   desktop. It scales with the frame now, and the total between two sections lands near
+   80px on a desktop and 64px on a phone — still a clear break, without a screenful of
+   ground to scroll past (owner, 2026-09-12). */
 .screen {
-  padding-block: 3.5rem;
+  padding-block: clamp(1.75rem, 2.4vw, 2.25rem);
   border-top: 1px solid transparent;
 }
 .screen--canvas {
@@ -380,6 +411,16 @@ hr {
   background: var(--surface);
   border-top-color: var(--ink-10);
   border-bottom: 1px solid var(--ink-10);
+}
+
+/* A band's padding is the gap between bands. The last block inside one should not add
+   a second one on top: a closing list or paragraph was carrying its own 20-36px, so the
+   measured hole between the end of one section and the eyebrow of the next ran to
+   113px where the design says ~75. */
+.screen :is(.column, .column-wide, .column-band) > :last-child,
+.screen :is(.column, .column-wide, .column-band) > :last-child > :last-child,
+.screen :is(.column, .column-wide, .column-band) > :last-child > :last-child > :last-child {
+  margin-bottom: 0;
 }
 
 /* Prose written by the writer, injected as HTML from one markdown section. */
@@ -439,16 +480,19 @@ hr {
   text-align: center;
 }
 
-/* A ledger id is a reference, not an alarm. It reads as ink and carries the defect
-   red only in its underline, which is where the site keeps "this was a measured
-   failure" — one step darker and browner than the brand, so the two never trade. */
-.ast {
-  font-family: var(--font-mono);
+/* A link into the ledger is a reference, not an alarm. It reads as ink and carries the
+   defect red only in its underline, which is where the site keeps "this was a measured
+   failure" — one step darker and browner than the brand, so the two never trade. The
+   link used to be the ledger's filing number and is now the lesson itself, so this is
+   a sentence with an underline rather than a code chip. */
+a.lesson,
+a.cite {
   color: var(--ink-88);
   text-decoration: none;
   border-bottom: 1px solid color-mix(in srgb, var(--defect) 45%, transparent);
 }
-.ast:hover {
+a.lesson:hover,
+a.cite:hover {
   color: var(--ink);
   border-bottom-color: var(--defect);
 }
@@ -474,6 +518,14 @@ hr {
 }
 .more-link:hover {
   opacity: 0.75;
+}
+/* A standalone call to action is a control, not a word inside a sentence, so on a touch
+   screen it gets a control's hit area. The underline stays on the text. */
+@media (pointer: coarse) {
+  .more-link {
+    padding-block: 0.5rem;
+    padding-bottom: calc(0.5rem + 2px);
+  }
 }
 
 /* An anchored target inside a scrolling page needs air above it. */
@@ -546,14 +598,16 @@ hr {
 
 /* A section of a content page: 3rem apart, separated by a hairline, never by a
    screenful of ground. */
+/* Same doubling on the docs pages: padding and margin were both --section-gap, so a
+   hairline sat in 96px of air. Half that, split evenly either side of the rule. */
 .read-section {
-  padding-top: var(--section-gap);
-  margin-top: var(--section-gap);
+  padding-top: clamp(1.5rem, 2.2vw, 2rem);
+  margin-top: clamp(1.5rem, 2.2vw, 2rem);
   border-top: 1px solid var(--rule);
 }
 .read-section:first-of-type {
   padding-top: 0;
-  margin-top: 2rem;
+  margin-top: 1.5rem;
   border-top: 0;
 }
 
@@ -656,6 +710,59 @@ hr {
 }
 .read-body table + p {
   margin-top: 1.6rem;
+}
+
+/* One row per record, not one column per phone. A compare table keeps its columns as
+   long as they have room; below that the row becomes a small block whose first cell is
+   the heading and whose other cells carry the column name they came from. The labels
+   are written by Prose.astro, so a table that never got them stays a table. */
+@media (max-width: 560px) {
+  .read-body table[data-stack] {
+    display: block;
+  }
+  .read-body table[data-stack] thead {
+    /* the column names are on the cells now; the header row would repeat them */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .read-body table[data-stack] tbody,
+  .read-body table[data-stack] tr,
+  .read-body table[data-stack] td {
+    display: block;
+    width: auto;
+  }
+  .read-body table[data-stack] tr {
+    padding-block: 0.85rem;
+    border-bottom: 1px solid var(--ink-10);
+  }
+  .read-body table[data-stack] tr:last-child {
+    border-bottom: 0;
+  }
+  .read-body table[data-stack] td {
+    border-bottom: 0;
+    padding: 0;
+  }
+  .read-body table[data-stack] tbody td:first-child {
+    width: auto;
+    margin-bottom: 0.5rem;
+  }
+  .read-body table[data-stack] td[data-col] + td[data-col] {
+    margin-top: 0.55rem;
+  }
+  .read-body table[data-stack] td[data-col]::before {
+    content: attr(data-col);
+    display: block;
+    margin-bottom: 0.1rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-label-sm);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
 }
 
 /* A diagram uses the whole column. `.figure` — the wrapper the page bodies already put
