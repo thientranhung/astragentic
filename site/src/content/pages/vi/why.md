@@ -1,6 +1,6 @@
 ---
 title: "Cách tiếp cận"
-description: "Cách tiếp cận đứng sau Astragentic, một scaffold cho autonomous coding: mô hình orchestrator agent, issue tracker giữ trạng thái, vì sao không đặt điều phối vào subagent, phương pháp mattpocock-skills, và lượt đọc lại của một AI hãng khác."
+description: "Cách tiếp cận đứng sau Astragentic: mô hình orchestrator agent, issue tracker giữ trạng thái, vì sao không đặt điều phối vào subagent, và review chéo giữa hai hãng AI."
 ---
 
 Astragentic hướng tới autonomous coding: một team AI agent tự vận hành phần thi công, còn con

@@ -27,6 +27,22 @@ interface Props {
 const { title, description, lang, page, alternate, switchTo, docs = false, dualChrome = false } = Astro.props;
 const other: Lang = lang === 'vi' ? 'en' : 'vi';
 const site = Astro.site?.toString().replace(/\/$/, '') ?? '';
+
+/* ── what search engines and link previews read ──────────────────────────────
+   The page title already carries the brand, so the home page would otherwise read
+   "Astragentic — Astragentic". Canonical is self-referencing and built from the
+   request path, so a page reached with a query string still declares one address. */
+const heading = title === 'Astragentic' ? title : `${title} — Astragentic`;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url).toString();
+const pair = alternate ?? (page ? ROUTES[page] : null);
+const ogLocale = lang === 'vi' ? 'vi_VN' : 'en_US';
+const ogImage = `${site}/og.png`;
+/* One description, used by the meta tag, the link preview and the card alike. */
+const summary =
+  description ??
+  (lang === 'vi'
+    ? 'Astragentic là scaffold để vận hành một team AI agent theo mô hình orchestrator.'
+    : 'Astragentic is a scaffold for running a team of AI agents on the orchestrator model.');
 ---
 
 <!doctype html>
@@ -34,15 +50,35 @@ const site = Astro.site?.toString().replace(/\/$/, '') ?? '';
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title} — Astragentic</title>
-    {description && <meta name="description" content={description} />}
+    <title>{heading}</title>
+    <meta name="description" content={summary} />
+    <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    {(alternate ?? (page ? ROUTES[page] : null)) && (
+    {pair && (
       <>
-        <link rel="alternate" hreflang="vi" href={`${site}${(alternate ?? ROUTES[page!]).vi}`} />
-        <link rel="alternate" hreflang="en" href={`${site}${(alternate ?? ROUTES[page!]).en}`} />
+        <link rel="alternate" hreflang="vi" href={`${site}${pair.vi}`} />
+        <link rel="alternate" hreflang="en" href={`${site}${pair.en}`} />
+        {/* English is the site's default, so it is what a crawler gets when no
+            language matches the reader. */}
+        <link rel="alternate" hreflang="x-default" href={`${site}${pair.en}`} />
       </>
     )}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Astragentic" />
+    <meta property="og:title" content={heading} />
+    <meta property="og:description" content={summary} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content={ogLocale} />
+    {pair && <meta property="og:locale:alternate" content={lang === 'vi' ? 'en_US' : 'vi_VN'} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={heading} />
+    <meta name="twitter:description" content={summary} />
+    <meta name="twitter:image" content={ogImage} />
+    <slot name="head" />
   </head>
   <body>
     <div class:list={['page', docs && 'page--docs']}>

@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import mdx from '@astrojs/mdx';
+import sitemap from '@astrojs/sitemap';
 
 // portless supplies PORT/HOST; nothing is hardcoded and nothing auto-opens.
 const port = process.env.PORT ? Number(process.env.PORT) : undefined;
@@ -13,7 +14,16 @@ export default defineConfig({
   // The dev toolbar is position:fixed, so it lands in the middle of a full-page
   // screenshot and hides whatever it covers. Off.
   devToolbar: { enabled: false },
-  integrations: [mdx()],
+  integrations: [
+    mdx(),
+    // One sitemap for both languages, with the vi/en pair declared on every entry so a
+    // crawler that lands on one finds the other. `/explore/*` is archify's standalone
+    // build under public/ and is not part of the reading site, so it stays out.
+    sitemap({
+      i18n: { defaultLocale: 'en', locales: { en: 'en', vi: 'vi' } },
+      filter: (page) => !page.includes('/explore/'),
+    }),
+  ],
   // /kien-truc and /en/architecture were pass-3 names for what is now /cau-truc
   // (build spec 4 §3). Astro emits a redirect page for each, so old links still land.
   // English moved to `/` and Vietnamese under `/vi/` on 2026-09-11; every address

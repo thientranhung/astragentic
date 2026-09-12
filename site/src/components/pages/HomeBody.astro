@@ -17,7 +17,7 @@ import { ACTIVE, ACTIVE_TABLE, HAS_UNSET, SAMPLE, ORCHESTRATOR_FILE } from '../.
 import { failures, meta } from '../../lib/data';
 import { ROLE_IDS, ROLE_META, roleHref, type RoleId } from '../../lib/roles';
 import { termHref } from '../../lib/terms';
-import { NAV, ROUTES, UI, type Lang } from '../../lib/site';
+import { NAV, REPO, ROUTES, UI, type Lang } from '../../lib/site';
 const rowFor = (id: string) => ACTIVE.find((r) => r.role.toLowerCase() === id.toLowerCase());
 
 interface Props {
@@ -124,6 +124,43 @@ const CARD_FRAME = 330;
 ---
 
 <BaseLayout title={page.title} description={page.description} lang={lang} page="home">
+  {/* Structured data for the home page only: the site itself, and the thing it is about.
+      Search engines read this to name the publisher and the software; every other page
+      is prose and needs none. */}
+  <script
+    slot="head"
+    type="application/ld+json"
+    is:inline
+    set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'WebSite',
+          '@id': 'https://astragentic.thisistool.com/#website',
+          url: 'https://astragentic.thisistool.com/',
+          name: 'Astragentic',
+          inLanguage: lang === 'vi' ? 'vi' : 'en',
+          publisher: { '@id': 'https://astragentic.thisistool.com/#publisher' },
+        },
+        {
+          '@type': 'Organization',
+          '@id': 'https://astragentic.thisistool.com/#publisher',
+          name: 'Astraler',
+          url: 'https://astraler.com',
+        },
+        {
+          '@type': 'SoftwareApplication',
+          name: 'Astragentic',
+          applicationCategory: 'DeveloperApplication',
+          operatingSystem: 'macOS, Linux',
+          url: 'https://astragentic.thisistool.com/',
+          codeRepository: REPO,
+          description: page.description,
+          offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+        },
+      ],
+    })}
+  />
   {/* ── 1 · Hero ─────────────────────────────────────────────────────────── */}
   <section class="screen screen--canvas hero-screen" id="hero">
     <div class="column-band hero">

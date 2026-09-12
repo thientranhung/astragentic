@@ -1,6 +1,6 @@
 ---
 title: "Approach"
-description: "The approach behind Astragentic, a scaffold for autonomous coding: the orchestrator agent model, the issue tracker as state, why coordination does not live in subagents, the mattpocock-skills method, and the second-vendor read."
+description: "The approach behind Astragentic: the orchestrator agent model, the tracker as state, why coordination is not a subagent, and the cross review between two vendors."
 ---
 
 Astragentic is built for autonomous coding: a team of AI agents runs the build on its own, while

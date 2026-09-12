@@ -1,6 +1,6 @@
 ---
 title: "Structure"
-description: "Four layers: a runtime that runs the agent, a harness that holds the roles and the rules, a coordination layer that holds the state, and your repo underneath. Astragentic is only the middle."
+description: "Four layers: the runtime that runs the agent, the harness holding roles and rules, the coordination that holds state, and your own repo underneath. Astragentic is the middle."
 ---
 
 Astragentic is not a runtime and it is not a method. It sits between the two: underneath it,

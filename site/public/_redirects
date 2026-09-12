@@ -1,0 +1,26 @@
+# Real 301s for the addresses that moved. Astro also emits an HTML redirect page for
+# each of these; Cloudflare answers from this file first, so a crawler gets a status
+# code instead of a meta refresh (owner asked for SEO, 2026-09-12).
+/en                     /                       301
+/en/structure           /structure              301
+/en/why                 /why                    301
+/en/adopt               /adopt                  301
+/en/failures            /failures               301
+/en/evidence            /failures               301
+/en/hooks               /hooks                  301
+/en/tech-stack          /tech-stack             301
+/en/skills              /skills                 301
+/en/architecture        /structure              301
+/en/skills/:slug        /skills/:slug           301
+/en/roles/:id           /roles/:id              301
+/evidence               /failures               301
+/kien-truc              /vi/cau-truc            301
+/cau-truc               /vi/cau-truc            301
+/vi-sao                 /vi/cach-tiep-can       301
+/vi/vi-sao              /vi/cach-tiep-can       301
+/cai                    /vi/cai                 301
+/loi                    /vi/loi                 301
+/bang-chung             /vi/loi                 301
+/vi/bang-chung          /vi/loi                 301
+/vai/:id                /vi/role/:id            301
+/vi/vai/:id             /vi/role/:id            301
