@@ -4,6 +4,23 @@ import Footer from '../components/Footer.astro';
 import { ROUTES, htmlLang, type Lang, type PageKey } from '../lib/site';
 import '../styles/global.css';
 
+/* The three faces are self-hosted, not fetched from a font CDN, and each ships a
+   Vietnamese subset. What they were missing is a head start. Without a preload the
+   browser cannot know a font exists until it has fetched and parsed the stylesheet,
+   so on a phone or any cold cache the first paint lands in the system fallback and
+   the real face swaps in afterwards — which is the "lost font" the owner saw, and the
+   reflow behind it is the spacing shifting as the metrics change. Importing the file
+   gives us the hashed URL Vite emits, so the preload can never point at a stale name.
+   Only the subsets a first screen actually needs: latin everywhere, Vietnamese on a
+   Vietnamese page. Preloading a subset the page will not draw costs bandwidth and
+   earns a console warning. */
+import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
+import interVi from '@fontsource-variable/inter/files/inter-vietnamese-wght-normal.woff2?url';
+import serifLatin from '@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2?url';
+import serifVi from '@fontsource-variable/source-serif-4/files/source-serif-4-vietnamese-wght-normal.woff2?url';
+import monoLatin from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url';
+import monoVi from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-vietnamese-wght-normal.woff2?url';
+
 interface Props {
   title: string;
   description?: string;
@@ -52,8 +69,23 @@ const summary =
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{heading}</title>
     <meta name="description" content={summary} />
+    {
+      /* Ahead of the stylesheet on purpose: these start downloading with the HTML. */
+      [interLatin, serifLatin, monoLatin, ...(lang === 'vi' ? [interVi, serifVi, monoVi] : [])].map(
+        (href) => <link rel="preload" as="font" type="font/woff2" href={href} crossorigin="anonymous" />,
+      )
+    }
     <link rel="canonical" href={canonical} />
+    {/* One mark, five surfaces. The SVG is what a modern browser takes; the .ico is a
+        real multi-size container for the ones that still ask for it; the touch icon is
+        the square bleed iOS masks itself; the manifest carries the same tile to
+        Android. All five are generated from the Wordmark's own paths. */}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#E53625" />
+    <meta name="apple-mobile-web-app-title" content="Astragentic" />
     {pair && (
       <>
         <link rel="alternate" hreflang="vi" href={`${site}${pair.vi}`} />

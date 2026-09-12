@@ -7,12 +7,13 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "node scripts/localise-explore-fonts.mjs && astro build",
     "preview": "astro preview",
     "astro": "astro",
     "data": "node scripts/build-data.mjs",
     "tokens": "node scripts/build-tokens.mjs",
-    "deploy": "astro build && wrangler deploy"
+    "deploy": "node scripts/localise-explore-fonts.mjs && astro build && wrangler deploy",
+    "explore-fonts": "node scripts/localise-explore-fonts.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.0",
