@@ -1,6 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="12" fill="#E53625"/>
-  <g transform="translate(6 6) scale(0.8125)">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Astragentic">
+  <rect width="64" height="64" rx="13" fill="#E53625"/>
+  <!-- The wordmark's own mark, inverted onto the brand tile: the paths are copied from
+       src/components/Wordmark.astro so the tab icon and the header cannot drift apart.
+       The mark's own box is 64x52 starting at y=2, so the transform below centres it. -->
+  <g transform="translate(7 10.13) scale(0.78125)">
     <path fill="#fff" d="M26.5 2h11L64 54H50.8l-4.6-10.6H17.8L13.2 54H0L26.5 2Zm5.5 14.2L22.4 33.4h19.2L32 16.2Z"/>
     <path fill="#E53625" d="M14.6 39.5 34.4 8.6l3.1 4.9L19.6 41.3l-5-1.8Z"/>
     <path fill="#fff" d="M31.9 20.4l3.2 6.1h-6.3l3.1-6.1Z"/>
