@@ -171,7 +171,7 @@ export interface SkillCard {
 }
 
 export function skillHref(lang: Lang, name: string): string {
-  return lang === 'vi' ? `/vi/skills/${name}` : `/skills/${name}`;
+  return lang === 'vi' ? `/vi/skills/${name}/` : `/skills/${name}/`;
 }
 
 type Entry = {

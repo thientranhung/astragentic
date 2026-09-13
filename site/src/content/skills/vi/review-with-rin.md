@@ -101,7 +101,7 @@ Một ticket đi qua worktree của `/skills/dispatch-ticket`, và khi nó sẵn
 không, và bằng chứng trình duyệt có chống lưng cho mọi thay đổi UI không. Thứ Rin không phán được,
 tức sản phẩm đang chạy có còn liền mạch không, là việc của `dispatch-qa-walk`. Khi các phát hiện
 đã được gộp và kiểm lại, `/skills/codex-arm` nhận SHA cuối cho lượt cross-vendor trước khi bất cứ
-thứ gì được merge. Bản thân `rin` là một [role](/dictionary/role), và toàn bộ
-việc này diễn ra bên trong một [gate](/dictionary/gate), trên một [worktree](/dictionary/worktree) mà không ai
+thứ gì được merge. Bản thân `rin` là một [role](/dictionary/role/), và toàn bộ
+việc này diễn ra bên trong một [gate](/dictionary/gate/), trên một [worktree](/vi/role/builder/) mà không ai
 ngoài Rin ghi vào.
 <!-- source: harness/.agents/skills/review-with-rin/SKILL.md -->

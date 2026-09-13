@@ -37,7 +37,7 @@ const alternate = termAlternate(entry.id);
         {entry.data.related.map((slug: string, i: number) => (
           <>
             {i > 0 && ', '}
-            <a href={`/dictionary/${slug}`} class="underline">
+            <a href={`/dictionary/${slug}/`} class="underline">
               {slug}
             </a>
           </>

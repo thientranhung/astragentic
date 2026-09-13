@@ -14,7 +14,7 @@ The ledger is explicit that it's advisory rather than authoritative — code, do
 
 ## Why it matters here
 
-Astragentic keeps one append-only ledger instead of editing entries in place because a silently corrected mistake is one that gets made again under a different name — the point of `AST-` numbers is that a [gate](/dictionary/gate) or a rule can point at a specific measured incident rather than a vague "we've learned this before." The cost is volume: as of this writing the file runs 136 entries (AST-001 through AST-137, one withdrawn) across roughly 3,600 lines, and reading it in full is deliberately not how it's meant to be consumed — grep the section you need.
+Astragentic keeps one append-only ledger instead of editing entries in place because a silently corrected mistake is one that gets made again under a different name — the point of `AST-` numbers is that a [gate](/dictionary/gate/) or a rule can point at a specific measured incident rather than a vague "we've learned this before." The cost is volume: as of this writing the file runs 136 entries (AST-001 through AST-137, one withdrawn) across roughly 3,600 lines, and reading it in full is deliberately not how it's meant to be consumed — grep the section you need.
 
 ## Seen in:
 

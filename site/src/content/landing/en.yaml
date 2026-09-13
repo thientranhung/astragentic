@@ -56,31 +56,31 @@ explain:
         tag: "your representative"
         session: "A resident session, alive across many tickets."
         body: "Holds the tracker, runs the frontier query, claims, dispatches and merges. It is the only role still there once a Builder has closed its session, so every durable piece of state belongs to Thomas. It comes back to you at the decisions that matter."
-        href: "/roles/thomas"
+        href: "/roles/thomas/"
       - id: shaper
         title: "Shaper"
         tag: "shaping"
         session: "One unbroken session end to end, never compacted."
         body: "Runs grill-with-docs, to-spec and to-tickets in that order, and stops after the spec for you to approve."
-        href: "/roles/shaper"
+        href: "/roles/shaper/"
       - id: builder
         title: "Builder"
         tag: "building"
         session: "One session per ticket, in its own worktree, the only writer there."
         body: "Implements, reviews the code on two axes, simplifies, then takes the cross review pass where Codex re-reads the diff. It commits at every boundary, not only at handback."
-        href: "/roles/builder"
+        href: "/roles/builder/"
       - id: rin
         title: "Rin"
         tag: "the gate"
         session: "One session per milestone, in a separate worktree at the exact SHA under review."
         body: "Reads only, and writes exactly one file: the gate report. One pass per milestone, never a loop."
-        href: "/roles/rin"
+        href: "/roles/rin/"
       - id: qa
         title: "QA"
         tag: "acceptance"
         session: "One session per walk, with the product running for real in its own worktree."
         body: "Uses the product the way a user does and never reads the diff. Read-only by default; every write needs your permission, one at a time."
-        href: "/roles/qa"
+        href: "/roles/qa/"
 
   tracker:
     eyebrow: "Issue tracker"
@@ -101,7 +101,7 @@ explain:
       - text: "A surface the OWNER can open and read without running a query"
     more:
       label: "Explore the structure →"
-      href: "/structure#coordination"
+      href: "/structure/#coordination"
 
   method:
     eyebrow: "mattpocock-skills"
@@ -126,7 +126,7 @@ explain:
         text: "grilling · tdd · code-review · codebase-design · domain-modeling · research · prototype · diagnosing-bugs"
     more:
       label: "Learn more about the choice →"
-      href: "/why#why-mattpocock"
+      href: "/why/#why-mattpocock"
 
 why:
   eyebrow: "Approach"
@@ -173,35 +173,35 @@ features:
     body: "Every ticket goes through a code review against Standards and Spec on Claude Code, then a cross-read on Codex. Two models from two vendors read the same diff before the merge, so quality does not rest on a single model."
     diagram: cross-vendor-arm
     crop: [builder, codex, head]
-    href: /en/skills/codex-arm
+    href: /skills/codex-arm/
   - id: tracker
     title: "Continuous operation around the issue tracker."
     body: "Every requirement, spec and ticket sits on the tracker. When a review finds new work, it is written up as a new ticket. The team runs around the clock without you watching it, and nothing falls outside the system."
     diagram: frontier-query
     crop: [frontier_query, board]
-    href: /en/structure#coordination
+    href: /structure/#coordination
   - id: roles
     title: "A team with names, roles and contracts."
     body: "Thomas represents you, the Shaper shapes, the Builder builds, Rin holds the gate, QA accepts. Each role carries its own contract and system context, so responsibility is clear and nobody does someone else's job. Claude Code, Codex and OpenCode all support agent profiles at this level."
     diagram: five-roles
     crop: [shaper, builder]
-    href: /en/roles/thomas
+    href: /roles/thomas/
   - id: runtime
     title: "One process, several runtimes."
     body: "Claude Code is the required base; Codex and OpenCode come in when you want a second vendor or another model. Which role runs on which runtime is declared in orchestrator.md; changing the runtime does not change the process."
     diagram: structure
     crop: [runtime_claude, runtime_codex]
-    href: /en/tech-stack#claude-code
+    href: /tech-stack/#claude-code
   - id: models
     title: "The right model for the right work."
     body: "Sonnet for the Builder and QA, where fast and cheap matters; Opus for Thomas, the Shaper and Rin, where long reasoning matters. Cost and quality are balanced per role instead of one model for everything."
-    href: /en/roles/builder
+    href: /roles/builder/
   - id: oversight
     title: "Full oversight, no need to take over."
     body: "The tracker board, the herdr panes, the designs and the decisions can all be read back. Thomas comes back to you at the points that matter: UI/UX, and the choice of tech stack. You decide, the team builds."
     diagram: hub-and-spokes
     crop: [tra139, tra142]
-    href: /en/roles/thomas
+    href: /roles/thomas/
 
 fit:
   eyebrow: "The right size of project"

@@ -10,7 +10,7 @@ updated: 2026-09-04
 
 The brief's first line is a fixed shape: the phase's slash command, plugin-qualified (`/mattpocock-skills:<name>`), because what actually reaches the agent's pane is text arriving as a user turn, not a function call with named arguments. Everything after that first line is the rest of the instructions — the ticket, its spec, the owner intent, the workspace label, the ticket ID, branch, base, worktree path. `dispatch-ticket` treats submitting the brief as its own step, separate from writing it, because a multi-line brief pasted into a pane composer lands without submitting — the paste consumes the newlines that would normally hit Enter, and the pane sits reporting `idle` with an unsent brief still in the box.
 
-That's also why a brief carries a `Base:` field as a required field rather than a rule left in prose: a boundary an agent has to remember is a boundary it eventually forgets, but a field that has to arrive with the brief gets checked mechanically. Downstream, the [Builder](/dictionary/role) is told to pass `code-review` the exact `Base:` the brief carried, because "the increment" on its own is not a git ref anyone can resolve later.
+That's also why a brief carries a `Base:` field as a required field rather than a rule left in prose: a boundary an agent has to remember is a boundary it eventually forgets, but a field that has to arrive with the brief gets checked mechanically. Downstream, the [Builder](/dictionary/role/) is told to pass `code-review` the exact `Base:` the brief carried, because "the increment" on its own is not a git ref anyone can resolve later.
 
 ## Why it matters here
 

@@ -11,14 +11,14 @@ import type { Lang } from './site';
  *  dictionary page in both locales, and gets no language switch, because there is
  *  nothing to switch to. */
 export const TERM_VI: Record<string, string> = {
-  tracker: '/vi/cach-tiep-can#why-tracker',
-  frontier: '/vi/cau-truc#coordination',
-  'blocking-edge': '/vi/cau-truc#coordination',
-  claim: '/vi/cau-truc#coordination',
-  worktree: '/vi/role/builder',
+  tracker: '/vi/cach-tiep-can/#why-tracker',
+  frontier: '/vi/cau-truc/#coordination',
+  'blocking-edge': '/vi/cau-truc/#coordination',
+  claim: '/vi/cau-truc/#coordination',
+  worktree: '/vi/role/builder/',
 };
 
-export const dictionaryHref = (slug: string) => `/dictionary/${slug}`;
+export const dictionaryHref = (slug: string) => `/dictionary/${slug}/`;
 
 /** Where a diagram node or a body link about `slug` should land, in this locale. */
 export function termHref(lang: Lang, slug: string): string {

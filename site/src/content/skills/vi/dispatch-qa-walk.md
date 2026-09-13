@@ -106,6 +106,6 @@ quy trình có để lại dấu vết không, còn `dispatch-qa-walk` là gate 
 cả. Nó lái sản phẩm đang chạy, vì một cái diff mạch lạc và một sản phẩm mạch lạc là hai lời khẳng
 định khác nhau. Phát hiện từ cả hai cửa đi cùng một đường: `qa` khuyến nghị, Thomas phân loại,
 Builder sửa, và một quyết định sản phẩm thật sự thì lên chủ project. Lượt đi bộ chạy bên trong một
-[gate](/dictionary/gate) và một [worktree](/dictionary/worktree) mà nó force-remove lúc cleanup, đó chính là lý do
+[gate](/dictionary/gate/) và một [worktree](/vi/role/builder/) mà nó force-remove lúc cleanup, đó chính là lý do
 danh sách verified-clean phải được ghi ra ngoài worktree đó trước.
 <!-- source: harness/.agents/skills/dispatch-qa-walk/SKILL.md -->

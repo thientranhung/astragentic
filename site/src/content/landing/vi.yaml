@@ -56,31 +56,31 @@ explain:
         tag: "người đại diện"
         session: "Session thường trực, kéo dài qua nhiều ticket."
         body: "Giữ tracker, chạy frontier query, claim, dispatch và merge. Là agent duy nhất còn ở đó khi Builder đã đóng session, nên mọi trạng thái bền đều thuộc Thomas. Hỏi lại bạn ở những quyết định quan trọng."
-        href: "/vi/role/thomas"
+        href: "/vi/role/thomas/"
       - id: shaper
         title: "Shaper"
         tag: "định hình"
         session: "Một session liền mạch từ đầu tới cuối, không compact."
         body: "Chạy grill-with-docs, to-spec, to-tickets theo thứ tự, dừng sau spec để bạn duyệt."
-        href: "/vi/role/shaper"
+        href: "/vi/role/shaper/"
       - id: builder
         title: "Builder"
         tag: "thi công"
         session: "Một session mỗi ticket, trong worktree riêng, là người viết duy nhất ở đó."
         body: "Implement, code review hai trục, simplify, rồi lượt review chéo do Codex đọc lại. Commit ở mỗi ranh giới, không chỉ lúc handback."
-        href: "/vi/role/builder"
+        href: "/vi/role/builder/"
       - id: rin
         title: "Rin"
         tag: "gate"
         session: "Một session mỗi milestone, worktree tách riêng tại đúng SHA được review."
         body: "Chỉ đọc và viết đúng một file: báo cáo gate. Một vòng mỗi milestone, không lặp."
-        href: "/vi/role/rin"
+        href: "/vi/role/rin/"
       - id: qa
         title: "QA"
         tag: "nghiệm thu"
         session: "Một session mỗi lượt walk, với sản phẩm đang chạy thật trong worktree riêng."
         body: "Dùng sản phẩm như người dùng, không đọc diff. Mặc định chỉ đọc, mọi thao tác ghi cần bạn cho phép từng lần."
-        href: "/vi/role/qa"
+        href: "/vi/role/qa/"
 
   tracker:
     eyebrow: "Issue tracker"
@@ -101,7 +101,7 @@ explain:
       - text: "A surface the OWNER can open and read without running a query"
     more:
       label: "Khám phá cấu trúc →"
-      href: "/vi/cau-truc#coordination"
+      href: "/vi/cau-truc/#coordination"
 
   method:
     eyebrow: "mattpocock-skills"
@@ -126,7 +126,7 @@ explain:
         text: "grilling · tdd · code-review · codebase-design · domain-modeling · research · prototype · diagnosing-bugs"
     more:
       label: "Hiểu rõ hơn lý do chọn →"
-      href: "/vi/cach-tiep-can#why-mattpocock"
+      href: "/vi/cach-tiep-can/#why-mattpocock"
 
 why:
   eyebrow: "Cách tiếp cận"
@@ -173,35 +173,35 @@ features:
     body: "Mọi ticket đi qua code-review theo Standards và Spec trên Claude Code, rồi một lượt đọc chéo trên Codex. Hai model của hai hãng, Claude và Codex, đọc cùng một diff trước khi merge, nên chất lượng không phụ thuộc vào một model duy nhất."
     diagram: cross-vendor-arm
     crop: [builder, codex, head]
-    href: /vi/skills/codex-arm
+    href: /vi/skills/codex-arm/
   - id: tracker
     title: "Vận hành liên tục quanh issue tracker."
     body: "Mọi yêu cầu, spec và ticket đều nằm trên tracker. Review phát hiện việc mới thì ghi thành ticket mới. Team chạy 24/7 mà không cần bạn ngồi canh, và không có việc nào rơi ra ngoài hệ thống."
     diagram: frontier-query
     crop: [frontier_query, board]
-    href: /vi/cau-truc#coordination
+    href: /vi/cau-truc/#coordination
   - id: roles
     title: "Team có tên, có role, có contract."
     body: "Thomas đại diện, Shaper định hình, Builder thi công, Rin giữ gate, QA nghiệm thu. Mỗi role có contract và system context riêng, nên trách nhiệm rõ và không ai làm thay việc của ai. Claude Code, Codex và OpenCode đều hỗ trợ agent profile ở mức này."
     diagram: five-roles
     crop: [shaper, builder]
-    href: /vi/role/thomas
+    href: /vi/role/thomas/
   - id: runtime
     title: "Một quy trình, nhiều runtime."
     body: "Claude Code là nền bắt buộc; Codex và OpenCode thêm vào khi bạn cần AI của hãng thứ hai hay model khác. Role nào chạy trên runtime nào khai trong orchestrator.md; đổi runtime không đổi quy trình."
     diagram: structure
     crop: [runtime_claude, runtime_codex]
-    href: /vi/tech-stack#claude-code
+    href: /vi/tech-stack/#claude-code
   - id: models
     title: "Đúng model cho đúng việc."
     body: "Sonnet cho Builder và QA, nơi cần nhanh và rẻ; Opus cho Thomas, Shaper và Rin, nơi cần suy luận dài. Chi phí và chất lượng cân theo từng role thay vì một model cho tất cả."
-    href: /vi/role/builder
+    href: /vi/role/builder/
   - id: oversight
     title: "Toàn quyền giám sát, không cần ra tay."
     body: "Board tracker, pane herdr, thiết kế và quyết định đều đọc lại được. Thomas hỏi lại bạn ở những điểm quan trọng: UI/UX, lựa chọn tech stack. Bạn quyết, team làm."
     diagram: hub-and-spokes
     crop: [tra139, tra142]
-    href: /vi/role/thomas
+    href: /vi/role/thomas/
 
 fit:
   eyebrow: "Quy mô phù hợp"

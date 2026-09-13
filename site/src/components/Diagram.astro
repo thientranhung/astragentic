@@ -59,7 +59,7 @@ const prepared = raw
   ? prepare(raw, { lang, frame: frame ?? svgMaxWidth ?? BAND, crop, transform: stripFocus })
   : null;
 const svg = prepared?.html ?? null;
-const exploreHref = localised ? `/explore/vi/${slug}` : `/explore/${slug}`;
+const exploreHref = localised ? `/explore/vi/${slug}/` : `/explore/${slug}/`;
 const svgStyle = svgMaxWidth ? `max-width:${svgMaxWidth}px;margin-inline:auto;` : undefined;
 ---
 

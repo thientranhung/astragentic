@@ -26,3 +26,10 @@
 /en/roles/:id           /roles/:id/               301
 /vai/:id                /vi/role/:id/             301
 /vi/vai/:id             /vi/role/:id/             301
+
+# The standalone diagram pages moved from `explore/<slug>.html` to a directory, so the
+# address is `/explore/<slug>/` like every other page. The old file address has been
+# linked for months and is the one a bookmark holds, so it keeps a real 301 rather than
+# a 404. The extensionless form needs no rule: Cloudflare resolves it to the directory.
+/explore/:slug.html     /explore/:slug/           301
+/explore/vi/:slug.html  /explore/vi/:slug/        301

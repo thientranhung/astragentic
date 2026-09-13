@@ -1,4 +1,15 @@
-/* archify's standalone explore pages ship a Google Fonts <link> for JetBrains Mono.
+/* Two things archify's standalone explore pages need before they belong to this site.
+
+ * FIRST, the address. archify writes `explore/<slug>.html`, and a file path is not a
+ * page address here: every other URL on the site ends in a slash, which is what the
+ * canonical tags and the sitemap declare. Served as a bare file the page answers only
+ * at `/explore/<slug>.html`, which Cloudflare then 307s to the extensionless form,
+ * while nothing strips the extension locally at all — so the same link was a redirect
+ * in production and a 404 in dev. Moving the file to `explore/<slug>/index.html` makes
+ * `/explore/<slug>/` a real directory address that resolves the same way everywhere,
+ * with no redirect and no dev-only middleware standing in for one.
+
+ * SECOND, the font.
  * Every diagram on the site links to one of them, so a reader who opens a diagram makes
  * a request to a third party — on a site that self-hosts every other byte it serves.
  * Three reasons that is worth closing: it hands the reader's address to someone the
@@ -14,8 +25,8 @@
  * package into public/fonts/ at a stable path — these pages are plain HTML in public/
  * and never pass through Vite, so they cannot use a hashed asset URL.
  */
-import { readFile, writeFile, readdir } from 'node:fs/promises';
-import { join, relative } from 'node:path';
+import { readFile, writeFile, readdir, mkdir, rename } from 'node:fs/promises';
+import { join, relative, dirname, basename } from 'node:path';
 
 const ROOT = new URL('../public/explore/', import.meta.url).pathname;
 const MARKER = 'astragentic:local-mono';
@@ -72,11 +83,25 @@ async function* walk(dir) {
   }
 }
 
+/* `<slug>.html` becomes `<slug>/index.html`; a file already in that shape is left
+   alone, so the step is safe to run on every build. */
+async function toDirectoryForm(file) {
+  const name = basename(file);
+  if (name === 'index.html') return file;
+  const target = join(dirname(file), name.replace(/\.html$/, ''), 'index.html');
+  await mkdir(dirname(target), { recursive: true });
+  await rename(file, target);
+  moved += 1;
+  return target;
+}
+
+let moved = 0;
 let patched = 0;
 let already = 0;
 let untouched = 0;
 
-for await (const file of walk(ROOT)) {
+for await (const found of walk(ROOT)) {
+  const file = await toDirectoryForm(found);
   const before = await readFile(file, 'utf8');
   if (before.includes(MARKER)) {
     already += 1;
@@ -99,5 +124,5 @@ for await (const file of walk(ROOT)) {
 }
 
 console.log(
-  `[explore-fonts] patched ${patched}, already local ${already}, no CDN reference ${untouched}`,
+  `[explore] moved ${moved} to directory form, patched ${patched}, already local ${already}, no CDN reference ${untouched}`,
 );

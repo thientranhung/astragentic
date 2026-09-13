@@ -7,9 +7,9 @@ diagram: parallel-lanes
 updated: 2026-09-04
 ---
 
-**A worktree is a separate git checkout for one ticket, so the [Builder](/dictionary/role) working it never shares a HEAD with anyone else.**
+**A worktree is a separate git checkout for one ticket, so the [Builder](/dictionary/role/) working it never shares a HEAD with anyone else.**
 
-`dispatch-ticket` puts the sequence in a fixed order — the [claim](/dictionary/claim) comes first, then the branch, then the worktree: `git worktree add -b <ticket-branch> <worktree-path> <base>`. The worktree path is always absolute and inside the repo, at `.claude/worktrees/<branch-slug>`, and it's created with `--detach` where the arm needs a throwaway one for spec or slice scope. The Builder is the sole writer inside it; Thomas, Rin, another Builder — everyone else reads. That's the actual isolation boundary, and it's what makes several tickets run on the frontier at once without one agent's `git switch` moving another's HEAD out from under it.
+`dispatch-ticket` puts the sequence in a fixed order — the [claim](/dictionary/claim/) comes first, then the branch, then the worktree: `git worktree add -b <ticket-branch> <worktree-path> <base>`. The worktree path is always absolute and inside the repo, at `.claude/worktrees/<branch-slug>`, and it's created with `--detach` where the arm needs a throwaway one for spec or slice scope. The Builder is the sole writer inside it; Thomas, Rin, another Builder — everyone else reads. That's the actual isolation boundary, and it's what makes several tickets run on the frontier at once without one agent's `git switch` moving another's HEAD out from under it.
 
 The part that's easy to get wrong is what a worktree actually holds. A worktree carries tracked git content and nothing else — it does not isolate a database container, a background process, or anything a tool writes to a fixed path outside the checkout. That gap is why cleanup needed its own script: `release-worktree-resources.sh` reaps processes rooted in the worktree by real cwd, and `.astraler/project/cleanup-worktree.sh` releases whatever else a project's own tooling allocated. Removal itself is `git worktree remove`, never `rm -rf` — a raw delete leaves the registration behind in `.git/worktrees/`, and the next `add` at that path refuses.
 

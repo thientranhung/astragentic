@@ -9,7 +9,7 @@ updated: 2026-09-04
 
 **_Example only — writer fills this in with a single bold definition sentence, standing alone._**
 
-Two paragraphs of mechanism follow. Link every other term by its own word — `[gate](/dictionary/gate)`,
+Two paragraphs of mechanism follow. Link every other term by its own word — `[gate](/dictionary/gate/)`,
 never the bare path: a URL set in code reads as a file name, and two skill pages had sentences
 running "inside a /dictionary/gate", which is neither a word nor a link.
 

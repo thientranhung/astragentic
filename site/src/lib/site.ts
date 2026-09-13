@@ -17,16 +17,24 @@ export type PageKey =
  *  with its own slugs (decided 2026-09-11, swapping the earlier vi-first layout).
  *  One table owns every route. Nav, LangSwitch and the pages all read from here,
  *  so a Vietnamese slug and its English twin can never drift apart. */
+/* Every address ends in a slash, and that is not cosmetic. Cloudflare's asset layer
+ * serves a page at its directory form, so `/why` answers 307 and sends the reader to
+ * `/why/`. The canonical tag and every sitemap entry already named the slash form, so
+ * writing links without it had the site pointing at an address it does not claim as
+ * its own and relying on a redirect to arrive — 2,970 links, each one a wasted round
+ * trip and a mixed signal to a crawler. `trailingSlash: 'always'` in astro.config
+ * keeps the build honest about it. Files are the exception and take no slash: the
+ * standalone `/explore/` pages, `/og.png`, the fonts. */
 export const ROUTES: Record<PageKey, Record<Lang, string>> = {
-  home: { vi: '/vi', en: '/' },
-  structure: { vi: '/vi/cau-truc', en: '/structure' },
-  roles: { vi: '/vi/role/thomas', en: '/roles/thomas' },
-  skills: { vi: '/vi/skills', en: '/skills' },
-  hooks: { vi: '/vi/hooks', en: '/hooks' },
-  why: { vi: '/vi/cach-tiep-can', en: '/why' },
-  stack: { vi: '/vi/tech-stack', en: '/tech-stack' },
-  adopt: { vi: '/vi/cai', en: '/adopt' },
-  failures: { vi: '/vi/loi', en: '/failures' },
+  home: { vi: '/vi/', en: '/' },
+  structure: { vi: '/vi/cau-truc/', en: '/structure/' },
+  roles: { vi: '/vi/role/thomas/', en: '/roles/thomas/' },
+  skills: { vi: '/vi/skills/', en: '/skills/' },
+  hooks: { vi: '/vi/hooks/', en: '/hooks/' },
+  why: { vi: '/vi/cach-tiep-can/', en: '/why/' },
+  stack: { vi: '/vi/tech-stack/', en: '/tech-stack/' },
+  adopt: { vi: '/vi/cai/', en: '/adopt/' },
+  failures: { vi: '/vi/loi/', en: '/failures/' },
 };
 
 /** Seven items, in the order the reader asks the questions (home v2 spec §Nav): why the

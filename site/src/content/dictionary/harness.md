@@ -8,7 +8,7 @@ updated: 2026-09-04
 
 **The harness is the framework Astragentic ships: the roles, skills, and dispatch mechanics that let several AI agents build software on the same codebase without stepping on each other.**
 
-It is not a product feature or a runtime — it's the thing you install into a repo. `install.sh` stages it into `<target>/.astraler/releases/<version>/`, and from there an adaptive installer, `ADAPT-HARNESS.md`, inspects the project and wires it in. Once installed, the harness owns the parts that make concurrency safe: it assigns a [tracker](/dictionary/tracker) ticket to a [role](/dictionary/role) as a claim before that ticket gets a worktree, and it keeps every agent's writes isolated to its own checkout.
+It is not a product feature or a runtime — it's the thing you install into a repo. `install.sh` stages it into `<target>/.astraler/releases/<version>/`, and from there an adaptive installer, `ADAPT-HARNESS.md`, inspects the project and wires it in. Once installed, the harness owns the parts that make concurrency safe: it assigns a [tracker](/dictionary/tracker/) ticket to a [role](/dictionary/role/) as a claim before that ticket gets a worktree, and it keeps every agent's writes isolated to its own checkout.
 
 The distinction the README draws matters for reading anything else on this site: this repo is the **package** — it produces the harness. A project the harness gets installed into is the **adapted project**, and it keeps its own tracker, its own ledger of measured history, and its own project-specific decisions in files like `docs/agents/issue-tracker.md`. The harness carries the coordination mechanics; the project carries the facts about itself.
 

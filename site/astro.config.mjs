@@ -49,23 +49,21 @@ function pairFor(pathname) {
 }
 
 // https://astro.build/config
-/* The standalone diagram pages are plain files in public/, so their real name ends in
- * `.html`. Cloudflare's asset layer strips that on the way out: /explore/hooks.html
- * answers 307 and sends the reader to /explore/hooks, which is the better public URL
- * and the one the components now link to. Nothing does that locally — Vite serves
- * public/ verbatim — so without this the "open the full diagram" link is a 404 on the
- * dev server and a 200 in production, which is the worst way round for a link the owner
- * reviews locally. Dev only; the built output is untouched.
+/* The standalone diagram pages live in public/ as `explore/<slug>/index.html`, which
+ * Cloudflare serves at `/explore/<slug>/` like any other directory. Vite's public-dir
+ * handler does not resolve a directory index, so in dev that address is a 404 while
+ * production serves it — the split this whole arrangement exists to avoid. One line of
+ * dev-only middleware appends the index. Nothing here touches the build.
  */
-function exploreExtensionless() {
+function exploreDirectoryIndex() {
   return {
-    name: 'astragentic:explore-extensionless',
+    name: 'astragentic:explore-directory-index',
     apply: 'serve',
     configureServer(server) {
       server.middlewares.use((req, _res, next) => {
         const [path, query = ''] = (req.url ?? '').split('?');
-        if (path.startsWith('/explore/') && !path.endsWith('/') && !/\.[a-z0-9]+$/i.test(path)) {
-          req.url = `${path}.html${query ? `?${query}` : ''}`;
+        if (path.startsWith('/explore/') && path.endsWith('/')) {
+          req.url = `${path}index.html${query ? `?${query}` : ''}`;
         }
         next();
       });
@@ -126,6 +124,13 @@ export default defineConfig({
   // English is the primary language and lives at `/`; Vietnamese mirrors under `/vi/`.
   // Route files are explicit (vi/loi.astro / failures.astro) because the Vietnamese
   // slugs are not transliterations of the English ones.
+  /* Every page address ends in a slash. Cloudflare serves a page at its directory
+     form, so the slashless address answers 307 — and the canonical tag and the sitemap
+     already named the slash form, which left the site's own links pointing at an
+     address it does not claim. This keeps the build honest: Astro emits the slash form
+     and dev matches it, so a link written without one shows up here rather than as a
+     redirect in production. */
+  trailingSlash: 'always',
   i18n: {
     defaultLocale: 'en',
     locales: ['vi', 'en'],
@@ -134,7 +139,7 @@ export default defineConfig({
     },
   },
   vite: {
-    plugins: [tailwindcss(), exploreExtensionless()],
+    plugins: [tailwindcss(), exploreDirectoryIndex()],
   },
   server: {
     port,

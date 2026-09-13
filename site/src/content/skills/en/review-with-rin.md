@@ -103,7 +103,7 @@ A ticket moves through `/skills/dispatch-ticket`'s worktree, and once it is read
 `Ledger:` line actually exist, and that browser evidence backs any UI change. What Rin cannot
 judge, meaning whether the running product still coheres, is `dispatch-qa-walk`'s job. Once
 findings are folded and verified, `/skills/codex-arm` takes the final SHA for the cross-vendor
-pass before anything merges. `rin` itself is a [role](/dictionary/role), and the
-whole thing happens inside a [gate](/dictionary/gate), on a [worktree](/dictionary/worktree) nobody but Rin
+pass before anything merges. `rin` itself is a [role](/dictionary/role/), and the
+whole thing happens inside a [gate](/dictionary/gate/), on a [worktree](/dictionary/worktree/) nobody but Rin
 writes to.
 <!-- source: harness/.agents/skills/review-with-rin/SKILL.md -->

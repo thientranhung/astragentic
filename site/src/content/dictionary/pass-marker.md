@@ -14,7 +14,7 @@ Markers may be empty — a `simplify(increment):` reading "no findings on `<base
 
 ## Why it matters here
 
-Astragentic ties merge readiness to a marker instead of a status report because a [gate](/dictionary/gate) with a physical artifact a script already checks is one that actually blocks a merge — a milestone gate with no marker and no reader in the gating script went silent for over a hundred merges before anyone noticed. The cost is discipline: every pass has to end in a real commit, empty ones included, and a marker that isn't at the current head is worthless — a fold that moves the tree past what the pass read makes the marker a green shirt on a stale diff.
+Astragentic ties merge readiness to a marker instead of a status report because a [gate](/dictionary/gate/) with a physical artifact a script already checks is one that actually blocks a merge — a milestone gate with no marker and no reader in the gating script went silent for over a hundred merges before anyone noticed. The cost is discipline: every pass has to end in a real commit, empty ones included, and a marker that isn't at the current head is worthless — a fold that moves the tree past what the pass read makes the marker a green shirt on a stale diff.
 
 ## Seen in:
 
