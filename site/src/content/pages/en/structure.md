@@ -115,9 +115,9 @@ becomes either a rule or an open record.
 ### The cross-vendor arm binds to one SHA
 
 After Claude finishes, a model from a different vendor reads the diff back and leaves a receipt
-bound to the exact SHA it read. This is not variety for its own sake: a same-vendor correctness
-review once passed a defect that committed live secrets and buyer PII into a tracked file, and
-the cross-vendor pass is what caught it as a P1.
+bound to the exact SHA it read. The reason is not variety for its own sake: a model re-reading
+its own diff re-reads its own assumptions along with it, and a model from another vendor does
+not carry those assumptions.
 
 ### The tracker is the state substrate
 

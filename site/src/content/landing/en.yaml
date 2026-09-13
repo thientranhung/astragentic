@@ -133,7 +133,7 @@ why:
   headline: "AI is now a real developer. Astragentic puts you in charge of that developer team."
   p1: "A coding agent today takes the work, writes the code, runs the tests and fixes until they pass. Once execution is no longer the bottleneck, the engineer's value moves elsewhere: setting the right requirement, making the right call, keeping the process on course."
   p2: "Astragentic is built so that you do exactly that part. It organises agents into an outsourcing team under the familiar SDLC discipline, and redesigns dispatch, review and handback for a speed no human team can sustain."
-  more: "Explore every design decision →"
+  more: "Explore the whole approach →"
 
 shots:
   hero:
@@ -206,7 +206,7 @@ features:
 fit:
   eyebrow: "The right size of project"
   headline: "For long-lived projects with many parts running in parallel."
-  body: "A project is not large because it has sprints or stories. It is large because it is long-lived, wide, dependent and risky, and Astragentic has one mechanism for each: the tracker and receipts keep state outside any agent's memory, claims and worktrees let several Builders run in parallel, blocking edges and the frontier query keep the order, Rin's gate and QA's walk stop a merge before it hurts. Without all four, an ordinary agent session is enough."
+  body: "A project is not large because it has sprints or stories. It is large because it is long-lived, wide, dependent and risky, and Astragentic has one mechanism for each: the tracker and receipts keep state outside any agent's memory, claims and worktrees let several Builders run in parallel, blocking edges and the frontier query keep the order, Rin's gate and QA's walk stop a merge before it hurts. With none of the four, an ordinary agent session is enough."
   fitsLabel: "A fit when"
   notYetLabel: "Not needed when"
   fits:
