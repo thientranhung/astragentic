@@ -107,6 +107,6 @@ checks that the process left its traces, and `dispatch-qa-walk` is the gate besi
 nothing. It drives the running product instead, because a coherent diff and a coherent product
 are different claims. Findings from both gates route the same way: `qa` advises, Thomas
 classifies, the Builder fixes, and a genuine product decision goes to the owner. The walk runs
-inside a `/dictionary/gate` and a `/dictionary/worktree` it force-removes at cleanup, which is
+inside a [gate](/dictionary/gate) and a [worktree](/dictionary/worktree) it force-removes at cleanup, which is
 why the verified-clean list has to be written outside that worktree first.
 <!-- source: harness/.agents/skills/dispatch-qa-walk/SKILL.md -->
