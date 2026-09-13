@@ -334,12 +334,12 @@ export const GOOD_PARTS: GoodPart[] = [
 ];
 
 
-/* ── /operating-techniques ──────────────────────────────────────────────── */
+/* ── /tips ──────────────────────────────────────────────────────────────── */
 
 /** The four techniques for running several agents on one machine. They are not peers:
  *  the first is the technique, the next two are what make it affordable, and the last
  *  is what it is for. The order carries that argument, so the rail reads in it too. */
-export interface OperatingItem {
+export interface TipItem {
   id: string;
   /** Tool or technique name. Never translated. */
   name: string;
@@ -348,7 +348,7 @@ export interface OperatingItem {
   role: Dict;
 }
 
-export const OPERATING: OperatingItem[] = [
+export const TIPS: TipItem[] = [
   {
     id: 'runtime-per-worktree',
     name: 'runtime theo worktree',

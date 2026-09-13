@@ -33,11 +33,11 @@ export const UI = {
   sideHooks: { vi: 'Hooks', en: 'Hooks' },
   sideWhy: { vi: 'Cách tiếp cận', en: 'Approach' },
   sideStack: { vi: 'Tech stack', en: 'Tech stack' },
-  sideOperating: { vi: 'Vận hành', en: 'Operating' },
+  sideTips: { vi: 'Kinh nghiệm', en: 'Tips' },
   sideFailures: { vi: 'Bài học', en: 'Lessons' },
   sideAdopt: { vi: 'Install', en: 'Install' },
-  /** The operating page's own eyebrow, longer than the rail label it shares a page with. */
-  operatingTitle: { vi: 'Kỹ thuật vận hành', en: 'Operating techniques' },
+  /** The tips page's own eyebrow, longer than the rail label it shares a page with. */
+  tipsTitle: { vi: 'Kinh nghiệm chạy nhiều agent', en: 'Tips for running several agents' },
   roleKey: { vi: 'Màu role trong hình', en: 'Role colours in this figure' },
 
   /* ── hero strip ── */

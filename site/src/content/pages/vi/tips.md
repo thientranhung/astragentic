@@ -1,5 +1,5 @@
 ---
-title: "Kỹ thuật vận hành"
+title: "Kinh nghiệm chạy nhiều agent"
 description: "Bốn kỹ thuật để nhiều agent chạy song song trên một máy: runtime theo worktree, pnpm, portless, và QA walk bằng trình duyệt thật."
 ---
 
@@ -186,11 +186,104 @@ Lý do phải là trình duyệt thật nằm ở hai chỗ. Có những lớp l
 Và health check thường trả lời một câu hỏi dễ hơn câu hỏi cần hỏi: "tiến trình có sống không" không
 phải là "người dùng có làm xong việc không".
 
-Công cụ chia làm hai phần. Một trình duyệt thật giữ profile đăng nhập — ở đây là **OmniLogin** —
-và **`agent-browser`**, một CLI lái trình duyệt đó qua CDP. Bằng chứng để lại là một file: ảnh
-chụp, đường dẫn đã đi, chuỗi chữ đã thấy, kèm số cổng CDP và user agent để trạm sau biết bằng
-chứng đến từ trình duyệt nào. Không phải một câu khẳng định trong pane, vì một câu khẳng định thì
-trạm sau không kiểm lại được.
+Công cụ chia làm hai, và **cách chia vai mới là phần quan trọng**.
+
+### OmniLogin giữ trạng thái
+
+**OmniLogin** là một trình duyệt giữ profile: cookie, localStorage, extension đã cài, fingerprint,
+proxy. Một Chrome sạch khởi chạy mỗi lượt thì không giữ được gì trong số đó, nên mọi hành trình
+đứng sau màn đăng nhập đều không đi được.
+
+Nó phơi ra một HTTP API cục bộ để tìm profile theo tên, hỏi profile đã mở chưa, và mở nó. Khi mở,
+nó trả về **cổng CDP thật** của lần mở đó. Cổng ấy **đổi theo mỗi lần mở** — nhớ số cổng cũ là một
+lỗi, phải đọc lại từ phản hồi.
+
+### agent-browser chỉ lái
+
+**`agent-browser`** là một CLI nối vào trình duyệt đang chạy qua CDP rồi lái nó. Trong mô hình này
+nó **không bao giờ được tự khởi chạy trình duyệt**: khoảnh khắc nó làm thế, đó là một Chrome mới
+không có login nào, và mọi quan sát qua nó là hư cấu.
+
+Nên luật phân vai gọn trong một câu: **trạng thái ở OmniLogin, điều khiển ở agent-browser.** Đảo
+vai — để agent-browser giữ login — là mất fingerprint và mất luôn lý do OmniLogin tồn tại.
+
+Ba lớp tách khi nhiều agent cùng dùng một trình duyệt, và cần phân biệt rạch ròi:
+
+- **`--session <tên>`** tách trang hiện tại và ngữ cảnh lệnh của phiên đó. Nó **không** tách tập tab
+  của Chrome — CDP phơi một tập target cho cả tiến trình. Đừng nhầm với `--session-name`, vốn chỉ là
+  khoá lưu auth-state chứ không tách gì.
+- **`--pin-tab`** ràng buộc phiên vào đúng tab của nó. Giá trị của cờ này không phải sự cô lập, mà
+  là **biến một fallback im lặng thành một lỗi**: tab bị đóng thì lệnh kế tiếp báo `tab_gone` thay vì
+  lặng lẽ trôi sang tab của người khác. Nó không làm tab của bạn riêng tư — agent khác vẫn thấy, vẫn
+  lái, vẫn đóng được.
+- **Daemon** dùng chung toàn máy và tự tắt sau một giờ không hoạt động. Mọi bước dọn worktree phải
+  **không** giết nó, cùng lý do với container dùng chung: nó không quy được về worktree nào.
+
+### Một lượt walk
+
+```bash
+# 0. Đúng binary trước đã. Thiếu cờ là dừng, không phải "cẩn thận bằng kỷ luật".
+agent-browser --help | grep -- --pin-tab || { echo "STOP: binary quá cũ"; exit 1; }
+
+# 1-3. Trình duyệt còn sống không, profile đã mở chưa, và CỔNG THẬT của lần mở này là bao nhiêu.
+#      Không bao giờ dùng lại số cổng của lần trước.
+
+# 4. CDP có thật không, và user agent ở tầng browser là gì. Ghi lại để so ở bước 6.
+curl -fsS "http://127.0.0.1:<cổng>/json/version"
+
+# 5. Nối vào. `connect`, mỗi agent một --session, kèm --pin-tab.
+agent-browser --session <ticket> --pin-tab connect <cổng>
+
+# 6. Ba bằng chứng. Trượt một cái là dừng và huỷ mọi quan sát trước đó.
+agent-browser --session <ticket> eval "navigator.userAgent + ' webdriver=' + navigator.webdriver"
+#    (1) khớp UA ở bước 4   (2) không chứa Headless   (3) webdriver=false
+
+# 7-8. Nhận tab của mình, rồi đi tới stack của chính worktree mình.
+agent-browser --session <ticket> tab new
+agent-browser --session <ticket> open "https://myapp-<nhánh>.localhost/<đường-dẫn>"
+
+# 9-10. Đọc cây accessibility có ref, hành động lên ref, rồi đọc lại.
+agent-browser --session <ticket> snapshot -i
+agent-browser --session <ticket> click @ref
+
+# 11. Khẳng định ngữ nghĩa, không phải "trang có tải".
+agent-browser --session <ticket> screenshot <đường-dẫn>.png
+```
+
+**Bước 0 đứng trước bước 1** vì một binary sai làm mọi bước sau vô nghĩa mà không báo gì.
+
+**Bước 6 không bỏ được kể cả khi bước 4 đã xanh**, vì hai bước hỏi hai câu khác nhau: "tôi định nối
+vào đâu" và "trang thật sự đang chạy ở đâu".
+
+**Ref hết hạn sau mỗi lần điều hướng**, kể cả chuyển trang trong SPA hay mở đóng modal. Phải chụp
+lại cây accessibility, đừng dùng ref cũ.
+
+**Một bẫy với React:** `click @ref` ở tầng CDP không kích hoạt `onClick` của React, và `fill ""`
+không kích hoạt `onChange`. Click thật thì gọi `eval` để chạy `.click()` trên phần tử; xoá ô nhập
+thì dùng phím, `Control+a` rồi `Delete`.
+
+### Năm kiểu hỏng, và chỉ một kiểu đáng sợ
+
+| Chết cái gì | Triệu chứng |
+|---|---|
+| Trình duyệt đóng hoặc đăng xuất | API cục bộ không trả lời. Dừng, và **không bao giờ rơi sang trình duyệt khác**. |
+| Profile bị đóng nhưng app còn sống | Hỏi trạng thái trả về "chưa mở". Mở lại sẽ ra cổng mới, phải đọc lại. |
+| Daemon `agent-browser` chết | Lệnh kế tiếp tự dựng lại. Nhưng ràng buộc tab là trạng thái của phiên, nên phải kiểm lại tab. |
+| Tab bị người khác đóng | Lỗi `tab_gone`. Đây là kiểu hỏng **đáng giá nhất** — nó thay một hành động lặng lẽ lên nhầm trang bằng một lỗi ồn ào. Ràng buộc lại, đừng retry mù. |
+| Nối nhầm trình duyệt | **Không có triệu chứng nào.** Lệnh chạy, trang tải, kết quả trông hợp lý. |
+
+Bốn kiểu đầu tự báo. Kiểu thứ năm không, và toàn bộ kỷ luật ở trên tồn tại vì đúng kiểu đó. Cũng vì
+nó mà kiểm bằng `curl` rồi hành động bằng trình duyệt là chứng minh không gì cả — hai lệnh có thể
+đang nói chuyện với hai trình duyệt khác nhau. Phải kiểm bằng chính công cụ sắp dùng để hành động.
+
+Và cùng lý do đó, **kết luận "công cụ không hỗ trợ cờ này" có thể sai**: một máy có thể có hai bản
+CLI khác phiên bản, bản cũ resolve trước trong shell. Kiểm cờ trước mỗi phiên, trên mỗi máy.
+
+### Bằng chứng, và một luật đáng chép lại
+
+Thứ để lại là **một file commit trên nhánh**: ảnh chụp, đường dẫn đã đi, chuỗi chữ đã thấy, kèm số
+cổng CDP và user agent để trạm sau biết bằng chứng đến từ trình duyệt nào. Không phải một câu khẳng
+định trong pane, vì một câu khẳng định thì trạm sau không kiểm lại được.
 
 **Đây là mục cho thấy vì sao ba mục trên đáng làm.** Bằng chứng trình duyệt đòi mỗi người một stack
 đang chạy. Nếu dựng stack còn đắt thì bước này sẽ bị bỏ, và lý do bỏ nghe rất hợp lý. Đo được một
@@ -199,17 +292,6 @@ lần, nguyên văn lời một Builder:
 > no local stack was running in this worktree; standing one up is a multi-step job
 
 Đó chính xác là chi phí mà mục đầu tiên xoá bỏ.
-
-**Bốn chỗ hỏng, và chúng đều không hiển nhiên.** Một trình duyệt phục vụ nhiều agent thì CDP phơi ra
-một tập tab dùng chung và một con trỏ tab-đang-hoạt-động cho cả tiến trình — nên đừng bao giờ mở
-trang mà không nêu tab đích tường minh, và hãy kiểm quyền sở hữu tab ở mọi lệnh, kể cả lệnh chỉ
-đọc. Kiểm bằng `curl` rồi hành động bằng trình duyệt thì không chứng minh được gì, vì chúng có thể
-là hai trình duyệt khác nhau; phải kiểm bằng chính công cụ sắp dùng để hành động. Kết luận "công cụ
-không hỗ trợ cờ này" có thể sai vì trên một máy có thể tồn tại hai bản CLI khác phiên bản và bản cũ
-resolve trước trong shell — nên hãy kiểm cờ trước mỗi phiên, trên mỗi máy. Và có những cổng không
-mở được: một sàn có lớp chống bot ở trước, không có tài khoản cho agent. Luật ở đây là không tìm
-cách lách, vì rủi ro điều khoản rơi vào tài khoản thật của chủ dự án, và bằng chứng lấy bằng cách né
-chỉ chứng minh được là mình đã né.
 
 **Một luật đáng chép lại.** Một luật mà người vận hành cẩn thận vẫn quên trong vòng một giờ thì cần
 một ô bắt buộc chặn việc khởi chạy, không phải một câu văn nằm ở chỗ khác. Ở đây nó là một trường
@@ -221,6 +303,10 @@ Và đội không chấp nhận được việc agent lái một session đăng 
 và cách đáp là mặc định chỉ đọc, cho phép ghi theo từng lần chạy, kèm một luật rõ: quy tắc là về
 **dữ liệu**, không về môi trường. Dữ liệu dẫn xuất từ production vẫn là dữ liệu production, chạy ở
 đâu cũng vậy.
+
+Có những cổng không mở được, và không nên lách: một sàn có lớp chống bot ở trước, không có tài khoản
+cho agent. Rủi ro điều khoản rơi vào tài khoản thật của chủ dự án, và bằng chứng lấy bằng cách né chỉ
+chứng minh được là mình đã né.
 
 ## one-shape
 

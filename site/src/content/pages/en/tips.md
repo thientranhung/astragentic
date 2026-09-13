@@ -1,5 +1,5 @@
 ---
-title: "Operating techniques"
+title: "Tips for running several agents"
 description: "Four techniques for running several agents on one machine: a runtime per worktree, pnpm, portless, and a QA walk in a real browser."
 ---
 
@@ -195,11 +195,110 @@ Why it has to be a real browser comes down to two things. Some classes of defect
 something has been rendered. And a health check usually answers an easier question than the one
 that needed asking: "is the process alive" is not "can a user finish the job".
 
-The tooling splits in two: a real browser holding the logged-in profile — **OmniLogin** here — and
-**`agent-browser`**, a CLI driving that browser over CDP. What it leaves behind is a file:
-screenshots, the path walked, the exact strings seen, and the CDP port and user agent so the next
-station knows which browser the evidence came from. Not an assertion in a pane, because an
-assertion is not something the next station can check.
+The tooling splits in two, and **how the roles are split is the part that matters**.
+
+### OmniLogin holds the state
+
+**OmniLogin** is a browser that keeps a profile: cookies, localStorage, installed extensions,
+fingerprint, proxy. A clean Chrome launched fresh each run holds none of that, so every journey
+behind a login screen is unreachable.
+
+It exposes a local HTTP API to find a profile by name, ask whether it is already open, and open it.
+On opening, it returns the **real CDP port** for that launch. That port **changes with every
+launch** — remembering the old number is a bug; read it back from the response.
+
+### agent-browser only drives
+
+**`agent-browser`** is a CLI that attaches to a running browser over CDP and drives it. In this
+model it must **never launch a browser of its own**: the moment it does, that is a fresh Chrome with
+no login, and every observation made through it is fiction.
+
+So the division of roles fits in one sentence: **state in OmniLogin, control in agent-browser.**
+Reverse it — let agent-browser hold the login — and you lose the fingerprint along with the reason
+OmniLogin exists.
+
+Three layers of separation when several agents share one browser, and they need telling apart:
+
+- **`--session <name>`** separates the current page and that session's command context. It does
+  **not** separate Chrome's set of tabs — CDP exposes one target set for the whole process. Do not
+  confuse it with `--session-name`, which is only a key for saved auth state and separates nothing.
+- **`--pin-tab`** binds the session to its own tab. The value of the flag is not isolation but
+  **turning a silent fallback into an error**: when the bound tab is closed, the next command fails
+  with `tab_gone` rather than quietly drifting onto somebody else's tab. It does not make your tab
+  private — another agent can still see it, drive it and close it.
+- **The daemon** is shared machine-wide and shuts itself down after an hour idle. Worktree cleanup
+  must **not** kill it, for the same reason it must not kill a shared container: it cannot be
+  attributed to any one worktree.
+
+### One walk
+
+```bash
+# 0. The right binary first. A missing flag is a stop, not a case for "being careful".
+agent-browser --help | grep -- --pin-tab || { echo "STOP: binary too old"; exit 1; }
+
+# 1-3. Is the browser alive, is the profile open, and what is the REAL port for this launch.
+#      Never reuse the port number from last time.
+
+# 4. Is CDP real, and what is the user agent at the browser layer. Note it for step 6.
+curl -fsS "http://127.0.0.1:<port>/json/version"
+
+# 5. Attach. `connect`, one --session per agent, with --pin-tab.
+agent-browser --session <ticket> --pin-tab connect <port>
+
+# 6. Three proofs. Failing one means stopping and discarding every earlier observation.
+agent-browser --session <ticket> eval "navigator.userAgent + ' webdriver=' + navigator.webdriver"
+#    (1) matches the UA from step 4   (2) contains no Headless   (3) webdriver=false
+
+# 7-8. Take a tab of your own, then go to your own worktree's stack.
+agent-browser --session <ticket> tab new
+agent-browser --session <ticket> open "https://myapp-<branch>.localhost/<route>"
+
+# 9-10. Read the accessibility tree with refs, act on a ref, then read again.
+agent-browser --session <ticket> snapshot -i
+agent-browser --session <ticket> click @ref
+
+# 11. Assert something semantic, not "the page loaded".
+agent-browser --session <ticket> screenshot <path>.png
+```
+
+**Step 0 comes before step 1** because the wrong binary makes every later step meaningless without
+saying so.
+
+**Step 6 cannot be skipped even when step 4 came back green**, because the two ask different
+questions: "where do I intend to connect" and "where is the page actually running".
+
+**Refs expire on every navigation**, including an SPA route change or opening and closing a modal.
+Take the snapshot again; do not reuse an old ref.
+
+**A React trap:** a CDP-level `click @ref` does not fire React's `onClick`, and `fill ""` does not
+fire `onChange`. For a real click, `eval` a `.click()` on the element; to clear an input, use keys —
+`Control+a` then `Delete`.
+
+### Five ways it breaks, and only one to fear
+
+| What died | Symptom |
+|---|---|
+| Browser closed or signed out | The local API does not answer. Stop, and **never fall back to another browser**. |
+| The profile closed but the app is alive | The status query says "not open". Reopening gives a new port, which has to be read back. |
+| The `agent-browser` daemon died | The next command rebuilds it. But the tab binding is session state, so check the tab again. |
+| Somebody else closed your tab | A `tab_gone` error. This is the **most valuable** failure here — it replaces a quiet action on the wrong page with a loud error. Rebind; never retry blind. |
+| Attached to the wrong browser | **No symptom at all.** The commands run, the page loads, the result looks reasonable. |
+
+The first four announce themselves. The fifth does not, and the whole discipline above exists for
+exactly that one. It is also why checking with `curl` and then acting through the browser proves
+nothing — the two commands may be talking to two different browsers. Verify with the same tool you
+are about to act with.
+
+For the same reason, a conclusion that **"the tool does not support this flag" can be wrong**: a
+machine can carry two CLI versions with the older one resolving first in the shell. Check for the
+flag at the start of every session, on every machine.
+
+### The evidence, and one rule worth copying
+
+What it leaves behind is **a file committed on the branch**: screenshots, the path walked, the exact
+strings seen, and the CDP port and user agent so the next station knows which browser the evidence
+came from. Not an assertion in a pane, because an assertion is not something the next station can
+check.
 
 **This is the section that shows why the three above are worth their cost.** Browser evidence
 demands a running stack per person. While standing one up is expensive, the step gets skipped, and
@@ -208,17 +307,6 @@ the reason for skipping sounds entirely reasonable. Measured once, in a Builder'
 > no local stack was running in this worktree; standing one up is a multi-step job
 
 That is precisely the cost the first technique removes.
-
-**Four failures, none of them obvious.** One browser serving several agents means CDP exposes a
-shared set of tabs and one active-tab pointer for the whole process — so never open a page without
-naming the target tab explicitly, and check tab ownership on every command, including read-only
-ones. Checking with `curl` and then acting through the browser proves nothing, because they may be
-two different browsers; verify with the same tool you are about to act with. A conclusion that
-"the tool does not support this flag" can be wrong, because a machine can carry two CLI versions
-with the older one resolving first in the shell — so check for the flag at the start of every
-session, on every machine. And some doors do not open: a marketplace with a bot-detection layer in
-front and no account for an agent. The rule there is not to work around it, because the terms-of-service
-risk lands on somebody's real account, and evidence obtained by evading only proves that you evaded.
 
 **One rule worth copying.** A rule a careful operator still forgets within an hour needs a required
 field blocking the launch, not a sentence living somewhere else. Here it is a required field in the
@@ -230,6 +318,10 @@ regression already dense enough. And a team that cannot accept an agent driving 
 session — a legitimate concern, answered here with read-only by default, writes permitted per run,
 and one clear rule: the rule is about **data**, not about environment. Data derived from production
 is production data wherever it runs.
+
+Some doors do not open, and should not be forced: a marketplace with a bot-detection layer in front
+and no account for an agent. The terms-of-service risk lands on somebody's real account, and evidence
+obtained by evading only proves that you evaded.
 
 ## one-shape
 

@@ -1,22 +1,22 @@
 ---
-// /operating-techniques · /vi/ky-thuat-van-hanh — the four techniques a machine needs
-// before several agents can run on it at once. Read mode (design spec 5 §2).
+// /tips · /vi/kinh-nghiem — the four techniques a machine needs before several agents
+// can run on it at once. Read mode (design spec 5 §2).
 //
 // Every other page describes Astragentic. This one describes the ground it stands on,
 // which is why it is the only page whose sections are tools the project does not ship.
-// The writer owns the prose in src/content/pages/<lang>/operating.md, split by the ids
-// in OPERATING plus a closing `## one-shape`.
+// The writer owns the prose in src/content/pages/<lang>/tips.md, split by the ids
+// in TIPS plus a closing `## one-shape`.
 import DocsLayout from '../../layouts/DocsLayout.astro';
 import Prose from '../Prose.astro';
 import { getPage } from '../../lib/pages';
-import { OPERATING } from '../../lib/anchors';
+import { TIPS } from '../../lib/anchors';
 import { UI, type Lang } from '../../lib/site';
 
 interface Props {
   lang: Lang;
 }
 const { lang } = Astro.props;
-const page = await getPage(lang, 'operating');
+const page = await getPage(lang, 'tips');
 
 const heading =
   lang === 'vi'
@@ -25,17 +25,17 @@ const heading =
 ---
 
 <DocsLayout
-  title={page.missing ? UI.operatingTitle[lang] : page.title}
+  title={page.missing ? UI.tipsTitle[lang] : page.title}
   description={page.description}
   lang={lang}
-  page="operating"
-  eyebrow={UI.operatingTitle[lang]}
+  page="tips"
+  eyebrow={UI.tipsTitle[lang]}
   heading={heading}
 >
   {page.intro && <Prose slot="lede" html={page.intro} class="lede" />}
 
   {
-    OPERATING.map((item) => (
+    TIPS.map((item) => (
       <section class="read-section" id={item.id}>
         {/* The role label carries the argument: which of the four this is, and why it
             sits here rather than in a flat list of tips. */}
