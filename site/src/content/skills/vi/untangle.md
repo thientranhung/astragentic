@@ -44,7 +44,7 @@ role nào, nên nó được với tới khi tình huống xuất hiện chứ k
 | Một đợt việc là cú refactor rối tới mức không khoanh vùng nổi | `untangle`, cho một Shaper, trước khi cắt ticket |
 | Ranh giới đã có sẵn và chỉ cần cải thiện | `improve-codebase-architecture`, ở upstream |
 | Một ranh giới sắp được vẽ mà bên dưới chưa có lưới test | `legacy-testing`, trước đã |
-| Chính việc tách ticket expand-contract | Trả hình dạng đó về, vì `to-tickets` do người dùng gọi và Shaper mới là người lái |
+| Chính việc tách ticket expand-contract | Trả hình dạng đó về, vì `to-tickets` do người dùng gọi và Shaper mới là người thực hiện |
 
 <!-- source: harness/.agents/skills/untangle/SKILL.md, harness/.agents/roles/builder.md, harness/.agents/roles/shaper.md -->
 
@@ -103,7 +103,7 @@ trạng thái `promoted`.
 
 Một Builder hoặc Shaper đâm vào cú refactor không chịu khoanh vùng → `untangle` trích đồ thị và
 chọn nhát cắt mỏng nhất → `legacy-testing` đặt lưới dưới ranh giới sắp vẽ → hình dạng đó quay về
-Shaper, người lái `to-tickets` → mỗi ticket chạy vòng bình thường qua `dispatch-ticket` → các ranh
+Shaper, người chạy `to-tickets` → mỗi ticket chạy vòng bình thường qua `dispatch-ticket` → các ranh
 giới đọng lại trong `docs/agents/boundaries.md` cho lượt sau. Skill dừng và mang việc lên chủ dự
 án khi đồ thị cho thấy kiến trúc dự định còn code thì nói khác, vì đó là một quyết định chứ không
 phải một cú refactor.

@@ -3,12 +3,12 @@ title: "Kinh nghiệm chạy nhiều agent"
 description: "Bốn kỹ thuật để nhiều agent chạy song song trên một máy: runtime theo worktree, pnpm, portless, và QA walk bằng trình duyệt thật."
 ---
 
-`git worktree` cô lập code. Nó không cô lập runtime, mà runtime mới là chỗ nhiều agent giẫm lên
-nhau: database, `node_modules`, và cổng của frontend lẫn backend. Astragentic dựng sự song song ở
-tầng điều phối; bốn kỹ thuật dưới đây là thứ máy của bạn cần có để tầng đó chạy được thật.
+`git worktree` cô lập code. Nó không cô lập runtime, mà runtime mới là chỗ nhiều agent tranh chấp
+với nhau: database, `node_modules`, và cổng của frontend lẫn backend. Astragentic dựng sự song
+song ở tầng điều phối; bốn kỹ thuật dưới đây là thứ máy của bạn cần có để tầng đó chạy được thật.
 
-Bốn mục không ngang hàng. Mục đầu là kỹ thuật. Hai mục giữa là hai điều kiện khiến nó trả nổi
-tiền. Mục cuối là lý do nó đáng làm.
+Bốn mục không ngang hàng. Mục đầu là kỹ thuật. Hai mục giữa là hai điều kiện khiến nó khả thi về
+chi phí. Mục cuối là lý do nó đáng làm.
 
 ## runtime-per-worktree
 
@@ -24,10 +24,10 @@ Ba thứ nói ở trên được cấp như sau:
 | `node_modules` | Hai bản: bản host do `pnpm install` trong chính worktree, và bản trong container là named volume che lên bind mount. | pnpm store, build cache, module cache — khai `external: true`. |
 | Cổng FE/BE | Không ai chọn cổng. Compose chỉ khai cổng trong container, Docker cấp cổng ngoài. | — |
 
-**Luật một câu, và đây là phần đem đi chỗ khác dùng được: cô lập state khả biến, chia sẻ state
+**Luật một câu, và đây là phần áp dụng được ở nơi khác: cô lập state khả biến, chia sẻ state
 content-addressed.** Package và build artifact được đánh khoá bằng hash của chính nó, nên hai
-nhánh muốn hai phiên bản sẽ nhận hai khoá khác nhau thay vì giành nhau một chỗ. Chia sẻ chúng an
-toàn về mặt cấu trúc, không phải an toàn vì gặp may.
+nhánh muốn hai phiên bản sẽ nhận hai khoá khác nhau thay vì tranh chấp cùng một khoá. Chia sẻ
+chúng an toàn về mặt cấu trúc, không phải an toàn vì gặp may.
 
 ### Vì sao không phải ba phương án hiển nhiên
 
@@ -52,7 +52,7 @@ toàn cụm. Container riêng thì không còn lớp chung nào để giẫm.
 **Một stack dev dùng chung, ai cần thì xếp hàng.** Cái giá không nằm ở chỗ chờ. Nó nằm ở chỗ người
 ta sẽ không xếp hàng — người ta sẽ bỏ bước.
 
-### Hai chi tiết cấu hình mà đa số sẽ vấp
+### Hai chi tiết cấu hình dễ bỏ sót
 
 **Compose file không được có `name:`.** Tên project là thứ cấp cho mỗi worktree bộ container,
 network và volume của riêng nó, và nó phải đến từ nơi biết người gọi đang đứng ở worktree nào. Một
@@ -60,7 +60,7 @@ cái tên viết cứng trong file đưa mọi worktree về chung một project
 
 **`.git` trong worktree là một *file*, không phải thư mục.** Nó chứa đường dẫn tuyệt đối phía host
 trỏ vào `.git/worktrees/<tên>` của checkout gốc, mà bind mount không mang theo đường dẫn đó. Bất kỳ
-tooling nào gọi `git` bên trong container sẽ chết. Cách chữa là mount common git dir ở chế độ chỉ
+tooling nào gọi `git` bên trong container sẽ lỗi. Cách chữa là mount common git dir ở chế độ chỉ
 đọc rồi trỏ `GIT_DIR` vào, và cả hai đều suy ra từ chính git:
 
 ```make
@@ -74,10 +74,10 @@ phép so sánh đó, đừng đoán hình dạng đường dẫn.
 
 **Đánh đổi.** Ràng buộc thật không phải đĩa mà là RAM. Đĩa thì mỗi worktree tốn khoảng 540–650 MB
 volume, và phần dùng chung cho cả máy khoảng 2 GB — với ổ đĩa hôm nay thì đó không phải giới hạn.
-RAM mới là giới hạn: chạy hai bộ test đầy đủ có `-race` cùng lúc có thể giết cả hai, không ai
-thắng. Ai định dùng mô hình này phải trả lời trước một câu: RAM của máy chịu được bao nhiêu stack
-song song. Một khoá tư vấn dạng token, `take` thì thoát khác 0 khi người khác đang giữ, là đủ để
-xếp hàng đúng chỗ cần xếp.
+RAM mới là giới hạn: chạy hai bộ test đầy đủ có `-race` cùng lúc có thể làm cả hai cùng thất bại.
+Ai định dùng mô hình này phải trả lời trước một câu: RAM của máy chịu được bao nhiêu stack song
+song. Một khoá tư vấn dạng token, `take` thì thoát khác 0 khi người khác đang giữ, là đủ để xếp
+hàng đúng chỗ cần xếp.
 
 **Chỗ rò đã biết.** Bước dọn chỉ gỡ volume khi còn container để gỡ. Một Builder lịch sự tắt stack
 trước khi trả việc sẽ để lại 0 container, điều kiện sai, `down -v` bị bỏ qua, và volume mồ côi
@@ -97,8 +97,8 @@ về đĩa: N thư mục `node_modules` nhưng gần như một bản byte.
 
 **Nói thẳng một điều.** pnpm thường không được chọn vì lý do worktree — nó có mặt từ trước khi vấn
 đề nhiều worktree tồn tại. Điều đúng để nói là: thuộc tính store và hardlink của pnpm là thứ khiến
-mô hình nhiều worktree trả nổi tiền đĩa. Một lợi ích được thừa hưởng, không phải một quyết định
-được cân nhắc. Trình bày nó như lựa chọn có chủ đích là làm đẹp câu chuyện.
+mô hình nhiều worktree khả thi về dung lượng đĩa. Một lợi ích được thừa hưởng, không phải một
+quyết định được cân nhắc. Trình bày nó như một lựa chọn có chủ đích là mô tả sai thực tế.
 
 Ba tính chất, xếp theo mức liên quan tới nhiều worktree:
 
@@ -148,7 +148,7 @@ nên dev server phải đọc hai biến đó. Chế độ `alias` dành cho sta
 không thể khởi chạy *qua* portless được nữa — Docker cấp cổng trước, rồi bạn đăng ký một alias tĩnh
 trỏ tên vào cổng vừa publish.
 
-Quy ước đặt tên cho nhiều worktree gọn trong một dòng, và đáng chép lại:
+Quy ước đặt tên cho nhiều worktree gọn trong một dòng:
 
 ```make
 DEV_SITE := $(if $(filter main,$(DEV_SLUG)),myapp,myapp-$(DEV_SLUG))
@@ -179,8 +179,9 @@ cổng không còn đoán trước được, tức đúng lúc bạn cấp runti
 
 ## browser-qa
 
-Một agent QA lái sản phẩm đang chạy như một người dùng — đi qua giao diện, hành trình, hợp đồng API
-và dữ liệu như chúng hiện ra — thay vì đọc diff. Nó viết một file báo cáo để trạm sau đọc lại được.
+Một agent QA thao tác trên sản phẩm đang chạy như một người dùng — đi qua giao diện, hành trình,
+hợp đồng API và dữ liệu như chúng hiện ra — thay vì đọc diff. Nó viết một file báo cáo để trạm sau
+đọc lại được.
 
 Lý do phải là trình duyệt thật nằm ở hai chỗ. Có những lớp lỗi chỉ tồn tại sau khi đã dựng hình.
 Và health check thường trả lời một câu hỏi dễ hơn câu hỏi cần hỏi: "tiến trình có sống không" không
@@ -198,14 +199,14 @@ Nó phơi ra một HTTP API cục bộ để tìm profile theo tên, hỏi profi
 nó trả về **cổng CDP thật** của lần mở đó. Cổng ấy **đổi theo mỗi lần mở** — nhớ số cổng cũ là một
 lỗi, phải đọc lại từ phản hồi.
 
-### agent-browser chỉ lái
+### agent-browser điều khiển
 
-**`agent-browser`** là một CLI nối vào trình duyệt đang chạy qua CDP rồi lái nó. Trong mô hình này
-nó **không bao giờ được tự khởi chạy trình duyệt**: khoảnh khắc nó làm thế, đó là một Chrome mới
-không có login nào, và mọi quan sát qua nó là hư cấu.
+**`agent-browser`** là một CLI kết nối vào trình duyệt đang chạy qua CDP và điều khiển nó. Trong
+mô hình này nó **không bao giờ được tự khởi chạy trình duyệt**: ngay khi nó làm thế, đó là một
+Chrome mới không có login nào, và mọi quan sát qua nó đều không có giá trị.
 
 Nên luật phân vai gọn trong một câu: **trạng thái ở OmniLogin, điều khiển ở agent-browser.** Đảo
-vai — để agent-browser giữ login — là mất fingerprint và mất luôn lý do OmniLogin tồn tại.
+vai, để agent-browser giữ login, là mất fingerprint và mất luôn lý do OmniLogin tồn tại.
 
 Ba lớp tách khi nhiều agent cùng dùng một trình duyệt, và cần phân biệt rạch ròi:
 
@@ -213,9 +214,10 @@ Ba lớp tách khi nhiều agent cùng dùng một trình duyệt, và cần ph�
   của Chrome — CDP phơi một tập target cho cả tiến trình. Đừng nhầm với `--session-name`, vốn chỉ là
   khoá lưu auth-state chứ không tách gì.
 - **`--pin-tab`** ràng buộc phiên vào đúng tab của nó. Giá trị của cờ này không phải sự cô lập, mà
-  là **biến một fallback im lặng thành một lỗi**: tab bị đóng thì lệnh kế tiếp báo `tab_gone` thay vì
+  là **biến một fallback im lặng thành một lỗi**: tab bị đóng thì lệnh kế tiếp báo `tab_gone`
+  thay vì
   lặng lẽ trôi sang tab của người khác. Nó không làm tab của bạn riêng tư — agent khác vẫn thấy, vẫn
-  lái, vẫn đóng được.
+  thao tác, vẫn đóng được.
 - **Daemon** dùng chung toàn máy và tự tắt sau một giờ không hoạt động. Mọi bước dọn worktree phải
   **không** giết nó, cùng lý do với container dùng chung: nó không quy được về worktree nào.
 
@@ -250,7 +252,7 @@ agent-browser --session <ticket> click @ref
 agent-browser --session <ticket> screenshot <đường-dẫn>.png
 ```
 
-**Bước 0 đứng trước bước 1** vì một binary sai làm mọi bước sau vô nghĩa mà không báo gì.
+**Bước 0 phải chạy trước bước 1** vì một binary sai làm mọi bước sau vô nghĩa mà không báo gì.
 
 **Bước 6 không bỏ được kể cả khi bước 4 đã xanh**, vì hai bước hỏi hai câu khác nhau: "tôi định nối
 vào đâu" và "trang thật sự đang chạy ở đâu".
@@ -262,14 +264,14 @@ lại cây accessibility, đừng dùng ref cũ.
 không kích hoạt `onChange`. Click thật thì gọi `eval` để chạy `.click()` trên phần tử; xoá ô nhập
 thì dùng phím, `Control+a` rồi `Delete`.
 
-### Năm kiểu hỏng, và chỉ một kiểu đáng sợ
+### Năm kiểu hỏng, và chỉ một kiểu không có triệu chứng
 
 | Chết cái gì | Triệu chứng |
 |---|---|
-| Trình duyệt đóng hoặc đăng xuất | API cục bộ không trả lời. Dừng, và **không bao giờ rơi sang trình duyệt khác**. |
+| Trình duyệt đóng hoặc đăng xuất | API cục bộ không trả lời. Dừng, và **không bao giờ chuyển sang trình duyệt khác**. |
 | Profile bị đóng nhưng app còn sống | Hỏi trạng thái trả về "chưa mở". Mở lại sẽ ra cổng mới, phải đọc lại. |
-| Daemon `agent-browser` chết | Lệnh kế tiếp tự dựng lại. Nhưng ràng buộc tab là trạng thái của phiên, nên phải kiểm lại tab. |
-| Tab bị người khác đóng | Lỗi `tab_gone`. Đây là kiểu hỏng **đáng giá nhất** — nó thay một hành động lặng lẽ lên nhầm trang bằng một lỗi ồn ào. Ràng buộc lại, đừng retry mù. |
+| Daemon `agent-browser` dừng | Lệnh kế tiếp tự dựng lại. Nhưng ràng buộc tab là trạng thái của phiên, nên phải kiểm lại tab. |
+| Tab bị người khác đóng | Lỗi `tab_gone`. Đây là kiểu hỏng **đáng giá nhất** — nó thay một thao tác âm thầm lên nhầm trang bằng một lỗi tường minh. Ràng buộc lại, đừng retry mù. |
 | Nối nhầm trình duyệt | **Không có triệu chứng nào.** Lệnh chạy, trang tải, kết quả trông hợp lý. |
 
 Bốn kiểu đầu tự báo. Kiểu thứ năm không, và toàn bộ kỷ luật ở trên tồn tại vì đúng kiểu đó. Cũng vì
@@ -279,38 +281,38 @@ nó mà kiểm bằng `curl` rồi hành động bằng trình duyệt là chứ
 Và cùng lý do đó, **kết luận "công cụ không hỗ trợ cờ này" có thể sai**: một máy có thể có hai bản
 CLI khác phiên bản, bản cũ resolve trước trong shell. Kiểm cờ trước mỗi phiên, trên mỗi máy.
 
-### Bằng chứng, và một luật đáng chép lại
+### Bằng chứng, và một luật chung
 
 Thứ để lại là **một file commit trên nhánh**: ảnh chụp, đường dẫn đã đi, chuỗi chữ đã thấy, kèm số
 cổng CDP và user agent để trạm sau biết bằng chứng đến từ trình duyệt nào. Không phải một câu khẳng
 định trong pane, vì một câu khẳng định thì trạm sau không kiểm lại được.
 
-**Đây là mục cho thấy vì sao ba mục trên đáng làm.** Bằng chứng trình duyệt đòi mỗi người một stack
-đang chạy. Nếu dựng stack còn đắt thì bước này sẽ bị bỏ, và lý do bỏ nghe rất hợp lý. Đo được một
-lần, nguyên văn lời một Builder:
+**Đây là mục cho thấy vì sao ba mục trên đáng làm.** Bằng chứng trình duyệt đòi mỗi người một
+stack đang chạy. Nếu dựng stack còn tốn kém thì bước này sẽ bị bỏ, và lý do bỏ nghe rất hợp lý. Đo
+được một lần, nguyên văn lời một Builder:
 
 > no local stack was running in this worktree; standing one up is a multi-step job
 
 Đó chính xác là chi phí mà mục đầu tiên xoá bỏ.
 
-**Một luật đáng chép lại.** Một luật mà người vận hành cẩn thận vẫn quên trong vòng một giờ thì cần
+**Một luật chung.** Một luật mà người vận hành cẩn thận vẫn quên trong vòng một giờ thì cần
 một ô bắt buộc chặn việc khởi chạy, không phải một câu văn nằm ở chỗ khác. Ở đây nó là một trường
 bắt buộc trong brief dispatch, không có dạng để trống: hoặc khai rõ ticket này cần bằng chứng trình
 duyệt và phải đi qua hành trình nào, hoặc khai rõ là không cần và vì sao.
 
 **Ai không cần.** Sản phẩm không có bề mặt người dùng. Đội đã có visual regression tự động đủ dày.
-Và đội không chấp nhận được việc agent lái một session đăng nhập thật — đó là lo ngại chính đáng,
-và cách đáp là mặc định chỉ đọc, cho phép ghi theo từng lần chạy, kèm một luật rõ: quy tắc là về
-**dữ liệu**, không về môi trường. Dữ liệu dẫn xuất từ production vẫn là dữ liệu production, chạy ở
-đâu cũng vậy.
+Và đội không chấp nhận được việc agent điều khiển một session đăng nhập thật — đó là lo ngại chính
+đáng, và cách đáp là mặc định chỉ đọc, cho phép ghi theo từng lần chạy, kèm một luật rõ: quy tắc
+là về **dữ liệu**, không về môi trường. Dữ liệu dẫn xuất từ production vẫn là dữ liệu production,
+chạy ở đâu cũng vậy.
 
-Có những cổng không mở được, và không nên lách: một sàn có lớp chống bot ở trước, không có tài khoản
-cho agent. Rủi ro điều khoản rơi vào tài khoản thật của chủ dự án, và bằng chứng lấy bằng cách né chỉ
-chứng minh được là mình đã né.
+Có những cổng không mở được, và không nên lách: một sàn có lớp chống bot ở trước, không có tài
+khoản cho agent. Rủi ro điều khoản rơi vào tài khoản thật của chủ dự án, và bằng chứng lấy bằng
+cách né chỉ chứng minh được là mình đã né.
 
 ## one-shape
 
-Ba kỹ thuật đầu có cùng một hình dạng, và nếu trang này chỉ mang đi được một câu thì nên là câu
+Ba kỹ thuật đầu có cùng một hình dạng, và nếu trang này chỉ đọng lại một câu thì nên là câu
 này: **biến một việc phải nhớ làm thành một việc được suy ra.**
 
 Tên project suy ra từ nhánh. Cổng suy ra từ Docker. `GIT_DIR` suy ra từ git. Tên miền suy ra từ

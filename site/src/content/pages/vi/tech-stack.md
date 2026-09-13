@@ -92,12 +92,12 @@ phải sửa một dòng config.
 ## trackers
 
 Astragentic không ship tracker. Nó ship ba adapter là `github-issue-tracker`,
-`jira-issue-tracker` và `linear-issue-tracker`, mỗi adapter mô tả cách lái đúng một backend:
+`jira-issue-tracker` và `linear-issue-tracker`, mỗi adapter mô tả cách vận hành đúng một backend:
 status biểu diễn thế nào, claim ghi ở đâu, blocking edge diễn đạt ra sao.
 
 Thứ cố định không phải adapter mà là `.agents/tracker-contract.md`: năm thứ mà pipeline cần ở
 bất kỳ tracker nào. Nhờ vậy Thomas đọc `docs/agents/issue-tracker.md`, biết dự án này dùng
-adapter nào, rồi lái y hệt nhau bất kể backend.
+adapter nào, rồi thao tác y hệt nhau bất kể backend.
 
 **Đánh đổi.** Đã nêu ở trang vì sao: mỗi backend mang theo cái bẫy riêng, và GitHub Issues không
 có trường status thật nên status phải nằm trong label.

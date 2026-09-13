@@ -103,7 +103,7 @@ STOP, và "không cú nào chạm bề mặt" là câu trả lời hợp lệ, c
 
 Một ticket đóng lại qua `/skills/dispatch-ticket`, `/skills/review-with-rin` đọc diff và kiểm xem
 quy trình có để lại dấu vết không, còn `dispatch-qa-walk` là gate bên cạnh, gate không đọc gì
-cả. Nó lái sản phẩm đang chạy, vì một cái diff mạch lạc và một sản phẩm mạch lạc là hai lời khẳng
+cả. Nó thao tác trên sản phẩm đang chạy, vì một cái diff mạch lạc và một sản phẩm mạch lạc là hai lời khẳng
 định khác nhau. Phát hiện từ cả hai cửa đi cùng một đường: `qa` khuyến nghị, Thomas phân loại,
 Builder sửa, và một quyết định sản phẩm thật sự thì lên chủ project. Lượt đi bộ chạy bên trong một
 [gate](/dictionary/gate/) và một [worktree](/vi/role/builder/) mà nó force-remove lúc cleanup, đó chính là lý do

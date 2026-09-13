@@ -7,7 +7,7 @@ sessionTag: "per walk"
 ## does
 
 1. **Đọc dispatch trước khi chạm vào bất cứ thứ gì.** Dispatch mang depth, scope, persona, consent,
-   và những mutation được cho phép. Không có consent để lái một session đang chạy thì QA dừng và hỏi;
+   và những mutation được cho phép. Không có consent để điều khiển một session đang chạy thì QA dừng và hỏi;
    consent của lần chạy trước không mang sang được.
 2. **Chọn depth theo dispatch.** Incremental là mặc định trước PR hoặc merge: đi các bề mặt bị
    chạm, cộng mọi màn hình khác đang hiển thị cùng một khái niệm, và liệt kê những gì đã bỏ qua.
