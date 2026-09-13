@@ -33,8 +33,11 @@ export const UI = {
   sideHooks: { vi: 'Hooks', en: 'Hooks' },
   sideWhy: { vi: 'Cách tiếp cận', en: 'Approach' },
   sideStack: { vi: 'Tech stack', en: 'Tech stack' },
+  sideOperating: { vi: 'Vận hành', en: 'Operating' },
   sideFailures: { vi: 'Bài học', en: 'Lessons' },
   sideAdopt: { vi: 'Install', en: 'Install' },
+  /** The operating page's own eyebrow, longer than the rail label it shares a page with. */
+  operatingTitle: { vi: 'Kỹ thuật vận hành', en: 'Operating techniques' },
   roleKey: { vi: 'Màu role trong hình', en: 'Role colours in this figure' },
 
   /* ── hero strip ── */

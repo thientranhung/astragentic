@@ -333,3 +333,56 @@ export const GOOD_PARTS: GoodPart[] = [
   },
 ];
 
+
+/* ── /operating-techniques ──────────────────────────────────────────────── */
+
+/** The four techniques for running several agents on one machine. They are not peers:
+ *  the first is the technique, the next two are what make it affordable, and the last
+ *  is what it is for. The order carries that argument, so the rail reads in it too. */
+export interface OperatingItem {
+  id: string;
+  /** Tool or technique name. Never translated. */
+  name: string;
+  line: Dict;
+  /** What the section contributes to the argument, printed above the heading. */
+  role: Dict;
+}
+
+export const OPERATING: OperatingItem[] = [
+  {
+    id: 'runtime-per-worktree',
+    name: 'runtime theo worktree',
+    role: { vi: 'Kỹ thuật', en: 'The technique' },
+    line: {
+      vi: 'Mỗi worktree một stack riêng, và tên stack suy ra từ tên nhánh chứ không ai đặt.',
+      en: 'One stack per worktree, its name derived from the branch rather than chosen by anyone.',
+    },
+  },
+  {
+    id: 'pnpm',
+    name: 'pnpm',
+    role: { vi: 'Điều kiện · đĩa', en: 'Condition · disk' },
+    line: {
+      vi: 'Một store, hardlink vào từng bản. N thư mục node_modules gần như một bản byte trên đĩa.',
+      en: 'One store, hardlinked into each copy. N node_modules are almost one copy of bytes on disk.',
+    },
+  },
+  {
+    id: 'portless',
+    name: 'portless',
+    role: { vi: 'Điều kiện · cổng', en: 'Condition · ports' },
+    line: {
+      vi: 'Docker cấp cổng, portless gắn tên lên cổng đó. Không ai phải chọn số.',
+      en: 'Docker assigns the port, portless puts a name on it. Nobody picks a number.',
+    },
+  },
+  {
+    id: 'browser-qa',
+    name: 'QA walk',
+    role: { vi: 'Lý do', en: 'The reason' },
+    line: {
+      vi: 'Một agent lái sản phẩm đang chạy như người dùng, và để lại file bằng chứng đọc lại được.',
+      en: 'An agent drives the running product as a user, and leaves a readable evidence file.',
+    },
+  },
+];

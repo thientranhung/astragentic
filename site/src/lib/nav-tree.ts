@@ -1,4 +1,4 @@
-import { HOOKS, STACK, WHY } from './anchors';
+import { HOOKS, OPERATING, STACK, WHY } from './anchors';
 import { getSkillGroups, GROUPS, type GroupId } from './skills';
 import { ROLE_IDS, ROLE_META, roleHref, type RoleId } from './roles';
 import { ROUTES, UI, type Lang } from './site';
@@ -98,6 +98,15 @@ export async function getNavTree(lang: Lang): Promise<NavSection[]> {
       items: anchors(
         ROUTES.stack[lang],
         STACK.map((item) => ({ id: item.id, label: item.name })),
+      ),
+    },
+    {
+      id: 'operating',
+      label: UI.sideOperating[lang],
+      href: ROUTES.operating[lang],
+      items: anchors(
+        ROUTES.operating[lang],
+        OPERATING.map((item) => ({ id: item.id, label: item.name })),
       ),
     },
     { id: 'failures', label: UI.sideFailures[lang], href: ROUTES.failures[lang] },

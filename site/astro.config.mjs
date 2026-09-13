@@ -21,6 +21,7 @@ const PAGE_PAIRS = [
   { en: '/hooks', vi: '/vi/hooks' },
   { en: '/why', vi: '/vi/cach-tiep-can' },
   { en: '/tech-stack', vi: '/vi/tech-stack' },
+  { en: '/operating-techniques', vi: '/vi/ky-thuat-van-hanh' },
   { en: '/adopt', vi: '/vi/cai' },
   { en: '/failures', vi: '/vi/loi' },
   ...['thomas', 'shaper', 'builder', 'rin', 'qa'].map((id) => ({

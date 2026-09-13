@@ -1,0 +1,82 @@
+---
+// /operating-techniques · /vi/ky-thuat-van-hanh — the four techniques a machine needs
+// before several agents can run on it at once. Read mode (design spec 5 §2).
+//
+// Every other page describes Astragentic. This one describes the ground it stands on,
+// which is why it is the only page whose sections are tools the project does not ship.
+// The writer owns the prose in src/content/pages/<lang>/operating.md, split by the ids
+// in OPERATING plus a closing `## one-shape`.
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import Prose from '../Prose.astro';
+import { getPage } from '../../lib/pages';
+import { OPERATING } from '../../lib/anchors';
+import { UI, type Lang } from '../../lib/site';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const page = await getPage(lang, 'operating');
+
+const heading =
+  lang === 'vi'
+    ? 'git worktree cô lập code, không cô lập runtime'
+    : 'git worktree isolates code, not runtime';
+---
+
+<DocsLayout
+  title={page.missing ? UI.operatingTitle[lang] : page.title}
+  description={page.description}
+  lang={lang}
+  page="operating"
+  eyebrow={UI.operatingTitle[lang]}
+  heading={heading}
+>
+  {page.intro && <Prose slot="lede" html={page.intro} class="lede" />}
+
+  {
+    OPERATING.map((item) => (
+      <section class="read-section" id={item.id}>
+        {/* The role label carries the argument: which of the four this is, and why it
+            sits here rather than in a flat list of tips. */}
+        <p class="parts-label mono">{item.role[lang]}</p>
+        <h2 class="mono name" lang="en">{item.name}</h2>
+        {/* The one-liner is the rail's summary of this section. It stands on the page
+            only until the writer's prose lands, or it says the same thing twice. */}
+        {page.sections[item.id] ? (
+          <Prose html={page.sections[item.id]} class="read-body body" />
+        ) : (
+          <p class="line">{item.line[lang]}</p>
+        )}
+      </section>
+    ))
+  }
+
+  {
+    page.sections['one-shape'] && (
+      <section class="read-section" id="one-shape">
+        <h2>{lang === 'vi' ? 'Một hình dạng chung' : 'One shape'}</h2>
+        <Prose html={page.sections['one-shape']} class="read-body body" />
+      </section>
+    )
+  }
+</DocsLayout>
+
+<style>
+  /* The section head is the tool's own name, so it is set in the mono face the rest of
+     the site uses for anything a reader would type. */
+  .name {
+    font-size: var(--text-h3);
+    letter-spacing: 0.01em;
+  }
+  .line {
+    font-size: var(--text-body);
+    line-height: 1.55;
+    color: var(--ink-muted);
+    max-width: 64ch;
+    margin: 0.35rem 0 0;
+  }
+  .body {
+    margin-top: 1.25rem;
+  }
+</style>
