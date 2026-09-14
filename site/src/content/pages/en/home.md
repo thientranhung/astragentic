@@ -1,6 +1,6 @@
 ---
 title: "Astragentic"
-description: "Why I built this coordination, what I chose, and what each choice costs."
+description: "Astragentic is a scaffold for running a team of AI agents on the orchestrator model: you talk to one representative, and work goes through an issue tracker."
 acts:
   - id: act-1
     eyebrow: "Measured 2026-07-11 · now a rule"

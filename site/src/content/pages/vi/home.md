@@ -1,6 +1,6 @@
 ---
 title: "Astragentic"
-description: "Vì sao tôi dựng phần điều phối này, tôi đã chọn gì, và cái giá của từng lựa chọn."
+description: "Astragentic là scaffold để vận hành một team AI agent theo mô hình orchestrator: bạn trao đổi với một người đại diện, mọi việc đi qua issue tracker."
 acts:
   - id: act-1
     eyebrow: "Đo ngày 2026-07-11 · đã thành luật"
