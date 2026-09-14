@@ -106,7 +106,7 @@ export async function getNavTree(lang: Lang): Promise<NavSection[]> {
       href: ROUTES.tips[lang],
       items: anchors(
         ROUTES.tips[lang],
-        TIPS.map((item) => ({ id: item.id, label: item.name })),
+        TIPS.map((item) => ({ id: item.id, label: item.name[lang] })),
       ),
     },
     { id: 'failures', label: UI.sideFailures[lang], href: ROUTES.failures[lang] },

@@ -40,7 +40,7 @@ const heading =
         {/* The role label carries the argument: which of the four this is, and why it
             sits here rather than in a flat list of tips. */}
         <p class="parts-label mono">{item.role[lang]}</p>
-        <h2 class="name">{item.name}</h2>
+        <h2 class="name">{item.name[lang]}</h2>
         {/* The one-liner is the rail's summary of this section. It stands on the page
             only until the writer's prose lands, or it says the same thing twice. */}
         {page.sections[item.id] ? (

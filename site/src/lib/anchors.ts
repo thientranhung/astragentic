@@ -341,8 +341,10 @@ export const GOOD_PARTS: GoodPart[] = [
  *  is what it is for. The order carries that argument, so the rail reads in it too. */
 export interface TipItem {
   id: string;
-  /** Tool or technique name. Never translated. */
-  name: string;
+  /** The section head. A Dict, not a bare string: two of the four are tool names that
+   *  are the same in both languages, and two are descriptions that are not. Typed as a
+   *  name that never translates, the English page shipped a Vietnamese heading. */
+  name: Dict;
   line: Dict;
   /** What the section contributes to the argument, printed above the heading. */
   role: Dict;
@@ -351,7 +353,7 @@ export interface TipItem {
 export const TIPS: TipItem[] = [
   {
     id: 'runtime-per-worktree',
-    name: 'runtime theo worktree',
+    name: { vi: 'runtime theo worktree', en: 'runtime per worktree' },
     role: { vi: 'Kỹ thuật', en: 'The technique' },
     line: {
       vi: 'Mỗi worktree một stack riêng, và tên stack suy ra từ tên nhánh chứ không ai đặt.',
@@ -360,7 +362,7 @@ export const TIPS: TipItem[] = [
   },
   {
     id: 'pnpm',
-    name: 'pnpm',
+    name: { vi: 'pnpm', en: 'pnpm' },
     role: { vi: 'Điều kiện · đĩa', en: 'Condition · disk' },
     line: {
       vi: 'Một store, hardlink vào từng bản. N thư mục node_modules gần như một bản byte trên đĩa.',
@@ -369,7 +371,7 @@ export const TIPS: TipItem[] = [
   },
   {
     id: 'portless',
-    name: 'portless',
+    name: { vi: 'portless', en: 'portless' },
     role: { vi: 'Điều kiện · cổng', en: 'Condition · ports' },
     line: {
       vi: 'Docker cấp cổng, portless gắn tên lên cổng đó. Không ai phải chọn số.',
@@ -378,7 +380,7 @@ export const TIPS: TipItem[] = [
   },
   {
     id: 'browser-qa',
-    name: 'QA walk',
+    name: { vi: 'QA walk', en: 'QA walk' },
     role: { vi: 'Lý do', en: 'The reason' },
     line: {
       vi: 'Một agent lái sản phẩm đang chạy như người dùng, và để lại file bằng chứng đọc lại được.',
