@@ -45,10 +45,16 @@ roster and 44 capability files with the install machinery removed, which is the 
 of how this project works — separate from `mattpocock-skills`, which is the method wired into
 the role contracts.
 
-The ten vendored content skills under `.agents/skills/` are gone — 444 files that were copies
-of machine-wide installations, never part of the payload, never staged by `install.sh`.
-`omnilogin-agent-browser` stays, because its procedure is this project's QA walk rather than a
-copy of something the machine already provides.
+The vendored skills under `.agents/skills/` are gone — 448 files, copies of machine-wide
+installations, never part of the payload, never staged by `install.sh` (which stages `harness/`).
+The directory went with them.
+
+`omnilogin-agent-browser` was kept at first, on the argument that its procedure is this project's
+QA walk rather than a copy of something the machine provides. That argument was wrong, and the
+same day proved it: the skill was edited here, the reload reported no changes, and the reason was
+that the loaded skill is a symlink to a source outside this repository. Two files, one of them
+read by nobody. A vendored copy of something that is already global is not a safety net, it is a
+second place for the truth to live — and the copy is the one that goes stale in silence.
 
 Two ProRes render masters are also out of the history: 1.4 GB each, 2.88 GB of the 3.08 GB
 that had never been pushed. ProRes at 176 Mbit/s is what an editing codec is supposed to cost;
