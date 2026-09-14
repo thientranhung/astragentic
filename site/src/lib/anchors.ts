@@ -393,11 +393,14 @@ export const TIPS: TipItem[] = [
   },
   {
     id: 'browser-qa',
-    name: { vi: 'QA walk', en: 'QA walk' },
-    role: { vi: 'Bằng chứng', en: 'Evidence' },
+    /* The id stays `browser-qa` because the URL is live; the name widened in 2026-09 when the
+       section stopped being only about a QA walk. One browser, several jobs — the walk is the
+       worked example because it demands the most discipline, not because it is the only use. */
+    name: { vi: 'Autonomous browser', en: 'Autonomous browser' },
+    role: { vi: 'Bằng chứng · khảo sát', en: 'Evidence · research' },
     line: {
-      vi: 'Một agent thao tác trên sản phẩm đang chạy như người dùng, và để lại file bằng chứng đọc lại được.',
-      en: 'An agent drives the running product as a user, and leaves a readable evidence file.',
+      vi: 'Một agent thao tác trên sản phẩm đang chạy như người dùng — nghiệm thu, khảo sát, và kiểm thứ chỉ nhìn thấy khi render.',
+      en: 'An agent drives a real browser as a user — acceptance, research, and whatever only exists once a page is rendered.',
     },
   },
   {

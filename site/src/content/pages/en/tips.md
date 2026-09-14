@@ -197,6 +197,20 @@ It exposes a local HTTP API to find a profile by name, ask whether it is already
 On opening, it returns the **real CDP port** for that launch. That port **changes with every
 launch** — remembering the old number is a bug; read it back from the response.
 
+Three things it buys, hardest to replace first:
+
+- **A login session that outlives the launch.** Cookies, localStorage, installed extensions,
+  fingerprint, proxy — all of it belongs to the profile rather than to the run. This is the one of
+  the three without which the section collapses: no session, no journey past the login screen, and
+  no evidence at all.
+- **Separation from the Chrome you work in.** Automation eventually has to kill the browser and
+  start it again — a hang, a lost tab, a broken session. If that is your own Chrome, every recovery
+  takes your open tabs with it. A separate profile turns a frightening operation into a dull one.
+- **No second Chrome pulled onto the machine.** When `agent-browser` launches a browser itself it
+  downloads its own Chrome build. Measured on a machine in use: `~/.agent-browser/browsers/` holds
+  **two builds at 336 MB each, 671 MB** — nobody meant to install them; they are the residue of
+  runs with no profile to attach to. Attaching to an open profile costs none of it.
+
 ### agent-browser only drives
 
 **[`agent-browser`](https://agent-browser.dev)** is a CLI that attaches to a running browser over CDP and drives it. In this
@@ -206,6 +220,27 @@ no login, and every observation made through it is fiction.
 So the division of roles fits in one sentence: **state in OmniLogin, control in agent-browser.**
 Reverse it — let agent-browser hold the login — and you lose the fingerprint along with the reason
 OmniLogin exists.
+
+### One browser, several jobs
+
+The QA walk is the worked example here because it demands the most discipline — a running
+product, a journey that has to be right, evidence that has to survive. But this pair is not only
+for QA. It is an **autonomous browser**, and the same mechanism serves at least three different
+jobs:
+
+- **Exercising the running product** — UI journeys, API contracts, data as it actually appears.
+- **Reading and researching** — pages behind a login, a vendor dashboard, a console no public API
+  answers for.
+- **Checking what only exists once rendered.** This is the one most easily forgotten. Some
+  questions the source cannot answer: whether a Mermaid diagram on a README breaks its lines,
+  whether a badge is clickable, whether a block overflows on a narrow screen. The answer comes
+  into existence only after a browser has laid the page out.
+
+**But the profile only earns its keep where state matters**, and saying so is worth more than
+lengthening the list. For a public documentation page a single `fetch` is cheaper by far: no
+profile, no CDP, no browser at all. OmniLogin earns its place exactly when the answer depends on
+**who you are** — logged in, the right account, the right fingerprint. Using a real profile to
+read a page anyone can read is paying a high price for something given away free.
 
 Four layers of separation when several agents share one browser, and they need telling apart:
 

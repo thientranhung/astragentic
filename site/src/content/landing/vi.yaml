@@ -3,7 +3,7 @@ hero:
   headline: "Một team outsource bằng AI agent.\nVận hành đúng quy trình, **liên tục 24/7**, cho **những dự án lớn**."
   sub: "Astragentic là scaffold để vận hành một team AI agent theo mô hình orchestrator. Bạn trao đổi với một người đại diện, team thi công theo role, và mọi việc đi qua issue tracker: GitHub Issues, Jira hoặc Linear. Những phần khó của việc điều hành nhiều agent đã được giải quyết sẵn; phần còn lại là của bạn."
   primary: "Khám phá cách hoạt động ↓"
-  secondary: "Đọc cách tiếp cận của Astragentic"
+  secondary: "Cài vào repo của bạn"
 
 explain:
   runtimes:

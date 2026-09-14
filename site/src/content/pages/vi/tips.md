@@ -189,6 +189,21 @@ Nó phơi ra một HTTP API cục bộ để tìm profile theo tên, hỏi profi
 nó trả về **port CDP thật** của lần mở đó. Port ấy **đổi theo mỗi lần mở** — nhớ số port cũ là một
 lỗi, phải đọc lại từ phản hồi.
 
+Ba thứ nó mua, xếp theo mức khó thay thế:
+
+- **Phiên đăng nhập sống qua nhiều lượt.** Cookie, localStorage, extension đã cài, fingerprint,
+  proxy — tất cả thuộc về profile chứ không thuộc về lần khởi chạy. Đây là thứ duy nhất trong ba
+  thứ mà không có nó thì cả mục này sụp: không có phiên thì không đi qua được màn đăng nhập, không
+  qua được thì không có bằng chứng nào.
+- **Tách khỏi Chrome bạn đang làm việc.** Automation thì sẽ có lúc phải giết browser và mở lại —
+  treo, tab lạc, session hỏng. Nếu đó là Chrome cá nhân của bạn thì mỗi lần khôi phục automation là
+  một lần cuốn theo toàn bộ tab đang mở của bạn. Một profile riêng biến một thao tác đáng sợ thành
+  một thao tác tầm thường.
+- **Không kéo theo một bản Chrome thứ hai.** Khi `agent-browser` tự khởi chạy browser, nó tải một
+  bản Chrome riêng về máy. Đo trên một máy đang dùng: `~/.agent-browser/browsers/` chứa **hai bản,
+  336 MB mỗi bản, tổng 671 MB** — không ai chủ ý cài chúng, chúng là dấu vết của những lần chạy
+  không có profile nào để nối vào. Nối vào một profile đã mở thì không tốn gì trong số đó.
+
 ### agent-browser điều khiển
 
 **[`agent-browser`](https://agent-browser.dev)** là một CLI kết nối vào browser
@@ -198,6 +213,26 @@ browser**: ngay khi nó làm thế, đó là một Chrome mới không có login
 
 Nên luật phân vai gọn trong một câu: **trạng thái ở OmniLogin, điều khiển ở agent-browser.** Đảo
 vai, để agent-browser giữ login, là mất fingerprint và mất luôn lý do OmniLogin tồn tại.
+
+### Một trình duyệt, nhiều việc
+
+QA walk là ví dụ được khai triển ở đây vì nó đòi kỷ luật cao nhất — có sản phẩm đang chạy, có
+hành trình phải đi đúng, có bằng chứng phải để lại. Nhưng bộ đôi này không chỉ làm QA. Nó là một
+**trình duyệt tự chủ**, và cùng một cơ chế phục vụ ít nhất ba việc khác nhau:
+
+- **Nghiệm thu sản phẩm đang chạy** — hành trình UI, hợp đồng API, dữ liệu như nó hiện ra.
+- **Đọc tài liệu và khảo sát** — trang sau tường đăng nhập, dashboard nhà cung cấp, console mà
+  không có API công khai nào trả lời thay được.
+- **Kiểm thứ chỉ nhìn thấy khi render.** Đây là loại việc dễ bị bỏ quên nhất. Có những câu hỏi mà
+  đọc mã nguồn không trả lời được: một sơ đồ Mermaid trên README có xuống dòng đúng không, một
+  badge có bấm được không, một khối có bị tràn ngang trên màn hẹp không. Câu trả lời chỉ tồn tại
+  sau khi trình duyệt dựng xong trang.
+
+**Nhưng profile chỉ đáng giá ở phần cần trạng thái**, và nói rõ chỗ này quan trọng hơn là mở rộng
+danh sách. Một trang tài liệu công khai thì một lần `fetch` rẻ hơn nhiều lần: không cần profile,
+không cần CDP, không cần cả trình duyệt. OmniLogin kiếm được chỗ đứng đúng lúc câu trả lời phụ
+thuộc vào **bạn là ai** — đã đăng nhập, đúng tài khoản, đúng fingerprint. Dùng một profile thật để
+đọc một trang ai cũng đọc được là trả giá cao cho một thứ cho không.
 
 Bốn lớp tách khi nhiều agent cùng dùng một browser, và cần phân biệt rạch ròi:
 

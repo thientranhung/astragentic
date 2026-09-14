@@ -3,7 +3,7 @@ hero:
   headline: "An outsourcing team made of AI agents.\nRunning by process, **24/7**, for **large projects**."
   sub: "Astragentic is a scaffold for running a team of AI agents on the orchestrator model. You talk to one representative, the team builds by role, and every piece of work goes through an issue tracker: GitHub Issues, Jira or Linear. The hard parts of running many agents are settled; the rest is yours."
   primary: "Explore how it works ↓"
-  secondary: "Read the Astragentic approach"
+  secondary: "Install it in your repo"
 
 explain:
   runtimes:
