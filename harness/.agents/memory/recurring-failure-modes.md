@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 137 entries (AST-001 … AST-138, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 138 entries (AST-001 … AST-139, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -3623,3 +3623,42 @@ they are in the suite (AST-137).
 
 Bound: `harness/.codex/hooks.json`, `harness/.codex/profiles/*.config.toml`,
 `harness/scripts/hook-contract-reload.py`, `harness/scripts/selftest.sh`.
+
+### AST-139 — The fork guard AST-119 asked for cannot be built today, measured three ways · promoted 2026-09-14
+
+AST-119 closes by naming what is missing: *a provenance field on cross-session messages — whether
+a message originated in the session's own turn or in a sub-agent inside it. Until that exists,
+every rule above is a rule the honest follow and the failure mode does not.* A downstream project
+shipped a `PreToolUse`/`Agent` guard for the same class, so this package went to build one. **It
+does not exist, and the reason is measured rather than argued.**
+
+Three candidate signals, all negative:
+
+| signal | result |
+|---|---|
+| process ancestry | **negative.** A fork is not a separate OS process. Measured inside one: its shell's `PPID` equals `CLAUDE_PID` equals the single `claude` process in `ps`. A script inspecting its own tree sees an identical picture in a fork and in the parent. |
+| `CLAUDE_CODE_CHILD_SESSION` | **negative.** Present as `1` inside a fork — and present as `1` in the parent session, measured in the same minute. It marks a Claude Code session, not a child of one. |
+| the `PreToolUse` payload | **negative.** No provenance field is observable, and nothing routes the payload to a fork so it could be read from there. |
+
+**The near-miss is worth more than the result.** The first two readings looked positive.
+`CLAUDE_CODE_CHILD_SESSION=1` inside a fork is exactly what a guard would key on, and the probe
+that found it said so — while flagging that it had observed PRESENCE in the fork and ASSUMED
+absence in the parent, because `ps eww` on macOS prints no environment for another process. One
+command in the parent session closed it and inverted the answer. A guard built on the unverified
+half would have been registered, logged, reviewed, and incapable of ever firing — the exact shape
+of a check that always takes the reassuring branch (AST-051), arriving by a route nobody would
+have called careless.
+
+**So the mechanism stays doctrine, and this entry exists to stop the next attempt from starting
+over.** The defences AST-119 already names are the ones that worked that night: a handback is a
+claim whose author is unknowable, contradictory handbacks are a normal condition of this channel,
+and they are resolved by SHA and never by which prose reads more honest. Every stale, wrong or
+fabricated message was caught by `git rev-parse` not moving or a blob not containing what the
+story required — **never once by anything in the prose.**
+
+Revisit when the runtime exposes provenance on a message or on a tool call. Until then, a guard
+here is not a missing feature, it is an unbuildable one, and shipping something shaped like it
+would cost more than the gap.
+
+Bound: `.agents/memory/recurring-failure-modes.md` (AST-119), `.agents/roles/thomas.md`,
+`.agents/roles/builder-claude.md`.

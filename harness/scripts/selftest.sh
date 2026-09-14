@@ -388,7 +388,8 @@ TD="$TMP/td"; mkdir -p "$TD"; ( cd "$TD" && git init -q -b main . && git config 
   && git remote add origin "$TD" && git update-ref refs/remotes/origin/main HEAD \
   && git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main \
   && git checkout -qb builder/ABC-7 && git commit -q --allow-empty -m "feat: x" \
-  && git checkout -q main && git merge -q --no-ff builder/ABC-7 -m "Merge ABC-7: x (AST-069)" \
+  && git checkout -q main && git merge -q --no-ff builder/ABC-7 -m "Merge ABC-7: x (AST-069)
+Ledger: none" \
   && git checkout -qb feature/other && git commit -q --allow-empty -m "wip" && git checkout -q main ) >/dev/null 2>&1
 guard_in "$TD" deny  "git push origin main"                       # merge for ABC-7, no stamp
 guard_in "$TD" deny  "git push"                                   # bare push of the base
@@ -407,6 +408,50 @@ guard_in "$TD" allow "git push origin main"
 ( cd "$TD" && bash "$S/ticket-done.sh" ABC-9 ) >/dev/null 2>&1 \
   && bad "ticket-done unmerged" "stamped a ticket with nothing on the base" \
   || ok "ticket-done refuses a ticket with nothing on the base"
+
+# ---------------------------------------------------------------------------------------------
+# The `Ledger:` line — a rule nothing could refuse until 2.9.0. Measured in this package on
+# 2026-09-14: 1 of the last 60 commits carried it, while the contract had required it since 2.0
+# and the project's own site advertised it. These were watched to fail against the guard as it
+# stood. The last case is the point of the whole check: a merge whose PROSE mentions the ledger
+# is the shape a careful author produces when they mean to comply, and accepting it would pass
+# on exactly the merges that skipped the step.
+# ---------------------------------------------------------------------------------------------
+echo "ledger line — declared, not mentioned (2.9.0)"
+LD="$TMP/ld"; mkdir -p "$LD"; ( cd "$LD" && git init -q -b main . && git config user.email t@t && git config user.name t \
+  && git commit -q --allow-empty -m init \
+  && git remote add origin "$LD" && git update-ref refs/remotes/origin/main HEAD \
+  && git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main ) >/dev/null 2>&1
+LDN=0
+ld_merge() { # <subject-and-body> — a fresh branch each call; reusing one silently fails the
+             # checkout, leaves the range empty, and turns a deny case green for the wrong reason
+  LDN=$((LDN+1))
+  ( cd "$LD" && git checkout -qb "builder/ABC-1-$LDN" && git commit -q --allow-empty -m "w" \
+    && git checkout -q main && git merge -q --no-ff "builder/ABC-1-$LDN" -m "$1" ) >/dev/null 2>&1
+}
+mkdir -p "$HARNESS_STAMP_ROOT/harness-ticket-done" && : > "$HARNESS_STAMP_ROOT/harness-ticket-done/ABC-1"
+ld_merge "Merge ABC-1: no declaration at all"
+guard_in "$LD" deny  "git push origin main"            # no Ledger: line anywhere
+( cd "$LD" && git reset -q --hard HEAD~1 ) >/dev/null 2>&1
+ld_merge "Merge ABC-1: declared nothing
+
+Ledger: none"
+guard_in "$LD" allow "git push origin main"            # `Ledger: none` IS a declaration
+( cd "$LD" && git reset -q --hard HEAD~1 ) >/dev/null 2>&1
+ld_merge "Merge ABC-1: declared an entry
+
+Ledger: AST-042"
+guard_in "$LD" allow "git push origin main"
+( cd "$LD" && git reset -q --hard HEAD~1 ) >/dev/null 2>&1
+ld_merge "Merge ABC-1: wrote the ledger and moved on
+
+This one updated the Ledger: carefully, see the entry."
+guard_in "$LD" deny  "git push origin main"            # a MENTION is not a declaration
+( cd "$LD" && git reset -q --hard HEAD~1 ) >/dev/null 2>&1
+ld_merge "Merge ABC-1: empty value
+
+Ledger:"
+guard_in "$LD" deny  "git push origin main"            # a bare key declares nothing
 
 # ---------------------------------------------------------------------------------------------
 # Residency by REAL cwd (2.8, adopted from a downstream project's ten-case proof). Real

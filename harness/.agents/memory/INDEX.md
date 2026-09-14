@@ -54,7 +54,7 @@ from this table — read the entry.
 | `AST-039` | An ID namespace shared with the host project resolves confidently to the wrong lesson | promoted | 160 |   |
 | `AST-040` | A placeholder that looks like a real id fails later than a missing one | promoted | 140 |   |
 | `AST-041` | A file called "the owner's" that ships in the payload has two homes and the shipped one wins | promoted | 119 | orchestrator.md |
-| `AST-042` | Two skills answering to one name means the model-invoked path picks the wrong one | promoted | 126 |   |
+| `AST-042` | Two skills answering to one name means the model-invoked path picks the wrong one | promoted | 126 | selftest.sh |
 | `AST-043` | A gate that requires an artifact no contract produces | promoted | 191 |   |
 | `AST-044` | Reading a diff cannot find a disagreement between two screens | promoted | 280 |   |
 | `AST-045` | A green test suite and a coherent product are different claims | promoted | 331 | check-reachability.sh,dispatch-qa-walk |
@@ -130,7 +130,7 @@ from this table — read the entry.
 | `AST-116` | A local fix that never goes upstream is a defect every fresh install re-buys | promoted | 335 | check-reachability.sh,docs-staleness-audit.sh |
 | `AST-117` | A worktree isolates git, not a tool that writes to a fixed path | promoted | 329 |   |
 | `AST-118` | A fallback that changes what the verdict MEANS, while keeping the same exit code | promoted | 373 | check-reachability.sh |
-| `AST-119` | A fork inside a Builder can message the dispatcher, and nothing marks it as not the Builder | promoted | 677 | builder-claude.md,thomas.md |
+| `AST-119` | A fork inside a Builder can message the dispatcher, and nothing marks it as not the Builder | promoted | 677 | builder-claude.md,hook-git-guard.py,thomas.md |
 | `AST-120` | A verification that fired twice on immutable input and disagreed with itself, cause unknown | promoted | 520 |   |
 | `AST-121` | The check had no vocabulary for being obeyed, so honesty registered as failure | promoted | 463 | CLEANUP.md,MARKERS.md,check-simplify-markers.sh |
 | `AST-122` | Existence is not relationship: a verified pointer that proves nothing about what it points at | promoted | 481 | CLEANUP.md,MARKERS.md,builder.md,check-payload-drift.sh,check-simplify-markers.sh,rin.md |
@@ -149,4 +149,5 @@ from this table — read the entry.
 | `AST-135` | The verifier's queue was invisible to itself, and the fire point had to follow the artifact | promoted | 363 | dispatch-qa-walk,thomas.md |
 | `AST-136` | `--grep` is BASIC regex, and every marker kind in this system contains parentheses | promoted | 287 | check-simplify-markers.sh,selftest.sh |
 | `AST-137` | Every defect a live project found lived between a tested invocation and a real one | promoted | 418 | selftest.sh |
-| `AST-138` | A rule reaches every runtime or it reaches one, and nothing in the package asked which | promoted | 485 |   |
+| `AST-138` | A rule reaches every runtime or it reaches one, and nothing in the package asked which | promoted | 485 | hook-git-guard.py |
+| `AST-139` | The fork guard AST-119 asked for cannot be built today, measured three ways | promoted | 449 |   |

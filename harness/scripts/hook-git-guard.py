@@ -595,6 +595,42 @@ def main():
                              "step, and stamps the id. Merge-and-hold is where the write-back "
                              "was skipped every time it was measured (AST-057); this is the "
                              "refusal that replaces remembering it." % (", ".join(missing), base), cmd)
+
+                    # THE LEDGER LINE, WHICH WAS A RULE NOTHING COULD REFUSE (AST-138 / 2.9.0).
+                    # Thomas's contract has said since 2.0 that a merge carries a `Ledger:`
+                    # line and that `Ledger: none` is a valid answer while its absence is not.
+                    # Measured in this package on 2026-09-14: 1 of the last 60 commits carried
+                    # it. The rule was reachable, documented, advertised on the project's own
+                    # site, and enforced by nothing — which is the difference between a rule
+                    # the honest follow and a rule that holds (AST-119's closing line).
+                    #
+                    # A TRAILER, NOT A MENTION. A commit whose prose says "wrote the ledger"
+                    # does not satisfy this; the line must start a line. That distinction is
+                    # the whole check: prose is what a careful author produces when they mean
+                    # to comply, and it is not machine-readable, so a checker that accepted it
+                    # would pass on exactly the commits that skipped the step.
+                    rc, out = run(["git", "log", "--merges", "--format=%H%x1f%B%x1e",
+                                   "%s..%s" % (up, src)])
+                    bare = []
+                    for rec in (out.split("\x1e") if rc == 0 else []):
+                        rec = rec.strip("\n")
+                        if not rec or "\x1f" not in rec:
+                            continue
+                        sha, body = rec.split("\x1f", 1)
+                        if not re.search(r"(?m)^Ledger:[ \t]*\S", body):
+                            bare.append(sha[:8])
+                    if bare:
+                        deny("this push lands merge(s) with no `Ledger:` line: %s. Every merge "
+                             "declares what went into the ledger, and `Ledger: none` is a "
+                             "valid declaration — its ABSENCE is not, because \"this one "
+                             "taught us nothing\" is a conclusion while no line at all is a "
+                             "step that was skipped, and from outside those look identical. "
+                             "Amend each with a trailer line (`git commit --amend`), not a "
+                             "sentence mentioning the ledger: a mention is not machine-"
+                             "readable and would pass on exactly the merges that skipped it. "
+                             "On the first push after upgrading, merges already on your local "
+                             "base will be refused until they carry it — that is the check "
+                             "working on the backlog it was built for." % ", ".join(bare), cmd)
             continue
 
     log("allow", cmd)
