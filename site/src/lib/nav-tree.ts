@@ -104,10 +104,13 @@ export async function getNavTree(lang: Lang): Promise<NavSection[]> {
       id: 'tips',
       label: UI.sideTips[lang],
       href: ROUTES.tips[lang],
-      items: anchors(
-        ROUTES.tips[lang],
-        TIPS.map((item) => ({ id: item.id, label: item.name[lang] })),
-      ),
+      /* The closing section is not a technique, so it is not in TIPS — but it is a
+         heading a reader can land on, and a rail that lists five of six sections is a
+         rail that is quietly wrong. */
+      items: anchors(ROUTES.tips[lang], [
+        ...TIPS.map((item) => ({ id: item.id, label: item.name[lang] })),
+        { id: 'one-shape', label: lang === 'vi' ? 'Một hình dạng chung' : 'One shape' },
+      ]),
     },
     { id: 'failures', label: UI.sideFailures[lang], href: ROUTES.failures[lang] },
     { id: 'adopt', label: UI.sideAdopt[lang], href: ROUTES.adopt[lang] },
