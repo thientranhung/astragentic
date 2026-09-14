@@ -61,7 +61,7 @@ That creates a more realistic collaboration flow where each role contributes its
 3. For larger work, bring in multiple roles and let them collaborate.
 
 Example template:
-> "Play the role of Winston in distilled/roster.md, following distilled/capabilities/architecture.md. Design the architecture for: [project description]."
+> "Play the role of Winston in bmad-distilled/roster.md, following bmad-distilled/capabilities/architecture.md. Design the architecture for: [project description]."
 
 > 💡 For most sessions, load only 1–3 files (one role + one or two capabilities) to stay token-efficient.
 
@@ -122,7 +122,7 @@ Ask a different role to challenge the solution, test assumptions, or improve qua
 ## 7. Folder structure
 
 ```
-distilled/
+bmad-distilled/
 ├── README.md           ← this file
 ├── roster.md           ← the roles and links to capabilities
 └── capabilities/       ← self-contained capability files

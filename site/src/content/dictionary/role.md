@@ -20,7 +20,7 @@ Splitting a big job into five roles instead of one general "coding agent" costs 
 
 - `harness/.agents/roles/thomas.md`, `shaper.md`, `builder.md`, `qa.md`, `rin.md`
 - `harness/.claude/agents/thomas.md`, `shaper.md`, `builder.md`, `qa.md`, `rin.md`
-- `docs/distilled/roster.md` — the earlier, vendored role-kit this method grew alongside
+- `docs/bmad-distilled/roster.md` — the earlier, vendored role-kit this method grew alongside
 
 ## Usage:
 

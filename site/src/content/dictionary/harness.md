@@ -20,7 +20,7 @@ Running agents alone doesn't need this — one agent, one branch, no coordinatio
 
 - `README.md` — top-level description and quickstart (`install.sh`, `ADAPT-HARNESS.md`)
 - `docs/adr/0001-rebuild-the-method-around-matt-pocock-skills.md` — "this harness contributes... this harness extends the claim to build tickets"
-- `docs/distilled/README.md` — the role-kit half of the method the harness builds on
+- `docs/bmad-distilled/README.md` — the role-kit half of the method the harness builds on
 
 ## Usage:
 
