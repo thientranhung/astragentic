@@ -1,0 +1,24 @@
+# What GitHub counts as this project's language.
+#
+# Without this the bar reads "HTML 97%", because 40 generated files weigh 23 MB
+# while the contracts, skills and scripts that are the actual work are markdown,
+# which Linguist does not count at all. The language bar was describing the build
+# output of one sub-directory.
+
+# Diagram explorers: emitted by the diagram pipeline, then rewritten by
+# site/scripts/normalise-explore-pages.mjs. Nobody edits these by hand.
+site/public/explore/**           linguist-generated=true
+
+# Visual-check output: a render of a diagram, kept as evidence for a review.
+content/site/diagrams/visual-check/**  linguist-generated=true
+
+# HyperFrames compositions: authored as HTML, but they are video source rather
+# than anything this repository ships as a web page.
+site/video/**/*.html             linguist-vendored=true
+
+# The BMAD role kit is vendored prose, distilled from an upstream method.
+docs/bmad-distilled/**           linguist-vendored=true
+
+# Keep line endings stable for the scripts that hooks and installers run.
+*.sh                             text eol=lf
+*.py                             text eol=lf
