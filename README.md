@@ -4,9 +4,9 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-2.8.1-blue" alt="version"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-2.9.0-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
-  <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-137_measured-red" alt="failure modes"></a>
+  <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-138_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache_2.0-blue" alt="license"></a>
 </p>
@@ -47,7 +47,7 @@ prove what happened.
 
 # 3. Open your repo in Claude Code and run the adaptive installer
 cd /path/to/your-repo
-claude "Read .astraler/releases/2.8.1/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/2.9.0/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Start the router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium
@@ -358,7 +358,7 @@ so the interesting sentence is rarely in the newest entry alone.
 | **Skills** | 16 in the harness, 4 of them brownfield-specific |
 | **Runtimes** | Claude Code, Codex, OpenCode |
 | **Review layers** | 3 per ticket (prior system: 5-14 rounds) |
-| **Failure modes** | 136 measured, append-only evidence base |
+| **Failure modes** | 138 measured, append-only evidence base |
 | **Isolation** | 1 worktree per Builder, 1 branch per ticket |
 
 ---

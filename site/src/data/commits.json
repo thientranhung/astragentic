@@ -1,5 +1,17 @@
 [
   {
+    "sha": "7e6db387d88503477326299c5279b217e3263d07",
+    "date": "2026-09-14",
+    "subject": "the Ledger line becomes a refusal; the fork guard turns out to be unbuildable",
+    "ledger": "Ledger: AST-139."
+  },
+  {
+    "sha": "e44f905af34d74f9dbe0161e78daf359c5e4a88f",
+    "date": "2026-09-14",
+    "subject": "a rule reaches every runtime, or it reaches one — the contract re-arm reaches all three",
+    "ledger": "Ledger: AST-138."
+  },
+  {
     "sha": "544aea2ba48a07d2f1fd8788cee00529784d5fd1",
     "date": "2026-09-09",
     "subject": "site: task, feature, requirement in bold",
@@ -105,18 +117,6 @@
     "sha": "33ad791c4a85ea9603029bd516dec33ab92ca0fc",
     "date": "2026-09-07",
     "subject": "site: onward links in one professional form",
-    "ledger": "Ledger: none."
-  },
-  {
-    "sha": "c99e760d19fa4eaf66797ea0adc6e84b626be557",
-    "date": "2026-09-07",
-    "subject": "site: highlight the positioning phrases, bold the tool names",
-    "ledger": "Ledger: none."
-  },
-  {
-    "sha": "9473e5a1bfa93d357b2f9a62b47556d476ebfaac",
-    "date": "2026-09-07",
-    "subject": "site: requirements and install as two sections",
     "ledger": "Ledger: none."
   }
 ]

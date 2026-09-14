@@ -1,3 +1,109 @@
+# Astragentic 2.9.0
+
+Three findings from reading a harness built on the same payload in another project, and one
+of the three is that a thing this package already shipped reached one runtime out of three.
+The other two are a rule that nothing could refuse, and a guard that cannot be built — which
+is reported rather than approximated.
+
+## A rule reaches every runtime, or it reaches one
+
+2.7.13 is titled *"the guard shipped for three runtimes and was registered on one."*
+`hook-git-guard.py` lived in `.claude/settings.json`, which Codex does not read, so a Builder
+on a Codex pane ran with the contract above it and nothing underneath. That release fixed that
+one registration and stopped. **The class was never written down**, so nothing carried it
+forward — and a grep of the ledger found no entry for it, in a package that had named a
+release after it.
+
+Asking the question 2.7.13 did not ask found two more instances:
+
+| | claude | opencode | codex |
+|---|---|---|---|
+| `hook-contract-reload.py` registered | yes | no declarative hook surface | **no** |
+| rules that outlive compaction, per role | 5/5 | 5/5 | **0/5** |
+
+The second is the worse one. Those rules live in the adapter because **the adapter is the
+system prompt**, and the measurement this package already holds is that after a compaction the
+system-prompt rules were obeyed every time and every rule outside it was violated, with a total
+correlation. A Builder dispatched to Codex was running the one configuration where the defect
+has no defence at all, while the file documenting the defect sat two directories away.
+
+`.codex/hooks.json` now registers the re-arm on `SessionStart`. All five Codex profiles carry
+their role's compaction rules, wording identical to the other two runtimes so they cannot drift
+apart quietly. `hook-contract-reload.py` no longer resolves the project through
+`CLAUDE_PROJECT_DIR` alone — naming a Claude-only variable is 2.7.13 one layer down — and it
+records every invocation, so the first real compaction on another runtime is a measurement
+rather than an assumption.
+
+**OpenCode is the named exception, by measurement rather than by assumption:** it has no
+declarative hook file. Its plugin API exposes `experimental.session.compacting` with a mutable
+context, which is a stronger intervention than re-arming after the fact, and is the path when
+that API leaves experimental. Its adapters carry the rules meanwhile.
+
+**The rule, stated so it outlives this release.** Anything the payload ships for a role or a
+moment — a hook registration, a system-prompt rule, an adapter instruction — is declared for
+every runtime that can carry it, and a runtime that cannot is named as an exception with the
+reason. A surface that is silent is not an exception; it is an omission wearing one.
+
+## The `Ledger:` line stops being a rule only the honest follow
+
+Thomas's contract has required it since 2.0. `Ledger: none` is a valid answer and its absence
+is not, because "this one taught us nothing" is a conclusion while no line at all is a step
+that was skipped, and from outside those are identical. The project's own site advertises the
+mechanism.
+
+Measured in this package on 2026-09-14: **1 of the last 60 commits carried it.** The only
+script that named the rule was `check-reachability.sh`, which verifies the rule is reachable
+in a contract — not that any commit obeys it.
+
+`hook-git-guard.py` now refuses a push of the base carrying a merge with no `Ledger:` trailer,
+in the same block that already refuses one with no `ticket-done` stamp. It wants a **trailer,
+not a mention**: prose saying "updated the ledger" is what a careful author produces when they
+mean to comply, it is not machine-readable, and accepting it would pass on exactly the merges
+that skipped the step.
+
+**On the first push after upgrading**, merges already on your local base will be refused until
+they carry the line. Amend each with `git commit --amend`. That is the check working on the
+backlog it was built for.
+
+## A guard that cannot be built, reported instead of approximated
+
+AST-119 measured three contradictory messages arriving at Thomas presenting as one Builder's
+handback, one of them a true technical fact under false authorship that Thomas nearly relayed
+to the owner as real. It closes by naming what is missing: a provenance field on cross-session
+messages. Another project shipped a `PreToolUse`/`Agent` guard for the class, so this release
+went to build one.
+
+Three candidate signals, all measured, all negative. A fork is not a separate OS process — its
+shell's `PPID` equals `CLAUDE_PID` equals the single `claude` in `ps`. `CLAUDE_CODE_CHILD_SESSION=1`
+is set inside a fork **and in the parent session**. No provenance field is observable in the
+hook payload.
+
+**The second nearly shipped.** A probe found the variable set inside a fork and said so, while
+flagging that it had observed presence and *assumed* absence in the parent, because `ps eww`
+prints no environment for another process on macOS. One command in the parent inverted the
+answer. A guard built on the unverified half would have been registered, logged, reviewed, and
+incapable of ever firing — AST-051 arriving by a route nobody would have called careless.
+
+AST-139 records it so the next attempt does not start over from a transcript. Revisit when a
+runtime exposes provenance on a message or a tool call.
+
+## Also in this release
+
+- `selftest.sh`: 58 → 76 cases. Every case added here was watched to FAIL first — five roles
+  red, one registration red, five ledger-line cases red — which is the only thing that earns a
+  case a place in that suite (AST-137).
+- `hook-contract-reload.py` had **no selftest case at all** before this release. The hook
+  defending the one failure with a measured total correlation had never been watched to fire,
+  or to stay quiet.
+
+## Considered and not done
+
+**Moving `check-payload-drift.sh` out of the payload.** The concern was that a release can
+replace the tool that watches for releases replacing things. Reading the script closed it: the
+state that decides the outcome is `.agents/payload-drift-manifest.json`, which the payload does
+not ship, so an upgrade cannot reset the hashes that give the check meaning. The circularity
+was already cut at the half that matters.
+
 # Astragentic 2.8.1
 
 Two observations from the first project to run 2.8.0, and the repository work that lets a

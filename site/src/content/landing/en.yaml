@@ -252,7 +252,7 @@ adopt:
       lines: ["./install.sh /path/to/your-repo"]
     - title: "Let Claude Code adapt the harness to the repo"
       note: "Reads and executes ADAPT-HARNESS.md: tracker name, ticket prefix, docs paths."
-      lines: ["cd /path/to/your-repo", "claude \"Read .astraler/releases/2.8.1/ADAPT-HARNESS.md completely and execute it.\""]
+      lines: ["cd /path/to/your-repo", "claude \"Read .astraler/releases/2.9.0/ADAPT-HARNESS.md completely and execute it.\""]
     - title: "Configure mattpocock-skills for the repo, once"
       note: "This skill declares the tracker, the triage label set and where CONTEXT.md and ADRs live; the engineering skills read that configuration afterwards."
       lines: ["claude", "/mattpocock-skills:setup-matt-pocock-skills"]

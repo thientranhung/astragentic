@@ -785,12 +785,20 @@
     "lesson": "Two skills answering to one name means the model-invoked path picks the wrong one",
     "status": "promoted",
     "words": 126,
-    "citedBy": [],
+    "citedBy": [
+      "selftest.sh"
+    ],
     "indexLine": 57,
     "entryLine": 547,
     "promotedOn": "2026-08-11",
     "entry": "### AST-042 — Two skills answering to one name means the model-invoked path picks the wrong one · promoted 2026-08-11\n`builder.md` told the Builder to run `code-review` and listed it as model-invoked craft. Two\nskills answer to that name: the plugin's `mattpocock-skills:code-review`, which has the two\naxes the contract describes, and the built-in `/code-review`, which takes different flags and\ndoes something else. Slash invocation is unambiguous because the plugin namespaces its\ncommands; the model-invoked path is not.\n\nThe mirror case is worse: the contract mandated a `simplify` pass, the plugin ships no skill\nby that name, and the built-in `/simplify` is what actually runs — stated nowhere. An agent\nlooking for a plugin skill that does not exist finds nothing and skips the pass silently.\n\n**Name the qualified skill wherever a bare name is ambiguous**, and say which tool a mandated\npass actually is. Bound: `harness/.agents/roles/builder.md`.",
-    "refs": [],
+    "refs": [
+      {
+        "name": "selftest.sh",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/selftest.sh"
+      }
+    ],
     "commits": []
   },
   {
@@ -2592,6 +2600,7 @@
     "words": 677,
     "citedBy": [
       "builder-claude.md",
+      "hook-git-guard.py",
       "thomas.md"
     ],
     "indexLine": 133,
@@ -2603,6 +2612,11 @@
         "name": "builder-claude.md",
         "kind": "file",
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/roles/builder-claude.md"
+      },
+      {
+        "name": "hook-git-guard.py",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/hook-git-guard.py"
       },
       {
         "name": "thomas.md",
@@ -3114,6 +3128,52 @@
         "sha": "ffc1c440179f1d2601b1c4f95d3c6721e66d22cc",
         "date": "2026-08-27",
         "subject": "2.7.5 — the correction the downstream project made against its own interest"
+      }
+    ]
+  },
+  {
+    "id": "AST-138",
+    "lesson": "A rule reaches every runtime or it reaches one, and nothing in the package asked which",
+    "status": "promoted",
+    "words": 485,
+    "citedBy": [
+      "hook-git-guard.py"
+    ],
+    "indexLine": 152,
+    "entryLine": 3579,
+    "promotedOn": "2026-09-14",
+    "entry": "### AST-138 — A rule reaches every runtime or it reaches one, and nothing in the package asked which · promoted 2026-09-14\n\n2.7.13 is titled *\"the guard shipped for three runtimes and was registered on one.\"*\n`hook-git-guard.py` was registered in `.claude/settings.json`, which **Codex does not read**, so\na Builder dispatched to a Codex pane ran with the contract above it and nothing underneath. That\nrelease fixed the registration for that one script and stopped there. **The class was never\nwritten down**, so no rule, no check and no contract carried it forward — and a grep of this\nledger on 2026-09-14 found nothing for it, in a package that had named a release after it.\n\nTwo more instances were then measured in the same package, both by asking the question 2.7.13\ndid not:\n\n| what | claude | opencode | codex |\n|---|---|---|---|\n| `hook-contract-reload.py` registered | yes | n/a — no declarative hook surface | **no** |\n| the rules that outlive compaction, per role | 5/5 | 5/5 | **0/5** |\n\nThe second is the worse one. …",
+    "refs": [
+      {
+        "name": "hook-git-guard.py",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/hook-git-guard.py"
+      }
+    ],
+    "commits": [
+      {
+        "sha": "e44f905af34d74f9dbe0161e78daf359c5e4a88f",
+        "date": "2026-09-14",
+        "subject": "a rule reaches every runtime, or it reaches one — the contract re-arm reaches all three"
+      }
+    ]
+  },
+  {
+    "id": "AST-139",
+    "lesson": "The fork guard AST-119 asked for cannot be built today, measured three ways",
+    "status": "promoted",
+    "words": 449,
+    "citedBy": [],
+    "indexLine": 153,
+    "entryLine": 3627,
+    "promotedOn": "2026-09-14",
+    "entry": "### AST-139 — The fork guard AST-119 asked for cannot be built today, measured three ways · promoted 2026-09-14\n\nAST-119 closes by naming what is missing: *a provenance field on cross-session messages — whether\na message originated in the session's own turn or in a sub-agent inside it. Until that exists,\nevery rule above is a rule the honest follow and the failure mode does not.* A downstream project\nshipped a `PreToolUse`/`Agent` guard for the same class, so this package went to build one. **It\ndoes not exist, and the reason is measured rather than argued.**\n\nThree candidate signals, all negative:\n\n| signal | result |\n|---|---|\n| process ancestry | **negative.** A fork is not a separate OS process. Measured inside one: its shell's `PPID` equals `CLAUDE_PID` equals the single `claude` process in `ps`. A script inspecting its own tree sees an identical picture in a fork and in the parent. |\n| `CLAUDE_CODE_CHILD_SESSION` | **negative.** Present as `1` inside a fork — and present as `1` in the parent session, measured in the same minute. It marks a Claude Code session, not a child of one. …",
+    "refs": [],
+    "commits": [
+      {
+        "sha": "7e6db387d88503477326299c5279b217e3263d07",
+        "date": "2026-09-14",
+        "subject": "the Ledger line becomes a refusal; the fork guard turns out to be unbuildable"
       }
     ]
   }

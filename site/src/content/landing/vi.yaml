@@ -252,7 +252,7 @@ adopt:
       lines: ["./install.sh /path/to/your-repo"]
     - title: "Để Claude Code thích nghi harness với repo"
       note: "Đọc và thực thi ADAPT-HARNESS.md: đặt tên tracker, prefix ticket, đường dẫn docs."
-      lines: ["cd /path/to/your-repo", "claude \"Read .astraler/releases/2.8.1/ADAPT-HARNESS.md completely and execute it.\""]
+      lines: ["cd /path/to/your-repo", "claude \"Read .astraler/releases/2.9.0/ADAPT-HARNESS.md completely and execute it.\""]
     - title: "Cấu hình mattpocock-skills cho repo, chạy một lần"
       note: "Skill này khai tracker, bộ nhãn triage và chỗ để CONTEXT.md, ADR; các skill engineering sau đó đọc cấu hình này."
       lines: ["claude", "/mattpocock-skills:setup-matt-pocock-skills"]

@@ -4,9 +4,9 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-2.8.1-blue" alt="version"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-2.9.0-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
-  <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-136_measured-red" alt="failure modes"></a>
+  <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-138_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/vi/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache_2.0-blue" alt="license"></a>
 </p>
@@ -47,7 +47,7 @@ nhau, review xong trong một vòng, và artifact chứng minh được điều 
 
 # 3. Mở repo bằng Claude Code và chạy bộ cài thích nghi
 cd /path/to/your-repo
-claude "Read .astraler/releases/2.8.1/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/2.9.0/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Mở router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium
@@ -359,7 +359,7 @@ nằm riêng trong mục mới nhất.
 | **Skill** | 16 trong harness, 4 trong số đó dành cho brownfield |
 | **Runtime** | Claude Code, Codex, OpenCode |
 | **Lớp review** | 3 mỗi ticket (hệ thống trước: 5–14 vòng) |
-| **Failure mode** | 136 đã đo, cơ sở bằng chứng chỉ thêm |
+| **Failure mode** | 138 đã đo, cơ sở bằng chứng chỉ thêm |
 | **Cô lập** | 1 worktree mỗi Builder, 1 branch mỗi ticket |
 
 ---
