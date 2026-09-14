@@ -16,7 +16,7 @@ sessionTag: "per ticket"
 3. **Chạy simplify pass theo runtime supplement, để lại commit `simplify(increment):`** mà body
    gọi tên pass đã chạy.
 4. **Chạy `arm: ticket` từ worktree của Builder, gọi sang vendor còn lại.** Builder fold theo class
-   chứ không theo từng instance, và ghi rõ những gì bỏ lại. Biên nhận là một commit rỗng ở head,
+   chứ không theo từng instance, và ghi rõ những gì bỏ lại. Receipt là một commit rỗng ở head,
    nên parent của receipt đúng là tree mà gate đã đọc. Tôi đặt trigger ở đây để gate nằm trong tree
    nó đọc, thay vì nằm trong lượt của Thomas.
 5. **Thu browser evidence cho mọi bề mặt người dùng nhìn thấy được**: nhìn cái gì, ở viewport nào,

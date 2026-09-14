@@ -83,7 +83,7 @@ STOP, và "không cú nào chạm bề mặt" là câu trả lời hợp lệ, c
 - **Dời chữ nhưng để lại tên cũ.** Khi dời phần cơ chế của lượt đi bộ ra khỏi `review-with-rin`, ba dòng cũ vẫn đi theo,
   vẫn gọi người đi bộ là "Rin" và gọi lượt đi bộ là "một mode". Promoted, chữ đã dời thì chưa về
   nhà mới cho tới khi được đọc lại trong ngữ cảnh mới.
-- **Teardown lỡ tay dừng luôn container dùng chung.** Một app đang chạy rò tiến trình broker và container database
+- **Teardown lỡ tay dừng luôn container dùng chung.** Một app đang chạy leak tiến trình broker và container database
   sau mỗi lượt đi bộ; một lần teardown đặt sai phạm vi từng dừng luôn container test dùng chung mà
   mọi Builder đang chạy đều phụ thuộc vào đó. Promoted, cleanup chạy theo thứ tự: giết app, xác nhận
   port, teardown có giới hạn phạm vi, rồi mới `--force` cái worktree.

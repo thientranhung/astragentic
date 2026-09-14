@@ -34,7 +34,7 @@ vậy cùng lúc, nên im lặng ở đây nghĩa là một Builder ngồi khôn
 gán trên tracker trước, nên hai session Thomas cùng nhặt trên frontier sẽ thấy claim của nhau thay vì
 đua nhau tạo cùng một branch. Vấn đề sinh ra luật này là hai session dùng chung một checkout và mất
 commit trong im lặng vì một lệnh `git switch` chạy song song. Mỗi session một worktree là cách chữa,
-và sự cô lập đó phủ mọi lệnh có ghi xuống đĩa, không riêng git.
+và sự cô lập đó phủ mọi lệnh có ghi xuống disk, không riêng git.
 <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
 
 ## Khi nào Thomas gọi nó
@@ -94,7 +94,7 @@ thái `promoted`: đã sửa và đã nằm trong hợp đồng mà trang này m
   trước khi kết luận là xong.
 - **Watcher không tự arm lại.** Watcher theo lượt chỉ phủ một lượt rồi thoát; không có gì arm lại, và cú arm lại
   chính là bước hay bị bỏ ngay sau một tác vụ dài. Đã sửa: mỗi lượt mới có watcher mới.
-- **Dừng trước khi commit.** Một Builder dừng trước khi commit để lại phần việc chỉ tồn tại trên đĩa;
+- **Dừng trước khi commit.** Một Builder dừng trước khi commit để lại phần việc chỉ tồn tại trên disk;
   `git worktree remove` xoá nó không nói gì. Đã sửa: "commit, push, rồi mới trả về" là ba hành
   động tách bạch.
 

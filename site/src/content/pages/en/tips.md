@@ -13,29 +13,44 @@ it affordable. The last is what makes it worth doing.
 
 ## runtime-per-worktree
 
-Each worktree gets a container stack of its own, and **the stack's name is derived from the branch
-name**. Docker Compose prefixes the project name onto containers, networks and volumes, so one
-differing project name separates four things at once: container, network, volume — meaning the
-database — and port.
+**The pain.** You dispatch two tickets to two Builders, one worktree each. The code separates
+cleanly — that is what `git worktree` is good at. But both run migrations against one database,
+both bind the same port, both write into one `node_modules`. The second Builder breaks the first
+one's environment and nobody gets a signal, because nothing errors: two processes sharing one
+resource is legal behaviour.
 
-The three named above are allocated like this:
+`git worktree` isolates the **working tree**. It does not isolate what that tree starts.
+
+**The technique.** Give each worktree a runtime of its own, and **derive that runtime's name from
+the branch** rather than letting somebody choose it.
+
+The second half is the part that matters. Isolating by making each person name their own resources
+and pick their own ports in a config file turns isolation into **something you have to remember** —
+and what you have to remember, someone eventually forgets, with a silent symptom. Derived from the
+branch there is nothing to forget: changing branch changes the runtime, and no file is edited.
+
+**The rule, and this is the part that travels to any stack: isolate mutable state, share
+content-addressed state.** Packages and build artifacts are keyed by their own hash, so two branches
+wanting two versions get two different keys rather than fighting over one place. Sharing them is
+safe structurally, not safe by luck.
+
+### One implementation, to picture it
+
+Astragentic **does not ship** this part and holds no opinion about your stack. The database, the
+container runtime, the package manager — those are the project's choices. What follows is **one
+example**, from a project using Docker Compose, Postgres and pnpm, so the principle above can be
+seen written down. If your project uses Podman, or runs Postgres on the host, or has no database at
+all, the principle does not change; only the details do.
+
+In that example the Compose project name is derived from the branch, and Compose prefixes the
+project name onto containers, networks and volumes — so one differing name separates four things at
+once:
 
 | Runtime | Per worktree | Shared |
 |---|---|---|
-| Database | Its own Postgres container and its own volume. Not a schema on a shared server. | The test cluster is the opposite: one container for the machine, isolated inside by templates keyed to the migration-set hash. |
-| `node_modules` | Two copies: the host one from `pnpm install` in the worktree itself, and the in-container one as a named volume shadowing the bind mount. | The pnpm store, the build cache and the module cache, declared `external: true`. |
+| Database | Its own Postgres container and volume. Not a schema on a shared server. | The test cluster is the opposite: one container for the machine, isolated inside by templates keyed to the migration set hash. |
+| `node_modules` | Two copies: the host one from `pnpm install` in the worktree, and the in-container one as a named volume shadowing the bind mount. | The pnpm store, build cache and module cache, declared `external: true`. |
 | FE/BE ports | Nobody picks a port. Compose declares only the in-container port; Docker assigns the outside one. | — |
-
-**One rule, and this is the part that travels: isolate mutable state, share content-addressed
-state.** A package or a build artifact is keyed by its own hash, so two branches wanting two
-versions get two different keys rather than fighting over one place. Sharing them is safe
-structurally, not safe by luck.
-
-### Why not the three obvious answers
-
-**Each worktree names its own containers and ports in `.env`.** This turns isolation into
-something you have to remember, and what you have to remember, someone eventually forgets — with
-a silent symptom. The project name should be derived:
 
 ```make
 DEV_SLUG := $(shell git rev-parse --abbrev-ref HEAD | tr '[:upper:]' '[:lower:]' \
@@ -44,26 +59,30 @@ DEV_SLUG := $(if $(filter head,$(DEV_SLUG)),$(shell git rev-parse --short HEAD),
 DEV_PROJECT := myapp-dev-$(DEV_SLUG)
 ```
 
-No env file to edit when you switch branch. `builder/TRA-686` becomes `builder-tra-686`, and a
-detached HEAD falls back to the short SHA so the name is still stable for that checkout.
+`builder/TRA-686` becomes `builder-tra-686`, and a detached HEAD falls back to the short SHA so the
+name stays stable for that checkout.
+
+### Two other answers, and why not
 
 **One database per worktree on a shared Postgres.** Cheaper, and still right for the test cluster.
-But `CREATE DATABASE` does not isolate what is cluster-global: roles and passwords. One `ALTER
-ROLE` is cluster-wide. A container of its own leaves no shared layer to step on.
+But `CREATE DATABASE` does not isolate what is cluster-global: roles and passwords. One `ALTER ROLE`
+is cluster-wide. A separate instance leaves no shared layer to step on.
 
 **One shared dev stack, and you queue for it.** The cost is not the waiting. It is that people do
 not queue — they skip the step.
 
-### Two configuration details most people hit
+### Two details easy to miss once containerised
 
-**The Compose file must have no `name:`.** The project name is what gives each worktree its own
-containers, network and volumes, and it has to come from the one place that knows which worktree
-the caller is standing in. A literal name in the file puts every worktree back into one project.
+Neither depends on a particular stack; anyone putting a repo into a container meets both.
+
+**Do not give the project a fixed name.** The project name is what gives each worktree its own
+resources, and it has to come from the one place that knows which worktree the caller is standing
+in. A hardcoded name in config puts every worktree back into one project.
 
 **A worktree's `.git` is a *file*, not a directory.** It holds a host-side absolute path into the
 main checkout's `.git/worktrees/<name>`, and a bind mount does not carry that path. Any tooling
-that shells out to `git` inside the container dies. The fix is to mount the common git dir
-read-only and point `GIT_DIR` at it, both derived from git itself:
+shelling out to `git` inside the container fails. The fix is to mount the common git dir read-only
+and point `GIT_DIR` at it, both derived from git itself:
 
 ```make
 DEV_GIT_COMMON := $(shell cd "$$(git rev-parse --git-common-dir)" && pwd)
@@ -71,70 +90,80 @@ DEV_GIT_REAL   := $(shell cd "$$(git rev-parse --git-dir)" && pwd)
 DEV_GIT_DIR    := $(if $(filter $(DEV_GIT_COMMON),$(DEV_GIT_REAL)),/gitcommon,/gitcommon/worktrees/$(notdir $(DEV_GIT_REAL)))
 ```
 
-`--git-dir` differing from `--git-common-dir` is how git itself tells a main checkout from a
-linked worktree. Use that comparison; do not guess at the shape of the path.
+`--git-dir` differing from `--git-common-dir` is how git itself tells a main checkout from a linked
+worktree. Use that comparison; do not guess at the shape of the path.
 
 **Trade-off.** The real constraint is not disk, it is RAM. On disk each worktree costs roughly
-540–650 MB of volumes, with about 2 GB shared across the machine — not a limit on any modern
-drive. RAM is: running two full `-race` test suites at once can kill both, with neither winning.
-Anyone adopting this model has to answer one question first — how many parallel stacks the
-machine's memory can carry. An advisory token lock whose `take` exits non-zero while somebody else
-holds it is enough to queue the one thing that needs queueing.
+540–650 MB of volumes, with about 2 GB shared across the machine — not a limit on any modern drive.
+RAM is: running two full `-race` test suites at once can make both fail. Anyone adopting this model
+has to answer one question first — how many parallel stacks the machine's memory can carry. An
+advisory token lock whose `take` exits non-zero while somebody else holds it is enough to queue the
+one thing that needs queueing.
 
-**A known leak.** The cleanup step only removes volumes when there are containers left to remove.
-A Builder who politely stops its stack before handing back leaves zero containers, the condition
-reads false, `down -v` is skipped, and the volumes are orphaned while the cleanup stamp still
-records success. If you rebuild this model, have cleanup remove volumes **by project name** rather
-than by the presence of a container.
+**A known leak.** Cleanup only removes volumes when there are containers left to remove. A Builder
+who politely stops its stack before handing back leaves zero containers, the condition reads false,
+`down -v` is skipped, and the volumes are orphaned while the cleanup stamp still records success. If
+you rebuild this model, have cleanup remove volumes **by project name** rather than by the presence
+of a container.
 
 **Who does not need it.** A team of one on one branch at a time: this whole mechanism buys exactly
-one thing, concurrency, and without concurrency it is only cost. A team whose dev environment
-holds no mutable state does not need it either — dynamic ports are enough. And a team running CI
-on a clean runner every time does not have this problem at all: it is only real when several
-checkouts live on one machine.
+one thing, concurrency, and without concurrency it is only cost. A team whose dev environment holds
+no mutable state does not need it either — dynamic ports are enough. And a team running CI on a
+clean runner every time does not have this problem at all: it is only real when several checkouts
+live on one machine.
 
 ## pnpm
 
-pnpm installs packages into a single content-addressable store and hardlinks them into each
-project's `node_modules` instead of copying. With several worktrees, that is what makes the Nth
-worktree affordable on disk: N `node_modules` directories but almost one copy of bytes.
+**The pain.** The fourth worktree does not fail for technical reasons; it fails because you begrudge
+the disk. A full `node_modules` per checkout is a few hundred MB per checkout, and once that number
+starts to matter people do the one thing that breaks the model: share one `node_modules` across
+worktrees. Isolation dies of an economic decision, not a technical one.
+
+**The technique.** [pnpm](https://pnpm.io) installs packages into a single content-addressable store
+and **hardlinks** them into each project's `node_modules` instead of copying. N `node_modules`
+directories but almost one copy of bytes on disk — so the question "is a fourth worktree worth it"
+stops being asked.
 
 **One thing said plainly.** pnpm is usually not chosen for worktree reasons — it tends to predate
-the multi-worktree problem entirely. What is true to say is this: pnpm's store-and-hardlink
-property is what lets the multi-worktree model pay for its disk. An inherited benefit, not a
-weighed decision. Presenting it as deliberate would be prettifying the story.
+the multi-worktree problem entirely. What is true to say is this: pnpm's store-and-hardlink property
+is what lets the multi-worktree model pay for its disk. An inherited benefit, not a weighed
+decision. Presenting it as deliberate would be prettifying the story.
 
 Three properties, ordered by how much they bear on several worktrees:
 
 - **Disk.** npm copies, so three worktrees cost three times the real space. pnpm hardlinks, and
-  three checkouts feed from one store.
+  three checkouts read from one store.
 - **`node_modules` is not flat.** pnpm does not hoist, so a package can only import what it
   declares. Across worktrees sitting on different commits, that blocks a whole class of "works in
   this worktree, breaks in that one" caused by differing dependency graphs rather than by code.
 - **Install scripts are off by default.** Running one means naming it, which makes allocating
   `node_modules` explicit.
 
-**Trade-off.** What npm and yarn have that pnpm does not is the flat `node_modules` that tolerates
-a package declaring its dependencies incompletely. pnpm exposes those packages instead. That is a
+**Trade-off.** What npm and yarn have that pnpm does not is the flat `node_modules` that tolerates a
+package declaring its dependencies incompletely. pnpm exposes those packages instead. That is a
 feature, but it is a real cost the day you pull in an old dependency.
 
 **A trap when the repo is bind-mounted into a container.** pnpm puts its store on the same
-filesystem as the directory it hardlinks into. If `node_modules` is a named volume while the
-parent is a bind mount, those are two filesystems, so pnpm ignores the store you mounted and
-relocates it inside the working tree. Measured result: the mounted volume empty, and a few hundred
-MB of store landing in the host's working tree as an untracked directory. Shadow the path pnpm
-**actually chooses**, not the one the documentation names.
+filesystem as the directory it hardlinks into. If `node_modules` is a named volume while the parent
+is a bind mount, those are two filesystems, so pnpm ignores the store you mounted and relocates it
+inside the working tree. Measured result: the mounted volume empty, and a few hundred MB of store
+landing in the host's working tree as an untracked directory. Shadow the path pnpm **actually
+chooses**, not the one the documentation names.
 
 ## portless
 
-portless is a background proxy that holds port 443 for the machine and maps the name
-`https://<name>.localhost` onto a localhost port. It replaces hand-pinned ports and the job of
-remembering port numbers.
+**The pain.** The moment each worktree has its own runtime, each worktree needs its own port.
+Picking numbers by hand returns you to the "something to remember" from the first section. Letting
+the runtime assign random ports ends the collisions but hands you an address nobody can type: not
+memorable, not bookmarkable, not pasteable into a ticket. And a URL you cannot type yields no
+browser evidence at all.
 
-With several worktrees it solves exactly one thing: when Docker assigns a random port to each
-stack, something has to give humans and browsers a **stable address** pointing at that random
-port. A dynamic port with no naming layer is a port nobody can type into an address bar, and a URL
-you cannot type yields no browser evidence at all.
+**The technique.** [portless](https://github.com/vercel-labs/portless) is a background proxy that
+holds port 443 for the machine and maps the name `https://<name>.localhost` onto a localhost port.
+It replaces hardcoded ports and the job of remembering port numbers.
+
+With several worktrees it solves exactly one thing: when the runtime assigns a random port to each
+stack, something has to give humans and browsers a **stable address** pointing at that random port.
 
 The declaration is one file next to `package.json`:
 
@@ -187,19 +216,21 @@ give each worktree its own runtime.
 
 ## browser-qa
 
-A QA agent drives the running product as a user would — through the interface, the journey, the
+**The pain.** An agent reports the ticket done, tests green, diff clean. But the button does not
+click because a transparent overlay sits on top of it, or the image does not load because the path
+is only wrong once rendered. No test catches it, because no test renders. And a health check answers
+an easier question than the one that needed asking: "is the process alive" is not "can a user finish
+the job".
+
+**The technique.** A QA agent drives the running product as a user would — through the interface, the journey, the
 API contract and the data as they actually appear — instead of reading the diff. It writes an
 evidence file the next station can read back.
-
-Why it has to be a real browser comes down to two things. Some classes of defect only exist once
-something has been rendered. And a health check usually answers an easier question than the one
-that needed asking: "is the process alive" is not "can a user finish the job".
 
 The tooling splits in two, and **how the roles are split is the part that matters**.
 
 ### OmniLogin holds the state
 
-**OmniLogin** is a browser that keeps a profile: cookies, localStorage, installed extensions,
+**[OmniLogin](https://omnilogin.net)** is a browser that keeps a profile: cookies, localStorage, installed extensions,
 fingerprint, proxy. A clean Chrome launched fresh each run holds none of that, so every journey
 behind a login screen is unreachable.
 
@@ -209,7 +240,7 @@ launch** — remembering the old number is a bug; read it back from the response
 
 ### agent-browser only drives
 
-**`agent-browser`** is a CLI that attaches to a running browser over CDP and drives it. In this
+**[`agent-browser`](https://github.com/vercel-labs/agent-browser)** is a CLI that attaches to a running browser over CDP and drives it. In this
 model it must **never launch a browser of its own**: the moment it does, that is a fresh Chrome with
 no login, and every observation made through it is fiction.
 

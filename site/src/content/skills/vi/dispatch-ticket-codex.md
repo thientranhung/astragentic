@@ -31,7 +31,7 @@ không:
 
 - **Profile cục bộ theo máy.** File đứng sau `codex --profile <role>` nằm dưới
   `${CODEX_HOME:-$HOME/.codex}/`.
-- **Effort là một trường TOML** (`model_reasoning_effort`), vì Codex không có cờ `--effort`.
+- **Effort là một trường TOML** (`model_reasoning_effort`), vì Codex không có flag `--effort`.
 - **`--yolo` đã cũ từ v0.147.0**, thay bằng `--dangerously-bypass-approvals-and-sandbox`.
 
 Nên bước kiểm trước dispatch không phải nghi thức: đó là chỗ duy nhất lựa chọn runtime của chủ máy
@@ -64,7 +64,7 @@ và dòng trong `orchestrator.md` được đem ra đối chiếu.
 
 | Kết quả | Nơi nó nằm lại |
 |---|---|
-| Lần launch | `herdr agent start "<role>-<ticket-id>" --kind codex`, kèm cờ profile |
+| Lần launch | `herdr agent start "<role>-<ticket-id>" --kind codex`, kèm flag profile |
 | Danh tính role, model và effort | File TOML cục bộ theo máy, không phải CLI |
 | Một phát hiện lệch | Một báo cáo cho chủ máy, kèm lệnh copy và diff, trước mọi lần dispatch |
 | Mọi thứ còn lại, gồm brief, watch, phán quyết và dọn dẹp | Giao thức dùng chung `dispatch-ticket` |
@@ -95,7 +95,7 @@ này đọc, và cả hai đều `promoted`.
 - Lệnh `diff -q` với template đã ship có chạy, và mọi độ lệch đều tới tay chủ máy bằng lời.
 - Lệnh launch mang `--dangerously-bypass-approvals-and-sandbox`, không bao giờ mang `--yolo`
   đã nghỉ hưu.
-- Không có effort nào truyền qua CLI, vì Codex không có cờ cho nó.
+- Không có effort nào truyền qua CLI, vì Codex không có flag cho nó.
 - Không Builder nào bị định tuyến qua subagent `.codex/agents/*.toml`, vì nó dùng chung topology
   của session cha và không được cấp worktree.
 

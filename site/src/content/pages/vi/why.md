@@ -121,7 +121,7 @@ Vì vậy Astragentic để subagent làm đúng việc của nó, bên trong m�
 phải có `isolation: "worktree"` và không được nhắn cho dispatcher.
 
 **Đánh đổi.** Bạn phải cài herdr và cấu hình một tracker, hai dependency mà subagent không cần.
-Mỗi Builder tốn một worktree trên đĩa và vài giây setup. Mỗi lần dispatch tốn một lượt ghi và một
+Mỗi Builder tốn một worktree trên disk và vài giây setup. Mỗi lần dispatch tốn một lượt ghi và một
 lượt đọc trên tracker. Quy trình dài hơn, nhiều tên hơn phải nhớ. Tôi chọn trả giá đó vì lỗi im
 lặng đắt hơn nhiều.
 

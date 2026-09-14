@@ -23,7 +23,7 @@ mất trắng và thêm một buổi nữa để tìm nguyên nhân.
 
 Cách chữa thô nhất: mọi agent được spawn mà có quyền chạy git đổi trạng thái đều phải có
 checkout riêng, kể cả agent chỉ đọc. Ngoại lệ "chỉ đọc" là giả định gây ra sự cố này. Đánh
-đổi: mỗi Builder tốn thêm một worktree trên đĩa và vài giây setup, rẻ hơn nhiều so với một buổi
+đổi: mỗi Builder tốn thêm một worktree trên disk và vài giây setup, rẻ hơn nhiều so với một buổi
 làm việc mất trắng.
 
 ## act-2

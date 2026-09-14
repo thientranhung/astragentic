@@ -51,7 +51,7 @@ sessionTag: "per walk"
   không được ghi lại trên tài khoản thật thì không có undo.
 - **"Local" không phải bằng chứng.** Luật này nói về dữ liệu chứ không nói về môi trường; team seed
   local từ dump production, nên một màn hình local vẫn có thể mang tên khách hàng thật.
-- **Không ghi bytes rồi redact.** Chụp trước rồi crop sau nghĩa là khung hình gốc đã chạm đĩa.
+- **Không ghi bytes rồi redact.** Chụp trước rồi crop sau nghĩa là khung hình gốc đã chạm disk.
 - **Không dump DOM có dữ liệu.** Hỏi một câu hỏi cấu trúc thay vào đó.
 - **Không trích giá trị thật**, và không dán transcript console, network hay DOM vào report.
 - **Không hạ standard.** Scope thuộc về caller, standard thì không, và một dispatch xin đọc lỏng

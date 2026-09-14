@@ -12,7 +12,7 @@ explain:
       lines:
         - "claude   --dangerously-skip-permissions --agent builder --model <model> --effort <low|medium|high|xhigh|max>"
         - "codex    --profile builder            # model + model_reasoning_effort nằm trong profile TOML"
-        - "opencode --agent builder -m <provider>/<model>   # không có cờ effort"
+        - "opencode --agent builder -m <provider>/<model>   # không có flag effort"
 
   customize:
     eyebrow: "Tuỳ biến"
@@ -266,4 +266,4 @@ adopt:
       role: "**Bộ nhớ chung** (shared memory) của team. Mọi task, claim và receipt đều đi qua đây."
     - name: "python3"
       tag: "required"
-      role: "Chạy các **hook gác git** và nạp lại contract sau compaction."
+      role: "Chạy **git-guard hook** và nạp lại contract sau compaction."

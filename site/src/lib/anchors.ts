@@ -363,9 +363,9 @@ export const TIPS: TipItem[] = [
   {
     id: 'pnpm',
     name: { vi: 'pnpm', en: 'pnpm' },
-    role: { vi: 'Điều kiện · đĩa', en: 'Condition · disk' },
+    role: { vi: 'Điều kiện · disk', en: 'Condition · disk' },
     line: {
-      vi: 'Một store, hardlink vào từng bản. N thư mục node_modules gần như một bản byte trên đĩa.',
+      vi: 'Một store, hardlink vào từng bản. N thư mục node_modules gần như một bản byte trên disk.',
       en: 'One store, hardlinked into each copy. N node_modules are almost one copy of bytes on disk.',
     },
   },
