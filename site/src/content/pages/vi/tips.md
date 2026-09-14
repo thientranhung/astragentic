@@ -1,14 +1,15 @@
 ---
 title: "Kinh nghiệm chạy nhiều agent"
-description: "Bốn kỹ thuật để nhiều agent chạy song song trên một máy: runtime theo worktree, pnpm, portless, và QA walk bằng browser thật."
+description: "Bốn kỹ thuật để nhiều agent chạy song song trên một máy: pnpm, portless, QA walk bằng browser thật, và runtime riêng cho mỗi worktree."
 ---
 
 `git worktree` cô lập code. Nó không cô lập runtime, mà runtime mới là chỗ nhiều agent tranh chấp
 với nhau: database, `node_modules`, và port của frontend lẫn backend. Astragentic dựng sự song
 song ở tầng điều phối; bốn kỹ thuật dưới đây là thứ máy của bạn cần có để tầng đó chạy được thật.
 
-Bốn mục không ngang hàng. Mục đầu là kỹ thuật. Hai mục giữa là hai điều kiện khiến nó khả thi về
-chi phí. Mục cuối là lý do nó đáng làm.
+Bốn mục xếp theo mức phải hình dung. Ba mục đầu đứng riêng được: mỗi mục một công cụ, giải quyết
+một cái đau cụ thể, áp dụng được ngay cả khi bạn không làm ba mục còn lại. Mục cuối là nơi chúng
+ghép lại — nó là phần khó nhất, và nó chỉ có nghĩa sau khi đã đọc ba mục kia.
 
 ## runtime-per-worktree
 
@@ -110,10 +111,13 @@ khi nhiều checkout cùng sống trên một máy.
 
 ## pnpm
 
-**Pain point.** Worktree thứ tư không hỏng vì kỹ thuật, nó hỏng vì bạn tiếc disk. Mỗi checkout một
-`node_modules` đầy đủ là mỗi checkout thêm vài trăm MB, và khi con số đó bắt đầu đáng kể thì người
-ta làm đúng cái việc phá vỡ mô hình: share một `node_modules` cho nhiều worktree. Sự cô lập chết vì
-một quyết định kinh tế, không phải vì một quyết định kỹ thuật.
+**Pain point.** Mỗi Builder một `git worktree`, nghĩa là mỗi Builder một checkout, nghĩa là mỗi
+checkout một `node_modules` đầy đủ — thêm vài trăm MB mỗi lần. Khi con số đó bắt đầu đáng kể thì
+người ta làm đúng cái việc phá vỡ sự cô lập: share một `node_modules` cho nhiều worktree. Và lúc đó
+worktree không còn cô lập gì nữa, vì hai branch đang đọc cùng một cây dependency.
+
+Đáng chú ý là nó chết vì **một quyết định kinh tế**, không phải một quyết định kỹ thuật. Không ai
+cân nhắc rồi kết luận share là đúng; người ta chỉ tiếc disk.
 
 **Kỹ thuật.** [pnpm](https://pnpm.io) install package vào một content-addressable store duy nhất
 rồi **hardlink** vào `node_modules` của từng project, thay vì copy. N thư mục `node_modules` nhưng
@@ -146,12 +150,15 @@ untracked. Phải shadow đúng path pnpm **thật sự chọn**, không phải 
 
 ## portless
 
-**Pain point.** Ngay khi mỗi worktree có runtime riêng, mỗi worktree cần port riêng. Tự chọn số thì
-quay lại đúng cái "phải nhớ làm" ở mục đầu. Để runtime tự cấp port ngẫu nhiên thì hết va chạm, nhưng
-bạn nhận về một địa chỉ không ai gõ được: không nhớ nổi, không bookmark được, không dán vào ticket
-được. Mà một URL không gõ được thì không có browser evidence nào.
+**Pain point.** Hai dev server không dùng chung được một port. Ba worktree cùng chạy là ba port, và
+ai đó phải chọn ba con số rồi ghi vào đâu đó rồi nhớ. Đó là cấu hình tay, mà cấu hình tay thì sẽ có
+người quên.
 
-**Kỹ thuật.** [portless](https://github.com/vercel-labs/portless) là một proxy chạy nền giữ port 443
+Để runtime tự cấp port ngẫu nhiên thì hết va chạm, nhưng bạn nhận về một địa chỉ không ai gõ được:
+không nhớ nổi, không bookmark được, không dán vào ticket được. Mà một URL không gõ được thì không
+có browser evidence nào.
+
+**Kỹ thuật.** [portless](https://portless.sh) là một proxy chạy nền giữ port 443
 cho cả máy và map tên `https://<tên>.localhost` sang một port localhost. Nó thay thế port hardcode
 và việc phải nhớ số port.
 
@@ -230,7 +237,7 @@ lỗi, phải đọc lại từ phản hồi.
 
 ### agent-browser điều khiển
 
-**[`agent-browser`](https://github.com/vercel-labs/agent-browser)** là một CLI kết nối vào browser
+**[`agent-browser`](https://agent-browser.dev)** là một CLI kết nối vào browser
 đang chạy qua CDP và điều khiển nó. Trong mô hình này nó **không bao giờ được tự khởi chạy
 browser**: ngay khi nó làm thế, đó là một Chrome mới không có login nào, và mọi quan sát qua nó
 đều không có giá trị.
@@ -317,13 +324,13 @@ Thứ để lại là **một file commit trên branch**: ảnh chụp, đườn
 port CDP và user agent để trạm sau biết bằng chứng đến từ browser nào. Không phải một câu khẳng
 định trong pane, vì một câu khẳng định thì trạm sau không kiểm lại được.
 
-**Đây là mục cho thấy vì sao ba mục trên đáng làm.** Browser evidence đòi mỗi người một
+**Và đây là chỗ mục cuối bắt đầu cần thiết.** Browser evidence đòi mỗi người một
 stack đang chạy. Nếu dựng stack còn tốn kém thì bước này sẽ bị bỏ, và lý do bỏ nghe rất hợp lý. Đo
 được một lần, nguyên văn lời một Builder:
 
 > no local stack was running in this worktree; standing one up is a multi-step job
 
-Đó chính xác là chi phí mà mục đầu tiên xoá bỏ.
+Đó chính xác là chi phí mà mục tiếp theo xoá bỏ.
 
 **Một luật chung.** Một luật mà người vận hành cẩn thận vẫn quên trong vòng một giờ thì cần
 một ô bắt buộc chặn việc khởi chạy, không phải một câu văn nằm ở chỗ khác. Ở đây nó là một trường
@@ -342,7 +349,7 @@ cách né chỉ chứng minh được là mình đã né.
 
 ## one-shape
 
-Ba kỹ thuật đầu có cùng một hình dạng, và nếu trang này chỉ đọng lại một câu thì nên là câu
+Ba trong bốn kỹ thuật trên có cùng một hình dạng, và nếu trang này chỉ đọng lại một câu thì nên là câu
 này: **biến một việc phải nhớ làm thành một việc được suy ra.**
 
 Tên project suy ra từ branch. Port suy ra từ Docker. `GIT_DIR` suy ra từ git. Tên miền suy ra từ

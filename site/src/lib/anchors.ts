@@ -336,9 +336,10 @@ export const GOOD_PARTS: GoodPart[] = [
 
 /* ── /tips ──────────────────────────────────────────────────────────────── */
 
-/** The four techniques for running several agents on one machine. They are not peers:
- *  the first is the technique, the next two are what make it affordable, and the last
- *  is what it is for. The order carries that argument, so the rail reads in it too. */
+/** The four techniques for running several agents on one machine. Ordered by how much
+ *  the reader has to hold in their head: three that stand on their own, then the one
+ *  that composes them, which is the one that needs the other three to make sense.
+ *  The rail reads in the same order. */
 export interface TipItem {
   id: string;
   /** The section head. A Dict, not a bare string: two of the four are tool names that
@@ -352,18 +353,9 @@ export interface TipItem {
 
 export const TIPS: TipItem[] = [
   {
-    id: 'runtime-per-worktree',
-    name: { vi: 'runtime theo worktree', en: 'runtime per worktree' },
-    role: { vi: 'Kỹ thuật', en: 'The technique' },
-    line: {
-      vi: 'Mỗi worktree một stack riêng, và tên stack suy ra từ tên nhánh chứ không ai đặt.',
-      en: 'One stack per worktree, its name derived from the branch rather than chosen by anyone.',
-    },
-  },
-  {
     id: 'pnpm',
     name: { vi: 'pnpm', en: 'pnpm' },
-    role: { vi: 'Điều kiện · disk', en: 'Condition · disk' },
+    role: { vi: 'Disk', en: 'Disk' },
     line: {
       vi: 'Một store, hardlink vào từng bản. N thư mục node_modules gần như một bản byte trên disk.',
       en: 'One store, hardlinked into each copy. N node_modules are almost one copy of bytes on disk.',
@@ -381,10 +373,20 @@ export const TIPS: TipItem[] = [
   {
     id: 'browser-qa',
     name: { vi: 'QA walk', en: 'QA walk' },
-    role: { vi: 'Lý do', en: 'The reason' },
+    role: { vi: 'Bằng chứng', en: 'Evidence' },
     line: {
       vi: 'Một agent lái sản phẩm đang chạy như người dùng, và để lại file bằng chứng đọc lại được.',
       en: 'An agent drives the running product as a user, and leaves a readable evidence file.',
     },
   },
+  {
+    id: 'runtime-per-worktree',
+    name: { vi: 'runtime theo worktree', en: 'runtime per worktree' },
+    role: { vi: 'Ghép lại · phần khó nhất', en: 'Putting it together · the hard one' },
+    line: {
+      vi: 'Mỗi worktree một stack riêng, và tên stack suy ra từ tên nhánh chứ không ai đặt.',
+      en: 'One stack per worktree, its name derived from the branch rather than chosen by anyone.',
+    },
+  },
 ];
+

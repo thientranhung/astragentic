@@ -1,6 +1,6 @@
 ---
 title: "Tips for running several agents"
-description: "Four techniques for running several agents on one machine: a runtime per worktree, pnpm, portless, and a QA walk in a real browser."
+description: "Four techniques for running several agents on one machine: pnpm, portless, a QA walk in a real browser, and a runtime of its own for each worktree."
 ---
 
 `git worktree` isolates code. It does not isolate runtime, and runtime is where several agents
@@ -8,8 +8,10 @@ step on each other: the database, `node_modules`, and the frontend and backend p
 builds the parallelism at the coordination layer; the four techniques below are what your machine
 needs before that layer can actually run.
 
-The four are not peers. The first is the technique. The middle two are the conditions that make
-it affordable. The last is what makes it worth doing.
+The four are ordered by how much you have to hold in your head. The first three stand on their
+own: one tool each, one concrete pain each, usable even if you never do the other three. The last
+is where they combine — it is the hard one, and it only makes sense once the first three have been
+read.
 
 ## runtime-per-worktree
 
@@ -114,10 +116,13 @@ live on one machine.
 
 ## pnpm
 
-**The pain.** The fourth worktree does not fail for technical reasons; it fails because you begrudge
-the disk. A full `node_modules` per checkout is a few hundred MB per checkout, and once that number
-starts to matter people do the one thing that breaks the model: share one `node_modules` across
-worktrees. Isolation dies of an economic decision, not a technical one.
+**The pain.** One `git worktree` per Builder means one checkout per Builder, which means a full
+`node_modules` per checkout — a few hundred MB every time. Once that number starts to matter, people
+do the one thing that breaks the isolation: share one `node_modules` across worktrees. And at that
+point the worktrees are not isolated at all, because two branches are reading one dependency tree.
+
+What is worth noticing is that it dies of **an economic decision**, not a technical one. Nobody
+weighs it up and concludes that sharing is right; they just begrudge the disk.
 
 **The technique.** [pnpm](https://pnpm.io) installs packages into a single content-addressable store
 and **hardlinks** them into each project's `node_modules` instead of copying. N `node_modules`
@@ -152,13 +157,15 @@ chooses**, not the one the documentation names.
 
 ## portless
 
-**The pain.** The moment each worktree has its own runtime, each worktree needs its own port.
-Picking numbers by hand returns you to the "something to remember" from the first section. Letting
-the runtime assign random ports ends the collisions but hands you an address nobody can type: not
-memorable, not bookmarkable, not pasteable into a ticket. And a URL you cannot type yields no
-browser evidence at all.
+**The pain.** Two dev servers cannot share a port. Three worktrees running at once is three ports,
+and somebody has to choose three numbers, write them down somewhere, and remember them. That is
+manual configuration, and manual configuration is what people forget.
 
-**The technique.** [portless](https://github.com/vercel-labs/portless) is a background proxy that
+Letting the runtime assign random ports ends the collisions but hands you an address nobody can
+type: not memorable, not bookmarkable, not pasteable into a ticket. And a URL you cannot type
+yields no browser evidence at all.
+
+**The technique.** [portless](https://portless.sh) is a background proxy that
 holds port 443 for the machine and maps the name `https://<name>.localhost` onto a localhost port.
 It replaces hardcoded ports and the job of remembering port numbers.
 
@@ -240,7 +247,7 @@ launch** — remembering the old number is a bug; read it back from the response
 
 ### agent-browser only drives
 
-**[`agent-browser`](https://github.com/vercel-labs/agent-browser)** is a CLI that attaches to a running browser over CDP and drives it. In this
+**[`agent-browser`](https://agent-browser.dev)** is a CLI that attaches to a running browser over CDP and drives it. In this
 model it must **never launch a browser of its own**: the moment it does, that is a fresh Chrome with
 no login, and every observation made through it is fiction.
 
@@ -331,13 +338,13 @@ strings seen, and the CDP port and user agent so the next station knows which br
 came from. Not an assertion in a pane, because an assertion is not something the next station can
 check.
 
-**This is the section that shows why the three above are worth their cost.** Browser evidence
+**And this is where the last section starts to be necessary.** Browser evidence
 demands a running stack per person. While standing one up is expensive, the step gets skipped, and
 the reason for skipping sounds entirely reasonable. Measured once, in a Builder's own words:
 
 > no local stack was running in this worktree; standing one up is a multi-step job
 
-That is precisely the cost the first technique removes.
+That is precisely the cost the next section removes.
 
 **One rule worth copying.** A rule a careful operator still forgets within an hour needs a required
 field blocking the launch, not a sentence living somewhere else. Here it is a required field in the
@@ -356,7 +363,7 @@ obtained by evading only proves that you evaded.
 
 ## one-shape
 
-The first three techniques share one shape, and if this page carries away a single sentence it
+Three of the four techniques share one shape, and if this page carries away a single sentence it
 should be this one: **turn something you have to remember into something that is derived.**
 
 The project name comes from the branch. The port comes from Docker. `GIT_DIR` comes from git. The
