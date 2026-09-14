@@ -1,113 +1,64 @@
 ---
 title: "Kinh nghiệm chạy nhiều agent"
-description: "Bốn kỹ thuật để nhiều agent chạy song song trên một máy: pnpm, portless, QA walk bằng browser thật, và runtime riêng cho mỗi worktree."
+description: "Năm kỹ thuật để nhiều agent chạy song song trên một máy: git worktree, pnpm, portless, QA walk bằng browser thật, và runtime riêng cho mỗi worktree."
 ---
 
-`git worktree` cô lập code. Nó không cô lập runtime, mà runtime mới là chỗ nhiều agent tranh chấp
-với nhau: database, `node_modules`, và port của frontend lẫn backend. Astragentic dựng sự song
-song ở tầng điều phối; bốn kỹ thuật dưới đây là thứ máy của bạn cần có để tầng đó chạy được thật.
+Astragentic dựng sự song song ở tầng điều phối: Thomas dispatch nhiều ticket, nhiều Builder cùng
+thi công. Nhưng cả tầng đó đứng trên một giả định về máy của bạn — rằng ba agent chạy cùng lúc thì
+không giẫm lên nhau. Máy mặc định không cho bạn điều đó.
 
-Bốn mục xếp theo mức phải hình dung. Ba mục đầu đứng riêng được: mỗi mục một công cụ, giải quyết
-một cái đau cụ thể, áp dụng được ngay cả khi bạn không làm ba mục còn lại. Mục cuối là nơi chúng
-ghép lại — nó là phần khó nhất, và nó chỉ có nghĩa sau khi đã đọc ba mục kia.
+Năm kỹ thuật dưới đây là thứ lấp khoảng cách ấy. Không cái nào do Astragentic ship; tất cả đều là
+công cụ có sẵn, và mỗi mục nói rõ nó giải quyết cái đau nào.
 
-## runtime-per-worktree
+Năm mục xếp theo mức phải hình dung. Mục đầu là nền tảng mà cả trang dựa lên. Ba mục giữa đứng
+riêng được: mỗi mục một công cụ, giải quyết một cái đau cụ thể, áp dụng được ngay cả khi bạn không
+làm ba mục còn lại. Mục cuối là nơi chúng ghép lại — nó là phần khó nhất, và nó chỉ có nghĩa sau
+khi đã đọc bốn mục kia.
 
-**Pain point.** Bạn dispatch hai ticket cho hai Builder, mỗi Builder một worktree. Code tách nhau
-sạch sẽ — đó là việc `git worktree` làm tốt. Nhưng cả hai cùng chạy migration lên một database,
-cùng bind vào một port, cùng ghi vào một `node_modules`. Builder thứ hai làm hỏng môi trường của
-Builder thứ nhất mà không ai nhận được tín hiệu nào, vì không có gì báo lỗi cả: hai tiến trình
-dùng chung một tài nguyên là hành vi hợp lệ.
+## git-worktree
 
-`git worktree` cô lập **cây làm việc**. Nó không cô lập những gì cây đó khởi chạy.
+**Pain point.** Bạn đang làm dở một việc thì cần xem nhanh một branch khác. Đường thường đi là
+`git stash`, `git switch`, xem xong thì quay lại, `git stash pop` — và nếu hai branch khác nhau về
+dependency thì cộng thêm một lượt cài lại. Nhân chuyện đó lên cho **ba agent chạy song song** thì nó
+không còn là phiền phức, nó là bất khả: chỉ có một working directory, mà `HEAD` thì chỉ trỏ được vào
+một chỗ.
 
-**Kỹ thuật.** Cấp cho mỗi worktree một runtime riêng, và **suy tên của runtime đó ra từ tên
-branch** thay vì để ai đó đặt.
+Cách né hiển nhiên là clone repository ra ba lần. Được, nhưng bạn trả giá bằng ba bản lịch sử, ba
+lần fetch, và ba nơi để remote đi lệch nhau.
 
-Vế thứ hai mới là phần quan trọng. Cô lập bằng cách bắt mỗi người tự đặt tên và tự chọn port trong
-một file config là biến sự cô lập thành **một việc phải nhớ làm** — mà việc phải nhớ thì sẽ có người
-quên, và triệu chứng khi quên là im lặng. Suy ra từ branch thì không có gì để quên: đổi branch là
-đổi runtime, không sửa file nào.
+**Kỹ thuật.** `git worktree` cho bạn **nhiều thư mục làm việc từ một repository**. Mỗi thư mục
+checkout một branch riêng, có `HEAD` riêng và index riêng, nhưng **dùng chung một object database**.
 
-**Luật, và đây là phần áp dụng được ở mọi stack: cô lập state khả biến, share state
-content-addressed.** Package và build artifact được key bằng hash của chính nó, nên hai branch
-muốn hai version sẽ nhận hai key khác nhau thay vì tranh chấp cùng một chỗ. Share chúng an toàn về
-mặt cấu trúc, không phải an toàn vì gặp may.
-
-### Một cách hiện thực, để hình dung
-
-Astragentic **không ship** phần này và không có ý kiến về stack của bạn. Database, container
-runtime, package manager — đó là lựa chọn của dự án. Phần dưới đây là **một ví dụ** từ một dự án
-dùng Docker Compose, Postgres và pnpm, để thấy nguyên tắc trên trông như thế nào khi viết ra. Dự án
-của bạn dùng Podman, hay chạy Postgres trên máy, hay không có database nào — nguyên tắc không đổi,
-chỉ chi tiết đổi.
-
-Ở ví dụ đó, tên Compose project được suy ra từ branch, và Compose tự prefix tên project vào
-container, network và volume — nên chỉ một cái tên khác nhau là bốn thứ tách nhau cùng lúc:
-
-| Runtime | Cấp cho mỗi worktree | Share phần nào |
-|---|---|---|
-| Database | Một Postgres container riêng, volume riêng. Không phải schema riêng trên một server chung. | Cụm test thì ngược lại: một container cho cả máy, cô lập bên trong bằng template theo hash của migration set. |
-| `node_modules` | Hai bản: bản host do `pnpm install` trong chính worktree, và bản trong container là named volume shadow lên bind mount. | pnpm store, build cache, module cache — khai `external: true`. |
-| Port FE/BE | Không ai chọn port. Compose chỉ khai port trong container, Docker cấp port ngoài. | — |
-
-```make
-DEV_SLUG := $(shell git rev-parse --abbrev-ref HEAD | tr '[:upper:]' '[:lower:]' \
-              | sed 's/[^a-z0-9]/-/g; s/--*/-/g; s/^-//; s/-$$//' | cut -c1-40)
-DEV_SLUG := $(if $(filter head,$(DEV_SLUG)),$(shell git rev-parse --short HEAD),$(DEV_SLUG))
-DEV_PROJECT := myapp-dev-$(DEV_SLUG)
+```bash
+git worktree add ../app-tra-142 -b builder/TRA-142   # thư mục mới, branch mới
+git worktree list                                     # ai đang ở đâu, trên branch nào
+git worktree remove ../app-tra-142                    # trả lại khi xong
 ```
 
-`builder/TRA-686` thành `builder-tra-686`, còn detached HEAD rơi về short SHA để tên vẫn ổn định
-cho đúng checkout đó.
+Ba tính chất khiến nó khác hẳn việc clone nhiều lần, và đây là phần nhiều người chưa dùng sẽ thấy
+bất ngờ:
 
-### Hai phương án khác, và vì sao không chọn
+- **Nó rẻ.** Worktree mới chỉ tốn phần file đang checkout, không tốn thêm một bản lịch sử. Bên trong
+  `.git/worktrees/<tên>` chỉ có `HEAD`, `index`, `refs`, `logs` — **không có `objects`**. Object
+  database nằm ở checkout gốc và mọi worktree đọc chung.
+- **Một branch chỉ checkout được ở đúng một worktree.** Thử checkout nó ở nơi thứ hai thì git từ
+  chối: `fatal: 'feature-a' is already used by worktree at ...`. Nghe như một hạn chế, nhưng với
+  nhiều agent thì đây chính là thứ bạn muốn — hai Builder **không thể** cùng nhận một branch, và git
+  là thứ nói không, không phải một quy ước ai đó phải nhớ.
+- **Checkout gốc không bị động tới.** Bạn vẫn đứng ở `main`. Không ai `git switch` dưới chân bạn,
+  không ai stash hộ bạn.
 
-**Một database riêng cho mỗi worktree trên một Postgres dùng chung.** Rẻ hơn, và vẫn đúng cho test
-cluster. Nhưng `CREATE DATABASE` không cô lập thứ cluster-global: role và password. Một lệnh `ALTER
-ROLE` là toàn cluster. Một instance riêng thì không còn lớp chung nào để giẫm lên.
+Ghép ba tính chất đó lại là được đúng thứ một team agent cần: **mỗi Builder một checkout, và trong
+checkout đó nó là người ghi duy nhất.** Không ai kéo `HEAD` của ai đi.
 
-**Một dev stack dùng chung, ai cần thì xếp hàng.** Cái giá không nằm ở chỗ chờ. Nó nằm ở chỗ người
-ta sẽ không xếp hàng — người ta sẽ bỏ bước.
+**Đánh đổi.** Thêm một thư mục cho mỗi việc đang chạy, và một bước dọn khi xong — worktree bị xoá
+tay mà không `git worktree remove` sẽ để lại đăng ký mồ côi, phải `git worktree prune` mới sạch. Và
+`.git` trong worktree là một *file* chứ không phải directory, điều này sẽ quay lại cắn bạn ở mục
+cuối nếu bạn đưa repo vào container.
 
-### Hai chi tiết dễ bỏ sót khi container hoá
-
-Hai thứ này không phụ thuộc stack cụ thể; ai đưa repo vào container cũng gặp.
-
-**Đừng đặt tên cố định cho project.** Tên project là thứ cấp cho mỗi worktree bộ tài nguyên riêng,
-và nó phải đến từ nơi biết người gọi đang đứng ở worktree nào. Một cái tên hardcode trong config
-đưa mọi worktree về chung một project.
-
-**`.git` trong worktree là một *file*, không phải directory.** Nó chứa một absolute path phía host
-trỏ vào `.git/worktrees/<tên>` của checkout gốc, mà bind mount không mang theo path đó. Bất kỳ
-tooling nào gọi `git` bên trong container sẽ lỗi. Cách chữa là mount common git dir ở chế độ
-read-only rồi trỏ `GIT_DIR` vào, và cả hai đều suy ra từ chính git:
-
-```make
-DEV_GIT_COMMON := $(shell cd "$$(git rev-parse --git-common-dir)" && pwd)
-DEV_GIT_REAL   := $(shell cd "$$(git rev-parse --git-dir)" && pwd)
-DEV_GIT_DIR    := $(if $(filter $(DEV_GIT_COMMON),$(DEV_GIT_REAL)),/gitcommon,/gitcommon/worktrees/$(notdir $(DEV_GIT_REAL)))
-```
-
-`--git-dir` khác `--git-common-dir` là cách git tự phân biệt checkout gốc với linked worktree. Dùng
-phép so sánh đó, đừng đoán hình dạng của path.
-
-**Đánh đổi.** Constraint thật không phải disk mà là RAM. Disk thì mỗi worktree tốn khoảng 540–650 MB
-volume, phần share cho cả máy khoảng 2 GB — với ổ cứng hôm nay thì đó không phải giới hạn. RAM mới
-là giới hạn: chạy hai bộ test đầy đủ có `-race` cùng lúc có thể làm cả hai cùng fail. Ai định dùng
-mô hình này phải trả lời trước một câu: RAM của máy chịu được bao nhiêu stack song song. Một
-advisory lock dạng token, `take` thì exit khác 0 khi người khác đang giữ, là đủ để xếp hàng đúng chỗ
-cần xếp.
-
-**Một chỗ leak đã biết.** Bước cleanup chỉ remove volume khi còn container để remove. Một Builder
-lịch sự tắt stack trước khi handback sẽ để lại 0 container, điều kiện sai, `down -v` bị bỏ qua, và
-volume mồ côi trong khi stamp cleanup vẫn ghi là sạch. Nếu bạn dựng lại mô hình này, hãy cho bước
-cleanup remove volume theo **tên project** chứ đừng theo sự tồn tại của container.
-
-**Ai không cần.** Team một người, một branch tại một thời điểm: toàn bộ cơ chế này mua đúng một thứ
-là tính đồng thời. Team mà dev environment không chứa state khả biến cũng không cần — chỉ cần port
-động là đủ. Và team chạy CI trên runner sạch mỗi lần thì vấn đề này không tồn tại: nó chỉ có thật
-khi nhiều checkout cùng sống trên một máy.
+**Và đây là giới hạn mà cả trang này nói về.** `git worktree` cô lập **cây làm việc**. Nó không cô
+lập những gì cây đó khởi chạy: database, `node_modules`, port. Bốn mục còn lại là về đúng khoảng
+trống đó.
 
 ## pnpm
 
@@ -346,6 +297,104 @@ chạy ở đâu cũng vậy.
 Có những port không mở được, và không nên lách: một sàn có lớp chống bot ở trước, không có tài
 khoản cho agent. Rủi ro điều khoản rơi vào tài khoản thật của chủ dự án, và bằng chứng lấy bằng
 cách né chỉ chứng minh được là mình đã né.
+
+## runtime-per-worktree
+
+**Pain point.** Bạn dispatch hai ticket cho hai Builder, mỗi Builder một worktree. Code tách nhau
+sạch sẽ — đó là việc `git worktree` làm tốt. Nhưng cả hai cùng chạy migration lên một database,
+cùng bind vào một port, cùng ghi vào một `node_modules`. Builder thứ hai làm hỏng môi trường của
+Builder thứ nhất mà không ai nhận được tín hiệu nào, vì không có gì báo lỗi cả: hai tiến trình
+dùng chung một tài nguyên là hành vi hợp lệ.
+
+`git worktree` cô lập **cây làm việc**. Nó không cô lập những gì cây đó khởi chạy.
+
+**Kỹ thuật.** Cấp cho mỗi worktree một runtime riêng, và **suy tên của runtime đó ra từ tên
+branch** thay vì để ai đó đặt.
+
+Vế thứ hai mới là phần quan trọng. Cô lập bằng cách bắt mỗi người tự đặt tên và tự chọn port trong
+một file config là biến sự cô lập thành **một việc phải nhớ làm** — mà việc phải nhớ thì sẽ có người
+quên, và triệu chứng khi quên là im lặng. Suy ra từ branch thì không có gì để quên: đổi branch là
+đổi runtime, không sửa file nào.
+
+**Luật, và đây là phần áp dụng được ở mọi stack: cô lập state khả biến, share state
+content-addressed.** Package và build artifact được key bằng hash của chính nó, nên hai branch
+muốn hai version sẽ nhận hai key khác nhau thay vì tranh chấp cùng một chỗ. Share chúng an toàn về
+mặt cấu trúc, không phải an toàn vì gặp may.
+
+### Một cách hiện thực, để hình dung
+
+Astragentic **không ship** phần này và không có ý kiến về stack của bạn. Database, container
+runtime, package manager — đó là lựa chọn của dự án. Phần dưới đây là **một ví dụ** từ một dự án
+dùng Docker Compose, Postgres và pnpm, để thấy nguyên tắc trên trông như thế nào khi viết ra. Dự án
+của bạn dùng Podman, hay chạy Postgres trên máy, hay không có database nào — nguyên tắc không đổi,
+chỉ chi tiết đổi.
+
+Ở ví dụ đó, tên Compose project được suy ra từ branch, và Compose tự prefix tên project vào
+container, network và volume — nên chỉ một cái tên khác nhau là bốn thứ tách nhau cùng lúc:
+
+| Runtime | Cấp cho mỗi worktree | Share phần nào |
+|---|---|---|
+| Database | Một Postgres container riêng, volume riêng. Không phải schema riêng trên một server chung. | Cụm test thì ngược lại: một container cho cả máy, cô lập bên trong bằng template theo hash của migration set. |
+| `node_modules` | Hai bản: bản host do `pnpm install` trong chính worktree, và bản trong container là named volume shadow lên bind mount. | pnpm store, build cache, module cache — khai `external: true`. |
+| Port FE/BE | Không ai chọn port. Compose chỉ khai port trong container, Docker cấp port ngoài. | — |
+
+```make
+DEV_SLUG := $(shell git rev-parse --abbrev-ref HEAD | tr '[:upper:]' '[:lower:]' \
+              | sed 's/[^a-z0-9]/-/g; s/--*/-/g; s/^-//; s/-$$//' | cut -c1-40)
+DEV_SLUG := $(if $(filter head,$(DEV_SLUG)),$(shell git rev-parse --short HEAD),$(DEV_SLUG))
+DEV_PROJECT := myapp-dev-$(DEV_SLUG)
+```
+
+`builder/TRA-686` thành `builder-tra-686`, còn detached HEAD rơi về short SHA để tên vẫn ổn định
+cho đúng checkout đó.
+
+### Hai phương án khác, và vì sao không chọn
+
+**Một database riêng cho mỗi worktree trên một Postgres dùng chung.** Rẻ hơn, và vẫn đúng cho test
+cluster. Nhưng `CREATE DATABASE` không cô lập thứ cluster-global: role và password. Một lệnh `ALTER
+ROLE` là toàn cluster. Một instance riêng thì không còn lớp chung nào để giẫm lên.
+
+**Một dev stack dùng chung, ai cần thì xếp hàng.** Cái giá không nằm ở chỗ chờ. Nó nằm ở chỗ người
+ta sẽ không xếp hàng — người ta sẽ bỏ bước.
+
+### Hai chi tiết dễ bỏ sót khi container hoá
+
+Hai thứ này không phụ thuộc stack cụ thể; ai đưa repo vào container cũng gặp.
+
+**Đừng đặt tên cố định cho project.** Tên project là thứ cấp cho mỗi worktree bộ tài nguyên riêng,
+và nó phải đến từ nơi biết người gọi đang đứng ở worktree nào. Một cái tên hardcode trong config
+đưa mọi worktree về chung một project.
+
+**`.git` trong worktree là một *file*, không phải directory.** Nó chứa một absolute path phía host
+trỏ vào `.git/worktrees/<tên>` của checkout gốc, mà bind mount không mang theo path đó. Bất kỳ
+tooling nào gọi `git` bên trong container sẽ lỗi. Cách chữa là mount common git dir ở chế độ
+read-only rồi trỏ `GIT_DIR` vào, và cả hai đều suy ra từ chính git:
+
+```make
+DEV_GIT_COMMON := $(shell cd "$$(git rev-parse --git-common-dir)" && pwd)
+DEV_GIT_REAL   := $(shell cd "$$(git rev-parse --git-dir)" && pwd)
+DEV_GIT_DIR    := $(if $(filter $(DEV_GIT_COMMON),$(DEV_GIT_REAL)),/gitcommon,/gitcommon/worktrees/$(notdir $(DEV_GIT_REAL)))
+```
+
+`--git-dir` khác `--git-common-dir` là cách git tự phân biệt checkout gốc với linked worktree. Dùng
+phép so sánh đó, đừng đoán hình dạng của path.
+
+**Đánh đổi.** Constraint thật không phải disk mà là RAM. Disk thì mỗi worktree tốn khoảng 540–650 MB
+volume, phần share cho cả máy khoảng 2 GB — với ổ cứng hôm nay thì đó không phải giới hạn. RAM mới
+là giới hạn: chạy hai bộ test đầy đủ có `-race` cùng lúc có thể làm cả hai cùng fail. Ai định dùng
+mô hình này phải trả lời trước một câu: RAM của máy chịu được bao nhiêu stack song song. Một
+advisory lock dạng token, `take` thì exit khác 0 khi người khác đang giữ, là đủ để xếp hàng đúng chỗ
+cần xếp.
+
+**Một chỗ leak đã biết.** Bước cleanup chỉ remove volume khi còn container để remove. Một Builder
+lịch sự tắt stack trước khi handback sẽ để lại 0 container, điều kiện sai, `down -v` bị bỏ qua, và
+volume mồ côi trong khi stamp cleanup vẫn ghi là sạch. Nếu bạn dựng lại mô hình này, hãy cho bước
+cleanup remove volume theo **tên project** chứ đừng theo sự tồn tại của container.
+
+**Ai không cần.** Team một người, một branch tại một thời điểm: toàn bộ cơ chế này mua đúng một thứ
+là tính đồng thời. Team mà dev environment không chứa state khả biến cũng không cần — chỉ cần port
+động là đủ. Và team chạy CI trên runner sạch mỗi lần thì vấn đề này không tồn tại: nó chỉ có thật
+khi nhiều checkout cùng sống trên một máy.
 
 ## one-shape
 

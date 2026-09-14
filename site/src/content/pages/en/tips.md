@@ -1,118 +1,66 @@
 ---
 title: "Tips for running several agents"
-description: "Four techniques for running several agents on one machine: pnpm, portless, a QA walk in a real browser, and a runtime of its own for each worktree."
+description: "Five techniques for running several agents on one machine: git worktree, pnpm, portless, a QA walk in a real browser, and a runtime of its own for each worktree."
 ---
 
-`git worktree` isolates code. It does not isolate runtime, and runtime is where several agents
-step on each other: the database, `node_modules`, and the frontend and backend ports. Astragentic
-builds the parallelism at the coordination layer; the four techniques below are what your machine
-needs before that layer can actually run.
+Astragentic builds the parallelism at the coordination layer: Thomas dispatches several tickets and
+several Builders work at once. But that whole layer stands on an assumption about your machine —
+that three agents running at the same time do not step on each other. A machine does not give you
+that by default.
 
-The four are ordered by how much you have to hold in your head. The first three stand on their
-own: one tool each, one concrete pain each, usable even if you never do the other three. The last
-is where they combine — it is the hard one, and it only makes sense once the first three have been
-read.
+The five techniques below are what closes the gap. Astragentic ships none of them; they are all
+existing tools, and each section says which pain it answers.
 
-## runtime-per-worktree
+The five are ordered by how much you have to hold in your head. The first is the foundation the
+rest of the page rests on. The middle three stand on their own: one tool each, one concrete pain
+each, usable even if you never do the others. The last is where they combine — it is the hard one,
+and it only makes sense once the other four have been read.
 
-**The pain.** You dispatch two tickets to two Builders, one worktree each. The code separates
-cleanly — that is what `git worktree` is good at. But both run migrations against one database,
-both bind the same port, both write into one `node_modules`. The second Builder breaks the first
-one's environment and nobody gets a signal, because nothing errors: two processes sharing one
-resource is legal behaviour.
+## git-worktree
 
-`git worktree` isolates the **working tree**. It does not isolate what that tree starts.
+**The pain.** You are halfway through something and need a quick look at another branch. The usual
+path is `git stash`, `git switch`, look, come back, `git stash pop` — plus a reinstall if the two
+branches disagree about dependencies. Multiply that by **three agents working at once** and it stops
+being an annoyance and becomes impossible: there is one working directory, and `HEAD` can only point
+at one thing.
 
-**The technique.** Give each worktree a runtime of its own, and **derive that runtime's name from
-the branch** rather than letting somebody choose it.
+The obvious way round is to clone the repository three times. That works, and you pay for it with
+three copies of the history, three fetches, and three places for remotes to drift apart.
 
-The second half is the part that matters. Isolating by making each person name their own resources
-and pick their own ports in a config file turns isolation into **something you have to remember** —
-and what you have to remember, someone eventually forgets, with a silent symptom. Derived from the
-branch there is nothing to forget: changing branch changes the runtime, and no file is edited.
+**The technique.** `git worktree` gives you **several working directories from one repository**.
+Each checks out its own branch with its own `HEAD` and its own index, while **sharing one object
+database**.
 
-**The rule, and this is the part that travels to any stack: isolate mutable state, share
-content-addressed state.** Packages and build artifacts are keyed by their own hash, so two branches
-wanting two versions get two different keys rather than fighting over one place. Sharing them is
-safe structurally, not safe by luck.
-
-### One implementation, to picture it
-
-Astragentic **does not ship** this part and holds no opinion about your stack. The database, the
-container runtime, the package manager — those are the project's choices. What follows is **one
-example**, from a project using Docker Compose, Postgres and pnpm, so the principle above can be
-seen written down. If your project uses Podman, or runs Postgres on the host, or has no database at
-all, the principle does not change; only the details do.
-
-In that example the Compose project name is derived from the branch, and Compose prefixes the
-project name onto containers, networks and volumes — so one differing name separates four things at
-once:
-
-| Runtime | Per worktree | Shared |
-|---|---|---|
-| Database | Its own Postgres container and volume. Not a schema on a shared server. | The test cluster is the opposite: one container for the machine, isolated inside by templates keyed to the migration set hash. |
-| `node_modules` | Two copies: the host one from `pnpm install` in the worktree, and the in-container one as a named volume shadowing the bind mount. | The pnpm store, build cache and module cache, declared `external: true`. |
-| FE/BE ports | Nobody picks a port. Compose declares only the in-container port; Docker assigns the outside one. | — |
-
-```make
-DEV_SLUG := $(shell git rev-parse --abbrev-ref HEAD | tr '[:upper:]' '[:lower:]' \
-              | sed 's/[^a-z0-9]/-/g; s/--*/-/g; s/^-//; s/-$$//' | cut -c1-40)
-DEV_SLUG := $(if $(filter head,$(DEV_SLUG)),$(shell git rev-parse --short HEAD),$(DEV_SLUG))
-DEV_PROJECT := myapp-dev-$(DEV_SLUG)
+```bash
+git worktree add ../app-tra-142 -b builder/TRA-142   # new directory, new branch
+git worktree list                                     # who is where, on which branch
+git worktree remove ../app-tra-142                    # hand it back when done
 ```
 
-`builder/TRA-686` becomes `builder-tra-686`, and a detached HEAD falls back to the short SHA so the
-name stays stable for that checkout.
+Three properties set it apart from cloning repeatedly, and they are the part that surprises people
+who have not used it:
 
-### Two other answers, and why not
+- **It is cheap.** A new worktree costs the checked-out files, not another copy of the history.
+  Inside `.git/worktrees/<name>` there is a `HEAD`, an `index`, `refs` and `logs` — and **no
+  `objects`**. The object database stays in the main checkout and every worktree reads from it.
+- **A branch can be checked out in exactly one worktree.** Try it in a second and git refuses:
+  `fatal: 'feature-a' is already used by worktree at ...`. That sounds like a restriction, but with
+  several agents it is precisely what you want — two Builders **cannot** take the same branch, and
+  it is git saying no rather than a convention somebody has to remember.
+- **The main checkout is left alone.** You stay on `main`. Nobody runs `git switch` under your feet
+  and nobody stashes on your behalf.
 
-**One database per worktree on a shared Postgres.** Cheaper, and still right for the test cluster.
-But `CREATE DATABASE` does not isolate what is cluster-global: roles and passwords. One `ALTER ROLE`
-is cluster-wide. A separate instance leaves no shared layer to step on.
+Put the three together and you get what a team of agents needs: **one checkout per Builder, and
+inside it that Builder is the sole writer.** Nobody moves anybody else's `HEAD`.
 
-**One shared dev stack, and you queue for it.** The cost is not the waiting. It is that people do
-not queue — they skip the step.
+**Trade-off.** One directory per piece of work in flight, and a cleanup step when it ends — a
+worktree deleted by hand without `git worktree remove` leaves an orphaned registration, and only
+`git worktree prune` clears it. And a worktree's `.git` is a *file* rather than a directory, which
+comes back to bite in the last section if you put the repo in a container.
 
-### Two details easy to miss once containerised
-
-Neither depends on a particular stack; anyone putting a repo into a container meets both.
-
-**Do not give the project a fixed name.** The project name is what gives each worktree its own
-resources, and it has to come from the one place that knows which worktree the caller is standing
-in. A hardcoded name in config puts every worktree back into one project.
-
-**A worktree's `.git` is a *file*, not a directory.** It holds a host-side absolute path into the
-main checkout's `.git/worktrees/<name>`, and a bind mount does not carry that path. Any tooling
-shelling out to `git` inside the container fails. The fix is to mount the common git dir read-only
-and point `GIT_DIR` at it, both derived from git itself:
-
-```make
-DEV_GIT_COMMON := $(shell cd "$$(git rev-parse --git-common-dir)" && pwd)
-DEV_GIT_REAL   := $(shell cd "$$(git rev-parse --git-dir)" && pwd)
-DEV_GIT_DIR    := $(if $(filter $(DEV_GIT_COMMON),$(DEV_GIT_REAL)),/gitcommon,/gitcommon/worktrees/$(notdir $(DEV_GIT_REAL)))
-```
-
-`--git-dir` differing from `--git-common-dir` is how git itself tells a main checkout from a linked
-worktree. Use that comparison; do not guess at the shape of the path.
-
-**Trade-off.** The real constraint is not disk, it is RAM. On disk each worktree costs roughly
-540–650 MB of volumes, with about 2 GB shared across the machine — not a limit on any modern drive.
-RAM is: running two full `-race` test suites at once can make both fail. Anyone adopting this model
-has to answer one question first — how many parallel stacks the machine's memory can carry. An
-advisory token lock whose `take` exits non-zero while somebody else holds it is enough to queue the
-one thing that needs queueing.
-
-**A known leak.** Cleanup only removes volumes when there are containers left to remove. A Builder
-who politely stops its stack before handing back leaves zero containers, the condition reads false,
-`down -v` is skipped, and the volumes are orphaned while the cleanup stamp still records success. If
-you rebuild this model, have cleanup remove volumes **by project name** rather than by the presence
-of a container.
-
-**Who does not need it.** A team of one on one branch at a time: this whole mechanism buys exactly
-one thing, concurrency, and without concurrency it is only cost. A team whose dev environment holds
-no mutable state does not need it either — dynamic ports are enough. And a team running CI on a
-clean runner every time does not have this problem at all: it is only real when several checkouts
-live on one machine.
+**And here is the limit this whole page is about.** `git worktree` isolates the **working tree**. It
+does not isolate what that tree starts: the database, `node_modules`, the ports. The other four
+sections are about exactly that gap.
 
 ## pnpm
 
@@ -360,6 +308,107 @@ is production data wherever it runs.
 Some doors do not open, and should not be forced: a marketplace with a bot-detection layer in front
 and no account for an agent. The terms-of-service risk lands on somebody's real account, and evidence
 obtained by evading only proves that you evaded.
+
+## runtime-per-worktree
+
+**The pain.** You dispatch two tickets to two Builders, one worktree each. The code separates
+cleanly — that is what `git worktree` is good at. But both run migrations against one database,
+both bind the same port, both write into one `node_modules`. The second Builder breaks the first
+one's environment and nobody gets a signal, because nothing errors: two processes sharing one
+resource is legal behaviour.
+
+`git worktree` isolates the **working tree**. It does not isolate what that tree starts.
+
+**The technique.** Give each worktree a runtime of its own, and **derive that runtime's name from
+the branch** rather than letting somebody choose it.
+
+The second half is the part that matters. Isolating by making each person name their own resources
+and pick their own ports in a config file turns isolation into **something you have to remember** —
+and what you have to remember, someone eventually forgets, with a silent symptom. Derived from the
+branch there is nothing to forget: changing branch changes the runtime, and no file is edited.
+
+**The rule, and this is the part that travels to any stack: isolate mutable state, share
+content-addressed state.** Packages and build artifacts are keyed by their own hash, so two branches
+wanting two versions get two different keys rather than fighting over one place. Sharing them is
+safe structurally, not safe by luck.
+
+### One implementation, to picture it
+
+Astragentic **does not ship** this part and holds no opinion about your stack. The database, the
+container runtime, the package manager — those are the project's choices. What follows is **one
+example**, from a project using Docker Compose, Postgres and pnpm, so the principle above can be
+seen written down. If your project uses Podman, or runs Postgres on the host, or has no database at
+all, the principle does not change; only the details do.
+
+In that example the Compose project name is derived from the branch, and Compose prefixes the
+project name onto containers, networks and volumes — so one differing name separates four things at
+once:
+
+| Runtime | Per worktree | Shared |
+|---|---|---|
+| Database | Its own Postgres container and volume. Not a schema on a shared server. | The test cluster is the opposite: one container for the machine, isolated inside by templates keyed to the migration set hash. |
+| `node_modules` | Two copies: the host one from `pnpm install` in the worktree, and the in-container one as a named volume shadowing the bind mount. | The pnpm store, build cache and module cache, declared `external: true`. |
+| FE/BE ports | Nobody picks a port. Compose declares only the in-container port; Docker assigns the outside one. | — |
+
+```make
+DEV_SLUG := $(shell git rev-parse --abbrev-ref HEAD | tr '[:upper:]' '[:lower:]' \
+              | sed 's/[^a-z0-9]/-/g; s/--*/-/g; s/^-//; s/-$$//' | cut -c1-40)
+DEV_SLUG := $(if $(filter head,$(DEV_SLUG)),$(shell git rev-parse --short HEAD),$(DEV_SLUG))
+DEV_PROJECT := myapp-dev-$(DEV_SLUG)
+```
+
+`builder/TRA-686` becomes `builder-tra-686`, and a detached HEAD falls back to the short SHA so the
+name stays stable for that checkout.
+
+### Two other answers, and why not
+
+**One database per worktree on a shared Postgres.** Cheaper, and still right for the test cluster.
+But `CREATE DATABASE` does not isolate what is cluster-global: roles and passwords. One `ALTER ROLE`
+is cluster-wide. A separate instance leaves no shared layer to step on.
+
+**One shared dev stack, and you queue for it.** The cost is not the waiting. It is that people do
+not queue — they skip the step.
+
+### Two details easy to miss once containerised
+
+Neither depends on a particular stack; anyone putting a repo into a container meets both.
+
+**Do not give the project a fixed name.** The project name is what gives each worktree its own
+resources, and it has to come from the one place that knows which worktree the caller is standing
+in. A hardcoded name in config puts every worktree back into one project.
+
+**A worktree's `.git` is a *file*, not a directory.** It holds a host-side absolute path into the
+main checkout's `.git/worktrees/<name>`, and a bind mount does not carry that path. Any tooling
+shelling out to `git` inside the container fails. The fix is to mount the common git dir read-only
+and point `GIT_DIR` at it, both derived from git itself:
+
+```make
+DEV_GIT_COMMON := $(shell cd "$$(git rev-parse --git-common-dir)" && pwd)
+DEV_GIT_REAL   := $(shell cd "$$(git rev-parse --git-dir)" && pwd)
+DEV_GIT_DIR    := $(if $(filter $(DEV_GIT_COMMON),$(DEV_GIT_REAL)),/gitcommon,/gitcommon/worktrees/$(notdir $(DEV_GIT_REAL)))
+```
+
+`--git-dir` differing from `--git-common-dir` is how git itself tells a main checkout from a linked
+worktree. Use that comparison; do not guess at the shape of the path.
+
+**Trade-off.** The real constraint is not disk, it is RAM. On disk each worktree costs roughly
+540–650 MB of volumes, with about 2 GB shared across the machine — not a limit on any modern drive.
+RAM is: running two full `-race` test suites at once can make both fail. Anyone adopting this model
+has to answer one question first — how many parallel stacks the machine's memory can carry. An
+advisory token lock whose `take` exits non-zero while somebody else holds it is enough to queue the
+one thing that needs queueing.
+
+**A known leak.** Cleanup only removes volumes when there are containers left to remove. A Builder
+who politely stops its stack before handing back leaves zero containers, the condition reads false,
+`down -v` is skipped, and the volumes are orphaned while the cleanup stamp still records success. If
+you rebuild this model, have cleanup remove volumes **by project name** rather than by the presence
+of a container.
+
+**Who does not need it.** A team of one on one branch at a time: this whole mechanism buys exactly
+one thing, concurrency, and without concurrency it is only cost. A team whose dev environment holds
+no mutable state does not need it either — dynamic ports are enough. And a team running CI on a
+clean runner every time does not have this problem at all: it is only real when several checkouts
+live on one machine.
 
 ## one-shape
 

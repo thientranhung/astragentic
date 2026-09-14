@@ -336,10 +336,11 @@ export const GOOD_PARTS: GoodPart[] = [
 
 /* ── /tips ──────────────────────────────────────────────────────────────── */
 
-/** The four techniques for running several agents on one machine. Ordered by how much
- *  the reader has to hold in their head: three that stand on their own, then the one
- *  that composes them, which is the one that needs the other three to make sense.
- *  The rail reads in the same order. */
+/** The five techniques for running several agents on one machine. Ordered by how much
+ *  the reader has to hold in their head: git worktree first, because the whole page
+ *  rests on it and a reader who has not used it is lost by the second paragraph; then
+ *  three that stand on their own; then the one that composes them, which needs the
+ *  others to make sense. The rail reads in the same order. */
 export interface TipItem {
   id: string;
   /** The section head. A Dict, not a bare string: two of the four are tool names that
@@ -352,6 +353,15 @@ export interface TipItem {
 }
 
 export const TIPS: TipItem[] = [
+  {
+    id: 'git-worktree',
+    name: { vi: 'git worktree', en: 'git worktree' },
+    role: { vi: 'Nền tảng', en: 'The foundation' },
+    line: {
+      vi: 'Nhiều thư mục làm việc từ một repository, mỗi thư mục một branch, dùng chung object database.',
+      en: 'Several working directories from one repository, a branch each, sharing one object database.',
+    },
+  },
   {
     id: 'pnpm',
     name: { vi: 'pnpm', en: 'pnpm' },
