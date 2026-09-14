@@ -149,3 +149,4 @@ from this table — read the entry.
 | `AST-135` | The verifier's queue was invisible to itself, and the fire point had to follow the artifact | promoted | 363 | dispatch-qa-walk,thomas.md |
 | `AST-136` | `--grep` is BASIC regex, and every marker kind in this system contains parentheses | promoted | 287 | check-simplify-markers.sh,selftest.sh |
 | `AST-137` | Every defect a live project found lived between a tested invocation and a real one | promoted | 418 | selftest.sh |
+| `AST-138` | A rule reaches every runtime or it reaches one, and nothing in the package asked which | promoted | 485 |   |

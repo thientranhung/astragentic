@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 136 entries (AST-001 … AST-137, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 137 entries (AST-001 … AST-138, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -3575,3 +3575,51 @@ Gates and field use are not two independent detectors; the gates are what make a
 legible enough to be searched.
 
 Bound: `harness/scripts/check-requirements.sh` (the integration checks this produced).
+
+### AST-138 — A rule reaches every runtime or it reaches one, and nothing in the package asked which · promoted 2026-09-14
+
+2.7.13 is titled *"the guard shipped for three runtimes and was registered on one."*
+`hook-git-guard.py` was registered in `.claude/settings.json`, which **Codex does not read**, so
+a Builder dispatched to a Codex pane ran with the contract above it and nothing underneath. That
+release fixed the registration for that one script and stopped there. **The class was never
+written down**, so no rule, no check and no contract carried it forward — and a grep of this
+ledger on 2026-09-14 found nothing for it, in a package that had named a release after it.
+
+Two more instances were then measured in the same package, both by asking the question 2.7.13
+did not:
+
+| what | claude | opencode | codex |
+|---|---|---|---|
+| `hook-contract-reload.py` registered | yes | n/a — no declarative hook surface | **no** |
+| the rules that outlive compaction, per role | 5/5 | 5/5 | **0/5** |
+
+The second is the worse one. Those rules live in the adapter because the adapter **is** the
+system prompt, and the measurement this package already holds is that after a compaction the
+system-prompt rules were obeyed every time and every rule outside it was violated, with a total
+correlation. A Builder on Codex was therefore running the one configuration where the defect has
+no defence at all, and the file that documents the defect sat two directories away.
+
+**Why reading did not find it.** Every surface was individually correct. `.claude/settings.json`
+is right, `.codex/hooks.json` is right, each adapter is right about the role it describes. The
+defect is only visible in a comparison nobody was asked to make, and a package with three
+runtimes has three files per role plus three registration files — twelve places where a fourth
+can quietly not exist.
+
+**The rule.** Anything the payload ships for a role or a moment — a hook registration, a
+system-prompt rule, an adapter instruction — is declared for **every runtime that can carry it**,
+and a runtime that cannot carry it is named as an exception with the reason. A surface that is
+silent is not an exception; it is an omission wearing one.
+
+OpenCode is the named exception here, by measurement rather than assumption: it has no
+declarative hook file. Its plugin API exposes `experimental.session.compacting` with a mutable
+context, which is a stronger intervention than re-arming after the fact, and is the path when
+that API leaves experimental. Its adapters carry the rules in the meantime.
+
+**And the check that closes it.** `selftest.sh` gained the comparison itself: per role, the
+compaction rules must be present on all three surfaces; per hook script, the registration must
+exist for every runtime with a hook surface. Both cases were watched to FAIL against the tree as
+it stood before this entry — five roles red and one registration red — which is the only reason
+they are in the suite (AST-137).
+
+Bound: `harness/.codex/hooks.json`, `harness/.codex/profiles/*.config.toml`,
+`harness/scripts/hook-contract-reload.py`, `harness/scripts/selftest.sh`.

@@ -448,6 +448,65 @@ else
 fi
 
 # ---------------------------------------------------------------------------------------------
+# A RULE REACHES EVERY RUNTIME, OR IT REACHES ONE (2.9.0).
+#
+# 2.7.13 is titled "the guard shipped for three runtimes and was registered on one":
+# hook-git-guard.py lived in .claude/settings.json, which Codex does not read, so a Builder on
+# a Codex pane ran with the contract above it and nothing underneath. That release fixed the
+# registration for that one script. Nobody asked the next question, so in 2.9.0 the same shape
+# was found twice more: hook-contract-reload.py registered only for Claude, and the four rules
+# that outlive compaction present in the Claude and OpenCode adapters and in NONE of the five
+# Codex profiles. Both were watched to fail here before they were fixed.
+# ---------------------------------------------------------------------------------------------
+echo "one rule, every runtime"
+
+if pkg_only "runtime parity"; then
+  # Each role's system prompt is a different file per runtime, so the compaction rules are
+  # necessarily copied. What must not vary is WHETHER they are there.
+  for role in thomas shaper builder rin qa; do
+    cla=".claude/agents/$role.md"; opc=".opencode/agents/$role.md"; cdx=".codex/profiles/$role.config.toml"
+    miss=""
+    grep -qi 'survives compaction' "$ROOT/harness/$cla" 2>/dev/null || miss="$miss claude"
+    grep -qi 'survives compaction' "$ROOT/harness/$opc" 2>/dev/null || miss="$miss opencode"
+    grep -qi 'survives compaction' "$ROOT/harness/$cdx" 2>/dev/null || miss="$miss codex"
+    [ -z "$miss" ] && ok "compaction rules reach every runtime: $role" \
+                   || bad "compaction rules missing for $role" "absent on:$miss"
+  done
+
+  # Every hook script the payload ships must be named by every runtime that HAS a hook surface.
+  # OpenCode has none of the declarative kind, so it is out of scope here by measurement rather
+  # than by assumption — its adapters are markdown and carry the rules instead.
+  for hk in hook-git-guard.py hook-contract-reload.py; do
+    inc=$(grep -c "$hk" "$ROOT/harness/.claude/settings.json" 2>/dev/null || echo 0)
+    inx=$(grep -c "$hk" "$ROOT/harness/.codex/hooks.json" 2>/dev/null || echo 0)
+    if [ "$inc" -gt 0 ] && [ "$inx" -gt 0 ]; then ok "registered for claude and codex: $hk"
+    else bad "$hk registered on one runtime" "claude=$inc codex=$inx — this is the 2.7.13 shape"; fi
+  done
+fi
+
+# hook-contract-reload had no case at all until 2.9.0, which is its own finding: the hook that
+# defends the one failure whose correlation was measured as total had never been watched to
+# fire, or to stay quiet.
+reload() { # <expect fire|silent> <json>
+  local want="$1" out got
+  out="$(printf '%s' "$2" | python3 "$S/hook-contract-reload.py" 2>/dev/null)"
+  if [ -n "$out" ]; then got=fire; else got=silent; fi
+  [ "$want" = "$got" ] && ok "contract-reload $want: $3" || bad "contract-reload $3" "expected $want, got $got"
+}
+reload fire   '{"hook_event_name":"SessionStart","source":"compact","agent_type":"builder"}' "compact re-arms"
+reload silent '{"hook_event_name":"SessionStart","source":"startup"}'                        "startup does not"
+reload silent '{"hook_event_name":"SessionStart","source":"clear"}'                          "clear does not"
+reload silent 'not json at all'                                                              "malformed stdin is silent"
+reload fire   '{"hook_event_name":"SessionStart","source":"compact"}'                        "no role named still re-arms"
+# A path is never built from unvetted input: a role name with a separator must not escape.
+out="$(printf '%s' '{"hook_event_name":"SessionStart","source":"compact","agent_type":"../../etc/passwd"}' \
+       | python3 "$S/hook-contract-reload.py" 2>/dev/null)"
+case "$out" in
+  *"/etc/passwd"*) bad "contract-reload path traversal" "a role name reached the emitted path" ;;
+  *)               ok  "contract-reload refuses a role name that is not a bare identifier" ;;
+esac
+
+# ---------------------------------------------------------------------------------------------
 echo
 if [ "$FAIL" -eq 0 ]; then
   echo "selftest: $PASS passed, 0 failed ($LAYOUT layout, $SKIPPED package-only section(s) skipped)."

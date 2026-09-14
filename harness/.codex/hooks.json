@@ -13,6 +13,18 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "d=\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)\"; s=\"$d/scripts/hook-contract-reload.py\"; [ -f \"$s\" ] || s=\"$d/harness/scripts/hook-contract-reload.py\"; if [ -f \"$s\" ]; then exec python3 \"$s\"; else cat >/dev/null; echo \"hook-contract-reload: NOT FOUND under $d — role contracts are not re-armed after compaction\" >&2; echo \"$(date -u +%FT%TZ) hook-contract-reload MISSING under $d\" >> /tmp/harness-hook-events.log; fi",
+            "timeout": 15,
+            "statusMessage": "Re-arming the Astragentic role contract"
+          }
+        ]
+      }
     ]
   }
 }

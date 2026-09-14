@@ -44,12 +44,55 @@ the operator would keep shipping a harness that looks armed.
 
 import json
 import os
+import subprocess
 import sys
 
 # Sources that leave an agent believing it is mid-session while its contract is gone.
 REARM_ON = {"compact"}
 
 ROLES_DIR = os.path.join(".agents", "roles")
+EVENTS_LOG = "/tmp/harness-hook-events.log"
+
+
+def _utcnow():
+    try:
+        import datetime
+        return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    except Exception:
+        return "?"
+
+
+def note(line):
+    """Append one line to the shared hook log. Never raises: a hook that dies while
+    recording that it ran is worse than one that stays quiet."""
+    try:
+        with open(EVENTS_LOG, "a") as fh:
+            fh.write(line.rstrip("\n") + "\n")
+    except Exception:
+        pass
+
+
+def project_dir(payload):
+    """Where the contract lives, resolved without assuming one runtime.
+
+    `CLAUDE_PROJECT_DIR` is set by Claude Code and by nothing else. Codex sets its own, and
+    the repository root is what both mean, so ask git before falling back to the payload.
+    2.7.13 shipped a guard that only Claude could reach because its registration named a
+    Claude-only file; naming a Claude-only variable is the same defect one layer down."""
+    for var in ("CLAUDE_PROJECT_DIR", "CODEX_PROJECT_DIR"):
+        val = os.environ.get(var)
+        if val:
+            return val
+    try:
+        out = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, timeout=5,
+        )
+        if out.returncode == 0 and out.stdout.strip():
+            return out.stdout.strip()
+    except Exception:
+        pass
+    return payload.get("cwd") or os.getcwd()
 
 
 def emit(text):
@@ -106,13 +149,23 @@ def main():
 
     if not isinstance(payload, dict):
         return
-    if payload.get("source") not in REARM_ON:
+
+    event = payload.get("hook_event_name") or "?"
+    source = payload.get("source")
+
+    if source not in REARM_ON:
+        # Every runtime this package supports has a compaction event; only Claude Code is
+        # known to spell the reason `source: "compact"`. Record what a runtime actually
+        # sent so the first real compaction elsewhere becomes a measurement instead of an
+        # assumption — the hook stays silent either way.
+        note("%s hook-contract-reload INERT event=%s source=%s keys=%s"
+             % (_utcnow(), event, source, ",".join(sorted(payload))[:120]))
         return
 
-    project_dir = (
-        os.environ.get("CLAUDE_PROJECT_DIR") or payload.get("cwd") or os.getcwd()
-    )
-    emit(message(contract_path(project_dir, payload.get("agent_type"))))
+    root = project_dir(payload)
+    note("%s hook-contract-reload FIRED event=%s role=%s root=%s"
+         % (_utcnow(), event, payload.get("agent_type") or "?", root))
+    emit(message(contract_path(root, payload.get("agent_type"))))
 
 
 if __name__ == "__main__":
