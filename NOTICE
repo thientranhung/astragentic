@@ -1,0 +1,33 @@
+Astragentic
+Copyright 2026 Tran Hung Thien
+
+Licensed under the Apache License, Version 2.0. See LICENSE.
+
+--------------------------------------------------------------------------------
+Third-party material redistributed in this repository
+--------------------------------------------------------------------------------
+
+docs/bmad-distilled/
+    A distilled form of the BMAD Method: role personas quoted from the upstream
+    `customize.toml` files and one file per capability, with the install
+    machinery removed. Derived from BMAD-METHOD, which is MIT licensed.
+
+        Copyright (c) 2025 BMad Code, LLC
+        https://github.com/bmad-code-org/BMAD-METHOD
+
+    The full MIT text as published upstream is kept beside the material it
+    covers, at docs/bmad-distilled/LICENSE.
+
+--------------------------------------------------------------------------------
+Required at run time, not redistributed here
+--------------------------------------------------------------------------------
+
+These are dependencies the harness calls. No part of them is copied into this
+repository; they are listed so a reader reviewing licences can see the whole
+surface in one place.
+
+    Claude Code CLI      Anthropic          https://docs.anthropic.com/en/docs/claude-code
+    herdr                Apache-2.0         https://github.com/herdrdev/herdr
+    mattpocock-skills    MIT                https://github.com/mattpocock/skills
+    agent-browser        Apache-2.0         https://github.com/vercel-labs/agent-browser
+    Codex CLI            OpenAI             https://github.com/openai/codex

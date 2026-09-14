@@ -1,5 +1,10 @@
 # 📖 User Guide — BMAD Roles (distilled)
 
+> Distilled from the **BMAD Method** — Copyright (c) 2025 BMad Code, LLC, MIT licensed.
+> Upstream: <https://github.com/bmad-code-org/BMAD-METHOD> · <https://bmadcode.com>
+> The personas here are quoted from upstream; the MIT text they are used under is in
+> [LICENSE](LICENSE) beside this file. The rest of this repository is Apache-2.0.
+
 This kit turns the **BMAD** method into a lightweight "virtual department" for software work. Each role is an AI specialist you can call into the conversation when a task needs deeper expertise. It is designed to be dropped into the documentation of a project and used as a practical playbook for better, more structured AI collaboration.
 
 ---
