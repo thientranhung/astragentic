@@ -233,6 +233,17 @@ export const WHY: WhyCard[] = [
       en: 'A model re-reading its own diff re-reads its own assumptions with it. A second vendor does not carry them, and the receipt is bound to the SHA that was actually read.',
     },
   },
+  {
+    id: 'why-self-repair',
+    question: {
+      vi: 'Bộ khung tự sửa chữa qua từng vòng làm việc',
+      en: 'The scaffold repairs itself, one loop at a time',
+    },
+    answer: {
+      vi: 'Session kết thúc là context mất, nên một agent không tự mang bài học sang ticket sau. Mỗi sự cố thành một dòng trong sổ, luật rút ra được viết vào contract agent đọc ở đầu session.',
+      en: 'A session ends and its context goes with it, so an agent carries no lesson into the next ticket. Each incident becomes a ledger line, and the rule it yields is written into the contract an agent reads at session start.',
+    },
+  },
 ];
 
 /* ── /cau-truc ──────────────────────────────────────────────────────────── */
@@ -385,7 +396,7 @@ export const TIPS: TipItem[] = [
     name: { vi: 'QA walk', en: 'QA walk' },
     role: { vi: 'Bằng chứng', en: 'Evidence' },
     line: {
-      vi: 'Một agent lái sản phẩm đang chạy như người dùng, và để lại file bằng chứng đọc lại được.',
+      vi: 'Một agent thao tác trên sản phẩm đang chạy như người dùng, và để lại file bằng chứng đọc lại được.',
       en: 'An agent drives the running product as a user, and leaves a readable evidence file.',
     },
   },
@@ -396,6 +407,15 @@ export const TIPS: TipItem[] = [
     line: {
       vi: 'Mỗi worktree một stack riêng, và tên stack suy ra từ tên nhánh chứ không ai đặt.',
       en: 'One stack per worktree, its name derived from the branch rather than chosen by anyone.',
+    },
+  },
+  {
+    id: 'bmad-distilled',
+    name: { vi: 'bmad-distilled', en: 'bmad-distilled' },
+    role: { vi: 'Ngữ cảnh · một trục khác', en: 'Context · a different axis' },
+    line: {
+      vi: 'Phương pháp chưng xuống còn markdown: một roster, mỗi capability một file, không còn gì để cài.',
+      en: 'A method distilled to markdown: one roster, one file per capability, nothing left to install.',
     },
   },
 ];

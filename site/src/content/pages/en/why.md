@@ -1,6 +1,6 @@
 ---
 title: "Approach"
-description: "The approach behind Astragentic: the orchestrator agent model, the tracker as state, why coordination is not a subagent, and the cross review between two vendors."
+description: "The approach behind Astragentic: the orchestrator agent model, the tracker as state, why coordination is not a subagent, the cross review between two vendors, and a scaffold that repairs itself."
 ---
 
 Astragentic is built for autonomous coding: a team of AI agents runs the build on its own, while
@@ -9,7 +9,7 @@ people keep direction and decisions.
 Every team works its own way, and no process can be imported intact. So Astragentic is a scaffold:
 the hard parts are settled, and every component is open for you to adapt.
 
-The five parts below are the five largest design decisions in that scaffold: the mechanism, the
+The six parts below are the six largest design decisions in that scaffold: the mechanism, the
 evidence on record, and the trade-off. These are my choices on my own projects, not a template you
 have to follow.
 
@@ -180,3 +180,44 @@ while working to the ticket.
 silently before, so it needs a timeout and a dispatcher watching. The most dangerous part is scope:
 if `--base` and `HEAD` resolve differently, the companion compares a branch with itself and returns
 clean on zero commits. So every read prints its range line before the verdict is trusted.
+
+## why-self-repair
+
+An incident nobody writes down comes back. That is not a remark about agents; it is a remark about
+any system whose memory does not outlive the session.
+
+With a team of agents it bites harder than with a team of people, in exactly one place: the session
+ends and the context goes with it. A Builder that has just made a mistake and just understood why
+it was wrong carries none of that into the next ticket, because there is no "it" that continues. A
+person at least half-remembers.
+
+The mechanism is a ledger, and a path from the ledger into a contract.
+
+**The ledger.** Every incident is one line in an append-only file with a fixed id — `AST-136` today
+is still `AST-136` a hundred entries later. Never renumbered, never deleted, not even once the bug
+is fixed. There are 136 entries.
+
+**The path.** A line that yields a rule does not leave the rule in the ledger. It writes it into a
+file an agent actually reads: a role contract, a skill, or a hook. The ledger is the evidence; the
+contract is where the evidence takes effect.
+
+**The loop closes at merge**, not at the end of a sprint and not when somebody remembers. The merge
+commit carries a `Ledger:` line naming what went in. `Ledger: none` is valid; its absence is not —
+"this one taught us nothing" is a conclusion, while no line at all is a step that was skipped, and
+from the outside those look identical unless the declaration is required.
+
+**There is no build step and nobody reloads anything.** Each role's system prompt is only a few
+lines, and one of them is an instruction to read its own contract. The next session opens already
+carrying the new rule. A hook covers the rest: after a session compacts, the contract is re-armed,
+because what sits outside the system prompt is the first thing compaction summarises away.
+
+**An entry is only promoted once it has happened more than once.** `AST-136` went in after the same
+mistake wore three different faults: an escape that made a script report a confident STOP naming
+the wrong cause, a search that read 23 markers as 193, and a path that made a marker which really
+existed report as never recorded. Those three were releases apart, and they were only visible as
+one thing because all three were in the ledger.
+
+**Trade-off.** The ledger grows and never shrinks. It is not meant to be read end to end — it is
+what you consult when a rule in a contract makes you wonder *why is this here*. And every rule
+added to a contract is tokens paid on every session of that role, so a rule has to show that it
+blocks a failure that **has happened**, not one that could.

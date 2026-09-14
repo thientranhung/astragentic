@@ -27,6 +27,28 @@ explain:
       - "Customising means editing files in your checkout. Each role is a contract, each skill a folder, each hook a script."
       - "The path from a change to a project is the release path: bump `VERSION`, add an entry to `RELEASE-NOTES.md`, then reinstall with `install.sh`. Inside the project the adaptation step compares the new release with the one running and keeps the files that belong to you, such as `orchestrator.md`."
 
+  selfRepair:
+    eyebrow: "Self-repair"
+    headline: "The scaffold learns from every loop, and the rule it draws goes straight into a file agents read."
+    paragraphs:
+      - "A team of agents repeats its own mistakes when nothing writes them down. Here something does: every incident is one line in an append-only ledger, with a fixed id, never renumbered and never deleted."
+      - "A line that yields a rule puts that rule straight into a role contract, a skill or a hook — the files an agent reads at the start of its session. At the next dispatch the whole team behaves differently, not because anyone remembered, but because the text changed."
+    commands:
+      label: "The foot of a merge commit"
+      lines:
+        - "Pass: code-review, simplify, arm"
+        - "Ledger: AST-136 — --grep is BASIC regex, and every marker kind"
+        - "        in this system contains parentheses"
+    bullets:
+      - "**It closes at merge**: the merge commit carries a `Ledger:` line naming what went in. `Ledger: none` is valid; its absence is not."
+      - "**No build step**: the rule lives in the contract file itself, which the agent reads at session start. A hook re-arms the contract after a session compacts."
+      - "**Append-only**: a line that has not yielded a rule yet stays where it is. An open record is more honest than a ledger holding only the things already solved."
+    paragraphsAfter:
+      - "The same property lets an **agent customise the scaffold for you**. All of Astragentic is text — contracts, skills, hooks — no binaries, no config schema to learn. You open a session inside the checkout, describe how you want to work, it proposes a diff, you approve it."
+    more:
+      label: "Read the whole mechanism →"
+      href: "/customize/#self-repair"
+
   comms:
     eyebrow: "How agents talk to each other"
     headline: "Dispatching a ticket opens a conversation with an address."

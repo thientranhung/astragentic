@@ -1,6 +1,6 @@
 ---
 title: "Cách tiếp cận"
-description: "Cách tiếp cận đứng sau Astragentic: mô hình orchestrator agent, issue tracker giữ trạng thái, vì sao không đặt điều phối vào subagent, và review chéo giữa hai hãng AI."
+description: "Cách tiếp cận đứng sau Astragentic: mô hình orchestrator agent, issue tracker giữ trạng thái, vì sao không đặt điều phối vào subagent, review chéo giữa hai hãng AI, và một bộ khung tự sửa chữa."
 ---
 
 Astragentic hướng tới autonomous coding: một team AI agent tự vận hành phần thi công, còn con
@@ -10,7 +10,7 @@ Mỗi team có một cách làm việc riêng, và không quy trình nào nhập
 Astragentic là một scaffold: bộ khung đã giải quyết sẵn những phần khó, còn mọi thành phần trong
 đó đều mở để bạn tuỳ biến.
 
-Năm phần dưới đây là năm quyết định thiết kế lớn nhất của bộ khung: cơ chế, bằng chứng đo được,
+Sáu phần dưới đây là sáu quyết định thiết kế lớn nhất của bộ khung: cơ chế, bằng chứng đo được,
 và đánh đổi. Đây là lựa chọn của tôi trên dự án của tôi, không phải khuôn mẫu bắt buộc.
 
 ## why-astragentic
@@ -175,3 +175,42 @@ chính tiêu chuẩn dự án đã khai, điều người viết code khó nhậ
 treo im lặng, nên cần timeout và một dispatcher theo dõi. Nguy hiểm nhất là phạm vi: nếu `--base` và
 `HEAD` resolve lệch nhau, companion so một branch với chính nó và trả về sạch trên không commit nào.
 Vì vậy mọi lượt đọc phải in ra dòng range trước khi verdict được tin.
+
+## why-self-repair
+
+Một sự cố không được ghi lại sẽ quay lại. Đó không phải nhận xét về agent; đó là nhận xét về mọi hệ
+thống không có bộ nhớ sống lâu hơn phiên làm việc.
+
+Với một team agent, chuyện này gắt hơn một team người ở đúng một điểm: session kết thúc là context
+mất. Một Builder vừa mắc lỗi và vừa hiểu ra vì sao nó sai sẽ không mang hiểu biết đó sang ticket
+sau, vì không có "nó" nào đi tiếp. Người thì ít nhất còn nhớ mang máng.
+
+Cơ chế là một cuốn sổ, và một đường đi từ sổ vào contract.
+
+**Sổ.** Mỗi sự cố là một dòng trong một file chỉ thêm, mang mã cố định — `AST-136` hôm nay vẫn là
+`AST-136` sau một trăm mục nữa. Không đánh số lại, không xoá, kể cả sau khi lỗi đã được sửa. Hiện
+có 136 mục.
+
+**Đường đi.** Dòng nào rút ra được luật thì luật đó không nằm lại trong sổ. Nó được viết vào một
+file mà agent thật sự đọc: contract của một role, một skill, hoặc một hook. Sổ là bằng chứng;
+contract là chỗ bằng chứng có hiệu lực.
+
+**Vòng khép lại ở lúc merge**, không phải cuối sprint và không phải khi ai đó nhớ ra. Commit merge
+mang một dòng `Ledger:` nói rõ cái gì vừa được ghi vào sổ. `Ledger: none` là hợp lệ; thiếu hẳn dòng
+đó thì không — "lượt này không học được gì" là một kết luận, còn không có dòng nào là một bước bị bỏ
+qua, và nhìn từ ngoài hai thứ giống hệt nhau nếu không bắt buộc khai báo.
+
+**Không có bước build, và không ai phải nạp lại.** System prompt của mỗi role chỉ có vài dòng, và
+một trong số đó là lệnh đọc contract của chính nó. Session kế tiếp mở lên là đã mang luật mới. Một
+hook lo phần còn lại: sau khi session bị compact, contract được nạp lại, vì thứ nằm ngoài system
+prompt là thứ compaction tóm tắt đi trước tiên.
+
+**Một mục chỉ vào sổ khi nó đã xảy ra nhiều lần.** `AST-136` được ghi sau ba lần cùng một sai lầm
+đội ba lớp vỏ khác nhau: một lần escape sai khiến script báo STOP với nguyên nhân sai, một lần đọc
+23 marker thành 193, một lần làm một marker có thật báo là chưa từng được ghi. Ba lần đó cách nhau
+nhiều release, và chỉ nhìn ra được vì cả ba đều nằm trong sổ.
+
+**Đánh đổi.** Cuốn sổ dài ra và không bao giờ ngắn lại. Nó không phải thứ để đọc từ đầu tới cuối,
+mà là thứ để tra khi một luật trong contract khiến bạn thắc mắc *vì sao lại có luật này*. Và mỗi
+luật thêm vào contract là token phải trả ở mỗi session của role đó — nên một luật phải chứng minh
+được nó chặn một lỗi **đã xảy ra**, không phải một lỗi có thể xảy ra.

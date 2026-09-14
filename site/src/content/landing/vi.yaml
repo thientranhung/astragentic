@@ -27,6 +27,28 @@ explain:
       - "Tuỳ biến là sửa file trong bản checkout của bạn. Mỗi role là một contract, mỗi skill là một thư mục, mỗi hook là một script."
       - "Đường đưa thay đổi tới dự án là đường phát hành: tăng `VERSION`, ghi một mục trong `RELEASE-NOTES.md`, rồi cài lại bằng `install.sh`. Bước thích nghi trong dự án so bản mới với bản đang chạy và giữ nguyên các file thuộc về bạn, như `orchestrator.md`."
 
+  selfRepair:
+    eyebrow: "Tự sửa chữa"
+    headline: "Bộ khung học từ mỗi vòng làm việc, và luật rút ra đi thẳng vào file agent đọc."
+    paragraphs:
+      - "Một team agent lặp lại lỗi của chính nó nếu không có chỗ nào ghi lại. Ở đây có: mỗi sự cố là một dòng trong một cuốn sổ chỉ thêm, mang mã cố định, không đánh số lại và không xoá."
+      - "Dòng nào rút ra được luật thì luật đó viết thẳng vào contract của role, vào skill hoặc vào hook — những file agent đọc ở đầu session. Lần dispatch sau cả team làm khác đi, không phải vì ai nhớ, mà vì văn bản đã đổi."
+    commands:
+      label: "Phần cuối của một commit merge"
+      lines:
+        - "Pass: code-review, simplify, arm"
+        - "Ledger: AST-136 — --grep is BASIC regex, and every marker kind"
+        - "        in this system contains parentheses"
+    bullets:
+      - "**Khép lại ở lúc merge**: commit merge mang một dòng `Ledger:` nói rõ cái gì vừa vào sổ. `Ledger: none` là hợp lệ; thiếu hẳn dòng đó thì không."
+      - "**Không có bước build**: luật nằm trong chính file contract, agent đọc nó ở đầu session. Một hook nạp lại contract sau khi session bị compact."
+      - "**Sổ chỉ thêm**: dòng chưa rút ra được luật vẫn nằm nguyên đó. Một hồ sơ chờ trung thực hơn một cuốn sổ chỉ chứa những lần đã giải quyết xong."
+    paragraphsAfter:
+      - "Cùng cơ chế đó cho phép một **agent tự tuỳ biến bộ khung**. Toàn bộ Astragentic là văn bản — contract, skill, hook — không có binary, không có config schema phải học. Bạn mở một session ngay trong bản checkout, mô tả cách mình muốn làm việc, nó đề xuất diff, bạn duyệt."
+    more:
+      label: "Đọc cơ chế đầy đủ →"
+      href: "/vi/tuy-bien/#self-repair"
+
   comms:
     eyebrow: "Giao tiếp giữa các agent"
     headline: "Dispatch một ticket là mở một cuộc trao đổi có địa chỉ."

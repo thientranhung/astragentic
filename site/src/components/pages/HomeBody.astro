@@ -634,6 +634,38 @@ const CARD_FRAME = 330;
       </div>
     </section>
   )}
+
+  {/* ── Self-repair: the ledger loop, and why it needs no build step ─────
+       Last on the page on purpose. Customise above is the scaffold changed by hand;
+       this is the scaffold changing itself, and it only lands once the reader knows
+       a role is a contract file. The figure is a real merge trailer rather than a
+       drawing — the mechanism is two lines of text, so showing the text is the
+       honest picture. */}
+  {EX.selfRepair && (
+    <section class="screen screen--canvas explain" id="self-repair">
+      <div class="column">
+        <p class="eyebrow">{EX.selfRepair.eyebrow}</p>
+        <h2>{EX.selfRepair.headline}</h2>
+      </div>
+      <div class="column">
+        {EX.selfRepair.paragraphs?.map((line) => <p class="lede" set:html={hl(line)} />)}
+        {panes(EX.selfRepair.commands).map((pane) => (
+          <div class="pane breakout">
+            <CodeFrame lang={lang} lines={pane.lines} label={pane.label} />
+          </div>
+        ))}
+        {EX.selfRepair.bullets && (
+          <ul class="lede-list">
+            {EX.selfRepair.bullets.map((line) => <li set:html={hl(line)} />)}
+          </ul>
+        )}
+        {EX.selfRepair.paragraphsAfter?.map((line) => <p class="lede" set:html={hl(line)} />)}
+        {EX.selfRepair.more && (
+          <a class="more-link" href={EX.selfRepair.more.href}>{EX.selfRepair.more.label}</a>
+        )}
+      </div>
+    </section>
+  )}
 </BaseLayout>
 
 <style>

@@ -1,19 +1,22 @@
 ---
 title: "Kinh nghiệm chạy nhiều agent"
-description: "Năm kỹ thuật để nhiều agent chạy song song trên một máy: git worktree, pnpm, portless, QA walk bằng browser thật, và runtime riêng cho mỗi worktree."
+description: "Sáu kỹ thuật vận hành nhiều agent: git worktree, pnpm, portless, QA walk bằng browser thật, runtime riêng cho mỗi worktree, và một role kit chưng xuống còn markdown."
 ---
 
 Astragentic dựng sự song song ở tầng điều phối: Thomas dispatch nhiều ticket, nhiều Builder cùng
 thi công. Nhưng cả tầng đó đứng trên một giả định về máy của bạn — rằng ba agent chạy cùng lúc thì
 không giẫm lên nhau. Máy mặc định không cho bạn điều đó.
 
-Năm kỹ thuật dưới đây là thứ lấp khoảng cách ấy. Không cái nào do Astragentic ship; tất cả đều là
-công cụ có sẵn, và mỗi mục nói rõ nó giải quyết cái đau nào.
+Năm kỹ thuật đầu là thứ lấp khoảng cách ấy. Không cái nào do Astragentic ship; tất cả đều là công
+cụ có sẵn, và mỗi mục nói rõ nó giải quyết cái đau nào.
 
-Năm mục xếp theo mức phải hình dung. Mục đầu là nền tảng mà cả trang dựa lên. Ba mục giữa đứng
+Năm mục đó xếp theo mức phải hình dung. Mục đầu là nền tảng mà cả trang dựa lên. Ba mục giữa đứng
 riêng được: mỗi mục một công cụ, giải quyết một cái đau cụ thể, áp dụng được ngay cả khi bạn không
-làm ba mục còn lại. Mục cuối là nơi chúng ghép lại — nó là phần khó nhất, và nó chỉ có nghĩa sau
+làm ba mục còn lại. Mục thứ năm là nơi chúng ghép lại — nó là phần khó nhất, và nó chỉ có nghĩa sau
 khi đã đọc bốn mục kia.
+
+Mục thứ sáu đứng trên một trục khác, và nó ở cuối vì lý do đó chứ không phải vì khó. Năm mục đầu
+nói về cái máy agent chạy trên; mục cuối nói về thứ agent đọc khi nó bắt đầu làm việc.
 
 ## git-worktree
 
@@ -396,6 +399,64 @@ là tính đồng thời. Team mà dev environment không chứa state khả bi�
 động là đủ. Và team chạy CI trên runner sạch mỗi lần thì vấn đề này không tồn tại: nó chỉ có thật
 khi nhiều checkout cùng sống trên một máy.
 
+## bmad-distilled
+
+**Pain point.** Bạn mở một session và đặt một câu hỏi lớn: thiết kế kiến trúc cho phần này, viết
+PRD cho tính năng kia, dựng chiến lược test. Câu trả lời về đúng hạn, đọc trôi chảy, và không có
+hình dạng nào. Đó là câu trả lời của một trợ lý chung, không phải của một người làm đúng nghề đó.
+
+Cách chữa quen thuộc là mô tả phương pháp ngay trong prompt: đi theo các bước này, hỏi những câu
+này trước, trả ra artifact dạng này. Nó có tác dụng thật, và nó có hai chi phí. Bạn gõ lại ở mỗi
+session, và bản gõ lại lần này không giống bản lần trước — phương pháp trôi đi mà không ai phát
+hiện, vì không có bản gốc nào để đối chiếu.
+
+Cách chữa nặng hơn là cài nguyên một framework phương pháp. Lúc đó bạn có bản gốc, nhưng bạn nhận
+thêm một hệ thống phải nuôi: resolver riêng, file config riêng, vòng đời nâng cấp riêng, đứng cạnh
+bộ khung bạn đang chạy.
+
+**Kỹ thuật.** Chưng phương pháp xuống còn markdown, rồi để nó nằm trong `docs/` của chính dự án.
+
+[`docs/bmad-distilled/`](https://github.com/thientranhung/astragentic/tree/main/docs/bmad-distilled)
+là bản distilled của [BMAD](https://bmadcode.com): một file `roster.md` khai tám role, và
+`capabilities/` chứa 44 file, mỗi workflow một file. Persona được trích nguyên văn từ file
+`customize.toml` của bản gốc; toàn bộ máy móc cài đặt — python resolver, `memlog.py`, `config.yaml`,
+headless JSON — bị bỏ đi. Không còn gì để cài.
+
+Gọi nó là một dòng trong prompt:
+
+> Đóng vai Winston trong `docs/bmad-distilled/roster.md`, theo
+> `docs/bmad-distilled/capabilities/architecture.md`. Thiết kế kiến trúc cho: …
+
+Ba tính chất:
+
+- **Nó là ngữ cảnh, không phải máy móc.** File nằm trong repo, nên bất kỳ agent nào mở repo cũng
+  đọc được — Claude Code, Codex, OpenCode, không cần adapter nào. Không có tiến trình phải sống,
+  không có bản nâng cấp nào làm hỏng nó.
+- **Chi phí token là ràng buộc thiết kế.** Một framework nạp cả bộ vào context. Ở đây một capability
+  là một file, nên bạn trả đúng phần bạn cần: một session bình thường là một role cộng một tới hai
+  capability. Đó cũng là lý do nó được cắt theo file chứ không gom thành một tài liệu lớn.
+- **Role có tên riêng.** Mary phân tích, John viết PRD, Winston kiến trúc, Amelia thi công, Murat
+  test. Tên riêng ở đây làm đúng việc mà tên riêng làm trong Astragentic: giữ agent không trôi khỏi
+  role của mình trong một context dài.
+
+**Nó không thay phương pháp mà Astragentic chạy.** Đường chính là mattpocock-skills, và phương pháp
+đó gắn vào contract của từng role: Shaper chạy grill → to-spec → to-tickets, Builder chạy implement.
+`bmad-distilled` là thứ bạn với tay tới ở một session đứng ngoài đường chính — lúc chưa có ticket
+nào để dispatch, và bạn muốn một buổi bàn tròn về một quyết định thiết kế trước khi nó kịp thành
+spec:
+
+> Dùng `capabilities/party-mode.md`, cho Winston, Amelia và Murat tranh luận về quyết định này.
+
+**Đánh đổi.** Đây là một bản chụp. Nó không theo upstream, nên một sửa đổi ở BMAD không tự về đây,
+và bạn sở hữu bản distilled của mình đúng như bạn sở hữu bản fork harness của mình.
+
+Quan trọng hơn: **một role kit là mức prompt, không phải mức contract.** Không hook nào, không gate
+nào bắt agent đi đúng file nó vừa đọc. Nó cải thiện hình dạng của câu trả lời; nó không chứng minh
+một bước đã chạy. Chỗ nào cần chứng minh thì vẫn phải là contract, receipt và gate.
+
+**Ai không cần.** Một việc đã rõ phạm vi: role kit chỉ thêm token. Và ai đang chạy đủ vòng harness
+thì contract của role đã làm đúng việc này, kèm phần cưỡng chế mà một role kit không có.
+
 ## one-shape
 
 Ba trong bốn kỹ thuật trên có cùng một hình dạng, và nếu trang này chỉ đọng lại một câu thì nên là câu
@@ -404,6 +465,9 @@ này: **biến một việc phải nhớ làm thành một việc được suy r
 Tên project suy ra từ branch. Port suy ra từ Docker. `GIT_DIR` suy ra từ git. Tên miền suy ra từ
 branch. Không có file env nào phải sửa khi đổi branch, nên không có bước nào để quên.
 
-Đó cũng là lý do bốn mục này thuộc về trang của Astragentic chứ không phải một danh sách mẹo. Điều
+Mục cuối cùng cũng mang hình dạng đó, chỉ ở một tầng khác: phương pháp gõ lại trong prompt mỗi
+session là một việc phải nhớ, còn một file trong `docs/` là một việc được đọc.
+
+Đó cũng là lý do các mục này thuộc về trang của Astragentic chứ không phải một danh sách mẹo. Điều
 phối nhiều agent đặt ra một yêu cầu mà làm việc một mình không đặt ra: mọi thứ phải đúng **mà không
 ai phải nhớ**, vì bên nhớ không còn là một người.

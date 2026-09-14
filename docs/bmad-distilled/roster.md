@@ -60,4 +60,4 @@ Build       → Amelia → Murat (test)
 ```
 
 > 💡 Need "session memory" (resume/audit)? Keep a simple append-only markdown log. No BMAD script required.
-> 💡 Slimming down: after adopting `distilled/`, you may delete the install source (`_bmad/` + `.claude/skills/`) — `distilled/` runs standalone.
+> 💡 Slimming down: after adopting `bmad-distilled/`, you may delete the install source (`_bmad/` + `.claude/skills/`) — `bmad-distilled/` runs standalone.

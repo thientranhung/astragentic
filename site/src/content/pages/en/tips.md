@@ -1,6 +1,6 @@
 ---
 title: "Tips for running several agents"
-description: "Five techniques for running several agents on one machine: git worktree, pnpm, portless, a QA walk in a real browser, and a runtime of its own for each worktree."
+description: "Six techniques for running several agents: git worktree, pnpm, portless, a QA walk in a real browser, a runtime of its own for each worktree, and a role kit distilled to markdown."
 ---
 
 Astragentic builds the parallelism at the coordination layer: Thomas dispatches several tickets and
@@ -8,13 +8,17 @@ several Builders work at once. But that whole layer stands on an assumption abou
 that three agents running at the same time do not step on each other. A machine does not give you
 that by default.
 
-The five techniques below are what closes the gap. Astragentic ships none of them; they are all
+The first five techniques are what closes the gap. Astragentic ships none of them; they are all
 existing tools, and each section says which pain it answers.
 
-The five are ordered by how much you have to hold in your head. The first is the foundation the
+Those five are ordered by how much you have to hold in your head. The first is the foundation the
 rest of the page rests on. The middle three stand on their own: one tool each, one concrete pain
-each, usable even if you never do the others. The last is where they combine — it is the hard one,
+each, usable even if you never do the others. The fifth is where they combine — it is the hard one,
 and it only makes sense once the other four have been read.
+
+The sixth stands on a different axis, and it is last for that reason rather than for difficulty.
+The first five are about the machine an agent runs on; the last is about what the agent reads when
+it starts work.
 
 ## git-worktree
 
@@ -410,6 +414,68 @@ no mutable state does not need it either — dynamic ports are enough. And a tea
 clean runner every time does not have this problem at all: it is only real when several checkouts
 live on one machine.
 
+## bmad-distilled
+
+**Pain point.** You open a session and ask a large question: design the architecture for this part,
+write the PRD for that feature, put together a test strategy. The answer arrives on time, reads
+well, and has no shape to it. It is the answer of a general assistant, not of somebody who does
+that job.
+
+The familiar fix is to describe the method inside the prompt: follow these steps, ask these
+questions first, produce an artifact in this form. It genuinely works, and it costs two things. You
+retype it every session, and this retyping is not the last one — the method drifts and nobody
+notices, because there is no original to compare against.
+
+The heavier fix is to install a whole method framework. Now you have the original, but you have
+taken on a second system to keep alive: its own resolver, its own config file, its own upgrade
+cycle, standing beside the harness you already run.
+
+**The technique.** Distil the method down to markdown, and let it live in the project's own `docs/`.
+
+[`docs/bmad-distilled/`](https://github.com/thientranhung/astragentic/tree/main/docs/bmad-distilled)
+is a distilled [BMAD](https://bmadcode.com): one `roster.md` naming eight roles, and `capabilities/`
+holding 44 files, one per workflow. The personas are quoted verbatim from the original's
+`customize.toml`; all the install machinery — the python resolver, `memlog.py`, `config.yaml`, the
+headless JSON — is gone. There is nothing left to install.
+
+Calling it is one line in a prompt:
+
+> Play Winston in `docs/bmad-distilled/roster.md`, following
+> `docs/bmad-distilled/capabilities/architecture.md`. Design the architecture for: …
+
+Three properties:
+
+- **It is context, not machinery.** The files sit in the repo, so any agent that opens the repo can
+  read them — Claude Code, Codex, OpenCode, no adapter needed. Nothing has to stay running, and no
+  upgrade can break it.
+- **Token cost is the design constraint.** A framework loads the whole set into context. Here a
+  capability is a file, so you pay for exactly the part you need: an ordinary session is one role
+  plus one or two capabilities. That is also why it is cut into files rather than gathered into one
+  large document.
+- **The roles have names.** Mary analyses, John writes the PRD, Winston designs, Amelia implements,
+  Murat tests. A name does the same job here that it does in Astragentic: it keeps an agent from
+  drifting out of its role across a long context.
+
+**It does not replace the method Astragentic runs on.** The main road is mattpocock-skills, and that
+method is wired into each role's contract: the Shaper runs grill → to-spec → to-tickets, the Builder
+runs implement. `bmad-distilled` is what you reach for in a session standing outside that road —
+when there is no ticket to dispatch yet, and you want a roundtable on a design decision before it
+becomes a spec:
+
+> Use `capabilities/party-mode.md` and have Winston, Amelia and Murat debate this decision.
+
+**Trade-off.** This is a snapshot. It does not track upstream, so a fix in BMAD does not find its
+way here on its own, and you own your distilled copy exactly the way you own your fork of the
+harness.
+
+More importantly: **a role kit is prompt level, not contract level.** No hook and no gate makes the
+agent follow the file it just read. It improves the shape of an answer; it does not prove a step
+ran. Wherever proof is what you need, it still has to be a contract, a receipt and a gate.
+
+**Who does not need this.** Anyone with one well-scoped task: a role kit only adds tokens. And
+anyone running the full harness loop, where the role's contract already does this job and carries
+the enforcement a role kit does not have.
+
 ## one-shape
 
 Three of the four techniques share one shape, and if this page carries away a single sentence it
@@ -419,6 +485,9 @@ The project name comes from the branch. The port comes from Docker. `GIT_DIR` co
 domain comes from the branch. No env file changes when you switch branch, so there is no step left
 to forget.
 
-That is also why these four belong on an Astragentic page rather than in a list of tips.
+The last section has that shape too, one layer up: a method retyped into the prompt every session
+is something to remember, while a file in `docs/` is something to read.
+
+That is also why these belong on an Astragentic page rather than in a list of tips.
 Coordinating several agents makes a demand that working alone does not: everything has to be right
 **without anybody remembering**, because the one doing the remembering is no longer a person.
