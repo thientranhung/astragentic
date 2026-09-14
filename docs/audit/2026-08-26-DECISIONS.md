@@ -1,8 +1,12 @@
 # Bảng quyết định — Astragentic, 2026-08-26
 
-**Đây là file anh đọc.** Hai file kia là phụ lục:
-`2026-08-26-dissection.md` (bằng chứng, 12 nhóm ~95 mục) ·
-`2026-08-26-surgery-plan.md` (cách thi công từng phase).
+**Đây là file anh đọc.** Phụ lục còn lại: `2026-08-26-dissection.md`
+(bằng chứng, 12 nhóm ~95 mục).
+
+> Kế hoạch thi công đi kèm (`2026-08-26-surgery-plan.md`) đã bị xoá ngày 2026-09-14.
+> Viết thời 2.6.1, phần lớn đã được các release sau hấp thụ. Ba việc chưa làm khi xoá:
+> gộp `codex-arm` với `codex-claude-arm`, đưa gate merge từ contract xuống hook, và
+> thêm `git branch --merged` vào lớp stale-claim của `reconcile-tracker`.
 
 Audit đã phủ **8 tầng**: điều phối · token/context · rule & enforcement · git/worktree ·
 issue tracker · QA walk · herdr/pane · brownfield · release/install.
