@@ -8,15 +8,12 @@ Third-party material redistributed in this repository
 --------------------------------------------------------------------------------
 
 docs/bmad-distilled/
-    A distilled form of the BMAD Method: role personas quoted from the upstream
-    `customize.toml` files and one file per capability, with the install
-    machinery removed. Derived from BMAD-METHOD, which is MIT licensed.
+    Distilled from the BMAD Method, which is MIT licensed. The distillation —
+    the layout, the file per capability, the removal of the install machinery —
+    is this project's; the personas and the method are upstream's.
 
         Copyright (c) 2025 BMad Code, LLC
         https://github.com/bmad-code-org/BMAD-METHOD
-
-    The full MIT text as published upstream is kept beside the material it
-    covers, at docs/bmad-distilled/LICENSE.
 
 --------------------------------------------------------------------------------
 Required at run time, not redistributed here
