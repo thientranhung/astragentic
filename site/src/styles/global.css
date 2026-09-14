@@ -662,6 +662,30 @@ a.cite:hover {
   color: var(--ink);
   margin: 2.2rem 0 0.8rem;
 }
+/* The house h3 is a run-in label: small, bold, set below body size on purpose, because
+   on most pages it interrupts flowing prose rather than opening a part of it. The tips
+   page uses h3 structurally — five subsections carrying their own tables and code — so
+   there it is a heading and has to outrank the paragraph beneath it. */
+.read-body--sections h3 {
+  font-size: var(--text-h3);
+  line-height: 1.3;
+  /* Size alone does not settle it. The house style opens paragraphs with a bold run-in,
+     and a long one of those sits at 17px bold against a 19px bold heading — two pixels
+     apart, which is not a difference a reader sees while scrolling. A hairline is a
+     signal bold text cannot imitate, so the subsection heads carry one and the run-ins
+     never will. */
+  margin: 2.6rem 0 0.7rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--rule-faint);
+}
+/* The first subsection opens right under the section's own prose, where the rule would
+   read as a second section break rather than a heading. */
+.read-body--sections > h3:first-child {
+  margin-top: 1.6rem;
+  padding-top: 0;
+  border-top: 0;
+}
+
 .read-body ul,
 .read-body ol {
   margin: 0 0 1.6rem;

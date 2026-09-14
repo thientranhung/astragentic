@@ -40,11 +40,11 @@ const heading =
         {/* The role label carries the argument: which of the four this is, and why it
             sits here rather than in a flat list of tips. */}
         <p class="parts-label mono">{item.role[lang]}</p>
-        <h2 class="mono name" lang="en">{item.name}</h2>
+        <h2 class="name">{item.name}</h2>
         {/* The one-liner is the rail's summary of this section. It stands on the page
             only until the writer's prose lands, or it says the same thing twice. */}
         {page.sections[item.id] ? (
-          <Prose html={page.sections[item.id]} class="read-body body" />
+          <Prose html={page.sections[item.id]} class="read-body read-body--sections body" />
         ) : (
           <p class="line">{item.line[lang]}</p>
         )}
@@ -56,18 +56,29 @@ const heading =
     page.sections['one-shape'] && (
       <section class="read-section" id="one-shape">
         <h2>{lang === 'vi' ? 'Một hình dạng chung' : 'One shape'}</h2>
-        <Prose html={page.sections['one-shape']} class="read-body body" />
+        <Prose html={page.sections['one-shape']} class="read-body read-body--sections body" />
       </section>
     )
   }
 </DocsLayout>
 
 <style>
-  /* The section head is the tool's own name, so it is set in the mono face the rest of
-     the site uses for anything a reader would type. */
+  /* This page carries five sections and eleven headings under them, so the ladder has
+     to be read at a glance. It was not: the section head sat at 19px against 17px of
+     body, the label above it at 17px competed with it, and the subsection heads under
+     it rendered at 14px — smaller than the paragraph they introduced. The rungs are the
+     docs pages' own: 10px label, 26px section, 19px subsection, 17px body.
+     Sans, not mono: only two of the section names are literal tool names, and a tool
+     name inside the prose already gets the mono face from its backticks. */
+  .parts-label {
+    font-size: var(--text-micro);
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin: 0 0 0.5rem;
+  }
   .name {
-    font-size: var(--text-h3);
-    letter-spacing: 0.01em;
+    font-size: var(--text-h2);
   }
   .line {
     font-size: var(--text-body);
