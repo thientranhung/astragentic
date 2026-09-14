@@ -396,7 +396,7 @@ export const TIPS: TipItem[] = [
     /* The id stays `browser-qa` because the URL is live; the name widened in 2026-09 when the
        section stopped being only about a QA walk. One browser, several jobs — the walk is the
        worked example because it demands the most discipline, not because it is the only use. */
-    name: { vi: 'Autonomous browser', en: 'Autonomous browser' },
+    name: { vi: 'Autonomous browser', en: 'Autonomous Browser' },
     role: { vi: 'Bằng chứng · khảo sát', en: 'Evidence · research' },
     line: {
       vi: 'Một agent thao tác trên sản phẩm đang chạy như người dùng — nghiệm thu, khảo sát, và kiểm thứ chỉ nhìn thấy khi render.',
@@ -405,7 +405,7 @@ export const TIPS: TipItem[] = [
   },
   {
     id: 'runtime-per-worktree',
-    name: { vi: 'runtime theo worktree', en: 'runtime per worktree' },
+    name: { vi: 'runtime theo worktree', en: 'Runtime per Worktree' },
     role: { vi: 'Ghép lại · phần khó nhất', en: 'Putting it together · the hard one' },
     line: {
       vi: 'Mỗi worktree một stack riêng, và tên stack suy ra từ tên nhánh chứ không ai đặt.',

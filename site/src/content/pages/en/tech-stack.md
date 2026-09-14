@@ -68,11 +68,58 @@ The terminal workspace manager, floor `>= 0.8.0`. It gives every agent a pane yo
 look at, and it lets you prompt, wait on and read each one. This is what turns dispatch from
 something narrated into something countable.
 
+**And it is the one channel that does not care which vendor you are on.** Two Claude Code
+sessions already have cross-session messaging, but that channel exists only inside one vendor.
+When Thomas runs on Claude, a Builder on Codex and a QA on OpenCode, three processes from three
+vendors share no protocol at all. herdr does: the pane is the address, `herdr pane run` is send,
+`herdr pane read` is receive. Thomas drives a Builder on Codex with the same commands it uses for
+a Builder on Claude — which is what keeps "one process, several runtimes" from being a slogan.
+
+**One measured trap when reading a pane:** the read is truncated and says nothing about it. When
+you need a long output verbatim, do not trust the pane read — have the agent write a file and
+read the file. A short read looks exactly like a complete one.
+
 `dispatch-ticket` refuses to dispatch unless `herdr-watchdog.sh` is running, and it checks at the
 first dispatch. The limit I had to learn twice: `herdr agent wait` cannot be
 trusted for the verdict. Now `herdr-watch-terminal.sh` waits in 60-second slices and takes the
 verdict from a fresh `herdr agent get` on every slice, with the wait demoted to an interruptible
 sleep. Worst-case detection lag is 60 seconds rather than the whole session.
+
+**The watchdog, and the question that is harder than it looks: is it alive.** Measured on a live
+project, one instance did all three at once: it was in `ps`, its own pid file had been deleted
+while it kept running, and a permanent child process made "has a child" true whether the loop was
+working or wedged. **None of those three can go false when the loop hangs.** What can is a
+timestamp that only advances when the loop **completes a pass** — that is the heartbeat file.
+Check its `mtime`, not its presence.
+
+**And do not wrap it in anything.** Launch it as `nohup … &` with nothing else in the pipeline.
+Isolating it into its own process group protects it from a signal sent to the caller's group; it
+does nothing against a signal sent straight to its PID, which is exactly what a wrapper with a
+timeout does when that timeout fires. Measured: a watchdog launched from inside a tool call that
+later timed out exited within the same second — **cleanly, and with nothing in the log to say
+why**, because from the log alone a clean exit and a kill look identical. After launching,
+confirm with `ps -o ppid= -p <pid>` reading `1`; a live PID with no error printed is **not** the
+same claim as "detached and still running".
+
+**`/loop` — the cadence that means nobody has to sit and watch.** The watchdog catches a dead
+pane. There is one state it cannot catch, because from outside it looks perfectly healthy:
+**nothing is happening at all** — the last ticket merged, no pane failed, and nobody picked up
+anything new. Claude Code's `/loop` puts a fixed cadence on Thomas's own session, and each tick
+is a real model pass rather than a shell cron:
+
+```
+/loop 12m Thomas: are the agents still active? Make sure monitoring and watching remain
+healthy. When the tickets run out, proactively pick a new ticket and continue. Only stop
+when there are no tickets left to pick up AND no pane is running AND nothing is waiting
+to be merged. If Thomas's context is above 80%, proactively compact it.
+```
+
+Three things worth knowing before setting a cadence. **The floor is 60 seconds** — `15s` is
+rounded up to `1m`. Below `5m` most ticks produce no meaningful change while still spending a
+full model pass, and dead panes are already caught by `herdr-watchdog.sh` on its own 300-second
+interval — the two watch different failures, so do not make one carry the other's job. And **in
+cron mode Thomas cannot stop by itself**: if you want it to stop for real, the stop condition has
+to come with an instruction to remove the cron job.
 
 ## mattpocock-skills
 

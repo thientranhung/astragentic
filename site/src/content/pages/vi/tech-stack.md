@@ -67,11 +67,57 @@ Trình quản lý workspace terminal, floor `>= 0.8.0`. Nó cho mỗi agent mộ
 và cho phép nhắc, chờ, đọc từng pane. Đây là thứ biến dispatch từ một câu kể thành một vật đếm
 được.
 
+**Và nó là kênh duy nhất không phân biệt nền tảng.** Giữa hai session Claude Code đã có sẵn
+cross-session messaging, nhưng kênh đó chỉ tồn tại bên trong một hãng. Khi Thomas chạy Claude,
+một Builder chạy Codex và một QA chạy OpenCode, ba tiến trình của ba hãng không có giao thức
+chung nào để nói với nhau. herdr có: pane là địa chỉ, `herdr pane run` là gửi, `herdr pane read`
+là đọc. Thomas điều một Builder trên Codex bằng đúng những lệnh nó dùng cho Builder trên Claude —
+và đó là lý do "một quy trình, nhiều runtime" không dừng ở khẩu hiệu.
+
+**Một bẫy đã đo khi đọc pane:** phần đọc bị cắt bớt mà không báo gì. Khi cần nguyên văn một output
+dài, đừng tin lần đọc pane — bảo agent ghi ra file rồi đọc file. Một lần đọc thiếu trông hệt như
+một lần đọc đủ.
+
 `dispatch-ticket` từ chối dispatch nếu `herdr-watchdog.sh` chưa chạy, và nó kiểm ngay ở lần
 dispatch đầu tiên. Giới hạn tôi phải học lại: `herdr agent wait` không đáng tin
 cho phần verdict. Bây giờ `herdr-watch-terminal.sh` chờ theo lát 60 giây và lấy verdict từ một
 lệnh `herdr agent get` mới tinh ở mỗi lát; wait bị hạ xuống thành giấc ngủ có thể ngắt. Độ trễ
 phát hiện xấu nhất là 60 giây, không phải cả session.
+
+**Watchdog, và câu hỏi khó hơn vẻ ngoài của nó: "nó còn sống không".** Đo trên một dự án thật,
+cùng một instance đồng thời: nằm trong `ps`, bị xoá mất pid file trong khi vẫn đang chạy, và có
+một tiến trình con thường trú khiến "còn con" luôn đúng dù vòng lặp đã treo. **Không cái nào
+trong ba tín hiệu đó có thể thành sai khi vòng lặp treo.** Thứ có thể thành sai là một dấu thời
+gian chỉ nhích lên khi vòng lặp **chạy trọn một lượt** — đó là heartbeat file. Kiểm `mtime` của
+nó, đừng kiểm sự tồn tại của nó.
+
+**Và đừng bọc nó trong bất cứ thứ gì.** Khởi chạy bằng `nohup … &`, không thêm gì trong pipeline.
+Tách process group bảo vệ watchdog khỏi tín hiệu gửi cho nhóm của bên gọi, nhưng không bảo vệ được
+khỏi tín hiệu gửi thẳng vào PID của nó — mà đó đúng là việc một wrapper có timeout làm khi timeout
+nổ. Đo được: một watchdog khởi chạy từ bên trong một tool call, tool call đó timeout, watchdog
+thoát trong cùng một giây — **sạch sẽ, và không để lại dòng nào giải thích vì sao**, vì nhìn từ
+log thì một lần thoát sạch và một lần bị giết giống hệt nhau. Sau khi phóng, xác nhận bằng
+`ps -o ppid= -p <pid>` đọc ra `1`; một PID còn sống và không có lỗi in ra **không phải** cùng một
+khẳng định với "đã tách hẳn và vẫn đang chạy".
+
+**`/loop` — nhịp để không ai phải ngồi canh.** Watchdog phát hiện pane chết. Có một trạng thái nó
+không phát hiện được, vì nhìn từ ngoài nó hoàn toàn bình thường: **không còn ai làm gì cả** —
+ticket cuối đã merge, không pane nào lỗi, và cũng không ai nhặt việc mới. `/loop` của Claude Code
+đặt một nhịp cố định lên chính session Thomas, và mỗi nhịp là một lượt model thật chứ không phải
+một cron shell:
+
+```
+/loop 12m Thomas: agent còn hoạt động không? Đảm bảo monitoring và watching còn khoẻ.
+Hết ticket thì chủ động nhặt ticket mới và làm tiếp. Chỉ dừng khi không còn ticket để
+nhặt VÀ không pane nào đang chạy VÀ không có gì chờ merge. Context của Thomas trên 80%
+thì chủ động compact.
+```
+
+Ba điều đáng biết trước khi đặt nhịp. **Sàn là 60 giây** — `15s` bị làm tròn lên `1m`. Dưới `5m`
+thì phần lớn nhịp không tạo ra thay đổi nào có nghĩa nhưng vẫn tiêu một lượt model đầy đủ, mà pane
+chết thì `herdr-watchdog.sh` đã bắt ở nhịp 300 giây rồi — hai thứ này canh hai loại hỏng khác
+nhau, đừng để nhịp này gánh việc của nhịp kia. Và **ở chế độ cron, Thomas không tự dừng được**:
+muốn nó dừng thật thì điều kiện dừng phải kèm một câu bảo nó tự gỡ cron job.
 
 ## mattpocock-skills
 

@@ -32,16 +32,16 @@ export const UI = {
   sideSkills: { vi: 'Skills', en: 'Skills' },
   sideHooks: { vi: 'Hooks', en: 'Hooks' },
   sideWhy: { vi: 'Cách tiếp cận', en: 'Approach' },
-  sideStack: { vi: 'Tech stack', en: 'Tech stack' },
+  sideStack: { vi: 'Tech stack', en: 'Tech Stack' },
   sideTips: { vi: 'Kinh nghiệm', en: 'Tips' },
   sideFailures: { vi: 'Bài học', en: 'Lessons' },
   sideCustomize: { vi: 'Tuỳ biến', en: 'Customize' },
   customizeEyebrow: { vi: 'cài và tuỳ biến', en: 'install and customize' },
   /** The four sections the customize page is built from, after install. */
   customizeHeads: {
-    customize: { vi: 'Sửa nó thành của bạn', en: 'Make it yours' },
-    'agent-customize': { vi: 'Để một agent sửa bộ khung', en: 'Let an agent do the customising' },
-    'self-repair': { vi: 'Bộ khung tự sửa bằng cuốn sổ lỗi', en: 'The scaffold repairs itself through its ledger' },
+    customize: { vi: 'Sửa nó thành của bạn', en: 'Make It Yours' },
+    'agent-customize': { vi: 'Để một agent sửa bộ khung', en: 'Let an Agent Do the Customising' },
+    'self-repair': { vi: 'Bộ khung tự sửa bằng cuốn sổ lỗi', en: 'The Scaffold Repairs Itself Through Its Ledger' },
   },
   /** The tips page's own eyebrow, longer than the rail label it shares a page with. */
   tipsTitle: { vi: 'Kinh nghiệm chạy nhiều agent', en: 'Tips for running several agents' },
@@ -117,7 +117,7 @@ export const UI = {
   copied: { vi: 'Copied', en: 'Copied' },
   prerequisites: { vi: 'Cần sẵn', en: 'Prerequisites' },
   quickstart: { vi: 'Install', en: 'Install' },
-  brownfield: { vi: 'Bốn skill cho repo có sẵn', en: 'Four skills for an existing repo' },
+  brownfield: { vi: 'Bốn skill cho repo có sẵn', en: 'Four Skills for an Existing Repo' },
 
   /* ── roles ── */
   roleEyebrow: { vi: 'ROLE', en: 'ROLE' },
