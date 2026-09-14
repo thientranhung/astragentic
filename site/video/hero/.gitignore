@@ -1,2 +1,10 @@
 snapshots/
 out/
+
+# Render masters. ProRes at 176 Mbit/s — 1.4 GB for 70 seconds, which is what an
+# editing codec is for. GitHub rejects any blob over 100 MB, so one of these in a
+# commit makes the whole push unpushable. What ships is public/shots/*.mp4 at 0.5
+# Mbit/s, 345x smaller with nothing visible lost. Rebuild with `npm run render`.
+renders/
+*.mov
+*.prores.mp4

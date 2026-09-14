@@ -50,6 +50,17 @@ of machine-wide installations, never part of the payload, never staged by `insta
 `omnilogin-agent-browser` stays, because its procedure is this project's QA walk rather than a
 copy of something the machine already provides.
 
+Two ProRes render masters are also out of the history: 1.4 GB each, 2.88 GB of the 3.08 GB
+that had never been pushed. ProRes at 176 Mbit/s is what an editing codec is supposed to cost;
+what the site actually serves is the same 70 seconds at 0.51 Mbit/s, 345 times smaller with
+nothing visible lost. GitHub refuses any blob over 100 MB, so one of those in a commit made
+every push fail — after uploading everything in front of it.
+
+The files stay on disk and are rebuildable by re-rendering. What is new is that nobody has to
+remember this: `.githooks/pre-commit` refuses a staged blob over 50 MB and names the file, and
+each video project's `.gitignore` excludes `renders/` outright. Wire it in a fresh clone with
+`git config core.hooksPath .githooks`.
+
 # Astragentic 2.8.0
 
 2.7.15 made the payload a chipset and shipped its first socket. 2.8.0 ships the second pin —

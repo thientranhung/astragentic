@@ -424,6 +424,7 @@ something has already gone wrong.
 | `check-simplify-markers.sh` | Builder before handback, Thomas before merge | both, independently |
 | `ticket-git-facts.sh` | session start and after every merge | `reconcile-tracker` |
 | `check-payload-drift.sh` | pre-commit | the git hook, where a project has installed one |
+| `.githooks/pre-commit` | every commit, once `core.hooksPath` points at it | git — it refuses a staged blob over 50 MB |
 | `project-status-sync.sh` | at claim, at the merge write-back, at session start | Thomas, GitHub projects only |
 | `check-requirements.sh` | install, upgrade, and when a runtime misbehaves | whoever is installing |
 

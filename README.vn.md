@@ -426,6 +426,7 @@ cho tới khi có chuyện đã xảy ra rồi.
 | `check-simplify-markers.sh` | Builder trước handback, Thomas trước merge | cả hai, độc lập nhau |
 | `ticket-git-facts.sh` | đầu session và sau mỗi lần merge | `reconcile-tracker` |
 | `check-payload-drift.sh` | pre-commit | git hook, ở project đã cài |
+| `.githooks/pre-commit` | mỗi lần commit, sau khi `core.hooksPath` trỏ vào nó | git — từ chối blob đã stage trên 50 MB |
 | `project-status-sync.sh` | lúc claim, lúc ghi ngược sau merge, đầu session | Thomas, chỉ với GitHub Projects |
 | `check-requirements.sh` | lúc cài, lúc nâng cấp, và khi một runtime giở chứng | ai đang cài |
 

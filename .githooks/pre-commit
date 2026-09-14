@@ -1,0 +1,23 @@
+#!/bin/sh
+# Refuse any staged blob GitHub would refuse. 100 MB is GitHub's hard limit; 50 MB is
+# where it starts warning, and the point of stopping here rather than there is that a
+# push carrying an oversized blob fails only after uploading everything before it.
+# The rule that matters is not "do not commit big files" — it is that nobody has to
+# remember it.
+LIMIT=$((50 * 1024 * 1024))
+fail=0
+git diff --cached --name-only --diff-filter=ACM -z | while IFS= read -r -d '' f; do
+  size=$(git cat-file -s "$(git rev-parse ":$f" 2>/dev/null)" 2>/dev/null) || continue
+  [ "${size:-0}" -le "$LIMIT" ] && continue
+  printf 'pre-commit: STOP — %s is %s MB, over the %s MB line\n' \
+    "$f" "$((size / 1048576))" "$((LIMIT / 1048576))" >&2
+  fail=1
+  printf '%s\n' "$f" >> "$(git rev-parse --git-dir)/.oversize"
+done
+if [ -s "$(git rev-parse --git-dir)/.oversize" ]; then
+  rm -f "$(git rev-parse --git-dir)/.oversize"
+  echo "pre-commit: unstage it, or add it to .gitignore if it is a rebuildable render." >&2
+  echo "pre-commit: to override once — git commit --no-verify" >&2
+  exit 1
+fi
+exit 0
