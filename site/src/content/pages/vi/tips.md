@@ -199,18 +199,25 @@ browser**: ngay khi nó làm thế, đó là một Chrome mới không có login
 Nên luật phân vai gọn trong một câu: **trạng thái ở OmniLogin, điều khiển ở agent-browser.** Đảo
 vai, để agent-browser giữ login, là mất fingerprint và mất luôn lý do OmniLogin tồn tại.
 
-Ba lớp tách khi nhiều agent cùng dùng một browser, và cần phân biệt rạch ròi:
+Bốn lớp tách khi nhiều agent cùng dùng một browser, và cần phân biệt rạch ròi:
 
 - **`--session <tên>`** tách trang hiện tại và ngữ cảnh lệnh của session đó. Nó **không** tách tập tab
   của Chrome — CDP phơi một tập target cho cả tiến trình. Đừng nhầm với `--session-name`, vốn chỉ là
-  khoá lưu auth-state chứ không tách gì.
-- **`--pin-tab`** bind session vào đúng tab của nó. Giá trị của flag này không phải sự cô lập, mà
-  là **biến một fallback im lặng thành một lỗi**: tab bị đóng thì lệnh kế tiếp báo `tab_gone`
-  thay vì
+  khoá lưu auth-state chứ không tách gì; upstream giờ ghi nó là legacy alias, cách viết hiện hành là
+  `--restore`.
+- **`--pin-tab`** bind session vào đúng tab của nó. Giá trị của flag này không phải sự cô lập, mà là
+  **biến một fallback im lặng thành một lỗi**: tab bị đóng thì lệnh kế tiếp báo `tab_gone` thay vì
   lặng lẽ trôi sang tab của người khác. Nó không làm tab của bạn riêng tư — agent khác vẫn thấy, vẫn
-  thao tác, vẫn đóng được.
-- **Daemon** dùng chung toàn máy và tự tắt sau một giờ không hoạt động. Mọi bước dọn worktree phải
-  **không** giết nó, cùng lý do với container dùng chung: nó không quy được về worktree nào.
+  thao tác, vẫn đóng được. Flag này sticky theo session nên truyền một lần là đủ, và nó cần CLI từ
+  0.34.0 trở lên — đó chính là thứ bước 0 kiểm.
+- **`--namespace <tên>`** tách registry và thư mục runtime của chính daemon. Đo được: namespace mặc
+  định và một namespace có tên liệt kê hai tập session rời nhau, và namespace có tên nhận một cây
+  thư mục riêng dưới `~/.agent-browser/namespaces/<tên>/`. Không có nó thì `session list` của một
+  agent hiện ra session của mọi agent khác, vì chúng chung một daemon.
+- **Daemon** tự tắt sau một giờ không hoạt động. Ở namespace mặc định nó dùng chung toàn máy, và mọi
+  bước dọn worktree phải **không** giết nó, cùng lý do với container dùng chung: nó không quy được
+  về worktree nào. Cấp cho mỗi worktree một namespace riêng thì điều đó hết đúng — và đó là việc của
+  lớp ngay trên.
 
 ### Một lượt walk
 

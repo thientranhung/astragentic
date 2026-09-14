@@ -207,18 +207,24 @@ So the division of roles fits in one sentence: **state in OmniLogin, control in 
 Reverse it — let agent-browser hold the login — and you lose the fingerprint along with the reason
 OmniLogin exists.
 
-Three layers of separation when several agents share one browser, and they need telling apart:
+Four layers of separation when several agents share one browser, and they need telling apart:
 
 - **`--session <name>`** separates the current page and that session's command context. It does
   **not** separate Chrome's set of tabs — CDP exposes one target set for the whole process. Do not
-  confuse it with `--session-name`, which is only a key for saved auth state and separates nothing.
+  confuse it with `--session-name`, which is only a key for saved auth state and separates nothing;
+  upstream now calls that one a legacy alias and spells it `--restore`.
 - **`--pin-tab`** binds the session to its own tab. The value of the flag is not isolation but
   **turning a silent fallback into an error**: when the bound tab is closed, the next command fails
   with `tab_gone` rather than quietly drifting onto somebody else's tab. It does not make your tab
   private — another agent can still see it, drive it and close it.
-- **The daemon** is shared machine-wide and shuts itself down after an hour idle. Worktree cleanup
-  must **not** kill it, for the same reason it must not kill a shared container: it cannot be
-  attributed to any one worktree.
+- **`--namespace <name>`** separates the daemon's own session registry and runtime directory.
+  Measured: the default namespace and a named one list disjoint sets of sessions, and the named one
+  gets its own tree under `~/.agent-browser/namespaces/<name>/`. Without it one agent's
+  `session list` shows every other agent's sessions, because they share a daemon.
+- **The daemon** shuts itself down after an hour idle. In the default namespace it is shared
+  machine-wide, and worktree cleanup must **not** kill it, for the same reason it must not kill a
+  shared container: it cannot be attributed to any one worktree. Give each worktree its own
+  namespace and that stops being true — which is what the layer above is for.
 
 ### One walk
 

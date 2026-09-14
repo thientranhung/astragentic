@@ -144,13 +144,39 @@ agent-browser skills get core
 Inspect existing tabs before navigating:
 
 ```bash
-agent-browser --session "omni-<profile_id>" --cdp <port> tab
+agent-browser --session "omni-<profile_id>" --pin-tab --cdp <port> tab
 ```
 
 Continue the requested website task with the same `--session` and `--cdp`
 values. Use the agent-browser snapshot-and-ref workflow. Do not use
 `agent-browser --profile`; OmniLogin owns the browser profile and persistent
 state.
+
+`--pin-tab` is not optional here. An OmniLogin browser is always one Chrome
+reached over `--cdp`, which is the exact condition the core skill names for the
+flag, and a profile the user opened already has their own tabs in it. Without
+the pin, a command whose tab was closed falls back to a neighbouring tab and
+succeeds — on somebody else's page, with no error. With it, the same command
+fails with `tab_gone`, which is the outcome worth having. The flag is sticky per
+session, so passing it on the first call is enough. Requires agent-browser
+0.34.0 or newer; on an older CLI the flag is silently absent, so check it before
+relying on it:
+
+```bash
+agent-browser --help | grep -- --pin-tab || echo "STOP: CLI older than 0.34.0"
+```
+
+When several agents drive the same OmniLogin browser at once, give each one its
+own `--namespace <name>` as well. Measured: the default namespace and a named
+one list disjoint sessions, and a named namespace gets its own runtime root
+under `~/.agent-browser/namespaces/<name>/`. `--session` alone shares one daemon
+registry, so one agent's `session list` shows every other agent's sessions.
+
+Take a new tab rather than reusing one the user left open:
+
+```bash
+agent-browser --session "omni-<profile_id>" --pin-tab --cdp <port> tab new
+```
 
 ## Stop a profile
 
@@ -163,6 +189,13 @@ curl -fsS --max-time 15 \
 
 Confirm `/active/<profile_id>` becomes `false`. Never kill all Chrome or
 OmniLogin processes as a shortcut.
+
+`agent-browser close` is not how a profile is stopped, and its output invites
+that mistake: it prints `✓ Browser closed` while the OmniLogin browser keeps
+running — the command ends the CLI session, not the browser it attached to.
+Measured after running it against an attached session: `/json/version` still
+answered and every tab was intact. Read that message as "session detached", and
+confirm the real state with `/json/version` before reporting a browser closed.
 
 ## Inspect deeper OmniLogin APIs only when needed
 
