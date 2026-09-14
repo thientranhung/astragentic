@@ -11,7 +11,7 @@ export type PageKey =
   | 'why'
   | 'stack'
   | 'tips'
-  | 'adopt'
+  | 'customize'
   | 'failures';
 
 /** English is the primary language and lives at `/`; Vietnamese mirrors under `/vi/`
@@ -35,7 +35,7 @@ export const ROUTES: Record<PageKey, Record<Lang, string>> = {
   why: { vi: '/vi/cach-tiep-can/', en: '/why/' },
   stack: { vi: '/vi/tech-stack/', en: '/tech-stack/' },
   tips: { vi: '/vi/kinh-nghiem/', en: '/tips/' },
-  adopt: { vi: '/vi/cai/', en: '/adopt/' },
+  customize: { vi: '/vi/tuy-bien/', en: '/customize/' },
   failures: { vi: '/vi/loi/', en: '/failures/' },
 };
 
@@ -50,7 +50,7 @@ export const NAV: { key: PageKey; label: Record<Lang, string> }[] = [
   { key: 'hooks', label: { vi: 'Hooks', en: 'Hooks' } },
   { key: 'stack', label: { vi: 'Tech stack', en: 'Tech stack' } },
   { key: 'tips', label: { vi: 'Kinh nghiệm', en: 'Tips' } },
-  { key: 'adopt', label: { vi: 'Install', en: 'Install' } },
+  { key: 'customize', label: { vi: 'Tuỳ biến', en: 'Customize' } },
 ];
 
 export const REPO = 'https://github.com/thientranhung/astragentic';

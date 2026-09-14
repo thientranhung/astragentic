@@ -113,7 +113,20 @@ export async function getNavTree(lang: Lang): Promise<NavSection[]> {
       ]),
     },
     { id: 'failures', label: UI.sideFailures[lang], href: ROUTES.failures[lang] },
-    { id: 'adopt', label: UI.sideAdopt[lang], href: ROUTES.adopt[lang] },
+    {
+      id: 'customize',
+      label: UI.sideCustomize[lang],
+      href: ROUTES.customize[lang],
+      /* Five sections now, where this used to be an installer and a list of brownfield
+         skills. A plain link would hide four of them. */
+      items: anchors(ROUTES.customize[lang], [
+        { id: 'install', label: UI.quickstart[lang] },
+        { id: 'customize', label: UI.customizeHeads.customize[lang] },
+        { id: 'agent-customize', label: UI.customizeHeads['agent-customize'][lang] },
+        { id: 'self-repair', label: UI.customizeHeads['self-repair'][lang] },
+        { id: 'brownfield', label: UI.brownfield[lang] },
+      ]),
+    },
   ];
 }
 

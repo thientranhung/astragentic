@@ -1,5 +1,5 @@
 ---
-// /adopt · /vi/cai — install it, then the four skills for a repo that already exists.
+// /customize · /vi/tuy-bien — install it, then the four skills for a repo that already exists.
 // Read mode (design spec 5 §2).
 import DocsLayout from '../../layouts/DocsLayout.astro';
 import AdoptBlock from '../AdoptBlock.astro';
@@ -14,7 +14,7 @@ interface Props {
   lang: Lang;
 }
 const { lang } = Astro.props;
-const page = await getPage(lang, 'adopt');
+const page = await getPage(lang, 'customize');
 
 // Which four skills these are comes from the catalog, so the list cannot drift from the
 // harness. What each one says comes from the locale's own skill page — the catalog's
@@ -33,14 +33,27 @@ const brownfield = (await getSkillCards(lang)).filter((card) => names.has(card.n
   title={page.title}
   description={page.description}
   lang={lang}
-  page="adopt"
-  eyebrow={`install · v${meta.version}`}
+  page="customize"
+  eyebrow={`${UI.customizeEyebrow[lang]} · v${meta.version}`}
 >
   <Prose slot="lede" html={page.intro} class="lede" />
 
-  <div class="install" data-toc-skip>
-    <AdoptBlock lang={lang} />
-  </div>
+  <section class="read-section" id="install">
+    <h2>{UI.quickstart[lang]}</h2>
+    {page.sections['install'] && <Prose html={page.sections['install']} class="read-body read-body--sections" />}
+    <div class="install" data-toc-skip>
+      <AdoptBlock lang={lang} />
+    </div>
+  </section>
+
+  {
+    (['customize', 'agent-customize', 'self-repair'] as const).map((id) => (
+      <section class="read-section" id={id}>
+        <h2>{UI.customizeHeads[id][lang]}</h2>
+        {page.sections[id] && <Prose html={page.sections[id]} class="read-body read-body--sections" />}
+      </section>
+    ))
+  }
 
   <section class="read-section" id="brownfield">
     <h2>{UI.brownfield[lang]}</h2>

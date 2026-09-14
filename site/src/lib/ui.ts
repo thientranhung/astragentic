@@ -17,7 +17,7 @@ export const UI = {
     en: 'Astragentic: an agent outsourcing unit that puts the engineer in the client\'s seat.',
   },
   repoLink: { vi: 'GitHub ↗', en: 'GitHub ↗' },
-  footerAdopt: { vi: 'Install', en: 'Install' },
+  footerCustomize: { vi: 'Tuỳ biến', en: 'Customize' },
   footerVersion: { vi: 'phiên bản', en: 'version' },
   footerCited: { vi: 'bài học đo được đã thành luật trong harness', en: 'measured lessons now enforced by a harness file' },
   footerGenerated: { vi: 'số liệu sinh ngày', en: 'data generated' },
@@ -35,7 +35,14 @@ export const UI = {
   sideStack: { vi: 'Tech stack', en: 'Tech stack' },
   sideTips: { vi: 'Kinh nghiệm', en: 'Tips' },
   sideFailures: { vi: 'Bài học', en: 'Lessons' },
-  sideAdopt: { vi: 'Install', en: 'Install' },
+  sideCustomize: { vi: 'Tuỳ biến', en: 'Customize' },
+  customizeEyebrow: { vi: 'cài và tuỳ biến', en: 'install and customize' },
+  /** The four sections the customize page is built from, after install. */
+  customizeHeads: {
+    customize: { vi: 'Sửa nó thành của bạn', en: 'Make it yours' },
+    'agent-customize': { vi: 'Để một agent sửa bộ khung', en: 'Let an agent do the customising' },
+    'self-repair': { vi: 'Bộ khung tự sửa bằng cuốn sổ lỗi', en: 'The scaffold repairs itself through its ledger' },
+  },
   /** The tips page's own eyebrow, longer than the rail label it shares a page with. */
   tipsTitle: { vi: 'Kinh nghiệm chạy nhiều agent', en: 'Tips for running several agents' },
   roleKey: { vi: 'Màu role trong hình', en: 'Role colours in this figure' },
