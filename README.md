@@ -4,9 +4,17 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.8.0-blue" alt="version">
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-2.8.1-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
-  <img src="https://img.shields.io/badge/failure_modes-136_measured-red" alt="failure modes">
+  <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-136_measured-red" alt="failure modes"></a>
+  <a href="https://astragentic.thisistool.com/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
+</p>
+
+<p align="center">
+  <a href="https://astragentic.thisistool.com/"><strong>Website</strong></a> ·
+  <a href="RELEASE-NOTES.md">Release notes</a> ·
+  <a href="https://astragentic.thisistool.com/tips/">Running several agents</a> ·
+  <a href="docs/bmad-distilled/">BMAD role kit</a>
 </p>
 
 <p align="center">
@@ -38,7 +46,7 @@ prove what happened.
 
 # 3. Open your repo in Claude Code and run the adaptive installer
 cd /path/to/your-repo
-claude "Read .astraler/releases/2.8.0/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/2.8.1/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Start the router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium
@@ -187,6 +195,31 @@ term nobody confirmed, becomes confident-sounding lore that later agents treat a
 
 ---
 
+## A role kit, alongside the method
+
+`mattpocock-skills` is the **method**: it is wired into the role contracts, and every ticket
+travels through it. [`docs/bmad-distilled/`](docs/bmad-distilled/) is something else — a
+**role kit** for the sessions that stand outside that road, when there is no ticket to
+dispatch yet and you want a specialist rather than a generic assistant.
+
+It is [BMAD](https://bmadcode.com) distilled to markdown: one `roster.md` naming eight roles,
+and `capabilities/` holding 44 files, one per workflow. The personas are quoted verbatim from
+the original; the python resolver, `config.yaml` and the rest of the install machinery are
+gone. There is nothing to install, and an agent loads one role plus one or two capabilities
+rather than the whole set.
+
+```
+Play Winston in docs/bmad-distilled/roster.md, following
+docs/bmad-distilled/capabilities/architecture.md. Design the architecture for: …
+```
+
+**The limit, stated plainly.** A role kit is prompt level, not contract level. No hook and no
+gate makes an agent follow the file it just read. It improves the shape of an answer; it does
+not prove a step ran. Where proof is what you need, it is still a contract, a receipt and a
+gate.
+
+---
+
 ## Greenfield — the first session
 
 An empty repo **skips `bootstrap-glossary` and `batch-triage`** — both read something that
@@ -293,15 +326,38 @@ Then: `claude --dangerously-skip-permissions --agent thomas --model claude-opus-
 
 ---
 
+## Versions and releases
+
+`VERSION` is the single source, and it is the number a staged release is named after:
+`.astraler/releases/<version>/`. [`RELEASE-NOTES.md`](RELEASE-NOTES.md) carries one entry per
+release, newest first, and every version it documents has a git tag on the commit that set it.
+
+```bash
+cat VERSION                          # what this checkout is
+git tag --sort=-v:refname | head     # the ladder, newest first
+git log --oneline -- VERSION         # every bump, with the sentence that named it
+```
+
+Releases are read as prose rather than as a changelog: each entry says what broke, what the
+evidence was, and what the fix refuses to do. An entry that only listed changed files would
+not be able to say why the change is there — and the ledger it draws from is the reason the
+package has a memory at all.
+
+The rule when upgrading: read the entry for **every** version between yours and the new one.
+A patch release in this package is often the correction of a defect the previous one shipped,
+so the interesting sentence is rarely in the newest entry alone.
+
+---
+
 ## At a glance
 
 | | |
 |---|---|
 | **Roles** | 5 — Thomas, Shaper, Builder, Rin, QA |
-| **Skills** | 13+ orchestration, 4 brownfield-specific |
+| **Skills** | 16 in the harness, 4 of them brownfield-specific |
 | **Runtimes** | Claude Code, Codex, OpenCode |
 | **Review layers** | 3 per ticket (prior system: 5-14 rounds) |
-| **Failure modes** | 125 measured, append-only evidence base |
+| **Failure modes** | 136 measured, append-only evidence base |
 | **Isolation** | 1 worktree per Builder, 1 branch per ticket |
 
 ---
@@ -325,9 +381,12 @@ harness/
   .codex/hooks.json   project-local Codex safety hook registration
   scripts/                     see "When each script runs" below
 docs/adr/                      architectural decision records
+docs/bmad-distilled/           the BMAD role kit — roster + 44 capability files
 prompts/ADAPT-HARNESS.md       the semantic installer
 install.sh                     staging script
 check-requirements.sh          machine readiness check
+VERSION                        the number a staged release is named after
+RELEASE-NOTES.md               one entry per release, newest first
 ```
 
 ## Removing it

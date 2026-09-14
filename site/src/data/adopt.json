@@ -24,7 +24,7 @@
   "commands": [
     "./check-requirements.sh",
     "./install.sh /path/to/your-repo",
-    "cd /path/to/your-repo\nclaude \"Read .astraler/releases/2.8.0/ADAPT-HARNESS.md completely and execute it.\"",
-    "claude --agent thomas"
+    "cd /path/to/your-repo\nclaude \"Read .astraler/releases/2.8.1/ADAPT-HARNESS.md completely and execute it.\"",
+    "claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium"
   ]
 }

@@ -1,3 +1,55 @@
+# Astragentic 2.8.1
+
+Two observations from the first project to run 2.8.0, and the repository work that lets a
+reader arriving on GitHub tell which version they are looking at. No contract changed. Both
+payload fixes are the same shape: a receipt and a log line now say what they actually know.
+
+## A stamp that says what closed, not that something did
+
+`ticket-done.sh` calls the project's own `ticket-done.sh` plug — the deploy trigger, the
+changelog line, the notification each project owes at close. It recorded the outcome as
+`project plug: ran`, which is a boolean wearing a sentence: it proves the plug exited 0 and
+nothing about what the plug did.
+
+The stamp now carries the plug's last output line — `project plug: ran — <line>`, or
+`(printed nothing)` where a plug is silent. A plug that prints a deploy id, a changelog entry
+or a notification target leaves that in the receipt where the next station reads it. The
+plug's own output still goes to stderr as it runs, so nothing is swallowed in order to make
+the stamp.
+
+## A guessed base branch now says it is a guess
+
+`hook-git-guard.py` resolves the base branch from `refs/remotes/<remote>/HEAD`. A clone that
+never ran `git remote set-head` has no such ref, and the guard fell back to `main` in silence.
+On a project whose base is `master` or `develop` that guards the wrong branch and reports
+nothing — the failure class this package keeps measuring, where the reassuring branch is taken
+without saying it was taken.
+
+It still falls back to `main`, because refusing every clone with no remote HEAD would block
+more than it protects. It now logs the guess, the reason, and the one command that turns the
+guess into a fact:
+
+```
+base-guessed(main: no refs/remotes/origin/HEAD; run `git remote set-head origin -a`)
+```
+
+## Nothing in the payload, and everything for a reader arriving from outside
+
+The repository had no tags and no releases. A visitor could read every line of the code and
+not learn which version it was, and `VERSION` is a file you have to know to look for. Every
+version this file documents now has a tag on the commit that set it, so the ladder from 1.0.0
+to here is on the Tags page rather than only in here.
+
+`docs/distilled/` is `docs/bmad-distilled/`, naming the method it was distilled from: a BMAD
+roster and 44 capability files with the install machinery removed, which is the role kit half
+of how this project works — separate from `mattpocock-skills`, which is the method wired into
+the role contracts.
+
+The ten vendored content skills under `.agents/skills/` are gone — 444 files that were copies
+of machine-wide installations, never part of the payload, never staged by `install.sh`.
+`omnilogin-agent-browser` stays, because its procedure is this project's QA walk rather than a
+copy of something the machine already provides.
+
 # Astragentic 2.8.0
 
 2.7.15 made the payload a chipset and shipped its first socket. 2.8.0 ships the second pin —
