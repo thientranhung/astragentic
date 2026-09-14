@@ -91,6 +91,30 @@ That is the closed loop: a failure, a line in the ledger, a rule in a contract, 
 at the next dispatch. The ledger is the scaffold's long-term memory; the contracts are where that
 memory takes effect.
 
+### The loop closes at merge
+
+Not at the end of a sprint, and not when somebody remembers. Thomas's contract says it directly:
+**write the lesson at merge**, and the merge commit carries a `Ledger:` line naming what went in.
+
+`Ledger: none` is valid. **Its absence is not.** That distinction carries the weight: "this one
+taught us nothing" is a conclusion, while no line at all is a step that was skipped — and from the
+outside those look identical unless the declaration is required.
+
+### When it reaches an agent
+
+There is no build step and nobody reloads anything. A promoted rule is written straight **into a
+file the agent reads at the start of its session** — a role contract, a skill, a hook. Each role's
+system prompt is only a few lines, and one of them is an instruction to read its own contract. The
+next session opens already carrying the new rule.
+
+A hook covers the rest: after a session compacts, the contract is re-armed, because what sits
+outside the system prompt is the first thing compaction summarises away.
+
+Exactly one thing is generated: a **rules index**, derived from the ledger, one line per entry —
+the rule without the story around it. It exists because lookup and evidence want different shapes:
+read the full entry when you need to know what happened, read the index when you only need to know
+what the rule is. That file states on its face that it is derived and not authoritative.
+
 A line that has not yielded a rule yet stays in the ledger rather than being filtered out. An open
 record is more honest than a ledger containing only the things already solved.
 

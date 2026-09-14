@@ -86,6 +86,30 @@ nhớ, mà vì văn bản đã đổi.
 Đó là vòng khép kín: lỗi → một dòng trong sổ → một luật trong contract → hành vi khác ở lần dispatch
 sau. Cuốn sổ là bộ nhớ dài hạn của bộ khung, còn contract là chỗ bộ nhớ đó có hiệu lực.
 
+### Vòng đó khép lại ở lúc merge
+
+Không phải cuối sprint, không phải khi ai đó nhớ ra. Contract của Thomas ghi thẳng: **ghi bài học
+vào lúc merge**, và commit merge mang một dòng `Ledger:` nói rõ cái gì vừa được ghi vào sổ.
+
+`Ledger: none` là hợp lệ. **Thiếu hẳn dòng đó thì không.** Khác biệt ấy quan trọng: "lượt này không
+học được gì" là một kết luận, còn không có dòng nào là một bước bị bỏ qua — và hai thứ đó nhìn từ
+ngoài giống hệt nhau nếu không bắt buộc khai báo.
+
+### Nó tới tay agent lúc nào
+
+Không có bước build, và không ai phải nạp lại. Một luật được rút ra sẽ **viết thẳng vào file mà
+agent đọc ở đầu session** — một role contract, một skill, một hook. System prompt của mỗi role chỉ
+có vài dòng, và một trong số đó là lệnh đọc contract của chính nó. Session kế tiếp mở lên là đã mang
+luật mới.
+
+Một hook lo phần còn lại: sau khi session bị compact, contract được nạp lại, vì thứ nằm ngoài system
+prompt là thứ compaction tóm tắt đi trước tiên.
+
+Chỉ có đúng một thứ được sinh tự động: một **file chỉ mục luật**, dựng từ cuốn sổ, mỗi mục một dòng
+— phần luật, bỏ phần kể chuyện. Nó tồn tại vì tra cứu và kể chuyện cần hai hình dạng khác nhau: khi
+cần bằng chứng thì đọc nguyên mục trong sổ, khi chỉ cần biết luật là gì thì đọc chỉ mục. File đó ghi
+rõ nó là bản dẫn xuất và không phải nguồn có thẩm quyền.
+
 Dòng nào chưa rút ra được luật vẫn nằm nguyên trong sổ chứ không bị lọc đi. Một hồ sơ chờ thì trung
 thực hơn một cuốn sổ chỉ chứa những lần đã giải quyết xong.
 
