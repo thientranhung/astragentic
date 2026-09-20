@@ -53,6 +53,15 @@ PASS=0; FAIL=0; FAILED=""
 ok()   { PASS=$((PASS+1)); [ "$VERBOSE" = 1 ] && printf '  ok   %s\n' "$1"; return 0; }
 bad()  { FAIL=$((FAIL+1)); FAILED="$FAILED  $1\n"; printf '  FAIL %s\n     %s\n' "$1" "${2:-}"; }
 have() { command -v "$1" >/dev/null 2>&1; }
+# DEFINED WITH THE OTHER HELPERS, not beside its first caller. It lived inside the reachability
+# section for two releases, four hundred lines below the top of the file, so a case added ABOVE
+# that point called an undefined function — which in a shell is not an error a reader sees: the
+# call returns non-zero and the case reports the FAILURE IT WAS WRITTEN TO CATCH. Measured
+# 2026-09-20 on the install.sh fossil case, which passed by hand and failed here for a reason
+# that had nothing to do with install.sh.
+says() { # <haystack> <needle> — substring, with no pipeline and no exit status in the way
+  case "$1" in *"$2"*) return 0 ;; *) return 1 ;; esac
+}
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
@@ -292,6 +301,30 @@ if bash "$ROOT/install.sh" "$T1" >/dev/null 2>&1 && [ -d "$T1/.astraler/releases
   ( cd "$SP" && bash install.sh "$T3" ) >/dev/null 2>&1 && [ -d "$T3/.astraler/releases/$V" ] \
     && ok "stages from a path containing a space" \
     || bad "spaced path" "a repository path with a space refused a valid install"
+
+  # A RENAMED SCAFFOLD PATH. The fossil report has existed since 2.7.6 and excluded
+  # `.codex/profiles/*` by name, because a project keeps its own scaffold — right reasoning,
+  # and it stops holding the moment the path is RETIRED rather than tuned. 2.12.0 renamed all
+  # five profiles, and this exclusion is what would have carried the dead name into every
+  # adapted repo without a word (AST-143's shape, one directory over).
+  T4="$TMP/pre212"; rm -rf "$T4"
+  mkdir -p "$T4/.codex/profiles" "$T4/.astraler/releases/0.0.1/harness/.codex/profiles" "$T4/.astraler/state"
+  ( cd "$T4" && git init -q . ) >/dev/null 2>&1
+  FOSSIL="builder.config"".toml"
+  printf 'model = "x"\n' > "$T4/.codex/profiles/$FOSSIL"
+  cp "$T4/.codex/profiles/$FOSSIL" "$T4/.astraler/releases/0.0.1/harness/.codex/profiles/"
+  printf '0.0.1\n' > "$T4/.astraler/state/applied-version"
+  # The guard install.sh reads, set deliberately: these two runs are about the fossil REPORT,
+  # and without it each one spawns a nested copy of this whole suite as its staging gate —
+  # minutes, for coverage the three cases above already provide.
+  ASTRALER_IN_SELFTEST=1 bash "$ROOT/install.sh" "$T4" >/dev/null 2>&1
+  out="$(ASTRALER_IN_SELFTEST=1 bash "$ROOT/install.sh" "$T4" --apply 2>&1)"
+  says "$out" ".codex/profiles/$FOSSIL" \
+    && ok "a renamed profile is reported as a fossil rather than skipped as scaffold" \
+    || bad "profile rename fossil" "the dead name stays in the project and the receipt says clean"
+  says "$out" "READ THIS ONE BEFORE DELETING" \
+    && ok "the fossil report says where the owner's model and effort have to go first" \
+    || bad "profile rename advisory" "the owner is told to delete a file holding values nothing else has"
 else
   bad "install.sh staging" "did not stage $V into a fresh target"
 fi
@@ -527,7 +560,7 @@ PAY="$ROOT/harness"; [ "$LAYOUT" = project ] && PAY="$ROOT"
 for role in thomas shaper builder rin qa; do
   cla="$PAY/.claude/agents/$role.md"
   opc="$PAY/.opencode/agents/$role.md"
-  cdx="$PAY/.codex/profiles/$role.config.toml"
+  cdx="$PAY/.codex/profiles/$role.md"
   # A project may not run all five roles, and a surface that does not exist there is not a
   # drifted surface. Absent files are reported as scope, never as a failure.
   present=0; miss=""
@@ -644,9 +677,6 @@ cp "$ROOT/README.md" "$ROOT/install.sh" "$ROOT/check-requirements.sh" "$RX/" 2>/
 # here on 2026-09-16 before this comment existed.
 rx()  { python3 "$S/check-reachability.sh" "$RX" 2>&1; }
 rxp() { python3 "$S/check-reachability.sh" "$RP" 2>&1; }
-says() { # <haystack> <needle> — substring, with no pipeline and no exit status in the way
-  case "$1" in *"$2"*) return 0 ;; *) return 1 ;; esac
-}
 
 out="$(rx)"
 says "$out" "All reachability checks passed" \
@@ -700,6 +730,47 @@ says "$out" "All reachability checks passed" \
   || bad "check 10 (gone)" "an explicitly retired citation is still reported"
 cp "$ROOT/harness/.agents/memory/recurring-failure-modes.md" \
    "$RX/harness/.agents/memory/recurring-failure-modes.md"
+
+# 10 — THE SAME CLAIM WITH A STAR IN IT. `Bound: `x/*.toml`` was not a resolved binding, not a
+# finding and not even a counted assertion: the pattern demanded both backticks and `*` was
+# outside its character class, so the citation matched nothing at all. Two entries carried that
+# shape while the files behind it were renamed away (2.12.0), and check 10 stayed green over
+# both. Watched to fail here first: with the star, invisible; without it, caught (AST-147).
+printf '\n### AST-998 — fixture\n\nBound: `.agents/roles/*.no-such-suffix.md`.\n' \
+  >> "$RX/harness/.agents/memory/recurring-failure-modes.md"
+out="$(rx)"
+says "$out" "asserts a live binding to .agents/roles/*.no-such-suffix.md" \
+  && ok "check 10 reads a globbed binding that matches no file" \
+  || bad "check 10 glob" "a starred Bound: line was excused by the pattern that was meant to read it"
+cp "$ROOT/harness/.agents/memory/recurring-failure-modes.md" \
+   "$RX/harness/.agents/memory/recurring-failure-modes.md"
+out="$(rx)"
+says "$out" "All reachability checks passed" \
+  && ok "check 10 stays quiet on the payload's own globbed bindings" \
+  || bad "check 10 glob" "a live glob binding in the shipped ledger reads as rot"
+
+# 4 — `--profile <role>` is an address outside the repository. codex --help: it layers
+# $CODEX_HOME/<name>.config.toml, which no payload ships and no adaptation writes since 2.12.0.
+# A launcher written that way starts a pane with no role contract and Codex says nothing.
+python3 - "$RX" <<'EOS'
+import sys, os
+p = os.path.join(sys.argv[1], "harness", ".agents", "skills", "dispatch-ticket-codex", "SKILL.md")
+open(p, "a").write("\n```text\nbuilder → codex --profile builder\n```\n")
+EOS
+out="$(rx)"
+says "$out" "launches \`--profile builder\`, an address outside the repository" \
+  && ok "check 4 refuses the retired --profile launcher" \
+  || bad "check 4 --profile" "a launcher pointing outside the repo passed as a resolved address"
+cp "$ROOT/harness/.agents/skills/dispatch-ticket-codex/SKILL.md" \
+   "$RX/harness/.agents/skills/dispatch-ticket-codex/SKILL.md"
+
+# 4 — and the address that replaced it must resolve like any other payload path.
+mv "$RX/harness/.codex/profiles/builder.md" "$RX/harness/.codex/profiles/builder.md.away"
+out="$(rx)"
+says "$out" "orchestrator.md puts builder on codex, but .codex/profiles/builder.md is absent" \
+  && ok "check 4 catches a role the table puts on codex with no instruction file" \
+  || bad "check 4 role file" "a launcher would have passed an empty developer_instructions and nothing went red"
+mv "$RX/harness/.codex/profiles/builder.md.away" "$RX/harness/.codex/profiles/builder.md"
 
 # docs-staleness axis 4 must actually READ the shipped prompts. Three attempts at that scope
 # fix each passed `bash -n`, printed `(clean)`, and scanned zero files — an array that read as
@@ -768,12 +839,97 @@ out="$(rxp)"
 says "$out" "role 'builder' runs on codex, which never sees .claude/rules/fixture-invariant.md" \
   && ok "check 11 fires when a role is moved off the runtime its rules live on" \
   || bad "check 11" "reassigning a runtime silenced an always-on rule and nothing went red"
-printf 'fixture-invariant\n' >> "$RP/.codex/profiles/builder.config.toml"
+printf 'fixture-invariant\n' >> "$RP/.codex/profiles/builder.md"
 out="$(rxp)"
 says "$out" "never sees .claude/rules/fixture-invariant.md" \
   && bad "check 11 after carrying the rule" "the rule was carried into the profile and it still fires" \
   || ok "check 11 goes quiet once the rule is carried into that runtime's adapter"
 fi
+# ---------------------------------------------------------------------------------------------
+# THE CODEX LAUNCHER: THE ROW, THE FILE, AND A MECHANISM THAT RETIRED UNDER IT (2.12.0).
+#
+# `codex --profile <role>` layers `$CODEX_HOME/<role>.config.toml` and nothing else — the CLI's
+# own help says so. Until 2.12.0 this package shipped in-repo templates for a machine-local file
+# the owner had to copy by hand into a namespace every project on the machine shares. The
+# replacement passes the role file on the command line, which makes the orchestrator row the
+# only home for model and effort and leaves three ways to be wrong, each fired here first.
+# ---------------------------------------------------------------------------------------------
+echo "codex launcher — a row that names no model, a file that is not there, a mechanism that retired"
+
+CR="$ROOT/check-requirements.sh"; [ -f "$CR" ] || CR="$S/check-requirements.sh"
+if [ -f "$CR" ]; then
+  CFIX="$TMP/cqfix"
+  cfresh() {
+    rm -rf "$CFIX"; mkdir -p "$CFIX"
+    cp -R "$ROOT/harness/.agents" "$CFIX/.agents"
+    cp -R "$ROOT/harness/.codex"  "$CFIX/.codex"
+  }
+  crow() { python3 - "$CFIX" "$1" <<'EOS'
+import sys, os, re
+p = os.path.join(sys.argv[1], ".agents", "orchestrator.md")
+t = open(p).read()
+t = re.sub(r"^\|\s*builder\s*\|\s*codex\s*\|.*\n", sys.argv[2], t, count=1, flags=re.M)
+open(p, "w").write(t)
+EOS
+  }
+  cq() { bash "$CR" "$CFIX" 2>&1; }
+
+  # A row that claims the runtime and names nothing to launch. Until 2.12.0 one awk condition
+  # answered two questions — is there a row, and does it name a model — and delivered the
+  # second answer as the first: a blank Model cell printed `no codex row … does not run on
+  # Codex`, which is what a DELIBERATE decline looks like. AST-040 wearing a blank.
+  cfresh; crow '| builder | codex |  | medium |
+'
+  out="$(cq)"
+  says "$out" "Codex builder has a codex row with no model" \
+    && ok "a codex row with a blank model is a finding, not a decline" \
+    || bad "codex row/model" "a role that cannot launch was reported as declining the runtime"
+
+  # And the decline itself must still read as one, or the fix above turns into noise on every
+  # project that deliberately runs a role on one runtime.
+  cfresh; crow ''
+  out="$(cq)"
+  says "$out" "Codex builder: no codex row — this role does not run on Codex" \
+    && ok "no codex row still reads as a deliberate decline" \
+    || bad "codex row absent" "declining a runtime now produces a finding"
+
+  # A TARGET missing its own file must not be answered by the package's copy. Same class as
+  # 2.11.0's staleness gate measuring the caller's cwd: the checker was handed a tree and
+  # reported on a different one.
+  cfresh; rm -f "$CFIX/.codex/profiles/builder.md"
+  out="$(cq)"
+  says "$out" "Codex builder instruction file not found" \
+    && ok "a target with no instruction file is not answered by the package's copy" \
+    || bad "codex file scope" "the checker fell back across the target boundary and reported OK"
+
+  # The file IS the pane's system prompt, so a sentence describing the retired mechanism is
+  # read as instruction. Measured downstream: five role files kept "it exists so codex
+  # --profile <role> resolves" through the change that retired it, and the pane quoted it back.
+  cfresh; printf 'it exists so codex --profile builder resolves\n' >> "$CFIX/.codex/profiles/builder.md"
+  out="$(cq)"
+  says "$out" "still describe the retired --profile mechanism" \
+    && ok "role instructions teaching a dead mechanism are reported" \
+    || bad "codex stale mechanism" "a pane would be told to use a flag that resolves nowhere"
+
+  # An upgrade adds `<role>.md` and cannot delete the `<role>.config.toml` it no longer ships.
+  # Both then sit in the same directory and the stale one still reads as current.
+  cfresh; printf 'model = ""\n' > "$CFIX/.codex/profiles/builder.config.toml"
+  out="$(cq)"
+  says "$out" "pre-2.12 profile TOML still present" \
+    && ok "a leftover profile TOML is named rather than left beside the live file" \
+    || bad "codex legacy leftover" "two files, one dead, and the upgrade said nothing"
+
+  # The green case, because a gate only read when it is red teaches nothing about when it is right.
+  cfresh; crow '| builder | codex | gpt-5.6-luna | medium |
+'
+  out="$(cq)"
+  says "$out" "Codex builder row: gpt-5.6-luna / medium" \
+    && ok "a fully configured codex row reports the pair it will launch with" \
+    || bad "codex row green" "a correct row produced no confirmation"
+else
+  SKIPPED=$((SKIPPED+1)); echo "  skip codex launcher — check-requirements.sh not in this layout"
+fi
+
 # A path is never built from unvetted input: a role name with a separator must not escape.
 out="$(printf '%s' '{"hook_event_name":"SessionStart","source":"compact","agent_type":"../../etc/passwd"}' \
        | python3 "$S/hook-contract-reload.py" 2>/dev/null)"

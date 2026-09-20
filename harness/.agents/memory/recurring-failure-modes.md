@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 143 entries (AST-001 … AST-144, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 147 entries (AST-001 … AST-148, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -530,7 +530,8 @@ An empty field a doctor refuses is louder than a plausible wrong value nothing q
 ship no id: `model = ""` plus a comment naming where the real one comes from, and a doctor
 that MISSes on empty. The general shape: **a default that cannot be right should not look
 right.** Placeholders that pass validation are how a config error becomes an outage report.
-Bound: `harness/.codex/profiles/*.config.toml`, `check-requirements.sh`.
+Bound: `harness/.codex/profiles/*.config.toml` (gone), `harness/.agents/orchestrator.md`, `check-requirements.sh`. 2.12.0 moved the model out of the profile entirely: the
+orchestrator row is its only home, and the doctor MISSes on a codex row that names none.
 
 ### AST-041 — A file called "the owner's" that ships in the payload has two homes and the shipped one wins · promoted 2026-08-11
 `.agents/orchestrator.md` opens with "This file is the owner's" and was nevertheless part of
@@ -3621,7 +3622,7 @@ exist for every runtime with a hook surface. Both cases were watched to FAIL aga
 it stood before this entry — five roles red and one registration red — which is the only reason
 they are in the suite (AST-137).
 
-Bound: `harness/.codex/hooks.json`, `harness/.codex/profiles/*.config.toml`,
+Bound: `harness/.codex/hooks.json`, `harness/.codex/profiles/*.md`,
 `harness/scripts/hook-contract-reload.py`, `harness/scripts/selftest.sh`.
 
 ### AST-139 — The fork guard AST-119 asked for cannot be built today, measured three ways · promoted 2026-09-14
@@ -3846,3 +3847,132 @@ cannot describe "yours and mine are duplicates and one has to die."
 
 Bound: `scripts/docs-staleness-audit.sh`, `scripts/check-reachability.sh` (check 4),
 `scripts/selftest.sh`, `install.sh`, `prompts/ADAPT-HARNESS.md` (§3 plugs).
+
+### AST-145 — A role identity routed through a namespace the project does not own · promoted 2026-09-20
+
+A downstream project asked a narrow question — does `codex --profile <role>` read the repo's
+`.codex/profiles/`? — and the answer was already in the CLI's own help: `--profile` layers
+`$CODEX_HOME/<name>.config.toml`, and nothing else. The package had never claimed otherwise. It
+shipped in-repo TEMPLATES and told the owner to copy each one into `$CODEX_HOME` by hand.
+
+The narrow answer was the smaller half. **`$CODEX_HOME` is one namespace for every project on
+the machine, and the key is a generic role name.** Two repositories adapting this harness both
+want `builder`; the second one to be provisioned wins, silently, and no check on either side can
+see it — each compares its own template against a destination that belongs to neither. That the
+file had to be copied by hand was the second cost: `install.sh` cannot write outside the repo,
+so the doctor reported an unprovisioned profile on every run until a human acted, which is how a
+project ends up sitting on four `[MISS]` lines that mean nothing is wrong yet.
+
+The third cost was ordinary duplication. `model` and `model_reasoning_effort` lived in the
+profile AND in the orchestrator row, and a third of the doctor's Codex block existed only to
+police the disagreement. **A value with two homes needs a referee; a value with one does not.**
+
+The fix removes the namespace rather than guarding it. Everything travels on the launch line:
+
+```
+codex -m <model> -c model_reasoning_effort="<effort>" \
+  -c developer_instructions="$(cat .codex/profiles/<role>.md)" \
+  --dangerously-bypass-approvals-and-sandbox
+```
+
+`.codex/profiles/<role>.md` is plain text, in the repository, tracked, per-project. The row is
+the only home for model and effort. Nothing is provisioned and nothing can drift.
+
+**One consequence worth stating, because it changes how the file is written: it IS the system
+prompt.** A line explaining the file to a reader is said to the agent. So the explanation moved
+into the skill, and the file carries instructions only — which is also why the sentence *"it
+exists so `codex --profile <role>` resolves"* had to be removed from all five rather than left
+as a stale comment: a pane launched with it reads it as current instruction (AST-146).
+
+Bound: `.agents/skills/dispatch-ticket-codex/SKILL.md`, `.codex/profiles/*.md`,
+`.agents/orchestrator.md`, `check-requirements.sh`, `scripts/check-reachability.sh` (check 4).
+
+### AST-146 — An unrecognised configuration key is accepted in silence, so "it launched" is not evidence · promoted 2026-09-20
+
+Measured on codex-cli 0.155.1 while replacing the launcher above. Three probes, run as a set
+because the first one alone would have made the other two look unnecessary:
+
+| probe | result |
+|---|---|
+| `-c totally_bogus_key_xyz="whatever"` | accepted, no warning, exit 0 |
+| `-c developer_instructions="<text>"` | the agent obeyed the text; a control run without it did not |
+| `-c model_reasoning_effort="definitely_not_a_level"` | HTTP 400 — at the first API call, not at launch |
+
+**A typo in a config key costs a Builder with no contract and produces no error anywhere.** The
+pane starts, looks healthy, reports for work, and is running on the base user config. This is
+AST-032's shape (a signal that cannot fail is not evidence) one layer below where that entry
+found it: not a check that always passes, but an INPUT that is always accepted.
+
+So the pre-dispatch step stopped comparing two files and started asking the parser.
+`codex debug prompt-input` renders the model-visible prompt as JSON without a model call, and
+the role file must come back byte for byte. Two traps it caught that reading would not:
+
+- `-c` parses its value as TOML FIRST and falls back to a literal string. Prose survives
+  verbatim — headings, `$`, backticks, quotes, markdown links — but a file that is one quoted
+  line comes back with its quotes stripped, and a file containing only `true` is refused with
+  *invalid type: boolean, expected a string*.
+- The first version of the verification snippet compared with `diff` against output written
+  without a trailing newline, so it failed on a CORRECT file. It would have shipped as a step
+  that is red for everyone, which is a step people learn to skip.
+
+**What the check proves is delivery, and only delivery.** The bytes reach the pane; it cannot
+say the bytes are right. A file still describing a retired mechanism passes it — so
+`check-requirements.sh` WARNs on `--profile`, `CODEX_HOME` and `.config.toml` appearing inside a
+role's instruction file, which is the half a parser can never answer.
+
+Bound: `.agents/skills/dispatch-ticket-codex/SKILL.md`, `check-requirements.sh`,
+`scripts/selftest.sh`.
+
+### AST-147 — A `Bound:` line with a star in it was invisible to the check whose whole job is `Bound:` lines · promoted 2026-09-20
+
+2.10.0 shipped check 10 — every live `Bound:`/`Wired`/`Enforced by` citation must still resolve
+— because the ledger's provenance had gone unchecked for four releases. Renaming five files out
+of the payload in 2.12.0 made two citations false the moment the rename landed, and check 10
+stayed green over both.
+
+Its pattern required a backtick on each side of the path and did not have `*` in the character
+class. `` `harness/.codex/profiles/*.config.toml` `` therefore matched **nothing at all**: not a
+resolved binding, not a finding, and not even a counted assertion. The count it prints — the
+only number a reader has to judge its coverage by — excluded exactly the citations it could not
+read. Adding `*` took the count from 137 to 140.
+
+**Found by planting the same claim twice**, once with a literal filename and once with a star.
+The literal one failed immediately; the starred one was silent. Reading the regex would not have
+told anyone which of those two it was, because the regex looks correct either way — what it
+excludes is a shape nobody thought to write down as a case.
+
+**The rule, which is not about globs.** A check that reads a document by PATTERN is only as wide
+as the shapes it was tested against, and its own count is not evidence of coverage — a shape it
+cannot parse is subtracted from the denominator before anyone sees it. Test a matcher with the
+shapes the document actually contains, including the ones written in a different notation.
+
+A globbed citation is also a different CLAIM: it says the set is non-empty. Check 10 resolves it
+with a glob and fails when the set is empty, which is what a renamed-away file leaves behind.
+
+Bound: `scripts/check-reachability.sh` (check 10), `scripts/selftest.sh`,
+`.agents/memory/recurring-failure-modes.md` (AST-141).
+
+### AST-148 — One condition answering two questions delivered the second answer as the first · promoted 2026-09-20
+
+`check-requirements.sh` read a role's codex row with `if ($2 == role && $3 == "codex" && $4 != "")`.
+That last clause is a judgement about the MODEL cell smuggled into a test for whether the ROW
+EXISTS. A row reading `| builder | codex |  | medium |` produced no output, and the loop below
+reported `ok: no codex row — this role does not run on Codex` — which is what a DELIBERATE
+decline looks like. The role was assigned to Codex and could not launch, and the doctor said
+green in the sentence reserved for a correct configuration.
+
+It survived because a second home covered it: the profile TOML shipped `model = ""` and a
+different branch MISSed on that. 2.12.0 made the row the only home (AST-145), and the moment it
+did, this blank cell became unreportable. **Removing a duplicate removes the redundancy that was
+quietly answering for a defect elsewhere** — the deduplication is still right, and the check that
+was leaning on the duplicate has to be found before it falls over.
+
+Three distinct states, three distinct answers, and the fix is to ask three questions instead of
+one: no row is a decline and reports `ok`; a row with `<set-me>` is the scaffold's resting state
+and reports `ok` on a target; a row naming the runtime and no model is a `MISS`. It is AST-040
+wearing a blank instead of a plausible id — *a default that cannot be right should not look
+right*, and `ok: this role does not run on Codex` is the most reassuring-looking wrong answer
+the block had available.
+
+Bound: `check-requirements.sh`, `scripts/selftest.sh`,
+`.agents/memory/recurring-failure-modes.md` (AST-040).

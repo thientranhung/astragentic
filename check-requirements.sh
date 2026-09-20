@@ -221,23 +221,42 @@ else
     "in an interactive claude session: /plugin → install 'codex' (marketplace: openai-codex)"
 fi
 
-# Codex role profiles — machine-local, provisioned only with explicit owner confirmation, so
-# drift and absence are reported rather than repaired.
+# Codex role instructions — an in-repo file per role, injected on the launch command line as
+# `developer_instructions`. Nothing is provisioned outside the repository, so there is no
+# destination to compare against and no drift to report: the file either exists, says the
+# right thing, and reaches the pane, or it does not.
 #
-# The template is NOT the authority. `.agents/orchestrator.md` is the single owner of role →
-# runtime/model/effort, and a template shipped with placeholder values agrees with a profile
-# copied from it while BOTH disagree with the table — drift that is invisible to a
-# template-vs-profile comparison, and that surfaces as "Codex is down" at the first
-# cross-vendor call rather than as a config error. So compare against the table too.
+# `.agents/orchestrator.md` is the single owner of role → runtime/model/effort, and since
+# 2.12.0 it is the ONLY home for model and effort — the launcher reads the row and passes
+# both as flags. That removes the failure this block used to police (a template agreeing with
+# a machine copy while both disagreed with the table) and leaves two new ones, which is what
+# it polices now: a row that names Codex without naming a model, and an instruction file that
+# still teaches the retired `--profile` mechanism.
 # A named target owns the answer: its table is the one its dispatches read. Only with no
 # target does the package's own copy stand in.
+# A FALLBACK ACROSS THE TARGET BOUNDARY ANSWERS ABOUT THE WRONG TREE. The comment above has
+# said "only with no target does the package's own copy stand in" since this block was written,
+# and the loop below it did not do that: a target with no table of its own fell through to the
+# package's, and every row check that followed described a file the target does not have.
 ORCH=""
-for CAND in "${TARGET:+$TARGET/.agents/orchestrator.md}" \
-            ".agents/orchestrator.md" "harness/.agents/orchestrator.md"; do
-  [ -n "$CAND" ] && [ -f "$CAND" ] && { ORCH="$CAND"; break; }
-done
+if [ -n "$TARGET" ]; then
+  [ -f "$TARGET/.agents/orchestrator.md" ] && ORCH="$TARGET/.agents/orchestrator.md"
+else
+  for CAND in ".agents/orchestrator.md" "harness/.agents/orchestrator.md"; do
+    [ -f "$CAND" ] && { ORCH="$CAND"; break; }
+  done
+fi
 
-# Read a role's codex row from either table; prints "<model>|<effort>".
+# Read a role's codex row from either table; prints "<model>|<effort>". Prints nothing only
+# when the role has NO codex row.
+#
+# IT MUST NOT ALSO JUDGE THE MODEL CELL. Until 2.12.0 this awk carried `&& $4 != ""`, so a row
+# reading `| builder | codex |  | medium |` produced no output and the loop below printed
+# `ok: no codex row — this role does not run on Codex`. One condition was answering two
+# questions — *is there a row* and *does the row name a model* — and the second answer was
+# delivered as the first. It was survivable while the profile TOML shipped `model = ""` and a
+# separate branch MISSed on it; with the row as the only home for the model, the same blank
+# cell is a role that cannot launch, reported as a role deliberately declining a runtime.
 orchestrator_codex_row() {
   [ -n "$ORCH" ] || return 1
   awk -F'|' -v role="$1" '
@@ -245,83 +264,90 @@ orchestrator_codex_row() {
       gsub(/^[ \t]+|[ \t]+$/, "", $2); gsub(/^[ \t]+|[ \t]+$/, "", $3)
       gsub(/^[ \t]+|[ \t]+$/, "", $4); gsub(/^[ \t]+|[ \t]+$/, "", $5)
       gsub(/`/, "", $4)
-      if ($2 == role && $3 == "codex" && $4 != "") { print $4 "|" $5; exit }
+      if ($2 == role && $3 == "codex") { print $4 "|" $5; exit }
     }' "$ORCH"
 }
 
-profile_field() { grep -E "^$2 *=" "$1" 2>/dev/null | head -1 | cut -d'"' -f2; }
-# A role with NO codex row never runs on Codex, so it needs no machine-local profile and
-# warning about one is noise the owner cannot act on. Absence is how this table already
-# says "not this runtime" — `rin` has said it since 1.0.0 — so read it the same way here.
-# `rin` stays in the loop because its template is the pane launcher for the day the trade
-# is revisited; every other role follows its row.
+# A role with NO codex row never runs on Codex, so it needs no instruction file and warning
+# about one is noise the owner cannot act on. Absence is how this table already says "not this
+# runtime" — `rin` has said it since 1.0.0 — so read it the same way here. `rin` stays in the
+# loop because its file is the pane launcher for the day that trade is revisited; its write
+# posture is UNVERIFIED and would need measuring before anyone relies on it.
 for ROLE in thomas shaper builder rin qa; do
-  ROW_EXISTS="$(orchestrator_codex_row "$ROLE" 2>/dev/null)"
-  if [ "$ROLE" != "rin" ] && [ -n "$ORCH" ] && [ -z "$ROW_EXISTS" ]; then
+  ROW="$(orchestrator_codex_row "$ROLE" 2>/dev/null || true)"
+  if [ "$ROLE" != "rin" ] && [ -n "$ORCH" ] && [ -z "$ROW" ]; then
     ok "Codex ${ROLE}: no codex row — this role does not run on Codex"
     continue
   fi
-  # Three places the template can live: an adapted project (.codex/), this package
-  # (harness/.codex/), or a target where the release is staged but not yet adapted.
-  TEMPLATE=""
-  for CAND in "${TARGET:+$TARGET/.codex/profiles/${ROLE}.config.toml}" \
-              ".codex/profiles/${ROLE}.config.toml" \
-              "harness/.codex/profiles/${ROLE}.config.toml" \
-              $(ls -d .astraler/releases/*/harness/.codex/profiles/${ROLE}.config.toml 2>/dev/null | tail -1); do
-    [ -n "$CAND" ] && [ -f "$CAND" ] && { TEMPLATE="$CAND"; break; }
-  done
-  DEST="${CODEX_HOME:-$HOME/.codex}/${ROLE}.config.toml"
-  if [ -n "$TEMPLATE" ]; then
-    # Authority check first: does the profile agree with the orchestrator row?
-    ROW="$(orchestrator_codex_row "$ROLE")"
-    ROW_MODEL="${ROW%%|*}"; ROW_EFFORT="${ROW##*|}"
-    # `<set-me>` is the scaffold's way of saying "the owner has not chosen yet". It is not a
-    # value to compare against — comparing it would report every real config as drift.
-    if [ "$ROW_MODEL" = "<set-me>" ]; then
-      # UNDECIDED is a legitimate resting state, not a defect: the owner picks a runtime per
-      # project and per situation, and may genuinely not know yet. Warning here every run is
-      # a nag they cannot act on, and a nag they learn to skip costs the warnings that matter.
-      # The check that IS actionable happens at dispatch, where using it is the actual risk.
-      [ -n "$TARGET" ] && ok "Codex ${ROLE}: undecided (<set-me>) — dispatch to codex will STOP until it is set"
-      ROW=""
-      SKIP_PROFILE=1
-    fi
-    if [ -n "$ROW" ]; then
-      PROF_SRC="$TEMPLATE"; [ -f "$DEST" ] && PROF_SRC="$DEST"
-      PROF_MODEL="$(profile_field "$PROF_SRC" model)"
-      PROF_EFFORT="$(profile_field "$PROF_SRC" model_reasoning_effort)"
-      # A placeholder that LOOKS like a real id is the trap: it resolves nowhere and fails
-      # at the moment the cross-vendor arm runs — end of phase, when the work looks done —
-      # reading as "the provider is down" rather than as a config error. So the package
-      # ships an EMPTY model and the doctor refuses it (AST-040).
-      if [ -z "$PROF_MODEL" ]; then
-        miss "Codex ${ROLE} profile has no model set" \
-          "the package ships this empty on purpose. Copy the model from the ${ROLE} codex row in .agents/orchestrator.md into $PROF_SRC — a placeholder id would fail only at the first cross-vendor call"
-      elif [ "$PROF_MODEL" != "$ROW_MODEL" ]; then
-        miss "Codex ${ROLE} profile model '$PROF_MODEL' disagrees with its orchestrator.md row '$ROW_MODEL'" \
-          "orchestrator.md owns role → model; a profile that disagrees fails at invoke time and looks like the provider being down. Fix $PROF_SRC"
-      elif [ -n "$ROW_EFFORT" ] && [ "$PROF_EFFORT" != "$ROW_EFFORT" ]; then
-        warn "Codex ${ROLE} profile effort '$PROF_EFFORT' disagrees with its row '$ROW_EFFORT'" \
-          "align $PROF_SRC with .agents/orchestrator.md"
-      fi
-    fi
-    if [ "${SKIP_PROFILE:-0}" = "1" ]; then
-      SKIP_PROFILE=0
-    elif [ -f "$DEST" ] && cmp -s "$TEMPLATE" "$DEST"; then
-      ok "Codex ${ROLE} profile installed and matches the tracked template"
-    elif [ -f "$DEST" ]; then
-      warn "Codex ${ROLE} profile drift detected" \
-        "compare $TEMPLATE with $DEST; adaptation needs explicit confirmation before overwrite"
-    else
-      warn "Codex ${ROLE} profile not provisioned" \
-        "adaptation needs explicit confirmation before copying $TEMPLATE to $DEST"
-    fi
+  ROW_MODEL=""; ROW_EFFORT=""
+  if [ -n "$ROW" ]; then ROW_MODEL="${ROW%%|*}"; ROW_EFFORT="${ROW##*|}"; fi
+
+  # Three places the file can live: an adapted project (.codex/), this package (harness/.codex/),
+  # or a target where the release is staged but not yet adapted.
+  PROFILE=""
+  if [ -n "$TARGET" ]; then
+    # Only the target's own tree, including a release staged there but not yet adapted. Reading
+    # the package's copy here reports the PACKAGE is fine while the target has no file at all.
+    for CAND in "$TARGET/.codex/profiles/${ROLE}.md" \
+                $(ls -d "$TARGET"/.astraler/releases/*/harness/.codex/profiles/${ROLE}.md 2>/dev/null | tail -1); do
+      [ -n "$CAND" ] && [ -f "$CAND" ] && { PROFILE="$CAND"; break; }
+    done
   else
-    warn "Codex ${ROLE} profile template not found" \
-      "run this check from the package root or an adapted project root"
+    for CAND in ".codex/profiles/${ROLE}.md" \
+                "harness/.codex/profiles/${ROLE}.md" \
+                $(ls -d .astraler/releases/*/harness/.codex/profiles/${ROLE}.md 2>/dev/null | tail -1); do
+      [ -f "$CAND" ] && { PROFILE="$CAND"; break; }
+    done
+  fi
+
+  # A pre-2.12 project keeps its old TOML at the same path: the release adds `<role>.md` and
+  # cannot delete what it no longer ships, so both sit there and the stale one still reads as
+  # current. Name it; deleting a file under `.codex/profiles/` is the owner's call.
+  LEGACY=""
+  for CAND in "${TARGET:+$TARGET/.codex/profiles/${ROLE}.config.toml}" \
+              ".codex/profiles/${ROLE}.config.toml"; do
+    [ -n "$CAND" ] && [ -f "$CAND" ] && { LEGACY="$CAND"; break; }
+  done
+  [ -n "$LEGACY" ] && warn "Codex ${ROLE}: pre-2.12 profile TOML still present at $LEGACY" \
+    "the launcher no longer reads it, and ${CODEX_HOME:-$HOME/.codex}/${ROLE}.config.toml no longer launches anything. Delete both once ${PROFILE:-.codex/profiles/${ROLE}.md} carries the role's instructions"
+
+  if [ -z "$PROFILE" ]; then
+    miss "Codex ${ROLE} instruction file not found" \
+      "the launcher passes -c developer_instructions=\"\$(cat .codex/profiles/${ROLE}.md)\"; without that file the pane starts with no role contract and no error"
+  elif [ ! -s "$PROFILE" ]; then
+    miss "Codex ${ROLE} instruction file is empty ($PROFILE)" \
+      "an empty file launches a pane with no role identity. Codex accepts it in silence — exit 0, no warning"
+  elif grep -qE -- '--profile|CODEX_HOME|\.config\.toml' "$PROFILE"; then
+    # THIS FILE IS THE AGENT'S SYSTEM PROMPT. A sentence in it describing a mechanism the CLI
+    # stopped performing is not a stale comment — it is an instruction, read as current by
+    # whatever launches with it. Measured downstream: five role files kept "it exists so
+    # codex --profile <role> resolves" through the change that retired it, and the pane quoted
+    # the sentence back when asked.
+    warn "Codex ${ROLE} instructions still describe the retired --profile mechanism ($PROFILE)" \
+      "this file IS the pane's system prompt, so that sentence is read as instruction. Remove the --profile / CODEX_HOME / .config.toml reference"
+  else
+    ok "Codex ${ROLE} instructions present ($PROFILE)"
+  fi
+
+  # The model now has exactly one home, so this is the only place it can be wrong. `<set-me>`
+  # is the scaffold saying "the owner has not chosen yet" — a legitimate resting state, and a
+  # nag they learn to skip costs the warnings that matter. An EMPTY cell is different: the row
+  # claims the runtime and names nothing to launch, which is AST-040 wearing a blank instead of
+  # a plausible id.
+  if [ -z "$ROW" ]; then
+    :
+  elif [ "$ROW_MODEL" = "<set-me>" ]; then
+    [ -n "$TARGET" ] && ok "Codex ${ROLE}: undecided (<set-me>) — dispatch to codex will STOP until it is set"
+  elif [ -z "$ROW_MODEL" ]; then
+    miss "Codex ${ROLE} has a codex row with no model" \
+      "the row claims the runtime and names nothing to launch. Put the model in the ${ROLE} codex row in $ORCH, or delete the row to decline Codex for this role"
+  elif [ -z "$ROW_EFFORT" ]; then
+    warn "Codex ${ROLE} row names a model and no effort" \
+      "the launcher passes -c model_reasoning_effort=; an empty cell leaves it to the account default"
+  else
+    ok "Codex ${ROLE} row: ${ROW_MODEL} / ${ROW_EFFORT}"
   fi
 done
-
 # 9. Watcher script — project-local, since install already stages it and a global copy is
 # never touched by a release (measured: it drifted out of sync with the shipped version).
 WATCHER=""

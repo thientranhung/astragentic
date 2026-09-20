@@ -553,7 +553,14 @@ PY
       [ -n "$OLDREL" ] || continue
       [ -e "$RELEASE_DIR/harness/$OLDREL" ] && continue      # still shipped
       [ -e "$TARGET/$OLDREL" ] || continue                    # already gone from the project
-      case "$OLDREL" in .agents/orchestrator.md|.claude/settings.json|.codex/profiles/*) continue ;; esac
+      # OWNER PATHS ARE EXCLUDED BECAUSE A PROJECT KEEPS ITS OWN — but that reasoning holds
+      # only while the path still means something. 2.12.0 renamed every
+      # `.codex/profiles/<role>.config.toml` to `<role>.md`, and this exclusion is precisely
+      # the mechanism that would have carried the dead name into every adapted repo without a
+      # word: the file is owner-kept, so the loop above says nothing, and the fossil report
+      # skipped it by name. The orchestrator and settings.json stay excluded — neither has
+      # ever been renamed, and both are edited by hand every release.
+      case "$OLDREL" in .agents/orchestrator.md|.claude/settings.json) continue ;; esac
       GONE="$GONE  $OLDREL"$'\n'; N_GONE=$((N_GONE+1))
     done < <(for _d in $BASELINE_DIRS; do (cd "$_d" && find . -type f ! -name '.DS_Store' | sed 's|^\./||'); done | sort -u)
   fi
@@ -563,6 +570,15 @@ PY
     echo "still in the project. Usually a rename; check for the new name before removing."
     printf '%s' "$GONE"
     echo "  (not removed automatically: a project may have adopted one of these on purpose)"
+    case "$GONE" in
+      *.codex/profiles/*.config.toml*)
+        echo
+        echo "  READ THIS ONE BEFORE DELETING: a profile TOML carried YOUR model and effort."
+        echo "  Since $VERSION both live only in the codex row of .agents/orchestrator.md, and"
+        echo "  the role's instructions live in .codex/profiles/<role>.md. Move your values into"
+        echo "  the row first, then delete the TOML — and the copy under \$CODEX_HOME with it,"
+        echo "  which no launcher reads any more." ;;
+    esac
   fi
 
   echo

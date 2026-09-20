@@ -80,8 +80,11 @@ being resolved by picking the more convenient one.
 
 Outside the repo, and nothing in the repo will remind anyone:
 
-- `${CODEX_HOME:-$HOME/.codex}/<role>.config.toml`, one per role the project provisioned. Read
-  `.agents/orchestrator.md` for which roles those were **before** you delete it.
+- `${CODEX_HOME:-$HOME/.codex}/<role>.config.toml`, one per role a project adapted **before
+  2.12.0** provisioned. Nothing launches from them since, and a project adapted after never
+  wrote any — but they are generic role names in a namespace shared with every other project on
+  the machine, so read `.agents/orchestrator.md` for which roles this project used **before**
+  you delete it, and leave the ones another project put there.
 - the herdr workspace, if it exists only for this project. Ask — a workspace can outlive one
   project's use of it.
 
@@ -116,7 +119,7 @@ Verification is a command, not a belief:
 ```bash
 git status                                  # exactly the deletions you intended, nothing else
 grep -rn '\.astraler\|\.agents/roles' --exclude-dir=.git .   # no live pointer to what is gone
-ls ~/.codex/*.config.toml 2>/dev/null       # profiles gone, or named as deliberately kept
+ls ~/.codex/*.config.toml 2>/dev/null       # pre-2.12 profiles gone, or named as kept on purpose
 ```
 
 Write `UNINSTALL-RECEIPT.md` at the repo root, and keep it short — it exists so a later session

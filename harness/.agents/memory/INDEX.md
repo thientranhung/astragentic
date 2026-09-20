@@ -52,7 +52,7 @@ from this table — read the entry.
 | `AST-037` | A multi-line prompt pastes without submitting, and the pane calls it idle | promoted | 140 | dispatch-ticket,dispatch-ticket-claude |
 | `AST-038` | A checker that cannot tell project content from package content fires on every adopted repo | promoted | 146 | check-reachability.sh |
 | `AST-039` | An ID namespace shared with the host project resolves confidently to the wrong lesson | promoted | 160 |   |
-| `AST-040` | A placeholder that looks like a real id fails later than a missing one | promoted | 140 |   |
+| `AST-040` | A placeholder that looks like a real id fails later than a missing one | promoted | 169 | selftest.sh |
 | `AST-041` | A file called "the owner's" that ships in the payload has two homes and the shipped one wins | promoted | 119 | orchestrator.md |
 | `AST-042` | Two skills answering to one name means the model-invoked path picks the wrong one | promoted | 126 | selftest.sh |
 | `AST-043` | A gate that requires an artifact no contract produces | promoted | 191 |   |
@@ -154,5 +154,9 @@ from this table — read the entry.
 | `AST-140` | A wiring count is an artifact of its definition, and three honest definitions gave three answers | promoted | 417 | selftest.sh |
 | `AST-141` | The ledger's `Bound:` line claims the present, and nothing had ever checked it | promoted | 335 |   |
 | `AST-142` | Where what is owed is DATA, inject it; raising a document's tier only makes the duty louder | promoted | 294 | selftest.sh |
-| `AST-143` | A scaffold path swallowed this package's own headline fix, silently, and the receipt said clean | promoted | 272 |   |
+| `AST-143` | A scaffold path swallowed this package's own headline fix, silently, and the receipt said clean | promoted | 272 | selftest.sh |
 | `AST-144` | Three gates met their first real project on the same day and all three answered about the wro… | promoted | 634 |   |
+| `AST-145` | A role identity routed through a namespace the project does not own | promoted | 359 |   |
+| `AST-146` | An unrecognised configuration key is accepted in silence, so "it launched" is not evidence | promoted | 345 | check-reachability.sh |
+| `AST-147` | A `Bound:` line with a star in it was invisible to the check whose whole job is `Bound:` lines | promoted | 298 | check-reachability.sh,selftest.sh |
+| `AST-148` | One condition answering two questions delivered the second answer as the first | promoted | 275 |   |

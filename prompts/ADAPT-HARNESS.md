@@ -152,14 +152,14 @@ Classify candidate material before editing anything:
     error text told it to (`AST-132`). Absent is an empty socket. Measured on the first real
     project to run check 4: one Docker container name kept its reachability gate permanently
     red, and a gate that cannot go green is a gate people stop reading.
-- **Runtime-specific** — Claude Markdown/YAML agents and skills stay Claude-native. Codex
-  machine-local launch-profile templates stay under `.codex/profiles/`; project-local custom
-  subagents stay under `.codex/agents/`; project hooks stay in `.codex/hooks.json`. These are
+- **Runtime-specific** — Claude Markdown/YAML agents and skills stay Claude-native. Codex role
+  instructions stay under `.codex/profiles/<role>.md`; project-local custom subagents stay under
+  `.codex/agents/`; project hooks stay in `.codex/hooks.json`. These are
   three different surfaces and are not interchangeable. OpenCode adapters
   (`.opencode/agents/*.md`) stay OpenCode-native. Translate mechanics by reading each
   runtime's contract, rather than by analogy from another.
-- **Scaffold — written once, never overwritten.** `.agents/orchestrator.md` and
-  `.codex/profiles/*.config.toml` carry the owner's runtime and model choices. Write them on
+- **Scaffold — written once, never overwritten.** `.agents/orchestrator.md` carries the owner's
+  runtime and model choices, and `.codex/profiles/*.md` carry role instructions they may tune. Write them on
   a FRESH install only. On an upgrade, leave the values alone and report any change in the
   table's shape for the owner to merge. A release that overwrites them silently reverts
   tuning the owner made deliberately, and the first sign is a dispatch failing on a model id
@@ -314,11 +314,19 @@ history, and the next run either applies it or the owner deletes the directory. 
 applied one left untracked is a different thing**: the notes and the prompt describing what
 this upgrade meant to do exist on one disk and nowhere else.
 
-**Codex role profiles** (`thomas`, `shaper`, `builder`, `rin`) are machine-local at
-`${CODEX_HOME:-$HOME/.codex}/<role>.config.toml`. Compare each tracked template with its
-destination and report missing or drifted state. Provision only after explicit owner
-confirmation in this session; a declined or absent confirmation is recorded `PENDING` for
-that runtime and leaves a Claude-only installation valid.
+**Codex role instructions** (`thomas`, `shaper`, `builder`, `qa`, `rin`) are in-repo at
+`.codex/profiles/<role>.md` and are passed on the launch command line. Nothing is provisioned
+outside the repository: there is no `$CODEX_HOME` copy to make, no destination to compare
+against, and no owner confirmation to collect for a runtime the project simply has.
+
+**Upgrading a project adapted before 2.12.0.** It carries `.codex/profiles/<role>.config.toml`,
+and `install.sh` reports them under DELETED upstream — it does not remove them, because the
+owner's model and effort are in them. For each: copy those two values into that role's codex row
+in `.agents/orchestrator.md` if the row does not already carry them, move any instruction text
+the owner added into `<role>.md`, then delete the TOML and its copy under `$CODEX_HOME`. Nothing
+reads either one any more. `check-requirements.sh` WARNs while a leftover remains, and WARNs
+again if a `<role>.md` still mentions `--profile` or `CODEX_HOME` — that file is the pane's
+system prompt, so a sentence about a retired mechanism is read as an instruction (AST-145).
 
 **Rin has no fallback row, and its absence is the correct state — preserve it.** The gate is
 a Herdr pane on the root provider's runtime, so a fallback would name a runtime that cannot

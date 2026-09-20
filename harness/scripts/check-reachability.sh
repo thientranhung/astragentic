@@ -93,6 +93,22 @@ def unqualify(name):
 # check-requirements.sh is what verifies them in an adapted project.
 PROJECT_SIDE_PREFIXES = ("docs/agents/", "docs/adr/")
 
+# Paths every ADAPTED project has and this package's payload directory does not, because the
+# installer injects them from the package root rather than shipping them inside `harness/`.
+# `check-requirements.sh` is the whole set: install.sh copies it to `harness/scripts/` inside
+# the staged release, so a project resolves `scripts/check-requirements.sh` and the package
+# tree does not. Named here rather than excluded quietly — a contract citing it is citing a
+# real address, and the alternative was to stop citing the one tool that answers for a project.
+INSTALLER_INJECTED = {"scripts/check-requirements.sh": "check-requirements.sh"}
+
+
+def payload_missing(ref):
+    """True when `ref` resolves nowhere a project or this package would find it."""
+    if os.path.exists(os.path.join(PAYLOAD, ref)):
+        return False
+    alt = INSTALLER_INJECTED.get(ref)
+    return not (alt and os.path.exists(os.path.join(ROOT, alt)))
+
 findings = []
 def fail(check, msg, detail=""):
     findings.append((check, msg, detail))
@@ -401,14 +417,14 @@ for src, text in sorted(sources.items()):
         # correct. Named, not hidden in a regex — an unstated exclusion reads as a passed check.
         if ref.startswith(PROJECT_SIDE_PREFIXES):
             continue
-        if not os.path.exists(os.path.join(PAYLOAD, ref)):
+        if payload_missing(ref):
             fail("4", f"{src} references {ref}, which does not exist in the payload")
 
     # 4a-bis. Script invocations inside fenced blocks. A path a contract tells someone to RUN
     # is not always backticked — the one that was wrong sat in a ```bash fence, where 4a has
     # never looked.
     for ref in sorted(set(re.findall(r"(?m)^\s*(?:bash\s+|sh\s+|python3\s+)?((?:scripts|tools)/[A-Za-z0-9_./-]+\.(?:sh|py))\b", text))):
-        if not os.path.exists(os.path.join(PAYLOAD, ref)):
+        if payload_missing(ref):
             fail("4", f"{src} invokes {ref}, which does not exist in the payload")
     # 4b. skill-shaped tokens.
     #
@@ -456,12 +472,38 @@ for src, text in sorted(sources.items()):
                       f".opencode/agents/{agent}.md exists in the payload",
                  "claude and opencode resolve the agent definition from the cwd; "
                  "this dispatch cannot start on either runtime")
+    # `--profile <role>` is an address that CANNOT resolve from a repository. `codex --help`:
+    # it layers `$CODEX_HOME/<name>.config.toml`, a machine-local path this payload cannot ship
+    # and no adaptation writes since 2.12.0. A launcher written this way starts a pane with the
+    # base user config and no role contract, and Codex reports nothing (AST-146).
     for prof in sorted(set(re.findall(r"--profile ([a-z][a-z0-9-]*)", text))):
-        if not os.path.exists(os.path.join(PAYLOAD, ".codex", "profiles",
-                                           f"{prof}.config.toml")):
-            fail("4", f"{src} launches `--profile {prof}`, "
-                      f"but .codex/profiles/{prof}.config.toml is absent from the payload",
-                 "check-requirements.sh reports this template as missing rather than WARN-able")
+        fail("4", f"{src} launches `--profile {prof}`, an address outside the repository",
+             "codex --profile layers $CODEX_HOME/<name>.config.toml only; pass the role file "
+             f'instead: -c developer_instructions="$(cat .codex/profiles/{prof}.md)"')
+    # The address that replaced it must resolve like any other payload path. Literal citations
+    # only; the launcher itself is written with a `<role>` placeholder, and a check keyed to
+    # that string can never fire — which is how the first version of this shipped, silent.
+    # The table-driven half below is the one that answers for the launcher.
+    for prof in sorted(set(re.findall(r"\.codex/profiles/([a-z][a-z0-9-]*)\.md", text))):
+        if not os.path.exists(os.path.join(PAYLOAD, ".codex", "profiles", f"{prof}.md")):
+            fail("4", f"{src} launches with .codex/profiles/{prof}.md, "
+                      "which is absent from the payload",
+                 "the launcher would pass an empty developer_instructions and Codex would "
+                 "accept it in silence")
+
+# 4c. Every role the orchestrator puts on Codex — actively or as a fallback — must have the
+# file its launcher cats. BOTH tables, because a fallback row is a launch path: it is the form
+# the launcher takes on the day the active runtime is down, which is the worst moment to find
+# out the role has no contract. The pane starts anyway: Codex accepts an empty
+# `developer_instructions` in silence, so this cannot be left to be noticed at runtime.
+_orch = read(os.path.join(PAYLOAD, ".agents", "orchestrator.md"))
+for _m in re.finditer(r"^\|\s*([a-z][a-z0-9-]*)\s*\|\s*codex\s*\|", _orch, re.M):
+    _role = _m.group(1)
+    if not os.path.exists(os.path.join(PAYLOAD, ".codex", "profiles", f"{_role}.md")):
+        fail("4", f"orchestrator.md puts {_role} on codex, but "
+                  f".codex/profiles/{_role}.md is absent from the payload",
+             "the launcher cats that file into developer_instructions; without it the pane "
+             "starts with no role contract and Codex reports nothing")
 
 # --- 5. ROLE -> STARTABLE ---------------------------------------------------------------
 # Checks 1-4 verify that what exists is consistent. None of them asks the question that
@@ -907,7 +949,14 @@ for _base, _dirs, _files in os.walk(pkg_root):
     _dirs[:] = [d for d in _dirs if d not in ("node_modules", ".git")]
     PAYLOAD_BASENAMES.update(_files)
 ASSERTS = re.compile(r"(?:^|\s)(Bound:|Wired\b|Enforced by:?)", re.M)
-CITED_PATH = re.compile(r"`([A-Za-z0-9_.][A-Za-z0-9_./-]*\.(?:md|sh|py|json|toml))`")
+# `*` IS IN THE CLASS BECAUSE ITS ABSENCE EXCUSED A WHOLE CITATION SHAPE. The pattern requires
+# both backticks, so `harness/.codex/profiles/*.config.toml` matched nothing at all: not a
+# resolved binding, not a finding, not even a counted assertion. Two entries carried that shape
+# while the files behind it were renamed out of the payload, and check 10 — the check whose one
+# job is that a `Bound:` line is true NOW — stayed green over both. Measured by planting the
+# same citation twice, once with a literal name and once with a star: the first failed, the
+# second was invisible (AST-147).
+CITED_PATH = re.compile(r"`([A-Za-z0-9_.][A-Za-z0-9_./*-]*\.(?:md|sh|py|json|toml))`")
 ledger_asserts = 0
 for _ledger in LEDGERS:
     if not os.path.isfile(_ledger):
@@ -942,6 +991,17 @@ for _ledger in LEDGERS:
                     or ref in ("AGENTS.md", "CLAUDE.md")) and LAYOUT != "project":
                 continue
             stripped = ref[len("harness/"):] if ref.startswith("harness/") else ref
+            if "*" in ref:
+                # A glob binds a SET. It is live while the set is non-empty and rot the moment
+                # it is empty, which is what a renamed-away file leaves behind.
+                if any(glob.glob(os.path.join(base, cand))
+                       for base in (ROOT, PAYLOAD, pkg_root)
+                       for cand in (ref, stripped)):
+                    continue
+                fail("10", f"the ledger asserts a live binding to {ref}, which matches no file",
+                     "a globbed `Bound:` is a claim that the SET is non-empty. Repoint it or "
+                     f"mark it `(gone)` ({_rel} line {i + 1})")
+                continue
             if any(os.path.exists(os.path.join(base, cand))
                    for base in (ROOT, PAYLOAD, pkg_root)
                    for cand in (ref, stripped)):
@@ -983,7 +1043,7 @@ for _ledger in LEDGERS:
 rules_checked = 0
 if LAYOUT == "project":
     ADAPTER_FOR = {
-        "codex": os.path.join(ROOT, ".codex", "profiles", "%s.config.toml"),
+        "codex": os.path.join(ROOT, ".codex", "profiles", "%s.md"),
         "opencode": os.path.join(ROOT, ".opencode", "agents", "%s.md"),
         "claude": os.path.join(ROOT, ".claude", "agents", "%s.md"),
     }

@@ -50,7 +50,7 @@ closing one.
 | thomas | claude | claude-opus-5 | medium |
 | shaper | claude | claude-opus-5 | high |
 | builder | claude | claude-sonnet-5 | medium |
-| rin | claude | claude-opus-4-8 | medium |
+| rin | claude | claude-opus-5 | high |
 | qa | claude | claude-sonnet-5 | low |
 
 ## Fallback providers
@@ -66,8 +66,8 @@ written back into this file.
 | builder | codex | <set-me> | medium |
 | qa | codex | <set-me> | medium |
 
-**Removing a role's codex row means that role does not run on Codex** — no fallback, no machine
-profile, and the doctor stops asking about one. That is how you decline a runtime deliberately,
+**Removing a role's codex row means that role does not run on Codex** — no fallback, no
+launcher, and the doctor stops asking about one. That is how you decline a runtime deliberately,
 rather than leaving `<set-me>` in place and being warned about it every run. Re-add the row when
 you want it back.
 
@@ -83,15 +83,15 @@ no dispatch path for that role is a misconfigured row: take it to the owner. Mov
 another runtime is a role-contract change — it needs a dispatch path and an adapter — not a row
 tune.
 
-**Model** travels on the command line for Claude and opencode. For Codex it lives in the
-machine-local profile at `${CODEX_HOME:-$HOME/.codex}/<role>.config.toml`, which mirrors this
-table; a profile that disagrees with its row is drift to report. **opencode requires
+**Model** travels on the command line on all three runtimes, so this table is its only home —
+nothing mirrors it and nothing can disagree with it. **opencode requires
 `provider/model` format** (e.g. `opencode-go/deepseek-v4-flash`) — a bare model name produces
 `ProviderModelNotFoundError` at launch with no suggestion, looking like a missing model rather
 than a format problem.
 
-**Effort** is `low|medium|high|xhigh|max` on Claude. Codex carries it as
-`model_reasoning_effort` in the same profile TOML. **opencode leaves it blank** — the persistent
+**Effort** is `low|medium|high|xhigh|max` on Claude. Codex takes it as
+`-c model_reasoning_effort=` on the launch command; a value it does not know fails at the first
+API call rather than at launch, so a typo here surfaces late. **opencode leaves it blank** — the persistent
 TUI form has no `--variant`, and the form that does is invisible to herdr, so effort and
 orchestration visibility are mutually exclusive there and visibility wins. A non-blank opencode
 Effort cell is a misconfigured row.

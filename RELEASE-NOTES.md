@@ -1,3 +1,169 @@
+# Astragentic 2.12.0
+
+A downstream project asked one narrow question: does `codex --profile <role>` read the
+repository's `.codex/profiles/`? It does not, and the CLI's own help has always said so — it
+layers `$CODEX_HOME/<name>.config.toml`, and nothing else. The package never claimed otherwise.
+It shipped templates and told the owner to copy each one into `$CODEX_HOME` by hand.
+
+The narrow answer was the smaller half. **`$CODEX_HOME` is one namespace shared by every project
+on the machine, and the key is a generic role name.** Two repositories running this harness both
+want `builder`. The second one provisioned wins, silently, and no check on either side can see
+it: each compares its own template against a destination that belongs to neither.
+
+This release removes the namespace rather than guarding it. Everything the Codex pane needs now
+travels on the launch command line, which makes the orchestrator row the only home for model and
+effort — and, as usual, retiring a mechanism found three checks that had been quiet about things
+they were supposed to be watching.
+
+## The launcher stops going through a file it cannot write
+
+```bash
+codex -m <model> -c model_reasoning_effort="<effort>" \
+  -c developer_instructions="$(cat .codex/profiles/<role>.md)" \
+  --dangerously-bypass-approvals-and-sandbox
+```
+
+The five `.codex/profiles/<role>.config.toml` become `.codex/profiles/<role>.md`: plain text, in
+the repository, tracked in git, per-project. Every rule in them is carried across byte for byte
+except one sentence, which is the subject of the next section.
+
+Three costs went with the old mechanism, and they are three different failures:
+
+| what it was | why it could not stay |
+|---|---|
+| a copy into `$CODEX_HOME` | `install.sh` cannot write outside the repo, so the doctor reported an unprovisioned profile on every run until a human acted — four `[MISS]` lines that meant nothing was wrong yet |
+| `model` and `model_reasoning_effort` in the profile AND the row | a third of the doctor's Codex block existed only to police the disagreement. A value with two homes needs a referee; a value with one does not |
+| a generic name in a shared namespace | two adapted projects collide on `builder`, and the collision is invisible from inside either one |
+
+**The file is the pane's system prompt.** Whatever is in it is said to the agent, so a line
+explaining the file to a human reader is a line the agent reads as instruction. The explanation
+moved into `dispatch-ticket-codex`; the file carries instructions and nothing else.
+
+## "It launched" was never evidence, and one probe proves the other two are necessary
+
+Measured on codex-cli 0.155.1, in this order on purpose:
+
+| probe | result |
+|---|---|
+| `-c totally_bogus_key_xyz="whatever"` | **accepted, no warning, exit 0** |
+| `-c developer_instructions="<text>"` | the agent obeyed the text; a control run without it did not |
+| `-c model_reasoning_effort="definitely_not_a_level"` | HTTP 400 — at the first API call, not at launch |
+
+A typo in a config key costs a Builder with no contract and produces no error anywhere: the pane
+starts, looks healthy, reports for work, and runs on the base user config. That is AST-032's
+shape one floor down — not a check that cannot fail, but an **input that is always accepted**.
+
+So pre-dispatch verification stopped comparing two copies of a file and started asking the
+parser. `codex debug prompt-input` renders the model-visible prompt as JSON with no model call,
+and the role file must come back byte for byte. It caught two things reading would not:
+
+- `-c` parses its value as TOML **first** and falls back to a literal string. Prose survives
+  verbatim — headings, `$`, backticks, quotes, markdown links — but a file that is one quoted
+  line returns with its quotes stripped, and a file containing only `true` is refused with
+  *invalid type: boolean, expected a string*.
+- The first draft of the verification snippet compared with `diff` against output written
+  without a trailing newline. It failed on a **correct** file. Shipped, it would have been a
+  step that is red for everyone, which is a step people learn to skip.
+
+What it proves is delivery and only delivery. A file that still describes a retired mechanism
+passes it — so `check-requirements.sh` WARNs when a role file mentions `--profile`, `CODEX_HOME`
+or `.config.toml`, which is the half no parser can answer. Measured downstream: five role files
+kept *"it exists so `codex --profile <role>` resolves"* through the change that retired it, and
+the pane quoted the sentence back when asked.
+
+## One awk condition was answering two questions
+
+`check-requirements.sh` read a role's codex row with `$2 == role && $3 == "codex" && $4 != ""`.
+That last clause is a judgement about the **model cell** smuggled into a test for whether the
+**row exists**. A row reading `| builder | codex |  | medium |` produced no output, and the loop
+below printed `ok: no codex row — this role does not run on Codex` — which is what a deliberate
+decline looks like. The role was assigned to Codex, could not launch, and the doctor answered in
+the sentence reserved for a correct configuration.
+
+It survived because the duplicate covered it: the profile shipped `model = ""` and another
+branch MISSed on that. The moment the row became the only home, the blank cell became
+unreportable. **Removing a duplicate removes the redundancy that was quietly answering for a
+defect somewhere else.** Three states now get three answers: no row is a decline and reports
+`ok`; `<set-me>` is the scaffold's resting state; a row naming the runtime and no model is a
+`MISS`.
+
+Two more boundary faults in the same block, both the shape 2.11.0 was named for — a check
+answering about a different tree than the one it was handed. With a target given, the block fell
+through to the **package's** orchestrator when the target had none, and to the **package's**
+role file when the target's was missing, reporting `ok` about a file the target does not have.
+The comment above it had claimed the opposite since the block was written.
+
+## A `Bound:` line with a star in it was never checked at all
+
+2.10.0 added check 10 — every live `Bound:`/`Wired`/`Enforced by` citation must still resolve —
+after the ledger's provenance went unchecked for four releases. Renaming five files out of the
+payload made two of its citations false, and check 10 stayed green over both.
+
+Its pattern required a backtick on each side and did not have `*` in the character class, so
+`` `harness/.codex/profiles/*.config.toml` `` matched **nothing**: not a resolved binding, not a
+finding, not even a counted assertion. The count it prints — the only number a reader can judge
+its coverage by — had been quietly excluding the citations it could not read. Adding `*` took it
+from 137 to 140 before this release added an entry.
+
+Found by planting the same claim twice, once with a literal filename and once with a star: the
+literal one failed on the spot, the starred one was silent. Reading the regex would not have
+distinguished those two, because it looks correct either way.
+
+A globbed citation is also a different claim — that the set is non-empty — so check 10 resolves
+it with a glob and fails when the set is empty, which is exactly what a renamed-away file leaves
+behind.
+
+## The rename would have left a fossil in every adapted repo
+
+`install.sh` has carried a fossil detector since 2.7.6: a path an older release shipped, this
+one does not, and the project still has. It skipped this rename by name. `.codex/profiles/*` was
+in its exclusion list beside `.agents/orchestrator.md` and `.claude/settings.json`, because a
+project keeps its own scaffold — right reasoning, and it stops holding the moment the path
+itself is retired rather than tuned.
+
+The exclusion now names only the two files that have never been renamed and are hand-merged
+every release. A pre-2.12.0 project upgrading is told what to do with the leftovers, and told
+before it deletes them: the owner's model and effort are inside those TOMLs, and they need to
+reach the orchestrator row first.
+
+## Also in this release
+
+- **Rin moves to `claude-opus-5` at `high`.** The shipped table had the reviewer a generation
+  behind Thomas and the Shaper, and the gate running at lower effort than the work it judges.
+  Rin is one round per milestone over a whole slice, with no second pass to catch what the first
+  missed; the cheapest role to under-provision is the wrong one to.
+- **Check 4 gained the question the launcher actually asks.** Every role the orchestrator puts
+  on Codex — active row or fallback row, because a fallback is a launch path — must have the
+  file the launcher cats. The first version of this check keyed on the literal string
+  `.codex/profiles/<role>.md` written in the skill, which contains a `<role>` placeholder and
+  therefore could never match anything. It was caught by its own fixture, which is the only
+  reason it is not shipping silent.
+- **Check 4 also stopped reporting a real address as missing.** `scripts/check-requirements.sh`
+  exists in every adapted project and nowhere in this package's payload directory, because the
+  installer injects it from the package root. It is named in one map with the reason, rather
+  than excluded by a regex nobody can find.
+- **Ten new selftest cases**, each watched to fail against the tree before its fix: a blank model
+  cell, a deliberate decline, a target answered by the package's copy, a role file teaching a
+  retired flag, a leftover TOML, a fully configured row, a globbed binding, a `--profile`
+  launcher, a role on Codex with no instruction file, and the payload's own globs staying quiet.
+- Four ledger entries: `AST-145` (the namespace), `AST-146` (silent key acceptance),
+  `AST-147` (the invisible glob), `AST-148` (one condition, two questions).
+
+## Upgrade from 2.11.0
+
+Copy `harness/`, or `./install.sh <target> --apply`. The five role files arrive as NEW scaffold
+and your `.config.toml` files are reported under DELETED upstream — **read that report before
+deleting anything**, because those TOMLs hold your model and effort and the row may not have
+them yet.
+
+Per role: put `model` and `model_reasoning_effort` into that role's codex row in
+`.agents/orchestrator.md`, move any instruction text you added into `.codex/profiles/<role>.md`,
+then delete the TOML and its copy under `$CODEX_HOME`. Nothing reads either one.
+
+`check-requirements.sh` WARNs while a leftover TOML remains and while any role file still
+mentions `--profile` or `CODEX_HOME`. Both are advisory: a project that declines Codex entirely
+can delete the rows instead, and the doctor will stop asking.
+
 # Astragentic 2.11.0
 
 2.10.0 was applied to a real project the hour it was built. Four of its changes were defects,
