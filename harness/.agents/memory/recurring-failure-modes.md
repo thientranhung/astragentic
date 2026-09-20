@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 138 entries (AST-001 … AST-139, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 143 entries (AST-001 … AST-144, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -84,7 +84,7 @@ Bound: working-method §3 (Prototype row).
 
 ### AST-010 — Worktree delegation hygiene undocumented · promoted 2026-07-02
 Superseded in scope by AST-016 (isolation became unconditional). Committed base, one agent
-per worktree. Bound: `.claude/rules/agent-worktree-isolation.md`.
+per worktree. Bound: `.claude/rules/agent-worktree-isolation.md` (gone).
 
 ### AST-011 — Gate was per-PR only, not per-step · promoted 2026-07-02 · **superseded 2026-07-16**
 Its fix ("gate every step") over-corrected into continuous Codex loops that stalled
@@ -109,13 +109,13 @@ per-slice gates + one holistic train gate (hub-v2 pattern). Historical; propose 
 ### AST-015 — Export step committed live secrets + buyer PII · promoted 2026-07-11
 Same-vendor correctness review PASSED it; cross-vendor caught it (P1) — the two lenses
 catch different classes. A value that touched a tracked file is burned — rotate it.
-Bound: `.claude/rules/no-secrets-in-exports.md` (always-on). CI secret-scan still TODO.
+Bound: `.claude/rules/no-secrets-in-exports.md` (gone) (always-on). CI secret-scan still TODO.
 
 ### AST-016 — Agents sharing one checkout moved HEAD under each other · promoted 2026-07-11
 Includes a READ-ONLY reviewer that `git switch`ed the PM's HEAD. Worktree isolation is
 UNCONDITIONAL for every spawned agent that can run state-changing git; PM re-asserts its
 branch each turn + verifies reflog after each agent. Bound:
-`.claude/rules/agent-worktree-isolation.md` (always-on).
+`.claude/rules/agent-worktree-isolation.md` (gone) (always-on).
 
 ### AST-017 — Per-package typecheck missed a cross-package break · promoted 2026-07-11
 Gate evidence = repo-root `pnpm -r typecheck` + `pnpm -r test`; per-package green is not
@@ -124,13 +124,13 @@ whole-repo green. Bound (machine): `.github/workflows/ci.yml`.
 ### AST-018 — Dispatch emitted as text, never executed; no liveness signal · promoted 2026-07-11
 Dispatch-is-not-done-until-observed: verify every delegation by its observable effect
 (agent appears in `herdr agent list` / branch moves) in the same turn; narrating a tool
-call is not calling it. Bound: `.claude/agents/thomas-leader.md` (orchestration §) +
+call is not calling it. Bound: `.claude/agents/thomas-leader.md` (gone) (orchestration §) +
 `scripts/herdr-watch-terminal.sh` (AST-022 watcher).
 
 ### AST-019 — Implementer subagent retired; independence moved to the PR · promoted 2026-07-12 · dispatch superseded by AST-026
 The in-session build subagent cost more than it returned. Surviving core: branch → PR →
 review always; plan gate before build; `/simplify` before PR. Bound:
-`.claude/rules/build-loop-gates.md`.
+`.claude/rules/build-loop-gates.md` (gone).
 
 ### AST-020 — Plugin review commands invisible → rescue used as review; raw exec hung · promoted 2026-07-12
 `disable-model-invocation` commands don't appear in the skill list — absence there is NOT
@@ -148,7 +148,7 @@ working-method §3a.
 A shared operational tool needs a pointer in a doc an agent is GUARANTEED to load
 (`AGENTS.md` @-import or `.claude/rules/`), with full path/args/exit codes; tool + every
 doc pointer change in the same commit. Bound: `AGENTS.md` (watcher bullet) +
-`.claude/agents/thomas-leader.md` (full herdr-watch doctrine; ex-`THOMAS.md`, folded
+`.claude/agents/thomas-leader.md` (gone) (full herdr-watch doctrine; ex-`THOMAS.md` (gone), folded
 2026-07-16). Watcher semantics: bell not verdict — verify by artifact; `done` mis-fires
 when the worker spawns sub-agents; real end-signal = artifact progress.
 
@@ -161,7 +161,7 @@ dev-role session. Gate-independence guarantee UNCHANGED across supersessions. Th
 "Auto-loaded" ≠ "I am Thomas". Role adoption is gated by an explicit, exhaustive,
 ordered self-check keyed on **spawn designation** (system prompt / subagent_type), never
 prompt content, never `HERDR_ENV` (diagnostic only); fail-closed STOP on mislaunch.
-Bound: `.claude/rules/role-thomas.md`.
+Bound: `.claude/rules/role-thomas.md` (gone).
 
 ### AST-025 — Gate-able conventions parked in the always-on rule tier tax every loop · proposed 2026-07-16 (PARKED debt)
 The always-on `.claude/rules/` tier is for un-gate-able safety invariants; a convention a
@@ -187,9 +187,9 @@ Identity = observable spawn designation (fail-closed STOP); dispatch-mechanism c
 re-bind EVERY governance surface in the same slice (see
 `.scratch/harness/personas/BINDING-INVENTORY.md`). ACCEPTED RESIDUAL RISK (owner, option
 B): forgot-`--agent` mislaunch is soft-guarded only (fixed launch script + self-check
-STOP). Bound: `.claude/agents/thomas-leader.md` / `dan-implementor.md` /
-`rin-pr-reviewer.md`, `.claude/rules/role-thomas.md` / `build-loop-gates.md` /
-`agent-worktree-isolation.md`, working-method §3–§5, rules §3, `AGENTS.md`, truth-model §2.
+STOP). Bound: `.claude/agents/thomas-leader.md` (gone) / `dan-implementor.md` (gone) /
+`rin-pr-reviewer.md` (gone), `.claude/rules/role-thomas.md` (gone) / `build-loop-gates.md` (gone) /
+`agent-worktree-isolation.md` (gone), working-method §3–§5, rules §3, `AGENTS.md`, truth-model §2.
 actual-outcome: _pending — at next self-audit confirm: a Dan pane resolves to Dan (no
 re-dispatch), Rin resolves to Rin, Thomas verifies by artifact, no doc still mandates the
 old worker dispatch._
@@ -207,7 +207,7 @@ its OWN worktree/branch and merges via the normal flow.** Also: EVERY session re
 Recovery pattern proven: lost commits stay in the object store — `git reflog` +
 `git branch --contains <sha>` find them; re-apply on current main. Second live incident
 same day: a detached-SHA checkout by the other session made `.claude/agents/*` files
-vanish mid-turn. Bound: `.claude/rules/agent-worktree-isolation.md` (owner delegated the
+vanish mid-turn. Bound: `.claude/rules/agent-worktree-isolation.md` (gone) (owner delegated the
 promote decision to Thomas 2026-07-17).
 
 ### AST-028 — Relative worktree path + unverified pane cwd → worktree born in the wrong place, hour-long misdiagnosis · promoted 2026-07-30
@@ -226,8 +226,8 @@ broken" theory. Root cause was ONE error: no path/cwd verification floor. Lesson
 every add, and no agent is launched or briefed in a pane whose `foreground_cwd` was not
 verified against the worktree — a mismatch is STOP, and a "missing" herdr subcommand
 means check `herdr --version` first.** Bound:
-`.claude/rules/agent-worktree-isolation.md` (Location & naming + verification floor),
-`.agents/skills/dispatch-dan/SKILL.md`.
+`.claude/rules/agent-worktree-isolation.md` (gone) (Location & naming + verification floor),
+`.agents/skills/dispatch-dan/SKILL.md` (gone).
 
 ### AST-029 — Slice finished but Dan tabs survived; `/clear` blurred context and checkout lifecycle · promoted 2026-08-02
 Observed harness friction: dispatch created a new workspace and then another tab even
@@ -246,9 +246,9 @@ merge/approved abandonment, then closes the exact Dan tab when another tab remai
 root-managed workspace when Dan is last (Herdr 0.7.5 cannot close a last tab); workspace
 ownership persists across parallel slices and never depends on which slice finishes last.
 Only then does Git cleanup run. Any survivor records owner, reason, and next action.** Bound:
-`.agents/skills/dispatch-dan/SKILL.md`, `.agents/roles/dan-implementor.md`,
-`.astraler/AGENTS.harness.md`, `.claude/rules/agent-worktree-isolation.md`,
-`.claude/agents/thomas-leader.md`, working-method §3/§5/§7, rules §3.
+`.agents/skills/dispatch-dan/SKILL.md` (gone), `.agents/roles/dan-implementor.md` (gone),
+`.astraler/AGENTS.harness.md` (gone), `.claude/rules/agent-worktree-isolation.md` (gone),
+`.claude/agents/thomas-leader.md` (gone), working-method §3/§5/§7, rules §3.
 
 ### AST-030 — Orchestrator row named a runtime with no dispatch path for the role; Rin went undispatchable · promoted 2026-08-02
 (incident from the origin project) Rin's Active row was tuned from `claude/opus` to a
@@ -268,7 +268,7 @@ dispatch always uses the Active row; the Fallback row is consulted only on degra
 or an explicit `runtime=` override; a fallback naming a runtime with no dispatch path
 (or duplicating the active runtime) means that role has NO fallback — STOP and ask the
 owner, never invent a model ID.** Bound: `.agents/orchestrator.md` (header),
-`.agents/skills/dispatch-slice/SKILL.md`, `.claude/skills/review-with-rin/SKILL.md`.
+`.agents/skills/dispatch-slice/SKILL.md` (gone), `.claude/skills/review-with-rin/SKILL.md`.
 
 ### AST-031 — A prose instruction telling an agent to suppress its tool's own default is not a boundary · promoted 2026-08-03
 Release 0.11.4 authorized Dan — the READ-ONLY slice lead — to invoke Claude Code's
@@ -287,7 +287,7 @@ action to the role that is allowed to perform it and let the forbidden role revi
 result.** Scope honestly: where the forbidden role legitimately needs broad capability
 (Dan MUST run typecheck/tests/build, all of which write), the enforceable line is the
 tool's PURPOSE, not raw capability — do not sell a purpose boundary as a sandbox. Bound:
-`.agents/roles/dan-senior.md` (step 4), `.claude/agents/dan-senior.md`.
+`.agents/roles/dan-senior.md` (gone) (step 4), `.claude/agents/dan-senior.md` (gone).
 
 ### AST-032 — A signal that cannot fail is not evidence · promoted 2026-08-05
 A consuming project ran two real product slices through the framework and hit the same
@@ -342,10 +342,10 @@ signal incapable of failing. Ask of any check what a pass and a fail each look l
 either is impossible, it is decoration (`pgrep -f` / `grep '[h]erdr-…'` fix this one). A
 corollary runs the other way: when a signal misbehaves, prefer the mundane cause already
 known over a new theory — an invented mechanism is itself an unfalsifiable claim. Bound:
-`scripts/herdr-watch-terminal.sh`, `.claude/agents/thomas-leader.md` (herdr judgment
-items 1 and 4), `.claude/agents/dan-senior.md`, `.agents/roles/dan-senior.md` (duty 3),
-`.claude/agents/rin-reviewer.md` (Tests checklist + report contract),
-`.agents/skills/dispatch-slice/SKILL.md` (brief/watch/steer), `docs/governance/rules.md`
+`scripts/herdr-watch-terminal.sh`, `.claude/agents/thomas-leader.md` (gone) (herdr judgment
+items 1 and 4), `.claude/agents/dan-senior.md` (gone), `.agents/roles/dan-senior.md` (gone) (duty 3),
+`.claude/agents/rin-reviewer.md` (gone) (Tests checklist + report contract),
+`.agents/skills/dispatch-slice/SKILL.md` (gone) (brief/watch/steer), `docs/governance/rules.md` (gone)
 §2, `templates/AGENTS.md.template`.
 
 ### AST-033 — A lookup whose question has no referent at one of its call sites · promoted 2026-08-06
@@ -366,8 +366,8 @@ mechanically evaluable but wrong is worse than a judgement call, because it is c
 wrong every time and nobody re-examines it.** Corollary for reviewers: when a rule is
 tightened from discretion to a test, the review question is not "is this test objective"
 but "what does this test RETURN in each situation it governs". Bound:
-`.claude/skills/review-with-rin/SKILL.md` §2, `.agents/skills/dispatch-slice/SKILL.md`
-(rin-reviewer row), `.claude/agents/rin-reviewer.md`, `.claude/rules/build-loop-gates.md`.
+`.claude/skills/review-with-rin/SKILL.md` §2, `.agents/skills/dispatch-slice/SKILL.md` (gone)
+(rin-reviewer row), `.claude/agents/rin-reviewer.md` (gone), `.claude/rules/build-loop-gates.md` (gone).
 
 ### AST-034 — A mandatory rule that lives only in load-on-demand docs is skipped, and only the owner notices · promoted 2026-08-07
 The simplify pass had been mandatory since the harness began — written into
@@ -422,9 +422,9 @@ rule tier, which is exactly the cost **AST-025** parks. Accepted deliberately �
 premise is that a PR gate WILL catch the convention, and the five skipped rounds are the
 measurement that it did not. When AST-025's gate-wiring work lands, re-derive this placement
 rather than inheriting it.
-Bound: `.claude/rules/build-loop-gates.md`, `.agents/roles/james-dev.md` §4b,
-`.agents/roles/dan-senior.md` §4a, `docs/governance/working-method.md` (PR checklist
-"Reuse/simplify"), `.agents/skills/dispatch-slice/SKILL.md`.
+Bound: `.claude/rules/build-loop-gates.md` (gone), `.agents/roles/james-dev.md` (gone) §4b,
+`.agents/roles/dan-senior.md` (gone) §4a, `docs/governance/working-method.md` (gone) (PR checklist
+"Reuse/simplify"), `.agents/skills/dispatch-slice/SKILL.md` (gone).
 
 ### AST-035 — `set -euo pipefail` plus a no-match `grep` aborts before its own guard · promoted 2026-08-10
 Hit three times while building 1.0.0, in three separate scripts, each time wearing a
@@ -450,7 +450,7 @@ satisfies both.
 
 Cheapest detection: run every script's empty/zero-result path, not only its happy path. All
 three defects were found that way and none by reading.
-Bound: `harness/scripts/gen-code-map.sh`, `check-requirements.sh`,
+Bound: `harness/scripts/gen-code-map.sh` (gone), `check-requirements.sh`,
 `harness/scripts/docs-staleness-audit.sh`.
 
 ### AST-036 — A git worktree carries TRACKED content only · promoted 2026-08-10
@@ -3662,3 +3662,187 @@ would cost more than the gap.
 
 Bound: `.agents/memory/recurring-failure-modes.md` (AST-119), `.agents/roles/thomas.md`,
 `.agents/roles/builder-claude.md`.
+
+### AST-140 — A wiring count is an artifact of its definition, and three honest definitions gave three answers · promoted 2026-09-16
+
+Two agents audited one downstream repo for orphaned tooling on the same evening and disagreed
+three times. Every disagreement was a different definition of the same word, and every
+definition was defensible on its own:
+
+| what counted as "wired" | verdict |
+|---|---|
+| the name appears in a hook file, CI, the Makefile or another script | **6 of 22** tools wired |
+| …plus `.astraler/project/*` and the repo's git hooks | **19 of 22** |
+| as above, but comment lines and printed strings stripped first, and skills still unscanned | **13 of 22** |
+
+**Nobody was careless and no number was the finding. The spread was.** A count published
+without its definition is a claim the reader cannot check, and it was published twice as fact
+before anyone asked what it measured.
+
+**The two errors run in opposite directions, which is why fixing one alone makes it worse.**
+
+*Too narrow — the surface set.* The package's own check 9 read two hook-registration files and
+stopped, while its failure message named "a VCS hook" as a valid call site and no git-hook
+directory was ever opened. It also never looked at `.astraler/project/`, the path this method
+TELLS an adapted project to put enforcement behind, precisely because `scripts/` is payload a
+release overwrites. A check blind to the place the method sends you scores every project that
+followed the method as an orphan farm. A skill is an execution surface too: one tool scored as
+dead was called from `.claude/skills/deploy-stage/SKILL.md`.
+
+*Too wide — a name is not a call.* One tool appeared three times inside another script: two
+comments and a `note "... (reap with tools/X if this is ever non-zero)"`. A substring test read
+that as a call site. Worse, one of those comments said the logic was *"reimplemented
+near-identically"* in the other file — so evidence of DUPLICATION was being read as evidence of
+wiring.
+
+**The rule.** Before counting, name the surface set out loud, and separate *mention* from
+*invocation* — a CONTEXT surface (a contract, a skill, the README) legitimately reaches a
+session by being read, so a script named there is reachable by mention; an EXECUTION surface (a
+hook, a plug, a VCS hook, the installer) and a script-to-script edge both claim the thing RUNS,
+and there a mention proves nothing. Fix both halves in one change or the false-clean becomes a
+false-alarm. Publish no count until each branch has been watched to go red (AST-137).
+
+Bound: `scripts/check-reachability.sh` (check 9), `scripts/selftest.sh`.
+
+### AST-141 — The ledger's `Bound:` line claims the present, and nothing had ever checked it · promoted 2026-09-16
+
+A ledger entry narrates the past, and that is correct: an entry naming a role file from a
+generation since renamed is history told accurately, and "fixing" it would falsify the record.
+But three labels inside those entries are not narrative. `Bound:` names where a rule is enforced
+**right now**; `Wired` and `Enforced by` make the same claim about a tool. Those are assertions
+about the present, and a false one is worse than silence, because it **closes the question** — a
+reader who sees `Bound:` stops looking for the enforcement.
+
+Measured on 2026-09-16, both halves on live repositories. In this package: `Bound:` pointing at
+`.claude/rules/agent-worktree-isolation.md` five times, `build-loop-gates.md` three, and
+`role-thomas.md` twice — files this package does not ship, does not require in
+`check-requirements.sh`, and names in no contract or adaptation step. Downstream: a ledger line
+reading `"Wired 2026-08-29 (report-only; --kill opt-in)"` about a tool with no call site
+anywhere in the tree.
+
+**The part worth keeping is what the package had already done about it.** `check-reachability.sh`
+knew. Its closing scope line said so in plain words — *"Not scanned, and check 4 does not speak
+for it: the failure-mode ledger's historical `Bound:` provenance. A live project measured five
+citations there to a file that had been deleted, while check 4 reported clean."* The finding had
+been converted into a footnote and shipped for four releases. **A rot entry written up honestly
+is still a rot entry**, and an accurate scope line is not a substitute for the check it is
+describing the absence of.
+
+**The rule.** An assertion label in the ledger is checkable and is checked. Retiring one is
+explicit and local: `` `path` (gone) `` at the citation, never at the entry, so a line binding one
+live file and one dead one keeps its live half under the check instead of being excused
+wholesale. And when a check's scope line names a defect the check does not cover, that sentence
+is a ticket, not documentation.
+
+Bound: `scripts/check-reachability.sh` (check 10), `.agents/memory/recurring-failure-modes.md`.
+
+### AST-142 — Where what is owed is DATA, inject it; raising a document's tier only makes the duty louder · promoted 2026-09-16
+
+The tracker contract's requirement 5 is a surface the OWNER can read without running a query,
+and the contract already says why no agent ever notices it missing: an agent recomputes what is
+ready whenever it wants. Downstream this arrived as the owner asking for tracker status three
+times and being forgotten three times — **with a correct, auto-loading rule file already on disk
+stating the duty.** The rule was at the highest tier available and it changed nothing.
+
+The fix that worked was not a higher tier. A `SessionStart` hook runs the project's own plug and
+puts the counts in context before the first question is asked. The duty did not get louder; it
+**stopped existing**, because the thing it asked for is already there.
+
+**The distinction, which is the general result.** Raising a document's tier makes an obligation
+shout — and it still depends on someone reading and acting. Injecting the data deletes the
+obligation, and depends on nobody. So: **where what is owed is DATA, inject it at the moment it
+is owed. Where what is owed is JUDGEMENT, the tier is all you have.** `hook-contract-reload.py`
+is the second kind and `hook-tracker-status.py` is the first, and shipping both is the clearest
+statement of the difference this package holds.
+
+Two boundaries this cost, both from the failure that produced it. The hook **queries nothing
+itself**: this package ships three tracker adapters, and a hook running one tracker's CLI would
+hardcode one vocabulary into payload and undo the contract it serves — so the query is a project
+plug at `.astraler/project/tracker-status.sh`. And it **only reads**: a session-start hook fires
+on every session with nobody watching the outcome, which is the wrong place to mutate a remote
+board.
+
+Bound: `scripts/hook-tracker-status.py`, `.agents/tracker-contract.md`,
+`prompts/ADAPT-HARNESS.md` (§3 plugs).
+
+### AST-143 — A scaffold path swallowed this package's own headline fix, silently, and the receipt said clean · promoted 2026-09-16
+
+2.9.0 is titled *"a rule reaches every runtime, or it reaches one"* and its central change was
+the compaction rules landing in all five `.codex/profiles/*.config.toml`. Those profiles are in
+`OWNER_PATHS`, so on every already-adapted project `install.sh` printed `owner … (kept — yours)`
+and wrote none of it. **The release's own headline fix could not reach a single project that had
+ever run it before**, and the receipt reported a clean upgrade.
+
+The scaffold rule is right and is not what failed: `.codex/profiles/` carries the owner's model
+and effort choices, and a release that overwrote them would silently revert deliberate tuning
+(AST-041). What was missing is that an owner file protects the owner's **tuning** — it was never
+meant to protect a **stale copy** from a safety fix the owner cannot see. `.claude/settings.json`
+already had the answer one branch above: keep the file, and REPORT what the release ships that
+the copy lacks.
+
+**And the check that should have caught it was disabled exactly where it would have fired.** The
+suite's runtime-parity case was `pkg_only` and resolved its paths through `$ROOT/harness/`, so it
+ran only in package layout — where the files are AUTHORED. The adapted project is where they are
+LOADED and the only place they can drift. A parity check that runs only where drift is impossible
+is a green light pointed at the wrong room.
+
+**The rule.** A scaffold path is reported on every upgrade that changes it — kept, never merged,
+always named. And a check that compares surfaces runs where the surfaces are loaded, not where
+they are written.
+
+Bound: `install.sh` (owner-file branch), `scripts/selftest.sh` (runtime parity),
+`.agents/memory/recurring-failure-modes.md` (AST-138).
+
+### AST-144 — Three gates met their first real project on the same day and all three answered about the wrong thing · promoted 2026-09-16
+
+2.10.0 shipped three checks whose fixtures all passed at package root, then went down into the
+first adapted project that had ever run them. Each failed in a different way, and none of the
+three was a bug in what it measured — each was **pointed at the wrong tree, or asked the wrong
+question, or left the project nowhere to answer.**
+
+**One: the gate measured the caller's cwd instead of the tree it was given.**
+`docs-staleness-audit.sh` resolves every axis through `$PAYLOAD` — and its `.claude/rules/`
+word-budget block used a bare relative path. A project ran `bash <package>/install.sh .` from
+its own repo; the installer asked the audit to check the PACKAGE; the audit read the PROJECT's
+rules, went over budget on them, and **the package refused to stage**. The comment forty lines
+above that block says, in plain words, that a bare relative path here *was* the real cwd
+dependency and was fixed. It was fixed for every axis except the one added later.
+
+Compounding it: the package ships no `.claude/rules/` at all, so that budget had run against an
+empty set since the day it was written. It reported clean on a denominator of zero for four
+releases, met one real rules tier, and shut the door.
+
+**Two: the case asserted cleanliness while claiming to test invocation.** `selftest.sh` carries
+a case titled *"check-reachability runs under python3 (never bash -n)"* — the file is Python
+with a `.sh` name and that is the defect it guards. It asserted **exit 0**. The tool exits 1 on
+any finding. So any healthy adapted project with one legitimate finding read as a failed
+invocation, and the suite that is supposed to prove a shape was silently proving a verdict.
+
+**Three: the error text told the project to edit the payload.** Check 4 flagged a Docker
+container name written in backticks in a project's own contract — character-for-character the
+shape of a skill reference. Its hint said to add the word to `NOT_A_SKILL` *in this script*,
+and that script is payload: doing what the hint says makes two owners for one path (`AST-132`),
+and the next upgrade undoes it.
+2.7.15 had correctly removed two downstream project names from that set — *the payload names no
+project* — and left projects with nowhere to put their own. **A gate that cannot go green is a
+gate people stop reading**, so this one benign token would have retired the whole check.
+
+**The rule, and it is one rule.** A check belongs to the package; the vocabulary, the budget and
+the tree it judges belong to whoever is being judged. So: resolve every path through the tree
+under test, never the caller's cwd; assert the thing the case is named for and nothing wider;
+and wherever a check needs a project-specific answer, give the project a socket at a path no
+release writes — `.astraler/project/not-a-skill.txt` joins the plug set for exactly this, union
+with the payload's vocabulary and never replacing it.
+
+**And a fourth finding, from the same apply, about advisory WORDING rather than mechanism.** The
+installer's new hook-script advisory fired correctly and its instruction was still wrong. It
+says *"merge everything that is not your own tuning"*, which assumes the release's version is
+the newer, better thing to fold in. In this case the project already had its own
+`SessionStart` hook answering the same question, and merging would have injected the same table
+twice per session (`AST-041`). The correct resolution was to **delete something of the
+project's** — repoint the existing registration at the payload script, verify the new path
+renders end-to-end, and only then retire the old file. An advisory that can only say "add mine"
+cannot describe "yours and mine are duplicates and one has to die."
+
+Bound: `scripts/docs-staleness-audit.sh`, `scripts/check-reachability.sh` (check 4),
+`scripts/selftest.sh`, `install.sh`, `prompts/ADAPT-HARNESS.md` (§3 plugs).

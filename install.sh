@@ -441,11 +441,47 @@ if ship is not None and proj is not None:
     print(" ".join(sorted(ship - proj)))
 PY
 )"
+          # EVENT NAMES ARE NOT ENOUGH, and that gap is the whole point of this advisory. A
+          # release that adds a hook SCRIPT under an event the project ALREADY declares shows
+          # no missing event, so the branch below says nothing and the owner keeps a file with
+          # none of the new machinery in it. Measured 2026-09-16: 2.10.0 registers
+          # hook-tracker-status.py on SessionStart; a project already had SessionStart for the
+          # contract re-arm, so the only signal it would ever have received was silence.
+          MISSING_SCRIPTS=""
+          for _hs in "$RELEASE_DIR"/harness/scripts/hook-*.py; do
+            [ -f "$_hs" ] || continue
+            _hb="$(basename "$_hs")"
+            grep -q "$_hb" "$DST" 2>/dev/null || MISSING_SCRIPTS="$MISSING_SCRIPTS $_hb"
+          done
+          if [ -n "$MISSING_SCRIPTS" ]; then
+            echo "          ACTION: this release ships hook script(s) your copy never names:"
+            echo "         $MISSING_SCRIPTS"
+            echo "          Your file was KEPT, so they are registered nowhere and will never"
+            echo "          fire. Copy their entries from the candidate's .claude/settings.json."
+          fi
           if [ -n "$MISSING_HOOKS" ]; then
             echo "          ACTION: this release ships hook event(s) your copy has no entry for:"
             echo "          $MISSING_HOOKS"
             echo "          Merge them in, keeping your own keys and hooks (ADAPT-HARNESS §4)."
           fi
+        fi
+        # The same defect one file over, and it swallowed this package's OWN headline fix.
+        # 2.9.0 is titled "a rule reaches every runtime, or it reaches one" and its central
+        # change was the compaction rules landing in all five `.codex/profiles/*.config.toml`.
+        # Those are scaffold, so every already-adapted project hit the branch above, printed
+        # "kept — yours", and received none of it — silently, while the receipt said the
+        # upgrade was clean. An owner file protects the owner's TUNING (model, effort); it was
+        # never meant to protect a stale copy from a safety fix the owner cannot see.
+        #
+        # Report, never merge: only a reader can tell an owner's deliberate edit from a copy
+        # that has simply fallen behind. The arbiter is the same one the payload branch uses —
+        # if the release changed this file since the project's last one, there is something
+        # new in it by definition.
+        if [ -n "$PREV_DIR" ] && [ -f "$PREV_DIR/$REL" ] && ! cmp -s "$PREV_DIR/$REL" "$SRC"; then
+          echo "          ACTION: this release CHANGED this scaffold file since $PREV_VERSION,"
+          echo "          and your copy was kept, so that change is not in your tree."
+          echo "          Diff it and merge everything that is not your own tuning:"
+          echo "            diff \"$PREV_DIR/$REL\" \"$SRC\""
         fi
       else
         [ "$PLAN" -eq 1 ] || { mkdir -p "$(dirname "$DST")"; cp "$SRC" "$DST"; }

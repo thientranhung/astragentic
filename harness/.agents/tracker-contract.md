@@ -67,6 +67,37 @@ where three tickets surfaced as claimable during an earlier phase exactly this w
 Related, and cheap to enforce: **a ticket in the ready state with an open blocker link is a
 contradiction.** Move it back in the same breath as adding the blocker.
 
+### Requirement 5 is the one this package now ships a mechanism for
+
+The other four are read by machinery that fails when they are missing: a frontier query
+returns nothing, a claim collides, a citation stops resolving. Requirement 5 is read by a
+person, so its failure is silence — and the entry above says why no agent notices it, which
+means writing the obligation down harder does not help. Measured downstream: an owner asked
+for tracker status three times and was forgotten three times, with a correct, auto-loading
+rule file already on disk stating the duty.
+
+So the mechanism does not raise the rule's tier. **It removes the fetch.**
+`scripts/hook-tracker-status.py` runs at session start, calls this project's
+`.astraler/project/tracker-status.sh`, and puts the counts in context before the first
+question is asked. Reporting them then costs nothing, and omitting them is visible.
+
+| | |
+|---|---|
+| the package owns | the moment, the fail-open discipline, the context cap |
+| the project owns | the query — one plug, printing whatever its tracker calls status |
+
+The plug is the boundary on purpose. This file ships three adapters and says the project's
+`docs/agents/issue-tracker.md` names the tracker, its coordinates and its status map; a hook
+that ran one tracker's CLI would hardcode one vocabulary into payload and undo exactly that.
+An absent plug is an empty socket — one note, never a broken session — the same rule
+`ticket-done.sh` follows for `tracker-state.sh`.
+
+**The general form, which is worth more than this one hook.** Raising a document's tier makes
+a duty shout; injecting the data deletes the duty. Where what is owed is *data*, prefer the
+second: it does not depend on anyone having read anything. Where what is owed is *judgement*,
+the tier is all you have. `hook-contract-reload.py` next door is the first kind and this is
+the second, and the pair is the clearest statement of the difference this package holds.
+
 ## The question that decides everything: how many places does status live?
 
 That is the whole difference between the three. Everything below follows from it.

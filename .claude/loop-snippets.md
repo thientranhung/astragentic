@@ -1,20 +1,19 @@
 # Loop snippets
 
-Mở ra, copy nguyên một khối, dán vào tab `thomas`.
+Open it, copy an entire block, and paste it into the `thomas` tab.
 
-Đơn vị interval: `s` `m` `h` `d` (vd `30m`). Sàn cứng 60 giây — `15s` bị làm tròn lên `1m`.
-Bỏ interval → Claude tự chọn nhịp (nếu tài khoản có bật); bỏ cả interval lẫn prompt → mặc định `10m`.
+Interval units: `s` `m` `h` `d` (e.g. `30m`). Hard floor: 60 seconds — `15s` is rounded up to `1m`.
+Omit the interval → Claude picks the cadence automatically (if enabled on the account); omit both the interval and the prompt → default `10m`.
 
 ---
 
-## Thomas — giữ nhịp, tự nhặt ticket mới
+## Thomas — keep the rhythm, pick up new tickets automatically
 
 ```
-/loop 30m Thomas: các agent vẫn đang hoạt động chứ? Đảm bảo monitor và watching vẫn tốt. Hết ticket thì chủ động pick ticket mới và làm tiếp. Chỉ dừng khi không còn ticket nào nhặt được VÀ không còn pane nào chạy VÀ không còn gì chờ merge.
+/loop 12m Thomas: are the agents still active? Make sure monitoring and watching remain healthy. When the tickets run out, proactively pick a new ticket and continue. Only stop when there are no tickets left to pick up AND no pane is running AND nothing is waiting to be merged. If Thomas's context is above 80%, proactively compact it.
 ```
 
-Nhịp dày hơn thì đổi `30m` → `5m`. Dưới `5m` phần lớn tick sẽ không có gì đổi mà vẫn tốn
-nguyên một lượt model; pane chết đã có `herdr-watchdog.sh` bắt ở nhịp 300s.
+For a denser cadence, change `30m` → `5m`. Below `5m`, most ticks will not produce meaningful changes but will still consume a full model pass; dead panes are already caught by `herdr-watchdog.sh` at a 300s interval.
 
-Ở chế độ cron, Thomas không tự dừng được — muốn nó dừng thật thì thêm vào cuối:
-"Khi đủ điều kiện dừng thì xoá cron job này và báo anh một dòng."
+In cron mode, Thomas cannot stop by itself — if you want it to stop for real, add this at the end:
+"When the stop conditions are met, remove this cron job and send me one line."

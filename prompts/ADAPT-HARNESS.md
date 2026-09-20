@@ -112,7 +112,7 @@ Classify candidate material before editing anything:
 - **Project plugs — the project's answers, at a path no release writes.** `.astraler/project/`
   is project-owned and tracked in git; `install.sh` never touches it, so an upgrade cannot
   overwrite what the project declared. The harness states an obligation and the moment; the
-  plug is the project's answer. Three plugs are asked for:
+  plug is the project's answer. Five plugs are asked for:
   - **`cleanup-worktree.sh <worktree-path>`** — *what does a worktree allocate in this project
     beyond git, and what releases it?* A database, a port registration, a container, a broker,
     a lease on something shared. Write the release for THIS worktree only, never a
@@ -132,6 +132,26 @@ Classify candidate material before editing anything:
   - **`ticket-done.sh <ticket-id>`** — *what does this project owe when a ticket closes?* A
     deploy trigger, a changelog line, a notification, a cache to invalidate. Nothing is a
     valid answer, written down. Runs from `scripts/ticket-done.sh` after the two checks above.
+  - **`tracker-status.sh`** (no arguments) — *what does this project's pipeline look like right
+    now, in a few lines a person can read?* Print a small table or a short list: open, in
+    progress, whatever this tracker calls waiting-on-the-owner. `scripts/hook-tracker-status.py`
+    runs it at session start and injects the output, so the counts are in context before anyone
+    asks. Read-only: a session-start hook fires on every session with nobody watching, so it is
+    the wrong place to push a board mirror — if this project needs a sync, its contract tells a
+    role to run it. Keep it under a page; the hook truncates and says so, and a count that was
+    cut off is worse than none. This plug serves requirement 5 of `.agents/tracker-contract.md`
+    — the surface the OWNER reads without running a query — which is the requirement every
+    project meets last, because no agent ever feels it missing.
+  - **`not-a-skill.txt`** (a list, not a script) — *which skill-shaped words in this project's
+    own documents are not skills?* One token per line, `#` comments allowed. Every project has
+    them: a container name, a queue, a feature flag, written in backticks in a contract.
+    `scripts/check-reachability.sh` check 4 reads this file and adds it to the payload's own
+    vocabulary; it never replaces it, so a project cannot silence the harness's words with it.
+    Before 2.10.0 the only place to put such a token was the payload set inside that script,
+    which the next release overwrites — the project redid the work every upgrade, and the
+    error text told it to (`AST-132`). Absent is an empty socket. Measured on the first real
+    project to run check 4: one Docker container name kept its reachability gate permanently
+    red, and a gate that cannot go green is a gate people stop reading.
 - **Runtime-specific** — Claude Markdown/YAML agents and skills stay Claude-native. Codex
   machine-local launch-profile templates stay under `.codex/profiles/`; project-local custom
   subagents stay under `.codex/agents/`; project hooks stay in `.codex/hooks.json`. These are
@@ -427,8 +447,9 @@ Only after validation succeeds:
    It records **exceptions only** — each `DIFFERS` path and its decision, every `PENDING`
    and why, ownership conflicts, defects found in the candidate, and validation failures.
    And one line per project plug under `.astraler/project/` — `cleanup-worktree.sh`,
-   `tracker-state.sh`, `ticket-done.sh` — written (what it does) or declined (why) — an
-   unrecorded plug is an empty socket the next session cannot tell from a considered one.
+   `tracker-state.sh`, `ticket-done.sh`, `tracker-status.sh`, `not-a-skill.txt` — written (what it does) or
+   declined (why) — an unrecorded plug is an empty socket the next session cannot tell from a
+   considered one.
    A clean upgrade produces a receipt of a few lines, and that is the correct output, not a
    thin one. What has a recurring reader — the ticket prefix, the standards pointer, the
    rendering path, the project ledger path — goes in the project's entry doc (steps 2.4, 3
@@ -440,3 +461,5 @@ where it is, record the blocker, and return `PENDING`.
 
 Finish with `APPLIED` or `PENDING`, the candidate version, the most important integration
 decisions, and exact artifact paths.
+
+

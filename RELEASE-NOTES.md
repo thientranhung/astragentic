@@ -1,3 +1,240 @@
+# Astragentic 2.11.0
+
+2.10.0 was applied to a real project the hour it was built. Four of its changes were defects,
+and all four were found by that project inside one afternoon — three of them by this package's
+own gates, refusing to let the next build ship. This release is those four fixes and the one
+new contract surface they required.
+
+**2.10.0 is not withdrawn and its notes are not edited.** It shipped, it was adopted, and the
+record of what it contained is what the next upgrade arbitrates against. A release quietly
+replaced under its own number is the same defect as a `Bound:` line that stopped being true —
+which is a thing this package spent 2.10.0 building a check for.
+
+## The gate measured the caller's cwd instead of the tree it was handed
+
+`docs-staleness-audit.sh` resolves every axis through `$PAYLOAD`, and its `.claude/rules/`
+word-budget block used a bare relative path. A project ran `bash <package>/install.sh .` from
+its own repo; the installer asked the audit to check the PACKAGE; the audit measured the
+PROJECT's rules, went over budget on them, and **the package refused to stage**. The comment
+forty lines above that block says in plain words that a bare relative path there *was* the real
+cwd dependency and was fixed — fixed for every axis except the one added afterwards.
+
+Compounding it: this package ships no `.claude/rules/` at all, so that budget had been
+measuring an empty set since the day it was written. Four releases of `ok`, on a denominator of
+zero, then one real rules tier and the door shut.
+
+## A project had nowhere to declare its own vocabulary
+
+Check 4 flags skill-shaped tokens. A project's contract named a Docker container in backticks —
+character for character the shape of a skill reference — and the hint said to add the word to
+`NOT_A_SKILL` *in this script*. That script is payload: doing what the hint said would be undone
+by the next upgrade, every upgrade. 2.7.15 had correctly removed two downstream project names
+from that set — *the payload names no project* — and left projects with nowhere to put their own.
+
+**A gate that cannot go green is a gate people stop reading**, so one benign token would have
+retired the whole check. `.astraler/project/not-a-skill.txt` is the fifth project plug: one
+token per line, union with the payload's vocabulary and never replacing it. The error text now
+points there and says plainly not to edit the payload set.
+
+## The case asserted cleanliness while claiming to test invocation
+
+`selftest.sh` carries a case named *"check-reachability runs under python3 (never bash -n)"* —
+the file is Python with a `.sh` name and that is the shape it guards. It asserted **exit 0**,
+and the tool exits 1 on any finding. Every healthy adapted project with one legitimate finding
+read as a broken invocation. It now asserts what its name says: the header line was printed and
+the exit status is 0 or 1. Anything else is still a failure, because that is what a broken
+interpreter actually looks like.
+
+## The text explaining the payload boundary violated it
+
+The vocabulary fix above cited `PROJ-016` — an id that exists only in a project's own ledger, 22
+times there and zero times in the payload's. Axis 4 caught two of the four copies and refused to
+ship. It was structurally blind to the other two: one in `.agents/memory/`, excluded on purpose
+because the ledger cites downstream measurements by design, and one in `prompts/ADAPT-HARNESS.md`
+— **shipped in every release, read by every adopting agent, and never in this axis's scope.**
+
+Axis 4 now reads the prompts. Getting that right took three attempts, and the first two are the
+reason there is now a fixture: an array of directories read as `unbound variable` inside the
+process substitution under `set -u`; then a `[[ -d ]]` guard that two byte-identical copies
+disagreed about. **Both passed `bash -n`, both printed `(clean)`, and both scanned zero files.**
+The actual cause was neither: the walk-up at the top of that script stops at the first directory
+holding `.agents/roles`, which in this package is `harness/` — so `$ROOT` is the payload
+directory and `$ROOT/prompts` does not exist.
+
+A check whose output cannot distinguish *nothing is wrong* from *nothing was read* is worth
+nothing. `selftest.sh` now plants a project-shaped token in `ADAPT-HARNESS.md` and requires the
+axis to name it, then requires it to go quiet when the token is removed. The token is composed
+at run time, because a literal one in `scripts/selftest.sh` makes axis 4 report on the suite
+forever — the second fixture this release to need that, after the orphan-script case.
+
+## Also in this release
+
+- `install.sh` reports hook SCRIPTS a kept `.claude/settings.json` never names, not just missing
+  event names. A release adding a script under an event the project already declares produced no
+  signal at all, and the owner kept a file with none of the new machinery in it.
+- `selftest.sh`: 100 cases, 0 failed.
+- `AST-144` records all four, and a fifth finding from the same apply that is **not** fixed here:
+  the advisory above detects a collision by script NAME, and the real one downstream collided on
+  event-plus-matcher with two different names. Its wording is wrong for the same reason — it says
+  "merge everything that is not your own tuning", and the correct resolution there was to delete
+  something of the project's. Both are held for the next release rather than wedged in at the end
+  of the afternoon that produced four defects.
+
+## Upgrade from 2.10.0
+
+Copy `harness/`, or `./install.sh <target> --apply`. If you applied 2.10.0, **do not delete its
+staged release directory** — it is the baseline this upgrade arbitrates your tree against, and
+your receipt cites it.
+
+`.astraler/project/not-a-skill.txt` is optional; without it check 4 reports your own vocabulary
+as unknown, which is the pre-2.11.0 behaviour and not a regression.
+
+# Astragentic 2.10.0
+
+Two agents spent an evening auditing one downstream repository for documents and tools nothing
+loads, disagreed three times, and every disagreement was worth more than the audit. The package
+was wrong twice, the downstream harness once, and the checks that were supposed to notice had
+been reporting clean over all of it.
+
+One theme runs through the release: **a check that has only ever been watched to stay quiet has
+not been tested.** Three of the four findings below are checks going green over the exact defect
+they name, one of them in a sentence the tool prints about itself.
+
+## A count is an artifact of its definition
+
+The question was simple — how many tools in that repo are actually wired to anything? Three
+definitions, all defensible, run against the same tree on the same evening:
+
+| what counted as "wired" | verdict |
+|---|---|
+| named in a hook file, CI, the Makefile or another script | **6 of 22** |
+| …plus `.astraler/project/*` and the repo's git hooks | **19 of 22** |
+| as above, with comments and printed strings stripped, skills still unscanned | **13 of 22** |
+
+**No number was the finding. The spread was**, and it was published as fact twice before anyone
+asked what it measured. The two errors run in opposite directions, so fixing either alone turns a
+false-clean into a false-alarm rather than into an answer.
+
+**Too narrow — the surface set.** `check-reachability.sh` check 9 read two hook-registration
+files and stopped, while its own failure message named *"a VCS hook"* as a valid call site and no
+git-hook directory was ever opened. It never looked at `.astraler/project/` either — the path
+this method TELLS a project to put enforcement behind, precisely because `scripts/` is payload a
+release overwrites. A check blind to the place the method sends you scores every project that
+followed the method as an orphan farm. Skills are execution surfaces too: one tool scored dead
+was called from a `SKILL.md`.
+
+**Too wide — a name is not a call.** One tool appeared three times inside another script: two
+comments and a `note "... (reap with tools/X if this is ever non-zero)"`. Substring matching read
+that as a call site — and one of those comments said the logic was *"reimplemented
+near-identically"* in the other file, so evidence of DUPLICATION was being read as evidence of
+wiring.
+
+Check 9 now names its surface set out loud, distinguishes CONTEXT surfaces (a contract, a skill,
+the README — reached by being read, so a mention is reachability) from EXECUTION surfaces (a
+hook, a plug, a VCS hook, the installer — where a mention proves nothing), and runs in project
+layout over the scripts the release actually shipped. `AST-140`.
+
+## `Bound:` is a claim about now, and nothing had ever checked one
+
+A ledger entry narrates the past and must keep doing so — an entry naming a role file from a
+generation since renamed is history told correctly. But `Bound:`, `Wired` and `Enforced by` name
+where a rule is enforced **right now**, and a false one is worse than silence because it closes
+the question: a reader who sees `Bound:` stops looking for the enforcement.
+
+Measured in this package on 2026-09-16: `Bound:` pointing at `.claude/rules/agent-worktree-isolation.md`
+five times, `build-loop-gates.md` three, `role-thomas.md` twice — files this package does not
+ship, does not require in `check-requirements.sh`, and names in no contract. Downstream: a line
+reading `"Wired 2026-08-29"` about a tool with no call site anywhere.
+
+**The part that stings is that the package knew.** `check-reachability.sh` closed every run by
+printing, in plain words, that the ledger's `Bound:` provenance was unscanned and that a live
+project had measured five citations to a deleted file while check 4 reported clean. The finding
+had been converted into a footnote and shipped for four releases. Check 10 is that footnote paid
+off. Retiring a citation is explicit and local — `` `path` (gone) `` at the citation, never at
+the entry, so a line binding one live file and one dead one keeps its live half under the check.
+`AST-141`.
+
+## The scaffold path that swallowed 2.9.0's own headline fix
+
+2.9.0 is titled *"a rule reaches every runtime, or it reaches one"* and its central change was
+the compaction rules landing in all five `.codex/profiles/*.config.toml`. Those are in
+`OWNER_PATHS`, so on every project that had ever run this installer before, `--apply` printed
+`owner … (kept — yours)` and wrote none of it. **The release's headline fix could not reach a
+single existing adopter**, and the receipt said the upgrade was clean.
+
+The scaffold rule itself is right: those profiles carry the owner's model and effort choices, and
+overwriting them silently reverts deliberate tuning (AST-041). What was missing is that an owner
+file protects the owner's **tuning** — never a **stale copy** of a safety fix the owner cannot
+see. `.claude/settings.json` already had the answer one branch above: keep the file, report what
+the release ships that your copy lacks. `.codex/profiles/` now gets the same treatment, with the
+diff command to run.
+
+**And the check that would have caught it was disabled exactly where it would have fired.** The
+suite's runtime-parity case was `pkg_only` and resolved through `$ROOT/harness/`, so it ran only
+in package layout — where those files are AUTHORED. The adapted project is where they are LOADED
+and the only place they can drift. It runs in both layouts now, and treats an absent adapter as
+scope rather than as a failure. `AST-143`.
+
+## Where what is owed is DATA, inject it
+
+The tracker contract's requirement 5 is a surface the OWNER can read without running a query, and
+the contract already explains why no agent notices it missing. Downstream this arrived as an owner
+asking for tracker status three times and being forgotten three times — **with a correct,
+auto-loading rule file already on disk stating the duty.** The rule was at the highest tier
+available and it changed nothing.
+
+`scripts/hook-tracker-status.py` runs at session start, calls this project's
+`.astraler/project/tracker-status.sh`, and puts the counts in context before the first question is
+asked. The duty did not get louder; it stopped existing.
+
+**The general result, which is worth more than the hook.** Raising a document's tier makes an
+obligation shout, and still depends on someone reading and acting. Injecting the data deletes the
+obligation and depends on nobody. So: **where what is owed is DATA, inject it at the moment it is
+owed; where what is owed is JUDGEMENT, the tier is all you have.** `hook-contract-reload.py` is
+the second kind and this is the first, and shipping both states the difference.
+
+Two boundaries, both from the failure that produced it. The hook **queries nothing itself** —
+this package ships three tracker adapters, and a hook running one tracker's CLI would hardcode one
+vocabulary into payload and undo the contract it serves, so the query is a fourth project plug.
+And it **only reads**: a session-start hook fires on every session with nobody watching, which is
+the wrong place to mutate a remote board. `AST-142`.
+
+## A rule follows the role, not the runtime it was written for
+
+New check 11, asked for by the downstream harness and buildable only here. `.claude/rules/` is
+read by Claude and by nothing else. A project with six rules there, five of them named in no Codex
+profile and no OpenCode adapter, is not leaking anything today if all five roles are assigned to
+`claude` — it is a loaded trap. The day one runtime cell in `orchestrator.md` changes, five
+always-on rules stop reaching that agent, silently, and the only signal is behaviour nobody
+attributes to a config edit weeks earlier.
+
+Check 11 reads the assignment table and the rules tier together and goes red on the pair. Project
+layout only, and it says so rather than passing quietly: no package ships that tier.
+
+## Also in this release
+
+- `selftest.sh`: 76 → 100 cases. Every case added here was watched to FAIL first — including the
+  three reachability fixtures, which break a copy of the payload on purpose so each new check is
+  seen to fire and then seen to go quiet once the defect is fixed (AST-137).
+- `hook-tracker-status.py` is tested for its failure discipline before its happy path: a missing,
+  dead, silent, slow, non-executable or oversized plug each cost one line on stderr and nothing
+  else. A session-start hook that can abort a session is worse than the problem it fixes.
+- 33 ledger citations were marked `(gone)`. None of the entries changed: the narrative was always
+  correct, only the binding label claimed a present that had passed.
+
+## Upgrade from 2.9.0
+
+Copy `harness/`, or `./install.sh <target> --apply`.
+
+**If you are already on 2.9.0, run `--apply` and read the `owner` lines this time.** The new
+ACTION on `.codex/profiles/*` will almost certainly fire: it is telling you that 2.9.0's
+compaction rules never arrived. That is this release reporting the previous one's silent miss,
+which is the whole point of the branch.
+
+Writing `.astraler/project/tracker-status.sh` is optional and the hook says so once per session
+until you do. `.agents/orchestrator.md`, `.claude/settings.json` and `.codex/profiles/*` remain
+yours.
+
 # Astragentic 2.9.0
 
 Three findings from reading a harness built on the same payload in another project, and one

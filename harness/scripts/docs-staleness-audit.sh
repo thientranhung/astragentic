@@ -69,11 +69,19 @@ budget_check() { # <label> <limit> <count>
     echo "ok: $1 = $3/$2 words ($(( $2 - $3 )) margin)"
   fi
 }
-if [[ -d .claude/rules ]]; then
+# THROUGH $PAYLOAD, NOT THE CALLER'S CWD. This block shipped with a bare relative
+# `.claude/rules` while the comment forty lines above says in plain words that a bare relative
+# path here WAS the real cwd dependency and that every axis resolves through $PAYLOAD. This one
+# did not. Measured 2026-09-16: a project ran `bash <package>/install.sh .` from its own repo,
+# the installer asked this audit to check the PACKAGE, the audit read the PROJECT's rules
+# instead, went over budget on them, and the package refused to stage. The gate was pointed at
+# one tree and answered about another — and the package ships no `.claude/rules/` at all, so
+# this budget had never once run against a real rules tier until it met one and shut the door.
+if [[ -d "$PAYLOAD/.claude/rules" ]]; then
   # Path-scoped rules (frontmatter `paths:`) load only when matching files are touched —
   # they don't bill every session, so the always-on budget excludes them.
   RULES_TOTAL=0
-  for r in .claude/rules/*.md; do
+  for r in "$PAYLOAD"/.claude/rules/*.md; do
     if head -1 "$r" | grep -q '^---$' && sed -n '2,20p' "$r" | grep -q '^paths:'; then
       continue
     fi
@@ -459,11 +467,35 @@ while IFS= read -r hit; do
 # documented purpose is to cite real tickets permanently, its AGENTS.md, its design docs and
 # its JSON test fixtures. The axis would have exited 1 forever on every adapted project
 # (AST-126). Axis 3 already scoped this way; axis 4 shipped without it.
+# `prompts/` IS SHIPPED AND WAS OUT OF SCOPE. `ADAPT-HARNESS.md` and `UNINSTALL-HARNESS.md`
+# go into every release and are read by every adopting agent, so a project name or a
+# project-only ticket id in them is exactly the defect this axis is named for — and the axis
+# could not see them. Found 2026-09-16 the hard way: a fix written to explain the
+# payload/project boundary cited a `PROJ-*` id, this axis caught the two copies under
+# `scripts/` and was structurally blind to the third, in the adaptation prompt itself.
+# THE PATH IS `$ROOT/..`, AND THAT IS NOT A TYPO. The walk-up at the top of this file stops at
+# the first directory holding `.agents/roles`, which in this package is `harness/` — so `$ROOT`
+# is the PAYLOAD dir, not the repo. Three attempts at this scope fix all pointed at
+# `$ROOT/prompts`, found nothing, and printed `(clean)`. In the package the prompts sit beside
+# the payload at `$ROOT/../prompts`; a staged release flattens them to `$ROOT/..` as two named
+# files; an adapted project carries neither, and grep on an absent path is already silent.
+# A SECOND GREP, UNCONDITIONAL. Two earlier shapes of this addition both scanned nothing while
+# printing `(clean)`: an array of optional directories read as `unbound variable` inside the
+# process substitution under `set -u` on bash 3.2, and an `if [[ -d ]]` guard that behaved
+# differently for reasons two byte-identical copies disagreed about. Both swallowed their own
+# error into this axis's output. `grep` on a directory that does not exist already exits
+# non-zero and says nothing, so the guard bought nothing and cost the scan. A scope fix that
+# passes `bash -n`, prints clean and reads no files is the exact shape this release is about,
+# so the fixture in selftest.sh plants a token under prompts/ and requires this axis to name
+# it — no construct here is trusted on its appearance.
 done < <( { grep -rnoE '\b[A-Z]{3,5}-[0-9]{2,}\b' \
               "$PAYLOAD/.agents" "$PAYLOAD/.claude" "$PAYLOAD/scripts" \
               --include='*.md' --include='*.sh' --include='*.json' --include='*.py' \
               --exclude-dir=node_modules --exclude-dir=memory \
-              --exclude='docs-staleness-audit.sh' 2>/dev/null || true; } \
+              --exclude='docs-staleness-audit.sh' 2>/dev/null || true
+            grep -rnoE '\b[A-Z]{3,5}-[0-9]{2,}\b' \
+              "$ROOT/../prompts" "$ROOT/../ADAPT-HARNESS.md" "$ROOT/../UNINSTALL-HARNESS.md" \
+              --include='*.md' 2>/dev/null || true; } \
           | grep -vE "$ALLOW" )
 [[ $A7 -eq 1 ]] || echo "(clean)"
 fi

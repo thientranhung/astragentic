@@ -213,9 +213,21 @@ done
 # In an adapted project this check needs the staged release manifest; without one it hard-
 # fails at check 0 by design, which is not the invocation shape this case is about.
 if head -1 "$S/check-reachability.sh" | grep -q python && { [ "$LAYOUT" = package ] || [ -d "$ROOT/.astraler/releases" ]; }; then
-  python3 "$S/check-reachability.sh" "$ROOT" >/dev/null 2>&1 \
-    && ok "check-reachability runs under python3 (never bash -n)" \
-    || bad "check-reachability" "python3 invocation failed"
+  # ASSERT THE INTERPRETER RAN, NOT THAT THE TREE IS CLEAN. This case is about invocation
+  # shape — the file is python with a `.sh` name, and `bash -n` on it is the defect. It used
+  # to assert exit 0, but check-reachability exits 1 on ANY finding, so an adapted project
+  # with one legitimate finding read this as a broken invocation. Measured 2026-09-16 on the
+  # first real project to run it: a benign Docker container name in a contract produced one
+  # check-4 finding, and the suite reported the invocation as failed. A gate that cannot go
+  # green on a healthy project is a gate people stop reading.
+  _cr="$(python3 "$S/check-reachability.sh" "$ROOT" 2>&1)"; _crx=$?
+  case "$_cr" in
+    *"Reachability check"*)
+      [ "$_crx" -le 1 ] \
+        && ok "check-reachability runs under python3 (never bash -n)" \
+        || bad "check-reachability" "ran but exited $_crx — neither clean (0) nor findings (1)" ;;
+    *) bad "check-reachability" "python3 invocation produced no header: ${_cr:-no output}" ;;
+  esac
 fi
 
 # ---------------------------------------------------------------------------------------------
@@ -505,29 +517,41 @@ fi
 # ---------------------------------------------------------------------------------------------
 echo "one rule, every runtime"
 
-if pkg_only "runtime parity"; then
-  # Each role's system prompt is a different file per runtime, so the compaction rules are
-  # necessarily copied. What must not vary is WHETHER they are there.
-  for role in thomas shaper builder rin qa; do
-    cla=".claude/agents/$role.md"; opc=".opencode/agents/$role.md"; cdx=".codex/profiles/$role.config.toml"
-    miss=""
-    grep -qi 'survives compaction' "$ROOT/harness/$cla" 2>/dev/null || miss="$miss claude"
-    grep -qi 'survives compaction' "$ROOT/harness/$opc" 2>/dev/null || miss="$miss opencode"
-    grep -qi 'survives compaction' "$ROOT/harness/$cdx" 2>/dev/null || miss="$miss codex"
-    [ -z "$miss" ] && ok "compaction rules reach every runtime: $role" \
-                   || bad "compaction rules missing for $role" "absent on:$miss"
-  done
+# WHY THIS SECTION IS NO LONGER `pkg_only` (2.10.0). It was, and that was the same defect it
+# exists to catch, one floor down. The payload is where these five files are AUTHORED; the
+# adapted project is where they are actually LOADED, and it is the only place they can drift —
+# `.codex/profiles/` is a scaffold path `install.sh` keeps for the owner, so a project that
+# already had one received none of 2.9.0's headline fix and its suite stayed green about it.
+# The check that proves a rule reached every runtime must run where the runtimes are.
+PAY="$ROOT/harness"; [ "$LAYOUT" = project ] && PAY="$ROOT"
+for role in thomas shaper builder rin qa; do
+  cla="$PAY/.claude/agents/$role.md"
+  opc="$PAY/.opencode/agents/$role.md"
+  cdx="$PAY/.codex/profiles/$role.config.toml"
+  # A project may not run all five roles, and a surface that does not exist there is not a
+  # drifted surface. Absent files are reported as scope, never as a failure.
+  present=0; miss=""
+  for f in "$cla" "$opc" "$cdx"; do [ -f "$f" ] && present=$((present+1)); done
+  if [ "$present" -eq 0 ]; then
+    SKIPPED=$((SKIPPED+1)); echo "  skip compaction rules: $role — no adapter on any runtime here"
+    continue
+  fi
+  [ ! -f "$cla" ] || grep -qi 'survives compaction' "$cla" || miss="$miss claude"
+  [ ! -f "$opc" ] || grep -qi 'survives compaction' "$opc" || miss="$miss opencode"
+  [ ! -f "$cdx" ] || grep -qi 'survives compaction' "$cdx" || miss="$miss codex"
+  [ -z "$miss" ] && ok "compaction rules reach every runtime present: $role" \
+                 || bad "compaction rules missing for $role" "absent on:$miss"
+done
 
-  # Every hook script the payload ships must be named by every runtime that HAS a hook surface.
-  # OpenCode has none of the declarative kind, so it is out of scope here by measurement rather
-  # than by assumption — its adapters are markdown and carry the rules instead.
-  for hk in hook-git-guard.py hook-contract-reload.py; do
-    inc=$(grep -c "$hk" "$ROOT/harness/.claude/settings.json" 2>/dev/null || echo 0)
-    inx=$(grep -c "$hk" "$ROOT/harness/.codex/hooks.json" 2>/dev/null || echo 0)
-    if [ "$inc" -gt 0 ] && [ "$inx" -gt 0 ]; then ok "registered for claude and codex: $hk"
-    else bad "$hk registered on one runtime" "claude=$inc codex=$inx — this is the 2.7.13 shape"; fi
-  done
-fi
+# Every hook script the payload ships must be named by every runtime that HAS a hook surface.
+# OpenCode has none of the declarative kind, so it is out of scope here by measurement rather
+# than by assumption — its adapters are markdown and carry the rules instead.
+for hk in hook-git-guard.py hook-contract-reload.py hook-tracker-status.py; do
+  inc=$(grep -c "$hk" "$PAY/.claude/settings.json" 2>/dev/null || echo 0)
+  inx=$(grep -c "$hk" "$PAY/.codex/hooks.json" 2>/dev/null || echo 0)
+  if [ "$inc" -gt 0 ] && [ "$inx" -gt 0 ]; then ok "registered for claude and codex: $hk"
+  else bad "$hk registered on one runtime" "claude=$inc codex=$inx — this is the 2.7.13 shape"; fi
+done
 
 # hook-contract-reload had no case at all until 2.9.0, which is its own finding: the hook that
 # defends the one failure whose correlation was measured as total had never been watched to
@@ -543,6 +567,213 @@ reload silent '{"hook_event_name":"SessionStart","source":"startup"}'           
 reload silent '{"hook_event_name":"SessionStart","source":"clear"}'                          "clear does not"
 reload silent 'not json at all'                                                              "malformed stdin is silent"
 reload fire   '{"hook_event_name":"SessionStart","source":"compact"}'                        "no role named still re-arms"
+
+# ---------------------------------------------------------------------------------------------
+# hook-tracker-status.py (2.10.0) — the hook that deletes an obligation instead of raising its
+# tier (AST-142). Every case below was watched to FAIL against an empty scripts/ before the
+# script existed, which is the only thing that earns a case a place here (AST-137).
+#
+# What is actually under test is the FAILURE discipline, not the happy path: this fires at the
+# top of every session on every runtime, so a plug that is missing, dead, slow or silent must
+# cost one line on stderr and nothing else. A session-start hook that can abort a session is a
+# worse defect than the one it fixes.
+# ---------------------------------------------------------------------------------------------
+echo "hook-tracker-status — the moment, and every way the plug can let it down"
+
+TS="$TMP/tracker"; mkdir -p "$TS/.astraler/project"; ( cd "$TS" && git init -q . ) >/dev/null 2>&1
+tstat() { # <expect inject|silent> <json> <label>
+  local want="$1" out got
+  out="$( cd "$TS" && printf '%s' "$2" | CLAUDE_PROJECT_DIR="$TS" python3 "$S/hook-tracker-status.py" 2>/dev/null )"
+  case "$out" in *additionalContext*) got=inject ;; *) got=silent ;; esac
+  [ "$want" = "$got" ] && ok "tracker-status $want: $3" \
+                       || bad "tracker-status $3" "expected $want, got $got"
+}
+
+# An absent plug is an empty socket: a note, never a failure, and never a broken session.
+tstat silent '{"hook_event_name":"SessionStart","source":"startup"}' "no plug is an empty socket"
+( cd "$TS" && printf '%s' '{"source":"startup"}' | python3 "$S/hook-tracker-status.py" >/dev/null 2>&1 ) \
+  && ok "exits 0 with no plug" || bad "exit status with no plug" "a session-start hook must never fail closed"
+
+printf '#!/bin/sh\necho "| open | wip |"\necho "| 12 | 3 |"\n' > "$TS/.astraler/project/tracker-status.sh"
+chmod +x "$TS/.astraler/project/tracker-status.sh"
+tstat inject '{"hook_event_name":"SessionStart","source":"startup"}' "a working plug is injected"
+tstat inject '{"hook_event_name":"SessionStart","source":"resume"}'  "resume injects"
+tstat inject '{"source":"startup"}'                                  "a payload with no event name still injects"
+# compact belongs to hook-contract-reload: re-fetching there hands the agent two snapshots of
+# the same board taken seconds apart and no way to tell which one its summary was reasoning on.
+tstat silent '{"hook_event_name":"SessionStart","source":"compact"}' "compact is not this hook's moment"
+tstat silent 'not json at all'                                       "malformed stdin is silent"
+out="$( cd "$TS" && printf '%s' '{"source":"startup"}' | CLAUDE_PROJECT_DIR="$TS" python3 "$S/hook-tracker-status.py" 2>/dev/null )"
+case "$out" in *"12"*) ok "the plug's own output reaches the context" ;;
+               *)      bad "plug output" "the injected block did not carry what the plug printed" ;; esac
+
+printf '#!/bin/sh\nexit 4\n' > "$TS/.astraler/project/tracker-status.sh"
+tstat silent '{"source":"startup"}' "a plug that exits non-zero fails open"
+printf '#!/bin/sh\nexit 0\n' > "$TS/.astraler/project/tracker-status.sh"
+tstat silent '{"source":"startup"}' "a plug that prints nothing fails open"
+printf '#!/bin/sh\nyes ABCDEFGHIJ | head -2000\n' > "$TS/.astraler/project/tracker-status.sh"
+out="$( cd "$TS" && printf '%s' '{"source":"startup"}' | CLAUDE_PROJECT_DIR="$TS" python3 "$S/hook-tracker-status.py" 2>/dev/null )"
+case "$out" in *"Cut off at"*) ok "an oversized plug is truncated AND says so" ;;
+               *)              bad "truncation" "a cut-off count that does not admit it is worse than none" ;; esac
+chmod -x "$TS/.astraler/project/tracker-status.sh"
+tstat silent '{"source":"startup"}' "a non-executable plug fails open"
+
+# ---------------------------------------------------------------------------------------------
+# check-reachability checks 9, 10 and 11 (2.10.0) — the three the audit in AST-140/141 produced.
+# Each is driven through a FIXTURE built to trip it, because a check that has only ever been run
+# against a clean tree has been watched to stay quiet and never watched to fire.
+# ---------------------------------------------------------------------------------------------
+if pkg_only "reachability 9/10/11 fixtures"; then
+echo "reachability — mention is not invocation, an assertion is about now, a rule follows its runtime"
+
+RX="$TMP/rx"; rm -rf "$RX"; mkdir -p "$RX"
+cp -R "$ROOT/harness" "$RX/harness"; mkdir -p "$RX/prompts"
+# A staged release FLATTENS prompts/ to its root, and this suite runs there too (install.sh
+# stages, then runs the staged copy of itself). Take the file from whichever layout we are in,
+# or the fixture is missing a surface every check below scans and the baseline case fails for
+# a reason that has nothing to do with what is being tested.
+cp "$ROOT/prompts/ADAPT-HARNESS.md" "$RX/prompts/" 2>/dev/null \
+  || cp "$ROOT/ADAPT-HARNESS.md" "$RX/prompts/" 2>/dev/null
+cp "$ROOT/README.md" "$ROOT/install.sh" "$ROOT/check-requirements.sh" "$RX/" 2>/dev/null
+
+# CAPTURE, NEVER PIPE. This file runs under `set -o pipefail` and check-reachability.sh exits 1
+# when it has findings, so `rx | grep -q "the finding"` returns 1 — the pipeline inherits the
+# tool's failure — and the case reads a CORRECT detection as a miss. The mirror is worse: the
+# `goes quiet` cases were passing because grep found nothing on a clean tree, which is also what
+# they would do if the tool were broken and printed nothing at all. Both halves were measured
+# here on 2026-09-16 before this comment existed.
+rx()  { python3 "$S/check-reachability.sh" "$RX" 2>&1; }
+rxp() { python3 "$S/check-reachability.sh" "$RP" 2>&1; }
+says() { # <haystack> <needle> — substring, with no pipeline and no exit status in the way
+  case "$1" in *"$2"*) return 0 ;; *) return 1 ;; esac
+}
+
+out="$(rx)"
+says "$out" "All reachability checks passed" \
+  && ok "the fixture copy is clean before anything is broken" \
+  || bad "fixture baseline" "the copy already fails; every case below would be meaningless"
+
+# 9 — a script named ONLY in a comment and in a printed string. This is the exact shape that
+# scored an orphan as wired downstream: two comments and one `note "... (reap with tools/X)"`.
+#
+# The fixture's filename is COMPOSED and never written out whole, because this file is itself a
+# payload script: a literal name here is a real script-to-script edge, check 9 reads it as a
+# call site, and the fixture reports itself wired. Measured — that is how the first version of
+# this case failed.
+MO="orph""an-fixture.sh"
+cat > "$RX/harness/scripts/$MO" <<'EOS'
+#!/bin/sh
+echo "I am shipped and nobody runs me"
+EOS
+printf '\n# see scripts/%s for the same logic\n' "$MO" >> "$RX/harness/scripts/ledger-index.sh"
+printf 'echo "run scripts/%s by hand if this is ever non-zero"\n' "$MO" >> "$RX/harness/scripts/ledger-index.sh"
+out="$(rx)"
+says "$out" "$MO is shipped and nothing calls it" \
+  && ok "check 9 refuses a comment and a printed string as call sites" \
+  || bad "check 9 mention-vs-invocation" "a mention was accepted as a call — the 2.10.0 defect is back"
+# ...and the same script, genuinely invoked, must go quiet — verified against a PASSING verdict,
+# not against the absence of a string, so a tool that printed nothing could not pass this.
+printf 'sh "$(dirname "$0")/%s" >/dev/null 2>&1 || true\n' "$MO" >> "$RX/harness/scripts/ledger-index.sh"
+out="$(rx)"
+says "$out" "All reachability checks passed" \
+  && ok "check 9 goes quiet once the script is really invoked" \
+  || bad "check 9 accepts a real call" "a genuinely invoked script is still reported as an orphan"
+rm -f "$RX/harness/scripts/$MO"
+cp "$ROOT/harness/scripts/ledger-index.sh" "$RX/harness/scripts/ledger-index.sh"
+
+# 10 — a present-tense binding to a file that does not exist, and the `(gone)` retirement.
+printf '\n### AST-999 — fixture\n\nBound: `.agents/roles/no-such-role.md`.\n' \
+  >> "$RX/harness/.agents/memory/recurring-failure-modes.md"
+out="$(rx)"
+says "$out" "asserts a live binding to .agents/roles/no-such-role.md" \
+  && ok "check 10 catches a Bound: line whose target is gone" \
+  || bad "check 10" "a dead present-tense binding passed — this is the four-release footnote again"
+python3 - "$RX" <<'EOS'
+import sys, os
+p = os.path.join(sys.argv[1], "harness", ".agents", "memory", "recurring-failure-modes.md")
+t = open(p).read().replace("`.agents/roles/no-such-role.md`.", "`.agents/roles/no-such-role.md` (gone).")
+open(p, "w").write(t)
+EOS
+out="$(rx)"
+says "$out" "All reachability checks passed" \
+  && ok 'check 10 accepts (gone) as an explicit retirement' \
+  || bad "check 10 (gone)" "an explicitly retired citation is still reported"
+cp "$ROOT/harness/.agents/memory/recurring-failure-modes.md" \
+   "$RX/harness/.agents/memory/recurring-failure-modes.md"
+
+# docs-staleness axis 4 must actually READ the shipped prompts. Three attempts at that scope
+# fix each passed `bash -n`, printed `(clean)`, and scanned zero files — an array that read as
+# unbound inside the process substitution, a guard that two byte-identical copies disagreed
+# about, and finally the real cause: `$ROOT` here is the PAYLOAD dir, so `$ROOT/prompts` does
+# not exist. A check whose verdict is indistinguishable between "nothing wrong" and "nothing
+# read" is the failure this whole release is named for, so it is pinned by planting a token.
+#
+# The token is COMPOSED, never written whole: this file lives in scripts/, which axis 4 scans,
+# so a literal project-shaped id here makes that axis report on the suite itself, forever. The
+# same trap as the orphan fixture above — met twice in one afternoon, which is why both now
+# build their fixture names at run time.
+TOK="XY""Z-991"
+PF="$RX/prompts/ADAPT-HARNESS.md"
+if [ -f "$PF" ]; then
+  cp "$PF" "$PF.orig"
+  printf '\nFixture token: %s.\n' "$TOK" >> "$PF"
+  out="$(bash "$S/docs-staleness-audit.sh" "$RX/harness" 2>&1)"
+  says "$out" "$TOK" \
+    && ok "docs-staleness axis 4 reads the shipped prompts" \
+    || bad "axis 4 prompts scope" "a project-shaped id in ADAPT-HARNESS.md went unreported"
+  mv "$PF.orig" "$PF"
+  out="$(bash "$S/docs-staleness-audit.sh" "$RX/harness" 2>&1)"
+  says "$out" "$TOK" \
+    && bad "axis 4 prompts scope" "still reporting a token that was removed" \
+    || ok "axis 4 goes quiet once the token is gone"
+else
+  SKIPPED=$((SKIPPED+1)); echo "  skip axis 4 prompts scope — no prompts/ in this layout"
+fi
+
+# 4 — a project's own vocabulary. Before 2.10.0 the only place to silence a skill-shaped token
+# was the payload set inside check-reachability.sh, so the project redid that edit on every
+# upgrade and the error text told it to. Watched here both ways: red without the plug, green
+# with it — the second half matters more, because an allowance that does not actually allow is
+# how a gate stays permanently red and stops being read.
+VOC="$TMP/rxvoc"; rm -rf "$VOC"; cp -R "$RX" "$VOC"
+python3 - "$VOC" <<'EOS'
+import sys, os
+p = os.path.join(sys.argv[1], "harness", ".agents", "roles", "thomas.md")
+open(p, "a").write("\n\nA container this project runs: `some-project-stage-server`.\n")
+EOS
+out="$(python3 "$S/check-reachability.sh" "$VOC" 2>&1)"
+says "$out" "names 'some-project-stage-server'" \
+  && ok "check 4 flags a skill-shaped token it does not know" \
+  || bad "check 4 vocabulary" "an unknown skill-shaped token passed unreported"
+mkdir -p "$VOC/.astraler/project"
+printf '# this project'"'"'s own words\nsome-project-stage-server\n' > "$VOC/.astraler/project/not-a-skill.txt"
+out="$(python3 "$S/check-reachability.sh" "$VOC" 2>&1)"
+says "$out" "names 'some-project-stage-server'" \
+  && bad "check 4 project vocabulary" "the plug was declared and the token is still reported" \
+  || ok "check 4 accepts .astraler/project/not-a-skill.txt"
+
+# 11 — the loaded trap: a rule in the Claude-only tier while a role is assigned to another
+# runtime. Needs project layout, because no package ships that tier.
+RP="$TMP/rxproj"; rm -rf "$RP"; mkdir -p "$RP/.claude/rules"
+cp -R "$ROOT/harness/." "$RP/"
+printf '# fixture rule\n' > "$RP/.claude/rules/fixture-invariant.md"
+python3 - "$RP" <<'EOS'
+import sys, os, re
+p = os.path.join(sys.argv[1], ".agents", "orchestrator.md")
+t = open(p).read()
+t = re.sub(r"^\|\s*builder\s*\|\s*claude\s*\|", "| builder | codex |", t, count=1, flags=re.M)
+open(p, "w").write(t)
+EOS
+out="$(rxp)"
+says "$out" "role 'builder' runs on codex, which never sees .claude/rules/fixture-invariant.md" \
+  && ok "check 11 fires when a role is moved off the runtime its rules live on" \
+  || bad "check 11" "reassigning a runtime silenced an always-on rule and nothing went red"
+printf 'fixture-invariant\n' >> "$RP/.codex/profiles/builder.config.toml"
+out="$(rxp)"
+says "$out" "never sees .claude/rules/fixture-invariant.md" \
+  && bad "check 11 after carrying the rule" "the rule was carried into the profile and it still fires" \
+  || ok "check 11 goes quiet once the rule is carried into that runtime's adapter"
+fi
 # A path is never built from unvetted input: a role name with a separator must not escape.
 out="$(printf '%s' '{"hook_event_name":"SessionStart","source":"compact","agent_type":"../../etc/passwd"}' \
        | python3 "$S/hook-contract-reload.py" 2>/dev/null)"

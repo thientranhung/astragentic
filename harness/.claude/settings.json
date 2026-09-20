@@ -31,6 +31,15 @@
             "command": "d=\"${CLAUDE_PROJECT_DIR:-$PWD}\"; s=\"$d/scripts/hook-contract-reload.py\"; [ -f \"$s\" ] || s=\"$d/harness/scripts/hook-contract-reload.py\"; if [ -f \"$s\" ]; then exec python3 \"$s\"; else cat >/dev/null; echo \"hook-contract-reload: NOT FOUND under $d — role contracts are not re-armed after compaction\" >&2; echo \"$(date -u +%FT%TZ) hook-contract-reload MISSING under $d\" >> /tmp/harness-hook-events.log; fi"
           }
         ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-$PWD}\"; s=\"$d/scripts/hook-tracker-status.py\"; [ -f \"$s\" ] || s=\"$d/harness/scripts/hook-tracker-status.py\"; if [ -f \"$s\" ]; then exec python3 \"$s\"; else cat >/dev/null; echo \"hook-tracker-status: NOT FOUND under $d — tracker counts are not injected at session start\" >&2; echo \"$(date -u +%FT%TZ) hook-tracker-status MISSING under $d\" >> /tmp/harness-hook-events.log; fi"
+          }
+        ]
       }
     ],
     "SubagentStop": [

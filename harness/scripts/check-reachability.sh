@@ -5,7 +5,7 @@ The prior package lost two weeks to an Align phase that lived in a method docume
 no role's contract, so nothing ever ran it. Every check here exists to make that class of
 gap fail loudly instead of quietly.
 
-Eight checks, in both directions:
+Eleven checks, in both directions:
 
   1 METHOD -> CONTRACT   every phase the README's role table names is the owning row of
                          exactly one contract, owned by the role the README names.
@@ -38,6 +38,18 @@ Eight checks, in both directions:
                          named; none asked whether anything reads what we produce, and three
                          skills shipped for weeks writing files nobody was told to open. The
                          owner found them by hand while every check was green (1.6.1).
+  9 SHIPPED -> CALLED    every script the payload ships is called from somewhere that reaches
+                         a session. A name in a comment or in a printed string is not a call:
+                         two agents scoring one repo three ways got 6, 19 and 13 of 22 tools
+                         "wired", and the spread was the finding (2.10.0).
+ 10 ASSERTION -> TRUE    every `Bound:` / `Wired` / `Enforced by` in the ledger resolves. The
+                         entries narrate the past and that is correct; those three labels
+                         claim the PRESENT, and a false one closes the question instead of
+                         leaving it open. `(gone)` retires a citation explicitly.
+ 11 RULE -> ITS RUNTIME  every always-on rule reaches the runtime each role is actually
+                         assigned to in orchestrator.md. `.claude/rules/` is read by Claude
+                         and by nothing else, so reassigning one role in a table can silence
+                         a tier (AST-138). Project layout only: no package ships that tier.
 
 Runs against this package (payload under harness/) or an adapted project (payload at the
 repo root). Exit 0 = every check passed, 1 = at least one finding.
@@ -47,6 +59,7 @@ import re
 import sys
 import json
 import glob
+import subprocess
 
 # --- locate the payload -----------------------------------------------------------------
 # In this package the payload sits under harness/; once adapted into a project it sits at
@@ -206,6 +219,30 @@ KNOWN = set(all_skills) | PLUGIN | USER_SKILLS
 # Kebab-case tokens that are vocabulary rather than skill references. Each is here because
 # it appears in backticks and looks like a skill name; the list stays short on purpose,
 # because a long one would mean this check has stopped discriminating.
+# A PROJECT DECLARES ITS OWN VOCABULARY, AT A PATH NO RELEASE WRITES. Every project has
+# skill-shaped tokens of its own — a container name, a queue, a feature flag — written in
+# backticks in its own contracts. Until 2.10.0 the only way to silence one was to edit the set
+# below, which is PAYLOAD: the next release overwrites it, so the project does that work again
+# every upgrade, and the error text was telling projects to do exactly that — two owners for
+# one path, neither able to see the other (`AST-132`). 2.7.15 correctly removed two downstream
+# project names from this set because the
+# payload names no project — and left projects with nowhere to put them.
+#
+# So the same split this release ships for tracker status: the package owns the check, the
+# project owns its vocabulary, at `.astraler/project/not-a-skill.txt` — one token per line,
+# `#` comments allowed. Absent is an empty socket, not a fault. Measured on the first real
+# project to run this: one Docker container name in a contract kept its reachability gate
+# permanently red, and a gate that cannot go green is a gate people stop reading.
+def project_vocabulary():
+    path = os.path.join(ROOT, ".astraler", "project", "not-a-skill.txt")
+    out = set()
+    for line in read(path).splitlines():
+        tok = line.split("#", 1)[0].strip().strip("`")
+        if tok:
+            out.add(tok)
+    return out
+
+
 NOT_A_SKILL = {
     # An orchestrator config key. Skill-shaped, and not a skill. (Two downstream project names
     # sat here until 2.7.15, because tracker-contract.md named them — the payload names no
@@ -245,6 +282,10 @@ NOT_A_SKILL = {
     # through its tools rather than shelling out to a CLI.
     "linear-server",
 }
+# The project's own tokens join the payload's. Union, never replacement: a project cannot
+# silence the package's vocabulary by declaring its own.
+PROJECT_VOCAB = project_vocabulary()
+NOT_A_SKILL |= PROJECT_VOCAB
 
 # --- 1. METHOD -> CONTRACT --------------------------------------------------------------
 # The README's role table is the method's own statement of who drives what. Parse the
@@ -384,7 +425,10 @@ for src, text in sorted(sources.items()):
         if tok in KNOWN or tok in NOT_A_SKILL:
             continue
         fail("4", f"{src} names '{tok}', which is neither a shipped skill nor a plugin skill",
-             "a retired name, a typo, or vocabulary to add to NOT_A_SKILL in this script")
+             "a retired name, a typo, or this project's own vocabulary — declare it in "
+             ".astraler/project/not-a-skill.txt (one token per line), which no release "
+             "overwrites. Do NOT edit NOT_A_SKILL in this script: it is payload, so the next "
+             "release overwrites your edit and you do it again (AST-132)")
     # 4c. launcher argv. `claude --agent X` resolves from .claude/agents/, and
     # `opencode --agent X` resolves from .opencode/agents/. Each runtime resolves from its
     # own directory ONLY, so a claude launcher naming an agent that exists only under
@@ -672,51 +716,306 @@ for sname in sorted(skills):
 # Package layout only: in an adapted project `scripts/` also holds the project's own tooling,
 # wired in ways this payload cannot see, and flagging those would be exactly the over-claim
 # check 8's scope note warns about.
+#
+# TWO THINGS THIS CHECK GOT WRONG UNTIL 2.10.0, AND THEY FAIL IN OPPOSITE DIRECTIONS. Both were
+# found by two agents auditing one downstream repo and disagreeing three times about how many of
+# its tools were wired: substring-with-a-narrow-surface said 6 of 22, substring-with-plugs said
+# 19, mention-filtering-with-a-narrow-surface said 13. The spread was the finding; no one of the
+# numbers was. So this check now pins BOTH halves, because fixing either alone turns a
+# false-clean into a false-alarm rather than into an answer.
+#
+#   TOO NARROW — the surface set. It listed the two hook registration files and stopped, while
+#   its own failure message named "a VCS hook" as a valid call site and no git-hook directory
+#   was ever read. It also never looked at `.astraler/project/`, which is where an adapted
+#   project is TOLD to put enforcement, precisely because `scripts/` is payload a release
+#   overwrites. A check that cannot see the place the method sends you scores every project
+#   that followed the method as an orphan farm.
+#
+#   TOO WIDE — a name is not a call. A tool named in a comment, or inside a string a script
+#   PRINTS as advice, is documentation. Measured downstream: one tool appeared three times
+#   inside another script — two comments and one `note "... (reap with tools/X if ...)"` — and
+#   a substring test read that as a call site. Worse, one of those comments said the logic was
+#   "reimplemented near-identically" in the other file, so the co-occurrence was evidence of
+#   DUPLICATION being read as evidence of wiring.
+#
+# The distinction is applied where it belongs and nowhere else. A CONTEXT surface — a contract,
+# a skill, the README — legitimately reaches a session by being read, so a script named there is
+# reachable by mention: that is the whole mechanism. An EXECUTION surface (a hook file, a plug,
+# a git hook, the installer) and a script-to-script edge both claim the thing is RUN, and there
+# a mention proves nothing.
+COMMENT_LINE = re.compile(r"^\s*#")
+PRINTS_PROSE = re.compile(r"^\s*(note|echo|printf|warn|info|say|die|cat)\b")
+
+
+def executable_text(text):
+    """`text` with the lines that can only document, not run, removed.
+
+    Deliberately crude and deliberately conservative: it drops whole lines rather than parsing
+    shell, so a real call sharing a line with an echo survives. Over-keeping is the safe error
+    — it can only leave this check as permissive as it was before 2.10.0, never stricter than
+    the evidence supports."""
+    keep = []
+    for line in text.splitlines():
+        if COMMENT_LINE.match(line) or PRINTS_PROSE.match(line):
+            continue
+        keep.append(line)
+    return "\n".join(keep)
+
+
 scripts_seen = 0
+pkg_root = os.path.normpath(os.path.join(PAYLOAD, ".."))
 if LAYOUT != "project":
-    pkg_root = os.path.normpath(os.path.join(PAYLOAD, ".."))
     script_files = sorted(glob.glob(os.path.join(PAYLOAD, "scripts", "*.sh")) +
                           glob.glob(os.path.join(PAYLOAD, "scripts", "*.py")))
+else:
+    # In a project, `scripts/` also holds the project's own tooling, wired in ways this payload
+    # cannot see — flagging those would be the over-claim check 8's scope note warns about. So
+    # the set under test is exactly the scripts THIS PACKAGE SHIPPED, read from the newest
+    # staged release beside the project. That is knowable without the package, and it is the
+    # set an upgrade is answerable for.
+    staged = sorted(glob.glob(os.path.join(ROOT, ".astraler", "releases", "*", "harness",
+                                           "scripts", "*")))
+    shipped_names = {os.path.basename(p) for p in staged
+                     if p.endswith(".sh") or p.endswith(".py")}
+    script_files = [os.path.join(PAYLOAD, "scripts", n)
+                    for n in sorted(shipped_names)
+                    if os.path.isfile(os.path.join(PAYLOAD, "scripts", n))]
+
+if script_files:
     scripts_txt = {os.path.basename(q): read(q) for q in script_files}
     scripts_seen = len(scripts_txt)
-    surfaces = {}
+    context_surfaces, exec_surfaces = {}, {}
     for q in (glob.glob(os.path.join(PAYLOAD, ".agents", "roles", "*.md")) +
               glob.glob(os.path.join(PAYLOAD, ".agents", "skills", "*", "*.md")) +
+              glob.glob(os.path.join(PAYLOAD, ".claude", "skills", "*", "*.md")) +
               [os.path.join(PAYLOAD, ".agents", "orchestrator.md"),
                os.path.join(PAYLOAD, ".agents", "tracker-contract.md")] +
               glob.glob(os.path.join(pkg_root, "prompts", "*.md")) +
-              [os.path.join(pkg_root, "README.md")]):
-        surfaces["context " + os.path.relpath(q, pkg_root)] = read(q)
-    for q in ([os.path.join(PAYLOAD, ".claude", "settings.json"),
-               os.path.join(PAYLOAD, ".codex", "hooks.json")] +
-              glob.glob(os.path.join(PAYLOAD, ".claude", "agents", "*")) +
-              glob.glob(os.path.join(PAYLOAD, ".codex", "agents", "*")) +
-              glob.glob(os.path.join(PAYLOAD, ".opencode", "agents", "*"))):
-        surfaces["hook " + os.path.relpath(q, pkg_root)] = read(q)
-    surfaces["installer install.sh"] = read(os.path.join(pkg_root, "install.sh"))
+              [os.path.join(pkg_root, "README.md")] +
+              ([os.path.join(ROOT, "AGENTS.md"), os.path.join(ROOT, "CLAUDE.md")]
+               if LAYOUT == "project" else [])):
+        if os.path.isfile(q):
+            context_surfaces["context " + os.path.relpath(q, pkg_root)] = read(q)
+    exec_paths = ([os.path.join(PAYLOAD, ".claude", "settings.json"),
+                   os.path.join(PAYLOAD, ".codex", "hooks.json")] +
+                  glob.glob(os.path.join(PAYLOAD, ".claude", "agents", "*")) +
+                  glob.glob(os.path.join(PAYLOAD, ".codex", "agents", "*")) +
+                  glob.glob(os.path.join(PAYLOAD, ".opencode", "agents", "*")) +
+                  [os.path.join(pkg_root, "install.sh")])
+    if LAYOUT == "project":
+        # Where an adapted project is told to put enforcement, plus every VCS hook this
+        # repository actually uses — `core.hooksPath` first, since a project that sets it has
+        # made `.git/hooks` dead, and `.githooks/` by convention.
+        exec_paths += glob.glob(os.path.join(ROOT, ".astraler", "project", "*"))
+        exec_paths += glob.glob(os.path.join(ROOT, ".githooks", "*"))
+        exec_paths += glob.glob(os.path.join(ROOT, ".github", "workflows", "*"))
+        exec_paths += [os.path.join(ROOT, "Makefile")]
+        try:
+            hp = subprocess.run(["git", "-C", ROOT, "config", "core.hooksPath"],
+                                capture_output=True, text=True, timeout=5)
+            if hp.returncode == 0 and hp.stdout.strip():
+                hd = hp.stdout.strip()
+                if not os.path.isabs(hd):
+                    hd = os.path.join(ROOT, hd)
+                exec_paths += glob.glob(os.path.join(hd, "*"))
+        except Exception:
+            pass
+    for q in exec_paths:
+        if os.path.isfile(q):
+            rel = os.path.relpath(q, pkg_root)
+            body = read(q)
+            # A JSON hook registration has no shell comments and its whole content is the
+            # command; stripping prose lines there would only lose signal.
+            exec_surfaces["exec " + rel] = body if q.endswith(".json") else executable_text(body)
+
     wired = {}
     for name in scripts_txt:
-        for label, text in surfaces.items():
+        for label, text in list(context_surfaces.items()) + list(exec_surfaces.items()):
             if name in text:
                 wired[name] = label
                 break
     grew = True
     while grew:                      # transitive: called by a script that is itself called
         grew = False
-        for name, text in scripts_txt.items():
+        for name in scripts_txt:
             if name in wired:
                 continue
             for w in list(wired):
-                if w != name and name in scripts_txt[w]:
+                # `executable_text`, not the raw body: a script that merely MENTIONS another in
+                # a comment has not called it, and reading that as a call is how an orphan
+                # scored as wired.
+                if w != name and w in scripts_txt and name in executable_text(scripts_txt[w]):
                     wired[name] = f"script {w} (itself via {wired[w]})"
                     grew = True
                     break
     for name in scripts_txt:
         if name not in wired:
             fail("9", f"scripts/{name} is shipped and nothing calls it",
-                 "name its call site — a role contract, a skill, a runtime hook, a VCS hook, "
-                 "the installer, or a script one of those calls — in the same commit, or "
-                 "delete it: an orphan is not improved by being documented (2.7.15)")
+                 "name its call site — a role contract, a skill, a runtime hook, a project "
+                 "plug under .astraler/project/, a VCS hook, the installer, or a script one of "
+                 "those calls — in the same commit, or delete it: an orphan is not improved by "
+                 "being documented (2.7.15). A mention in a comment or in a printed string is "
+                 "documentation, and this check no longer accepts one as a call site")
+# --- 10. LEDGER ASSERTION -> STILL TRUE ---------------------------------------------------
+# The ledger's narrative is about the PAST and must stay that way: an entry naming a role file
+# from a generation that has been renamed away is history told correctly, and "fixing" it would
+# falsify the record. But some lines in it are not narrative. `Bound:` names where a rule is
+# enforced RIGHT NOW, and `Wired`/`Enforced by` make the same claim about a tool. Those are
+# present-tense assertions, and a present-tense assertion that is no longer true is worse than
+# silence, because it closes the question: a reader who sees `Bound:` stops looking for the
+# enforcement, and a reader who sees "Wired" stops asking whether anything calls it.
+#
+# Both halves were measured on one downstream repo on 2026-09-16: `Bound:` pointing at three
+# `.claude/rules/*.md` files that existed nowhere in the tree, and a ledger line reading
+# "Wired 2026-08-29" about a tool with no call site anywhere. Check 4 reported clean over both,
+# and said so in its own scope line rather than growing to cover them — a rot entry converted
+# into a footnote. This check is that footnote being paid off.
+#
+# SCOPE, stated because it is the part that decides the verdict: only the assertion labels are
+# read, never prose. A path under a project-authored prefix is checked in a project and skipped
+# here, because the package genuinely does not ship one. Everything else must resolve.
+# WHICH LEDGERS. The payload's own, always. And in a project, every other `.md` in the memory
+# directory — because the project's ledger is named in its entry doc rather than at a fixed
+# path, and the measurement that produced this check came from exactly such a file: a line
+# reading `"Wired 2026-08-29"` about a tool with no call site, in a project-owned ledger of
+# 11,000 lines. A check that read only the payload ledger would have missed the finding it
+# exists for. `INDEX.md` and `RULES.md` are generated FROM a ledger, so scanning them would
+# report every citation twice.
+_GENERATED = {"INDEX.md", "RULES.md"}
+LEDGERS = [os.path.join(PAYLOAD, ".agents", "memory", "recurring-failure-modes.md")]
+if LAYOUT == "project":
+    LEDGERS += [q for q in sorted(glob.glob(os.path.join(ROOT, ".agents", "memory", "*.md")))
+                if os.path.basename(q) not in _GENERATED and q not in LEDGERS]
+# A citation resolves if the file exists ANYWHERE in the tree under test, because the same
+# payload is read in three layouts and the prefix differs in each: `harness/x` in the package,
+# `x` in an adapted project, and a staged release FLATTENS `prompts/` to its root — so a
+# `Bound:` line naming `prompts/ADAPT-HARNESS.md` is correct and still fails a prefix match
+# there. What this check is for is a file that exists nowhere.
+#
+# The skip list is anchored to the tree under test rather than matched as a substring. A bare
+# `"releases" in path` test was excluding EVERY file when the tree under test was itself a
+# staged release — the check then reported the whole ledger as rot, and the installer refused
+# to ship. Measured 2026-09-16; the case that caught it is `staged installer` in selftest.sh.
+_SKIP_ROOTS = tuple(os.path.normpath(os.path.join(pkg_root, d)) for d in (
+    "node_modules", ".git", "dist", os.path.join(".astraler", "releases"), "site"))
+PAYLOAD_BASENAMES = set()
+for _base, _dirs, _files in os.walk(pkg_root):
+    _n = os.path.normpath(_base)
+    if any(_n == r or _n.startswith(r + os.sep) for r in _SKIP_ROOTS):
+        _dirs[:] = []
+        continue
+    _dirs[:] = [d for d in _dirs if d not in ("node_modules", ".git")]
+    PAYLOAD_BASENAMES.update(_files)
+ASSERTS = re.compile(r"(?:^|\s)(Bound:|Wired\b|Enforced by:?)", re.M)
+CITED_PATH = re.compile(r"`([A-Za-z0-9_.][A-Za-z0-9_./-]*\.(?:md|sh|py|json|toml))`")
+ledger_asserts = 0
+for _ledger in LEDGERS:
+    if not os.path.isfile(_ledger):
+        continue
+    _rel = os.path.relpath(_ledger, ROOT)
+    lines = read(_ledger).splitlines()
+    for i, line in enumerate(lines):
+        if not ASSERTS.search(line):
+            continue
+        # An assertion may wrap; take the line and any continuation up to the next blank.
+        block = [line]
+        j = i + 1
+        while j < len(lines) and lines[j].strip() and not ASSERTS.search(lines[j]):
+            block.append(lines[j])
+            j += 1
+            if len(block) > 6:      # a paragraph is prose, not a citation list
+                break
+        blob = "\n".join(block)
+        # An explicitly retired binding. The ledger's entries are about the past, and a file
+        # named by one can be legitimately gone; what must not happen is the claim staying in
+        # the present tense. `(gone)` is the retirement, written at the citation rather than
+        # on the entry, so a line that binds one live file and one dead one keeps the live
+        # half under this check instead of being excused wholesale.
+        retired = {m.group(1) for m in re.finditer(CITED_PATH.pattern + r"\s*\(gone\)", blob)}
+        for ref in CITED_PATH.findall(blob):
+            if ref in retired:
+                continue
+            ledger_asserts += 1
+            # `AGENTS.md` and `CLAUDE.md` are the project's entry docs: the harness binds
+            # rules to them and ships neither, exactly like docs/agents/.
+            if (ref.startswith(PROJECT_SIDE_PREFIXES)
+                    or ref in ("AGENTS.md", "CLAUDE.md")) and LAYOUT != "project":
+                continue
+            stripped = ref[len("harness/"):] if ref.startswith("harness/") else ref
+            if any(os.path.exists(os.path.join(base, cand))
+                   for base in (ROOT, PAYLOAD, pkg_root)
+                   for cand in (ref, stripped)):
+                continue
+            # A `Bound:` list writes the directory once and then shorthand —
+            # `.agents/roles/thomas.md, builder.md, rin.md` — and a skill is cited as
+            # `codex-arm/SKILL.md` wherever it lives. Neither is a rot claim, and failing them
+            # would bury the two findings that are real under thirty that are not. What this
+            # check is for is a file that exists NOWHERE, so resolve by basename before
+            # calling it gone.
+            base = os.path.basename(ref)
+            if base == "SKILL.md":
+                # Every skill file is named SKILL.md, so a basename match would excuse any
+                # citation at all. The distinctive part is the directory.
+                if os.path.basename(os.path.dirname(ref)) in all_skills:
+                    continue
+            elif base not in ("README.md", "AGENTS.md", "CLAUDE.md") and base in PAYLOAD_BASENAMES:
+                continue
+            fail("10", f"the ledger asserts a live binding to {ref}, which does not exist",
+                 "`Bound:`/`Wired`/`Enforced by` are claims about the PRESENT. Repoint it at "
+                 "the file that carries the rule today, or say plainly that the binding is "
+                 "gone — narrative about the past stays as it is, an assertion about now does "
+                 f"not ({_rel} line {i + 1})")
+
+# --- 11. RUNTIME REASSIGNMENT -> RULES FOLLOW ---------------------------------------------
+# 2.9.0's rule: anything the payload ships for a role or a moment is declared for EVERY runtime
+# that can carry it. This check is that rule pointed at the one surface the package cannot see
+# from inside itself — the project's always-on tier.
+#
+# The trap it exists for, measured downstream on 2026-09-16: a project with six rules in
+# `.claude/rules/`, five of them named in no Codex profile and no OpenCode adapter, and all five
+# roles currently assigned to `claude` — so nothing was leaking and nothing was red. It is a
+# loaded trap rather than a live wound: the day the owner edits one runtime cell in
+# `orchestrator.md`, five always-on rules stop reaching the agent, silently, and the only
+# signal is behaviour nobody attributes to a config edit weeks earlier.
+#
+# Package layout ships no `.claude/rules/`, so this is a project-layout check by construction,
+# and it says so rather than passing quietly.
+rules_checked = 0
+if LAYOUT == "project":
+    ADAPTER_FOR = {
+        "codex": os.path.join(ROOT, ".codex", "profiles", "%s.config.toml"),
+        "opencode": os.path.join(ROOT, ".opencode", "agents", "%s.md"),
+        "claude": os.path.join(ROOT, ".claude", "agents", "%s.md"),
+    }
+    orch = read(os.path.join(ROOT, ".agents", "orchestrator.md"))
+    # ONLY the Active assignments table. The file also carries a Fallback providers table, and
+    # a fallback is a per-session degradation the orchestrator says is "never written back into
+    # this file" — reading it as an assignment reports every role as running on a runtime it is
+    # not on. Found by this check's own fixture, which is the only reason it is not shipping
+    # that way.
+    sect = re.search(r"^##\s*Active assignments\s*$(.*?)(?=^##\s|\Z)", orch, re.M | re.S)
+    assigned = {}
+    if sect:
+        for m in re.finditer(r"^\|\s*([a-z][a-z0-9-]*)\s*\|\s*(claude|codex|opencode)\s*\|",
+                             sect.group(1), re.M):
+            assigned[m.group(1)] = m.group(2)
+    rule_files = sorted(glob.glob(os.path.join(ROOT, ".claude", "rules", "*.md")))
+    for rf in rule_files:
+        stem = os.path.basename(rf)[:-3]
+        for role, runtime in sorted(assigned.items()):
+            # Claude reads `.claude/rules/` itself; no adapter has to repeat it.
+            if runtime == "claude":
+                continue
+            adapter = ADAPTER_FOR[runtime] % role
+            rules_checked += 1
+            if stem not in read(adapter):
+                fail("11", f"role '{role}' runs on {runtime}, which never sees "
+                           f".claude/rules/{stem}.md",
+                     f"`.claude/rules/` is read by Claude and by nothing else. Carry the rule "
+                     f"into {os.path.relpath(adapter, ROOT)} in the same wording, or name this "
+                     f"role an exception with the reason — a surface that is silent is not an "
+                     f"exception, it is an omission wearing one (AST-138)")
+
 # --- report -----------------------------------------------------------------------------
 print(f"Reachability check — {LAYOUT} layout, payload at {os.path.normpath(PAYLOAD)}")
 print(f"  {len(roles)} contracts · {len(skills)} harness skills · "
@@ -737,11 +1036,22 @@ if not findings:
     print("  [OK] 7 every gate artifact has both a producer and a verifier")
     print(f"  [OK] 8 every document a skill declares it writes is in the artifact registry"
           f" ({writes_seen} write heading(s) read)")
-    if LAYOUT != "project":
+    if scripts_seen:
         print(f"  [OK] 9 every shipped script is called from session context, a skill, a runtime"
-              f" hook, the installer, or a wired script ({scripts_seen} scripts, 0 orphans)")
+              f" hook, a project plug, a VCS hook, the installer, or a wired script"
+              f" ({scripts_seen} scripts, 0 orphans"
+              + (", payload-shipped only" if LAYOUT == "project" else "") + ")")
     else:
-        print("  [--] 9 shipped-script call sites: package layout only; a project's scripts/ is its own")
+        print("  [--] 9 shipped-script call sites: no staged release under .astraler/releases/,"
+              " so the payload-shipped set cannot be named and nothing was scored")
+    print(f"  [OK] 10 every live `Bound:`/`Wired`/`Enforced by` in the ledger still resolves"
+          f" ({ledger_asserts} assertion citation(s) read; `(gone)` marks a retired one)")
+    if LAYOUT == "project":
+        print(f"  [OK] 11 every always-on rule reaches the runtime each role is assigned to"
+              f" ({rules_checked} rule/role pair(s) off Claude)")
+    else:
+        print("  [--] 11 always-on rules vs assigned runtimes: this package ships no"
+              " .claude/rules/ tier; the check runs where that tier exists")
     if PLUGIN_UNREAD:
         print("  verifier(s) outside this payload and NOT read this run: "
               + ", ".join(sorted(set(PLUGIN_UNREAD)))
@@ -761,10 +1071,11 @@ if not findings:
         print(f"Not examined, and no check above speaks for them: "
               f"{len(PROJECT_OWNED)} project-owned skill(s) — "
               f"{', '.join(sorted(PROJECT_OWNED))}.")
-    print("Not scanned, and check 4 does not speak for it: the failure-mode ledger's "
-          "historical `Bound:` provenance. A live project measured five citations there to "
-          "a file that had been deleted, while check 4 reported clean — the scope line is "
-          "part of the verdict, not a footnote to it.")
+    print("Check 10 now covers what this scope line used to excuse: the ledger's `Bound:` "
+          "provenance went unscanned for four releases while a live project carried five "
+          "citations to a deleted file and check 4 reported clean. A rot entry written up as "
+          "a footnote is still a rot entry. What check 10 still cannot do is tell a binding "
+          "that RESOLVES from the right one — it reads existence, not correctness.")
     sys.exit(0)
 
 for check, msg, detail in findings:
