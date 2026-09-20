@@ -15,7 +15,7 @@ updated: 2026-09-04
 
 `codex-arm` là phần cơ chế gọi của cánh tay cross-vendor: lượt review bằng Codex mà Thomas, hoặc
 ở phạm vi ticket là chính Builder, chạy trên một artifact đã hoàn thành trước khi nó được merge.
-Nó bao gồm lệnh riêng theo runtime (`codex-companion.mjs` khi root là Claude, `codex exec review`
+Nó bao gồm lệnh riêng theo runtime (`codex-companion.mjs` khi root là Claude, `codex exec` trần
 gọi thẳng trên Codex hay opencode), các bẫy về argv và quoting, và chỗ ghi lại phán quyết. Nó
 không quyết định *khi nào* chạy. Nhịp đó, cùng với trần hai lượt, thuộc về `thomas.md` và
 `builder.md`. Skill này sở hữu phần cách làm, không phải phần thời điểm.
@@ -55,7 +55,26 @@ sản phẩm có.
   sách cố định. Nó được truyền không quote, tách theo từ, nên một cụm viết tự nhiên như `option (a)`
   không bao giờ tới được tiến trình; glob expansion của zsh giết lệnh ngay lúc parse.
   <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
-- `codex exec review` nhận `-m <model>`; `codex review` trần thì không.
+- **`codex exec review` không mang được cả dải lẫn focus cùng lúc.** Đo trên codex-cli 0.155.1:
+  `codex exec review --base main "<focus>"` từ chối với lỗi *đối số `--base <BRANCH>` không dùng
+  chung được với `[PROMPT]`* (exit 2); `--commit <sha>` từ chối y hệt, và `-` — ký hiệu đọc từ
+  stdin — chính là positional đó, nên cũng bị từ chối. Cách sửa nghe hợp lý lại tệ hơn: pipe focus
+  vào mà không kèm `-` thì được chấp nhận và âm thầm bị bỏ qua — lượt chạy review dải đó dưới một
+  prompt chung chung rồi thoát mã 0 với một review đầy đủ, chứng minh bằng cách pipe một chuỗi
+  đánh dấu và nhận lại một review bình thường, không thấy chuỗi đó xuất hiện lần nào. Nên trên
+  root không phải Claude, cánh tay dùng `codex exec` trần, viết cả dải lẫn ý định thành text
+  prompt bình thường, và `-o`/`--output-last-message` để lấy message cuối ra file riêng của nó.
+  Trên root Claude, đường plugin là chính vì một lý do cụ thể chứ không phải sở thích:
+  `adversarial-review` nhận focus như một positional bình thường bên cạnh `--base`, đúng thứ mà
+  `codex exec review` từ chối.
+  <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
+- **Một lượt treo giờ là một job, không phải một phán quyết** (plugin ≥ 1.0.6). `--background`
+  trả về một job id; `status --all --json` liệt kê những gì đang chạy; `result <job-id> --json`
+  trả về output cuối cùng đã lưu của lượt review như một artifact riêng; `cancel <job-id> --json`
+  huỷ một lượt treo thay vì bỏ mặc nó. Các phát hiện có hình dạng khai báo sẵn trong
+  `schemas/review-output.schema.json` của plugin — `verdict`, `summary`, `findings[]` gồm
+  `severity / title / body / file / line_start / line_end / confidence / recommendation` — nên
+  gộp theo field chứ không phải parse từ văn xuôi.
   <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
 
 ## Nó để lại gì

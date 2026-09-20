@@ -44,7 +44,7 @@ from this table — read the entry.
 | `AST-029` | Slice finished but Dan tabs survived; `/clear` blurred context and checkout lifecycle | promoted | 212 |   |
 | `AST-030` | Orchestrator row named a runtime with no dispatch path for the role; Rin went undispatchable | promoted | 216 | dispatch-ticket,review-with-rin |
 | `AST-031` | A prose instruction telling an agent to suppress its tool's own default is not a boundary | promoted | 229 | dispatch-ticket |
-| `AST-032` | A signal that cannot fail is not evidence | promoted | 776 | WATCHING.md,dispatch-ticket,dispatch-ticket-claude,dispatch-ticket-opencode,docs-staleness-audit.sh,herdr-watch-terminal.sh,herdr-watchdog.sh,review-with-rin |
+| `AST-032` | A signal that cannot fail is not evidence | promoted | 776 | WATCHING.md,codex-arm,dispatch-ticket,dispatch-ticket-claude,dispatch-ticket-opencode,docs-staleness-audit.sh,herdr-watch-terminal.sh,herdr-watchdog.sh,review-with-rin |
 | `AST-033` | A lookup whose question has no referent at one of its call sites | promoted | 265 | review-with-rin |
 | `AST-034` | A mandatory rule that lives only in load-on-demand docs is skipped, and only the owner notices | promoted | 759 |   |
 | `AST-035` | `set -euo pipefail` plus a no-match `grep` aborts before its own guard | promoted | 273 |   |
@@ -160,3 +160,6 @@ from this table — read the entry.
 | `AST-146` | An unrecognised configuration key is accepted in silence, so "it launched" is not evidence | promoted | 345 | check-reachability.sh |
 | `AST-147` | A `Bound:` line with a star in it was invisible to the check whose whole job is `Bound:` lines | promoted | 298 | check-reachability.sh,selftest.sh |
 | `AST-148` | One condition answering two questions delivered the second answer as the first | promoted | 275 |   |
+| `AST-149` | No form of the command carried both the range and the intent, and the repair that suggested i… | promoted | 325 |   |
+| `AST-150` | The launcher the shared protocol asks for cannot encode the identity the runtime needs | promoted | 258 |   |
+| `AST-151` | An empty cell read as "the default" was refused at bootstrap | promoted | 182 | selftest.sh |

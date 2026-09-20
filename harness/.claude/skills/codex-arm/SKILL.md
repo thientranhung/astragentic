@@ -29,7 +29,13 @@ deadlock inside the code pass 1's fix had just added.
 
 ## Invocation
 
-Use the plugin runtime; raw `codex exec` is fallback-only, and it has hung.
+Use the plugin runtime. Raw `codex exec review` is not a drop-in fallback: on codex-cli 0.155.1
+it **refuses a focus text beside a range** — `the argument '--base <BRANCH>' cannot be used with
+'[PROMPT]'`, and `-` counts as that positional — so an arm written that way exits 2 before any
+review starts and leaves no output file, which looks exactly like never having fired. Piping the
+focus without `-` is worse: accepted, discarded, and the run exits 0 having reviewed a generic
+prompt. The plugin path has no such conflict, taking the focus as a positional beside `--base`,
+and that is the concrete reason it is primary here.
 
 ```bash
 node "$CLAUDE_PLUGIN_ROOT/scripts/codex-companion.mjs" adversarial-review --wait --base <ref> <focus words>
@@ -38,6 +44,27 @@ node "$CLAUDE_PLUGIN_ROOT/scripts/codex-companion.mjs" review --wait --base <ref
 
 Plugin root: `~/.claude/plugins/cache/openai-codex/codex/<version>`. Run it in the
 background; the completion notification is your bell.
+
+**A hang is a job, not a verdict** (plugin >= 1.0.6; `codex-companion.mjs --help` lists what the
+installed copy has):
+
+```bash
+CC="$CLAUDE_PLUGIN_ROOT/scripts/codex-companion.mjs"
+node "$CC" adversarial-review --background --base "$BASE" <focus words>   # returns a job id
+node "$CC" status --all --json    # running[], latestFinished, recent[], needsReview
+node "$CC" result <job-id> --json # the finished review's stored final output
+node "$CC" cancel <job-id> --json # a hang is cancelled, not abandoned
+```
+
+`result` is the verdict as an ARTIFACT, which is what `Output:` has always wanted; keep the
+`tee` as well, since `$OUT` holds the range header and how the verdict was reached. The findings
+have a declared shape in the plugin's `schemas/review-output.schema.json` — `verdict`, `summary`,
+`findings[]` of `severity / title / body / file / line_start / line_end / confidence /
+recommendation` — so fold by field rather than by parsing prose.
+
+Where the plugin is genuinely unavailable, the working raw form is plain `codex exec` with the
+range named in the prompt, not `codex exec review`; `codex-arm` in `.agents/skills/` carries it
+and the measurements behind it.
 
 ### Bind it to the reviewed head, and fail closed
 

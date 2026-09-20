@@ -66,11 +66,24 @@ nội dung đúng.
   byte với `.codex/profiles/<role>.md`.
 - **cwd của pane là worktree**, theo gate cwd bắt buộc trong giao thức dùng chung.
 
+**Lần launch chia hai bước, cả hai đều bắt buộc.** `herdr agent start … -- <args>` — dạng mà
+giao thức dùng chung yêu cầu ở mọi nơi khác — từ chối thẳng lần launch này: đo trên herdr 0.9.1,
+nó trả về `invalid_agent_argument: agent arguments cannot be encoded safely for the target
+shell`. Nguyên nhân là các dấu xuống dòng bên trong danh tính role, không phải độ dài của nó:
+cùng lệnh đó với một giá trị `-c developer_instructions` một dòng thì qua được bước encode, và
+chỉ fail ở pane id. Mọi file role đều nhiều dòng, nên `agent start` từ chối mọi lần dispatch
+thật. `herdr pane run <pane-id>` nhận nguyên cả lệnh như một chuỗi shell duy nhất, nên không bị.
+`pane run` một mình mới chỉ là nửa việc: nó để pane lại không có tên agent đăng ký, vô hình với
+watchdog đếm số agent đã dispatch, nên phải theo sau bằng `herdr agent rename <pane-id>
+"<role>-<ticket-id-viết-thường>"`. Tên phải bắt đầu bằng chữ thường — một project có ticket id
+viết hoa sẽ fail đúng ở bước cuối này, khi agent đã chạy nhưng chưa đăng ký.
+<!-- source: harness/.agents/skills/dispatch-ticket-codex/SKILL.md -->
+
 ## Nó để lại gì
 
 | Kết quả | Nơi nó nằm lại |
 |---|---|
-| Lần launch | `herdr agent start "<role>-<ticket-id>" --kind codex`, kèm nguyên dòng lệnh `-m`/`-c`/`-c` |
+| Lần launch | Hai bước: `herdr pane run <pane-id>` kèm nguyên dòng lệnh `-m`/`-c`/`-c`, sau đó `herdr agent rename <pane-id> "<role>-<ticket-id-viết-thường>"` |
 | Danh tính role | `.codex/profiles/<role>.md`, nằm trong repo |
 | Model và effort | Dòng codex của role đó trong `.agents/orchestrator.md`, không nơi nào khác |
 | Một bước kiểm giao | Output của `codex debug prompt-input` diff với file role, trước mọi lần dispatch |

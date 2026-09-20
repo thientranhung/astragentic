@@ -126,6 +126,75 @@ every release. A pre-2.12.0 project upgrading is told what to do with the leftov
 before it deletes them: the owner's model and effort are inside those TOMLs, and they need to
 reach the orchestrator row first.
 
+## The first project to run the new launcher could not launch
+
+2.12.0's launch template was `herdr agent start … -- <args>`, unchanged from the `--profile`
+era. It refuses the very thing the release moved onto the command line:
+
+```
+invalid_agent_argument — agent arguments cannot be encoded safely for the target shell
+```
+
+Measured with a control on herdr 0.9.1: the same call with a **single-line** identity gets past
+encoding and fails only on the pane id. The cause is the newline, not the length — and every
+role file is multi-line, so `agent start` refuses every real Codex dispatch. The launch is two
+steps now: `herdr pane run`, which takes the whole command as one shell string, then
+`herdr agent rename` to restore the registered name.
+
+`pane run` alone is half a dispatch — the pane has no agent name, so the watchdog that counts
+dispatched agents cannot see it and nothing can prompt it by name. And the step that closes that
+gap has a rule of its own: `rename` demands a lowercase name, so a project whose ticket ids are
+uppercase fails at the END of dispatch, agent already up and unregistered, which is the state
+the step exists to prevent. The shared protocol had that rule written for `agent start` and
+nowhere near `rename`.
+
+## The arm's own command could not run, and the obvious repair was worse
+
+`codex-arm` documented `codex exec review --base "$BASE" -m <model> "<focus>"`. On codex-cli
+0.155.1 that is *the argument `--base <BRANCH>` cannot be used with `[PROMPT]`* — exit 2, before
+any review starts, so **no output file is produced and the failure looks exactly like an arm
+that was never fired**. `--commit <SHA>` refuses a prompt the same way, and `-`, the documented
+stdin marker, IS the positional it refuses.
+
+The repair that suggests itself is to pipe the focus without `-`. That is accepted, and the
+focus is discarded: the run reviews the range under a generic `changes against '<base>'` prompt
+and exits 0 with a complete, plausible review. Proven by piping *"Respond with exactly
+PIPEWORKS"* and getting an ordinary review back, zero occurrences of the token.
+
+**A loud failure had been replaced by a silent one.** Exit 2 with no artifact is obviously not a
+review. Exit 0 with a full review, from a mandatory intent-loaded gate that never saw the
+intent, is a gate that cannot fail. There is no form of `codex exec review` carrying both a
+range and a focus; on a non-Claude root the arm now uses plain `codex exec` with the range named
+in the prompt, accepted only after a token the prompt asked for came back in the final message.
+
+On a Claude root the plugin path stays primary, and now for a stated reason rather than a
+preference: `adversarial-review` takes the focus as an ordinary positional beside `--base`.
+Plugin >= 1.0.6 also turns a hang from a verdict into a job — `status`, `result`, `cancel`, all
+`--json` — which retires "treat a hang as NOT RUN", and ships
+`schemas/review-output.schema.json` so findings are folded by field instead of parsed from prose.
+
+## One call submits a brief, and an empty cell stops a pane
+
+**`herdr agent prompt` sends text and Enter together** (herdr >= 0.9.0), retiring the
+paste-plus-separate-Enter two-step the protocol carried because a multi-line paste consumes the
+Enter and leaves the brief in an unsent composer while the pane reports idle (AST-032, AST-037).
+Every real brief is multi-line, so that was the default case, with a second step a router could
+forget. The paste form stays as the fallback below 0.9.0 and for a pane with no name yet. Its
+`--wait --until idle` exit status is still not evidence: a prompt that demonstrably submitted
+and answered returned exit 1 from the wait, AST-107 one command over.
+
+**An empty Effort cell is refused rather than warned about.** The launcher passes
+`-c model_reasoning_effort=""` and Codex refuses it while loading configuration —
+*reasoning_effort must not be empty* — so the pane never starts, after dispatch has reported a
+launch. It is AST-040 one column over, and it only became reachable because the duplicate that
+used to answer for it is gone: deduplication does not create these, it exposes them.
+
+**herdr 0.9.1's claims are recorded as claims.** Its changelog touches three states
+`WATCHING.md` branches on — interrupted turns returning to idle, blocked keeping its meaning,
+and live agent names surviving detection blips, which the `agent prompt` path depends on. Every
+surrounding rule here was measured on 0.9.0, so `WATCHING.md` now names the three checks to
+re-run first and keeps the workarounds until someone runs them.
+
 ## Also in this release
 
 - **Rin moves to `claude-opus-5` at `high`.** The shipped table had the reviewer a generation
@@ -146,8 +215,10 @@ reach the orchestrator row first.
   cell, a deliberate decline, a target answered by the package's copy, a role file teaching a
   retired flag, a leftover TOML, a fully configured row, a globbed binding, a `--profile`
   launcher, a role on Codex with no instruction file, and the payload's own globs staying quiet.
-- Four ledger entries: `AST-145` (the namespace), `AST-146` (silent key acceptance),
-  `AST-147` (the invisible glob), `AST-148` (one condition, two questions).
+- Seven ledger entries: `AST-145` (the namespace), `AST-146` (silent key acceptance),
+  `AST-147` (the invisible glob), `AST-148` (one condition, two questions), `AST-149` (no form
+  carried both range and intent), `AST-150` (the launcher that cannot encode the identity),
+  `AST-151` (an empty cell refused at bootstrap).
 
 ## Upgrade from 2.11.0
 

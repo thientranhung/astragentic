@@ -919,6 +919,18 @@ EOS
     && ok "a leftover profile TOML is named rather than left beside the live file" \
     || bad "codex legacy leftover" "two files, one dead, and the upgrade said nothing"
 
+  # An empty Effort cell is refused where an empty model is. Measured: the launcher passes
+  # `-c model_reasoning_effort=""` and Codex refuses it while loading config —
+  # `reasoning_effort must not be empty` — so the pane never starts, after dispatch has already
+  # reported a launch. It was a WARN until 2026-09-20, on the wrong reading that an empty cell
+  # falls back to an account default (AST-151).
+  cfresh; crow '| builder | codex | gpt-5.6-luna |  |
+'
+  out="$(cq)"
+  says "$out" "[MISS] Codex builder row names a model and no effort" \
+    && ok "an empty effort cell is refused, not warned about" \
+    || bad "codex empty effort" "a row that cannot boot a pane passed as an advisory"
+
   # The green case, because a gate only read when it is red teaches nothing about when it is right.
   cfresh; crow '| builder | codex | gpt-5.6-luna | medium |
 '

@@ -15,7 +15,7 @@ updated: 2026-09-04
 
 `codex-arm` is the invocation mechanics for the cross-vendor arm: the Codex review that Thomas,
 or at ticket scope the Builder itself, runs over a completed artifact before it can merge. It
-covers the runtime-specific command (`codex-companion.mjs` on a Claude root, `codex exec review`
+covers the runtime-specific command (`codex-companion.mjs` on a Claude root, plain `codex exec`
 directly on Codex or opencode), the argv and quoting traps, and where the verdict gets recorded.
 It does not decide *when* to run. That cadence, and the two-pass cap, belong to `thomas.md` and
 `builder.md`. This skill owns the how, not the when.
@@ -55,7 +55,26 @@ Skipping it would have shipped a production 500 on the only unstick path the pro
   unquoted, word by word, so a naturally written phrase like `option (a)` never reaches the
   process; zsh's glob expansion kills the command at parse time.
   <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
-- `codex exec review` accepts `-m <model>`; the bare `codex review` does not.
+- **`codex exec review` cannot carry both a range and a focus.** Measured on codex-cli 0.155.1:
+  `codex exec review --base main "<focus>"` refuses with *the argument `--base <BRANCH>` cannot
+  be used with `[PROMPT]`* (exit 2); `--commit <sha>` refuses the same way, and `-`, the stdin
+  marker, IS that positional, so it is refused too. The repair that suggests itself is worse:
+  piping the focus without `-` is accepted and silently discarded — the run reviews the range
+  under a generic prompt and exits 0 with a full review, proven by piping a marker string and
+  getting an ordinary review back with zero occurrences of it. So on a non-Claude root the arm
+  uses plain `codex exec`, with both the range and the intent written as ordinary prompt text and
+  `-o`/`--output-last-message` capturing the final message to its own file. On a Claude root the
+  plugin path is primary for a concrete reason, not a preference: `adversarial-review` takes the
+  focus as an ordinary positional beside `--base`, which is exactly what `codex exec review`
+  refuses.
+  <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
+- **A hang is a job now, not a verdict** (plugin ≥ 1.0.6). `--background` returns a job id;
+  `status --all --json` lists what's running; `result <job-id> --json` returns the finished
+  review's stored final output as its own artifact; `cancel <job-id> --json` cancels a hang
+  instead of leaving it to rot. Findings have a declared shape in the plugin's
+  `schemas/review-output.schema.json` — `verdict`, `summary`, `findings[]` of `severity / title /
+  body / file / line_start / line_end / confidence / recommendation` — so they fold by field
+  rather than by parsing prose.
   <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
 
 ## What it leaves behind

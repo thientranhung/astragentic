@@ -342,8 +342,13 @@ for ROLE in thomas shaper builder rin qa; do
     miss "Codex ${ROLE} has a codex row with no model" \
       "the row claims the runtime and names nothing to launch. Put the model in the ${ROLE} codex row in $ORCH, or delete the row to decline Codex for this role"
   elif [ -z "$ROW_EFFORT" ]; then
-    warn "Codex ${ROLE} row names a model and no effort" \
-      "the launcher passes -c model_reasoning_effort=; an empty cell leaves it to the account default"
+    # NOT a warning, and not "the account default" — that reading was wrong and was measured
+    # wrong. The launcher passes `-c model_reasoning_effort=""`, and Codex refuses it while
+    # loading config: `reasoning_effort must not be empty`. The pane never starts, and it fails
+    # AFTER dispatch has reported a launch. AST-040 one column over: an empty cell that looks
+    # like a default is refused at the same place an empty model is.
+    miss "Codex ${ROLE} row names a model and no effort" \
+      "the launcher passes -c model_reasoning_effort=\"\" and Codex refuses it at bootstrap with 'reasoning_effort must not be empty'. Put low|medium|high|xhigh|max in the ${ROLE} codex row in $ORCH"
   else
     ok "Codex ${ROLE} row: ${ROW_MODEL} / ${ROW_EFFORT}"
   fi

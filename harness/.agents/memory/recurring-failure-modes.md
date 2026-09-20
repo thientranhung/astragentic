@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 147 entries (AST-001 … AST-148, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 150 entries (AST-001 … AST-151, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -3973,6 +3973,92 @@ and reports `ok` on a target; a row naming the runtime and no model is a `MISS`.
 wearing a blank instead of a plausible id — *a default that cannot be right should not look
 right*, and `ok: this role does not run on Codex` is the most reassuring-looking wrong answer
 the block had available.
+
+Bound: `check-requirements.sh`, `scripts/selftest.sh`,
+`.agents/memory/recurring-failure-modes.md` (AST-040).
+
+### AST-149 — No form of the command carried both the range and the intent, and the repair that suggested itself failed silently · promoted 2026-09-20
+
+`codex-arm` documented the cross-vendor gate's raw invocation as
+
+```
+codex exec review --base "$BASE" -m <model> "<focus text>"
+```
+
+which on codex-cli 0.155.1 cannot run at all: *the argument `--base <BRANCH>` cannot be used with
+`[PROMPT]`*, exit 2. `--commit <SHA>` refuses a prompt the same way, and `-` — the documented
+way to read the prompt from stdin — IS that positional, so it is refused too. **Because argument
+parsing fails before any review starts, the command produces no output file, which is
+indistinguishable from an arm that was never fired.**
+
+The first fix reached for the obvious alternative: pipe the focus without `-`. That is accepted,
+and the focus is **discarded**. The run reviews the range under a generic `changes against
+'<base>'` prompt and exits 0 with a complete, plausible review. Proven by piping *"Respond with
+exactly PIPEWORKS"* and getting an ordinary review back with zero occurrences of the token.
+
+**A loud failure was replaced by a silent one, and the silent one is worse.** Exit 2 with no
+artifact is a gate that obviously did not run. Exit 0 with a full review, from a mandatory
+intent-loaded gate that never saw the intent, is AST-032 exactly: a signal that cannot fail. The
+downstream project that found the conflict shipped the piped form and recorded the correct
+measurement in its own commit message one pass later, without the skill text catching up —
+which is how a measurement and the instruction it should have corrected end up in the same
+repository disagreeing.
+
+**The general shape: when a documented invocation turns out to be impossible, the replacement
+has to be measured for what it DELIVERS, not for what it exits.** Every arm form is now proven
+with a token the prompt asks for and the reader greps: plain `codex exec` with the range named
+in the prompt text carries both, and it was accepted only after the token came back.
+
+Bound: `.agents/skills/codex-arm/SKILL.md`, `.claude/skills/codex-arm/SKILL.md`,
+`.agents/memory/recurring-failure-modes.md` (AST-032).
+
+### AST-150 — The launcher the shared protocol asks for cannot encode the identity the runtime needs · promoted 2026-09-20
+
+2.12.0 moved the Codex role identity onto the launch command line as multi-line
+`developer_instructions`. `herdr agent start … -- <args>`, which every other runtime's dispatch
+uses and which registers the agent name in the same call, refuses it:
+
+```
+invalid_agent_argument — agent arguments cannot be encoded safely for the target shell
+```
+
+Measured with a control on herdr 0.9.1: the identical call with a **single-line** identity gets
+past encoding and fails only on the pane id. **The cause is the newline, not the length** — and
+every role file is multi-line, so `agent start` refuses every real Codex dispatch.
+
+So the launch is two steps: `herdr pane run`, which takes the whole command as one shell string,
+then `herdr agent rename` to restore the registered name. **`pane run` alone is half a
+dispatch**: the pane has no agent name, so it is invisible to the watchdog that counts
+dispatched agents, and it cannot be prompted by name at all — which the one-call
+`herdr agent prompt` form depends on.
+
+**And the step added to prevent an unregistered pane can itself produce one.** `rename` enforces
+the same name rule as `start`: lowercase first character, lowercase letters, digits, `-` or `_`.
+A project with uppercase ticket ids (`ABC-123`) fails at the rename — the END of dispatch, with
+the agent already up and unregistered, which is the exact state the step exists to prevent. The
+lowercasing rule was already written for `agent start` in the shared protocol and had never been
+stated where `rename` is used.
+
+Bound: `.agents/skills/dispatch-ticket-codex/SKILL.md`,
+`.agents/skills/dispatch-ticket/SKILL.md`, `.claude/skills/dispatch-ticket-codex/SKILL.md`.
+
+### AST-151 — An empty cell read as "the default" was refused at bootstrap · promoted 2026-09-20
+
+With model and effort moved onto the launch line (AST-145), `check-requirements.sh` WARNed on a
+codex row that named a model and left Effort blank, on the reading that an absent value falls
+back to the account default. Measured: it does not. The launcher passes
+`-c model_reasoning_effort=""` and Codex refuses it while loading configuration —
+*reasoning_effort must not be empty* — so the pane never starts, and it fails AFTER dispatch has
+reported a launch.
+
+This is AST-040 one column over. That entry is about a placeholder that LOOKS like a real id; an
+empty cell that looks like an intentional default is the same failure with the plausibility
+supplied by the reader instead of by the value. Refused now where the empty model is refused.
+
+**What made it findable is that the duplicate was gone.** While effort lived in both the row and
+a profile TOML, the profile carried a real value and the blank row cell never reached a launch.
+Deduplication does not create these; it exposes the ones a second copy was answering for
+(AST-148).
 
 Bound: `check-requirements.sh`, `scripts/selftest.sh`,
 `.agents/memory/recurring-failure-modes.md` (AST-040).

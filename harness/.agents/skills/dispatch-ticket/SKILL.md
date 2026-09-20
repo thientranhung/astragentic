@@ -244,8 +244,11 @@ an unintended default. Confirm the pane's `foreground_cwd` equals `<worktree-pat
 `herdr pane get <pane-id>`; a mismatch is a STOP (fix with
 `herdr pane run <pane-id> "cd <worktree-path>"`, then re-verify).
 
-**Agent names and pane labels are different strings.** `herdr agent start` accepts lowercase
-letters, digits, `-` and `_` — no `:`, no uppercase — while pane labels take `:`. So the
+**Agent names and pane labels are different strings.** `herdr agent start` AND `herdr agent
+rename` accept lowercase letters, digits, `-` and `_` — no `:`, no uppercase — while pane labels
+take `:`. The rule holding for `rename` is the one projects meet late: a repo with uppercase
+ticket ids fails at the rename, which is the END of dispatch, with the agent already up and
+unregistered — exactly the state the step exists to prevent. So the
 agent is `builder-<ticket-id-lowercased>` while the pane is `builder:<ticket-id>`.
 **Lowercase the ticket ID in the agent name** (`ABC-123` → `builder-abc-123`); passing
 uppercase or a pane label as an agent name fails the dispatch silently.
@@ -263,13 +266,21 @@ workspace_managed_by_root=<true|false inherited from the durable record>
 tab=<returned tab id>         pane=<returned pane id>
 ```
 
-Then launch using the `herdr agent start` command from the runtime-specific dispatch skill
-(`dispatch-ticket-claude`, `dispatch-ticket-codex` or `dispatch-ticket-opencode`).
+Then launch using the command from the runtime-specific dispatch skill
+(`dispatch-ticket-claude`, `dispatch-ticket-codex` or `dispatch-ticket-opencode`). **Which herdr
+form that skill uses is its own answer, not this file's** — `herdr agent start` registers the
+name in the same call, and a launch it cannot encode goes through `herdr pane run` plus
+`herdr agent rename`. Codex is the second case: its identity arrives as multi-line
+`developer_instructions`, and `agent start` refuses any argument containing a newline with
+`invalid_agent_argument` (measured on herdr 0.9.1).
 
-Where `agent start` fails readiness, inspect with `herdr agent read`, then fall back to
-`herdr pane run <pane-id> "<exact launcher command>"`. Launch into the pane this dispatch
-created — the owner's active tab stays theirs, and a hidden subagent is not a substitute for
-a visible pane.
+**Either way the pane ends up with a registered agent name.** A pane launched with `pane run`
+and never renamed is invisible to the workspace watchdog that counts dispatched agents
+(`WATCHING.md`), and cannot be prompted by name at all.
+
+Where a launch fails readiness, inspect with `herdr agent read`. Launch into the pane this
+dispatch created — the owner's active tab stays theirs, and a hidden subagent is not a
+substitute for a visible pane.
 
 ## Brief, watch, and steer
 
@@ -332,7 +343,25 @@ question gets asked, on every runtime and every submit form.
 **A multi-line brief lands in the composer WITHOUT submitting** — the paste consumes the
 Enter, the transcript shows `[Pasted text #1 +N lines]` in an unsent composer, **and the pane
 reports `idle` while it sits there** (AST-032, AST-037). Every real dispatch brief is
-multi-line, so this is the default case. It takes an explicit second step:
+multi-line, so this is the default case.
+
+**`herdr agent prompt` sends the text and the Enter in one call, and it is the primary form**
+(herdr >= 0.9.0 — check `herdr --version` before relying on it):
+
+```bash
+herdr agent prompt <agent-name> "<multi-line brief>"
+```
+
+Measured downstream 2026-09-20 on both runtimes with five-line briefs carrying backticks, `$`
+and quotes: the turn ran and answered, with no separate Enter. It addresses the pane **by
+name**, which is the other half of why the launch registers one — an unnamed pane cannot be
+prompted this way at all.
+
+**Its `--wait --until idle` exit status is not proof of anything.** In the same run a prompt
+that demonstrably submitted and answered returned exit 1 from the wait: AST-107's alive-and-deaf
+waiter, one command over. Take the verdict from a fresh `herdr agent get` or from the watcher.
+
+**The paste form stays as the fallback** — below 0.9.0, and for a pane with no agent name yet:
 
 ```bash
 herdr pane run <pane-id> "<multi-line brief>"
@@ -431,7 +460,19 @@ herdr pane send-text <pane-id> "<brief>" && herdr pane send-keys <pane-id> Enter
 ```
 
 Where a documented subcommand appears missing, check `herdr --version` against the 0.8.0
-floor before diagnosing the app.
+floor before diagnosing the app. **`herdr agent prompt`'s one-call submission needs 0.9.0**;
+below that the paste-plus-Enter fallback is the only form. **0.9.1 additionally CLAIMS that
+large pastes no longer disconnect with output-queue errors** — a dispatch brief is a large
+paste, so that is the version to be on before blaming a dropped brief on the composer.
+`WATCHING.md` records what else 0.9.1 claims and what has to be re-measured before any of it
+is relied on.
+
+**`herdr integration install <runtime>` is a WRITE, not a status probe.** Run once downstream
+while surveying versions, it installed a `SessionStart` hook that made every new Codex session
+open on a blocking *"1 hook needs review"* modal — which would have stalled every Codex dispatch
+on that machine. Read versions with `herdr --version` and `--help`; anything named `install`,
+`setup` or `integration` changes machine state the whole workspace shares, and belongs to the
+owner, deliberately, not to a dispatcher checking what exists.
 
 **A pane is for OBSERVATION; artifacts travel as files.** A pane read returns only the
 visible ROW COUNT — no `--lines` value gets past it — and reports SUCCESS, so anything longer

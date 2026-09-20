@@ -41,18 +41,63 @@ node "$CLAUDE_PLUGIN_ROOT/scripts/codex-companion.mjs" review --wait --base <ref
 Plugin root: `~/.claude/plugins/cache/openai-codex/codex/<version>`. Run it in the
 background; the completion notification is your bell.
 
-**On a non-Claude root** (Codex or opencode), invoke `codex exec review` directly:
+**The plugin path has no argument conflict, and that is why it is primary here** rather than a
+preference: `adversarial-review` takes the focus text as an ordinary positional BESIDE `--base`,
+which is exactly what `codex exec review` refuses (below).
+
+**A hang is a job now, not a verdict** (plugin >= 1.0.6; `codex-companion.mjs --help` lists what
+the installed copy has):
 
 ```bash
-codex exec review --base <ref> -m <codex-model> \
-  "Review the diff against the owner intent. Report findings as blocking or non-blocking."
+CC="$CLAUDE_PLUGIN_ROOT/scripts/codex-companion.mjs"
+node "$CC" adversarial-review --background --base "$BASE" <focus words>   # returns a job id
+node "$CC" status --all --json    # running[], latestFinished, recent[], needsReview
+node "$CC" result <job-id> --json # the finished review's stored final output
+node "$CC" cancel <job-id> --json # a hang is cancelled, not abandoned
 ```
 
-`codex exec review` accepts both `--base` and `-m`; the top-level `codex review` does NOT
-accept `-m`, so always use the `exec review` form when specifying a model. The direct form
-has been observed to hang, so set a timeout and treat a hang as NOT RUN. The plugin form on
-a Claude root wraps this with retry and completion-notification; the direct form has neither,
-so the dispatcher must watch for it.
+This retires "treat a hang as NOT RUN". `result` is also the verdict as an ARTIFACT, which is
+what `Output:` has always wanted; keep the `tee` as well, since `$OUT` holds the range header and
+how the verdict was reached. The findings have a declared shape in the plugin's
+`schemas/review-output.schema.json` — `verdict`, `summary`, `findings[]` of `severity / title /
+body / file / line_start / line_end / confidence / recommendation` — so fold by field rather than
+by parsing prose.
+
+**On a non-Claude root** (Codex or opencode) the plugin runtime is not there, and the obvious
+command **cannot run**. Measured on codex-cli 0.155.1:
+
+```
+codex exec review --base main "<focus>"   → error: the argument '--base <BRANCH>' cannot be
+                                             used with '[PROMPT]'        (exit 2)
+codex exec review --commit <sha> "<focus>" → same refusal
+codex exec review --base main -            → same refusal; `-` IS the positional
+```
+
+**And the repair that suggests itself is worse than the break.** Piping the focus without `-`
+is accepted — and silently discarded: the run reviews the range under a generic
+`changes against '<base>'` prompt and **exits 0** with a full review. Measured by piping
+*"Respond with exactly PIPEWORKS"* and getting an ordinary review back, zero occurrences of the
+token. A gate that exits 2 is loud and produces no output file; a gate that exits 0 having never
+seen the intent is a gate that cannot fail (AST-032). **There is no form of `codex exec review`
+that carries both a range and a focus.**
+
+So on a non-Claude root the arm uses plain `codex exec`, where both the range and the intent are
+ordinary prompt text:
+
+```bash
+codex exec -m <codex-model> -o "${OUT%.md}-verdict.md" \
+  "Review the diff produced by: git diff $BASE..HEAD. Owner intent for this review: <intent>.
+   Report findings as blocking or non-blocking."
+```
+
+Measured the same way, with a token the prompt asked for in the final message: it comes back,
+exit 0, with real findings against the named range. `-o/--output-last-message` writes the FINAL
+MESSAGE to its own file, so the conclusion is an artifact instead of something the reader digs
+out of the event stream — keep the `tee`, because `Output:` in the marker still points at `$OUT`.
+
+The direct form has been observed to hang, and unlike the plugin path there is no job to poll or
+cancel: set a timeout and treat a hang as NOT RUN there. The plugin form wraps retry and
+completion-notification; the direct form has neither, so the dispatcher must watch for it.
 
 ### Bind it to the reviewed head, and fail closed
 

@@ -69,11 +69,25 @@ correctness.
   byte-for-byte against `.codex/profiles/<role>.md`.
 - **The pane's cwd is the worktree**, per the shared protocol's cwd gate.
 
+**The launch is two steps, and both are load-bearing.** `herdr agent start … -- <args>`, the form
+the shared protocol asks for everywhere else, refuses this launch outright — measured on herdr
+0.9.1, it returns `invalid_agent_argument: agent arguments cannot be encoded safely for the
+target shell`. The cause is the newlines inside the role identity, not its length: the same
+call with a single-line `-c developer_instructions` value gets past encoding and only then fails
+on the pane id. Every role file is multi-line, so `agent start` refuses every real dispatch.
+`herdr pane run <pane-id>` takes the whole command as one shell string instead, and does not.
+`pane run` alone is only half the job: it leaves the pane with no registered agent name, invisible
+to the watchdog that counts dispatched agents, so `herdr agent rename <pane-id>
+"<role>-<ticket-id-lowercased>"` has to follow it. The name must start with a lowercase letter —
+a project with uppercase ticket ids fails at that last step, with the agent already up and
+unregistered.
+<!-- source: harness/.agents/skills/dispatch-ticket-codex/SKILL.md -->
+
 ## What it leaves behind
 
 | What happened | Where it lands |
 |---|---|
-| The launch | `herdr agent start "<role>-<ticket-id>" --kind codex`, with the full `-m`/`-c`/`-c` command line |
+| The launch | Two steps: `herdr pane run <pane-id>` with the full `-m`/`-c`/`-c` command line, then `herdr agent rename <pane-id> "<role>-<ticket-id-lowercased>"` |
 | The role identity | `.codex/profiles/<role>.md`, in the repository |
 | The model and effort | The role's codex row in `.agents/orchestrator.md`, and nowhere else |
 | A delivery check | `codex debug prompt-input` output diffed against the role file, before any dispatch |

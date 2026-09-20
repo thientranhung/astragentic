@@ -114,6 +114,20 @@ Reads `workspace-label` from `orchestrator.md`; `stop` verifies the PID at
 | `STUCK` | **No** pane working anywhere | Inspect, handback or re-dispatch |
 | `THOMAS_CRASHED` | The router's process is gone | Desktop notification substitutes |
 
+**herdr 0.9.1 changes what these states MEAN, and none of it is measured here.** Its changelog
+claims three fixes this contract rests on directly: *completed, interrupted turns return to
+idle* — an interrupted turn that never goes idle is a watcher that waits forever; *pending
+permissions, forms and failed executions remain blocked*, so `BLOCKED` keeps its meaning; and
+*live agent names survive temporary process-detection uncertainty*, which the whole
+`agent prompt` path depends on, since it addresses a pane by name. Per-runtime it also claims
+Codex stops reporting blocked on composer sparkles and stale confirmation text — the exact
+false-blocked the watcher reads — and that Claude Code's Unicode spinner is recognised.
+
+**Treat all of it as UNVERIFIED.** Every surrounding rule here was measured on 0.9.0, and a
+changelog is a claim, not a measurement. What to re-run first, in order: an interrupted turn
+reaching `idle`; a Codex pane mid-composer NOT reading `blocked`; an agent still reachable by
+name after a detection blip. Until someone does, the workarounds below stay.
+
 **What falls between them, stated because silence here reads as health.** `STUCK` requires that
 NO pane is working, so a Builder that finishes while a sibling still works produces nothing —
 with several Builders in flight, the ordinary case. A pane launched through the `herdr pane run`

@@ -1,6 +1,6 @@
 ---
 name: dispatch-ticket-codex
-description: "Codex-specific launcher and verification for dispatch-ticket. Covers the launcher matrix, the in-repo role instruction files, project-local custom agents and hooks, herdr agent start template, and Codex-specific runtime facts. Read dispatch-ticket for the shared protocol."
+description: "Codex-specific launcher and verification for dispatch-ticket. Covers the launcher matrix, the in-repo role instruction files, project-local custom agents and hooks, the two-step herdr launch, and Codex-specific runtime facts. Read dispatch-ticket for the shared protocol."
 ---
 
 # Dispatch a ticket — Codex runtime
@@ -79,14 +79,39 @@ parent launched with bypass can weaken that default. The instructions still forb
 but worktree/branch allocation and a visible Herdr pane remain the only accepted boundary for
 write-heavy role work.
 
-## Launch
+## Launch — two steps, and both are load-bearing
 
 ```bash
-herdr agent start "<role>-<ticket-id>" --kind codex --pane <pane-id> --timeout 60000 \
-  -- -m <model> -c model_reasoning_effort="<effort>" \
-     -c developer_instructions="$(cat .codex/profiles/<role>.md)" \
-     --dangerously-bypass-approvals-and-sandbox
+herdr pane run <pane-id> 'codex -m <model> -c model_reasoning_effort="<effort>" \
+  -c developer_instructions="$(cat .codex/profiles/<role>.md)" \
+  --dangerously-bypass-approvals-and-sandbox'
+
+herdr agent rename <pane-id> "<role>-<ticket-id-lowercased>"   # do NOT skip this line
 ```
+
+**`herdr agent start … -- <args>` cannot carry this launch**, which is what the shared protocol
+asks for everywhere else. Measured on herdr 0.9.1:
+
+```
+invalid_agent_argument — agent arguments cannot be encoded safely for the target shell
+```
+
+The cause is the **newlines** in the identity, not its length: the same call with a single-line
+`-c developer_instructions` gets past encoding and fails only on the pane id. Every role file is
+multi-line, so `agent start` refuses every real dispatch. `pane run` takes the whole command as
+one shell string and does not.
+
+**`pane run` alone is half a dispatch.** It leaves the pane with no registered agent name, so
+the role is invisible to the workspace watchdog that counts dispatched agents and raises the
+lifecycle alerts (`WATCHING.md`). `herdr agent rename` closes that gap, and it is also what
+makes `herdr agent prompt` usable later — that form addresses a pane BY NAME, and an unnamed
+pane cannot be prompted at all.
+
+**Lowercase the ticket id.** herdr refuses a name that does not start with a lowercase letter:
+*agent name must start with a lowercase letter and contain only lowercase letters, digits, `-`
+or `_`*. A project whose ids are uppercase (`ABC-123`) fails at exactly the step added to stop a
+role running unregistered — at the END of dispatch, with the agent already up. Measured
+downstream 2026-09-20.
 
 The `$(cat …)` expands in the dispatching shell, so the file's `$`, backticks and quotes reach
 the pane unchanged — measured downstream on a live herdr pane, where the launched Builder

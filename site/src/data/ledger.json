@@ -549,6 +549,7 @@
     "words": 776,
     "citedBy": [
       "WATCHING.md",
+      "codex-arm",
       "dispatch-ticket",
       "dispatch-ticket-claude",
       "dispatch-ticket-opencode",
@@ -566,6 +567,11 @@
         "name": "WATCHING.md",
         "kind": "file",
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket/WATCHING.md"
+      },
+      {
+        "name": "codex-arm",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/codex-arm"
       },
       {
         "name": "dispatch-ticket",
@@ -3269,12 +3275,20 @@
     "lesson": "A scaffold path swallowed this package's own headline fix, silently, and the receipt said clean",
     "status": "promoted",
     "words": 272,
-    "citedBy": [],
+    "citedBy": [
+      "selftest.sh"
+    ],
     "indexLine": 157,
     "entryLine": 3769,
     "promotedOn": "2026-09-16",
     "entry": "### AST-143 — A scaffold path swallowed this package's own headline fix, silently, and the receipt said clean · promoted 2026-09-16\n\n2.9.0 is titled *\"a rule reaches every runtime, or it reaches one\"* and its central change was\nthe compaction rules landing in all five `.codex/profiles/*.config.toml`. Those profiles are in\n`OWNER_PATHS`, so on every already-adapted project `install.sh` printed `owner … (kept — yours)`\nand wrote none of it. **The release's own headline fix could not reach a single project that had\never run it before**, and the receipt reported a clean upgrade.\n\nThe scaffold rule is right and is not what failed: `.codex/profiles/` carries the owner's model\nand effort choices, and a release that overwrote them would silently revert deliberate tuning\n(AST-041). What was missing is that an owner file protects the owner's **tuning** — it was never\nmeant to protect a **stale copy** from a safety fix the owner cannot see. `.claude/settings.json`\nalready had the answer one branch above: keep the file, and REPORT what the release ships that\nthe copy lacks. …",
-    "refs": [],
+    "refs": [
+      {
+        "name": "selftest.sh",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/selftest.sh"
+      }
+    ],
     "commits": []
   },
   {
@@ -3301,7 +3315,13 @@
     "promotedOn": "2026-09-20",
     "entry": "### AST-145 — A role identity routed through a namespace the project does not own · promoted 2026-09-20\n\nA downstream project asked a narrow question — does `codex --profile <role>` read the repo's\n`.codex/profiles/`? — and the answer was already in the CLI's own help: `--profile` layers\n`$CODEX_HOME/<name>.config.toml`, and nothing else. The package had never claimed otherwise. It\nshipped in-repo TEMPLATES and told the owner to copy each one into `$CODEX_HOME` by hand.\n\nThe narrow answer was the smaller half. **`$CODEX_HOME` is one namespace for every project on\nthe machine, and the key is a generic role name.** Two repositories adapting this harness both\nwant `builder`; the second one to be provisioned wins, silently, and no check on either side can\nsee it — each compares its own template against a destination that belongs to neither. That the\nfile had to be copied by hand was the second cost: `install.sh` cannot write outside the repo,\nso the doctor reported an unprovisioned profile on every run until a human acted, which is how a\nproject ends up sitting on four `[MISS]` lines that mean nothing is wrong yet.\n\nThe third cost was ordinary duplication. …",
     "refs": [],
-    "commits": []
+    "commits": [
+      {
+        "sha": "a7ce4a8493e19b30c9df167c05a32d0d86a1ebda",
+        "date": "2026-09-20",
+        "subject": "2.12.0 — a role identity stops travelling through a namespace the project does not own"
+      }
+    ]
   },
   {
     "id": "AST-146",
@@ -3322,7 +3342,13 @@
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/check-reachability.sh"
       }
     ],
-    "commits": []
+    "commits": [
+      {
+        "sha": "a7ce4a8493e19b30c9df167c05a32d0d86a1ebda",
+        "date": "2026-09-20",
+        "subject": "2.12.0 — a role identity stops travelling through a namespace the project does not own"
+      }
+    ]
   },
   {
     "id": "AST-147",
@@ -3349,7 +3375,13 @@
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/selftest.sh"
       }
     ],
-    "commits": []
+    "commits": [
+      {
+        "sha": "a7ce4a8493e19b30c9df167c05a32d0d86a1ebda",
+        "date": "2026-09-20",
+        "subject": "2.12.0 — a role identity stops travelling through a namespace the project does not own"
+      }
+    ]
   },
   {
     "id": "AST-148",
@@ -3362,6 +3394,59 @@
     "promotedOn": "2026-09-20",
     "entry": "### AST-148 — One condition answering two questions delivered the second answer as the first · promoted 2026-09-20\n\n`check-requirements.sh` read a role's codex row with `if ($2 == role && $3 == \"codex\" && $4 != \"\")`.\nThat last clause is a judgement about the MODEL cell smuggled into a test for whether the ROW\nEXISTS. A row reading `| builder | codex |  | medium |` produced no output, and the loop below\nreported `ok: no codex row — this role does not run on Codex` — which is what a DELIBERATE\ndecline looks like. The role was assigned to Codex and could not launch, and the doctor said\ngreen in the sentence reserved for a correct configuration.\n\nIt survived because a second home covered it: the profile TOML shipped `model = \"\"` and a\ndifferent branch MISSed on that. 2.12.0 made the row the only home (AST-145), and the moment it\ndid, this blank cell became unreportable. **Removing a duplicate removes the redundancy that was\nquietly answering for a defect elsewhere** — the deduplication is still right, and the check that\nwas leaning on the duplicate has to be found before it falls over. …",
     "refs": [],
+    "commits": [
+      {
+        "sha": "a7ce4a8493e19b30c9df167c05a32d0d86a1ebda",
+        "date": "2026-09-20",
+        "subject": "2.12.0 — a role identity stops travelling through a namespace the project does not own"
+      }
+    ]
+  },
+  {
+    "id": "AST-149",
+    "lesson": "No form of the command carried both the range and the intent, and the repair that suggested i…",
+    "status": "promoted",
+    "words": 325,
+    "citedBy": [],
+    "indexLine": 163,
+    "entryLine": 3980,
+    "promotedOn": "2026-09-20",
+    "entry": "### AST-149 — No form of the command carried both the range and the intent, and the repair that suggested itself failed silently · promoted 2026-09-20\n\n`codex-arm` documented the cross-vendor gate's raw invocation as\n\n```\ncodex exec review --base \"$BASE\" -m <model> \"<focus text>\"\n```\n\nwhich on codex-cli 0.155.1 cannot run at all: *the argument `--base <BRANCH>` cannot be used with\n`[PROMPT]`*, exit 2. `--commit <SHA>` refuses a prompt the same way, and `-` — the documented\nway to read the prompt from stdin — IS that positional, so it is refused too. **Because argument\nparsing fails before any review starts, the command produces no output file, which is\nindistinguishable from an arm that was never fired.**\n\nThe first fix reached for the obvious alternative: pipe the focus without `-`. That is accepted,\nand the focus is **discarded**. The run reviews the range under a generic `changes against\n'<base>'` prompt and exits 0 with a complete, plausible review. Proven by piping *\"Respond with\nexactly PIPEWORKS\"* and getting an ordinary review back with zero occurrences of the token. …",
+    "refs": [],
+    "commits": []
+  },
+  {
+    "id": "AST-150",
+    "lesson": "The launcher the shared protocol asks for cannot encode the identity the runtime needs",
+    "status": "promoted",
+    "words": 258,
+    "citedBy": [],
+    "indexLine": 164,
+    "entryLine": 4015,
+    "promotedOn": "2026-09-20",
+    "entry": "### AST-150 — The launcher the shared protocol asks for cannot encode the identity the runtime needs · promoted 2026-09-20\n\n2.12.0 moved the Codex role identity onto the launch command line as multi-line\n`developer_instructions`. `herdr agent start … -- <args>`, which every other runtime's dispatch\nuses and which registers the agent name in the same call, refuses it:\n\n```\ninvalid_agent_argument — agent arguments cannot be encoded safely for the target shell\n```\n\nMeasured with a control on herdr 0.9.1: the identical call with a **single-line** identity gets\npast encoding and fails only on the pane id. **The cause is the newline, not the length** — and\nevery role file is multi-line, so `agent start` refuses every real Codex dispatch.\n\nSo the launch is two steps: `herdr pane run`, which takes the whole command as one shell string,\nthen `herdr agent rename` to restore the registered name. **`pane run` alone is half a\ndispatch**: the pane has no agent name, so it is invisible to the watchdog that counts\ndispatched agents, and it cannot be prompted by name at all — which the one-call\n`herdr agent prompt` form depends on. …",
+    "refs": [],
+    "commits": []
+  },
+  {
+    "id": "AST-151",
+    "lesson": "An empty cell read as \"the default\" was refused at bootstrap",
+    "status": "promoted",
+    "words": 182,
+    "citedBy": [
+      "selftest.sh"
+    ],
+    "indexLine": 165,
+    "entryLine": 4045,
+    "promotedOn": "2026-09-20",
+    "entry": "### AST-151 — An empty cell read as \"the default\" was refused at bootstrap · promoted 2026-09-20\n\nWith model and effort moved onto the launch line (AST-145), `check-requirements.sh` WARNed on a\ncodex row that named a model and left Effort blank, on the reading that an absent value falls\nback to the account default. Measured: it does not. The launcher passes\n`-c model_reasoning_effort=\"\"` and Codex refuses it while loading configuration —\n*reasoning_effort must not be empty* — so the pane never starts, and it fails AFTER dispatch has\nreported a launch.\n\nThis is AST-040 one column over. That entry is about a placeholder that LOOKS like a real id; an\nempty cell that looks like an intentional default is the same failure with the plausibility\nsupplied by the reader instead of by the value. Refused now where the empty model is refused.\n\n**What made it findable is that the duplicate was gone.** While effort lived in both the row and\na profile TOML, the profile carried a real value and the blank row cell never reached a launch.\nDeduplication does not create these; it exposes the ones a second copy was answering for\n(AST-148). …",
+    "refs": [
+      {
+        "name": "selftest.sh",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/selftest.sh"
+      }
+    ],
     "commits": []
   }
 ]

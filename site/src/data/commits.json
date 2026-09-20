@@ -1,5 +1,11 @@
 [
   {
+    "sha": "a7ce4a8493e19b30c9df167c05a32d0d86a1ebda",
+    "date": "2026-09-20",
+    "subject": "2.12.0 — a role identity stops travelling through a namespace the project does not own",
+    "ledger": "Ledger: AST-145 the namespace, AST-146 silent key acceptance, AST-147 the invisible glob, AST-148 one condition two questions."
+  },
+  {
     "sha": "7e6db387d88503477326299c5279b217e3263d07",
     "date": "2026-09-14",
     "subject": "the Ledger line becomes a refusal; the fork guard turns out to be unbuildable",
@@ -111,12 +117,6 @@
     "sha": "a93788fcb05c57002f5f9f8046697d415f79fc1d",
     "date": "2026-09-08",
     "subject": "site: five explaining sections under the hero",
-    "ledger": "Ledger: none."
-  },
-  {
-    "sha": "33ad791c4a85ea9603029bd516dec33ab92ca0fc",
-    "date": "2026-09-07",
-    "subject": "site: onward links in one professional form",
     "ledger": "Ledger: none."
   }
 ]

@@ -18,7 +18,8 @@ a Codex root contributes. The arm always calls the OTHER vendor.
 **Thomas** fires `arm: spec` and `arm: slice`.
 
 **The ticket scope is NOT symmetric with `codex-arm`, and the difference is load-bearing.** A
-Builder firing the Codex arm runs it in its own worktree, because `codex exec review` reads. A
+Builder firing the Codex arm runs it in its own worktree, because the Codex arm reads — both
+its forms report `sandbox: read-only` in their own run header. A
 Builder firing THIS arm may not: `claude -p` is a full agent with Edit and Bash, so it gets its
 own detached worktree even though the Builder is already standing in the reviewed tree. The
 range is still correct by construction — the head is the Builder's own `HEAD` — but the
