@@ -77,12 +77,12 @@ Absent it, stop before the first call and ask; consent from a previous run does 
 
 **b. Default flows are strictly non-mutating.** Navigate, observe, screenshot, read console and
 network. Leave confirm, retry, cancel, delete, revoke, disconnect, resync, disable and form
-submission alone **unless the dispatch names that exact mutation and authorizes it**. In doubt,
-record a COVERAGE GAP instead of clicking — an unrecorded click on a live account has no undo.
+submission alone **unless this run's dispatch names and authorizes it** — a yes for one walk
+does not carry to the next. In doubt, record a COVERAGE GAP: a live click has no undo.
 
-**c. The rule is about the DATA, not the environment.** "Local" is a deployment fact and says
-nothing about what is in the database — teams seed local from production dumps, so a local
-screen can carry real customer names. Establish what the data **is** before capturing it, treat
+**c. The rule is about the DATA, not the environment.** "Local" says nothing about what is in
+the database — teams seed local from production dumps, so a local screen can carry real
+customer names. Establish what the data **is** before capturing it, treat
 prod-derived data as production data wherever it runs, and where the dispatch names neither
 environment nor provenance, ask.
 

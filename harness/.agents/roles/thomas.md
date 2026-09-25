@@ -200,8 +200,9 @@ the query, promote every ticket this merge unblocked, then `scripts/ticket-done.
 released, then stamps it; the guard refuses pushing the base until every
 merged ticket is stamped (AST-057).
 
-**Write the lesson at merge** into the project's ledger; the merge commit carries a `Ledger:`
-line naming what went in. `Ledger: none` is valid, its absence is not (AST-069).
+**Decide the lesson at merge.** The merge commit's `Ledger:` line names the id it taught; the
+entry may land right after, on the base. `Ledger: none` is valid, its absence is not (AST-069),
+and `none` means *taught nothing*, never *not written yet*.
 
 ## Watchdog
 
@@ -209,9 +210,8 @@ line naming what went in. `Ledger: none` is valid, its absence is not (AST-069).
 unwatched pane and a quiet healthy one both emit nothing (AST-124). Invocation, the alert table
 and what each alert asks of you: `dispatch-ticket/WATCHING.md`.
 
-**`STUCK` cannot fire while any pane is working**, so a Builder that finishes beside a busy
-sibling pings nothing. With several Builders in flight that is the ordinary state, not an edge:
-count panes yourself rather than waiting to be told.
+**Silence is not health.** Pane alerts need two polls and a registered name, so count panes
+yourself at every merge, handback and report rather than waiting to be told.
 
 **Run `scripts/release-worktree-resources.sh <worktree>` before every worktree removal, all
 runtimes** — processes, then the project's plug (`CLEANUP.md`). The `WorktreeRemove` hook never

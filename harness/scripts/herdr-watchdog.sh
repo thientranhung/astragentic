@@ -398,6 +398,7 @@ except (json.JSONDecodeError, KeyError):
 
 ws_label = "'"$WORKSPACE_LABEL"'"
 project_root = "'"$PROJECT_ROOT"'"
+state_dir = "'"$STATE_DIR"'"
 
 # Two independent signals can name a dispatched pane, checked in order.
 #
@@ -511,12 +512,48 @@ dispatched = [a for a in ws_agents
 if not dispatched:
     sys.exit(0)
 
-any_working = any(d["agent_status"] == "working" for d in dispatched)
+# Cross-cycle memory, three facts per pane: seen on a previous poll, ever observed working, idle
+# at the previous poll. One poll cannot tell "never started" from "between turns", or "stopped"
+# from "paused for a second", so NEVER_STARTED and STUCK both need two. A missing or corrupt
+# file degrades to "first sighting", which only ever DELAYS an alert and never invents one.
+# This block lives inside a single-quoted shell string: an apostrophe anywhere in it, comments
+# included, ends that string and breaks the script at parse time.
+mem_path = os.path.join(state_dir, "pane-memory")
+seen_before_set, ever_worked, idle_last = set(), set(), set()
+try:
+    for ln in open(mem_path):
+        k, _, v = ln.strip().partition("|")
+        {"seen": seen_before_set, "worked": ever_worked, "idle": idle_last}.get(k, set()).add(v)
+except Exception:
+    pass
 
+# Is heavy work in flight right now. A pane is `working` only during an agent TURN, so a pane
+# that started a test run in the background and ended its turn reads `done` while the box
+# burns; measured downstream, seven STUCK false positives in one shift were exactly that. The
+# pane state cannot answer this, so the project does: `.astraler/project/work-in-flight.sh`
+# exits 0 when something heavy is running, 1 when nothing is. Any other answer, including a
+# plug that errors or hangs, reads as IN FLIGHT: a missed STUCK costs a late nudge, a false one
+# costs trust in every alert. No plug at all means the question was never asked, and STUCK
+# fires on pane state alone.
+plug = os.path.join(project_root, ".astraler", "project", "work-in-flight.sh")
+in_flight = False
+if os.path.isfile(plug):
+    try:
+        in_flight = subprocess.run([plug], cwd=project_root, capture_output=True,
+                                   timeout=10).returncode != 1
+    except Exception:
+        in_flight = True
+
+idle_now = set()
 for d in dispatched:
     dpane   = d["pane_id"]
     dstatus = d["agent_status"]
     dname   = d.get("name", d.get("terminal_title_stripped", "unknown"))
+    seen_before = dpane in seen_before_set
+    if dstatus == "working":
+        ever_worked.add(dpane)
+    if dstatus in ("idle", "done"):
+        idle_now.add(dpane)
 
     # For the heartbeat pane count below — a marker line, not an alert.
     print(f"__seen|{dpane}")
@@ -531,10 +568,40 @@ for d in dispatched:
         has_w = False
     if dstatus == "blocked":
         print(f"BLOCKED|{dpane}_blocked|workspace={ws_label} thomas={tpane}({tstatus}) {dname}={dpane}(blocked) — builder asking a question, read pane and answer")
-    elif dstatus in ("idle", "done") and not has_w and not any_working and not thomas_busy:
-        print(f"STUCK|{dpane}_stuck|workspace={ws_label} thomas={tpane}({tstatus}) {dname}={dpane}({dstatus}) watcher=none — no pane working")
+    # STUCK asks about THIS pane. It used to require that no pane anywhere was working, so one
+    # busy sibling silenced it for every pane: measured downstream, a Builder sat idle on a free
+    # box while a sibling was mid-turn and nothing fired (AST-152). ever_worked keeps it apart
+    # from NEVER_STARTED: this one worked and then stopped.
+    elif (dstatus in ("idle", "done") and not has_w and seen_before and dpane in idle_last
+          and dpane in ever_worked and not in_flight and not thomas_busy):
+        print(f"STUCK|{dpane}_stuck|workspace={ws_label} thomas={tpane}({tstatus}) "
+              f"{dname}={dpane}({dstatus}) watcher=none, idle across two polls — it worked and "
+              f"then stopped. Check whether the NEXT step started, not whether a waiter is alive: "
+              f"one that exited on purpose and one that died look the same in ps.")
     elif dstatus == "working" and not has_w:
         print(f"WATCHER_LOST|{dpane}_wlost|workspace={ws_label} thomas={tpane}({tstatus}) {dname}={dpane}(working) watcher=none — re-arm the watch")
+    # A pane dispatched and never observed working is invisible to the three alerts above:
+    # silent, so not BLOCKED; idle, so not WATCHER_LOST; never worked, so not STUCK. Measured
+    # downstream on a Shaper whose brief never submitted, heartbeated past for the whole time,
+    # and again on a Builder idle forty minutes (AST-152). With a watcher, its NO_START
+    # answers this sooner, so the watcherless case is the one left.
+    elif dstatus in ("idle", "done") and not has_w and seen_before and dpane not in ever_worked:
+        print(f"NEVER_STARTED|{dpane}_nostart|workspace={ws_label} thomas={tpane}({tstatus}) "
+              f"{dname}={dpane}({dstatus}) watcher=none — dispatched but never observed working; "
+              f"its brief or phase command likely never ran as a turn. Read the pane.")
+
+# Only panes present THIS poll are written back, so a pane id herdr later reuses cannot
+# inherit its predecessor history.
+try:
+    with open(mem_path, "w") as f:
+        for p in sorted({d["pane_id"] for d in dispatched}):
+            f.write("seen|%s\n" % p)
+            if p in ever_worked:
+                f.write("worked|%s\n" % p)
+            if p in idle_now:
+                f.write("idle|%s\n" % p)
+except Exception:
+    pass
 ' 2>/dev/null
 }
 

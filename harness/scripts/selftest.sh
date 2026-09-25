@@ -951,6 +951,55 @@ case "$out" in
 esac
 
 # ---------------------------------------------------------------------------------------------
+# THE WATCHDOG ASKS ABOUT ONE PANE (2.13.0).
+#
+# Two downstream measurements: a Builder that worked and then stopped beside a busy sibling
+# fired nothing, because STUCK needed NO pane working anywhere; and a pane that never started
+# was invisible to all three alerts. Both were watched to be silent on the 2.12.0 analyzer
+# before this section was written. The analyzer is the python inside `analyze()`, run here on a
+# stubbed `herdr` and `pgrep`, poll after poll against one state dir, because the alerts it
+# gained are about what happens ACROSS polls — a single call cannot fail them.
+# ---------------------------------------------------------------------------------------------
+echo "watchdog — a stall beside a busy sibling, a pane that never started, a run in the background"
+
+WD="$S/herdr-watchdog.sh"
+W="$TMP/wd"; mkdir -p "$W/bin" "$W/proj/.astraler/project" "$W/state"
+awk '/^analyze\(\) \{/{f=1;next} f&&/^  python3 -c '"'"'$/{g=1;next} g&&/^'"'"' 2>\/dev\/null$/{exit} g{print}' "$WD" \
+  | sed -e "s#\"'\"\$WORKSPACE_LABEL\"'\"#\"ws\"#" -e "s#\"'\"\$PROJECT_ROOT\"'\"#\"$W/proj\"#" \
+        -e "s#\"'\"\$STATE_DIR\"'\"#\"$W/state\"#" > "$W/analyze.py"
+printf '#!/bin/sh\necho %s\n' "'{\"result\":{\"workspaces\":[{\"label\":\"ws\",\"workspace_id\":\"w1\"}]}}'" > "$W/bin/herdr"
+printf '#!/bin/sh\nexit 1\n' > "$W/bin/pgrep"
+chmod +x "$W/bin/herdr" "$W/bin/pgrep"
+# wd_polls <builder status>... : one poll per status, sibling always working, prints alerts per poll
+wd_polls() {
+  rm -rf "$W/state"; mkdir -p "$W/state"; local st
+  for st in "$@"; do
+    printf '{"result":{"agents":[{"pane_id":"w1:t","name":"thomas","agent_status":"done"},{"pane_id":"w1:b","name":"builder-x","agent_status":"%s"},{"pane_id":"w1:s","name":"builder-y","agent_status":"working"}]}}' "$st" \
+      | PATH="$W/bin:$PATH" python3 "$W/analyze.py" 2>&1 | grep -v '^__' | grep '|w1:b' | cut -d'|' -f1 | tr '\n' ' '
+    printf ';'
+  done
+}
+if [ ! -s "$W/analyze.py" ]; then
+  bad "watchdog analyzer extraction" "could not lift analyze() out of $WD — the fixture no longer matches the script"
+else
+  out="$(wd_polls working idle idle)"
+  case "$out" in *";;STUCK ;"|*";; STUCK ;") ok "STUCK fires for a pane that worked and stopped, beside a busy sibling" ;;
+                 *) bad "STUCK beside a busy sibling" "got '$out' — one working sibling is silencing every other pane again" ;; esac
+  out="$(wd_polls idle idle)"
+  case "$out" in ";NEVER_STARTED ;") ok "NEVER_STARTED fires on the second poll of a pane that never worked, and not the first" ;;
+                 *) bad "NEVER_STARTED" "got '$out' — a pane that never started is invisible again, or fires on first sighting" ;; esac
+  printf '#!/bin/sh\nexit 0\n' > "$W/proj/.astraler/project/work-in-flight.sh"; chmod +x "$W/proj/.astraler/project/work-in-flight.sh"
+  out="$(wd_polls working idle idle)"
+  case "$out" in *STUCK*) bad "work-in-flight plug" "STUCK fired while the project said a run is in flight: '$out'" ;;
+                 *) ok "STUCK stays quiet while .astraler/project/work-in-flight.sh says a run is in flight" ;; esac
+  printf '#!/bin/sh\nexit 7\n' > "$W/proj/.astraler/project/work-in-flight.sh"
+  out="$(wd_polls working idle idle)"
+  case "$out" in *STUCK*) bad "work-in-flight plug, broken" "a plug that errored read as nothing-in-flight: '$out'" ;;
+                 *) ok "a work-in-flight plug that errors reads as in flight" ;; esac
+  rm -f "$W/proj/.astraler/project/work-in-flight.sh"
+fi
+
+# ---------------------------------------------------------------------------------------------
 echo
 if [ "$FAIL" -eq 0 ]; then
   echo "selftest: $PASS passed, 0 failed ($LAYOUT layout, $SKIPPED package-only section(s) skipped)."

@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 150 entries (AST-001 … AST-151, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 153 entries (AST-001 … AST-154, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -4062,3 +4062,61 @@ Deduplication does not create these; it exposes the ones a second copy was answe
 
 Bound: `check-requirements.sh`, `scripts/selftest.sh`,
 `.agents/memory/recurring-failure-modes.md` (AST-040).
+
+### AST-152 — Each watchdog alert was scoped by the wrong subject, so one busy pane hid the rest · promoted 2026-09-25
+
+`STUCK` asked *is anything in this workspace working?* when the question was about one pane.
+Measured downstream: a Builder whose waiter had died sat idle on a free box for three minutes
+while a sibling was mid-turn, and nothing fired. With several Builders in flight, one of them
+working is the ordinary state, so the alert was silent in the case it exists for.
+
+The same scoping left a fourth state with no alert at all. A pane dispatched and never observed
+working is silent (not `BLOCKED`), idle (not `WATCHER_LOST`) and, beside any working sibling,
+not `STUCK` either. A Shaper whose brief never submitted was heartbeated past for the whole
+evening and surfaced only because it wrote to the router itself; a Builder later sat idle forty
+minutes, caught by the new alert three times.
+
+Both are fixed by asking about one pane across two polls, from memory the watchdog keeps in
+its state dir: `NEVER_STARTED` for a pane never seen working, `STUCK` for one that worked and
+then sat idle twice. Pane state cannot see a test run left in the background after a turn
+ends — the same shift measured seven `STUCK` false positives from exactly that, each verified
+by hand against the process table — so the project answers that through `.astraler/project/work-in-flight.sh`, and an unreadable
+answer counts as in flight. Recorded because the shape is general: **an alert gated on a
+system-wide condition is silent whenever any other part of the system is healthy.**
+
+Bound: `scripts/herdr-watchdog.sh`, `scripts/selftest.sh`,
+`.agents/skills/dispatch-ticket/WATCHING.md`.
+
+### AST-153 — A transport that can hold a message returned success, and the sender had no other evidence · promoted 2026-09-25
+
+`SendMessage` to another Claude session returns `{"success": true}` when the message is
+transported. The receiving session can then hold it for its user's approval
+(`crossSessionInbound`), and nothing tells the sender. Measured downstream: a gate brief to a
+Rin launched without bypass sat held while the pane read `idle` — exactly what a gate that
+started and found nothing looks like — and the verdict in the other direction was held too,
+with the release prompt defaulting to Deny. The first diagnosis blamed the permission-mode
+mismatch the pane printed; then a brief to a Builder launched WITH bypass was held as well, so
+the mismatch is one trigger, not the cause. **A cause read off the error text was narrower than
+the behaviour.**
+
+The two roles fail differently. Rin with no brief asks, and goes `blocked`. A Builder whose
+slash command already ran improvises from it and reads `working`. Delivery evidence therefore
+belongs at the receiver — a phrase only the brief could have supplied, read from the pane — and
+a gate brief goes by `herdr agent prompt`, typed input that crosses no permission boundary.
+
+Bound: `.agents/skills/review-with-rin/SKILL.md`, `.agents/skills/dispatch-ticket-claude/SKILL.md`.
+
+### AST-154 — The obvious retry for an unsent brief fused it with the next one and reported success · promoted 2026-09-25
+
+AST-032 and AST-037 are a brief left in the composer while the pane reads `idle`. The recovery
+that suggests itself is to send again. Measured downstream on a throwaway pane: `herdr agent
+prompt` does not clear the composer — it appends to the stale last line with no separator and
+submits both as one turn, and returned `agent_prompted`. The agent answered the fused text.
+Every machine-readable signal before the retry (`idle`, `ctx 0%`, `↑0 ↓0 tok`) was identical
+to an empty pane.
+
+The original failure did nothing and was eventually looked at; this one RUNS, carrying a field
+from a dead brief into a live one, and both sides report success. Read the composer before a
+re-delivery; `esc esc` clears it, where `ctrl-c` and `ctrl-u` were measured to leave the text.
+
+Bound: `.agents/skills/dispatch-ticket/SKILL.md`.

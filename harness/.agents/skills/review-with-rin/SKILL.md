@@ -121,6 +121,19 @@ Every check in that block is fail-closed, and each earns its place:
 Gates run without `--dangerously-skip-permissions`. The brief carries everything §1 lists,
 plus `$GATE_FILE`, plus an explicit "stay inside this worktree" line.
 
+**Deliver the brief with `herdr agent prompt`, never `SendMessage`:**
+
+```bash
+herdr agent prompt rin-<slice-or-ticket> "<brief>"
+```
+
+A peer message to a session that runs under permissions is HELD for approval on its side, and
+the sender gets `success: true` (AST-153). Measured downstream in both directions in one
+evening: Thomas to Rin held on dispatch, the pane idle with nothing received — which reads
+exactly like a gate that started and found nothing — and Rin to Thomas held on the verdict,
+the release prompt defaulting to **Deny**. `agent prompt` is typed input and crosses no
+permission boundary. It addresses the pane by agent name, so the launch must register one.
+
 Cleanup is Thomas's, after the report: **collect and verify `$GATE_FILE` FIRST** (§3) →
 `herdr tab close <gate-tab-id>` → confirm the pane is gone → `git worktree remove
 <gate-worktree>` (plain, never `--force`). Rin writes nothing inside the gate worktree and

@@ -70,6 +70,15 @@ SendMessage({
 })
 ```
 
+**`{"success": true}` means the message was transported, not that the agent read it.** The
+receiving session can HOLD a peer message for its user's approval — `crossSessionInbound` —
+and nothing tells the sender. Measured downstream on two roles: a Rin launched without bypass,
+whose pane printed *"the sending session's permission mode class doesn't match"*, and then a
+Builder launched WITH bypass, held too and released minutes later by someone else's keystroke.
+So the class mismatch is one trigger, not the cause. A held Builder has already run its slash
+command and improvises from it, which reads as `working` (AST-153). **After step 3, read the
+pane for a phrase only the brief could have supplied**; `working` is not delivery.
+
 **Step 2 — the bare slash command, TYPED into the pane as real input:**
 
 ```bash

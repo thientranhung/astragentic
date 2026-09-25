@@ -1,3 +1,115 @@
+# Astragentic 2.13.0
+
+A downstream project sent a report on its most stable week: 32 ticket merges in four days,
+serial, and its first real order carried end to end. It cited a commit for every claim. Each
+was read in that repository before anything here moved. Most of the report was about the
+project itself; four findings were about this package, and three of them are one shape:
+**something reported success, or reported nothing, about a thing it could not see.**
+
+## The watchdog asks about one pane
+
+`STUCK` fired only when **no** pane in the workspace was working. With several Builders in
+flight, one of them working is the ordinary state, so the alert was silent in the case it
+exists for. Measured downstream: a Builder whose waiter had died sat idle on a free box while a
+sibling was mid-turn, and nothing fired.
+
+The same scoping left a state with no alert at all:
+
+| alert | needs | a pane dispatched and never started |
+|---|---|---|
+| `BLOCKED` | the pane asking a question | silent |
+| `WATCHER_LOST` | the pane working | idle |
+| `STUCK` (2.12.0) | nothing else working | a sibling was working |
+
+A Shaper whose brief never submitted was heartbeated past all evening and surfaced only because
+it wrote to the router itself.
+
+Both alerts now ask about one pane across two polls, from memory the watchdog keeps in its
+state dir. **`NEVER_STARTED`** is a pane never seen working. **`STUCK`** is a pane that worked
+and then sat idle twice. Neither fires on a first sighting, and neither can fire for the other.
+
+**A pane that ends its turn with a test run in the background reads `done`**, and pane state
+cannot see that run: the same project measured seven false `STUCK` alerts in one shift from
+exactly that. So the project answers the question through a sixth plug,
+`.astraler/project/work-in-flight.sh`: exit 0 while something heavy runs, 1 when nothing does.
+Any other exit counts as in flight, because a missed `STUCK` costs a late nudge and a false one
+costs trust in every alert. Absent, `STUCK` fires on pane state alone.
+
+`scripts/selftest.sh` runs the analyzer poll after poll against a stubbed `herdr`. The two
+downstream states were run against the 2.12.0 analyzer first, and it was silent on both.
+
+## `success: true` was a statement about the transport
+
+`SendMessage` to another Claude session returns success when the message is transported. The
+receiving session can hold it for its user's approval (`crossSessionInbound`), and the sender is
+never told. Downstream, a gate brief to Rin was held while the pane read `idle` — which looks
+exactly like a gate that started and found nothing — and the verdict going back was held too,
+its release prompt defaulting to **Deny**.
+
+The first diagnosis was the permission-mode mismatch the pane printed. Then a brief to a Builder
+launched **with** bypass was held as well. **The mismatch is one trigger, not the cause**, and a
+rule built on it would have protected one role and missed the other two.
+
+- **`review-with-rin`** now delivers the gate brief with `herdr agent prompt`, which is typed
+  input and crosses no permission boundary. Until now it said nothing about delivery.
+- **`dispatch-ticket-claude`** keeps `SendMessage` for the Builder's body, but delivery is now
+  confirmed at the receiver: a phrase only the brief could have supplied, read off the pane. A
+  held Builder has already run its slash command and improvises from it, so it reads `working`.
+
+## Sending again fused two briefs
+
+The retry that suggests itself for a brief stuck in the composer (AST-032, AST-037) is to send
+it again. `herdr agent prompt` does not clear the composer. It appends to the stale last line
+with no separator, submits both as one turn, and reports success. Every signal before the retry
+matched an empty pane: `idle`, `ctx 0%`, `↑0 ↓0 tok`. The deadlock fails by doing nothing; this
+fails by **running**. `dispatch-ticket` now reads the composer before re-delivering, and clears
+it with `esc esc`. `ctrl-c` and `ctrl-u` were measured to leave the text where it was.
+
+## Smaller changes
+
+- **The Builder's loop names the full verification run**: once, after the last commit that
+  changes the tree, before the receipt. A Builder downstream started a 20–40 minute suite
+  straight after implement, because the loop never said where it went.
+- **`TERMINAL:done` means the turn ended, not that the work finished.** Measured twice in one
+  shift: `done`, with the Builder's own gated suite still running. `WATCHING.md` says so, and
+  names where the verdict comes from instead.
+- **`Ledger: none` means *taught nothing*, never *not written yet*.** Downstream moved the
+  ledger entry after the merge, and ten merges in a row then said `none`, one of them the merge
+  the next entry opened by citing.
+- **Where verification runs belongs in the entry doc.** `ADAPT-HARNESS` asks for the local
+  stack and the customer's environment to be named in `AGENTS.md` or `CLAUDE.md`. Not only in
+  `.claude/rules/`, which Claude Code alone loads (AST-138). QA's non-mutating rule adds that
+  authorization is per run: a yes for one walk does not carry to the next, and permission to
+  deploy is not permission to test.
+- Three ledger entries: `AST-152` (alerts scoped by the wrong subject), `AST-153` (a transport
+  that holds and reports success), `AST-154` (the retry that fuses).
+
+## Not taken, and why
+
+- **Default to one lane.** The single lane was measured on one project with a shared test
+  database and a single merge station, and there it is the right call. `AST-131` measured the
+  opposite failure, slots left idle against a full frontier. `builder-target` is already the
+  owner's knob, so the default stays 4.
+- **The commit-msg marker check.** It works well downstream, and it runs a checker that project
+  has since extended (retraction chains, tree comparison) past this package's copy. Shipping the
+  hook alone would lint against the older rules. The two checkers get reconciled first.
+- **Tree-equality narrowing, and its argument contract.** It is project tooling this package
+  does not ship, so there is no contract here to document.
+- **Gate start and end stamps, "infra-shaped failures are ENV", completion signalling.** Each
+  needs a gate wrapper, and the package has none. Downstream measured the lesson itself, a
+  duration read from a log's access time, and it stays theirs until a wrapper exists.
+- **The Claude watch loop swallowing `NO_START`.** That loop is the project's own. This
+  package arms one Monitor per turn, which reports `NO_START`.
+- **Prefer tickets that move the owner's named goal.** That was one owner's ruling on scope, not
+  something measured here.
+
+## Upgrade from 2.12.0
+
+Copy `harness/`, or `./install.sh <target> --apply`. Then decide the new plug: write
+`.astraler/project/work-in-flight.sh` if this project runs long verification in the background,
+or decline it in the receipt. The watchdog's pane memory lives in its `/tmp` state dir and needs
+no migration.
+
 # Astragentic 2.12.0
 
 A downstream project asked one narrow question: does `codex --profile <role>` read the

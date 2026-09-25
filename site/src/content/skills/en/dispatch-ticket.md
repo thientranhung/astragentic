@@ -90,7 +90,12 @@ Pulled from `harness/.agents/memory/recurring-failure-modes.md`. Everything belo
   requiring the watcher to observe `working` before believing the turn began.
 - **"Done" only meant the turn ended.** `TERMINAL:done` means the turn ended, not that the work finished; a Builder
   parked on background work reads as done. Fixed: check OS processes and the runtime status line
-  before concluding it finished.
+  before concluding it finished — the verdict is the markers, checked with
+  `scripts/check-simplify-markers.sh`.
+- **`agent prompt` fused onto a stale, unsent brief instead of replacing it.** Re-sending after `NO_START` appended the
+  new text to whatever was already sitting in the composer and submitted both as one turn,
+  reporting success (AST-154). Fixed: read the composer first; clear it with `esc esc` —
+  `ctrl-c` and `ctrl-u` were measured to leave the text in place.
 - **The watcher never re-armed.** The per-turn watcher covers one turn and exits; nothing re-arms it, and the
   re-arm is the step skipped right after a long task. Fixed: every new turn gets a new watcher.
 - **Work stopped before commit.** A Builder that stops before committing leaves work that only exists on disk;

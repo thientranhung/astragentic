@@ -91,7 +91,12 @@ thái `promoted`: đã sửa và đã nằm trong hợp đồng mà trang này m
   watcher phải thấy trạng thái `working` rồi mới tin là lượt đã bắt đầu.
 - **"Done" chỉ có nghĩa lượt đã kết thúc.** `TERMINAL:done` nghĩa là lượt đã kết thúc, không phải việc đã xong; một Builder
   đang đỗ ở background đọc ra thành done. Đã sửa: kiểm tiến trình OS và dòng status của runtime
-  trước khi kết luận là xong.
+  trước khi kết luận là xong — phán quyết nằm ở các marker, kiểm bằng
+  `scripts/check-simplify-markers.sh`.
+- **`agent prompt` gộp vào một brief cũ chưa gửi thay vì thay thế nó.** Gửi lại sau `NO_START` nối văn bản mới vào
+  bất cứ thứ gì đang nằm sẵn trong composer rồi submit cả hai như một lượt, vẫn báo thành công
+  (AST-154). Đã sửa: đọc composer trước; xoá bằng `esc esc` — `ctrl-c` và `ctrl-u` đo được là để
+  nguyên văn bản cũ.
 - **Watcher không tự arm lại.** Watcher theo lượt chỉ phủ một lượt rồi thoát; không có gì arm lại, và cú arm lại
   chính là bước hay bị bỏ ngay sau một tác vụ dài. Đã sửa: mỗi lượt mới có watcher mới.
 - **Dừng trước khi commit.** Một Builder dừng trước khi commit để lại phần việc chỉ tồn tại trên disk;

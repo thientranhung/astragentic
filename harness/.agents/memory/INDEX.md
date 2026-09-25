@@ -163,3 +163,6 @@ from this table — read the entry.
 | `AST-149` | No form of the command carried both the range and the intent, and the repair that suggested i… | promoted | 325 |   |
 | `AST-150` | The launcher the shared protocol asks for cannot encode the identity the runtime needs | promoted | 258 |   |
 | `AST-151` | An empty cell read as "the default" was refused at bootstrap | promoted | 182 | selftest.sh |
+| `AST-152` | Each watchdog alert was scoped by the wrong subject, so one busy pane hid the rest | promoted | 251 | WATCHING.md,herdr-watchdog.sh |
+| `AST-153` | A transport that can hold a message returned success, and the sender had no other evidence | promoted | 188 | dispatch-ticket-claude,review-with-rin |
+| `AST-154` | The obvious retry for an unsent brief fused it with the next one and reported success | promoted | 133 | dispatch-ticket |

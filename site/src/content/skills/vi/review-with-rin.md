@@ -80,6 +80,10 @@ Vì vậy toàn bộ báo cáo phải rơi vào một file do Thomas đặt tên
   `builder.md` chưa từng nhắc là phải tạo ra thứ đó. Promoted: hợp đồng nào nợ nó thì giờ đã nói ra.
 - **Pipeline hỏng giữa ống vẫn thoát mã 0.** Một pipeline sinh token có thể hỏng giữa ống mà vẫn thoát mã 0 dưới `set -e` trần, làm
   rỗng token freshness trong im lặng. Promoted, sửa bằng `set -euo pipefail` cộng một lượt kiểm độ dài.
+- **Một tin nhắn giữa hai session gửi cho Rin có thể bị giữ lại, chứ không tới nơi.** `SendMessage` gửi tới một session đang chạy dưới
+  permissions vẫn trả về `success: true` dù bên nhận giữ lại chờ duyệt (`crossSessionInbound`), và
+  pane sau đó đọc ra idle, y hệt một gate đã chạy mà không thấy gì. Đã sửa: giao brief bằng
+  `herdr agent prompt rin-<slice-or-ticket> "<brief>"` thay vì `SendMessage` (AST-153).
 <!-- source: harness/.agents/memory/recurring-failure-modes.md -->
 
 ## Đang chạy đúng nếu

@@ -111,7 +111,8 @@ Reads `workspace-label` from `orchestrator.md`; `stop` verifies the PID at
 |---|---|---|
 | `BLOCKED` | Pane asking a question | Read, answer, **restart the watch** — Monitor on Claude, watcher script on Codex/OpenCode |
 | `WATCHER_LOST` | Pane working, nobody watching | Re-arm the watch now |
-| `STUCK` | **No** pane working anywhere | Inspect, handback or re-dispatch |
+| `STUCK` | This pane worked, then sat idle across two polls, no watcher | Check whether its NEXT step started; handback or re-dispatch |
+| `NEVER_STARTED` | Dispatched, never observed working, no watcher | Read the pane: the brief or phase command never ran as a turn |
 | `THOMAS_CRASHED` | The router's process is gone | Desktop notification substitutes |
 
 **herdr 0.9.1 changes what these states MEAN, and none of it is measured here.** Its changelog
@@ -128,8 +129,26 @@ changelog is a claim, not a measurement. What to re-run first, in order: an inte
 reaching `idle`; a Codex pane mid-composer NOT reading `blocked`; an agent still reachable by
 name after a detection blip. Until someone does, the workarounds below stay.
 
-**What falls between them, stated because silence here reads as health.** `STUCK` requires that
-NO pane is working, so a Builder that finishes while a sibling still works produces nothing —
-with several Builders in flight, the ordinary case. A pane launched through the `herdr pane run`
-fallback carries no agent name and is never counted as dispatched, so it emits nothing at all
-(AST-084). Neither is a bug in the watchdog; both are why the router counts panes itself.
+**Both pane alerts ask about ONE pane.** `STUCK` used to need NO pane working anywhere, so one
+busy sibling silenced it for every other pane; and a pane that never started fell between all
+three alerts at once — silent, idle, never worked (AST-152). Both need two polls, from
+per-pane memory in the watchdog's state dir, so neither can fire on its first sighting.
+
+**A pane that ends its turn with a test run in the background reads `done`.** Pane state cannot
+see that work, so `STUCK` would fire on it — seven false positives in one shift downstream. The
+project answers the question instead: `.astraler/project/work-in-flight.sh` exits 0 while
+something heavy runs and 1 when nothing does; any other answer reads as in flight. Without the
+plug `STUCK` fires on pane state alone, and the router reads the pane before acting on it.
+
+**What still falls between them, stated because silence here reads as health.** A pane launched
+through `herdr pane run` and never renamed carries no agent name and is never counted as
+dispatched, so it emits nothing at all (AST-084). That is why the launch registers a name, and
+why the router still counts panes itself.
+
+**`TERMINAL:done` means the turn ended, not that the work finished.** A command the agent
+started in the background keeps running after the pane goes `done` — measured downstream twice
+in one shift, `done` while the Builder's own gated suite ran, statusline reading `1 shell still
+running`, no receipt on the branch yet. A handback collected on `done` is collected before the
+gate answered. The verdict is the artifact: the markers, checked with
+`scripts/check-simplify-markers.sh`. `herdr pane read <id> --source visible` shows a running
+shell; `herdr pane get` does not.

@@ -108,7 +108,11 @@ is **your change rendering correctly** — whether the product still coheres is 
 ## The cross-vendor arm — yours to fire, and it closes your loop
 
 **One closed loop, one handback:** `implement` → `code-review` → simplify → **arm pass 1** →
-[fold → **pass 2**] → `arm(ticket):` receipt → handback.
+[fold → **pass 2**] → **the ONE full verification run** → `arm(ticket):` receipt → handback.
+
+**The full run goes after the last commit that changes the tree** — any earlier and a review,
+simplify or fold commit stales it: a second run, or a `Tests:` citation at a SHA you did not
+hand back. Fast checks run as often as you like.
 
 **The head under review is yours**, so the range is correct without resolving it. Isolation has
 a per-runtime answer — take it from the arm skill.

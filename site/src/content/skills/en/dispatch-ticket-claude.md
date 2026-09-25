@@ -99,6 +99,10 @@ Pulled from `harness/.agents/memory/recurring-failure-modes.md`. All are marked 
   bigger the ticket the likelier the watch is already gone. Fixed: both fields explicit in every
   template, and a `Monitor timed out` notification means re-arm, not noise.
 - **Reading `TERMINAL:done` as work finished.** `TERMINAL:done` means the turn ended, not that the work finished.
+- **`success: true` from `SendMessage` means transported, not read.** The receiving session can hold the body for
+  approval; a held Builder has already run its slash command and improvises from it, which reads
+  as `working`. Fixed: after the echo check, read the pane for a phrase only the brief could
+  supply — `working` is not delivery (AST-153).
 - **Worktrees don't carry untracked files.** A worktree carries tracked content only, which is what the adapter check above
   exists to catch.
 

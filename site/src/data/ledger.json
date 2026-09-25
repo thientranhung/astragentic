@@ -3413,7 +3413,13 @@
     "promotedOn": "2026-09-20",
     "entry": "### AST-149 — No form of the command carried both the range and the intent, and the repair that suggested itself failed silently · promoted 2026-09-20\n\n`codex-arm` documented the cross-vendor gate's raw invocation as\n\n```\ncodex exec review --base \"$BASE\" -m <model> \"<focus text>\"\n```\n\nwhich on codex-cli 0.155.1 cannot run at all: *the argument `--base <BRANCH>` cannot be used with\n`[PROMPT]`*, exit 2. `--commit <SHA>` refuses a prompt the same way, and `-` — the documented\nway to read the prompt from stdin — IS that positional, so it is refused too. **Because argument\nparsing fails before any review starts, the command produces no output file, which is\nindistinguishable from an arm that was never fired.**\n\nThe first fix reached for the obvious alternative: pipe the focus without `-`. That is accepted,\nand the focus is **discarded**. The run reviews the range under a generic `changes against\n'<base>'` prompt and exits 0 with a complete, plausible review. Proven by piping *\"Respond with\nexactly PIPEWORKS\"* and getting an ordinary review back with zero occurrences of the token. …",
     "refs": [],
-    "commits": []
+    "commits": [
+      {
+        "sha": "a831c03d3a39c491649baf8655f4d9cff5494809",
+        "date": "2026-09-20",
+        "subject": "fold the first project's findings — the 2.12.0 launcher could not launch"
+      }
+    ]
   },
   {
     "id": "AST-150",
@@ -3426,7 +3432,13 @@
     "promotedOn": "2026-09-20",
     "entry": "### AST-150 — The launcher the shared protocol asks for cannot encode the identity the runtime needs · promoted 2026-09-20\n\n2.12.0 moved the Codex role identity onto the launch command line as multi-line\n`developer_instructions`. `herdr agent start … -- <args>`, which every other runtime's dispatch\nuses and which registers the agent name in the same call, refuses it:\n\n```\ninvalid_agent_argument — agent arguments cannot be encoded safely for the target shell\n```\n\nMeasured with a control on herdr 0.9.1: the identical call with a **single-line** identity gets\npast encoding and fails only on the pane id. **The cause is the newline, not the length** — and\nevery role file is multi-line, so `agent start` refuses every real Codex dispatch.\n\nSo the launch is two steps: `herdr pane run`, which takes the whole command as one shell string,\nthen `herdr agent rename` to restore the registered name. **`pane run` alone is half a\ndispatch**: the pane has no agent name, so it is invisible to the watchdog that counts\ndispatched agents, and it cannot be prompted by name at all — which the one-call\n`herdr agent prompt` form depends on. …",
     "refs": [],
-    "commits": []
+    "commits": [
+      {
+        "sha": "a831c03d3a39c491649baf8655f4d9cff5494809",
+        "date": "2026-09-20",
+        "subject": "fold the first project's findings — the 2.12.0 launcher could not launch"
+      }
+    ]
   },
   {
     "id": "AST-151",
@@ -3445,6 +3457,87 @@
         "name": "selftest.sh",
         "kind": "file",
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/selftest.sh"
+      }
+    ],
+    "commits": [
+      {
+        "sha": "a831c03d3a39c491649baf8655f4d9cff5494809",
+        "date": "2026-09-20",
+        "subject": "fold the first project's findings — the 2.12.0 launcher could not launch"
+      }
+    ]
+  },
+  {
+    "id": "AST-152",
+    "lesson": "Each watchdog alert was scoped by the wrong subject, so one busy pane hid the rest",
+    "status": "promoted",
+    "words": 251,
+    "citedBy": [
+      "WATCHING.md",
+      "herdr-watchdog.sh"
+    ],
+    "indexLine": 166,
+    "entryLine": 4066,
+    "promotedOn": "2026-09-25",
+    "entry": "### AST-152 — Each watchdog alert was scoped by the wrong subject, so one busy pane hid the rest · promoted 2026-09-25\n\n`STUCK` asked *is anything in this workspace working?* when the question was about one pane.\nMeasured downstream: a Builder whose waiter had died sat idle on a free box for three minutes\nwhile a sibling was mid-turn, and nothing fired. With several Builders in flight, one of them\nworking is the ordinary state, so the alert was silent in the case it exists for.\n\nThe same scoping left a fourth state with no alert at all. A pane dispatched and never observed\nworking is silent (not `BLOCKED`), idle (not `WATCHER_LOST`) and, beside any working sibling,\nnot `STUCK` either. A Shaper whose brief never submitted was heartbeated past for the whole\nevening and surfaced only because it wrote to the router itself; a Builder later sat idle forty\nminutes, caught by the new alert three times.\n\nBoth are fixed by asking about one pane across two polls, from memory the watchdog keeps in\nits state dir: `NEVER_STARTED` for a pane never seen working, `STUCK` for one that worked and\nthen sat idle twice. …",
+    "refs": [
+      {
+        "name": "WATCHING.md",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket/WATCHING.md"
+      },
+      {
+        "name": "herdr-watchdog.sh",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/herdr-watchdog.sh"
+      }
+    ],
+    "commits": []
+  },
+  {
+    "id": "AST-153",
+    "lesson": "A transport that can hold a message returned success, and the sender had no other evidence",
+    "status": "promoted",
+    "words": 188,
+    "citedBy": [
+      "dispatch-ticket-claude",
+      "review-with-rin"
+    ],
+    "indexLine": 167,
+    "entryLine": 4090,
+    "promotedOn": "2026-09-25",
+    "entry": "### AST-153 — A transport that can hold a message returned success, and the sender had no other evidence · promoted 2026-09-25\n\n`SendMessage` to another Claude session returns `{\"success\": true}` when the message is\ntransported. The receiving session can then hold it for its user's approval\n(`crossSessionInbound`), and nothing tells the sender. Measured downstream: a gate brief to a\nRin launched without bypass sat held while the pane read `idle` — exactly what a gate that\nstarted and found nothing looks like — and the verdict in the other direction was held too,\nwith the release prompt defaulting to Deny. The first diagnosis blamed the permission-mode\nmismatch the pane printed; then a brief to a Builder launched WITH bypass was held as well, so\nthe mismatch is one trigger, not the cause. **A cause read off the error text was narrower than\nthe behaviour.**\n\nThe two roles fail differently. Rin with no brief asks, and goes `blocked`. A Builder whose\nslash command already ran improvises from it and reads `working`. …",
+    "refs": [
+      {
+        "name": "dispatch-ticket-claude",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket-claude"
+      },
+      {
+        "name": "review-with-rin",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/review-with-rin"
+      }
+    ],
+    "commits": []
+  },
+  {
+    "id": "AST-154",
+    "lesson": "The obvious retry for an unsent brief fused it with the next one and reported success",
+    "status": "promoted",
+    "words": 133,
+    "citedBy": [
+      "dispatch-ticket"
+    ],
+    "indexLine": 168,
+    "entryLine": 4109,
+    "promotedOn": "2026-09-25",
+    "entry": "### AST-154 — The obvious retry for an unsent brief fused it with the next one and reported success · promoted 2026-09-25\n\nAST-032 and AST-037 are a brief left in the composer while the pane reads `idle`. The recovery\nthat suggests itself is to send again. Measured downstream on a throwaway pane: `herdr agent\nprompt` does not clear the composer — it appends to the stale last line with no separator and\nsubmits both as one turn, and returned `agent_prompted`. The agent answered the fused text.\nEvery machine-readable signal before the retry (`idle`, `ctx 0%`, `↑0 ↓0 tok`) was identical\nto an empty pane.\n\nThe original failure did nothing and was eventually looked at; this one RUNS, carrying a field\nfrom a dead brief into a live one, and both sides report success. Read the composer before a\nre-delivery; `esc esc` clears it, where `ctrl-c` and `ctrl-u` were measured to leave the text.\n\nBound: `.agents/skills/dispatch-ticket/SKILL.md`.",
+    "refs": [
+      {
+        "name": "dispatch-ticket",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket"
       }
     ],
     "commits": []

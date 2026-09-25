@@ -1,5 +1,11 @@
 [
   {
+    "sha": "a831c03d3a39c491649baf8655f4d9cff5494809",
+    "date": "2026-09-20",
+    "subject": "fold the first project's findings — the 2.12.0 launcher could not launch",
+    "ledger": "Ledger: AST-149 (no form carried both), AST-150 (the launcher that cannot encode the identity), AST-151 (an empty cell refused at bootstrap). Still 2.12.0, unreleased."
+  },
+  {
     "sha": "a7ce4a8493e19b30c9df167c05a32d0d86a1ebda",
     "date": "2026-09-20",
     "subject": "2.12.0 — a role identity stops travelling through a namespace the project does not own",
@@ -111,12 +117,6 @@
     "sha": "037f282adf567c1f67f9310b202734397788e163",
     "date": "2026-09-08",
     "subject": "site: launch commands show where effort goes per runtime",
-    "ledger": "Ledger: none."
-  },
-  {
-    "sha": "a93788fcb05c57002f5f9f8046697d415f79fc1d",
-    "date": "2026-09-08",
-    "subject": "site: five explaining sections under the hero",
     "ledger": "Ledger: none."
   }
 ]

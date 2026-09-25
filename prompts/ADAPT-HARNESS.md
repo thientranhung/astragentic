@@ -112,7 +112,7 @@ Classify candidate material before editing anything:
 - **Project plugs — the project's answers, at a path no release writes.** `.astraler/project/`
   is project-owned and tracked in git; `install.sh` never touches it, so an upgrade cannot
   overwrite what the project declared. The harness states an obligation and the moment; the
-  plug is the project's answer. Five plugs are asked for:
+  plug is the project's answer. Six plugs are asked for:
   - **`cleanup-worktree.sh <worktree-path>`** — *what does a worktree allocate in this project
     beyond git, and what releases it?* A database, a port registration, a container, a broker,
     a lease on something shared. Write the release for THIS worktree only, never a
@@ -152,6 +152,14 @@ Classify candidate material before editing anything:
     error text told it to (`AST-132`). Absent is an empty socket. Measured on the first real
     project to run check 4: one Docker container name kept its reachability gate permanently
     red, and a gate that cannot go green is a gate people stop reading.
+  - **`work-in-flight.sh`** (no arguments) — *is something heavy running right now?* Exit 0
+    while a test suite, a build or a migration this project runs is in flight, 1 when nothing
+    is; read a lock, a token, or `pgrep` for this project's runner. `scripts/herdr-watchdog.sh`
+    asks before it sends `STUCK`: a pane that started a suite in the background and ended its
+    turn reads `done` while the box burns, and pane state cannot tell that from a stall —
+    seven false alerts in one shift downstream. Any exit other than 0 or 1 reads as in flight.
+    Absent, `STUCK` fires on pane state alone; a project with no long-running verification
+    declines it in the receipt.
 - **Runtime-specific** — Claude Markdown/YAML agents and skills stay Claude-native. Codex role
   instructions stay under `.codex/profiles/<role>.md`; project-local custom subagents stay under
   `.codex/agents/`; project hooks stay in `.codex/hooks.json`. These are
@@ -370,6 +378,15 @@ ticket and `dispatch-qa-walk`, and they load the entry doc, not a state file. A 
 UI and no way to render it is a finding worth stating plainly: every visual defect there
 will reach the owner's screen first.
 
+**Name where verification runs, and what is off limits, in the same entry doc.** Which stack an
+agent verifies on — a local or per-worktree stack, and the command that says it is healthy —
+and which environment is the customer's. Downstream, a walk pressed a button on production's
+live provider account before any such rule existed; the owner's ruling afterwards was that
+production is touched only after the same journey passed locally AND with permission for that
+run, never carried from an earlier yes. Put it in `AGENTS.md` or `CLAUDE.md`, not only in
+`.claude/rules/`: that directory is loaded by Claude Code alone, so a rule there binds the
+Claude panes and no Codex or OpenCode one (AST-138).
+
 **The standards pointer and the rendering path live in the entry doc**, for the same reason
 the ticket prefix does: a fact goes where its reader already is. The glossary and triage
 counts go to the owner in your handback; they have no later reader and do not need a file.
@@ -455,7 +472,8 @@ Only after validation succeeds:
    It records **exceptions only** — each `DIFFERS` path and its decision, every `PENDING`
    and why, ownership conflicts, defects found in the candidate, and validation failures.
    And one line per project plug under `.astraler/project/` — `cleanup-worktree.sh`,
-   `tracker-state.sh`, `ticket-done.sh`, `tracker-status.sh`, `not-a-skill.txt` — written (what it does) or
+   `tracker-state.sh`, `ticket-done.sh`, `tracker-status.sh`, `not-a-skill.txt`,
+   `work-in-flight.sh` — written (what it does) or
    declined (why) — an unrecorded plug is an empty socket the next session cannot tell from a
    considered one.
    A clean upgrade produces a receipt of a few lines, and that is the correct output, not a

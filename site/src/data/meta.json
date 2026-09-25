@@ -1,8 +1,8 @@
 {
-  "total": 150,
-  "cited": 80,
+  "total": 153,
+  "cited": 83,
   "orphan": 70,
   "closedChains": 0,
-  "generatedAt": "2026-09-20T13:18:05.862Z",
-  "version": "2.12.0"
+  "generatedAt": "2026-09-25T09:21:11.211Z",
+  "version": "2.13.0"
 }

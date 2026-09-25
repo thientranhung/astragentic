@@ -357,6 +357,21 @@ and quotes: the turn ran and answered, with no separate Enter. It addresses the 
 name**, which is the other half of why the launch registers one — an unnamed pane cannot be
 prompted this way at all.
 
+**`agent prompt` does not clear the composer — it appends, and submits the fusion.** Measured
+downstream on a throwaway pane: a brief left unsent by an earlier paste read `idle`, `ctx 0%`,
+`↑0 ↓0 tok`, identical to an empty pane; the next `agent prompt` glued its text onto the stale
+last line with no separator, submitted both as one turn, and returned success (AST-154). The
+deadlock above fails by doing nothing; this fails by RUNNING, with a field from a dead brief
+inside a live one. **So a re-delivery after `NO_START` reads the composer first:**
+
+```bash
+herdr pane read <pane-id> --source visible | tr -d '\r' | tail -15   # the input box: empty, or not
+herdr pane send-keys <pane-id> esc esc      # clears it; ctrl-c and ctrl-u were measured NOT to
+```
+
+The measurement was on a Claude Code composer, whose input line starts `❯`; the fusion is
+herdr appending, so treat it as runtime-independent until a Codex pane is shown otherwise.
+
 **Its `--wait --until idle` exit status is not proof of anything.** In the same run a prompt
 that demonstrably submitted and answered returned exit 1 from the wait: AST-107's alive-and-deaf
 waiter, one command over. Take the verdict from a fresh `herdr agent get` or from the watcher.
@@ -372,7 +387,7 @@ herdr pane send-keys <pane-id> Enter        # the brief is pasted; THIS submits 
 start guard asks the same question a separate `herdr agent wait --until working` would, and
 asking twice delays the watcher into missing `working` on a fast builder. On `NO_START`, read
 the pane: an unsent brief sitting in the composer is the likeliest cause, and the fix is to
-send Enter again.
+send Enter again — never a second `agent prompt` on top of it, which fuses the two.
 
 ### Start the watcher — mandatory, immediately after submit
 

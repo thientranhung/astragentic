@@ -98,6 +98,10 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Tất cả đề
   tường minh trong mọi template, và thông báo `Monitor timed out` nghĩa là arm lại, không phải
   nhiễu.
 - **Đọc nhầm `TERMINAL:done` là việc đã xong.** `TERMINAL:done` nghĩa là lượt đó đã kết thúc, không phải công việc đã xong.
+- **`success: true` từ `SendMessage` chỉ có nghĩa đã chuyển tới, không phải đã đọc.** Session nhận có thể giữ lại phần
+  thân chờ duyệt; một Builder bị giữ đã chạy xong lệnh slash của nó và tự ứng biến tiếp, đọc ra
+  giống hệt `working`. Đã sửa: sau bước kiểm echo, đọc pane tìm một câu chỉ brief mới có thể đưa
+  vào — `working` không phải là đã giao (AST-153).
 - **Worktree không mang file chưa tracked.** Một worktree chỉ mang nội dung đã tracked, đúng thứ mà bước kiểm adapter ở trên
   sinh ra để bắt.
 

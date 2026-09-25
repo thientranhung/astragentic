@@ -81,6 +81,10 @@ full report has to land in a file Thomas names and verifies before any cleanup.
 - **A pipeline could fail mid-pipe yet exit 0.** A token-generation pipeline could fail mid-pipe and exit 0 under bare `set -e`,
   silently emptying the freshness token. Promoted, fixed by `set -euo pipefail` plus a length
   check.
+- **A peer message to Rin can be held, not delivered.** `SendMessage` to a session running under permissions gets
+  `success: true` even when the receive side holds it for approval (`crossSessionInbound`), and the
+  pane then reads idle, exactly like a gate that ran and found nothing. Fixed: deliver the brief
+  with `herdr agent prompt rin-<slice-or-ticket> "<brief>"` instead (AST-153).
 <!-- source: harness/.agents/memory/recurring-failure-modes.md -->
 
 ## It's working if
