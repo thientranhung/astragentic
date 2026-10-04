@@ -170,6 +170,11 @@ Classify candidate material before editing anything:
   three different surfaces and are not interchangeable. OpenCode adapters
   (`.opencode/agents/*.md`) stay OpenCode-native. Translate mechanics by reading each
   runtime's contract, rather than by analogy from another.
+  **`.claude/skills/astragentic-dispatch/` is a Claude Code mod, not a skill**: it has a
+  `.claude-plugin/plugin.json` and no `SKILL.md`. It is reusable runtime, so it lands at exactly
+  that path and is committed. A worktree loads the copy on its own branch, and a pane with no
+  mod is neither recorded nor watched. It has no `.agents/` twin and needs none: only Claude
+  loads it.
 - **Scaffold — written once, never overwritten.** `.agents/orchestrator.md` carries the owner's
   runtime and model choices, and `.codex/profiles/*.md` carry role instructions they may tune. Write them on
   a FRESH install only. On an upgrade, leave the values alone and report any change in the

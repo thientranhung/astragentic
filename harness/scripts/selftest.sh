@@ -1031,6 +1031,44 @@ else
 fi
 
 # ---------------------------------------------------------------------------------------------
+# The dispatch mod. On a Claude root it is the only thing that records a pane, delivers its
+# brief and reports its turn end, so a mod that does not load leaves every Claude pane
+# unwatched. Claude Code's own reader validates it the way the engine loads it, and a planted
+# defect proves the reader names one: a check only ever seen passing has not been tested.
+# ---------------------------------------------------------------------------------------------
+echo "dispatch mod — the engine's reader loads it, and refuses a broken copy"
+MOD="$(dirname "$S")/.claude/skills/astragentic-dispatch"
+if [ ! -d "$MOD" ]; then
+  bad "dispatch mod" "missing at $MOD — Claude panes would run unrecorded and unwatched"
+elif ! have claude; then
+  SKIPPED=$((SKIPPED+1)); echo "  skip dispatch mod — no claude CLI to validate it with"
+else
+  out="$(claude plugin validate "$MOD" 2>&1)"; rc=$?
+  missing=""
+  for h in session.start session.receive turn.complete "tool.call{tool=Bash}"; do
+    says "$out" "$h" || missing="$missing $h"
+  done
+  if [ "$rc" -eq 0 ] && [ -z "$missing" ]; then
+    ok "dispatch mod validates and hooks session.start, session.receive, turn.complete, tool.call"
+  else
+    bad "dispatch mod validation" "exit=$rc, hooks missing:${missing:- none}"
+  fi
+  rm -rf "$TMP/mod-broken"; cp -R "$MOD" "$TMP/mod-broken"
+  python3 - "$TMP/mod-broken/hooks/register.tsx" <<'EOS'
+import sys
+p = sys.argv[1]; s = open(p).read()
+anchor = "export const register: Register = on => {\n"
+s = s.replace(anchor, anchor + "  on('session.end', ($, e, next) => { const leak = (x: any) => x; leak($); return next(e) })\n", 1)
+open(p, 'w').write(s)
+EOS
+  if claude plugin validate "$TMP/mod-broken" >/dev/null 2>&1; then
+    bad "dispatch mod planted defect" "the reader passed a module that leaks \$ — this check cannot fail"
+  else
+    ok "the reader refuses a planted defect in the dispatch mod"
+  fi
+fi
+
+# ---------------------------------------------------------------------------------------------
 echo
 if [ "$FAIL" -eq 0 ]; then
   echo "selftest: $PASS passed, 0 failed ($LAYOUT layout, $SKIPPED package-only section(s) skipped)."

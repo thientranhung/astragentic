@@ -229,8 +229,14 @@ def plugin_skills():
     return set(PLUGIN_FALLBACK)
 
 PLUGIN = plugin_skills()
+# A Claude Code mod ships as `.claude/skills/<name>/.claude-plugin/plugin.json` with no
+# SKILL.md: the engine auto-loads a plugin from a project skills folder. It is shipped payload
+# that a contract names, so it resolves. Counting only SKILL.md failed every doc that named the
+# dispatch mod.
+SHIPPED_MODS = {os.path.basename(os.path.dirname(os.path.dirname(p))) for p in
+                glob.glob(os.path.join(PAYLOAD, ".claude", "skills", "*", ".claude-plugin", "plugin.json"))}
 # A name is resolvable when anything on this machine actually provides it.
-KNOWN = set(all_skills) | PLUGIN | USER_SKILLS
+KNOWN = set(all_skills) | PLUGIN | USER_SKILLS | SHIPPED_MODS
 
 # Kebab-case tokens that are vocabulary rather than skill references. Each is here because
 # it appears in backticks and looks like a skill name; the list stays short on purpose,

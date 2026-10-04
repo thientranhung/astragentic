@@ -22,10 +22,13 @@ Every dispatch runs these in order. Each names where its detail lives.
 2. **Resolve the row** — runtime, model, effort from `orchestrator.md`; write-set collected.
 3. **Claim, then create branch and worktree** — the claim precedes the worktree (`thomas.md`).
 4. **Resolve or create the workspace**, then create the tab and pane, and gate on `foreground_cwd`.
-5. **Print the resolved dispatch**, then launch via the runtime-specific skill.
+5. **Print the resolved dispatch**, then launch via the runtime-specific skill. On Claude, read
+   the record back: the pane writes its own tab and pane ids (`dispatch-ticket-claude`).
 6. **Submit the brief** — first line is the phase's plugin-qualified slash command.
-7. **Arm the watcher immediately** — submitting and arming are one action, not two.
-8. **Branch on the watcher's exit status and payload**, never on pane status alone.
+7. **Arm the watcher immediately** — submitting and arming are one action, not two. On Claude
+   there is no watcher to arm: the pane reports its own turn end.
+8. **Branch on the watcher's exit status and payload**, never on pane status alone. On Claude,
+   branch on the `TURN-END` prompt, which is a bell exactly as the watcher's line was.
 9. **Verify by artifact**, then cleanup — [`CLEANUP.md`](CLEANUP.md).
 
 A step that reports nothing is a step nobody can tell was skipped.
@@ -391,6 +394,10 @@ send Enter again — never a second `agent prompt` on top of it, which fuses the
 
 ### Start the watcher — mandatory, immediately after submit
 
+**On a Claude root this section does not apply.** The `astragentic-dispatch` mod reports every
+turn end from inside the pane, so there is nothing to arm and nothing to re-arm.
+`dispatch-ticket-claude` has what replaces it. What follows is the Codex and OpenCode protocol.
+
 **Every dispatched pane gets a watcher, from the script below.**
 
 **And every NEW turn gets a NEW watcher — not just the first brief.** The watcher watches one
@@ -402,10 +409,7 @@ skipped, because it comes right after a long absorbing task (AST-124).
 **Sending work and arming the watch are one action, not two adjacent ones.** If you have typed
 a message to a pane and not armed a watcher, the dispatch is not finished.
 
-**All runtimes run the same watcher script**; they differ only in how its output reaches
-the dispatcher. Claude runtime wraps it in `Monitor` so each line arrives as a notification —
-see `dispatch-ticket-claude`, which also covers the one-Monitor-per-builder rule. Codex and
-OpenCode run it directly and branch on `$?`, as below. A bare `herdr agent wait` is not a
+**Codex and OpenCode run the watcher script directly** and branch on `$?`, as below. A bare `herdr agent wait` is not a
 substitute; it goes deaf (AST-107).
 
 ```bash
@@ -460,9 +464,8 @@ nothing at all on opencode: a signal incapable of failing (AST-032).
 
 **So for any pane you did not prompt in that same call** — watching another role's pane,
 resuming after a break, waiting on an artifact — the start guard stays MANDATORY.
-**Claude runtime**: use Monitor (see `dispatch-ticket-claude`).
-**Codex/OpenCode**: use `<repo-root>/scripts/herdr-watch-terminal.sh`.
-Both observe `working` for THIS turn before blessing anything, and `working` is rule-backed
+**Claude runtime**: the pane's own `TURN-END` (see `dispatch-ticket-claude`).
+**Codex/OpenCode**: use `<repo-root>/scripts/herdr-watch-terminal.sh`, which observes `working` for THIS turn before blessing anything, and `working` is rule-backed
 on all three runtimes.
 
 On `agent_prompt_stalled` or a blocking modal, inspect first, resolve the modal, then use
@@ -546,10 +549,25 @@ it names machine-local pane and tab ids, so it is not committed and a project th
     "runtime":   "claude",
     "identity":  "builder/ABC-129",
     "write_set": ["src/posting/post.ts", "docs/agents/CONTEXT.md"],
-    "claimed_at": "2026-08-26T09:41:00Z"
+    "claimed_at": "2026-08-26T09:41:00Z",
+
+    "tab_id":     "w3:t5",
+    "pane_id":    "w3:p7",
+    "session_id": "e05a49da-…",
+    "session_name": "builder-abc-129",
+    "last_brief_received_at": 1791134673168,
+    "last_turn_end_at":       1791134680111,
+    "last_turn_reason":       "answer"
   }
 }
 ```
+
+**Two writers, one entry.** Thomas writes the first block at the claim. On a Claude root the
+second block belongs to the `astragentic-dispatch` mod. The pane writes `tab_id`, `pane_id`
+and `session_id` at session start, from herdr's environment, and the turn fields as turns
+happen. **Cleanup closes the tab named by `tab_id`, never one looked up by label or
+remembered.** A guessed id closed a working Builder in production. On Codex and OpenCode,
+Thomas writes `tab_id` and `pane_id` from the create output, and the turn fields stay absent.
 
 **Written at step 6 of the claim**, before the brief is submitted — a dispatch the record does
 not know about is one no later session can finish or clean up.

@@ -779,6 +779,7 @@
     "status": "promoted",
     "words": 119,
     "citedBy": [
+      "dispatch-ticket-claude",
       "orchestrator.md"
     ],
     "indexLine": 56,
@@ -786,6 +787,11 @@
     "promotedOn": "2026-08-11",
     "entry": "### AST-041 — A file called \"the owner's\" that ships in the payload has two homes and the shipped one wins · promoted 2026-08-11\n`.agents/orchestrator.md` opens with \"This file is the owner's\" and was nevertheless part of\nthe payload every release overwrites. A consuming repo had tuned it — three rows plus a\ndocumented `## Owner decisions` section — and the only thing preventing loss was the\nadaptation prompt telling an agent to preserve it, which is a habit rather than a mechanism.\n\nDeclaring ownership in prose while shipping a competing copy is not ownership. Scaffold and\npayload are different categories: **a scaffold is written when absent and never overwritten**,\nand where its shape must change the release reports the difference for the owner to merge.\nThe same applies to the Codex profiles, which carry the same owner-chosen values.\nBound: `harness/.agents/orchestrator.md`, `prompts/ADAPT-HARNESS.md` §3.",
     "refs": [
+      {
+        "name": "dispatch-ticket-claude",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket-claude"
+      },
       {
         "name": "orchestrator.md",
         "kind": "file",
@@ -1089,7 +1095,6 @@
       "builder-codex.md",
       "builder-opencode.md",
       "check-reachability.sh",
-      "dispatch-ticket-claude",
       "rin-claude.md",
       "rin-codex.md",
       "rin-opencode.md",
@@ -1121,11 +1126,6 @@
         "name": "check-reachability.sh",
         "kind": "file",
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/check-reachability.sh"
-      },
-      {
-        "name": "dispatch-ticket-claude",
-        "kind": "file",
-        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket-claude"
       },
       {
         "name": "rin-claude.md",
@@ -1387,6 +1387,7 @@
     "words": 272,
     "citedBy": [
       "check-reachability.sh",
+      "dispatch-ticket-claude",
       "hook-contract-reload.py",
       "hook-git-guard.py",
       "hook-tracker-status.py",
@@ -1402,6 +1403,11 @@
         "name": "check-reachability.sh",
         "kind": "file",
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/check-reachability.sh"
+      },
+      {
+        "name": "dispatch-ticket-claude",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket-claude"
       },
       {
         "name": "hook-contract-reload.py",
@@ -2077,7 +2083,8 @@
       "dispatch-ticket",
       "dispatch-ticket-claude",
       "dispatch-ticket-opencode",
-      "hook-git-guard.py"
+      "hook-git-guard.py",
+      "register.tsx"
     ],
     "indexLine": 111,
     "entryLine": 2115,
@@ -2108,6 +2115,11 @@
         "name": "hook-git-guard.py",
         "kind": "file",
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/hook-git-guard.py"
+      },
+      {
+        "name": "register.tsx",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.claude/skills/astragentic-dispatch/hooks/register.tsx"
       }
     ],
     "commits": []
@@ -2354,9 +2366,8 @@
     "words": 328,
     "citedBy": [
       "dispatch-ticket",
-      "dispatch-ticket-claude",
       "herdr-watch-terminal.sh",
-      "thomas-claude.md"
+      "register.tsx"
     ],
     "indexLine": 121,
     "entryLine": 2456,
@@ -2369,19 +2380,14 @@
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket"
       },
       {
-        "name": "dispatch-ticket-claude",
-        "kind": "file",
-        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket-claude"
-      },
-      {
         "name": "herdr-watch-terminal.sh",
         "kind": "file",
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/herdr-watch-terminal.sh"
       },
       {
-        "name": "thomas-claude.md",
+        "name": "register.tsx",
         "kind": "file",
-        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/roles/thomas-claude.md"
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.claude/skills/astragentic-dispatch/hooks/register.tsx"
       }
     ],
     "commits": []
@@ -2453,6 +2459,7 @@
     "words": 443,
     "citedBy": [
       "dispatch-ticket-claude",
+      "register.tsx",
       "shaper.md"
     ],
     "indexLine": 126,
@@ -2464,6 +2471,11 @@
         "name": "dispatch-ticket-claude",
         "kind": "file",
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket-claude"
+      },
+      {
+        "name": "register.tsx",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.claude/skills/astragentic-dispatch/hooks/register.tsx"
       },
       {
         "name": "shaper.md",
@@ -3500,7 +3512,6 @@
     "status": "promoted",
     "words": 188,
     "citedBy": [
-      "dispatch-ticket-claude",
       "review-with-rin"
     ],
     "indexLine": 167,
@@ -3508,11 +3519,6 @@
     "promotedOn": "2026-09-25",
     "entry": "### AST-153 — A transport that can hold a message returned success, and the sender had no other evidence · promoted 2026-09-25\n\n`SendMessage` to another Claude session returns `{\"success\": true}` when the message is\ntransported. The receiving session can then hold it for its user's approval\n(`crossSessionInbound`), and nothing tells the sender. Measured downstream: a gate brief to a\nRin launched without bypass sat held while the pane read `idle` — exactly what a gate that\nstarted and found nothing looks like — and the verdict in the other direction was held too,\nwith the release prompt defaulting to Deny. The first diagnosis blamed the permission-mode\nmismatch the pane printed; then a brief to a Builder launched WITH bypass was held as well, so\nthe mismatch is one trigger, not the cause. **A cause read off the error text was narrower than\nthe behaviour.**\n\nThe two roles fail differently. Rin with no brief asks, and goes `blocked`. A Builder whose\nslash command already ran improvises from it and reads `working`. …",
     "refs": [
-      {
-        "name": "dispatch-ticket-claude",
-        "kind": "file",
-        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket-claude"
-      },
       {
         "name": "review-with-rin",
         "kind": "file",
@@ -3573,6 +3579,25 @@
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/selftest.sh"
       }
     ],
+    "commits": [
+      {
+        "sha": "6e25bc33b72c7de342d4bd88aafdad85958c6689",
+        "date": "2026-10-05",
+        "subject": "fold the second project's findings — the teardown kept what it built"
+      }
+    ]
+  },
+  {
+    "id": "AST-156",
+    "lesson": "Three dispatch steps had no lock, and the same agent skipped two of them on the same day",
+    "status": "promoted",
+    "words": 369,
+    "citedBy": [],
+    "indexLine": 170,
+    "entryLine": 4147,
+    "promotedOn": "2026-10-05",
+    "entry": "### AST-156 — Three dispatch steps had no lock, and the same agent skipped two of them on the same day · promoted 2026-10-05\n\nA downstream Thomas reported its own day. It violated none of the roughly thirty steps a script\nrefuses, and was stopped by one of them minutes before writing the report. It broke two that\nnothing refused: it never wrote the dispatch record, then guessed a tab id at cleanup and\nclosed a working Builder; and it armed no watcher, writing a `while true; sleep 30` loop\ninstead. The second has a plain cause. The rule to wrap the watcher script was read at hour\nzero, and the Monitor tool's description, which carries exactly that loop as its example, was\nin the prompt at every hour after (AST-041, AST-069). The record step had a cause in this\npackage: the dispatch sequence listed nine steps and the record was not one of them. It sat in\na section after cleanup, so it was skippable by construction.\n\nSame agent, same session, same day: the variable was never discipline, only whether\nsomething refused. The obvious fix is another refusal. It was not taken, because two of the\nthree steps can be made to stop existing. …",
+    "refs": [],
     "commits": []
   }
 ]

@@ -1,28 +1,99 @@
 ---
 name: dispatch-ticket-claude
-description: "Claude Code-specific dispatch protocol. Covers SendMessage brief delivery, Monitor-based watching, launcher matrix, pre-dispatch verification, and Claude runtime facts. Read dispatch-ticket for the shared protocol."
+description: "Claude Code-specific dispatch protocol. Covers the astragentic-dispatch mod (the pane records itself, runs its brief, reports its turn end), the launcher matrix, pre-dispatch verification, and Claude runtime facts. Read dispatch-ticket for the shared protocol."
 ---
 
 # Dispatch a ticket — Claude Code runtime
 
 **Read `dispatch-ticket` for the shared protocol** (binding identity, inputs/resolution,
-worktree law, brief format, submission, watching, simplify, cleanup). This skill adds only
-the Claude Code-specific launcher and verification.
+worktree law, brief format, simplify, cleanup). This skill adds the Claude Code launcher and
+the mod that does three steps of a dispatch for you.
 
-## The submission order
+## The mod does the steps that got skipped
 
-Four actions, in this order. Getting them out of order produces a false terminal state that
-every downstream check reads as healthy (AST-032, AST-037).
+Writing the dispatch record, arming the watch, and typing the slash command into the pane
+were each a rule in prose, and each was skipped in production on the same day. A guessed tab
+id closed a working Builder, and a hand-rolled `while true; sleep` loop stood in for the
+watcher. A rule read at hour zero loses to the tool description in front of you at hour five
+(AST-041, AST-069). So on a Claude root these steps are no longer yours. The mod
+`.claude/skills/astragentic-dispatch/` ships in the payload, and every Claude session in the
+project loads it with no flag and no setup:
 
-1. **Body via `SendMessage`** — everything except the slash command.
-2. **Slash command typed into the pane** as real input, plugin-qualified, single line.
-3. **Confirm it echoed in the pane.** Positive evidence, because a refusal or a substitute is
-   a real turn that ends `TERMINAL:done`, exit 0.
-4. **Arm the Monitor** — after step 3, never after step 1. A body-only `SendMessage` produces
-   its own turn; a watch armed before the command sees THAT turn end and reports
-   `TERMINAL:idle` on a builder that has not started.
+| Step | Before | Now |
+|---|---|---|
+| Record tab and pane ids | copied by hand from the create output | the pane writes them at session start, from herdr's own environment |
+| Deliver the slash command | SendMessage for the body, type the command into the pane, confirm the echo | **one SendMessage**; the pane runs the first line as a real command |
+| Confirm delivery | read the pane for a phrase only the brief had | the pane answers `RECEIVED` |
+| Watch the turn | a Monitor wrapping the watcher script, re-armed for every turn | the pane reports `TURN-END` at every turn end, and the mod wakes you with a prompt |
+| Protect a working pane | nothing | `herdr tab\|pane\|workspace close` on a mid-turn pane is refused |
 
-Detail for each is below.
+Measured 2026-10-05 on Claude Code 2.1.289 and herdr 0.9.1, with a Builder in its own
+worktree. The record carried the right tab and pane ids. A phrase that existed only in the
+brief body came back in the Builder's answer. Wake-up arrived under one second after the turn
+ended, where pane-state polling was 67 s late (AST-097). A `herdr tab close` on the working
+Builder's tab was refused.
+
+**Three preconditions, all checkable:**
+
+- **Claude Code 2.1.289 or later.** `check-requirements.sh` refuses older versions. Below the
+  floor the mod does not load, and nothing else watches the pane.
+- **The tab label is set before launch.** The mod reads `ticket:` / `spec:` / `qa:` / `rin:`
+  from its tab at session start. A pane labelled after launch never records itself.
+- **The mod is committed on the branch the worktree checks out.** The pane loads the copy in
+  its own worktree, so a payload that is not committed is not there (AST-036).
+
+**After launch, read the record back.** `.astraler/state/dispatch-record.json` must carry this
+key with `pane_id` equal to the pane you created. If it is absent, one of the three
+preconditions failed. STOP: a pane the mod does not know about is unwatched, exactly like a
+missing Monitor used to be.
+
+## Submitting: one SendMessage
+
+```
+SendMessage({
+  to: "<builder-session-name>",          // from ListAgents
+  message: "/mattpocock-skills:implement ABC-123\n\nWorktree: … · Branch: … · Base: …\nAcceptance criteria: …"
+})
+```
+
+**The first line is the slash command, and everything below it arrives as the command's
+arguments.** A peer message is not a user turn, so it cannot invoke a `disable-model-invocation`
+skill (AST-112). The pane's mod takes the message and runs the first line through
+`$.command.run`, which is a real user command. No typing into the pane, no echo check.
+
+**Steering is a plain SendMessage too.** To an idle pane it becomes a user turn. To a pane
+mid-turn it is delivered the normal way, so the running turn can read it.
+
+**Do not arm a Monitor, type into the pane, or write tab and pane ids by hand.** Each of those
+is now a second copy of something the mod does, and a second copy is where the two drift.
+
+## What comes back
+
+- **`RECEIVED`** is consumed silently. The line above your prompt moves the dispatch to
+  `working`.
+- **`TURN-END`** arrives as a prompt in your session: *"builder ABC-123 ended its turn
+  (answer). Its last words: …"*. **It is a bell, not proof.** A turn ending is not the work
+  finishing (AST-097). A Builder that backgrounds its work sends one TURN-END when it parks and
+  another when the background work lands, and both were measured. Verify by artifact.
+- **`reason=command-failed`** means the pane refused the first line, usually an unknown command
+  name. Fix the brief and send again.
+- **No `RECEIVED` within 90 s** turns the line red, and your next prompt carries a note naming
+  the pane. Read that pane: the message may be held or lost. The sender's `{"success": true}`
+  is true even for a held message (measured), so it proves nothing.
+- **`/dispatch-board`** opens a pane listing every live dispatch with its state and age.
+
+## What the mod cannot see
+
+- **A pane whose process died.** The mod dies with it. The workspace watchdog still covers this
+  (`dispatch-ticket/WATCHING.md`), and it stays mandatory.
+- **A pane that never recorded itself.** See the read-back above.
+- **Codex and OpenCode panes.** They run no Claude mod, so they keep the watcher script and its
+  protocol in `dispatch-ticket`.
+
+**Trust boundary.** A consumed message skips the receiver's `crossSessionInbound` hold. On the
+dispatcher side the mod consumes only its own marked messages whose key and pane match the
+record. On a dispatched pane it consumes every peer message, which is the same trust a pane
+launched with `--dangerously-skip-permissions` already extends to its dispatcher.
 
 ## Launcher matrix — Claude rows
 
@@ -51,70 +122,12 @@ A missing adapter means the payload was not committed or was gitignored (AST-036
 shared protocol's worktree-visibility check catches this too, but this is the exact file
 `claude --agent <role>` will try to load.
 
-## Brief submission — SendMessage carries the body, the pane receives the command
-
-**Claude builders receive the brief BODY via SendMessage, not Herdr paste.** The shared
-protocol's paste-based submission (AST-037) applies to Codex/OpenCode only.
-
-**SendMessage cannot deliver the phase's slash command.** A message to another Claude session
-arrives wrapped as `<cross-session-message from="...">` — a tool-delivered peer message, **not a
-user turn** — and the flow skills are `disable-model-invocation: true`, so a user turn is the
-only thing that reaches them (AST-112).
-
-**Step 1 — body via SendMessage.** Discover the session name via `ListAgents`, then:
-
-```
-SendMessage({
-  to: "<builder-session-name>",
-  message: "<brief body — everything except the slash command>"
-})
-```
-
-**`{"success": true}` means the message was transported, not that the agent read it.** The
-receiving session can HOLD a peer message for its user's approval — `crossSessionInbound` —
-and nothing tells the sender. Measured downstream on two roles: a Rin launched without bypass,
-whose pane printed *"the sending session's permission mode class doesn't match"*, and then a
-Builder launched WITH bypass, held too and released minutes later by someone else's keystroke.
-So the class mismatch is one trigger, not the cause. A held Builder has already run its slash
-command and improvises from it, which reads as `working` (AST-153). **After step 3, read the
-pane for a phrase only the brief could have supplied**; `working` is not delivery.
-
-**Step 2 — the bare slash command, TYPED into the pane as real input:**
+Verify the mod is in the worktree too. Without it the pane runs, but nothing records it,
+delivers its command, or reports its turn end:
 
 ```bash
-herdr pane run <pane-id> '/mattpocock-skills:implement ABC-123'
-herdr pane send-keys <pane-id> Enter
+test -f <worktree-path>/.claude/skills/astragentic-dispatch/hooks/register.tsx || echo "STOP: dispatch mod missing"
 ```
-
-**Step 3 — confirm it echoed in the pane.** The command needs no arguments beyond the ticket
-id, since the body is already in context, so it stays a single line and avoids the
-multi-line-paste problem SendMessage exists to solve (AST-037).
-
-**This failure does NOT surface as `NO_START`** — a refusal or a substitute is a real turn that
-starts, runs and ends `TERMINAL:done`, exit 0. Nothing in the watching apparatus can see it,
-which is why step 3 is positive evidence rather than a courtesy.
-
-**Two dispatches, same round, same defect, two outcomes** (measured 2026-08-19):
-
-| Pane | Command | Outcome |
-|---|---|---|
-| builder | `/mattpocock-skills:implement` | **Loud** — invocation refused, builder stopped without touching the worktree, cited its own rule, asked for a human to type it. One round trip lost. |
-| shaper | `/mattpocock-skills:grill-with-docs` | **Silent** — began `cat`-ing the plugin's own skill files from the cache and proceeding from prose. Produces something shaped like a spec, indistinguishable from a real invocation. |
-
-Same runtime, same command shape. The builder's contract carried "the failure IS the finding"
-and the shaper's did not, so one defect surfaced and one hid (AST-055). Both carry it now.
-
-**Steering on BLOCKED**: when Monitor reports `blocked`, read the pane to understand the
-question, then reply via SendMessage:
-
-```
-SendMessage({
-  to: "<builder-session-name>",
-  message: "<answer to the builder's question>"
-})
-```
-
-Then start a new Monitor for the resumed work.
 
 ## Launch
 
@@ -132,68 +145,17 @@ herdr agent start "<role>-<artifact-key>" --kind claude --pane <pane-id> --timeo
   -- --agent <role> --model <row: Model> <--effort only when the row sets one>
 ```
 
-## Watching — Monitor delivers, the watcher script decides
-
-**Monitor is the delivery channel; `herdr-watch-terminal.sh` is the watch.** Monitor turns
-each stdout line into a notification; the script decides what a line means. A bare
-`herdr agent wait` inside Monitor goes deaf — measured twice in two sessions (AST-107).
-
-**Step 4 — arm the Monitor**, after the echo is confirmed:
-
-```
-Monitor({
-  command: "<repo-root>/scripts/herdr-watch-terminal.sh <pane-id> 3 3600 120",
-  description: "builder-<ticket-id> status",
-  timeout_ms: 3600000,
-  persistent: false
-})
-```
-
-**Never put a bare `herdr agent wait --timeout 3600000` in a Monitor.** Measured 2026-08-19:
-the waiter sat 10m25s against a pane that was already `idle` and returned nothing, while an
-identical wait issued in the same minute against the same pane returned in 0s with 634 bytes
-of state. `pgrep` reported it running the whole time, so the operator believed the watch was
-live — a signal that cannot fire, wearing the costume of a healthy one (AST-032). The script
-slices the wait and takes its verdict from a fresh `herdr agent get`, so a deaf waiter costs
-60 seconds instead of the session.
-
-**Branch on the line the script emits** — same contract as the shared protocol:
-
-- `TERMINAL:done pane=<id>` → builder's turn ended, **not necessarily finished** — check for background processes (AST-097) before concluding
-- `TERMINAL:blocked pane=<id>` → read the pane immediately, answer via SendMessage, start a NEW Monitor
-- `TERMINAL:idle pane=<id>` → check git log — may be finished or may have stopped early
-- `TIMEOUT after <max>s pane=<id>` → builder exceeded the cap, inspect the pane
-- `NO_START pane=<id>` → builder never reached `working`, re-read the pane; the brief may not have arrived
-
-**Three builders in flight means three Monitors, one per pane — not one Monitor for all.**
-Verified 2026-08-19: three concurrent Monitors were armed and all three delivered, each with
-its own task id, and the notification carries the Monitor's `description`, so
-`description: "builder-<ticket-id> status"` is what tells you which builder reported. Every
-line the script emits also names its pane.
-
-**One dispatch, one pane, one Monitor.** A gathered watch is a single point of failure for
-every builder behind it, and it needs a hand-rolled loop — which is where that failure class
-came from. `TaskStop` cancels exactly one.
-
-**On notification, the same debounce applies**: re-check with `herdr agent get <pane-id>`
-before acting. The notification is the bell, not the verdict.
-
-**To cancel a Monitor**, use `TaskStop` — no PID management, no process group kill.
-
-**Caffeinate IS needed, and the script carries it.** A Monitor command is an ordinary shell
-process, not an in-process native watch, so an idle sleep kills it — measured on five
-hand-rolled watchers in one session. The script gives you `caffeinate -i`, the start guard,
-the debounce, the cap and the wait slicing; a hand-rolled Monitor command has none of the
-five.
-
 ## Measured runtime facts
+
+These describe how herdr reads a Claude pane. The mod does not depend on them, but the
+workspace watchdog still does.
 
 **Claude idle rule.** `prompt_box_body` at priority 950 matches `"❯\n"`, so **an empty
 Claude composer reads as idle**. This means:
 
 - A multi-line brief sitting unsent in the composer reports `idle` — the dispatcher trusts
   it and concludes the Builder finished instantly (AST-032, AST-037).
-- After submission, the start guard must observe `working` before trusting any later `idle`.
+- A pane read as `idle` has not necessarily started. The watchdog's `NEVER_STARTED` exists for this.
 
 **Runtime detection quality.** Claude tops out at `osc_title` 1100 then falls to text
 regions. `working` and `blocked` are rule-backed; `idle` is rule-backed but its evidence is

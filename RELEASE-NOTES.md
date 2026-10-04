@@ -1,3 +1,91 @@
+# Astragentic 2.14.0
+
+A downstream Thomas sent an account of its own day, and it was the cleanest evidence this
+package has had. It violated none of the steps a script refuses, and was refused by one minutes
+before writing. It broke two steps that nothing refused. It skipped the dispatch record, then
+guessed a tab id at cleanup and closed a working Builder. It armed no watcher and wrote a
+`while true; sleep 30` loop instead, which is the example the Monitor tool's own description
+carries. Same agent, same day: **the variable was whether something refused, not discipline.**
+
+The obvious fix was another refusal. This release removes the steps instead.
+
+## The pane does its own dispatch steps
+
+`.claude/skills/astragentic-dispatch/` is a Claude Code mod, and it ships in the payload. Claude
+Code auto-loads a plugin from a project's skills folder, so every Claude session in the project
+runs it: Thomas, every Builder, Shaper, QA and Rin. Nobody passes a flag or installs it.
+
+| Step | 2.13.0 | 2.14.0 |
+|---|---|---|
+| Record tab and pane ids | Thomas copies them from the create output | the pane writes them at session start, from herdr's environment |
+| Deliver the slash command | SendMessage for the body, type the command into the pane, confirm the echo | one SendMessage; the pane runs the first line as a real command |
+| Confirm delivery | read the pane for a phrase only the brief had | the pane answers `RECEIVED`; 90 s without one turns the status line red |
+| Watch the turn | a Monitor wrapping the watcher script, re-armed every turn | the pane reports `TURN-END`, and the mod wakes Thomas with a prompt |
+| Protect a working pane | nothing | `herdr tab\|pane\|workspace close` on a mid-turn pane is refused |
+
+Measured 2026-10-05 on Claude Code 2.1.289 and herdr 0.9.1, with a Builder in its own worktree:
+
+- The record carried the right tab and pane ids.
+- A phrase that existed only in the brief body came back in the Builder's answer.
+- The wake arrived under one second after the turn ended. Pane-state polling was 67 s late
+  (AST-097).
+- A `herdr tab close` on the working Builder's tab was refused.
+
+The same lab also measured that a message a receiver **holds** still reports
+`isDelivered: true` to its sender, so `RECEIVED` from the receiver is the only proof of
+delivery (AST-153).
+
+**Two of the lab's own drafts failed**, and the shipped rule is what survived them:
+
+- Reporting every turn end woke Thomas three times for one task, on turns that only read
+  delivery notices.
+- Reporting only the brief's own turn missed the result of a Builder that backgrounded its work
+  and finished it one turn later.
+
+The pane now reports every turn after its first brief and skips turns that only read a
+delivery notice. `TURN-END` is still a bell, not proof. Thomas verifies by artifact.
+
+`dispatch-ticket-claude` is rewritten around the mod, and is 40 lines shorter. The record's
+shape gains `tab_id`, `pane_id`, `session_id`, `session_name` and the turn fields. Cleanup
+closes the tab whose id is recorded, never one looked up by label or remembered.
+
+## What stays
+
+- **The workspace watchdog stays mandatory.** A pane whose process died takes its mod with it,
+  and only the watchdog sees that pane.
+- **Codex and OpenCode are unchanged.** They load no Claude mod, so they keep the watcher script
+  and its protocol.
+- **Git hooks stay the gate.** A git hook refuses every caller: a person, any runtime, a script.
+  A mod sees only its own session's tool calls, and an installed mod can approve a call that a
+  PreToolUse hook denied.
+
+## Smaller changes
+
+- `check-requirements.sh` refuses Claude Code below 2.1.289, the version the mod was measured
+  on. Below it the mod does not load, and nothing records or watches a Claude pane.
+- `check-reachability.sh` counts a shipped mod (`.claude/skills/<name>/.claude-plugin/`) as a
+  resolvable name. It failed every document that named the mod.
+- Selftest validates the mod with Claude Code's own reader and plants a defect to prove that
+  the reader names one.
+- One ledger entry: `AST-156` (three steps had no lock, and the same agent skipped two of them
+  on the same day).
+
+## Not taken, and why
+
+- **A wrapper script and a refusal for the next dispatch**, which is what the downstream report
+  proposed. It would have enforced a step that a mod can remove.
+- **Moving git gates into the mod.** See *What stays*.
+- **`claude plugin test` cases.** The test kit has no filesystem or process access, and the mod
+  is built on both, so the lab run and the validator are the evidence.
+
+## Upgrade from 2.13.0
+
+Copy `harness/`, or run `./install.sh <target> --apply`. Commit
+`.claude/skills/astragentic-dispatch/` with the rest of the payload: a worktree loads the copy on
+its own branch. Update Claude Code to 2.1.289 or later on every machine that dispatches.
+Projects that still arm a Monitor for Claude panes can stop. The two mechanisms do not conflict,
+but the Monitor becomes a second copy of the same signal.
+
 # Astragentic 2.13.0
 
 A downstream project sent a report on its most stable week: 32 ticket merges in four days,

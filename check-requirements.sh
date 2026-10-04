@@ -69,6 +69,17 @@ HAVE_CODEX=0;  command -v codex  >/dev/null 2>&1 && HAVE_CODEX=1
 # cross-vendor arm, which Thomas fires at phase end.
 if [ "$HAVE_CLAUDE" -eq 1 ]; then
   ok "claude CLI ($(command -v claude))"
+  # The dispatch mod is what records, briefs and watches every Claude pane; there is no watcher
+  # left behind it on a Claude root. Below the version it was measured on it does not load, and
+  # each pane runs unwatched while looking dispatched — a MISS, not a warning.
+  CLAUDE_FLOOR="2.1.289"
+  CLAUDE_VER="$(claude --version 2>/dev/null | awk '{print $1}')"
+  if [ -n "$CLAUDE_VER" ] && [ "$(printf '%s\n%s\n' "$CLAUDE_FLOOR" "$CLAUDE_VER" | sort -V | head -1)" = "$CLAUDE_FLOOR" ]; then
+    ok "Claude Code $CLAUDE_VER loads the dispatch mod (floor $CLAUDE_FLOOR)"
+  else
+    miss "Claude Code ${CLAUDE_VER:-unknown} is below $CLAUDE_FLOOR — the dispatch mod will not load" \
+      "update Claude Code (claude update). Without the mod a Claude pane is neither recorded nor watched"
+  fi
 elif [ "$HAVE_CODEX" -eq 1 ]; then
   miss "claude CLI not on PATH — the milestone gate cannot run" \
     "install Claude Code: https://claude.com/claude-code. Rin has no fallback row by design (AST-030): with no Claude the answer is STOP and ask the owner, and Codex stays the cross-vendor arm"

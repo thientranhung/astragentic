@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 154 entries (AST-001 … AST-155, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 155 entries (AST-001 … AST-156, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -4143,3 +4143,34 @@ leak by construction. Build cache and unowned volumes are machine-wide and stay 
 
 Bound: `scripts/release-worktree-resources.sh`, `scripts/selftest.sh`,
 `.agents/skills/dispatch-ticket/CLEANUP.md`.
+
+### AST-156 — Three dispatch steps had no lock, and the same agent skipped two of them on the same day · promoted 2026-10-05
+
+A downstream Thomas reported its own day. It violated none of the roughly thirty steps a script
+refuses, and was stopped by one of them minutes before writing the report. It broke two that
+nothing refused: it never wrote the dispatch record, then guessed a tab id at cleanup and
+closed a working Builder; and it armed no watcher, writing a `while true; sleep 30` loop
+instead. The second has a plain cause. The rule to wrap the watcher script was read at hour
+zero, and the Monitor tool's description, which carries exactly that loop as its example, was
+in the prompt at every hour after (AST-041, AST-069). The record step had a cause in this
+package: the dispatch sequence listed nine steps and the record was not one of them. It sat in
+a section after cleanup, so it was skippable by construction.
+
+Same agent, same session, same day: the variable was never discipline, only whether
+something refused. The obvious fix is another refusal. It was not taken, because two of the
+three steps can be made to stop existing. The `astragentic-dispatch` mod runs inside every
+Claude pane. The pane writes its own tab and pane ids from herdr's environment at session
+start, runs its brief's first line as a real command, and reports each turn end to the
+dispatcher, which is woken by a prompt. The dispatcher side refuses to close a mid-turn pane.
+Measured 2026-10-05 on Claude Code 2.1.289 with a Builder in its own worktree: the record ids
+were correct, a phrase present only in the brief body came back, the wake arrived under one
+second after the turn ended (pane polling was 67 s late, AST-097), and the close was refused.
+Two of the lab's own first drafts failed. Reporting every turn woke the dispatcher three times
+for one task, on turns that only read delivery notices. Reporting only the brief's turn missed
+the result of a Builder that backgrounded its work and finished a turn later.
+
+**A step that can be removed beats a step that can be enforced. Enforce only what cannot be
+removed.** The watchdog stays, because a pane whose process died takes its mod with it.
+
+Bound: `.claude/skills/astragentic-dispatch/hooks/register.tsx`,
+`.agents/skills/dispatch-ticket-claude/SKILL.md`, `scripts/selftest.sh`.

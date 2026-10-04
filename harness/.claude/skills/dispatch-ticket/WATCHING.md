@@ -2,6 +2,11 @@
 
 Companion to `dispatch-ticket`. Read when a watch returns something unexpected.
 
+**On a Claude root the per-turn watcher is gone.** The `astragentic-dispatch` mod reports turn
+ends from inside the pane (`dispatch-ticket-claude`). The watcher sections below are for Codex
+and OpenCode panes. The pipe table and the workspace watchdog apply to every runtime, and the
+watchdog stays mandatory: it is the only thing that sees a pane whose process died.
+
 ## Pipes swallow exit codes — all runtimes
 
 Any command piped through `tail`, `grep`, `head` or similar **loses the original exit code**

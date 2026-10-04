@@ -167,3 +167,4 @@ from this table — read the entry.
 | `AST-153` | A transport that can hold a message returned success, and the sender had no other evidence | promoted | 188 | review-with-rin |
 | `AST-154` | The obvious retry for an unsent brief fused it with the next one and reported success | promoted | 133 | dispatch-ticket |
 | `AST-155` | The teardown removed what it started and kept what it built | promoted | 247 | CLEANUP.md,release-worktree-resources.sh,selftest.sh |
+| `AST-156` | Three dispatch steps had no lock, and the same agent skipped two of them on the same day | promoted | 369 |   |
