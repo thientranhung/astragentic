@@ -397,6 +397,37 @@ case "$out" in
   *) bad "rwr plug failure propagates" "$out" ;;
 esac
 
+# A compose stack rooted in the worktree is checked AFTER the plug, by Docker's own labels
+# (2.13.0, AST-155). Downstream the plug ran `down -v` and every built image survived it — 99
+# of them. `docker` is stubbed here so the case runs on a machine without Docker; the real
+# shape (compose up, `down -v` leaves the image, `--rmi local` clears it) was run against
+# Docker Desktop before this stub was written, and the stub prints what that run printed.
+DK="$TMP/rwr-docker"; mkdir -p "$DK"
+cat > "$DK/docker" <<EOF
+#!/bin/sh
+case "\$*" in
+  version*) exit 0 ;;
+  "ps -a --format"*) echo "stubproj|$R/wt/deploy"; echo "otherproj|$TMP/elsewhere" ;;
+  images*stubproj*) cat "$DK/images" 2>/dev/null ;;
+esac
+exit 0
+EOF
+chmod +x "$DK/docker"
+printf '#!/bin/sh\nexit 0\n' > "$R/.astraler/project/cleanup-worktree.sh"
+printf 'stubproj-app\nshared-server\n' > "$DK/images"
+out="$( (cd "$R" && PATH="$DK:$PATH" bash "$S/release-worktree-resources.sh" "$R/wt" 2>&1); echo "rc=$?" )"
+case "$out" in
+  *"otherproj"*|*"shared-server"*) bad "rwr compose scope" "checked a stack outside this worktree, or an image the project tags itself: $out" ;;
+  *"'stubproj'"*"image stubproj-app"*"rc=1"*) ok "rwr names the image a plug's down -v left behind, and refuses the stamp" ;;
+  *) bad "rwr compose leftover" "a built image survived the plug and nothing said so: $out" ;;
+esac
+: > "$DK/images"
+out="$( (cd "$R" && PATH="$DK:$PATH" bash "$S/release-worktree-resources.sh" "$R/wt" 2>&1); echo "rc=$?" )"
+case "$out" in
+  *"no container, volume or built image left"*"rc=0"*) ok "rwr passes a stack the plug fully released" ;;
+  *) bad "rwr compose clean" "$out" ;;
+esac
+
 
 # The release is ENFORCED by the git guard (2.7.15): an unstamped path is refused, a stamped
 # one admitted. Watched to fail before the stamp existed — the guard allowed the removal.

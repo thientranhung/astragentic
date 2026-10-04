@@ -65,6 +65,28 @@ matched an empty pane: `idle`, `ctx 0%`, `↑0 ↓0 tok`. The deadlock fails by 
 fails by **running**. `dispatch-ticket` now reads the composer before re-delivering, and clears
 it with `esc esc`. `ctrl-c` and `ctrl-u` were measured to leave the text where it was.
 
+## The teardown removed what it started and kept what it built
+
+The same project's worktree plug ran `docker compose down -v` for every ticket it retired.
+That removes the stack's containers and volumes, and **not the image the stack built**. The
+owner found 99 of them at ~485 MB each, inside 72 GB that also held 21.6 GB of never-pruned
+build cache. A second project on the same machine had no Docker teardown at all. Reproduced
+here on Docker Desktop: the image survives `down -v`, carrying the project's Compose label, and
+`--rmi local` removes it.
+
+The ask was for the harness to run the teardown itself. It does not: that needs the project's
+compose file, project name and environment, and the downstream stack refuses to start without
+a variable only that project sets. Hardwiring one project's stack is the defect 2.7.15
+removed. **What the harness can do without knowing the stack is notice.** Compose labels every
+container with the directory it ran from, so `release-worktree-resources.sh` names the stacks
+rooted in a worktree before the plug runs. If any of them still holds a container, a labelled
+volume or a default-named built image afterwards, it lists each by name and withholds the
+stamp the git guard needs. Images the project tags itself are left out, so a shared image kept
+on purpose is never flagged. Nothing is deleted.
+
+Selftest runs it on a stubbed `docker`. The 2.12.0 script, handed the same leftover image,
+stamped the worktree and said nothing.
+
 ## Smaller changes
 
 - **The Builder's loop names the full verification run**: once, after the last commit that
@@ -81,8 +103,9 @@ it with `esc esc`. `ctrl-c` and `ctrl-u` were measured to leave the text where i
   `.claude/rules/`, which Claude Code alone loads (AST-138). QA's non-mutating rule adds that
   authorization is per run: a yes for one walk does not carry to the next, and permission to
   deploy is not permission to test.
-- Three ledger entries: `AST-152` (alerts scoped by the wrong subject), `AST-153` (a transport
-  that holds and reports success), `AST-154` (the retry that fuses).
+- Four ledger entries: `AST-152` (alerts scoped by the wrong subject), `AST-153` (a transport
+  that holds and reports success), `AST-154` (the retry that fuses), `AST-155` (the teardown
+  that kept what it built).
 
 ## Not taken, and why
 
@@ -100,6 +123,11 @@ it with `esc esc`. `ctrl-c` and `ctrl-u` were measured to leave the text where i
   duration read from a log's access time, and it stays theirs until a wrapper exists.
 - **The Claude watch loop swallowing `NO_START`.** That loop is the project's own. This
   package arms one Monitor per turn, which reports `NO_START`.
+- **Pruning build cache on ticket close, and a doctor check for Docker disk.** `docker builder
+  prune` is machine-wide, and so is every dangling volume: pruning either from a ticket step
+  deletes other projects' state, which is AST-115's shape. The doctor runs at adaptation, so it
+  would not have seen 72 GB accumulate over weeks. Both stay the owner's, and CLEANUP.md now
+  names the three prunes never to run from a teardown.
 - **Prefer tickets that move the owner's named goal.** That was one owner's ruling on scope, not
   something measured here.
 
@@ -107,7 +135,9 @@ it with `esc esc`. `ctrl-c` and `ctrl-u` were measured to leave the text where i
 
 Copy `harness/`, or `./install.sh <target> --apply`. Then decide the new plug: write
 `.astraler/project/work-in-flight.sh` if this project runs long verification in the background,
-or decline it in the receipt. The watchdog's pane memory lives in its `/tmp` state dir and needs
+or decline it in the receipt. **A project whose worktrees run Compose must release them with
+`down -v --rmi local`** before this upgrade, or every retirement will be refused the stamp
+until it does. The watchdog's pane memory lives in its `/tmp` state dir and needs
 no migration.
 
 # Astragentic 2.12.0

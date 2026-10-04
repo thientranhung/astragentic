@@ -116,7 +116,11 @@ Classify candidate material before editing anything:
   - **`cleanup-worktree.sh <worktree-path>`** — *what does a worktree allocate in this project
     beyond git, and what releases it?* A database, a port registration, a container, a broker,
     a lease on something shared. Write the release for THIS worktree only, never a
-    project-level teardown (AST-115), and print what was released. A project whose worktrees
+    project-level teardown (AST-115), and print what was released. A Compose stack is released
+    with `down -v --rmi local`: `down -v` leaves the image the stack built, measured at 99
+    images and ~48 GB on one machine, and `release-worktree-resources.sh` now refuses the stamp
+    over it (AST-155). Never a machine-wide prune — build cache and anonymous volumes no
+    worktree owns are the owner's to clear, so report them and leave them. A project whose worktrees
     allocate nothing writes one that says exactly that — an absent plug is reported as an
     empty socket by `scripts/release-worktree-resources.sh`, and an empty socket on a project
     that does allocate is the gap that produced 43 orphaned processes and 3,405 leftover

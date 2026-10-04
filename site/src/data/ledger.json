@@ -3541,5 +3541,38 @@
       }
     ],
     "commits": []
+  },
+  {
+    "id": "AST-155",
+    "lesson": "The teardown removed what it started and kept what it built",
+    "status": "promoted",
+    "words": 247,
+    "citedBy": [
+      "CLEANUP.md",
+      "release-worktree-resources.sh",
+      "selftest.sh"
+    ],
+    "indexLine": 169,
+    "entryLine": 4124,
+    "promotedOn": "2026-09-27",
+    "entry": "### AST-155 — The teardown removed what it started and kept what it built · promoted 2026-09-27\n\nA project's `cleanup-worktree.sh` ran `docker compose -p <project> down -v` for every worktree\nit retired. That removes the stack's containers and its volumes, and not the image the stack\nbuilt. Measured on the owner's machine: 99 per-worktree images at ~485 MB each, alongside\n21.6 GB of build cache nothing pruned and 30 anonymous Postgres volumes from outside Compose —\n72 GB in total, and the file churn around it pushed `fseventsd` to 9–12 GB and got the merge\ngate killed for memory twice. A second project on the same machine had no Docker teardown at\nall. Reproduced here on Docker Desktop: after `down -v` the built image remains, carrying\n`com.docker.compose.project=<project>`; `--rmi local` removes it; `down -v` does remove a\nservice's anonymous volumes, so the orphaned ones came from a `docker run` or a test tool.\n\nEvery step reported success, because each one did exactly what it said. …",
+    "refs": [
+      {
+        "name": "CLEANUP.md",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket/CLEANUP.md"
+      },
+      {
+        "name": "release-worktree-resources.sh",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/release-worktree-resources.sh"
+      },
+      {
+        "name": "selftest.sh",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/selftest.sh"
+      }
+    ],
+    "commits": []
   }
 ]

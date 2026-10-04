@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 153 entries (AST-001 … AST-154, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 154 entries (AST-001 … AST-155, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -4120,3 +4120,26 @@ from a dead brief into a live one, and both sides report success. Read the compo
 re-delivery; `esc esc` clears it, where `ctrl-c` and `ctrl-u` were measured to leave the text.
 
 Bound: `.agents/skills/dispatch-ticket/SKILL.md`.
+
+### AST-155 — The teardown removed what it started and kept what it built · promoted 2026-09-27
+
+A project's `cleanup-worktree.sh` ran `docker compose -p <project> down -v` for every worktree
+it retired. That removes the stack's containers and its volumes, and not the image the stack
+built. Measured on the owner's machine: 99 per-worktree images at ~485 MB each, alongside
+21.6 GB of build cache nothing pruned and 30 anonymous Postgres volumes from outside Compose —
+72 GB in total, and the file churn around it pushed `fseventsd` to 9–12 GB and got the merge
+gate killed for memory twice. A second project on the same machine had no Docker teardown at
+all. Reproduced here on Docker Desktop: after `down -v` the built image remains, carrying
+`com.docker.compose.project=<project>`; `--rmi local` removes it; `down -v` does remove a
+service's anonymous volumes, so the orphaned ones came from a `docker run` or a test tool.
+
+Every step reported success, because each one did exactly what it said. **A teardown checked
+against its own command list cannot miss what the command list forgot.** The harness still
+does not tear down a stack — that needs the project's compose file and environment, and
+hardwiring one project's was the defect 2.7.15 removed — but it can identify one from Docker's
+labels alone: containers record the directory they ran from, so the stacks rooted in a worktree
+are named before the plug runs, and whatever still carries their project label afterwards is a
+leak by construction. Build cache and unowned volumes are machine-wide and stay the owner's.
+
+Bound: `scripts/release-worktree-resources.sh`, `scripts/selftest.sh`,
+`.agents/skills/dispatch-ticket/CLEANUP.md`.

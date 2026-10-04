@@ -55,6 +55,28 @@ else
 fi
 
 # 2. The project's part: whatever this project's worktrees allocate beyond git.
+#
+#    WHAT THE HARNESS CAN SEE WITHOUT KNOWING THE STACK, and checks after the plug. Tearing a
+#    Compose stack down needs the project's compose file, env and project name — hardwiring
+#    that is the defect 2.7.15 retired — but IDENTIFYING what a worktree's stack left behind
+#    needs only Docker's own labels. Compose stamps every container with the directory it ran
+#    from (`com.docker.compose.project.working_dir`), so the stacks rooted in this worktree are
+#    named before the plug runs, and whatever still carries their project label afterwards is a
+#    leak by construction. Measured downstream: a plug running `down -v` left the image its
+#    stack built, 99 of them at ~485 MB, because `down -v` removes containers and volumes and
+#    no image (AST-155). Images are checked only under Compose's default `<project>-<service>`
+#    name — exactly what `--rmi local` removes — so an image the project tags on purpose is
+#    never flagged. Resolved before the plug on purpose: after `down`, no container is left to
+#    say which project was this worktree's. A stack whose containers were already gone before
+#    this ran is not seen, and nothing here deletes anything.
+compose_projects=""
+if command -v docker >/dev/null 2>&1 && docker version >/dev/null 2>&1; then
+  real_wt="$(cd "$WT" 2>/dev/null && pwd -P || printf '%s' "$WT")"
+  compose_projects="$(docker ps -a --format '{{.Label "com.docker.compose.project"}}|{{.Label "com.docker.compose.project.working_dir"}}' 2>/dev/null \
+    | awk -F'|' -v a="$WT" -v b="$real_wt" '$1 != "" && ($2 == a || $2 == b || index($2, a "/") == 1 || index($2, b "/") == 1) { print $1 }' \
+    | sort -u)"
+fi
+
 if [ -x "$PLUG" ]; then
   echo "release-worktree-resources: running project plug $PLUG"
   "$PLUG" "$WT" || { echo "release-worktree-resources: WARN project plug exited $? for $WT" >&2; rc=1; }
@@ -64,6 +86,21 @@ elif [ -e "$PLUG" ]; then
 else
   echo "release-worktree-resources: NOTE — no project cleanup declared at .astraler/project/cleanup-worktree.sh; nothing project-specific was released. If this project's worktrees allocate anything beyond git (a database, a port, a container, a lease), that is a gap — see ADAPT-HARNESS.md §3."
 fi
+
+for p in $compose_projects; do
+  left="$(docker ps -a --filter "label=com.docker.compose.project=$p" --format 'container {{.Names}}' 2>/dev/null
+          docker volume ls -q --filter "label=com.docker.compose.project=$p" 2>/dev/null | sed 's/^/volume /'
+          docker images --filter "label=com.docker.compose.project=$p" --format '{{.Repository}}' 2>/dev/null \
+            | grep "^$p-" | sort -u | sed 's/^/image /')"
+  if [ -n "$left" ]; then
+    echo "release-worktree-resources: WARN compose project '$p' was rooted in this worktree and still holds:" >&2
+    printf '%s\n' "$left" | sed 's/^/  /' >&2
+    echo "release-worktree-resources:      the plug should release it: docker compose -p $p ... down -v --rmi local" >&2
+    rc=1
+  else
+    echo "release-worktree-resources: compose project '$p' — no container, volume or built image left"
+  fi
+done
 
 # 3. Leave evidence. `hook-git-guard.py` refuses `git worktree remove <path>` unless this stamp
 #    exists for the path, so the call above is a MECHANISM, not a remembered step: skipping it

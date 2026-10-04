@@ -53,7 +53,7 @@ from this table — read the entry.
 | `AST-038` | A checker that cannot tell project content from package content fires on every adopted repo | promoted | 146 | check-reachability.sh |
 | `AST-039` | An ID namespace shared with the host project resolves confidently to the wrong lesson | promoted | 160 |   |
 | `AST-040` | A placeholder that looks like a real id fails later than a missing one | promoted | 169 | selftest.sh |
-| `AST-041` | A file called "the owner's" that ships in the payload has two homes and the shipped one wins | promoted | 119 | orchestrator.md |
+| `AST-041` | A file called "the owner's" that ships in the payload has two homes and the shipped one wins | promoted | 119 | dispatch-ticket-claude,orchestrator.md |
 | `AST-042` | Two skills answering to one name means the model-invoked path picks the wrong one | promoted | 126 | selftest.sh |
 | `AST-043` | A gate that requires an artifact no contract produces | promoted | 191 |   |
 | `AST-044` | Reading a diff cannot find a disagreement between two screens | promoted | 280 |   |
@@ -67,7 +67,7 @@ from this table — read the entry.
 | `AST-052` | The word-budget audit ran its loop zero times and reported all clean | promoted | 227 | docs-staleness-audit.sh |
 | `AST-053` | An axis read the run's verdict instead of its own, and went mute | promoted | 226 |   |
 | `AST-054` | `git add -A` committed two releases nobody ever applied | promoted | 146 | hook-git-guard.py |
-| `AST-055` | A gate that reads the subject cannot see which pass wrote it | promoted | 325 | builder-claude.md,builder-codex.md,builder-opencode.md,check-reachability.sh,dispatch-ticket-claude,rin-claude.md,rin-codex.md,rin-opencode.md,rin.md,shaper.md,thomas-claude.md |
+| `AST-055` | A gate that reads the subject cannot see which pass wrote it | promoted | 325 | builder-claude.md,builder-codex.md,builder-opencode.md,check-reachability.sh,rin-claude.md,rin-codex.md,rin-opencode.md,rin.md,shaper.md,thomas-claude.md |
 | `AST-056` | A blocking edge expresses order, not exclusion | promoted | 329 | dispatch-qa-walk,dispatch-ticket,thomas.md |
 | `AST-057` | A frontier that is only computed is invisible to the one person who cannot compute | promoted | 689 | check-reachability.sh,dispatch-qa-walk,hook-git-guard.py,reconcile-tracker,release-worktree-resources.sh,thomas.md,ticket-done.sh |
 | `AST-058` | The check after the step reported clean when the step was impossible | promoted | 271 |   |
@@ -80,7 +80,7 @@ from this table — read the entry.
 | `AST-065` | Two reviewers sharing one name, each in the other's contract | promoted | 189 |   |
 | `AST-066` | A review bound to the wrong checkout returns clean without reading anything | promoted | 255 |   |
 | `AST-068` | A lesson closed at instance level reopens at class level | promoted | 259 |   |
-| `AST-069` | An instruction with no moment attached measures zero | promoted | 272 | check-reachability.sh,hook-contract-reload.py,hook-git-guard.py,hook-tracker-status.py,selftest.sh,thomas.md |
+| `AST-069` | An instruction with no moment attached measures zero | promoted | 272 | check-reachability.sh,dispatch-ticket-claude,hook-contract-reload.py,hook-git-guard.py,hook-tracker-status.py,selftest.sh,thomas.md |
 | `AST-070` | A bounded exception nobody asked for is a contradiction carried on speculation | promoted | 275 | dispatch-ticket,ledger-rules.py |
 | `AST-071` | Every check asked whether a thing was NAMED, none asked whether anything READ it | promoted | 312 | check-reachability.sh |
 | `AST-072` | Self-monitoring shipped without proof it cannot harm what it monitors | promoted | 345 | herdr-watchdog.sh |
@@ -108,7 +108,7 @@ from this table — read the entry.
 | `AST-094` | Builder commits and pushes correctly but silently skips the simplify pass | promoted | 426 | CLEANUP.md,MARKERS.md,builder.md,check-simplify-markers.sh |
 | `AST-095` | The cross-vendor companion exits 0 on configuration failure and caches state that survives a… | promoted | 335 | codex-arm |
 | `AST-096` | rm -rf on a worktree directory leaves git's registration behind; the next add at that path re… | promoted | 296 | CLEANUP.md,codex-arm,dispatch-ticket,hook-git-guard.py,review-with-rin,thomas.md |
-| `AST-097` | TERMINAL:done means the turn ended, not that the work finished | promoted | 831 | builder-claude.md,dispatch-ticket,dispatch-ticket-claude,dispatch-ticket-opencode,hook-git-guard.py |
+| `AST-097` | TERMINAL:done means the turn ended, not that the work finished | promoted | 831 | builder-claude.md,dispatch-ticket,dispatch-ticket-claude,dispatch-ticket-opencode,hook-git-guard.py,register.tsx |
 | `AST-098` | Fork sub-agents return the coordinator's own narration instead of doing their assigned task | promoted | 385 | builder-claude.md |
 | `AST-099` | Simplify marker exists without skill provenance — the subject is self-applied, only the Pass:… | promoted | 685 | CLEANUP.md,check-simplify-markers.sh |
 | `AST-100` | Codex companion broker leaks one process per arm pass, accumulating silently | promoted | 201 | CLEANUP.md,codex-arm,dispatch-qa-walk,hook-git-guard.py,release-worktree-resources.sh |
@@ -118,12 +118,12 @@ from this table — read the entry.
 | `AST-104` | herdr agent start rejects uppercase in agent names, but dispatch convention generates them | promoted | 87 |   |
 | `AST-105` | Pipe after a command swallows exit code, turning a failed gate into exit 0 | promoted | 182 | WATCHING.md |
 | `AST-106` | Worktree isolation stated about git, violated by non-git disk writes | promoted | 137 | dispatch-ticket |
-| `AST-107` | A long `herdr agent wait` stays alive and goes deaf, so the watch never fires | promoted | 328 | dispatch-ticket,dispatch-ticket-claude,herdr-watch-terminal.sh,thomas-claude.md |
+| `AST-107` | A long `herdr agent wait` stays alive and goes deaf, so the watch never fires | promoted | 328 | dispatch-ticket,herdr-watch-terminal.sh,register.tsx |
 | `AST-108` | A Monitor with no `timeout_ms` caps an hour-long watch at five minutes | promoted | 265 |   |
 | `AST-109` | Cleanup command aimed at the worktree root, where the target has never lived | promoted | 214 |   |
 | `AST-110` | A protocol change is an edit plus a sweep, and doc drift has at least three shapes | promoted | 417 | docs-staleness-audit.sh |
 | `AST-111` | A check that validates the rows it finds never notices the row that is missing | promoted | 355 |   |
-| `AST-112` | SendMessage is not a user turn, so the brief's slash command never fires | promoted | 443 | dispatch-ticket-claude,shaper.md |
+| `AST-112` | SendMessage is not a user turn, so the brief's slash command never fires | promoted | 443 | dispatch-ticket-claude,register.tsx,shaper.md |
 | `AST-113` | An audit that always screams is an audit nobody reads | promoted | 290 | docs-staleness-audit.sh |
 | `AST-114` | Splitting submission into two steps left the watch armed against the wrong one | promoted | 207 |   |
 | `AST-115` | Two correct changes composed into a live one, and the repair is what armed it | promoted | 447 | CLEANUP.md,codex-arm,dispatch-qa-walk,hook-git-guard.py,release-worktree-resources.sh |
@@ -164,5 +164,6 @@ from this table — read the entry.
 | `AST-150` | The launcher the shared protocol asks for cannot encode the identity the runtime needs | promoted | 258 |   |
 | `AST-151` | An empty cell read as "the default" was refused at bootstrap | promoted | 182 | selftest.sh |
 | `AST-152` | Each watchdog alert was scoped by the wrong subject, so one busy pane hid the rest | promoted | 251 | WATCHING.md,herdr-watchdog.sh |
-| `AST-153` | A transport that can hold a message returned success, and the sender had no other evidence | promoted | 188 | dispatch-ticket-claude,review-with-rin |
+| `AST-153` | A transport that can hold a message returned success, and the sender had no other evidence | promoted | 188 | review-with-rin |
 | `AST-154` | The obvious retry for an unsent brief fused it with the next one and reported success | promoted | 133 | dispatch-ticket |
+| `AST-155` | The teardown removed what it started and kept what it built | promoted | 247 | CLEANUP.md,release-worktree-resources.sh,selftest.sh |

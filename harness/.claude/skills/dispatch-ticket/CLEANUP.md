@@ -121,6 +121,13 @@ processes and 3,405 leftover databases. The project declares its own release ste
 `.astraler/project/cleanup-worktree.sh` (ADAPT-HARNESS.md §3 asks for it); the one call below
 reaps processes and then runs that plug, and says so when the plug is absent.
 
+**One thing it does check itself: a Compose stack rooted in the worktree.** Docker labels each
+container with the directory it ran from, so the script names those stacks before the plug and
+refuses the stamp while one still holds a container, a labelled volume or the image it built
+(AST-155). It deletes nothing. `down -v` leaves that image; `down -v --rmi local` does not.
+**Never answer a leak with `docker system prune`, `docker volume prune` or `docker builder
+prune`:** each is machine-wide, and the machine is shared with every other project on it.
+
 ```bash
 # 1. processes first — one command, and it is a script rather than a snippet for a reason.
 #    MATCH THE PROCESS'S REAL cwd, NEVER ITS ARGV. A `ps | grep -- '--cwd <path>'` reported
