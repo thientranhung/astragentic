@@ -484,6 +484,19 @@ guard_in "$TD" allow "git push origin main"
 ( cd "$TD" && bash "$S/ticket-done.sh" ABC-9 ) >/dev/null 2>&1 \
   && bad "ticket-done unmerged" "stamped a ticket with nothing on the base" \
   || ok "ticket-done refuses a ticket with nothing on the base"
+# A branch with no commit of its own is an ancestor of the base too. Measured 2026-10-05: a
+# ticket whose Builder had committed nothing was stamped done, the tracker plug saying closed.
+( cd "$TD" && git branch builder/ABC-11 main ) >/dev/null 2>&1
+( cd "$TD" && bash "$S/ticket-done.sh" ABC-11 --moved none ) >/dev/null 2>&1 \
+  && bad "ticket-done empty branch" "stamped a ticket whose branch never had a commit of its own" \
+  || ok "ticket-done refuses a branch with no commit of its own"
+# ...while a fast-forwarded branch, whose commits sit on the base's first-parent line exactly
+# like the empty one's tip, still passes on its subject naming the ticket.
+( cd "$TD" && git checkout -qb builder/ABC-12 && git commit -q --allow-empty -m "ABC-12: y" \
+  && git checkout -q main && git merge -q --ff-only builder/ABC-12 ) >/dev/null 2>&1
+( cd "$TD" && bash "$S/ticket-done.sh" ABC-12 --moved none ) >/dev/null 2>&1 \
+  && ok "ticket-done stamps a fast-forwarded ticket by its subject" \
+  || bad "ticket-done fast-forward" "refused a fast-forwarded ticket whose commit names it"
 
 # ---------------------------------------------------------------------------------------------
 # The `Ledger:` line — a rule nothing could refuse until 2.9.0. Measured in this package on

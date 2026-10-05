@@ -45,8 +45,26 @@ echo "ticket-done: $ID on base $BASE"
 slug="$(printf '%s' "$ID" | tr '[:upper:]' '[:lower:]')"
 branch="$(git branch --format='%(refname:short)' | grep -iE "(^|/)[^/]*${slug}([^0-9]|$)" | head -1 || true)"
 merged=no
+# Ancestry alone also holds for a branch that never had a commit of its own: its tip is a base
+# commit. Measured 2026-10-05, a ticket whose Builder committed nothing was stamped done. So the
+# tip must be the branch's own work: different from the commit it started at, where the
+# dispatch record kept one, and otherwise off the base's first-parent line, where a --no-ff
+# merge leaves it. A fast-forward lands on that line too and falls through to the subject test.
 if [ -n "$branch" ]; then
-  if git merge-base --is-ancestor "$branch" "refs/heads/$BASE" 2>/dev/null; then merged=yes; notes+=("git: branch $branch is an ancestor of $BASE"); fi
+  if git merge-base --is-ancestor "$branch" "refs/heads/$BASE" 2>/dev/null; then
+    tip="$(git rev-parse "$branch")"
+    start="$(python3 -c 'import json,sys
+try: print(json.load(open(sys.argv[1])).get(sys.argv[2], {}).get("start_sha", ""))
+except Exception: print("")' "$ROOT/.astraler/state/dispatch-record.json" "$ID" 2>/dev/null || true)"
+    if [ -n "$start" ]; then
+      [ "$tip" != "$start" ] && own=yes || own=no
+    elif git rev-list --first-parent "refs/heads/$BASE" | grep -qx "$tip"; then
+      own=no
+    else
+      own=yes
+    fi
+    if [ "$own" = yes ]; then merged=yes; notes+=("git: branch $branch is an ancestor of $BASE"); fi
+  fi
 fi
 if [ "$merged" = no ]; then
   n="$(git log "refs/heads/$BASE" --format='%s' | grep -ciE "\\b${ID}\\b" || true)"

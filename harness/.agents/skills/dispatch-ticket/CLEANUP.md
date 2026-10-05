@@ -43,7 +43,9 @@ herdr pane list --workspace <returned-workspace-id>
 - Another tab remains → close the exact ticket tab: `herdr tab close <tab_id>`, with `tab_id`
   read from this ticket's entry in `.astraler/state/dispatch-record.json`, never from memory or
   a label lookup. On a Claude root the mod refuses the close while that pane is mid-turn; a
-  refusal there means the Builder is still working, not that the command is wrong.
+  refusal there means the Builder is still working, not that the command is wrong. Where the
+  worktree was already removed, the release reaped the Builder and herdr has usually closed the
+  tab itself: not-found is the expected answer.
 - The ticket tab is last AND the inherited `workspace_managed_by_root=true` AND no owner
   resource or active ticket remains → close the exact workspace instead:
   `herdr workspace close <returned-workspace-id>`.

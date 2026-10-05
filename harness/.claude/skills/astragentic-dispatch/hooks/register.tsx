@@ -25,6 +25,17 @@
 // to the next prompt when a message was sent and never confirmed, and refuses `herdr tab|pane
 // close` on a pane whose turn is still running.
 //
+// THE TRACKER AND THE TEARDOWN, the two other steps that were remembered sometimes. A brief is
+// the one moment every dispatch passes through, so two checks sit on it. A ticket the project's
+// `.astraler/project/tracker-state.sh` reports unclaimed (assignee `-`, or state `closed` or
+// `unclaimed`) is not sent. Neither is any brief while a Builder ticket has reached the base with
+// no ticket-done stamp: the base-push guard missed `gh pr merge` and merge-and-hold, which is
+// where the write-back was forgotten (AST-057, AST-074). The merge result itself carries the
+// note, so the reminder lands in the same turn as the merge. `git worktree remove` on a recorded,
+// clean worktree whose agent is not mid-turn runs `release-worktree-resources.sh` first, the
+// step the git guard refused when it was skipped. The record entry goes once the worktree and
+// the tab are gone. The git guard and git hooks stay the gate; this only removes the steps.
+//
 // WHAT IT DOES NOT DO. It is a bell, not proof: TURN-END says a turn ended, never that the work
 // is right, so verifying by artifact stays the dispatcher's job. It cannot report a pane whose
 // process died, since the module dies with it; the workspace watchdog still covers that. A
@@ -40,6 +51,7 @@ const MARK = '[astragentic-dispatch]'
 const PANE = 'dispatch-board'
 const RECORD = '.astraler/state/dispatch-record.json'
 const ACK_GRACE_MS = 90_000
+const TICKET = /^[A-Z][A-Z0-9]*-[0-9]+$/
 const ROLE_BY_PREFIX: Record<string, string> = { ticket: 'builder', spec: 'shaper', qa: 'qa', rin: 'rin' }
 
 const board = atom({ plugin: 'astragentic-dispatch', key: 'board' } as const, [] as BoardRow[])
@@ -126,6 +138,87 @@ async function patchRecord($: any, root: string, key: string, patch: Entry): Pro
   return true
 }
 
+async function deleteRecordKey($: any, root: string, key: string): Promise<void> {
+  const rec = await readRecord($, root)
+  if (rec === null || !(key in rec)) return
+  delete rec[key]
+  await $.fs.write(`${root}/${RECORD}`, JSON.stringify(rec, null, 2) + '\n')
+}
+
+async function run($: any, argv: string[], timeoutMs = 10_000): Promise<{ code: number; out: string }> {
+  try {
+    const r = await $.process.run(argv, { timeoutMs })
+    return { code: r.exitCode, out: `${r.stdout}${r.stderr}`.trim() }
+  } catch (err) {
+    return { code: -1, out: String(err) }
+  }
+}
+
+async function exists($: any, path: string): Promise<boolean> {
+  return (await run($, ['test', '-e', path])).code === 0
+}
+
+async function realpath($: any, path: string): Promise<string> {
+  const r = await run($, ['realpath', path])
+  return r.code === 0 ? r.out : path
+}
+
+// The project's answer to "what does the tracker say about <id>": one line, `<state>
+// <assignee-or-dash>`, the same plug ticket-done.sh asks. null is an empty socket.
+async function trackerState($: any, root: string, id: string): Promise<{ state: string; assignee: string; line: string } | null> {
+  const plug = `${root}/.astraler/project/tracker-state.sh`
+  if (!(await exists($, plug))) return null
+  const r = await run($, [plug, id], 30_000)
+  const line = (r.out.split('\n')[0] ?? '').trim()
+  const [state = '', assignee = ''] = line.split(/\s+/)
+  // A plug that fails, prints nothing, or says the tracker is `unreachable` (ADAPT-HARNESS
+  // tells a project with no shell route to print that) cannot answer, and a check that cannot
+  // answer must not refuse every brief: it is treated as the empty socket.
+  if (r.code !== 0 || !state || /^unreachable$/i.test(state)) return null
+  return { state, assignee, line }
+}
+
+async function stampRoot($: any): Promise<string> {
+  return (await $.env.get('HARNESS_STAMP_ROOT')) ?? '/tmp'
+}
+
+async function baseBranch($: any, root: string): Promise<string> {
+  const pinned = await $.env.get('BASE_BRANCH')
+  if (pinned) return pinned
+  const r = await run($, ['git', '-C', root, 'symbolic-ref', '--quiet', '--short', 'refs/remotes/origin/HEAD'])
+  return r.code === 0 && r.out.includes('/') ? r.out.slice(r.out.indexOf('/') + 1) : 'main'
+}
+
+// A Builder ticket whose work reached the base and has no ticket-done stamp: the tracker
+// write-back is owed. Merged is either seen locally (branch tip is an ancestor of the base) or
+// recorded when the mod watched a merge command succeed (a `gh pr merge` lands remotely).
+async function owedTickets($: any, root: string): Promise<string[]> {
+  const rec = (await readRecord($, root)) ?? {}
+  const base = await baseBranch($, root)
+  const stamps = `${await stampRoot($)}/harness-ticket-done`
+  const owed: string[] = []
+  for (const [key, entry] of Object.entries(rec)) {
+    if (entry?.role !== 'builder' || !TICKET.test(key)) continue
+    if (await exists($, `${stamps}/${key}`)) continue
+    let isMerged = Boolean(entry.merged_at)
+    if (!isMerged && typeof entry.branch === 'string' && entry.last_turn_end_at) {
+      // A branch with no commit of its own is an ancestor of the base too. Measured: the board
+      // read "merged" for a Builder that had committed nothing, so work must exist first.
+      const tip = await run($, ['git', '-C', root, 'rev-parse', '--verify', '--quiet', `refs/heads/${entry.branch}`])
+      isMerged = tip.code === 0 && tip.out !== entry.start_sha &&
+        (await run($, ['git', '-C', root, 'merge-base', '--is-ancestor', entry.branch, base])).code === 0
+    }
+    if (isMerged) owed.push(key)
+  }
+  return owed
+}
+
+function owedText(owed: string[]): string {
+  return `${owed.join(', ')} reached the base but ${owed.length > 1 ? 'have' : 'has'} no ticket-done evidence. ` +
+    `Owed now: set the tracker to closed and release the assignee (docs/agents/issue-tracker.md), ` +
+    `then \`scripts/ticket-done.sh <id> --moved "<ids promoted, or none>"\`.`
+}
+
 function isLive(entry: Entry): boolean {
   return typeof entry?.pane_id === 'string'
 }
@@ -140,12 +233,15 @@ async function refreshBoard($: any, root: string | null, sends: Map<string, numb
   const rec = root ? ((await readRecord($, root)) ?? {}) : {}
   const rows: BoardRow[] = []
   const named = new Set<string>()
+  const owed = root ? await owedTickets($, root) : []
   for (const [key, entry] of Object.entries(rec)) {
     if (!isLive(entry)) continue
     if (entry.session_name) named.add(entry.session_name)
     const sentAt = entry.session_name ? sends.get(entry.session_name) : undefined
     const role = entry.role ?? 'agent'
-    if (sentAt !== undefined) {
+    if (owed.includes(key)) {
+      rows.push({ key, role, state: 'merged', since: entry.merged_at ?? entry.last_turn_end_at ?? now, note: 'tracker not closed' })
+    } else if (sentAt !== undefined) {
       const isLate = now - sentAt > ACK_GRACE_MS
       rows.push({ key, role, state: 'sent', since: sentAt, note: isLate ? 'not confirmed received' : undefined })
     } else if (isMidTurn(entry)) {
@@ -182,13 +278,21 @@ export const register: Register = on => {
     root = await repoRoot($)
     me = await whoAmI($)
     if (me && root) {
+      // session.start fires again on every reload and resume. The start commit is kept from the
+      // first registration: rewritten at a reload after the Builder committed, it equalled the
+      // tip and hid the merge (measured).
+      const prior = ((await readRecord($, root)) ?? {})[me.key] ?? {}
+      const branch = (await run($, ['git', 'rev-parse', '--abbrev-ref', 'HEAD'])).out
+      const isSameDispatch = prior.branch === branch && typeof prior.start_sha === 'string'
       await patchRecord($, root, me.key, {
         role: me.role,
         tab_id: me.tab,
         pane_id: me.pane,
         session_id: await $.session.id(),
         worktree: e.cwd,
-        registered_at: await $.clock.now(),
+        branch,
+        start_sha: isSameDispatch ? prior.start_sha : (await run($, ['git', 'rev-parse', 'HEAD'])).out,
+        registered_at: isSameDispatch && prior.registered_at ? prior.registered_at : await $.clock.now(),
       })
       $.ui.status(`dispatched ${me.role} ${me.key} — recorded tab ${me.tab}, pane ${me.pane}`)
     } else if (root) {
@@ -280,6 +384,26 @@ export const register: Register = on => {
   // ---- dispatcher side -------------------------------------------------------------------
 
   on('session.send', async ($, e, next) => {
+    // A brief is a send whose first line is a slash command. Two things are checked at the one
+    // moment every dispatch passes through, because both were skipped when they were prose:
+    // the previous merge's tracker write-back, and this ticket's claim.
+    const first = e.text.trimStart().split('\n')[0] ?? ''
+    if (!me && root && e.origin.kind === 'model' && e.agentId === undefined && first.startsWith('/')) {
+      const owed = await owedTickets($, root)
+      if (owed.length > 0) {
+        return { isDelivered: false, reason: `${MARK} not sent. ${owedText(owed)} Then send this brief again.` }
+      }
+      const id = first.split(/\s+/).slice(1).find(word => TICKET.test(word))
+      const ts = id ? await trackerState($, root, id) : null
+      if (id && ts && (ts.assignee === '-' || ts.assignee === '' || /^(closed|unclaimed)$/i.test(ts.state))) {
+        return {
+          isDelivered: false,
+          reason: `${MARK} not sent. The tracker says ${id} is "${ts.line}", so it is not claimed. ` +
+            `Claim it first (thomas.md § The claim protocol: assignee written and read back; status or label per ` +
+            `docs/agents/issue-tracker.md), then send this brief again.`,
+        }
+      }
+    }
     const res = await next(e)
     if (me || !root || e.origin.kind !== 'model' || e.agentId !== undefined || !res.isDelivered) return res
     const rec = (await readRecord($, root)) ?? {}
@@ -298,27 +422,111 @@ export const register: Register = on => {
     }
     if (!root) return next(e)
     await refreshBoard($, root, sends)
+    const notes: string[] = []
     const late = (await read($, board)).filter(r => r.note === 'not confirmed received')
-    if (late.length === 0) return next(e)
-    const note = `${MARK} No RECEIVED came back for: ${late.map(r => r.key).join(', ')}. The message may be held or lost; read that pane before assuming it is working.`
-    return next({ ...e, context: [...(e.context ?? []), note] })
+    if (late.length > 0) {
+      notes.push(`${MARK} No RECEIVED came back for: ${late.map(r => r.key).join(', ')}. The message may be held or lost; read that pane before assuming it is working.`)
+    }
+    const owed = await owedTickets($, root)
+    if (owed.length > 0) notes.push(`${MARK} ${owedText(owed)}`)
+    if (notes.length === 0) return next(e)
+    return next({ ...e, context: [...(e.context ?? []), ...notes] })
   })
 
   on('tool.call', { tool: 'Bash' }, async ($, e, next) => {
     if (me || !root) return next(e)
-    const m = e.command.match(/\bherdr\s+(tab|pane|workspace)\s+close\s+['"]?([A-Za-z0-9:_-]+)/)
-    if (!m) return next(e)
-    const [, kind, id] = m
     const rec = (await readRecord($, root)) ?? {}
-    const hit = Object.entries(rec).find(([, entry]) =>
-      isLive(entry) && isMidTurn(entry) &&
-      (kind === 'tab' ? entry.tab_id === id : kind === 'pane' ? entry.pane_id === id : String(entry.tab_id).startsWith(`${id}:`)),
-    )
-    if (!hit) return next(e)
-    const [key, entry] = hit
-    return {
-      deny: `astragentic-dispatch: ${entry.role} ${key} is mid-turn in ${kind} ${id} (brief received, no TURN-END since). Closing it kills a working agent. Wait for its TURN-END, or ask the owner.`,
+
+    // -- closing a pane, tab or workspace that holds a mid-turn agent ---------------------
+    const close = e.command.match(/\bherdr\s+(tab|pane|workspace)\s+close\s+['"]?([A-Za-z0-9:_-]+)/)
+    if (close) {
+      const [, kind, id] = close
+      const hit = Object.entries(rec).find(([, entry]) =>
+        isLive(entry) && isMidTurn(entry) &&
+        (kind === 'tab' ? entry.tab_id === id : kind === 'pane' ? entry.pane_id === id : String(entry.tab_id).startsWith(`${id}:`)),
+      )
+      if (hit) {
+        const [key, entry] = hit
+        return {
+          deny: `astragentic-dispatch: ${entry.role} ${key} is mid-turn in ${kind} ${id} (brief received, no TURN-END since). Closing it kills a working agent. Wait for its TURN-END, or ask the owner.`,
+        }
+      }
+      const ran = await next(e)
+      if (ran.deny === undefined && !ran.isError && kind === 'tab') {
+        for (const [key, entry] of Object.entries(rec)) {
+          if (entry?.tab_id !== id) continue
+          if (entry.worktree && (await exists($, entry.worktree))) await patchRecord($, root, key, { tab_closed_at: await $.clock.now() })
+          else await deleteRecordKey($, root, key)
+        }
+        await refreshBoard($, root, sends)
+      }
+      return ran
     }
+
+    // -- removing a worktree: release its resources first, then let the guard judge ---------
+    // The release used to be a step Thomas ran by hand before `git worktree remove`, and the
+    // git guard refused the removal when it was skipped (AST-100, AST-101; the WorktreeRemove
+    // hook never fired, AST-102). Here it runs at the moment of removal. It only runs for a
+    // recorded worktree whose agent is not mid-turn and whose tree is clean, because the
+    // release reaps processes and runs the project's teardown: doing that to a worktree the
+    // guard is about to refuse for uncommitted work would tear down live state (AST-115).
+    const remove = e.command.match(/\bgit\s+(?:-C\s+\S+\s+)?worktree\s+remove\s+((?:-f\s+|--force\s+)*)['"]?([^\s'"]+)/)
+    if (remove) {
+      const isForced = Boolean(remove[1])
+      const target = await realpath($, remove[2] ?? '')
+      const hit = Object.entries(rec).find(([, entry]) => typeof entry?.worktree === 'string' && entry.worktree === target)
+      if (hit && (await exists($, target))) {
+        const [key, entry] = hit
+        if (isMidTurn(entry)) {
+          return { deny: `astragentic-dispatch: ${entry.role} ${key} is mid-turn in ${target}. Removing its worktree destroys work in progress. Wait for its TURN-END.` }
+        }
+        const isClean = isForced || (await run($, ['git', '-C', target, 'status', '--short'])).out === ''
+        if (isClean) {
+          const script = (await exists($, `${root}/scripts/release-worktree-resources.sh`))
+            ? `${root}/scripts/release-worktree-resources.sh`
+            : `${root}/harness/scripts/release-worktree-resources.sh`
+          const released = await run($, ['bash', script, target], 600_000)
+          if (released.code !== 0) {
+            return {
+              deny: `astragentic-dispatch: releasing ${target} failed, so it was not removed:\n${released.out.split('\n').slice(-15).join('\n')}`,
+            }
+          }
+        }
+      }
+      const ran = await next(e)
+      if (hit && ran.deny === undefined && !ran.isError && !(await exists($, target))) {
+        const [key, entry] = hit
+        // The release reaps the agent rooted in the worktree, and herdr closes a tab whose last
+        // pane exited, so the tab is usually gone before anyone closes it (measured). Ask herdr.
+        const isTabAlive = Boolean(entry.tab_id) && !entry.tab_closed_at && (await herdrJson($, ['tab', 'get', entry.tab_id])) !== null
+        if (!isTabAlive) await deleteRecordKey($, root, key)
+        else await patchRecord($, root, key, { worktree_removed_at: await $.clock.now() })
+        await refreshBoard($, root, sends)
+      }
+      return ran
+    }
+
+    // -- a merge: the tracker write-back is owed from this moment, so say so in the result -----
+    const merge = /\bgit\s+(?:-C\s+\S+\s+)?merge\b|\bgh\s+pr\s+merge\b/.test(e.command)
+    const ran = await next(e)
+    if (!merge || ran.deny !== undefined || ran.isError) return ran
+    if (/\bgh\s+pr\s+merge\b/.test(e.command)) {
+      // A PR merged on the remote never reaches the local base, so ancestry cannot see it.
+      // Mark the entries the command names, by ticket id or by the PR's head branch.
+      const pr = e.command.match(/\bgh\s+pr\s+merge\s+(\S+)/)?.[1]
+      const head = pr && !pr.startsWith('-')
+        ? (await run($, ['gh', 'pr', 'view', pr, '--json', 'headRefName', '-q', '.headRefName'], 30_000)).out
+        : ''
+      for (const [key, entry] of Object.entries(rec)) {
+        if (e.command.includes(key) || (head && entry?.branch === head)) {
+          await patchRecord($, root, key, { merged_at: await $.clock.now() })
+        }
+      }
+    }
+    const owed = await owedTickets($, root)
+    await refreshBoard($, root, sends)
+    if (owed.length === 0) return ran
+    return { ...ran, context: [...(ran.context ?? []), `${MARK} ${owedText(owed)} The next brief will not be sent until this is done.`] }
   })
 
   on('command.run', { command: 'dispatch-board' }, async $ => {
@@ -335,7 +543,7 @@ export const register: Register = on => {
       <Box flexDirection="column">
         {rows.length === 0 && <Text dimColor>No live dispatches.</Text>}
         {rows.map(r => (
-          <Text color={r.note === 'not confirmed received' ? 'red' : undefined}>
+          <Text color={r.note === 'not confirmed received' || r.state === 'merged' ? 'red' : undefined}>
             {r.key.padEnd(14)} {r.role.padEnd(8)} {r.state.padEnd(10)} {ago(now - r.since).padStart(4)} {r.note ?? ''}
           </Text>
         ))}
@@ -348,7 +556,7 @@ export const register: Register = on => {
     const rows = await read($, board)
     if (rows.length === 0 || e.props.hasSurvey) return next(e)
     const { Text } = $.ui.resolve(e)
-    const isAlarm = rows.some(r => r.note === 'not confirmed received')
+    const isAlarm = rows.some(r => r.note === 'not confirmed received' || r.state === 'merged')
     return (
       <Text dimColor={!isAlarm} color={isAlarm ? 'red' : undefined}>
         dispatch: {boardLine(rows, await $.clock.now())}

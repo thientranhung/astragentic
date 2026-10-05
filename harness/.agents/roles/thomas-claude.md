@@ -19,6 +19,10 @@ every Claude session in this project loads, makes the pane record its own tab an
 the brief's first line as a real command, answer `RECEIVED`, and report every turn end to you
 as a prompt. `dispatch-ticket-claude` has the protocol.
 
+It also holds a brief for a ticket the tracker reports unclaimed, holds every brief while a
+merged ticket has no `scripts/ticket-done.sh` stamp, and runs the worktree release at `git worktree
+remove`. A refused brief names what is owed; do that, then send it again.
+
 Do not arm a Monitor, type into a Builder's pane, or write its tab and pane ids by hand. Each
 was a step that got skipped (a guessed tab id closed a working Builder), and the mod does it
 from inside the pane. Do not use the shared protocol's Herdr paste for Claude builders either;

@@ -26,6 +26,9 @@ project loads it with no flag and no setup:
 | Confirm delivery | read the pane for a phrase only the brief had | the pane answers `RECEIVED` |
 | Watch the turn | a Monitor wrapping the watcher script, re-armed for every turn | the pane reports `TURN-END` at every turn end, and the mod wakes you with a prompt |
 | Protect a working pane | nothing | `herdr tab\|pane\|workspace close` on a mid-turn pane is refused |
+| Claim on the tracker before the brief | prose in `thomas.md` | a brief for a ticket the tracker reports unclaimed is not sent |
+| Tracker write-back after a merge | refused only at a push of the base | the merge result carries the note, the line turns red, and no brief is sent until `scripts/ticket-done.sh` has stamped it |
+| Release a worktree's resources | `release-worktree-resources.sh` by hand before removal | runs at `git worktree remove`, and the record entry goes with the worktree |
 
 Measured 2026-10-05 on Claude Code 2.1.289 and herdr 0.9.1, with a Builder in its own
 worktree. The record carried the right tab and pane ids. A phrase that existed only in the
@@ -81,6 +84,46 @@ is now a second copy of something the mod does, and a second copy is where the t
   the pane. Read that pane: the message may be held or lost. The sender's `{"success": true}`
   is true even for a held message (measured), so it proves nothing.
 - **`/dispatch-board`** opens a pane listing every live dispatch with its state and age.
+
+## The tracker: claimed before the brief, closed before the next one
+
+Both ends of a ticket's tracker state were remembered sometimes. A dispatched ticket stayed in
+its ready state, and a merged one stayed in progress (AST-074). The brief is the one moment every
+dispatch passes through, so the checks sit there, on the answer of the project's own plug
+`.astraler/project/tracker-state.sh <id>`: one line, `<state> <assignee-or-dash>`, the same plug
+`ticket-done.sh` asks.
+
+- **Claimed before the brief.** A brief whose first line names a ticket the plug reports with
+  assignee `-`, or with state `closed` or `unclaimed`, is not sent. The refusal says why. A
+  project whose claim is a status or a label makes its plug print `unclaimed` until that is
+  set; the vocabulary stays the project's.
+- **Closed before the next brief.** A Builder ticket whose branch has commits of its own and
+  reached the base, or that a `gh pr merge` merged, with no ticket-done stamp, holds every
+  brief. The note arrives in the merge command's own result, so it lands in the same turn as the
+  merge. `scripts/ticket-done.sh <id>` clears it, and it asks the same plug that the ticket is
+  closed and released. The base-push guard missed `gh pr merge` and merge-and-hold, which is
+  where the write-back was forgotten (AST-057).
+- **No answer, no check.** An absent plug, one that fails, and one that prints `unreachable` are
+  an empty socket: briefs go, and `scripts/ticket-done.sh` stamps the tracker half as unverified, as before.
+  A check that cannot answer must not refuse every dispatch.
+
+Measured 2026-10-05: a brief for a ticket reporting `open -` was refused, and the Builder received
+nothing. After the merge, the note arrived with the merge result, the line turned red, and the
+next brief was refused until the dispatcher closed the ticket and ran `scripts/ticket-done.sh`. It did that
+at once, in the turn that read the note.
+
+## Cleanup: the release runs at removal
+
+`git worktree remove <path>` on a recorded worktree runs `release-worktree-resources.sh <path>`
+first: it reaps processes rooted there, runs the project's teardown plug and stamps the path.
+It runs only when the worktree's agent is not mid-turn and its tree is clean, or `--force` was
+given. The release tears down live state, so it must never run for a removal the git guard is
+about to refuse (AST-115). If the release fails, the removal is refused with its output.
+
+The release reaps the agent in that worktree, and herdr closes a tab whose last pane exited. The
+tab is usually gone before you close it, so a `tab close` answering not-found is expected. The
+record entry is deleted once the worktree and the tab are both gone. Measured: release ran,
+stamp written, Builder reaped, tab closed, entry gone, with no step besides the removal.
 
 ## What the mod cannot see
 

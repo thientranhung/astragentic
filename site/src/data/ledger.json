@@ -1201,8 +1201,10 @@
     "citedBy": [
       "check-reachability.sh",
       "dispatch-qa-walk",
+      "dispatch-ticket-claude",
       "hook-git-guard.py",
       "reconcile-tracker",
+      "register.tsx",
       "release-worktree-resources.sh",
       "thomas.md",
       "ticket-done.sh"
@@ -1223,6 +1225,11 @@
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-qa-walk"
       },
       {
+        "name": "dispatch-ticket-claude",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket-claude"
+      },
+      {
         "name": "hook-git-guard.py",
         "kind": "file",
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/hook-git-guard.py"
@@ -1231,6 +1238,11 @@
         "name": "reconcile-tracker",
         "kind": "file",
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/reconcile-tracker"
+      },
+      {
+        "name": "register.tsx",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.claude/skills/astragentic-dispatch/hooks/register.tsx"
       },
       {
         "name": "release-worktree-resources.sh",
@@ -1543,6 +1555,8 @@
     "status": "promoted",
     "words": 484,
     "citedBy": [
+      "dispatch-ticket-claude",
+      "register.tsx",
       "thomas.md"
     ],
     "indexLine": 88,
@@ -1550,6 +1564,16 @@
     "promotedOn": "2026-08-18",
     "entry": "### AST-074 — A tracker measured only against itself cannot detect its own drift · promoted 2026-08-18\n\nReported upstream from an adapted project's own Thomas, via a handoff, rather than found in\nthis package directly — the first entry with that provenance, recorded because the class it\nnames is general and the reachability checks have no way to see a tracker's *content* going\nstale, only a document's.\n\nFour tickets in that project sat claimed and in-progress with a live assignee **after their\ncode had merged to the base branch**, the oldest by a full day. Nothing errored: the merge ran,\nthe frontier write-back after it did not, and no artifact recorded the omission — the exact\nshape of AST-057, arriving in a place check-reachability cannot reach, because the drift is in\nthe tracker's *content*, not in whether a phase is named or wired.\n\n**The reason no tracker-only check catches this: a wrong state is perfectly consistent with\nitself.** In-progress with an assignee is exactly what a real in-flight ticket looks like from\ninside the tracker; the two are indistinguishable without a second, independent source. …",
     "refs": [
+      {
+        "name": "dispatch-ticket-claude",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket-claude"
+      },
+      {
+        "name": "register.tsx",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.claude/skills/astragentic-dispatch/hooks/register.tsx"
+      },
       {
         "name": "thomas.md",
         "kind": "file",
@@ -2182,6 +2206,7 @@
       "codex-arm",
       "dispatch-qa-walk",
       "hook-git-guard.py",
+      "register.tsx",
       "release-worktree-resources.sh"
     ],
     "indexLine": 114,
@@ -2210,6 +2235,11 @@
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/hook-git-guard.py"
       },
       {
+        "name": "register.tsx",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.claude/skills/astragentic-dispatch/hooks/register.tsx"
+      },
+      {
         "name": "release-worktree-resources.sh",
         "kind": "file",
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/release-worktree-resources.sh"
@@ -2226,6 +2256,7 @@
       "CLEANUP.md",
       "dispatch-qa-walk",
       "hook-git-guard.py",
+      "register.tsx",
       "release-worktree-resources.sh"
     ],
     "indexLine": 115,
@@ -2249,6 +2280,11 @@
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/hook-git-guard.py"
       },
       {
+        "name": "register.tsx",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.claude/skills/astragentic-dispatch/hooks/register.tsx"
+      },
+      {
         "name": "release-worktree-resources.sh",
         "kind": "file",
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/release-worktree-resources.sh"
@@ -2263,6 +2299,7 @@
     "words": 418,
     "citedBy": [
       "hook-git-guard.py",
+      "register.tsx",
       "thomas.md"
     ],
     "indexLine": 116,
@@ -2274,6 +2311,11 @@
         "name": "hook-git-guard.py",
         "kind": "file",
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/hook-git-guard.py"
+      },
+      {
+        "name": "register.tsx",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.claude/skills/astragentic-dispatch/hooks/register.tsx"
       },
       {
         "name": "thomas.md",
@@ -2528,7 +2570,9 @@
       "CLEANUP.md",
       "codex-arm",
       "dispatch-qa-walk",
+      "dispatch-ticket-claude",
       "hook-git-guard.py",
+      "register.tsx",
       "release-worktree-resources.sh"
     ],
     "indexLine": 129,
@@ -2552,9 +2596,19 @@
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-qa-walk"
       },
       {
+        "name": "dispatch-ticket-claude",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket-claude"
+      },
+      {
         "name": "hook-git-guard.py",
         "kind": "file",
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/hook-git-guard.py"
+      },
+      {
+        "name": "register.tsx",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.claude/skills/astragentic-dispatch/hooks/register.tsx"
       },
       {
         "name": "release-worktree-resources.sh",
@@ -3597,6 +3651,38 @@
     "entryLine": 4147,
     "promotedOn": "2026-10-05",
     "entry": "### AST-156 — Three dispatch steps had no lock, and the same agent skipped two of them on the same day · promoted 2026-10-05\n\nA downstream Thomas reported its own day. It violated none of the roughly thirty steps a script\nrefuses, and was stopped by one of them minutes before writing the report. It broke two that\nnothing refused: it never wrote the dispatch record, then guessed a tab id at cleanup and\nclosed a working Builder; and it armed no watcher, writing a `while true; sleep 30` loop\ninstead. The second has a plain cause. The rule to wrap the watcher script was read at hour\nzero, and the Monitor tool's description, which carries exactly that loop as its example, was\nin the prompt at every hour after (AST-041, AST-069). The record step had a cause in this\npackage: the dispatch sequence listed nine steps and the record was not one of them. It sat in\na section after cleanup, so it was skippable by construction.\n\nSame agent, same session, same day: the variable was never discipline, only whether\nsomething refused. The obvious fix is another refusal. It was not taken, because two of the\nthree steps can be made to stop existing. …",
+    "refs": [],
+    "commits": [
+      {
+        "sha": "0a3653edc262e628c09ec90b349fc2a3996b1412",
+        "date": "2026-10-05",
+        "subject": "2.14.0 — the pane does its own dispatch steps, so none of them can be skipped"
+      }
+    ]
+  },
+  {
+    "id": "AST-157",
+    "lesson": "The tracker write-back was refused at the one command a merge does not always pass through",
+    "status": "promoted",
+    "words": 248,
+    "citedBy": [],
+    "indexLine": 171,
+    "entryLine": 4178,
+    "promotedOn": "2026-10-05",
+    "entry": "### AST-157 — The tracker write-back was refused at the one command a merge does not always pass through · promoted 2026-10-05\n\nThe owner's account of the tracker, across projects: a dispatched ticket keeps its ready\nstatus and label, and a finished one is closed sometimes and sometimes not. The close side had\na gate since 2.8. `hook-git-guard.py` refuses a push of the base while a merge in the range\nnames a ticket with no `ticket-done` stamp. That push is the gate's only moment, and two merge\nshapes never reach it. `gh pr merge` lands on the remote, so no local base is pushed. A merge\nheld for a gate is pushed hours later, if at all. The claim side had no gate, only the claim\nprotocol in prose.\n\nBoth moved to the moment every dispatch does pass through: the brief. On a Claude root the\ndispatch mod asks the project's `tracker-state.sh` before sending one. A ticket reported\nunclaimed is not sent, and while any Builder ticket has reached the base with no stamp, no brief\nis sent at all. The note also rides the merge command's own result, so it lands in the turn\nthat merged. Measured 2026-10-05 against a stub tracker: the unclaimed brief was refused and\nthe Builder received nothing. …",
+    "refs": [],
+    "commits": []
+  },
+  {
+    "id": "AST-158",
+    "lesson": "\"Its commits reached the base\" passed for a branch that had no commits",
+    "status": "promoted",
+    "words": 195,
+    "citedBy": [],
+    "indexLine": 172,
+    "entryLine": 4202,
+    "promotedOn": "2026-10-05",
+    "entry": "### AST-158 — \"Its commits reached the base\" passed for a branch that had no commits · promoted 2026-10-05\n\n`git merge-base --is-ancestor <branch> <base>` is how both `ticket-done.sh` and the dispatch mod\nasked whether a ticket's work had landed. A branch created at the base and never committed to\nis an ancestor too, because its tip is a base commit. Measured twice in one lab run. The mod's\nboard read \"merged\" for a Builder that had committed nothing. `ticket-done.sh` stamped that\nticket done: git half \"an ancestor of main\", tracker half \"closed\". Only the plug stood between\nan empty ticket and a closed one.\n\nThe same check was written twice, months apart, by two authors, and both trusted the question\nover what it measured. Ancestry answers \"is nothing on this branch missing from the base\", and\nan empty set is never missing. The work must exist before its arrival is checked. The mod\nrecords the start commit at first registration, and keeps it there, because a reload re-fires\nsession start and rewrote it once in the lab. `ticket-done.sh` reads that start commit when it\nexists, and otherwise requires the tip off the base's first-parent line. …",
     "refs": [],
     "commits": []
   }

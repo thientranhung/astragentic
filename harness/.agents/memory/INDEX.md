@@ -69,7 +69,7 @@ from this table — read the entry.
 | `AST-054` | `git add -A` committed two releases nobody ever applied | promoted | 146 | hook-git-guard.py |
 | `AST-055` | A gate that reads the subject cannot see which pass wrote it | promoted | 325 | builder-claude.md,builder-codex.md,builder-opencode.md,check-reachability.sh,rin-claude.md,rin-codex.md,rin-opencode.md,rin.md,shaper.md,thomas-claude.md |
 | `AST-056` | A blocking edge expresses order, not exclusion | promoted | 329 | dispatch-qa-walk,dispatch-ticket,thomas.md |
-| `AST-057` | A frontier that is only computed is invisible to the one person who cannot compute | promoted | 689 | check-reachability.sh,dispatch-qa-walk,hook-git-guard.py,reconcile-tracker,release-worktree-resources.sh,thomas.md,ticket-done.sh |
+| `AST-057` | A frontier that is only computed is invisible to the one person who cannot compute | promoted | 689 | check-reachability.sh,dispatch-qa-walk,dispatch-ticket-claude,hook-git-guard.py,reconcile-tracker,register.tsx,release-worktree-resources.sh,thomas.md,ticket-done.sh |
 | `AST-058` | The check after the step reported clean when the step was impossible | promoted | 271 |   |
 | `AST-059` | The repo kept one self-check and lost the other to a directory it may ignore | promoted | 193 |   |
 | `AST-060` | Check 3 printed green about the skills it had not opened | promoted | 170 |   |
@@ -85,7 +85,7 @@ from this table — read the entry.
 | `AST-071` | Every check asked whether a thing was NAMED, none asked whether anything READ it | promoted | 312 | check-reachability.sh |
 | `AST-072` | Self-monitoring shipped without proof it cannot harm what it monitors | promoted | 345 | herdr-watchdog.sh |
 | `AST-073` | A global script is only shared if something keeps it updated | promoted | 200 |   |
-| `AST-074` | A tracker measured only against itself cannot detect its own drift | promoted | 484 | thomas.md |
+| `AST-074` | A tracker measured only against itself cannot detect its own drift | promoted | 484 | dispatch-ticket-claude,register.tsx,thomas.md |
 | `AST-075` | Neither the process table nor the PID file nor CPU time proves a loop is alive | promoted | 332 |   |
 | `AST-076` | AST-072's own fix left a window between acquiring the lock and recording who holds it | promoted | 1427 | herdr-watchdog.sh |
 | `AST-077` | Identity by substring match let `stop` sign a kill order for an unrelated process | promoted | 728 |   |
@@ -111,9 +111,9 @@ from this table — read the entry.
 | `AST-097` | TERMINAL:done means the turn ended, not that the work finished | promoted | 831 | builder-claude.md,dispatch-ticket,dispatch-ticket-claude,dispatch-ticket-opencode,hook-git-guard.py,register.tsx |
 | `AST-098` | Fork sub-agents return the coordinator's own narration instead of doing their assigned task | promoted | 385 | builder-claude.md |
 | `AST-099` | Simplify marker exists without skill provenance — the subject is self-applied, only the Pass:… | promoted | 685 | CLEANUP.md,check-simplify-markers.sh |
-| `AST-100` | Codex companion broker leaks one process per arm pass, accumulating silently | promoted | 201 | CLEANUP.md,codex-arm,dispatch-qa-walk,hook-git-guard.py,release-worktree-resources.sh |
-| `AST-101` | Gate worktree removal leaks database containers, not just broker processes | promoted | 182 | CLEANUP.md,dispatch-qa-walk,hook-git-guard.py,release-worktree-resources.sh |
-| `AST-102` | WorktreeRemove hook does not fire, but documentation declares manual cleanup redundant | promoted | 418 | hook-git-guard.py,thomas.md |
+| `AST-100` | Codex companion broker leaks one process per arm pass, accumulating silently | promoted | 201 | CLEANUP.md,codex-arm,dispatch-qa-walk,hook-git-guard.py,register.tsx,release-worktree-resources.sh |
+| `AST-101` | Gate worktree removal leaks database containers, not just broker processes | promoted | 182 | CLEANUP.md,dispatch-qa-walk,hook-git-guard.py,register.tsx,release-worktree-resources.sh |
+| `AST-102` | WorktreeRemove hook does not fire, but documentation declares manual cleanup redundant | promoted | 418 | hook-git-guard.py,register.tsx,thomas.md |
 | `AST-103` | Cross-vendor arm silently reviews a zero-commit range and returns clean | promoted | 206 | codex-arm |
 | `AST-104` | herdr agent start rejects uppercase in agent names, but dispatch convention generates them | promoted | 87 |   |
 | `AST-105` | Pipe after a command swallows exit code, turning a failed gate into exit 0 | promoted | 182 | WATCHING.md |
@@ -126,7 +126,7 @@ from this table — read the entry.
 | `AST-112` | SendMessage is not a user turn, so the brief's slash command never fires | promoted | 443 | dispatch-ticket-claude,register.tsx,shaper.md |
 | `AST-113` | An audit that always screams is an audit nobody reads | promoted | 290 | docs-staleness-audit.sh |
 | `AST-114` | Splitting submission into two steps left the watch armed against the wrong one | promoted | 207 |   |
-| `AST-115` | Two correct changes composed into a live one, and the repair is what armed it | promoted | 447 | CLEANUP.md,codex-arm,dispatch-qa-walk,hook-git-guard.py,release-worktree-resources.sh |
+| `AST-115` | Two correct changes composed into a live one, and the repair is what armed it | promoted | 447 | CLEANUP.md,codex-arm,dispatch-qa-walk,dispatch-ticket-claude,hook-git-guard.py,register.tsx,release-worktree-resources.sh |
 | `AST-116` | A local fix that never goes upstream is a defect every fresh install re-buys | promoted | 335 | check-reachability.sh,docs-staleness-audit.sh |
 | `AST-117` | A worktree isolates git, not a tool that writes to a fixed path | promoted | 329 |   |
 | `AST-118` | A fallback that changes what the verdict MEANS, while keeping the same exit code | promoted | 373 | check-reachability.sh |
@@ -168,3 +168,5 @@ from this table — read the entry.
 | `AST-154` | The obvious retry for an unsent brief fused it with the next one and reported success | promoted | 133 | dispatch-ticket |
 | `AST-155` | The teardown removed what it started and kept what it built | promoted | 247 | CLEANUP.md,release-worktree-resources.sh,selftest.sh |
 | `AST-156` | Three dispatch steps had no lock, and the same agent skipped two of them on the same day | promoted | 369 |   |
+| `AST-157` | The tracker write-back was refused at the one command a merge does not always pass through | promoted | 248 |   |
+| `AST-158` | "Its commits reached the base" passed for a branch that had no commits | promoted | 195 |   |

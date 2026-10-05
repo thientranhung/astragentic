@@ -1,6 +1,6 @@
 # Recurring Failure Modes
 
-Status: current · 155 entries (AST-001 … AST-156, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
+Status: current · 157 entries (AST-001 … AST-158, 067 withdrawn) · AST-001…034 carried into 1.0.0 unchanged
 
 Both numbers above are checked by `docs-staleness-audit.sh` AXIS 5 against `^### AST-` in this
 file. It sat at "50 entries (AST-001 … AST-050)" while the file held 66, for sixteen entries,
@@ -4174,3 +4174,46 @@ removed.** The watchdog stays, because a pane whose process died takes its mod w
 
 Bound: `.claude/skills/astragentic-dispatch/hooks/register.tsx`,
 `.agents/skills/dispatch-ticket-claude/SKILL.md`, `scripts/selftest.sh`.
+
+### AST-157 — The tracker write-back was refused at the one command a merge does not always pass through · promoted 2026-10-05
+
+The owner's account of the tracker, across projects: a dispatched ticket keeps its ready
+status and label, and a finished one is closed sometimes and sometimes not. The close side had
+a gate since 2.8. `hook-git-guard.py` refuses a push of the base while a merge in the range
+names a ticket with no `ticket-done` stamp. That push is the gate's only moment, and two merge
+shapes never reach it. `gh pr merge` lands on the remote, so no local base is pushed. A merge
+held for a gate is pushed hours later, if at all. The claim side had no gate, only the claim
+protocol in prose.
+
+Both moved to the moment every dispatch does pass through: the brief. On a Claude root the
+dispatch mod asks the project's `tracker-state.sh` before sending one. A ticket reported
+unclaimed is not sent, and while any Builder ticket has reached the base with no stamp, no brief
+is sent at all. The note also rides the merge command's own result, so it lands in the turn
+that merged. Measured 2026-10-05 against a stub tracker: the unclaimed brief was refused and
+the Builder received nothing. After the merge, the next brief was refused, and the dispatcher
+closed the ticket and ran `ticket-done` in the turn that read the note.
+
+**A gate belongs on the step that cannot be skipped, not on the step that usually follows.**
+The push usually follows a merge; the next brief always follows the last.
+
+Bound: `.claude/skills/astragentic-dispatch/hooks/register.tsx`,
+`.agents/skills/dispatch-ticket-claude/SKILL.md`.
+
+### AST-158 — "Its commits reached the base" passed for a branch that had no commits · promoted 2026-10-05
+
+`git merge-base --is-ancestor <branch> <base>` is how both `ticket-done.sh` and the dispatch mod
+asked whether a ticket's work had landed. A branch created at the base and never committed to
+is an ancestor too, because its tip is a base commit. Measured twice in one lab run. The mod's
+board read "merged" for a Builder that had committed nothing. `ticket-done.sh` stamped that
+ticket done: git half "an ancestor of main", tracker half "closed". Only the plug stood between
+an empty ticket and a closed one.
+
+The same check was written twice, months apart, by two authors, and both trusted the question
+over what it measured. Ancestry answers "is nothing on this branch missing from the base", and
+an empty set is never missing. The work must exist before its arrival is checked. The mod
+records the start commit at first registration, and keeps it there, because a reload re-fires
+session start and rewrote it once in the lab. `ticket-done.sh` reads that start commit when it
+exists, and otherwise requires the tip off the base's first-parent line. A fast-forward lands
+on that line as well, and falls through to the existing subject test.
+
+Bound: `scripts/ticket-done.sh`, `scripts/selftest.sh`.

@@ -132,7 +132,10 @@ Classify candidate material before editing anything:
     the write-back after a merge is on the agent's word alone, which is exactly the half that
     drifted downstream (two tickets merged, still open, still assigned — found only because
     the owner asked). Where nothing in the shell can reach the tracker, write one that prints
-    `unreachable -` and say so in the receipt.
+    `unreachable -` and say so in the receipt. On a Claude root the dispatch mod asks the same
+    plug before every brief and refuses one for a ticket reported with assignee `-`, or state
+    `closed` or `unclaimed`. A project whose claim is a status or a label prints `unclaimed`
+    until it is set. `unreachable` and a failing plug skip the check rather than refuse.
   - **`ticket-done.sh <ticket-id>`** — *what does this project owe when a ticket closes?* A
     deploy trigger, a changelog line, a notification, a cache to invalidate. Nothing is a
     valid answer, written down. Runs from `scripts/ticket-done.sh` after the two checks above.

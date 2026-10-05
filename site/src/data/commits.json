@@ -1,5 +1,11 @@
 [
   {
+    "sha": "0a3653edc262e628c09ec90b349fc2a3996b1412",
+    "date": "2026-10-05",
+    "subject": "2.14.0 — the pane does its own dispatch steps, so none of them can be skipped",
+    "ledger": "Ledger: AST-156."
+  },
+  {
     "sha": "6e25bc33b72c7de342d4bd88aafdad85958c6689",
     "date": "2026-10-05",
     "subject": "fold the second project's findings — the teardown kept what it built",
@@ -111,12 +117,6 @@
     "sha": "cb6c5b66963d9ce8324b12e93e05bcda29544844",
     "date": "2026-09-08",
     "subject": "site: discovery order, comms around dispatch, photo placeholders",
-    "ledger": "Ledger: none."
-  },
-  {
-    "sha": "40c0a3b11a9ff5a1770cacf294eac38d675d0ffa",
-    "date": "2026-09-08",
-    "subject": "site: brand and tool names in bold",
     "ledger": "Ledger: none."
   }
 ]

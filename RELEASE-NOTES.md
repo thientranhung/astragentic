@@ -1,3 +1,70 @@
+# Astragentic 2.15.0
+
+2.14.0 removed three dispatch steps by letting the pane do them. The owner named the two that
+were still remembered only sometimes: **the tracker**, at both ends of a ticket, and **the
+teardown**. This release puts both on the dispatch mod, and fixes a check that two authors got
+wrong in the same way.
+
+## The tracker is checked at the brief
+
+The close side had a gate since 2.8, a refusal at the push of the base. Two merge shapes never
+push the base locally: `gh pr merge`, and a merge held for a gate. The claim side had no gate at
+all. Both now sit on the one step every dispatch passes through, the brief. The check uses the
+project's own `.astraler/project/tracker-state.sh <id>`, the plug `ticket-done.sh` already asks:
+
+| Moment | What the mod does |
+|---|---|
+| A brief for a ticket the plug reports unclaimed (assignee `-`, state `closed` or `unclaimed`) | not sent; the refusal names the claim protocol |
+| A Builder ticket reached the base with no `ticket-done` stamp | every brief is held until `scripts/ticket-done.sh` stamps it |
+| The merge command that caused it | carries the note in its own result, and the status line turns red |
+
+A project whose claim is a status or a label makes its plug print `unclaimed` until it is set.
+An absent plug, a failing one, or one printing `unreachable` skips the check rather than
+refusing every brief. The mod never writes the tracker, because writing it is the claim
+protocol's job and the vocabulary is the project's.
+
+Measured 2026-10-05 against a stub tracker. The unclaimed brief was refused, and the Builder
+received nothing. After the merge the next brief was refused, and the dispatcher closed the
+ticket and ran `ticket-done` in the turn that read the note (AST-157).
+
+## The release runs at removal
+
+`git worktree remove` on a recorded worktree now runs `release-worktree-resources.sh` first,
+which used to be a step taken by hand before it. It runs only when the agent is not mid-turn and
+the tree is clean: the release tears down live state, and must not run for a removal the git
+guard would refuse (AST-115). The record entry goes once the worktree and the tab are gone.
+Measured: release, stamp, Builder reaped, tab closed by herdr, entry deleted, from one command.
+The git guard and git hooks are unchanged and still the gate.
+
+## An empty branch had "reached the base"
+
+`git merge-base --is-ancestor` holds for a branch that never had a commit, because its tip is a
+base commit. The lab caught it twice in one run. The mod's board said "merged" for a Builder
+that had committed nothing, and `ticket-done.sh` stamped that ticket done (AST-158).
+
+- **The mod** records the commit a pane started at, once, at first registration. A reload
+  re-fires session start, and it rewrote that commit in the lab.
+- **`ticket-done.sh`** requires the tip to be the branch's own work. It compares against that
+  start commit when the record has one, and otherwise requires the tip to sit off the base's
+  first-parent line. A fast-forward lands on that line too, and passes on its subject as before.
+
+Selftest plants both shapes: the empty branch is refused, and the fast-forward is stamped.
+
+## Smaller changes
+
+- Lab finds fixed before shipping. herdr closes a Builder's tab when the release reaps the
+  Builder, so the record entry is now deleted when the tab is already gone. The plug's
+  `unreachable` answer no longer blocks dispatch.
+- Two ledger entries: `AST-157` (a gate on the step that usually follows, not the one that
+  always does) and `AST-158` (ancestry passes for no commits).
+
+## Upgrade from 2.14.0
+
+Copy `harness/`, or run `./install.sh <target> --apply`. If the project has no
+`.astraler/project/tracker-state.sh` yet, write it now: on a Claude root it is what the claim
+check reads. If its claim is a status or a label rather than an assignee, print `unclaimed`
+until that is set. Commit the updated mod with the payload.
+
 # Astragentic 2.14.0
 
 A downstream Thomas sent an account of its own day, and it was the cleanest evidence this
