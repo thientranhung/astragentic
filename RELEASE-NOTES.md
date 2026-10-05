@@ -1,3 +1,26 @@
+# Astragentic 2.15.8
+
+**A correction to the 2.15.7 notes, which got the cause wrong.** They called the
+`ticket-done.sh` failure a load-dependent flake. The reviewer of the first 2.15 adoption measured
+it as deterministic. `git rev-list --first-parent <base> | grep -qx <tip>` under `pipefail` fails
+every time the list exceeds a pipe buffer (64 KB, about 1600 commits) and the match comes early:
+`grep -q` exits, and the writer takes SIGPIPE. On that project's 2,392-commit history it failed
+10/10. The 2.15.0 empty-branch fix therefore never worked in any real repository. It held only
+on the short selftest fixture, which structurally cannot fail, which is why 30 isolated runs
+were green. The `grep -cx` form shipped in 2.15.7 is correct. The diagnosis was wrong.
+
+Selftest now builds an 1,800-commit history (74 KB of first-parent ids) and requires the empty
+branch to be refused there. Against the `grep -q` form that case fails on the first run.
+Same-shape sites were swept: every remaining `| grep -q` under `pipefail` reads a shell variable
+or a few lines, far below the buffer.
+
+**The rule worth keeping:** after a pipe under `pipefail`, `grep -q` is safe only while the
+producer's output stays below 64 KB. Past that, an early match fails the pipeline, every time.
+
+## Upgrade from 2.15.7
+
+Copy `harness/`, or run `./install.sh <target> --apply`. Only `scripts/selftest.sh` changes.
+
 # Astragentic 2.15.7
 
 A scope statement, from the reviewer of the first 2.15 adoption. The dispatch mod recognises a

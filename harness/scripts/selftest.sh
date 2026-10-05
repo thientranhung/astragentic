@@ -497,6 +497,29 @@ guard_in "$TD" allow "git push origin main"
 ( cd "$TD" && bash "$S/ticket-done.sh" ABC-12 --moved none ) >/dev/null 2>&1 \
   && ok "ticket-done stamps a fast-forwarded ticket by its subject" \
   || bad "ticket-done fast-forward" "refused a fast-forwarded ticket whose commit names it"
+# THE SAME EMPTY BRANCH, ON A HISTORY LONGER THAN A PIPE BUFFER. The check above lived as
+# `git rev-list --first-parent | grep -qx` under pipefail: grep -q exits at the first line, and
+# once rev-list has more than 64 KB to write it takes SIGPIPE, failing the pipeline and stamping
+# the empty branch. Deterministic past ~1600 commits (the reviewer measured 10/10 on a 2392-
+# commit project, 98 KB), invisible on the short fixture above — which is why it shipped.
+TB="$TMP/td-big"; mkdir -p "$TB"
+( cd "$TB" && git init -q -b main . && git config user.email t@t && git config user.name t \
+  && { for i in $(seq 1 1800); do
+         printf 'commit refs/heads/main\ncommitter t <t@t> %s +0000\ndata 3\nc%s\n' "$((1700000000+i))" "$((i % 10))"
+         [ "$i" -gt 1 ] || true
+       done; } | git fast-import --quiet \
+  && git remote add origin "$TB" && git update-ref refs/remotes/origin/main main \
+  && git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main \
+  && git checkout -q main && git branch builder/ABC-13 main ) >/dev/null 2>&1
+mkdir -p "$TB/.astraler/project"
+printf '#!/bin/sh\necho "closed -"\n' > "$TB/.astraler/project/tracker-state.sh"; chmod +x "$TB/.astraler/project/tracker-state.sh"
+if [ "$(git -C "$TB" rev-list --count main 2>/dev/null)" -ge 1700 ]; then
+  ( cd "$TB" && bash "$S/ticket-done.sh" ABC-13 --moved none ) >/dev/null 2>&1 \
+    && bad "ticket-done empty branch, long history" "stamped an empty branch once rev-list outran the pipe buffer" \
+    || ok "ticket-done refuses an empty branch on a history longer than a pipe buffer"
+else
+  bad "ticket-done long-history fixture" "fast-import did not build 1700+ commits"
+fi
 
 # ---------------------------------------------------------------------------------------------
 # The `Ledger:` line — a rule nothing could refuse until 2.9.0. Measured in this package on

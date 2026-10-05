@@ -3720,6 +3720,11 @@
     "refs": [],
     "commits": [
       {
+        "sha": "8267622391b3199043eb8a64d1b22b1c40e60bc3",
+        "date": "2026-10-05",
+        "subject": "2.15.7 — resident panes are out of the close guard, said plainly; ticket-done stops racing pipefail"
+      },
+      {
         "sha": "535f8b1c850406b32dcaba42f9bc58cb8d6ce82d",
         "date": "2026-10-05",
         "subject": "2.15.0 — the tracker is checked at the brief, and an empty branch stops counting as merged"

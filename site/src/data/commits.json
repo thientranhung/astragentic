@@ -1,5 +1,11 @@
 [
   {
+    "sha": "8267622391b3199043eb8a64d1b22b1c40e60bc3",
+    "date": "2026-10-05",
+    "subject": "2.15.7 — resident panes are out of the close guard, said plainly; ticket-done stops racing pipefail",
+    "ledger": "Ledger: none (AST-158's check, repaired)."
+  },
+  {
     "sha": "520342d9d68770e8d07945dc8318aba4d391f509",
     "date": "2026-10-05",
     "subject": "2.15.6 — the visibility proof checks every payload file, not one",
@@ -111,12 +117,6 @@
     "sha": "267c39bccbfa20150203bf7ddc718def8cc28bcc",
     "date": "2026-09-09",
     "subject": "site: command pane label reads \"Start agent qua CLI\"",
-    "ledger": "Ledger: none."
-  },
-  {
-    "sha": "f973788d1af535a6a3bbd4bb17f5713cc73c635b",
-    "date": "2026-09-08",
-    "subject": "site: show the orchestrator table verbatim",
     "ledger": "Ledger: none."
   }
 ]
