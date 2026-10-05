@@ -517,6 +517,33 @@ print(json.dumps({"hook_event_name":"PreToolUse","tool_name":"Bash","cwd":sys.ar
 case "$out" in *ABC-14*) bad "guard reads the default stamp home" "refused a push for ABC-14 whose stamp is in .git/astraler-stamps" ;;
                *) ok "the push guard reads stamps from the same default home" ;; esac
 
+# THE PUSH GATE AS A GIT HOOK. hook-git-guard.py is silent on a heredoc, a $(...) or a ( ... )
+# (26% of one day's commands downstream), and a ticket's merge reached origin/main unstamped
+# inside a heredoc. pre-push-ticket-done.sh sees git's own refs. Refused unstamped, refused when
+# the push sits in exactly the line shape the guard skips, allowed once stamped.
+PR="$TMP/pp"; rm -rf "$PR"; mkdir -p "$PR"; git init -q --bare "$PR/remote.git"
+( cd "$PR" && git init -q -b main work && cd work && git config user.email t@t && git config user.name t \
+  && git commit -q --allow-empty -m init && git remote add origin "$PR/remote.git" && git push -q origin main \
+  && git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main \
+  && mkdir -p hooks && printf '#!/bin/sh\nexec "%s" "$@"\n' "$S/pre-push-ticket-done.sh" > hooks/pre-push \
+  && chmod +x hooks/pre-push && git config core.hooksPath hooks \
+  && git checkout -qb builder/ABC-21 && git commit -q --allow-empty -m "ABC-21: x" \
+  && git checkout -q main && git merge -q --no-ff builder/ABC-21 -m "Merge ABC-21: x" ) >/dev/null 2>&1
+if ( cd "$PR/work" && HARNESS_STAMP_ROOT="$PR/stamps" git push -q origin main ) >/dev/null 2>&1; then
+  bad "pre-push gate" "an unstamped ticket merge was pushed to the base branch"
+else
+  ok "pre-push refuses an unstamped ticket merge on the base branch"
+fi
+if ( cd "$PR/work" && X="$(git rev-parse HEAD)" && HARNESS_STAMP_ROOT="$PR/stamps" git push -q origin main ) >/dev/null 2>&1; then
+  bad "pre-push gate, guard-blind shape" "a push behind a \$(...) went through, as it did past the guard"
+else
+  ok "pre-push refuses it in the line shape the guard cannot read"
+fi
+mkdir -p "$PR/stamps/harness-ticket-done"; : > "$PR/stamps/harness-ticket-done/ABC-21"
+( cd "$PR/work" && HARNESS_STAMP_ROOT="$PR/stamps" git push -q origin main ) >/dev/null 2>&1 \
+  && ok "pre-push admits the same push once the ticket is stamped" \
+  || bad "pre-push stamped" "refused a push whose ticket carries its stamp"
+
 # THE SAME EMPTY BRANCH, ON A HISTORY LONGER THAN A PIPE BUFFER. The check above lived as
 # `git rev-list --first-parent | grep -qx` under pipefail: grep -q exits at the first line, and
 # once rev-list has more than 64 KB to write it takes SIGPIPE, failing the pipeline and stamping

@@ -632,8 +632,14 @@ PY
     echo "Payload PARTIALLY applied — $N_CONFLICT conflict(s) outstanding."
     echo "The non-conflicting files are written; applied-version still names the previous"
     echo "release, so this checkout is a hybrid until each conflict above is decided."
-    echo "Resolve them, then re-run --apply. Where you deliberately keep the project's"
-    echo "version, stamp $VERSION into .astraler/state/applied-version by hand, say why, AND"
+    # THE HAND STAMP IS THE NORMAL EXIT, NOT A RARE ONE. A reconciled file differs from both the
+    # old release and the new one, so a re-run reports the same CONFLICT for ever: three-way
+    # arbitration can never clear it. Measured on the first adopted project, every upgrade with a
+    # conflict ended here. The old wording read as an escape for the unusual case.
+    echo "Reconcile each one (three-way against .astraler/releases/<applied>/harness). A re-run"
+    echo "will report the same CONFLICT for ever, because a reconciled file differs from both"
+    echo "releases. So once every conflict is reconciled, this is the normal way out: record each"
+    echo "decision in the receipt, stamp $VERSION into .astraler/state/applied-version, AND"
     echo "delete .astraler/state/apply-incomplete — that file is what says the work is not"
     echo "finished, and a stamp alone leaves it behind asserting the opposite."
     exit 3

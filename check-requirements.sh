@@ -420,6 +420,33 @@ else
   # owner-kept, so an upgraded project can carry an old settings file that never invokes it.
   # Neither state announces itself at runtime. It is caught here instead, where a doctor is
   # supposed to answer "is this install complete".
+  # THE PUSH GATE IS A GIT HOOK, AND A HOOK GIT NEVER RUNS IS NOT ONE. hook-git-guard.py is a
+  # lint that is silent on a heredoc, a $(...) or a ( ... ), measured at 26% of one day's
+  # commands downstream, and a ticket's merge went out unstamped inside one. The gate is
+  # scripts/pre-push-ticket-done.sh run as git's pre-push hook, which sees the exact refs
+  # whatever the command looked like. Resolve the directory git actually reads: core.hooksPath
+  # first, because it overrides .git/hooks entirely (ADAPT-HARNESS §6).
+  if [ "$ADAPTED" = "1" ]; then
+    HP="$(git -C "$TARGET" config --get core.hooksPath 2>/dev/null || true)"
+    if [ -n "$HP" ]; then
+      case "$HP" in /*) HD="$HP" ;; *) HD="$TARGET/$HP" ;; esac
+    else
+      HD="$(git -C "$TARGET" rev-parse --path-format=absolute --git-path hooks 2>/dev/null || true)"
+    fi
+    PP="$HD/pre-push"
+    if [ ! -f "$TARGET/scripts/pre-push-ticket-done.sh" ]; then
+      miss "scripts/pre-push-ticket-done.sh is missing after adaptation" "re-run the payload install"
+    elif [ ! -x "$PP" ]; then
+      miss "no executable pre-push hook at $PP — unstamped ticket merges can reach the base branch" \
+        "wire it: a pre-push hook that runs scripts/pre-push-ticket-done.sh \"\$@\" (chain it into an existing pre-push rather than replacing it)"
+    elif [ "$(grep -c 'pre-push-ticket-done' "$PP" 2>/dev/null || true)" -eq 0 ]; then
+      miss "the pre-push hook at $PP does not call scripts/pre-push-ticket-done.sh" \
+        "add a line running it with the hook's arguments and stdin; the push gate is not armed"
+    else
+      ok "pre-push gate wired ($PP calls pre-push-ticket-done.sh)"
+    fi
+  fi
+
   if [ "$ADAPTED" = "1" ]; then
     if [ -f "$TARGET/scripts/hook-git-guard.py" ]; then
       ok "scripts/hook-git-guard.py present"

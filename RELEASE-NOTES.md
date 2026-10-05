@@ -1,3 +1,37 @@
+# Astragentic 2.16.0
+
+**The push gate moves into git.** The rule is unchanged: a push that lands a ticket's merge on the
+base branch needs that ticket's ticket-done stamp. It used to live only in `hook-git-guard.py`,
+which reads the command line a session is about to run and declares itself a lint, silent on any
+line holding a heredoc, a `$(...)` or a `( ... )`. The reviewer of the first 2.15 adoption measured
+that on one day's log: **84 of 319 commands (26%) went unread**, and the one push the rule existed
+for went out inside a heredoc. A ticket's merge reached `origin/main` about a minute before its
+stamp existed. The reviewer proved the mechanism with a command the guard must always refuse:
+`git add -A` behind a `$(...)` passed.
+
+`scripts/pre-push-ticket-done.sh` is now the gate. It runs as git's pre-push hook, reads the exact
+refs git is about to push, and refuses unstamped ticket merges on the base. It does so however
+the command was written, from any runtime, and when a person pushes too. Bypassing it takes
+`git push --no-verify`, a deliberate act. The guard keeps the rule as an early reminder, and its
+docstring now carries the 26% figure: "lint" here means one command in four unseen.
+
+- `check-requirements.sh --adapted` resolves the hooks directory git actually reads
+  (`core.hooksPath` first) and reports MISS until `pre-push` calls the script.
+- ADAPT-HARNESS §6 adds the wiring step: chain into an existing pre-push, and prove a refusal.
+- Selftest pushes to a real bare remote: refused unstamped, refused in the guard-blind `$(...)`
+  shape, admitted once stamped.
+
+**Wording:** `install.sh`'s conflict exit now says plainly that recording each decision,
+stamping by hand and deleting `apply-incomplete` is the normal way out of any reconciled upgrade.
+A reconciled file differs from both releases, so a re-run reports the same CONFLICT for ever.
+The old wording read as an escape for the unusual case. Raised by the same reviewer.
+
+## Upgrade from 2.15.10
+
+Copy `harness/`, or run `./install.sh <target> --apply`, then **wire the pre-push hook**
+(ADAPT-HARNESS §6). Until it is wired, `check-requirements --adapted` is red and the push gate is
+only the guard's lint.
+
 # Astragentic 2.15.10
 
 From the reviewer of the first 2.15 adoption.

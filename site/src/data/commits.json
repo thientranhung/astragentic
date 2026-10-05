@@ -1,5 +1,11 @@
 [
   {
+    "sha": "1f4921cbdff4dd50f18202eb6d6e107e81ecf439",
+    "date": "2026-10-05",
+    "subject": "2.15.10 — stamps survive a reboot; an unreadable record says so",
+    "ledger": "Ledger: none."
+  },
+  {
     "sha": "781164220bcd82a994436853481ddb97ba7516d2",
     "date": "2026-10-05",
     "subject": "2.15.9 — the watchdog stops crying WATCHER_LOST at self-reporting panes; a fast ack stops sticking",
@@ -111,12 +117,6 @@
     "sha": "01f5befb7ebb5a55e860b60519c71f0a1c9fe110",
     "date": "2026-09-09",
     "subject": "site: English team caption matches",
-    "ledger": "Ledger: none."
-  },
-  {
-    "sha": "fb08dbc18e4d994cbf2112f88829f33d233a62ee",
-    "date": "2026-09-09",
-    "subject": "site: team picture caption from the client's seat",
     "ledger": "Ledger: none."
   }
 ]

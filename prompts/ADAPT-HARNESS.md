@@ -458,6 +458,14 @@ Run checks proportional to what changed:
   in the project's entry doc. A project that declines the mechanism records that instead — an
   honest decline beats a hook that watches an empty manifest;
 
+- **Wire the push gate as git's pre-push hook.** `scripts/pre-push-ticket-done.sh` refuses a push
+  that lands a ticket's merge on the base branch without its ticket-done stamp. It is the gate;
+  `hook-git-guard.py`'s push rule is an early reminder that does not read a line holding a heredoc,
+  a `$(...)` or a `( ... )` (26% of one downstream day's commands). Resolve the hooks directory the
+  same way as for pre-commit above, `core.hooksPath` first, and chain into an existing pre-push
+  rather than replacing it: `scripts/pre-push-ticket-done.sh "$@"` with the hook's stdin. Prove it
+  refuses: on a scratch clone, push an unstamped `Merge ABC-1: x` and watch it fail.
+  `check-requirements.sh --adapted` reports the hook as MISS until it is wired;
 - **A project that gitignores `.astraler/` must say so here.** `check-reachability.sh` reads
   its ownership manifest from the staged release and hard-fails at check 0 when that
   directory is absent — so on a fresh clone of such a project the gate can never pass. Either

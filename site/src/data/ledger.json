@@ -1215,6 +1215,7 @@
       "dispatch-qa-walk",
       "dispatch-ticket-claude",
       "hook-git-guard.py",
+      "pre-push-ticket-done.sh",
       "reconcile-tracker",
       "register.tsx",
       "release-worktree-resources.sh",
@@ -1245,6 +1246,11 @@
         "name": "hook-git-guard.py",
         "kind": "file",
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/hook-git-guard.py"
+      },
+      {
+        "name": "pre-push-ticket-done.sh",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/pre-push-ticket-done.sh"
       },
       {
         "name": "reconcile-tracker",
@@ -1415,6 +1421,7 @@
       "hook-contract-reload.py",
       "hook-git-guard.py",
       "hook-tracker-status.py",
+      "pre-push-ticket-done.sh",
       "selftest.sh",
       "thomas.md"
     ],
@@ -1447,6 +1454,11 @@
         "name": "hook-tracker-status.py",
         "kind": "file",
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/hook-tracker-status.py"
+      },
+      {
+        "name": "pre-push-ticket-done.sh",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/pre-push-ticket-done.sh"
       },
       {
         "name": "selftest.sh",
@@ -3688,12 +3700,20 @@
     "lesson": "The tracker write-back was refused at the one command a merge does not always pass through",
     "status": "promoted",
     "words": 248,
-    "citedBy": [],
+    "citedBy": [
+      "pre-push-ticket-done.sh"
+    ],
     "indexLine": 171,
     "entryLine": 4178,
     "promotedOn": "2026-10-05",
     "entry": "### AST-157 — The tracker write-back was refused at the one command a merge does not always pass through · promoted 2026-10-05\n\nThe owner's account of the tracker, across projects: a dispatched ticket keeps its ready\nstatus and label, and a finished one is closed sometimes and sometimes not. The close side had\na gate since 2.8. `hook-git-guard.py` refuses a push of the base while a merge in the range\nnames a ticket with no `ticket-done` stamp. That push is the gate's only moment, and two merge\nshapes never reach it. `gh pr merge` lands on the remote, so no local base is pushed. A merge\nheld for a gate is pushed hours later, if at all. The claim side had no gate, only the claim\nprotocol in prose.\n\nBoth moved to the moment every dispatch does pass through: the brief. On a Claude root the\ndispatch mod asks the project's `tracker-state.sh` before sending one. A ticket reported\nunclaimed is not sent, and while any Builder ticket has reached the base with no stamp, no brief\nis sent at all. The note also rides the merge command's own result, so it lands in the turn\nthat merged. Measured 2026-10-05 against a stub tracker: the unclaimed brief was refused and\nthe Builder received nothing. …",
-    "refs": [],
+    "refs": [
+      {
+        "name": "pre-push-ticket-done.sh",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/pre-push-ticket-done.sh"
+      }
+    ],
     "commits": [
       {
         "sha": "aec8c7d16e780aa41eca157cf248abcda9084366",

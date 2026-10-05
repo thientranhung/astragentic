@@ -69,7 +69,7 @@ from this table — read the entry.
 | `AST-054` | `git add -A` committed two releases nobody ever applied | promoted | 146 | hook-git-guard.py |
 | `AST-055` | A gate that reads the subject cannot see which pass wrote it | promoted | 325 | builder-claude.md,builder-codex.md,builder-opencode.md,check-reachability.sh,rin-claude.md,rin-codex.md,rin-opencode.md,rin.md,shaper.md,thomas-claude.md |
 | `AST-056` | A blocking edge expresses order, not exclusion | promoted | 329 | dispatch-qa-walk,dispatch-ticket,thomas.md |
-| `AST-057` | A frontier that is only computed is invisible to the one person who cannot compute | promoted | 689 | check-reachability.sh,dispatch-qa-walk,dispatch-ticket-claude,hook-git-guard.py,reconcile-tracker,register.tsx,release-worktree-resources.sh,thomas.md,ticket-done.sh |
+| `AST-057` | A frontier that is only computed is invisible to the one person who cannot compute | promoted | 689 | check-reachability.sh,dispatch-qa-walk,dispatch-ticket-claude,hook-git-guard.py,pre-push-ticket-done.sh,reconcile-tracker,register.tsx,release-worktree-resources.sh,thomas.md,ticket-done.sh |
 | `AST-058` | The check after the step reported clean when the step was impossible | promoted | 271 |   |
 | `AST-059` | The repo kept one self-check and lost the other to a directory it may ignore | promoted | 193 |   |
 | `AST-060` | Check 3 printed green about the skills it had not opened | promoted | 170 |   |
@@ -80,7 +80,7 @@ from this table — read the entry.
 | `AST-065` | Two reviewers sharing one name, each in the other's contract | promoted | 189 |   |
 | `AST-066` | A review bound to the wrong checkout returns clean without reading anything | promoted | 255 |   |
 | `AST-068` | A lesson closed at instance level reopens at class level | promoted | 259 |   |
-| `AST-069` | An instruction with no moment attached measures zero | promoted | 272 | check-reachability.sh,dispatch-ticket-claude,hook-contract-reload.py,hook-git-guard.py,hook-tracker-status.py,selftest.sh,thomas.md |
+| `AST-069` | An instruction with no moment attached measures zero | promoted | 272 | check-reachability.sh,dispatch-ticket-claude,hook-contract-reload.py,hook-git-guard.py,hook-tracker-status.py,pre-push-ticket-done.sh,selftest.sh,thomas.md |
 | `AST-070` | A bounded exception nobody asked for is a contradiction carried on speculation | promoted | 275 | dispatch-ticket,ledger-rules.py |
 | `AST-071` | Every check asked whether a thing was NAMED, none asked whether anything READ it | promoted | 312 | check-reachability.sh |
 | `AST-072` | Self-monitoring shipped without proof it cannot harm what it monitors | promoted | 345 | herdr-watchdog.sh |
@@ -168,5 +168,5 @@ from this table — read the entry.
 | `AST-154` | The obvious retry for an unsent brief fused it with the next one and reported success | promoted | 133 | dispatch-ticket |
 | `AST-155` | The teardown removed what it started and kept what it built | promoted | 247 | CLEANUP.md,release-worktree-resources.sh,selftest.sh |
 | `AST-156` | Three dispatch steps had no lock, and the same agent skipped two of them on the same day | promoted | 369 |   |
-| `AST-157` | The tracker write-back was refused at the one command a merge does not always pass through | promoted | 248 |   |
+| `AST-157` | The tracker write-back was refused at the one command a merge does not always pass through | promoted | 248 | pre-push-ticket-done.sh |
 | `AST-158` | "Its commits reached the base" passed for a branch that had no commits | promoted | 195 |   |

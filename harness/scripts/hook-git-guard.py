@@ -38,6 +38,12 @@ now recognises ONE shape — simple commands separated by unquoted operators —
 on anything containing a substitution, heredoc, comment, reserved word, wrapper or interpreter.
 Silence there is the design, not a gap: a coverage claim that is not true is worse than none.
 
+HOW MUCH THAT SILENCE COVERS, MEASURED. On one downstream day's log, 84 of 319 commands (26%)
+held a heredoc, a $(...) or a ( ... ) and were not read at all, and the only push this guard
+existed to stop went out inside a heredoc. "Lint" here means one command in four unseen, not
+"catches most". So the push rule is no longer this file's: scripts/pre-push-ticket-done.sh runs
+as git's pre-push hook and sees the exact refs. This guard still says it early, when it can.
+
 That is why the contract is `dispatch-ticket/CLEANUP.md` and this file is a second layer under
 it. An OpenCode Builder has no equivalent hook, and either Claude or Codex may run with hooks
 disabled or untrusted, so every Builder must still get the ordering right. If a rule matters,
