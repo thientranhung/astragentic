@@ -465,7 +465,15 @@ Run checks proportional to what changed:
   same way as for pre-commit above, `core.hooksPath` first, and chain into an existing pre-push
   rather than replacing it: `scripts/pre-push-ticket-done.sh "$@"` with the hook's stdin. Prove it
   refuses: on a scratch clone, push an unstamped `Merge ABC-1: x` and watch it fail.
-  `check-requirements.sh --adapted` reports the hook as MISS until it is wired;
+  `check-requirements.sh --adapted` reports the hook as MISS until it is wired. Two traps, both
+  silent, found wiring it beside an existing pre-push gate. **Git sends the ref list on stdin
+  once**: a second gate chained after one that read it gets nothing, refuses nothing, and the
+  name-grep in `check-requirements` still passes. Read stdin once into a variable and feed each
+  gate from a heredoc, not a pipe, because an `exit 1` inside a piped `while` only leaves the
+  subshell. Run the gate that needs no network first, because a gate that exits 0 early when
+  `gh` is missing skips everything after it. **An absolute `core.hooksPath` pointing at the
+  main checkout makes every worktree run main's hooks**, so the gate takes effect only once it
+  is merged to main, and one place can disable it for all;
 - **A project that gitignores `.astraler/` must say so here.** `check-reachability.sh` reads
   its ownership manifest from the staged release and hard-fails at check 0 when that
   directory is absent — so on a fresh clone of such a project the gate can never pass. Either

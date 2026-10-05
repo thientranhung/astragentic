@@ -565,7 +565,25 @@ export const register: Register = on => {
     const remove = e.command.match(/\bgit\s+(?:-C\s+\S+\s+)?worktree\s+remove\s+((?:-f\s+|--force\s+)*)['"]?([^\s'"]+)/)
     if (remove) {
       const isForced = Boolean(remove[1])
-      const target = await realpath($, remove[2] ?? '')
+      const raw = remove[2] ?? ''
+      // UNREADABLE IS REFUSED HERE, NOT ALLOWED. This hook runs before the shell, so
+      // `git worktree remove $(pwd)/$W` arrives with the variables unexpanded, matches no record,
+      // and used to fall through every protection below — the mid-turn refusal included. Measured
+      // downstream on the command Thomas actually typed. Removal destroys work and cannot be
+      // undone, so a path this hook cannot resolve to a worktree git lists is refused, with the
+      // remedy: pass it as a literal path. There is no pre-worktree-remove git hook to move this to.
+      const listed = await run($, ['git', '-C', root, 'worktree', 'list', '--porcelain'])
+      const known = listed.code === 0
+        ? listed.out.split('\n').filter(l => l.startsWith('worktree ')).map(l => l.slice('worktree '.length))
+        : []
+      const knownReal = await Promise.all(known.map(k => realpath($, k)))
+      if (/[$`~]/.test(raw)) {
+        return { deny: `astragentic-dispatch: cannot tell which worktree "${raw}" is — it is expanded by the shell after this check runs. Pass the worktree as a literal absolute path.` }
+      }
+      const target = await realpath($, raw)
+      if (listed.code === 0 && !knownReal.includes(target)) {
+        return { deny: `astragentic-dispatch: "${raw}" resolves to ${target}, which is not a worktree of this repository (git worktree list). Pass the worktree's literal absolute path.` }
+      }
       const hit = Object.entries(rec).find(([, entry]) => typeof entry?.worktree === 'string' && entry.worktree === target)
       if (hit && (await exists($, target))) {
         const [key, entry] = hit

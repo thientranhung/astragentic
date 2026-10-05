@@ -1278,7 +1278,13 @@
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/scripts/ticket-done.sh"
       }
     ],
-    "commits": []
+    "commits": [
+      {
+        "sha": "84106ad6c2b7b1c0d56bd8449a651f58e38a0672",
+        "date": "2026-10-05",
+        "subject": "2.16.0 — the push gate moves into git's pre-push hook"
+      }
+    ]
   },
   {
     "id": "AST-058",
@@ -3715,6 +3721,11 @@
       }
     ],
     "commits": [
+      {
+        "sha": "84106ad6c2b7b1c0d56bd8449a651f58e38a0672",
+        "date": "2026-10-05",
+        "subject": "2.16.0 — the push gate moves into git's pre-push hook"
+      },
       {
         "sha": "aec8c7d16e780aa41eca157cf248abcda9084366",
         "date": "2026-10-05",

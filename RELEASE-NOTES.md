@@ -1,3 +1,27 @@
+# Astragentic 2.16.1
+
+**The mid-turn worktree protection was bypassed by an ordinary command.** Reported by the
+reviewer of the first adoption, from a command Thomas actually typed:
+`git worktree remove $(pwd)/$W`. The dispatch mod reads the command before the shell expands
+it, so it saw the literal `$(pwd)/$W`, matched no record, and skipped every protection inside
+that match. That included the refusal to remove a worktree whose agent is mid-turn, which is
+the destroy-live-work case the record exists to stop. On a destructive operation that cannot
+be undone, "cannot read it" had meant "allow". There is no pre-worktree-remove git hook to move
+this to, so the direction of failure changes instead. A path holding `$`, a backtick or `~`,
+or one that does not resolve to a worktree `git worktree list` knows, is refused with "pass the
+worktree as a literal path". Measured in a lab: the variable form refused, a non-worktree path
+refused, the literal path removed the worktree. The reviewer also traced that auto-release had
+likely never fired on that project for the same reason.
+
+ADAPT-HARNESS §6 gains two traps found wiring the 2.16.0 pre-push gate beside an existing one.
+Git sends the ref list on stdin once, so chained gates must share one read. An absolute
+`core.hooksPath` pointing at main makes every worktree run main's hooks.
+
+## Upgrade from 2.16.0
+
+Copy `harness/`, or run `./install.sh <target> --apply`. The mod and `dispatch-ticket-claude`
+change. Remove worktrees by literal path from now on; a variable path is refused.
+
 # Astragentic 2.16.0
 
 **The push gate moves into git.** The rule is unchanged: a push that lands a ticket's merge on the

@@ -134,6 +134,11 @@ at once, in the turn that read the note.
 
 ## Cleanup: the release runs at removal
 
+**Pass the worktree as a literal path.** A path with `$`, a backtick or `~`, or one that is not a
+worktree `git worktree list` knows, is refused: this hook runs before the shell expands
+variables, and `git worktree remove $(pwd)/$W` used to match no record and slip past every
+protection below, including the mid-turn refusal (measured downstream).
+
 `git worktree remove <path>` on a recorded worktree runs `release-worktree-resources.sh <path>`
 first: it reaps processes rooted there, runs the project's teardown plug and stamps the path.
 It runs only when the worktree's agent is not mid-turn and its tree is clean, or `--force` was

@@ -1,5 +1,11 @@
 [
   {
+    "sha": "84106ad6c2b7b1c0d56bd8449a651f58e38a0672",
+    "date": "2026-10-05",
+    "subject": "2.16.0 — the push gate moves into git's pre-push hook",
+    "ledger": "Ledger: none (AST-057, AST-157; the guard's docstring carries the 26%)."
+  },
+  {
     "sha": "1f4921cbdff4dd50f18202eb6d6e107e81ecf439",
     "date": "2026-10-05",
     "subject": "2.15.10 — stamps survive a reboot; an unreadable record says so",
@@ -111,12 +117,6 @@
     "sha": "9bfaa0e976c1cbb996478d184de759fa6e8cf454",
     "date": "2026-09-09",
     "subject": "site: say what a ticket is before dispatching one",
-    "ledger": "Ledger: none."
-  },
-  {
-    "sha": "01f5befb7ebb5a55e860b60519c71f0a1c9fe110",
-    "date": "2026-09-09",
-    "subject": "site: English team caption matches",
     "ledger": "Ledger: none."
   }
 ]
