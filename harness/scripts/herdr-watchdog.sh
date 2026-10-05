@@ -537,7 +537,13 @@ except Exception:
 # fires on pane state alone.
 plug = os.path.join(project_root, ".astraler", "project", "work-in-flight.sh")
 in_flight = False
-if os.path.isfile(plug):
+# A plug that exists but cannot run is neither answer. It used to raise below and read as IN
+# FLIGHT on every poll, so a forgotten chmod muted STUCK for good while a missing plug stayed
+# loud: the worse state was the quieter one. It now reads as no plug, and says so by name.
+if os.path.isfile(plug) and not os.access(plug, os.X_OK):
+    print(f"PLUG_BROKEN|work_in_flight_plug|{plug} exists but is not executable, so STUCK "
+          f"is judged on pane state alone. chmod +x it.")
+elif os.path.isfile(plug):
     try:
         in_flight = subprocess.run([plug], cwd=project_root, capture_output=True,
                                    timeout=10).returncode != 1

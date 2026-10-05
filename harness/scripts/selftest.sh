@@ -1040,6 +1040,12 @@ else
   out="$(wd_polls working idle idle)"
   case "$out" in *STUCK*) bad "work-in-flight plug, broken" "a plug that errored read as nothing-in-flight: '$out'" ;;
                  *) ok "a work-in-flight plug that errors reads as in flight" ;; esac
+  # A plug present without its exec bit raised inside the watchdog and read as IN FLIGHT on
+  # every poll: STUCK muted for good, by a forgotten chmod (found supervising an adoption).
+  printf '#!/bin/sh\nexit 0\n' > "$W/proj/.astraler/project/work-in-flight.sh"; chmod -x "$W/proj/.astraler/project/work-in-flight.sh"
+  out="$(wd_polls working idle idle)"
+  case "$out" in *STUCK*) ok "a non-executable work-in-flight plug does not mute STUCK" ;;
+                 *) bad "work-in-flight plug, not executable" "STUCK went quiet behind a plug that cannot run: '$out'" ;; esac
   rm -f "$W/proj/.astraler/project/work-in-flight.sh"
 fi
 

@@ -1,3 +1,22 @@
+# Astragentic 2.15.2
+
+Found by the read-only reviewer of the first project to adopt 2.15. A
+`.astraler/project/work-in-flight.sh` that exists without its exec bit raised inside
+`herdr-watchdog.sh`, fell into the "cannot tell, assume in flight" branch, and read as IN FLIGHT
+on every poll. STUCK was muted for good by a forgotten `chmod`, while a project with no plug at
+all stayed loud: the worse state was the quieter one (AST-124). The plug is written by hand
+during adaptation, and nothing refused a missing exec bit.
+
+A plug that exists but cannot run now reads as no plug, so STUCK is judged on pane state, and
+the watchdog sends `PLUG_BROKEN` naming the file. Selftest plants a non-executable plug and
+requires STUCK to fire. Against the 2.15.1 watchdog the case fails.
+
+## Upgrade from 2.15.1
+
+Copy `harness/`, or run `./install.sh <target> --apply`. Only `scripts/herdr-watchdog.sh` and
+`scripts/selftest.sh` change. If the project has a `work-in-flight.sh`, check it is executable;
+from this release a `PLUG_BROKEN` alert says so when it is not.
+
 # Astragentic 2.15.1
 
 Found while supervising the first project to take 2.15.0. An upgrade that stops on conflicts
