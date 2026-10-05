@@ -58,7 +58,10 @@ try: print(json.load(open(sys.argv[1])).get(sys.argv[2], {}).get("start_sha", ""
 except Exception: print("")' "$ROOT/.astraler/state/dispatch-record.json" "$ID" 2>/dev/null || true)"
     if [ -n "$start" ]; then
       [ "$tip" != "$start" ] && own=yes || own=no
-    elif git rev-list --first-parent "refs/heads/$BASE" | grep -qx "$tip"; then
+    # Counted, never `grep -q`: with pipefail, -q exits on the first match and rev-list can take
+    # SIGPIPE while still writing, so the pipeline fails exactly when the tip is the newest base
+    # commit (the empty-branch case) and the branch read as merged. Flaked once in selftest.
+    elif [ "$(git rev-list --first-parent "refs/heads/$BASE" | grep -cx "$tip")" -gt 0 ]; then
       own=no
     else
       own=yes

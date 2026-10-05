@@ -1,3 +1,28 @@
+# Astragentic 2.15.7
+
+A scope statement, from the reviewer of the first 2.15 adoption. The dispatch mod recognises a
+pane as dispatched only by its tab label (`ticket:` / `spec:` / `qa:` / `rin:`), so its refusal
+to close a mid-turn pane covers dispatched panes and no others. Resident panes, such as a
+deploy worker or a design or harness partner, have no record entry, and closing one goes
+through. `dispatch-ticket-claude` § What the mod cannot see now says so, so that "the mod
+blocks closing a working pane" is not read wider than it is. Covering resident panes is an
+open design question: a label the mod recognises, not a restart.
+
+## `ticket-done.sh` could stamp an empty branch under load
+
+The 2.15.0 fix for empty branches asked `git rev-list --first-parent <base> | grep -qx <tip>`.
+With `pipefail`, `grep -q` exits on the first match, and `rev-list` can take SIGPIPE while still
+writing. The pipeline then fails, and it fails in exactly the empty-branch case, where the tip is
+the newest base commit and the first line out. The branch read as merged and was stamped done.
+Selftest caught it once, while the box was busy; 30 isolated runs passed, which is why it
+shipped. It now counts with `grep -cx`, which reads all its input. Three consecutive selftest
+runs pass.
+
+## Upgrade from 2.15.6
+
+Copy `harness/`, or run `./install.sh <target> --apply`. `dispatch-ticket-claude` and
+`scripts/ticket-done.sh` change.
+
 # Astragentic 2.15.6
 
 From the reviewer's pre-dispatch check on the first 2.15 adoption. That project ignores
