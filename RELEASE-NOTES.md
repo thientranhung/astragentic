@@ -1,3 +1,17 @@
+# Astragentic 2.15.3
+
+Found applying 2.15.1 to the first adopted project. Selftest's codex-launcher section copied its
+fixture from `$ROOT/harness/.agents`, a path that exists only in this package. In every adopted
+project, all six codex cases failed while passing here: a test that has only ever been green
+where it was written. The fixture is now the generic scaffold from the staged release
+(`.astraler/releases/<CANDIDATE>/harness`) in an adapted project, and harness/ in the package.
+Measured on that project: 6 failures before, 0 after, with the project's own tuned
+orchestrator never read.
+
+## Upgrade from 2.15.2
+
+Copy `harness/`, or run `./install.sh <target> --apply`. Only `scripts/selftest.sh` changes.
+
 # Astragentic 2.15.2
 
 Found by the read-only reviewer of the first project to adopt 2.15. A

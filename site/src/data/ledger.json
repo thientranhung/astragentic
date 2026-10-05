@@ -2861,7 +2861,13 @@
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.claude/agents/thomas.md"
       }
     ],
-    "commits": []
+    "commits": [
+      {
+        "sha": "057ae900c355db93fecb6d9e7d47655c3fd4c646",
+        "date": "2026-10-05",
+        "subject": "2.15.2 — a plug that cannot run stops muting the watchdog"
+      }
+    ]
   },
   {
     "id": "AST-125",

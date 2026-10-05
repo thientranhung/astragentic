@@ -901,12 +901,20 @@ fi
 echo "codex launcher — a row that names no model, a file that is not there, a mechanism that retired"
 
 CR="$ROOT/check-requirements.sh"; [ -f "$CR" ] || CR="$S/check-requirements.sh"
-if [ -f "$CR" ]; then
+if [ -f "$CR" ] && { [ "$LAYOUT" = package ] || [ -d "$ROOT/.astraler/releases/$(cat "$ROOT/.astraler/CANDIDATE" 2>/dev/null)/harness/.agents" ]; }; then
   CFIX="$TMP/cqfix"
+  # The fixture is the GENERIC scaffold, never the project's own tuned orchestrator. In package
+  # layout that is harness/; in an adapted project it is the staged release. `$ROOT/harness`
+  # alone does not exist downstream, so all six cases below failed in every adopted project
+  # (found on the first 2.15 adoption) while passing here.
+  CSRC="$ROOT/harness"
+  if [ "$LAYOUT" = project ]; then
+    CSRC="$ROOT/.astraler/releases/$(cat "$ROOT/.astraler/CANDIDATE" 2>/dev/null)/harness"
+  fi
   cfresh() {
     rm -rf "$CFIX"; mkdir -p "$CFIX"
-    cp -R "$ROOT/harness/.agents" "$CFIX/.agents"
-    cp -R "$ROOT/harness/.codex"  "$CFIX/.codex"
+    cp -R "$CSRC/.agents" "$CFIX/.agents"
+    cp -R "$CSRC/.codex"  "$CFIX/.codex"
   }
   crow() { python3 - "$CFIX" "$1" <<'EOS'
 import sys, os, re

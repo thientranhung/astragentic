@@ -1,5 +1,11 @@
 [
   {
+    "sha": "057ae900c355db93fecb6d9e7d47655c3fd4c646",
+    "date": "2026-10-05",
+    "subject": "2.15.2 — a plug that cannot run stops muting the watchdog",
+    "ledger": "Ledger: none (an instance of AST-124)."
+  },
+  {
     "sha": "56c0af5f6f67ecba5bdbe0b021f37c379cf72c65",
     "date": "2026-10-05",
     "subject": "2.15.1 — a half-applied harness upgrade holds every brief",
@@ -111,12 +117,6 @@
     "sha": "9e2f31d5d42e0352eac2caa8b51b2bc40ba77ef6",
     "date": "2026-09-08",
     "subject": "site: 404 chrome follows the address language",
-    "ledger": "Ledger: none."
-  },
-  {
-    "sha": "c835b2862be182f14b413f848ba335fd04e217e7",
-    "date": "2026-09-08",
-    "subject": "site: one nav geometry on every page",
     "ledger": "Ledger: none."
   }
 ]
