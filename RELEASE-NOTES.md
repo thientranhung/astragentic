@@ -1,3 +1,28 @@
+# Astragentic 2.15.4
+
+Found by the read-only reviewer of the first 2.15 adoption, which caught a claim the
+adapting session made: that `check-requirements.sh`'s `[MISS] … uncommitted-but-tracked` would
+hold the first dispatch. Nothing read that MISS at dispatch. The doctor runs at adaptation, and
+an `orchestrator.md` edit left uncommitted in the main checkout would have gone into the first
+brief, read by the dispatcher and not by any worktree (AST-036).
+
+The dispatch mod already refused a brief while `apply-incomplete` exists, for that same reason.
+It now also refuses one while any file of the applied release's payload is modified or
+untracked in this checkout, and the refusal lists the paths with what to do about each. The
+reviewer measured the scope before release: about one commit in six on that project passes
+through this state, mostly a rule half-written into `thomas.md`. A gate whose only way through
+is committing something unfinished teaches committing rubbish, so a brief carrying
+`Uncommitted-payload: <why this brief is unaffected>` goes through, and the line reaches the
+agent with the brief. Generated files (`INDEX.md`, `RULES.md`) are named with the command that
+regenerates them. Measured in a lab repo: an edited payload file was named and refused, and an
+edited product file beside it was not named.
+
+## Upgrade from 2.15.3
+
+Copy `harness/`, or run `./install.sh <target> --apply`. The mod and `dispatch-ticket-claude`
+change. Commit or revert any payload edit sitting in the main checkout before dispatching; from
+this release a brief will not go while one is there.
+
 # Astragentic 2.15.3
 
 Found applying 2.15.1 to the first adopted project. Selftest's codex-launcher section copied its

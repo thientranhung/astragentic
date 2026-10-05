@@ -107,6 +107,16 @@ dispatch passes through, so the checks sit there, on the answer of the project's
   conflicts leaves `.astraler/state/apply-incomplete`, and the unreconciled files are the role
   contracts the next agent reads. While the marker exists, no brief is sent, and the refusal
   lists the paths. Reconcile them, stamp `applied-version`, then delete the marker.
+- **Payload edited but not committed holds every brief.** A worktree checks out HEAD, so a
+  payload file edited in the main checkout (a role contract, `orchestrator.md`) reaches the
+  dispatcher and never the agent (AST-036). While any file of the applied release's payload is
+  modified or untracked here, no brief is sent, and the refusal lists them with what to do.
+  Commit or revert; or, when this brief does not depend on them, add a line
+  `Uncommitted-payload: <why this brief is unaffected>`, which goes through and reaches the
+  agent with the brief. Measured downstream: about one commit in six passes through this state
+  in ordinary work, so a gate with no way through except committing half-written rules would
+  teach committing them. `check-requirements.sh` reports the same state, but only at
+  adaptation: after the first upgrade it was measured letting the first dispatch through.
 - **No answer, no check.** An absent plug, one that fails, and one that prints `unreachable` are
   an empty socket: briefs go, and `scripts/ticket-done.sh` stamps the tracker half as unverified, as before.
   A check that cannot answer must not refuse every dispatch.

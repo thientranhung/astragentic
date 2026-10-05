@@ -1,5 +1,11 @@
 [
   {
+    "sha": "ecc92f58151dc378d78804892c066841afbb9bb4",
+    "date": "2026-10-05",
+    "subject": "2.15.3 — the codex selftest stops failing in every adopted project",
+    "ledger": "Ledger: none."
+  },
+  {
     "sha": "057ae900c355db93fecb6d9e7d47655c3fd4c646",
     "date": "2026-10-05",
     "subject": "2.15.2 — a plug that cannot run stops muting the watchdog",
@@ -111,12 +117,6 @@
     "sha": "c072e536da7420678069e191f6f31de938598836",
     "date": "2026-09-08",
     "subject": "site: one island width, Home in the nav",
-    "ledger": "Ledger: none."
-  },
-  {
-    "sha": "9e2f31d5d42e0352eac2caa8b51b2bc40ba77ef6",
-    "date": "2026-09-08",
-    "subject": "site: 404 chrome follows the address language",
     "ledger": "Ledger: none."
   }
 ]

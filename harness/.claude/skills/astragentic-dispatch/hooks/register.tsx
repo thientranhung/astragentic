@@ -213,6 +213,34 @@ async function owedTickets($: any, root: string): Promise<string[]> {
   return owed
 }
 
+// The payload paths are the files of the release this checkout applied. `git status` runs
+// without pathspecs because a pathspec through a symlinked skill directory is refused outright.
+async function dirtyPayload($: any, root: string): Promise<string[]> {
+  let applied = ''
+  try {
+    applied = (await $.fs.read(`${root}/.astraler/state/applied-version`)).trim()
+  } catch {
+    return []
+  }
+  const rel = `${root}/.astraler/releases/${applied}/harness`
+  const listed = await run($, ['find', rel, '-type', 'f', '!', '-name', '.DS_Store'])
+  if (!applied || listed.code !== 0) return []
+  const payload = new Set(listed.out.split('\n').filter(Boolean).map(p => p.slice(rel.length + 1)))
+  // Not through run(): it trims, and the first porcelain line starts with a status space.
+  let out = ''
+  try {
+    const r = await $.process.run(['git', '-C', root, 'status', '--porcelain', '--untracked-files=all'], { timeoutMs: 15_000 })
+    if (r.exitCode !== 0) return []
+    out = r.stdout
+  } catch {
+    return []
+  }
+  return out.split('\n')
+    .map(line => ({ code: line.slice(0, 2), path: line.slice(3).replace(/^"|"$/g, '') }))
+    .filter(entry => payload.has(entry.path))
+    .map(entry => `${entry.code} ${entry.path}`)
+}
+
 function owedText(owed: string[]): string {
   return `${owed.join(', ')} reached the base but ${owed.length > 1 ? 'have' : 'has'} no ticket-done evidence. ` +
     `Owed now: set the tracker to closed and release the assignee (docs/agents/issue-tracker.md), ` +
@@ -403,6 +431,31 @@ export const register: Register = on => {
           reason: `${MARK} not sent. A harness upgrade stopped part-way (${pending}); its conflicts are unreconciled, ` +
             `so the contracts an agent would read are half old. Reconcile them, stamp applied-version, delete the marker, ` +
             `then send this brief again.\n${detail}`,
+        }
+      }
+      // Same harm, second shape: payload content edited in the main checkout and not committed.
+      // A worktree checks out HEAD, so the agent reads the committed contract while the
+      // dispatcher reads the edited one (AST-036). check-requirements reports it, but only at
+      // adaptation; it was measured passing silently into the first dispatch after an upgrade.
+      //
+      // Measured downstream: about one commit in six passes through this state in ordinary work,
+      // mostly a rule half-written into thomas.md. A gate whose only way through is committing
+      // something unfinished teaches committing rubbish, so it takes a named acknowledgment: a
+      // brief line `Uncommitted-payload: <why this brief is unaffected>` goes through, and the
+      // line reaches the agent with the brief. Empty, it does not count.
+      const dirty = await dirtyPayload($, root)
+      const ack = e.text.match(/^Uncommitted-payload:[ \t]*(\S.*)$/m)
+      if (dirty.length > 0 && !ack) {
+        const hint = (line: string) =>
+          /\.agents\/memory\/(INDEX|RULES)\.md$/.test(line)
+            ? `${line}   <- generated: run scripts/ledger-index.sh and scripts/ledger-rules.py, then commit`
+            : `${line}   <- the agent reads the committed copy, not this one`
+        return {
+          isDelivered: false,
+          reason: `${MARK} not sent. Payload files are edited or untracked in this checkout, and a worktree sees ` +
+            `only HEAD, so the agent would read a different contract than you do (AST-036). Commit or revert them; ` +
+            `or, if this brief does not depend on them, add a line "Uncommitted-payload: <why>" and send again:\n` +
+            dirty.slice(0, 12).map(hint).join('\n'),
         }
       }
       const owed = await owedTickets($, root)

@@ -48,7 +48,7 @@ from this table — read the entry.
 | `AST-033` | A lookup whose question has no referent at one of its call sites | promoted | 265 | review-with-rin |
 | `AST-034` | A mandatory rule that lives only in load-on-demand docs is skipped, and only the owner notices | promoted | 759 |   |
 | `AST-035` | `set -euo pipefail` plus a no-match `grep` aborts before its own guard | promoted | 273 |   |
-| `AST-036` | A git worktree carries TRACKED content only | promoted | 154 | builder-claude.md,dispatch-ticket,dispatch-ticket-claude |
+| `AST-036` | A git worktree carries TRACKED content only | promoted | 154 | builder-claude.md,dispatch-ticket,dispatch-ticket-claude,register.tsx |
 | `AST-037` | A multi-line prompt pastes without submitting, and the pane calls it idle | promoted | 140 | dispatch-ticket,dispatch-ticket-claude |
 | `AST-038` | A checker that cannot tell project content from package content fires on every adopted repo | promoted | 146 | check-reachability.sh |
 | `AST-039` | An ID namespace shared with the host project resolves confidently to the wrong lesson | promoted | 160 |   |
