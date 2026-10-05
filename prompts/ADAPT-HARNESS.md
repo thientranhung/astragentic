@@ -294,6 +294,17 @@ allow-list entries where needed, and prove the result:
 git worktree add --detach /tmp/harness-check HEAD
 test -f /tmp/harness-check/.agents/roles/builder.md && echo OK || echo "PAYLOAD NOT VISIBLE"
 git worktree remove --force /tmp/harness-check
+
+# Every payload file, not one. A project that ignores `.agents/*` and un-ignores each skill by
+# name swallows a skill the release adds for the first time, silently: it is on disk here and
+# absent from every worktree. One file proves nothing about the others (measured downstream on
+# a 76-file payload under exactly that allowlist).
+CAND="$(cat .astraler/CANDIDATE)"
+# A path through a symlinked skill directory is skipped: check-ignore refuses it outright, and
+# its target is checked under `.agents/skills/` anyway.
+( cd ".astraler/releases/$CAND/harness" && find . -type f ! -name .DS_Store ) | sed 's|^\./||' \
+  | while read -r P; do [ -L "$(dirname "$P")" ] || echo "$P"; done \
+  | git check-ignore --stdin --no-index && echo "IGNORED: the paths above never reach a worktree"
 ```
 
 Report the outcome in the receipt. `PAYLOAD NOT VISIBLE` after the commit is a blocker, not a

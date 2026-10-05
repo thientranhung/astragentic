@@ -1,3 +1,19 @@
+# Astragentic 2.15.6
+
+From the reviewer's pre-dispatch check on the first 2.15 adoption. That project ignores
+`.agents/*` and un-ignores each skill by name, so a skill a release adds for the first time
+would sit on disk in the main checkout and be absent from every worktree, silently.
+ADAPT-HARNESS's visibility proof tested one file, `builder.md`, which says nothing about the
+others. §4 now runs `git check-ignore` over every file of the candidate payload, skipping paths
+through symlinked skill directories (check-ignore refuses those outright; their targets are
+checked under `.agents/skills/`). Measured on that project's 2.15.5 payload: nothing ignored,
+and a planted new skill path was named.
+
+## Upgrade from 2.15.5
+
+Nothing in `harness/` changes; the adaptation prompt does. Run the new check at your next
+upgrade.
+
 # Astragentic 2.15.5
 
 Two findings from the reviewer of the first 2.15 adoption, both of which failed toward silence.
