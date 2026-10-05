@@ -3720,6 +3720,11 @@
     "refs": [],
     "commits": [
       {
+        "sha": "5f31000dc1af1214cf96122f05aaee0a909e7fc4",
+        "date": "2026-10-05",
+        "subject": "2.15.8 — the ticket-done pipe failure was deterministic, and now has a test that can fail"
+      },
+      {
         "sha": "8267622391b3199043eb8a64d1b22b1c40e60bc3",
         "date": "2026-10-05",
         "subject": "2.15.7 — resident panes are out of the close guard, said plainly; ticket-done stops racing pipefail"

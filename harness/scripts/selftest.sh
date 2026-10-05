@@ -1078,6 +1078,18 @@ else
   case "$out" in *STUCK*) ok "a non-executable work-in-flight plug does not mute STUCK" ;;
                  *) bad "work-in-flight plug, not executable" "STUCK went quiet behind a plug that cannot run: '$out'" ;; esac
   rm -f "$W/proj/.astraler/project/work-in-flight.sh"
+  # A working pane with no watcher is WATCHER_LOST, unless the dispatch mod recorded it: since
+  # 2.14 a Claude pane reports itself and runs no watcher, and the first live dispatch drew a
+  # false WATCHER_LOST every time (fixed in 2.15.9). Both directions, or the case cannot fail.
+  out="$(wd_polls working)"
+  case "$out" in *WATCHER_LOST*) ok "a working pane with no watcher and no record is WATCHER_LOST" ;;
+                 *) bad "WATCHER_LOST baseline" "a watcherless working pane went unreported: '$out'" ;; esac
+  mkdir -p "$W/proj/.astraler/state"
+  printf '{"ABC-9":{"role":"builder","pane_id":"w1:b","tab_id":"w1:tb","session_id":"s-1"}}' > "$W/proj/.astraler/state/dispatch-record.json"
+  out="$(wd_polls working)"
+  case "$out" in *WATCHER_LOST*) bad "self-reporting pane" "a pane the mod recorded drew WATCHER_LOST: '$out'" ;;
+                 *) ok "a pane the dispatch mod recorded is not WATCHER_LOST" ;; esac
+  rm -f "$W/proj/.astraler/state/dispatch-record.json"
 fi
 
 # ---------------------------------------------------------------------------------------------

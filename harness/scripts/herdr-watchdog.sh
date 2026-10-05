@@ -550,6 +550,21 @@ elif os.path.isfile(plug):
     except Exception:
         in_flight = True
 
+# Panes that report themselves. Since 2.14 a Claude pane runs the astragentic-dispatch mod,
+# which records the pane and sends TURN-END from inside it; it never runs the watcher script,
+# by design. The two probes below only know that script, so without this set every working
+# Claude pane drew WATCHER_LOST on every dispatch (measured on the first live 2.15 dispatch):
+# an alert that fires every time carries no information and teaches its reader to ignore the
+# real ones. A record entry with a session id was written by the mod, not by hand.
+self_reporting = set()
+try:
+    _rec = json.load(open(os.path.join(project_root, ".astraler", "state", "dispatch-record.json")))
+    for _e in _rec.values():
+        if isinstance(_e, dict) and _e.get("session_id") and _e.get("pane_id"):
+            self_reporting.add(_e["pane_id"])
+except Exception:
+    pass
+
 idle_now = set()
 for d in dispatched:
     dpane   = d["pane_id"]
@@ -584,7 +599,7 @@ for d in dispatched:
               f"{dname}={dpane}({dstatus}) watcher=none, idle across two polls — it worked and "
               f"then stopped. Check whether the NEXT step started, not whether a waiter is alive: "
               f"one that exited on purpose and one that died look the same in ps.")
-    elif dstatus == "working" and not has_w:
+    elif dstatus == "working" and not has_w and dpane not in self_reporting:
         print(f"WATCHER_LOST|{dpane}_wlost|workspace={ws_label} thomas={tpane}({tstatus}) {dname}={dpane}(working) watcher=none — re-arm the watch")
     # A pane dispatched and never observed working is invisible to the three alerts above:
     # silent, so not BLOCKED; idle, so not WATCHER_LOST; never worked, so not STUCK. Measured

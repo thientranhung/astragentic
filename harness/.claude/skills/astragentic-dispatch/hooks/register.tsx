@@ -275,7 +275,16 @@ async function refreshBoard($: any, root: string | null, sends: Map<string, numb
   for (const [key, entry] of Object.entries(rec)) {
     if (!isLive(entry)) continue
     if (entry.session_name) named.add(entry.session_name)
-    const sentAt = entry.session_name ? sends.get(entry.session_name) : undefined
+    let sentAt = entry.session_name ? sends.get(entry.session_name) : undefined
+    // The record outranks this process's memory. A pane can answer RECEIVED within tens of
+    // milliseconds (34 ms measured), before the send hook has noted the send, so the note lands
+    // after the ack that should have cleared it and stays forever: the live dispatch read "No
+    // RECEIVED" while the record held the ack. An ack recorded at or just before the send
+    // settles it; the window only absorbs that race.
+    if (sentAt !== undefined && typeof entry.acked_at === 'number' && entry.acked_at >= sentAt - 10_000) {
+      sends.delete(entry.session_name)
+      sentAt = undefined
+    }
     const role = entry.role ?? 'agent'
     if (owed.includes(key)) {
       rows.push({ key, role, state: 'merged', since: entry.merged_at ?? entry.last_turn_end_at ?? now, note: 'tracker not closed' })

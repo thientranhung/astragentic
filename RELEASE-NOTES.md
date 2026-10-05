@@ -1,3 +1,27 @@
+# Astragentic 2.15.9
+
+Two defects the first live 2.15 dispatch exposed, reported by that project's Thomas and
+confirmed by its reviewer.
+
+- **The watchdog sent `WATCHER_LOST` for every working Claude pane.** It decides whether a
+  pane is watched from two probes, and both know only the watcher script. Since 2.14 a Claude
+  pane runs no watcher: the dispatch mod reports from inside it. So every dispatch drew the
+  alert, and an alert that fires every time teaches its reader to ignore the real `BLOCKED` and
+  `STUCK`. A pane with a mod-written record entry (one with a `session_id`) is now treated as
+  self-reporting and is exempt from `WATCHER_LOST`. `STUCK` and `NEVER_STARTED` still apply to
+  it, since those are about the pane, not its watcher. Selftest covers both directions.
+- **A "No RECEIVED" alert stuck while the record held the ack.** The pane answered in 34 ms,
+  before the dispatcher's send hook had noted the send, so the note landed after the ack that
+  should have cleared it. The board also ranked that in-memory note above the record. An ack
+  recorded at, or within 10 s before, the noted send now settles it. The reviewer ruled out the
+  first hypothesis, that a refused send armed the timer: the code never notes a refused send.
+
+## Upgrade from 2.15.8
+
+Copy `harness/`, or run `./install.sh <target> --apply`. The mod and
+`scripts/herdr-watchdog.sh` change. **Restart the workspace watchdog**: a running watchdog keeps
+the old analysis until it is relaunched.
+
 # Astragentic 2.15.8
 
 **A correction to the 2.15.7 notes, which got the cause wrong.** They called the
