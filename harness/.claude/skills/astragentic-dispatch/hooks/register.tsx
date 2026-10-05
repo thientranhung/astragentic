@@ -389,6 +389,22 @@ export const register: Register = on => {
     // the previous merge's tracker write-back, and this ticket's claim.
     const first = e.text.trimStart().split('\n')[0] ?? ''
     if (!me && root && e.origin.kind === 'model' && e.agentId === undefined && first.startsWith('/')) {
+      // A harness upgrade that stopped on conflicts leaves this marker, and the unreconciled
+      // files are the role contracts the next agent reads. Only the doctor read it, at
+      // adaptation; the brief is where it has to refuse.
+      const pending = `${root}/.astraler/state/apply-incomplete`
+      if (await exists($, pending)) {
+        let detail = ''
+        try {
+          detail = (await $.fs.read(pending)).split('\n').slice(0, 12).join('\n')
+        } catch {}
+        return {
+          isDelivered: false,
+          reason: `${MARK} not sent. A harness upgrade stopped part-way (${pending}); its conflicts are unreconciled, ` +
+            `so the contracts an agent would read are half old. Reconcile them, stamp applied-version, delete the marker, ` +
+            `then send this brief again.\n${detail}`,
+        }
+      }
       const owed = await owedTickets($, root)
       if (owed.length > 0) {
         return { isDelivered: false, reason: `${MARK} not sent. ${owedText(owed)} Then send this brief again.` }

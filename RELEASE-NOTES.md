@@ -1,3 +1,19 @@
+# Astragentic 2.15.1
+
+Found while supervising the first project to take 2.15.0. An upgrade that stops on conflicts
+already leaves `.astraler/state/apply-incomplete` and withholds `applied-version`, and
+`check-requirements.sh` reports it. But the doctor runs at adaptation, and the next brief does
+not wait for it: Thomas could dispatch on role contracts that were half old. The dispatch mod
+now refuses every brief while the marker exists, and the refusal lists the unreconciled paths.
+This is AST-157's rule applied once more: the gate goes on the step that cannot be skipped.
+Measured on a lab repo carrying the marker: the brief was refused with the paths.
+
+## Upgrade from 2.15.0
+
+Copy `harness/`, or run `./install.sh <target> --apply`. Only the mod and
+`dispatch-ticket-claude` change. If an earlier apply left `apply-incomplete`, finish the
+reconciliation before dispatching; that is now enforced, not advised.
+
 # Astragentic 2.15.0
 
 2.14.0 removed three dispatch steps by letting the pane do them. The owner named the two that

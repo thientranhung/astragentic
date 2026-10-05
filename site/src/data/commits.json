@@ -1,5 +1,11 @@
 [
   {
+    "sha": "535f8b1c850406b32dcaba42f9bc58cb8d6ce82d",
+    "date": "2026-10-05",
+    "subject": "2.15.0 — the tracker is checked at the brief, and an empty branch stops counting as merged",
+    "ledger": "Ledger: AST-157, AST-158."
+  },
+  {
     "sha": "0a3653edc262e628c09ec90b349fc2a3996b1412",
     "date": "2026-10-05",
     "subject": "2.14.0 — the pane does its own dispatch steps, so none of them can be skipped",
@@ -111,12 +117,6 @@
     "sha": "25f2bcf51a573ba20bc9bc4fa5003487285614a9",
     "date": "2026-09-08",
     "subject": "site: Vietnamese for developers, IT terms kept in English",
-    "ledger": "Ledger: none."
-  },
-  {
-    "sha": "cb6c5b66963d9ce8324b12e93e05bcda29544844",
-    "date": "2026-09-08",
-    "subject": "site: discovery order, comms around dispatch, photo placeholders",
     "ledger": "Ledger: none."
   }
 ]

@@ -3671,7 +3671,13 @@
     "promotedOn": "2026-10-05",
     "entry": "### AST-157 — The tracker write-back was refused at the one command a merge does not always pass through · promoted 2026-10-05\n\nThe owner's account of the tracker, across projects: a dispatched ticket keeps its ready\nstatus and label, and a finished one is closed sometimes and sometimes not. The close side had\na gate since 2.8. `hook-git-guard.py` refuses a push of the base while a merge in the range\nnames a ticket with no `ticket-done` stamp. That push is the gate's only moment, and two merge\nshapes never reach it. `gh pr merge` lands on the remote, so no local base is pushed. A merge\nheld for a gate is pushed hours later, if at all. The claim side had no gate, only the claim\nprotocol in prose.\n\nBoth moved to the moment every dispatch does pass through: the brief. On a Claude root the\ndispatch mod asks the project's `tracker-state.sh` before sending one. A ticket reported\nunclaimed is not sent, and while any Builder ticket has reached the base with no stamp, no brief\nis sent at all. The note also rides the merge command's own result, so it lands in the turn\nthat merged. Measured 2026-10-05 against a stub tracker: the unclaimed brief was refused and\nthe Builder received nothing. …",
     "refs": [],
-    "commits": []
+    "commits": [
+      {
+        "sha": "535f8b1c850406b32dcaba42f9bc58cb8d6ce82d",
+        "date": "2026-10-05",
+        "subject": "2.15.0 — the tracker is checked at the brief, and an empty branch stops counting as merged"
+      }
+    ]
   },
   {
     "id": "AST-158",
@@ -3684,6 +3690,12 @@
     "promotedOn": "2026-10-05",
     "entry": "### AST-158 — \"Its commits reached the base\" passed for a branch that had no commits · promoted 2026-10-05\n\n`git merge-base --is-ancestor <branch> <base>` is how both `ticket-done.sh` and the dispatch mod\nasked whether a ticket's work had landed. A branch created at the base and never committed to\nis an ancestor too, because its tip is a base commit. Measured twice in one lab run. The mod's\nboard read \"merged\" for a Builder that had committed nothing. `ticket-done.sh` stamped that\nticket done: git half \"an ancestor of main\", tracker half \"closed\". Only the plug stood between\nan empty ticket and a closed one.\n\nThe same check was written twice, months apart, by two authors, and both trusted the question\nover what it measured. Ancestry answers \"is nothing on this branch missing from the base\", and\nan empty set is never missing. The work must exist before its arrival is checked. The mod\nrecords the start commit at first registration, and keeps it there, because a reload re-fires\nsession start and rewrote it once in the lab. `ticket-done.sh` reads that start commit when it\nexists, and otherwise requires the tip off the base's first-parent line. …",
     "refs": [],
-    "commits": []
+    "commits": [
+      {
+        "sha": "535f8b1c850406b32dcaba42f9bc58cb8d6ce82d",
+        "date": "2026-10-05",
+        "subject": "2.15.0 — the tracker is checked at the brief, and an empty branch stops counting as merged"
+      }
+    ]
   }
 ]

@@ -103,6 +103,10 @@ dispatch passes through, so the checks sit there, on the answer of the project's
   merge. `scripts/ticket-done.sh <id>` clears it, and it asks the same plug that the ticket is
   closed and released. The base-push guard missed `gh pr merge` and merge-and-hold, which is
   where the write-back was forgotten (AST-057).
+- **A harness upgrade still half-applied holds every brief.** `install.sh --apply` that stops on
+  conflicts leaves `.astraler/state/apply-incomplete`, and the unreconciled files are the role
+  contracts the next agent reads. While the marker exists, no brief is sent, and the refusal
+  lists the paths. Reconcile them, stamp `applied-version`, then delete the marker.
 - **No answer, no check.** An absent plug, one that fails, and one that prints `unreachable` are
   an empty socket: briefs go, and `scripts/ticket-done.sh` stamps the tracker half as unverified, as before.
   A check that cannot answer must not refuse every dispatch.
