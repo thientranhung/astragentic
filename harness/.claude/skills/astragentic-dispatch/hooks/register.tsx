@@ -179,7 +179,11 @@ async function trackerState($: any, root: string, id: string): Promise<{ state: 
 }
 
 async function stampRoot($: any): Promise<string> {
-  return (await $.env.get('HARNESS_STAMP_ROOT')) ?? '/tmp'
+  const pinned = await $.env.get('HARNESS_STAMP_ROOT')
+  if (pinned) return pinned
+  // Same home as ticket-done.sh writes: the git common dir, which survives a reboot.
+  const r = await run($, ['git', 'rev-parse', '--path-format=absolute', '--git-common-dir'])
+  return r.code === 0 && r.out ? `${r.out}/astraler-stamps` : '/tmp'
 }
 
 async function baseBranch($: any, root: string): Promise<string> {

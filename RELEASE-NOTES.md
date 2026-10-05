@@ -1,3 +1,30 @@
+# Astragentic 2.15.10
+
+From the reviewer of the first 2.15 adoption.
+
+- **Ticket-done and release stamps lived in `/tmp`, and a reboot erased them.** The push guard
+  refuses a merge of the base whose ticket has no stamp, so after every restart a ticket that
+  had finished properly read as unfinished. Measured downstream: 0 stamps after a reboot that
+  noon. Stamps now live in the repository's git common dir, `<git-common-dir>/astraler-stamps/`,
+  which survives a reboot, is shared by every worktree, and is never committed.
+  `ticket-done.sh`, `release-worktree-resources.sh`, `hook-git-guard.py` and the dispatch mod
+  all resolve the same default, and `HARNESS_STAMP_ROOT` still overrides it. Selftest runs the
+  writer and the push guard with no override and requires them to agree.
+- **An unreadable dispatch record now says so.** The 2.15.9 watchdog exemption read the record
+  and, on any read failure, silently fell back to "no pane reports itself", so every Claude pane
+  drew `WATCHER_LOST` with no reason given. A record that exists but cannot be parsed now sends
+  one `RECORD_UNREADABLE` alert naming the file.
+
+Not changed, by design: `ticket-done.sh` still does not close the tracker. It verifies a close
+that someone else made, and a verifier that performs the act it checks can no longer fail.
+
+## Upgrade from 2.15.9
+
+Copy `harness/`, or run `./install.sh <target> --apply`. Stamps written before the upgrade are
+in `/tmp` (or already gone). A ticket finished before it whose merge is not yet pushed needs
+`scripts/ticket-done.sh <id>` re-run once to write its stamp in the new home. Restart the
+workspace watchdog.
+
 # Astragentic 2.15.9
 
 Two defects the first live 2.15 dispatch exposed, reported by that project's Thomas and

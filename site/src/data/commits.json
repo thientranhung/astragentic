@@ -1,5 +1,11 @@
 [
   {
+    "sha": "781164220bcd82a994436853481ddb97ba7516d2",
+    "date": "2026-10-05",
+    "subject": "2.15.9 — the watchdog stops crying WATCHER_LOST at self-reporting panes; a fast ack stops sticking",
+    "ledger": "Ledger: none (AST-124)."
+  },
+  {
     "sha": "5f31000dc1af1214cf96122f05aaee0a909e7fc4",
     "date": "2026-10-05",
     "subject": "2.15.8 — the ticket-done pipe failure was deterministic, and now has a test that can fail",
@@ -111,12 +117,6 @@
     "sha": "fb08dbc18e4d994cbf2112f88829f33d233a62ee",
     "date": "2026-09-09",
     "subject": "site: team picture caption from the client's seat",
-    "ledger": "Ledger: none."
-  },
-  {
-    "sha": "01b3a05303596e7bcfc596fad747d68b62fddb75",
-    "date": "2026-09-09",
-    "subject": "site: English pane label matches",
     "ledger": "Ledger: none."
   }
 ]

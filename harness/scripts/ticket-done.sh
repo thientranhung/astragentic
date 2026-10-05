@@ -112,7 +112,12 @@ fi
 
 # 4. evidence — only on a clean run
 if [ "$rc" -eq 0 ]; then
-  D="${HARNESS_STAMP_ROOT:-/tmp}/harness-ticket-done"; mkdir -p "$D"
+  # Inside the repository's git dir, not /tmp: a reboot emptied /tmp and every finished ticket
+  # read as unfinished to the push guard (measured downstream: 0 stamps after a restart). The
+  # common dir is shared by every worktree, survives a reboot, and is never committed.
+  CD="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
+  SR="${HARNESS_STAMP_ROOT:-${CD:+$CD/astraler-stamps}}"; SR="${SR:-/tmp}"
+  D="$SR/harness-ticket-done"; mkdir -p "$D"
   { printf '%s %s base=%s moved=%s\n' "$(date -u +%FT%TZ)" "$ID" "$BASE" "${MOVED:-unreported}"; printf '  %s\n' "${notes[@]}"; } > "$D/$ID"
   [ -n "$MOVED" ] || echo "ticket-done: NOTE — --moved not given; the frontier write-back report is 'unreported' in the stamp (AST-057: none is a report, silence is not)"
   echo "ticket-done: stamped $D/$ID — the git guard now admits pushing $BASE with $ID's merge"

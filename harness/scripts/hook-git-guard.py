@@ -258,7 +258,20 @@ def first_operand(args, after):
 
 # Where the two release scripts leave their stamps. Overridable so nested selftests do not
 # share evidence; production leaves it at /tmp, machine-local like the hook-events log.
-STAMP_ROOT = os.environ.get("HARNESS_STAMP_ROOT", "/tmp")
+def _stamp_root():
+    # The repository's git common dir, not /tmp: a reboot emptied /tmp, and every finished ticket
+    # then read as unfinished here. HARNESS_STAMP_ROOT still overrides it for selftests.
+    if os.environ.get("HARNESS_STAMP_ROOT"):
+        return os.environ["HARNESS_STAMP_ROOT"]
+    try:
+        out = subprocess.run(["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
+                             capture_output=True, text=True, timeout=5)
+        if out.returncode == 0 and out.stdout.strip():
+            return os.path.join(out.stdout.strip(), "astraler-stamps")
+    except Exception:
+        pass
+    return "/tmp"
+STAMP_ROOT = _stamp_root()
 
 
 def run(cmd_argv, cwd=None):

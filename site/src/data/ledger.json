@@ -2875,6 +2875,11 @@
     ],
     "commits": [
       {
+        "sha": "781164220bcd82a994436853481ddb97ba7516d2",
+        "date": "2026-10-05",
+        "subject": "2.15.9 — the watchdog stops crying WATCHER_LOST at self-reporting panes; a fast ack stops sticking"
+      },
+      {
         "sha": "057ae900c355db93fecb6d9e7d47655c3fd4c646",
         "date": "2026-10-05",
         "subject": "2.15.2 — a plug that cannot run stops muting the watchdog"

@@ -110,7 +110,11 @@ done
 if [ "$rc" -eq 0 ]; then
   # HARNESS_STAMP_ROOT overrides /tmp so nested or parallel selftests never share (or delete)
   # each other's evidence; production leaves it unset.
-  STAMP_DIR="${HARNESS_STAMP_ROOT:-/tmp}/harness-released"; mkdir -p "$STAMP_DIR"
+  # In the repository's git common dir, beside ticket-done's, for the same reason: /tmp does not
+  # survive a reboot. Resolved from the worktree, whose common dir is the main repository's.
+  CD="$(git -C "$WT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
+  SR="${HARNESS_STAMP_ROOT:-${CD:+$CD/astraler-stamps}}"; SR="${SR:-/tmp}"
+  STAMP_DIR="$SR/harness-released"; mkdir -p "$STAMP_DIR"
   real="$(cd "$WT" 2>/dev/null && pwd -P || printf '%s' "$WT")"
   key="$(printf '%s' "$real" | shasum -a 256 | cut -c1-16)"
   printf '%s %s\n' "$(date -u +%FT%TZ)" "$real" > "$STAMP_DIR/$key"

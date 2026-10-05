@@ -557,13 +557,17 @@ elif os.path.isfile(plug):
 # an alert that fires every time carries no information and teaches its reader to ignore the
 # real ones. A record entry with a session id was written by the mod, not by hand.
 self_reporting = set()
-try:
-    _rec = json.load(open(os.path.join(project_root, ".astraler", "state", "dispatch-record.json")))
-    for _e in _rec.values():
-        if isinstance(_e, dict) and _e.get("session_id") and _e.get("pane_id"):
-            self_reporting.add(_e["pane_id"])
-except Exception:
-    pass
+_rec_path = os.path.join(project_root, ".astraler", "state", "dispatch-record.json")
+if os.path.isfile(_rec_path):
+    try:
+        for _e in json.load(open(_rec_path)).values():
+            if isinstance(_e, dict) and _e.get("session_id") and _e.get("pane_id"):
+                self_reporting.add(_e["pane_id"])
+    except Exception:
+        # Unreadable is not "nobody reports itself": every Claude pane would draw WATCHER_LOST
+        # with no reason given. Say what failed, once, and let the per-pane alerts stand.
+        print(f"RECORD_UNREADABLE|dispatch_record|{_rec_path} could not be read as JSON, so "
+              f"self-reporting panes cannot be told apart and WATCHER_LOST may fire for them.")
 
 idle_now = set()
 for d in dispatched:

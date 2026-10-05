@@ -497,6 +497,26 @@ guard_in "$TD" allow "git push origin main"
 ( cd "$TD" && bash "$S/ticket-done.sh" ABC-12 --moved none ) >/dev/null 2>&1 \
   && ok "ticket-done stamps a fast-forwarded ticket by its subject" \
   || bad "ticket-done fast-forward" "refused a fast-forwarded ticket whose commit names it"
+# WHERE THE STAMP LIVES, with no override, as in real use. It was /tmp, and a reboot emptied
+# it: every finished ticket then read as unfinished to the push guard (measured downstream, 0
+# stamps after a restart). The default is now the repository's git common dir. Both writer and
+# reader must agree on it, or the guard refuses a push the stamp was written to allow.
+( cd "$TD" && git checkout -q -b builder/ABC-14 main && git commit -q --allow-empty -m "ABC-14: z" \
+  && git checkout -q main && git merge -q --no-ff builder/ABC-14 -m "Merge ABC-14: z
+Ledger: none" ) >/dev/null 2>&1
+( cd "$TD" && env -u HARNESS_STAMP_ROOT bash "$S/ticket-done.sh" ABC-14 --moved none ) >/dev/null 2>&1
+if [ -f "$TD/.git/astraler-stamps/harness-ticket-done/ABC-14" ]; then
+  ok "ticket-done stamps inside the git common dir by default"
+else
+  bad "ticket-done stamp home" "no stamp under .git/astraler-stamps — it would not survive a reboot"
+fi
+out="$(cd "$TD" && printf 'git push origin main' | python3 -c '
+import sys, json
+print(json.dumps({"hook_event_name":"PreToolUse","tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":sys.stdin.read()}}))' "$TD" \
+  | env -u HARNESS_STAMP_ROOT HARNESS_HOOK_LOG="$TMP/hook.log" python3 "$S/hook-git-guard.py" 2>/dev/null)"
+case "$out" in *ABC-14*) bad "guard reads the default stamp home" "refused a push for ABC-14 whose stamp is in .git/astraler-stamps" ;;
+               *) ok "the push guard reads stamps from the same default home" ;; esac
+
 # THE SAME EMPTY BRANCH, ON A HISTORY LONGER THAN A PIPE BUFFER. The check above lived as
 # `git rev-list --first-parent | grep -qx` under pipefail: grep -q exits at the first line, and
 # once rev-list has more than 64 KB to write it takes SIGPIPE, failing the pipeline and stamping
