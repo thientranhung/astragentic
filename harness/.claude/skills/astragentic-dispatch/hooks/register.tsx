@@ -255,6 +255,30 @@ async function dirtyPayload($: any, root: string): Promise<string[]> {
     .map(entry => `${entry.code} ${entry.path}`)
 }
 
+// The part of a Bash command that runs. Heredoc bodies are text, not commands: writing a
+// ledger entry that quotes `git worktree remove $(pwd)/$W` was refused as if it were that
+// removal (measured downstream, while writing up the very incident). Bodies are dropped, and
+// each rule below matches a command only where a command can start: the beginning of a line or
+// after ; & | ( — never inside a quoted sentence. The failure direction of each rule is unchanged.
+function runnable(command: string): string {
+  const lines = command.split('\n')
+  const out: string[] = []
+  let until: { word: string; isTabbed: boolean } | null = null
+  for (const line of lines) {
+    if (until) {
+      const probe = until.isTabbed ? line.replace(/^\t+/, '') : line
+      if (probe === until.word) until = null
+      continue
+    }
+    out.push(line)
+    const m = line.match(/<<(-?)\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\2/)
+    if (m && m[3]) until = { word: m[3], isTabbed: m[1] === '-' }
+  }
+  return out.join('\n')
+}
+
+const AT_COMMAND = String.raw`(?:^|[\n;&|(])\s*`
+
 function owedText(owed: string[]): string {
   return `${owed.join(', ')} reached the base but ${owed.length > 1 ? 'have' : 'has'} no ticket-done evidence. ` +
     `Owed now: set the tracker to closed and release the assignee (docs/agents/issue-tracker.md), ` +
@@ -528,9 +552,10 @@ export const register: Register = on => {
   on('tool.call', { tool: 'Bash' }, async ($, e, next) => {
     if (me || !root) return next(e)
     const rec = (await readRecord($, root)) ?? {}
+    const cmd = runnable(e.command)
 
     // -- closing a pane, tab or workspace that holds a mid-turn agent ---------------------
-    const close = e.command.match(/\bherdr\s+(tab|pane|workspace)\s+close\s+['"]?([A-Za-z0-9:_-]+)/)
+    const close = cmd.match(new RegExp(AT_COMMAND + String.raw`herdr\s+(tab|pane|workspace)\s+close\s+['"]?([A-Za-z0-9:_-]+)`))
     if (close) {
       const [, kind, id] = close
       const hit = Object.entries(rec).find(([, entry]) =>
@@ -562,7 +587,7 @@ export const register: Register = on => {
     // recorded worktree whose agent is not mid-turn and whose tree is clean, because the
     // release reaps processes and runs the project's teardown: doing that to a worktree the
     // guard is about to refuse for uncommitted work would tear down live state (AST-115).
-    const remove = e.command.match(/\bgit\s+(?:-C\s+\S+\s+)?worktree\s+remove\s+((?:-f\s+|--force\s+)*)['"]?([^\s'"]+)/)
+    const remove = cmd.match(new RegExp(AT_COMMAND + String.raw`git\s+(?:-C\s+\S+\s+)?worktree\s+remove\s+((?:-f\s+|--force\s+)*)['"]?([^\s'"]+)`))
     if (remove) {
       const isForced = Boolean(remove[1])
       const raw = remove[2] ?? ''
@@ -581,6 +606,8 @@ export const register: Register = on => {
         return { deny: `astragentic-dispatch: cannot tell which worktree "${raw}" is — it is expanded by the shell after this check runs. Pass the worktree as a literal absolute path.` }
       }
       const target = await realpath($, raw)
+      // When `git worktree list` itself fails this check is skipped and the record lookup below
+      // decides: a chosen fail-open for a git that cannot list, stated rather than discovered.
       if (listed.code === 0 && !knownReal.includes(target)) {
         return { deny: `astragentic-dispatch: "${raw}" resolves to ${target}, which is not a worktree of this repository (git worktree list). Pass the worktree's literal absolute path.` }
       }
@@ -617,7 +644,7 @@ export const register: Register = on => {
     }
 
     // -- a merge: the tracker write-back is owed from this moment, so say so in the result -----
-    const merge = /\bgit\s+(?:-C\s+\S+\s+)?merge\b|\bgh\s+pr\s+merge\b/.test(e.command)
+    const merge = new RegExp(AT_COMMAND + String.raw`(?:git\s+(?:-C\s+\S+\s+)?merge\b|gh\s+pr\s+merge\b)`).test(cmd)
     const ran = await next(e)
     if (!merge || ran.deny !== undefined || ran.isError) return ran
     if (/\bgh\s+pr\s+merge\b/.test(e.command)) {

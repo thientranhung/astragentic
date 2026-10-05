@@ -1,3 +1,26 @@
+# Astragentic 2.16.2
+
+**The dispatch mod refused text that only quoted a command.** Reported by the reviewer of the
+first adoption: Thomas wrote a ledger entry with `cat > … <<'EOF'`, and its body quoted
+`git worktree remove $(pwd)/$W` while describing the incident 2.16.1 fixed. It was refused as if
+it were that removal. The reviewer found the same weakness in the close guard: a heredoc or
+quoted sentence naming `herdr tab close <id>` for a mid-turn pane would refuse a harmless write.
+The better an incident is written up, the likelier the write-up is blocked.
+
+The mod now drops heredoc bodies and matches each rule (close, remove, merge) only where a
+command can start: at the start of a line, or after `;`, `&`, `|` or `(`. Never inside a
+sentence. The failure direction of every rule is unchanged: an unreadable worktree path is still
+refused. Checked on seven command shapes. Real variable and literal removals, a close after
+`&&` and a close after a heredoc are still caught. A heredoc body and an `echo` sentence quoting
+either command are not.
+
+The mod also now states in code that its literal-path check is skipped when
+`git worktree list` itself fails. That is a chosen fail-open for a git that cannot list.
+
+## Upgrade from 2.16.1
+
+Copy `harness/`, or run `./install.sh <target> --apply`. Only the mod changes.
+
 # Astragentic 2.16.1
 
 **The mid-turn worktree protection was bypassed by an ordinary command.** Reported by the

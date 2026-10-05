@@ -1,5 +1,11 @@
 [
   {
+    "sha": "a2f7dcb72a3daab16b77fa3cac18034b7f05bb5e",
+    "date": "2026-10-05",
+    "subject": "2.16.1 — an unreadable worktree path is refused, not waved through",
+    "ledger": "Ledger: none."
+  },
+  {
     "sha": "84106ad6c2b7b1c0d56bd8449a651f58e38a0672",
     "date": "2026-10-05",
     "subject": "2.16.0 — the push gate moves into git's pre-push hook",
@@ -111,12 +117,6 @@
     "sha": "544aea2ba48a07d2f1fd8788cee00529784d5fd1",
     "date": "2026-09-09",
     "subject": "site: task, feature, requirement in bold",
-    "ledger": "Ledger: none."
-  },
-  {
-    "sha": "9bfaa0e976c1cbb996478d184de759fa6e8cf454",
-    "date": "2026-09-09",
-    "subject": "site: say what a ticket is before dispatching one",
     "ledger": "Ledger: none."
   }
 ]
