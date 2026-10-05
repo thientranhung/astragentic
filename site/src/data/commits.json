@@ -1,5 +1,11 @@
 [
   {
+    "sha": "aec8c7d16e780aa41eca157cf248abcda9084366",
+    "date": "2026-10-05",
+    "subject": "2.15.4 — uncommitted payload holds the brief, with a named way through",
+    "ledger": "Ledger: none (AST-036, AST-157)."
+  },
+  {
     "sha": "ecc92f58151dc378d78804892c066841afbb9bb4",
     "date": "2026-10-05",
     "subject": "2.15.3 — the codex selftest stops failing in every adopted project",
@@ -111,12 +117,6 @@
     "sha": "da237cfba8270036ae7c2af6d36f7909c0db9d34",
     "date": "2026-09-08",
     "subject": "site: design docs follow the single frame",
-    "ledger": "Ledger: none."
-  },
-  {
-    "sha": "c072e536da7420678069e191f6f31de938598836",
-    "date": "2026-09-08",
-    "subject": "site: one island width, Home in the nav",
     "ledger": "Ledger: none."
   }
 ]

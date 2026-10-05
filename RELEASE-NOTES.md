@@ -1,3 +1,23 @@
+# Astragentic 2.15.5
+
+Two findings from the reviewer of the first 2.15 adoption, both of which failed toward silence.
+
+- **A renamed payload file read as clean.** `git status --porcelain` prints a rename as
+  `old -> new`, which matches no payload path, so a moved contract file slipped past the 2.15.4
+  brief check. It now runs with `--no-renames`: the delete and the add are each named.
+- **The 2.15.4 check fails open, and said nothing about it.** It now says so in the module
+  and in `dispatch-ticket-claude`. With no readable applied version, release tree or
+  `git status`, the brief goes. That makes it a lint, not a boundary, in the sense this
+  package already uses for `hook-git-guard.py`, and it must not be cited as proof that a dirty
+  payload cannot be dispatched. Why it is not scoped to each role's reads is also recorded:
+  that source is prose in each contract's Load table, and a gate cannot depend on markdown
+  formatting.
+
+## Upgrade from 2.15.4
+
+Copy `harness/`, or run `./install.sh <target> --apply`. The mod and `dispatch-ticket-claude`
+change.
+
 # Astragentic 2.15.4
 
 Found by the read-only reviewer of the first 2.15 adoption, which caught a claim the

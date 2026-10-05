@@ -117,6 +117,12 @@ dispatch passes through, so the checks sit there, on the answer of the project's
   in ordinary work, so a gate with no way through except committing half-written rules would
   teach committing them. `check-requirements.sh` reports the same state, but only at
   adaptation: after the first upgrade it was measured letting the first dispatch through.
+  **This check is a lint, not a boundary.** When it cannot read the applied version, the
+  release tree or `git status`, it lets the brief go rather than block every dispatch on a
+  transient failure. Do not cite it as proof that a dirty payload cannot be dispatched. Scoping it
+  to what each role reads was rejected: that source exists only as prose in each contract's Load
+  table, and a gate whose correctness depends on how a markdown table is formatted fails in a
+  direction nobody can predict.
 - **No answer, no check.** An absent plug, one that fails, and one that prints `unreachable` are
   an empty socket: briefs go, and `scripts/ticket-done.sh` stamps the tracker half as unverified, as before.
   A check that cannot answer must not refuse every dispatch.

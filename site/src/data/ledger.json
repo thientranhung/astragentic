@@ -666,7 +666,8 @@
     "citedBy": [
       "builder-claude.md",
       "dispatch-ticket",
-      "dispatch-ticket-claude"
+      "dispatch-ticket-claude",
+      "register.tsx"
     ],
     "indexLine": 51,
     "entryLine": 456,
@@ -687,9 +688,20 @@
         "name": "dispatch-ticket-claude",
         "kind": "file",
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/skills/dispatch-ticket-claude"
+      },
+      {
+        "name": "register.tsx",
+        "kind": "file",
+        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.claude/skills/astragentic-dispatch/hooks/register.tsx"
       }
     ],
-    "commits": []
+    "commits": [
+      {
+        "sha": "aec8c7d16e780aa41eca157cf248abcda9084366",
+        "date": "2026-10-05",
+        "subject": "2.15.4 — uncommitted payload holds the brief, with a named way through"
+      }
+    ]
   },
   {
     "id": "AST-037",
@@ -3678,6 +3690,11 @@
     "entry": "### AST-157 — The tracker write-back was refused at the one command a merge does not always pass through · promoted 2026-10-05\n\nThe owner's account of the tracker, across projects: a dispatched ticket keeps its ready\nstatus and label, and a finished one is closed sometimes and sometimes not. The close side had\na gate since 2.8. `hook-git-guard.py` refuses a push of the base while a merge in the range\nnames a ticket with no `ticket-done` stamp. That push is the gate's only moment, and two merge\nshapes never reach it. `gh pr merge` lands on the remote, so no local base is pushed. A merge\nheld for a gate is pushed hours later, if at all. The claim side had no gate, only the claim\nprotocol in prose.\n\nBoth moved to the moment every dispatch does pass through: the brief. On a Claude root the\ndispatch mod asks the project's `tracker-state.sh` before sending one. A ticket reported\nunclaimed is not sent, and while any Builder ticket has reached the base with no stamp, no brief\nis sent at all. The note also rides the merge command's own result, so it lands in the turn\nthat merged. Measured 2026-10-05 against a stub tracker: the unclaimed brief was refused and\nthe Builder received nothing. …",
     "refs": [],
     "commits": [
+      {
+        "sha": "aec8c7d16e780aa41eca157cf248abcda9084366",
+        "date": "2026-10-05",
+        "subject": "2.15.4 — uncommitted payload holds the brief, with a named way through"
+      },
       {
         "sha": "56c0af5f6f67ecba5bdbe0b021f37c379cf72c65",
         "date": "2026-10-05",

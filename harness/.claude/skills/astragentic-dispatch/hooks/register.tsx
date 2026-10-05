@@ -214,7 +214,17 @@ async function owedTickets($: any, root: string): Promise<string[]> {
 }
 
 // The payload paths are the files of the release this checkout applied. `git status` runs
-// without pathspecs because a pathspec through a symlinked skill directory is refused outright.
+// without pathspecs because a pathspec through a symlinked skill directory is refused outright,
+// and with --no-renames because a rename prints `old -> new`, which matches no path: a moved
+// contract file would read as clean (found by the reviewer; check-visual-evidence downstream
+// paid for the same root cause).
+//
+// FAILS OPEN, deliberately. No readable applied-version, no release tree, a git error or a
+// 15 s timeout all return [], and the brief goes. Blocking every dispatch on a transient git
+// failure is worse than missing one dirty file. That makes this a lint, not a boundary, in the
+// sense this package already uses for hook-git-guard: it catches accidental misuse and promises
+// nothing when it cannot read. The watchdog's work-in-flight call fails the other way on
+// purpose, because there a wrong answer mutes alerts.
 async function dirtyPayload($: any, root: string): Promise<string[]> {
   let applied = ''
   try {
@@ -229,7 +239,7 @@ async function dirtyPayload($: any, root: string): Promise<string[]> {
   // Not through run(): it trims, and the first porcelain line starts with a status space.
   let out = ''
   try {
-    const r = await $.process.run(['git', '-C', root, 'status', '--porcelain', '--untracked-files=all'], { timeoutMs: 15_000 })
+    const r = await $.process.run(['git', '-C', root, 'status', '--porcelain', '--untracked-files=all', '--no-renames'], { timeoutMs: 15_000 })
     if (r.exitCode !== 0) return []
     out = r.stdout
   } catch {
