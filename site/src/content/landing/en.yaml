@@ -254,7 +254,7 @@ adopt:
       note: "Reads and executes ADAPT-HARNESS.md: tracker name, ticket prefix, docs paths."
       lines: ["cd /path/to/your-repo", "claude \"Read .astraler/releases/2.9.0/ADAPT-HARNESS.md completely and execute it.\""]
     - title: "Configure mattpocock-skills for the repo, once"
-      note: "This skill declares the tracker, the triage label set and where CONTEXT.md and ADRs live; the engineering skills read that configuration afterwards."
+      note: "This skill declares the tracker, the triage label set and where GLOSSARY.md and ADRs live; the engineering skills read that configuration afterwards."
       lines: ["claude", "/mattpocock-skills:setup-matt-pocock-skills"]
     - title: "Open Thomas's session"
       note: "Thomas runs without per-command permission prompts so it can route continuously; model and effort follow the thomas row in orchestrator.md."
@@ -279,7 +279,7 @@ adopt:
       tag: "required"
       role: "One **pane** per agent. Thomas sees which agent is running and sends or waits on messages through the **herdr CLI**."
       href: "https://github.com/herdrdev/herdr"
-    - name: "mattpocock-skills ≥ 1.2.3"
+    - name: "mattpocock-skills ≥ 1.3.1"
       tag: "required"
       role: "The **SDLC method** the team follows: grill, spec, tickets, implement, code review."
       href: "https://github.com/mattpocock/skills"

@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-2.16.2-blue" alt="version"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-2.17.0-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
   <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-157_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/vi/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
@@ -47,7 +47,7 @@ nhau, review xong trong một vòng, và artifact chứng minh được điều 
 
 # 3. Mở repo bằng Claude Code và chạy bộ cài thích nghi
 cd /path/to/your-repo
-claude "Read .astraler/releases/2.13.0/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/2.17.0/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Mở router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium
@@ -58,7 +58,7 @@ Thomas đọc file cấu hình orchestrator, claim workspace, rồi bắt đầu
 > **Cần có trước:** [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code),
 > Git (có worktree),
 > [herdr](https://github.com/herdrdev/herdr) >= 0.8.0,
-> plugin [mattpocock-skills](https://github.com/mattpocock/skills) >= 1.2.3
+> plugin [mattpocock-skills](https://github.com/mattpocock/skills) >= 1.3.1
 
 ---
 
@@ -188,7 +188,7 @@ Bốn skill này lấp đúng những chỗ mà agent skill phổ thông bỏ ng
 
 | Skill | Việc |
 |---|---|
-| `bootstrap-glossary` | Dựng `CONTEXT.md` từ chính code — mỗi từ mang theo file nó được đọc ra |
+| `bootstrap-glossary` | Dựng `GLOSSARY.md` từ chính code — mỗi từ mang theo file nó được đọc ra |
 | `batch-triage` | Biến một backlog thừa kế thành ticket có nhãn và blocking edge |
 | `legacy-testing` | Sinh characterisation test và dựng seam cho code chưa có test |
 | `untangle` | Đường refactor cho code rối hơn mức công cụ kiến trúc thông thường xử lý được |
@@ -266,7 +266,7 @@ không phải Thomas ngồi không.
 | [**Claude Code CLI**](https://docs.anthropic.com/en/docs/claude-code) | Runtime nền — mọi role đều chạy được ở đây |
 | **Git** (có worktree) | Ranh giới cô lập — mỗi Builder một worktree |
 | [**herdr**](https://github.com/herdrdev/herdr) >= 0.8.0 | Quản lý workspace terminal — pane cho agent, prompt/wait/read |
-| [**mattpocock-skills**](https://github.com/mattpocock/skills) >= 1.2.3 | Phương pháp — wayfinder, grill, spec, tickets, implement, review |
+| [**mattpocock-skills**](https://github.com/mattpocock/skills) >= 1.3.1 | Phương pháp — wayfinder, grill, spec, tickets, implement, review |
 
 ### Tuỳ chọn
 

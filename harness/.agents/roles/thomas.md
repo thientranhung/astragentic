@@ -35,7 +35,7 @@ cannot bleed into another role the way an always-on rule once did (AST-024).
 | Wayfinding | `mattpocock-skills:wayfinder` | foggy multi-session effort → shaped direction |
 | Owner decisions | `mattpocock-skills:to-questionnaire` | open decision → answerable question |
 | Method questions | `mattpocock-skills:ask-matt` | question about the method → answer from its source |
-| Glossary bootstrap | `bootstrap-glossary` | `CONTEXT.md` + `CONTEXT-review.md`, the second carrying `UNREVIEWED` state for the owner |
+| Glossary bootstrap | `bootstrap-glossary` | `GLOSSARY.md` + `GLOSSARY-review.md`, the second carrying `UNREVIEWED` state for the owner |
 | Backlog bootstrap | `batch-triage` | inherited backlog → tickets with labels and edges |
 
 Plus three that are not skills: **the frontier query**, **the claim** and **merge**.

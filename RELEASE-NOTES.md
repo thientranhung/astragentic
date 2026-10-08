@@ -1,3 +1,41 @@
+# Astragentic 2.17.0
+
+**`mattpocock-skills` 1.3 renamed the glossary, and a harness on the old name writes a file
+nobody reads.** 1.3 renamed `CONTEXT.md` to `GLOSSARY.md` and `CONTEXT-MAP.md` to
+`GLOSSARY-MAP.md`. Every plugin skill that reads it looks for the new names only. So
+`bootstrap-glossary` kept seeding a `CONTEXT.md` that `domain-modeling`, `grill-with-docs`,
+`tdd` and the rest no longer opened, and nothing reported it. The skill now writes `GLOSSARY.md`,
+follows `GLOSSARY-FORMAT.md`, and keeps its review state in `docs/agents/GLOSSARY-review.md`.
+The contracts, the reachability registry and ADAPT-HARNESS follow the same names. The format
+itself did not change.
+
+The plugin floor moves to **1.3.1**. The rename has no compatible middle: a harness writing
+`GLOSSARY.md` on 1.2.3 is as unread as the reverse. `check-requirements.sh` and
+ADAPT-HARNESS §2 now refuse anything older.
+
+1.3 also deleted `resolving-merge-conflicts`. The Builder contract routed a drifted branch to
+it. That row is gone, and the Builder resolves the conflict itself. The note warning that
+`implement` names its sub-skills in slash form is gone too, because 1.3's `implement` calls them
+through the Skill tool. Check 4's fallback list drops the deleted skill and adds the three new
+ones: `implement-spec`, `pr` and `retro`.
+
+The README Quickstart had drifted to 2.16.1 (English) and 2.13.0 (Vietnamese). `install.sh`
+already rewrites the version badge and the Quickstart path from `VERSION`, but only in
+`README.md`. The Vietnamese README was never in that loop. Both are now.
+
+## Upgrade from 2.16.2
+
+1. Update the plugin to 1.3.1 or later before applying: `claude plugin marketplace update
+   claude-plugins-official`, then `claude plugin update mattpocock-skills@claude-plugins-official`,
+   then restart.
+2. Copy `harness/`, or run `./install.sh <target> --apply`.
+3. Move the glossary in **one commit, with no ticket in flight**: `git mv CONTEXT.md GLOSSARY.md`,
+   plus `CONTEXT-MAP.md` → `GLOSSARY-MAP.md`, any per-context `CONTEXT.md` and
+   `docs/agents/CONTEXT-review.md` → `docs/agents/GLOSSARY-review.md`. In the same commit, replace
+   the old names in `docs/agents/domain.md` and in the `## Agent skills` block of `AGENTS.md` or
+   `CLAUDE.md`. A worktree cut before this commit lands creates an empty `GLOSSARY.md` beside the
+   old file.
+
 # Astragentic 2.16.2
 
 **The dispatch mod refused text that only quoted a command.** Reported by the reviewer of the

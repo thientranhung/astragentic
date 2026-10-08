@@ -98,8 +98,8 @@ const VERB: Record<string, Record<Lang, string>> = {
     en: 'Triage an inherited backlog in one pass.',
   },
   'bootstrap-glossary': {
-    vi: 'Gieo CONTEXT.md bằng chính từ vựng codebase đang dùng.',
-    en: 'Seed CONTEXT.md with the terms the code already uses.',
+    vi: 'Gieo GLOSSARY.md bằng chính từ vựng codebase đang dùng.',
+    en: 'Seed GLOSSARY.md with the terms the code already uses.',
   },
   'codex-arm': {
     vi: 'Chạy một lượt Codex đọc lại artifact trước khi nó merge.',

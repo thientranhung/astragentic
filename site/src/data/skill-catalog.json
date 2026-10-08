@@ -8,7 +8,7 @@
   {
     "name": "bootstrap-glossary",
     "kind": "skill",
-    "oneLiner": "Seed CONTEXT.md with the domain terms the code already uses, each term carrying the file it was read from and marked unreviewed until the owner confirms it.",
+    "oneLiner": "Seed GLOSSARY.md with the domain terms the code already uses, each term carrying the file it was read from and marked unreviewed until the owner confirms it.",
     "group": "entry"
   },
   {

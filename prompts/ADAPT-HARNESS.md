@@ -37,7 +37,7 @@ Every spine phase the role contracts name — `triage`, `wayfinder`, `to-questio
 that plugin. Without it the contracts point at nothing, so this step comes before any
 integration work.
 
-1. **Confirm the plugin is installed**, version ≥ 1.2.3. Where it is absent, stop and ask the
+1. **Confirm the plugin is installed**, version ≥ 1.3.1. Where it is absent, stop and ask the
    owner to install it (`/plugin` → `mattpocock-skills`, marketplace `claude-plugins-official`).
    This is a genuine blocker: record `PENDING` and return rather than adapting around it.
 
@@ -369,7 +369,7 @@ On a repo with existing code, **two bootstrap skills** run once and each produce
 the **owner reviews before it counts**. Thomas owns both as phases; run them in this order,
 because the first feeds the second:
 
-1. **`bootstrap-glossary`** → `CONTEXT.md`, seeded from the terms the code already uses, every
+1. **`bootstrap-glossary`** → `GLOSSARY.md`, seeded from the terms the code already uses, every
    term citing the file it was read from and marked `UNREVIEWED` until the owner confirms it.
    The plugin reads this file from thirteen places, which is why it is the one bootstrap
    artifact that survived the 1.6.1 cull: everything else this package wrote had a producer

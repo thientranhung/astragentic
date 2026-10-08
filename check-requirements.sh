@@ -91,7 +91,7 @@ fi
 # 2. The mattpocock-skills plugin — the method itself. Every spine step this package routes
 # to lives in the plugin, so an absent plugin leaves the whole chain pointing at nothing.
 PLUGINS_JSON="$HOME/.claude/plugins/installed_plugins.json"
-PLUGIN_FLOOR="1.2.3"
+PLUGIN_FLOOR="1.3.1"
 plugin_version() {
   [ -f "$PLUGINS_JSON" ] || return 1
   if command -v python3 >/dev/null 2>&1; then

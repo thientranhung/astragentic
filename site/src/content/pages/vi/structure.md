@@ -78,7 +78,7 @@ chính bạn khai.
 
 - **Tracker.** Dùng tracker nào nằm ở `docs/agents/issue-tracker.md`.
 - **Runtime và model.** Agent ở role nào chạy runtime nào, model nào nằm ở `.agents/orchestrator.md`.
-- **Từ vựng miền.** `CONTEXT.md` giữ từ vựng miền dùng chung.
+- **Từ vựng miền.** `GLOSSARY.md` giữ từ vựng miền dùng chung.
 - **Quyết định đã chốt.** ADR giữ những quyết định đã chốt.
 
 Không file nào trong số đó bị release ghi đè.

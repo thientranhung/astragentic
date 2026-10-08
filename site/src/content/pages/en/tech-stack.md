@@ -123,13 +123,12 @@ to come with an instruction to remove the cron job.
 
 ## mattpocock-skills
 
-The entire craft part comes from here, minimum version `>= 1.2.3`, installed as a plugin.
+The entire craft part comes from here, minimum version `>= 1.3.1`, installed as a plugin.
 
 - **User-invoked steps.** `wayfinder`, `grill-with-docs`, `to-spec`, `to-tickets`, `implement`,
   `code-review`.
 - **Craft the model reaches for on its own.** `grilling`, `tdd`, `codebase-design`,
-  `domain-modeling`, `research`, `prototype`, `diagnosing-bugs`, `wizard`,
-  `resolving-merge-conflicts`.
+  `domain-modeling`, `research`, `prototype`, `diagnosing-bugs`, `wizard`, `pr`.
 
 The benefit of installing it once is that the whole team gets the craft, because model-invoked
 skills need no wiring.

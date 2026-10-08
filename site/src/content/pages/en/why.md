@@ -151,7 +151,7 @@ tracker. Running both in one repo is two coordinators managing the same state, s
 not combine them.
 
 **Trade-off.** This is a real dependency. `check-requirements.sh` stops hard without
-`mattpocock-skills >= 1.2.3`. Skill names sit directly in the contracts, so changing the method
+`mattpocock-skills >= 1.3.1`. Skill names sit directly in the contracts, so changing the method
 means rewriting contracts. And Astragentic can only patch the seams, not the plugin: when a defect
 sits inside `to-tickets`, the right answer is to have the contract account for it rather than fork
 a patch.

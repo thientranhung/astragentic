@@ -291,7 +291,7 @@ export const LAYERS: Layer[] = [
       vi: 'Repo thật. Harness không viết vào đây ngoài những file project tự khai.',
       en: 'The real repo. The harness writes nothing here beyond the files the project declares itself.',
     },
-    parts: 'repo · CONTEXT.md · ADR',
+    parts: 'repo · GLOSSARY.md · ADR',
   },
 ];
 

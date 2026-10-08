@@ -63,7 +63,7 @@ from this table — read the entry.
 | `AST-048` | A rule not present where it must be remembered does not exist | promoted | 276 |   |
 | `AST-049` | Checks 1–4 asked whether things were consistent, never whether a role could START | promoted | 169 |   |
 | `AST-050` | Qualify a plugin command always, not once it is known to collide | promoted | 217 | check-reachability.sh,dispatch-ticket,docs-staleness-audit.sh |
-| `AST-051` | An address the caller cannot use produces a substitute, not an error | promoted | 319 | builder-claude.md,builder.md,check-reachability.sh,dispatch-ticket,docs-staleness-audit.sh,thomas-claude.md,untangle |
+| `AST-051` | An address the caller cannot use produces a substitute, not an error | promoted | 319 | builder-claude.md,check-reachability.sh,dispatch-ticket,docs-staleness-audit.sh,thomas-claude.md,untangle |
 | `AST-052` | The word-budget audit ran its loop zero times and reported all clean | promoted | 227 | docs-staleness-audit.sh |
 | `AST-053` | An axis read the run's verdict instead of its own, and went mute | promoted | 226 |   |
 | `AST-054` | `git add -A` committed two releases nobody ever applied | promoted | 146 | hook-git-guard.py |

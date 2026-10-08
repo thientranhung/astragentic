@@ -548,7 +548,7 @@ it names machine-local pane and tab ids, so it is not committed and a project th
     "pane":      "pane_01H…",
     "runtime":   "claude",
     "identity":  "builder/ABC-129",
-    "write_set": ["src/posting/post.ts", "docs/agents/CONTEXT.md"],
+    "write_set": ["src/posting/post.ts", "docs/agents/GLOSSARY.md"],
     "claimed_at": "2026-08-26T09:41:00Z",
 
     "tab_id":     "w3:t5",

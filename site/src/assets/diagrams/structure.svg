@@ -157,8 +157,8 @@
         <text data-detail="context" x="550" y="491" class="t-muted" font-size="9" text-anchor="middle">one checkout per ticket</text>
         </g>
 
-        <g id="node-project" data-node-id="project" data-node-label="Your Project" tabindex="0" role="button" aria-label="Focus Your Project, repo · CONTEXT.md · ADR, YOUR PROJECT" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="repo · CONTEXT.md · ADR" data-node-context="YOUR PROJECT">
-          <title>Your Project · repo · CONTEXT.md · ADR · YOUR PROJECT</title>
+        <g id="node-project" data-node-id="project" data-node-label="Your Project" tabindex="0" role="button" aria-label="Focus Your Project, repo · GLOSSARY.md · ADR, YOUR PROJECT" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="repo · GLOSSARY.md · ADR" data-node-context="YOUR PROJECT">
+          <title>Your Project · repo · GLOSSARY.md · ADR · YOUR PROJECT</title>
           <rect x="650" y="630" width="220" height="74" rx="6" class="c-mask"/>
           <rect x="650" y="630" width="220" height="74" rx="6" class="c-frontend" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(656 636) scale(0.6875)">
@@ -168,7 +168,7 @@
             <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
           </g>
           <text data-node-label="" data-detail-anchor="" x="760" y="665" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Your Project</text>
-        <text data-detail="context" x="760" y="681" class="t-muted" font-size="9" text-anchor="middle">repo · CONTEXT.md · ADR</text>
+        <text data-detail="context" x="760" y="681" class="t-muted" font-size="9" text-anchor="middle">repo · GLOSSARY.md · ADR</text>
         </g>
 
         <!-- Connection labels -->

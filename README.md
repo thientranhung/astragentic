@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-2.16.2-blue" alt="version"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-2.17.0-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
   <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-157_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
@@ -47,7 +47,7 @@ prove what happened.
 
 # 3. Open your repo in Claude Code and run the adaptive installer
 cd /path/to/your-repo
-claude "Read .astraler/releases/2.16.1/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/2.17.0/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Start the router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium
@@ -58,7 +58,7 @@ Thomas reads your orchestrator config, claims the workspace, and begins routing 
 > **Prerequisites:** [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code),
 > Git (with worktree support),
 > [herdr](https://github.com/herdrdev/herdr) >= 0.8.0,
-> [mattpocock-skills](https://github.com/mattpocock/skills) plugin >= 1.2.3
+> [mattpocock-skills](https://github.com/mattpocock/skills) plugin >= 1.3.1
 
 ---
 
@@ -186,7 +186,7 @@ These close the gaps that upstream agent skills leave open:
 
 | Skill | Purpose |
 |---|---|
-| `bootstrap-glossary` | Seeds a `CONTEXT.md` from your code — every term cites its source file |
+| `bootstrap-glossary` | Seeds a `GLOSSARY.md` from your code — every term cites its source file |
 | `batch-triage` | Converts an inherited backlog into tickets with labels and blocking edges |
 | `legacy-testing` | Generates characterisation tests + seam creation for untested code |
 | `untangle` | Refactoring path for code too tangled for standard architecture tools |
@@ -266,7 +266,7 @@ telling the truth, not Thomas idling.
 | [**Claude Code CLI**](https://docs.anthropic.com/en/docs/claude-code) | Root runtime — every role can run here |
 | **Git** (worktree support) | Isolation boundary — one worktree per Builder |
 | [**herdr**](https://github.com/herdrdev/herdr) >= 0.8.0 | Terminal workspace manager — agent panes, prompt/wait/read |
-| [**mattpocock-skills**](https://github.com/mattpocock/skills) >= 1.2.3 | Engineering method — wayfinder, grill, spec, tickets, implement, review |
+| [**mattpocock-skills**](https://github.com/mattpocock/skills) >= 1.3.1 | Engineering method — wayfinder, grill, spec, tickets, implement, review |
 
 ### Optional
 

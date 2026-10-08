@@ -1,5 +1,11 @@
 [
   {
+    "sha": "e5988b95d9fc135e3e034db27b66f0db4049597b",
+    "date": "2026-10-05",
+    "subject": "2.16.2 — the mod stops refusing text that only quotes a command",
+    "ledger": "Ledger: none."
+  },
+  {
     "sha": "a2f7dcb72a3daab16b77fa3cac18034b7f05bb5e",
     "date": "2026-10-05",
     "subject": "2.16.1 — an unreadable worktree path is refused, not waved through",
@@ -112,11 +118,5 @@
     "date": "2026-09-14",
     "subject": "a rule reaches every runtime, or it reaches one — the contract re-arm reaches all three",
     "ledger": "Ledger: AST-138."
-  },
-  {
-    "sha": "544aea2ba48a07d2f1fd8788cee00529784d5fd1",
-    "date": "2026-09-09",
-    "subject": "site: task, feature, requirement in bold",
-    "ledger": "Ledger: none."
   }
 ]

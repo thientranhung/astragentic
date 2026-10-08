@@ -81,7 +81,7 @@ it beyond what you declare.
 - **Tracker.** `docs/agents/issue-tracker.md` names which tracker.
 - **Runtime and model.** `.agents/orchestrator.md` names which runtime and model the agent in
   each role runs on.
-- **Domain vocabulary.** `CONTEXT.md` holds the shared domain vocabulary.
+- **Domain vocabulary.** `GLOSSARY.md` holds the shared domain vocabulary.
 - **Settled decisions.** The ADRs hold the decisions already settled.
 
 No release overwrites any of them.

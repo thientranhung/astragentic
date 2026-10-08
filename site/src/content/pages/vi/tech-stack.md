@@ -121,12 +121,12 @@ muốn nó dừng thật thì điều kiện dừng phải kèm một câu bảo
 
 ## mattpocock-skills
 
-Toàn bộ phần craft đến từ đây, phiên bản tối thiểu `>= 1.2.3`, cài dưới dạng plugin.
+Toàn bộ phần craft đến từ đây, phiên bản tối thiểu `>= 1.3.1`, cài dưới dạng plugin.
 
 - **Bước có người gọi.** `wayfinder`, `grill-with-docs`, `to-spec`, `to-tickets`, `implement`,
   `code-review`.
 - **Phần craft model tự gọi khi cần.** `grilling`, `tdd`, `codebase-design`, `domain-modeling`,
-  `research`, `prototype`, `diagnosing-bugs`, `wizard`, `resolving-merge-conflicts`.
+  `research`, `prototype`, `diagnosing-bugs`, `wizard`, `pr`.
 
 Lợi ích của việc cài một lần là cả team có craft, vì skill model-invoked không cần đấu dây gì
 thêm.

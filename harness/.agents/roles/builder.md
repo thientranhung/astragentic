@@ -16,7 +16,6 @@ at once.
 | build starts | the ticket, its spec, the owner intent in your brief | what to build |
 | no seam to test through | `legacy-testing` | characterise → seam → TDD, in that order |
 | blast radius keeps growing as you read | `untangle` | scoping a refactor that will not scope |
-| branch has drifted | `resolving-merge-conflicts` | |
 | you need a rule | `.agents/memory/RULES.md` | every entry's rule, no narrative — a fifth the size |
 | you need a rule's EVIDENCE | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only; `INDEX.md` finds the id |
 
@@ -38,18 +37,16 @@ cadence. Measured: four unpushed commits at stand-down; 49 minutes, 17 modified 
 commits.
 
 **`implement` knows nothing about acceptance criteria** — it implements, runs typechecks and
-tests, and commits. Checking the ticket's criteria is yours, after it returns. It also points you at
-`/tdd` and `/code-review` <!-- addr-ok: quoting the plugin's own wrong form --> — the **human's**
-slash form, which you have no keyboard for. Reach the model-invocable ones through the Skill
-tool (AST-051).
+tests, and commits. Checking the ticket's criteria is yours, after it returns.
 
 **Pass `code-review` the `Base:` your brief carries** — "the increment" is not a git ref, and
 the skill asks for one when missing, into a pane with nobody in it.
 
 `implement` is **user-invoked**: drive it by name. The craft layer is model-invoked and needs no
 wiring — `tdd`, `mattpocock-skills:code-review`, `codebase-design`, `domain-modeling`,
-`diagnosing-bugs`, `resolving-merge-conflicts`, `research`, `prototype`, `grilling`, `wizard`.
-`tdd` and `diagnosing-bugs` are where this role lives.
+`diagnosing-bugs`, `research`, `prototype`, `grilling`, `wizard`.
+`tdd` and `diagnosing-bugs` are where this role lives. A drifted branch needs no skill: merge
+the base in and resolve the conflict yourself.
 
 ## Build
 

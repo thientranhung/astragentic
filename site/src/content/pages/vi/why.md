@@ -148,7 +148,7 @@ và không có gì tương đương `to-tickets` sinh ticket kèm blocking edge 
 trong một repo là hai bộ điều phối cùng quản lý một trạng thái, nên Astragentic không kết hợp.
 
 **Đánh đổi.** Đây là phụ thuộc thật. `check-requirements.sh` dừng cứng khi thiếu
-`mattpocock-skills >= 1.2.3`. Tên skill nằm thẳng trong các contract, nên đổi phương pháp là viết
+`mattpocock-skills >= 1.3.1`. Tên skill nằm thẳng trong các contract, nên đổi phương pháp là viết
 lại contract. Và Astragentic chỉ vá được đường nối, không vá được plugin: khi một defect nằm bên
 trong `to-tickets`, cách xử lý đúng là để contract tính tới nó thay vì fork một bản vá.
 

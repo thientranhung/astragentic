@@ -204,7 +204,7 @@ PLUGIN_FALLBACK = {
     "triage", "wayfinder", "to-questionnaire", "ask-matt", "grill-with-docs", "to-spec",
     "to-tickets", "implement", "code-review", "grilling", "tdd", "codebase-design",
     "domain-modeling", "research", "prototype", "diagnosing-bugs", "wizard",
-    "resolving-merge-conflicts", "improve-codebase-architecture",
+    "implement-spec", "pr", "retro", "improve-codebase-architecture",
     "setup-matt-pocock-skills", "handoff", "teach", "grill-me", "wait-what",
     "writing-for-agents",
 }
@@ -667,16 +667,16 @@ ARTIFACTS = [
     # reader, invisible to check 8 precisely because it had no path (the AST-071 shape).
     ("untangle boundaries",         r"docs/agents/boundaries\.md|boundaries this pass",
                                                               "untangle",        ["shaper"]),
-    # The review state was invisible to every reader of CONTEXT.md, including nine plugin
+    # The review state was invisible to every reader of GLOSSARY.md, including nine plugin
     # skills that load it. It now has its own file, and a named reader: the owner, via Thomas.
-    ("glossary review state",       r"docs/agents/CONTEXT-review\.md|UNREVIEWED",
+    ("glossary review state",       r"docs/agents/GLOSSARY-review\.md|UNREVIEWED",
                                                               "bootstrap-glossary", ["thomas"]),
     # A produced DOCUMENT is an artifact too, and this row is the one that survived the
     # 1.6.1 cull: three sibling skills wrote files that no contract and no plugin skill was
-    # told to read, and every check here went green because each was NAMED. `CONTEXT.md`
+    # told to read, and every check here went green because each was NAMED. `GLOSSARY.md`
     # differs by being read — by the plugin, not by us — so its verifier is a plugin skill
     # and is checked against the installed copy when there is one.
-    ("CONTEXT.md",                  r"CONTEXT\.md",           "bootstrap-glossary",
+    ("GLOSSARY.md",                 r"GLOSSARY\.md",          "bootstrap-glossary",
                                                               ["plugin:domain-modeling"]),
     # The frontier write-back has no commit to grep — its artifact is tracker state, which
     # this script cannot see. So the registry binds the two halves that ARE readable: the

@@ -1,6 +1,6 @@
 ---
 name: bootstrap-glossary
-description: Seed CONTEXT.md with the domain terms the code already uses, each term carrying the file it was read from and marked unreviewed until the owner confirms it. Invoke by name at bootstrap on an existing codebase, instead of a fifty-question domain interview. Extracts vocabulary from code; it does not invent definitions.
+description: Seed GLOSSARY.md with the domain terms the code already uses, each term carrying the file it was read from and marked unreviewed until the owner confirms it. Invoke by name at bootstrap on an existing codebase, instead of a fifty-question domain interview. Extracts vocabulary from code; it does not invent definitions.
 ---
 
 # Bootstrap the glossary from the terms the code uses
@@ -31,9 +31,9 @@ name is core vocabulary. A term appearing once in a private helper is not.
 For each term, write what the code shows it to be — its shape, what it relates to, what
 changes it. Then attach the evidence:
 
-**Write the entry in the reader's format, not a format of our own.** `CONTEXT.md` is consumed by
+**Write the entry in the reader's format, not a format of our own.** `GLOSSARY.md` is consumed by
 `domain-modeling` and eight other plugin skills, and its shape is fixed by that skill's
-`CONTEXT-FORMAT.md`. Read that file and follow it whole — the parts below are the ones a
+`GLOSSARY-FORMAT.md`. Read that file and follow it whole — the parts below are the ones a
 code-seeded pass gets wrong, not a replacement for it.
 
 - Terms live under `## Language` as `**Term**:`, one or two sentences, defining what it **is**
@@ -41,15 +41,15 @@ code-seeded pass gets wrong, not a replacement for it.
 - **Every term carries `_Avoid_`.** Where the code uses several words for one concept, pick the
   best and list the rest — that choice is most of this file's value, and a pass reading code
   sees the synonyms more clearly than anyone.
-- **Implementation detail does not belong.** `domain-modeling` wants `CONTEXT.md` "totally
+- **Implementation detail does not belong.** `domain-modeling` wants `GLOSSARY.md` "totally
   devoid" of it, which is exactly what a code-seeded pass will otherwise fill it with.
 - **General programming concepts do not belong**, however often the code uses them.
-- **Check the layout before writing.** One context → one `CONTEXT.md` at the repo root. Several
-  → one `CONTEXT-MAP.md` at the root listing them, and a `CONTEXT.md` inside each. Seeding one
+- **Check the layout before writing.** One context → one `GLOSSARY.md` at the repo root. Several
+  → one `GLOSSARY-MAP.md` at the root listing them, and a `GLOSSARY.md` inside each. Seeding one
   root file across a multi-context repo merges unrelated vocabularies into a document every
   reader treats as authoritative, and it is the brownfield repos most likely to be multi-context.
 
-So the definition goes in `CONTEXT.md`:
+So the definition goes in `GLOSSARY.md`:
 
 ```markdown
 ## Language
@@ -61,7 +61,7 @@ _Avoid_: Posting, journal line
 ```
 
 ...and the evidence, the citations and the review state go in **one** file,
-`docs/agents/CONTEXT-review.md` — this pass's audit trail, not vocabulary, and one path
+`docs/agents/GLOSSARY-review.md` — this pass's audit trail, not vocabulary, and one path
 regardless of how many contexts the repo has:
 
 ```markdown
@@ -80,7 +80,7 @@ Where a term is clearly domain language but its meaning cannot be read from usag
 term with `definition: UNKNOWN` and its citations. A named gap is worth more than a confident
 guess, and it costs the owner one sentence to close.
 
-## 3. Write `CONTEXT.md`
+## 3. Write `GLOSSARY.md`
 
 Open with a header that says exactly how much weight the file carries:
 
@@ -93,19 +93,19 @@ Terms below describe what the code does today, which may differ from what it sho
 
 **`UNREVIEWED` must be visible to a reader that has never heard of it.** The status field lived
 only in this skill's own vocabulary: it appears nowhere in the plugin, and nine plugin skills
-load `CONTEXT.md` without knowing the field exists — so every one of them read unconfirmed
+load `GLOSSARY.md` without knowing the field exists — so every one of them read unconfirmed
 extractions as confirmed domain language, which is the "confident-sounding lore" this pass
-exists to prevent. Keeping the review state OUT of `CONTEXT.md` is half the fix; the other half
+exists to prevent. Keeping the review state OUT of `GLOSSARY.md` is half the fix; the other half
 is the header below, which is prose any reader sees.
 
-## 4. Write `docs/agents/CONTEXT-review.md`
+## 4. Write `docs/agents/GLOSSARY-review.md`
 
 The citations, the ambiguities, the `UNKNOWN` definitions and the per-term review state.
 **The owner reads it** — that is what "ends on owner review, not on the artifact" means, and
 until now the review had no address to be pointed at. A term moves out of this file by being
-confirmed, and the header count in `CONTEXT.md` is derived from it.
+confirmed, and the header count in `GLOSSARY.md` is derived from it.
 
-Where `CONTEXT.md` already exists, **add to it and leave existing entries alone.** An entry a
+Where `GLOSSARY.md` already exists, **add to it and leave existing entries alone.** An entry a
 human wrote outranks an entry read from code; where the code contradicts one, record that
 under the existing entry as an observation for the owner.
 

@@ -986,7 +986,6 @@
     "words": 319,
     "citedBy": [
       "builder-claude.md",
-      "builder.md",
       "check-reachability.sh",
       "dispatch-ticket",
       "docs-staleness-audit.sh",
@@ -1002,11 +1001,6 @@
         "name": "builder-claude.md",
         "kind": "file",
         "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.agents/roles/builder-claude.md"
-      },
-      {
-        "name": "builder.md",
-        "kind": "file",
-        "href": "https://github.com/thientranhung/astragentic/blob/main/harness/.claude/agents/builder.md"
       },
       {
         "name": "check-reachability.sh",

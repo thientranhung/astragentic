@@ -146,15 +146,17 @@ fi
 # class as the ledger header above, and it recurred exactly as that comment predicted: a project
 # taking 2.6.0 read a version badge saying 2.3.23 and a failure-mode count 9 entries stale. A
 # number a document states about itself is derived here or it drifts.
-README="$HARNESS_ROOT/README.md"
-if [ -f "$README" ] && [ -f "$LEDGER" ]; then
+# Both READMEs: the Vietnamese one was left out of this loop and its Quickstart sat at 2.13.0
+# while the English one tracked every release.
+for README in "$HARNESS_ROOT/README.md" "$HARNESS_ROOT/README.vn.md"; do
+  [ -f "$README" ] && [ -f "$LEDGER" ] || continue
   LEDGER_COUNT=$(grep -c '^### AST-' "$LEDGER")
   BEFORE=$(cat "$README")
   sed -i '' -E "s|badge/version-[0-9]+\.[0-9]+\.[0-9]+-blue|badge/version-$VERSION-blue|g; \
                 s|badge/failure_modes-[0-9]+_measured-red|badge/failure_modes-${LEDGER_COUNT}_measured-red|g; \
                 s|releases/[0-9]+\.[0-9]+\.[0-9]+/ADAPT-HARNESS\.md|releases/$VERSION/ADAPT-HARNESS.md|g" "$README"
-  [ "$BEFORE" = "$(cat "$README")" ] || echo "README badges auto-updated: version $VERSION, $LEDGER_COUNT failure modes"
-fi
+  [ "$BEFORE" = "$(cat "$README")" ] || echo "$(basename "$README") badges auto-updated: version $VERSION, $LEDGER_COUNT failure modes"
+done
 
 APPLY=0
 PLAN=0
