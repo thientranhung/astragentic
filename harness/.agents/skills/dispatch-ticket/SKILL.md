@@ -110,6 +110,10 @@ command that writes to disk — the arm already does, one detached worktree per 
 
 ## The watchdog must be RUNNING before the first dispatch
 
+**On a Claude root the per-turn watcher is the mod's** (`dispatch-ticket-claude`): the pane
+reports its own turn end. This workspace watchdog is still yours on every runtime, because it
+covers the one thing a mod cannot report — a pane whose process died.
+
 ```bash
 # Scoped to THIS workspace, and by the same identity test the watchdog uses on itself: a bare
 # `pgrep -f herdr-watchdog.sh` matches `tail -f herdr-watchdog.sh` and matches another
@@ -136,6 +140,11 @@ suppresses it — a Builder that finishes while Thomas is busy still pings nothi
 watcher and the watchdog cover different halves; neither replaces the other.
 
 ## The payload must be COMMITTED before the first dispatch
+
+**On a Claude root the mod refuses the brief while any payload file is uncommitted**, and
+names the files; a brief line `Uncommitted-payload: <why>` lets a deliberate one through. It
+fails open on a git error, so the check below is still worth one run per session. On Codex and
+OpenCode the check below is the only one.
 
 **A git worktree contains tracked content and nothing else.** A harness whose files are
 untracked — gitignored, or merely staged-but-uncommitted — is invisible inside every Builder
@@ -305,8 +314,27 @@ carries no `disable-model-invocation`, so an agent invokes it as `Skill(skill: "
 Writing it as `/simplify` <!-- addr-ok: cited as the wrong form --> hands an agent an address
 it cannot use, and a Builder given an unusable address rolls its own pass instead (AST-051).
 
+### The brief carries the build flow as a `FLOW:` line
+
+**`implement` points at `tdd` and `code-review` but does not reach them.** Measured downstream
+on 44 Builder transcripts (2026-10-09): `implement` 44/44, `tdd` 0/44, Matt's `code-review`
+6/44. On plugin 1.3.1 the pointer is the bare word `code-review`, which Matt's skill and
+Claude Code's built-in both answer to, so one of the two reviews never runs either way.
+
+So the brief carries the flow as one line of qualified Skill names, in this order, and a step
+that cannot apply is named in the handback with its reason (`TDD: n/a — <why>`). Both reviews
+are required: Matt's checks standards and spec, the built-in hunts bugs. On Codex and OpenCode
+the two built-ins (steps 3 and 4) are SKIPPED the way `simplify` already is.
+
+**On a Claude root the mod records each Skill call the Builder makes and names the missing
+steps in the merge result** (`dispatch-ticket-claude`). On Codex and OpenCode the handback is
+the only record.
+
 ```text
 /mattpocock-skills:implement TICKET-123
+
+FLOW: 1 Skill(mattpocock-skills:tdd) → 2 Skill(mattpocock-skills:code-review) → 3 Skill(code-review)
+  → 4 Skill(simplify) → 5 arm(ticket) — each a call; a skipped step is named with its reason.
 
 Worktree: … · Branch: … · Base: …
 Acceptance criteria: …
@@ -525,6 +553,10 @@ rather than inside one — and a new ticket takes a fresh pane and worktree anyw
 cwd, branch, worktree, process or lifecycle cleanup.
 
 ## 10. Write `.astraler/state/dispatch-record.json`
+
+**On a Claude root the pane writes its own entry at session start**, from herdr's environment,
+and you read it back (`dispatch-ticket-claude`); an entry you write by hand is overwritten by
+the pane's. On Codex and OpenCode you write it, as below.
 
 **The durable half of a dispatch.** `thomas.md` names this record beside the tracker and the
 frontier and nothing defined it: no path, no shape, no owner. Four rules read it and could

@@ -3,6 +3,12 @@
 **Read `.agents/roles/builder.md` (the base contract) first.** This file carries only what
 differs on the Claude Code runtime.
 
+## Bug review — Claude Code invocation
+
+**Invoke `Skill(skill: "code-review")`** after `mattpocock-skills:code-review` and before
+simplify. This is Claude Code's built-in bug review — not `mattpocock-skills:code-review`
+(Standards + Spec), and not `code-review:code-review` (the PR plugin). Fold the findings.
+
 ## Simplify — Claude Code invocation
 
 **Invoke `Skill(skill: "simplify")`** — model-invocable, no plugin prefix.
@@ -76,6 +82,13 @@ git commit --allow-empty -m 'simplify(increment): no findings on <base>..<head>
 
 Pass: Skill(skill: "simplify")'
 ```
+
+## Advisor
+
+When your `orchestrator.md` row sets an advisor, your session carries a stronger model you can
+consult, and the engine decides the moments. Consult it before committing to an approach, when
+the same error comes back a second time, and before the handback. Its guidance is advice, not a
+gate: where your own evidence contradicts a specific claim, say so and follow the evidence.
 
 ## Background work
 

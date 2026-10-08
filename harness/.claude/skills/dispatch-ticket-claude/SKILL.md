@@ -29,6 +29,7 @@ project loads it with no flag and no setup:
 | Claim on the tracker before the brief | prose in `thomas.md` | a brief for a ticket the tracker reports unclaimed is not sent |
 | Tracker write-back after a merge | refused only at a push of the base | the merge result carries the note, the line turns red, and no brief is sent until `scripts/ticket-done.sh` has stamped it |
 | Release a worktree's resources | `release-worktree-resources.sh` by hand before removal | runs at `git worktree remove`, and the record entry goes with the worktree |
+| Know which flow steps ran | a `Pass:` line in a commit message, which anyone can type | the Builder's pane records every Skill call as the engine expands it; `TURN-END` carries the list, and a merge names the steps with no record |
 
 Measured 2026-10-05 on Claude Code 2.1.289 and herdr 0.9.1, with a Builder in its own
 worktree. The record carried the right tab and pane ids. A phrase that existed only in the
@@ -38,7 +39,7 @@ Builder's tab was refused.
 
 **Three preconditions, all checkable:**
 
-- **Claude Code 2.1.289 or later.** `check-requirements.sh` refuses older versions. Below the
+- **Claude Code 2.1.294 or later.** `check-requirements.sh` refuses older versions. Below the
   floor the mod does not load, and nothing else watches the pane.
 - **The tab label is set before launch.** The mod reads `ticket:` / `spec:` / `qa:` / `rin:`
   from its tab at session start. A pane labelled after launch never records itself.
@@ -84,6 +85,39 @@ is now a second copy of something the mod does, and a second copy is where the t
   the pane. Read that pane: the message may be held or lost. The sender's `{"success": true}`
   is true even for a held message (measured), so it proves nothing.
 - **`/dispatch-board`** opens a pane listing every live dispatch with its state and age.
+
+## The project's rules travel as overlays
+
+`.astraler/project/overlays/` is the project's, and no release writes into it. The mod reads it
+on every Claude session in the project:
+
+| File | Where it lands |
+|---|---|
+| `overlays/<role>.md` (`builder`, `shaper`, `qa`, `rin`) | appended to that role's system prompt, on every render, so it survives compaction |
+| `overlays/thomas.md` | the same, in the dispatcher's own session (any Claude session in the repo that is not a dispatched pane) |
+| `overlays/dispatch-brief.md` | appended to every brief the mod sends, after the brief's own text |
+
+Measured 2026-10-09 on Claude Code 2.1.294: a section the mod added at `prompt.compose` was
+read by the model on the first turn. An overlay **adds** to the contract; where it would
+contradict one, the contract wins and the conflict goes upstream. A rule that must refuse
+belongs in a plug script (`ticket-done.sh`, the pre-push hook), not in an overlay: prose can
+instruct, only a hook can stop.
+
+## The flow is read from what ran
+
+The brief's `FLOW:` line names four Skill calls: `mattpocock-skills:tdd`,
+`mattpocock-skills:code-review`, the built-in `code-review`, `simplify`. The Builder's pane
+records each one at the moment the engine expands it, under `skills_run` in its record entry.
+Measured 2026-10-09 on Claude Code 2.1.294: a plugin skill is recorded qualified, a built-in
+bare, so the two reviews that share a word are told apart.
+
+- **`TURN-END` carries `Skills run: …`** — read it before the handback's claims.
+- **A merge names the gaps** in its result: *"ABC-123 merged with no record of: tdd, built-in
+  code-review"*. It is a note, not a refusal: a step the handback names `n/a` with its reason
+  is legitimate, and the mod cannot read reasons. Any other gap is a step that did not run.
+- **Only a pane the mod registered is judged.** A Codex or OpenCode Builder has no
+  `session_id` in its entry and is not named; its evidence stays the marker script.
+- **A fork's call is recorded under the Builder**, the same attribution git gives its commits.
 
 ## The tracker: claimed before the brief, closed before the next one
 
@@ -174,16 +208,19 @@ launched with `--dangerously-skip-permissions` already extends to its dispatcher
 ## Launcher matrix — Claude rows
 
 ```text
-builder  → claude --dangerously-skip-permissions --agent builder --model <row: Model> <--effort only when the row sets one>
-shaper   → claude --dangerously-skip-permissions --agent shaper --model <row: Model> <--effort only when the row sets one>
-rin      → claude --agent rin --model <row: Model> <--effort only when the row sets one>
-qa       → claude --agent qa --model <row: Model> <--effort only when the row sets one>
+builder  → claude --dangerously-skip-permissions --agent builder --model <row: Model> <--effort only when the row sets one> <--advisor only when the row sets one>
+shaper   → claude --dangerously-skip-permissions --agent shaper --model <row: Model> <--effort only when the row sets one> <--advisor only when the row sets one>
+rin      → claude --agent rin --model <row: Model> <--effort only when the row sets one> <--advisor only when the row sets one>
+qa       → claude --agent qa --model <row: Model> <--effort only when the row sets one> <--advisor only when the row sets one>
 ```
 
 Model and effort come from the role's `orchestrator.md` row, never from memory.
 
 Add `--effort` only when the row sets it (`low|medium|high|xhigh|max`); blank means the
-runtime default. **Rin runs without `--dangerously-skip-permissions`**: a gate runs under
+runtime default. Add `--advisor <value>` only when the row's Advisor cell is set; the pairing
+rules are in `orchestrator.md`. Not yet measured through `herdr agent start`: the flag is
+undocumented in `claude --help`, so the first launch with it is the measurement — a session
+that could not attach the advisor says `cannot advise` at launch and runs without it. **Rin runs without `--dangerously-skip-permissions`**: a gate runs under
 permissions, and rin has no fallback row, so no other runtime is legal here.
 
 ## Pre-dispatch verification
@@ -211,14 +248,14 @@ For **builder** and **shaper** (write roles):
 
 ```bash
 herdr agent start "<role>-<ticket-id>" --kind claude --pane <pane-id> --timeout 60000 \
-  -- --dangerously-skip-permissions --agent <role> --model <row: Model> <--effort only when the row sets one>
+  -- --dangerously-skip-permissions --agent <role> --model <row: Model> <--effort only when the row sets one> <--advisor only when the row sets one>
 ```
 
 For **rin** and **qa** (review roles — no `--dangerously-skip-permissions`):
 
 ```bash
 herdr agent start "<role>-<artifact-key>" --kind claude --pane <pane-id> --timeout 60000 \
-  -- --agent <role> --model <row: Model> <--effort only when the row sets one>
+  -- --agent <role> --model <row: Model> <--effort only when the row sets one> <--advisor only when the row sets one>
 ```
 
 ## Measured runtime facts

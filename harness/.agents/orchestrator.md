@@ -45,13 +45,13 @@ closing one.
 
 ## Active assignments
 
-| Role | Runtime | Model | Effort |
-|---|---|---|---|
-| thomas | claude | claude-opus-5 | medium |
-| shaper | claude | claude-opus-5 | high |
-| builder | claude | claude-sonnet-5 | medium |
-| rin | claude | claude-opus-5 | high |
-| qa | claude | claude-sonnet-5 | low |
+| Role | Runtime | Model | Effort | Advisor |
+|---|---|---|---|---|
+| thomas | claude | claude-opus-5 | medium | fable |
+| shaper | claude | claude-opus-5 | high | fable |
+| builder | claude | claude-sonnet-5 | medium | opus |
+| rin | claude | claude-opus-5 | high | fable |
+| qa | claude | claude-sonnet-5 | low | opus |
 
 ## Fallback providers
 
@@ -95,6 +95,17 @@ API call rather than at launch, so a typo here surfaces late. **opencode leaves 
 TUI form has no `--variant`, and the form that does is invisible to herdr, so effort and
 orchestration visibility are mutually exclusive there and visibility wins. A non-blank opencode
 Effort cell is a misconfigured row.
+
+**Advisor** is Claude only, and travels as `--advisor <value>` on the launch line when the cell
+is set; blank means none. It names a stronger model the role's session consults at its own
+decision points — before committing to an approach, when an error keeps recurring, before
+declaring done — and the main model decides when. The pairing must rank at or above the
+main model: an Opus role accepts only Opus 5 or later or Fable, so an Opus advisor on an Opus
+row buys little. The default pairs the two Sonnet roles with `opus` and the three Opus roles
+with `fable`. Fable bills to usage credits and needs the owner's one-time consent (`/model
+fable`, once, on this machine); until then a `fable` cell launches without an advisor. It needs a direct Anthropic connection (not Bedrock,
+Vertex or Foundry) and feature-flag fetching; a session that cannot attach it runs without it
+and says so at launch. A Codex or opencode row ignores the cell.
 
 **Mixing runtimes across roles is legal** — a Claude Shaper with a Codex Builder is a valid
 configuration. Each pane launches from its own row.

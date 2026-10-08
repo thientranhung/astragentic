@@ -19,6 +19,10 @@ at once.
 | you need a rule | `.agents/memory/RULES.md` | every entry's rule, no narrative — a fifth the size |
 | you need a rule's EVIDENCE | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only; `INDEX.md` finds the id |
 
+**A project's own rules reach you as a section of your system prompt**, from
+`.astraler/project/overlays/builder.md`, when the project has one and you run on Claude Code.
+It adds to this contract and never overrides it.
+
 Every `AST-` id here points into that ledger. Follow one when you need the evidence; the rule
 stands without it.
 
@@ -26,8 +30,9 @@ stands without it.
 
 | Phase | Skill | Ends when |
 |---|---|---|
-| Build | `mattpocock-skills:implement` | the build is green — **then YOU check the acceptance criteria**, one by one |
+| Build | `mattpocock-skills:implement` | `mattpocock-skills:tdd` has run at every seam and the build is green — **then YOU check the acceptance criteria**, one by one |
 | Increment review | `mattpocock-skills:code-review <Base>` | both axes have run once over that range |
+| Bug review | built-in `code-review` — see runtime supplement | its findings are folded |
 | Simplify | see runtime supplement | a `simplify(increment):` commit exists whose body names the pass that ran |
 | Cross-vendor arm | `codex-arm` / `codex-claude-arm` | an `arm(ticket):` receipt at your head |
 | Visual verification | — | every changed user-visible surface has browser evidence, or the skip is named |
@@ -41,6 +46,10 @@ tests, and commits. Checking the ticket's criteria is yours, after it returns.
 
 **Pass `code-review` the `Base:` your brief carries** — "the increment" is not a git ref, and
 the skill asks for one when missing, into a pane with nobody in it.
+
+**Call `tdd` and both reviews yourself, by their qualified names.** `implement` points at them,
+but a pointer is not a call: measured downstream, `tdd` ran in 0 of 44 tickets. A step that
+cannot apply is named in the handback with its reason — `TDD: n/a — <why>` — never left silent.
 
 `implement` is **user-invoked**: drive it by name. The craft layer is model-invoked and needs no
 wiring — `tdd`, `mattpocock-skills:code-review`, `codebase-design`, `domain-modeling`,
@@ -74,14 +83,8 @@ defects were one mistake repaired one at a time.
 ## Increment review
 
 **Two skills answer to `code-review`** — the plugin's and a Claude Code built-in that does
-something else — so name this one in full. Run both axes **once** over the increment, in one
-pass:
-
-- **Standards** — does this follow what the repo documents? Where the repo documents little,
-  the axis falls back to generic smells and quietly becomes a generic review. **Say so out
-  loud when that happens**; silent degradation is the failure class this harness exists to
-  catch.
-- **Spec** — does this match what the ticket asked for?
+something else — so name this one in full. Run it **once** over the increment; the skill
+carries its two axes and its smell baseline itself.
 
 Fix the findings you agree with. **A finding you dispute gets one reply, in writing, to
 Thomas** — he decides between it and the finding, and only what neither of you can close goes to
@@ -104,7 +107,8 @@ is **your change rendering correctly** — whether the product still coheres is 
 
 ## The cross-vendor arm — yours to fire, and it closes your loop
 
-**One closed loop, one handback:** `implement` → `code-review` → simplify → **arm pass 1** →
+**One closed loop, one handback:** `implement` → `tdd` → `mattpocock-skills:code-review` →
+built-in `code-review` → simplify → **arm pass 1** →
 [fold → **pass 2**] → **the ONE full verification run** → `arm(ticket):` receipt → handback.
 
 **The full run goes after the last commit that changes the tree** — any earlier and a review,

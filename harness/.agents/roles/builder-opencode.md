@@ -20,6 +20,12 @@ leaves the same marker shape, so every check after it reads as satisfied (AST-05
 The commit subject still starts with `simplify(increment):` so Thomas's artifact grep
 finds it.
 
+## Bug review
+
+**The built-in `code-review` is a Claude Code skill and does not exist here.** Skip it and say
+so in the handback: `Bug review: SKIPPED — runtime opencode has no built-in code-review`. `tdd` and
+`mattpocock-skills:code-review` still run.
+
 ## Context management
 
 No `/compact` or `/clear` on this runtime. opencode's TUI manages context by scrolling.

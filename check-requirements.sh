@@ -72,7 +72,7 @@ if [ "$HAVE_CLAUDE" -eq 1 ]; then
   # The dispatch mod is what records, briefs and watches every Claude pane; there is no watcher
   # left behind it on a Claude root. Below the version it was measured on it does not load, and
   # each pane runs unwatched while looking dispatched — a MISS, not a warning.
-  CLAUDE_FLOOR="2.1.289"
+  CLAUDE_FLOOR="2.1.294"
   CLAUDE_VER="$(claude --version 2>/dev/null | awk '{print $1}')"
   if [ -n "$CLAUDE_VER" ] && [ "$(printf '%s\n%s\n' "$CLAUDE_FLOOR" "$CLAUDE_VER" | sort -V | head -1)" = "$CLAUDE_FLOOR" ]; then
     ok "Claude Code $CLAUDE_VER loads the dispatch mod (floor $CLAUDE_FLOOR)"
@@ -256,6 +256,20 @@ else
   for CAND in ".agents/orchestrator.md" "harness/.agents/orchestrator.md"; do
     [ -f "$CAND" ] && { ORCH="$CAND"; break; }
   done
+fi
+
+# 2.18.0 added an Advisor column to the Active assignments table. The file is the owner's
+# scaffold, so no release writes the column; this check and the dispatch mod's brief refusal
+# are what make it land. The CELLS are not judged: blank means no advisor, by design.
+if [ -n "$ORCH" ]; then
+  ACTIVE_HEADER="$(awk '/^[ \t]*##[ \t]*Active assignments/{f=1;next} /^[ \t]*##[ \t]/{f=0} f && /^[ \t]*\|[ \t]*Role[ \t]*\|/{print; exit}' "$ORCH")"
+  if [ -z "$ACTIVE_HEADER" ]; then
+    miss "orchestrator: no Active assignments table found in $ORCH" "the launcher reads role → runtime/model/effort/advisor from that table; restore it"
+  elif ! printf '%s' "$ACTIVE_HEADER" | grep -qi '|[[:space:]]*Advisor[[:space:]]*|'; then
+    miss "orchestrator: Active assignments has no Advisor column (added 2.18.0; the launcher reads it)" "add the column — header Advisor, one cell per row: opus, fable, or blank for none; the dispatch mod refuses every brief until it exists"
+  else
+    ok "orchestrator: Active assignments carries the Advisor column"
+  fi
 fi
 
 # Read a role's codex row from either table; prints "<model>|<effort>". Prints nothing only

@@ -1,3 +1,77 @@
+# Astragentic 2.18.0
+
+**The Builder flow is read from what ran, not from what the handback says ran.** Measured
+downstream on 44 Builder transcripts: `implement` ran 44/44, `tdd` 0/44, Matt's `code-review`
+6/44. `implement` points at both skills in prose, and a Builder with no keyboard read the
+pointers as prose. On plugin 1.3.1 the pointer is the bare word `code-review`, which Matt's
+skill and Claude Code's built-in both answer to, so one of the two reviews never runs either
+way.
+
+Two changes close it, one on each side of the brief.
+
+**The brief carries a `FLOW:` line** of qualified Skill names, in order: `mattpocock-skills:tdd`
+→ `mattpocock-skills:code-review` → built-in `code-review` → `simplify` → `arm(ticket)`. A step
+that cannot apply is named in the handback with its reason (`TDD: n/a — <why>`). `builder.md`'s
+phase table and loop name the same order; `builder-claude.md` carries the built-in review's
+invocation; the Codex and OpenCode supplements record it SKIPPED, as `simplify` already is.
+
+**The dispatch mod records every Skill call the Builder's pane makes**, at the moment the
+engine expands the skill (`skill.prompt`). Measured 2026-10-09 on Claude Code 2.1.294: a plugin
+skill arrives qualified, a built-in bare, so the two reviews that share a word are told apart.
+`TURN-END` carries `Skills run: …`, and a merge names the steps with no record in its result:
+*"ABC-123 merged with no record of: tdd, built-in code-review"*. A note, not a refusal, because
+the mod cannot read a handback's `n/a` reason. Only a pane the mod registered is judged; a Codex
+or OpenCode Builder keeps the marker script as its evidence. This is the first step away from
+the `Pass:` line, which anyone can type, as the proof a pass ran.
+
+**The shared dispatch protocol now says what the mod already does.** Three sections of
+`dispatch-ticket` described steps by hand that the mod had taken over in 2.14 and 2.15 — the
+dispatch record, the payload-committed check, the per-turn watch — with no word that it had.
+Each now opens with what the mod does on a Claude root and what stays yours there, and keeps the
+manual form for Codex and OpenCode. The workspace watchdog stays a gate on every runtime: it
+covers the one thing a pane cannot report, its own death.
+
+**The project gets a place for its own rules that no release overwrites.** A downstream
+project counted 64 payload files it had edited in place and had to re-apply after every
+upgrade, with a drift script that could only report the loss. `.astraler/project/overlays/`
+closes that: `overlays/<role>.md` is appended to the role's system prompt by the dispatch mod,
+on every render and through compaction, and `overlays/dispatch-brief.md` is appended to every
+brief the mod sends. Measured 2026-10-09 on Claude Code 2.1.294: a `prompt.compose` section
+added by the mod was read by the model on the first turn. The dispatcher's own session reads
+`overlays/thomas.md`. An overlay adds to the contract and never contradicts it; the shape is in
+ADAPT-HARNESS §3. The plugs already in that directory are unchanged.
+
+**The launcher takes an advisor.** `orchestrator.md`'s Active assignments table has an
+`Advisor` column, Claude only, carried as `--advisor <value>` on the launch line when set. The
+default pairs the two Sonnet roles, Builder and QA, with `opus`, and the three Opus roles
+with `fable`, the only model that ranks above them. Fable bills to usage credits and needs the
+owner's one-time consent (`/model fable`); until it is given, a `fable` row launches without an
+advisor and says so.
+The Builder supplement says when to consult it. Not yet measured through `herdr agent start`;
+the first launch is the measurement.
+
+Smaller: `builder.md` no longer restates `code-review`'s two axes and its fallback, which 1.3.1's
+skill carries itself. Two ledger entries asserted a live `Bound:` to an `AGENTS.md` that is gone;
+both now say so, and reachability check 10 is clean. Claude Code floor moves to **2.1.294**, the
+build `skill.prompt` was measured on.
+
+## Upgrade from 2.17.0
+
+1. Claude Code 2.1.294 or later, plugin 1.3.1 or later.
+2. Copy `harness/`, or run `./install.sh <target> --apply`. The mod, `dispatch-ticket`,
+   `dispatch-ticket-claude` and the four Builder files change.
+3. Add the `FLOW:` line to the next brief; `dispatch-ticket` § "The brief carries the build flow"
+   has the form.
+4. `orchestrator.md` is scaffold and is never overwritten: add the `Advisor` column to your
+   Active assignments table by hand (ADAPT §4 has the defaults). While the table exists without
+   the column the mod refuses every brief; a table it cannot find is `check-requirements.sh`'s
+   MISS, not the mod's. A blank cell is a row with no advisor.
+5. Move the project's own rules out of payload files into `.astraler/project/overlays/`
+   (`builder.md`, `thomas.md`, `dispatch-brief.md`, …), then re-apply the payload clean. The
+   drift manifest should come out empty. Overlays reach Claude sessions only: a role whose row
+   runs on Codex or opencode reads none, so a project with such a row keeps that role's rules
+   where that runtime reads them.
+
 # Astragentic 2.17.0
 
 **`mattpocock-skills` 1.3 renamed the glossary, and a harness on the old name writes a file

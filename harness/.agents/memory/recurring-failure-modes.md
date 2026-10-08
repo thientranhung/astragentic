@@ -147,7 +147,7 @@ working-method §3a.
 ### AST-022 — A filesystem-only tool was invisible to agents · promoted 2026-07-13
 A shared operational tool needs a pointer in a doc an agent is GUARANTEED to load
 (`AGENTS.md` @-import or `.claude/rules/`), with full path/args/exit codes; tool + every
-doc pointer change in the same commit. Bound: `AGENTS.md` (watcher bullet) +
+doc pointer change in the same commit. Bound: `AGENTS.md` (gone) +
 `.claude/agents/thomas-leader.md` (gone) (full herdr-watch doctrine; ex-`THOMAS.md` (gone), folded
 2026-07-16). Watcher semantics: bell not verdict — verify by artifact; `done` mis-fires
 when the worker spawns sub-agents; real end-signal = artifact progress.
@@ -189,7 +189,7 @@ re-bind EVERY governance surface in the same slice (see
 B): forgot-`--agent` mislaunch is soft-guarded only (fixed launch script + self-check
 STOP). Bound: `.claude/agents/thomas-leader.md` (gone) / `dan-implementor.md` (gone) /
 `rin-pr-reviewer.md` (gone), `.claude/rules/role-thomas.md` (gone) / `build-loop-gates.md` (gone) /
-`agent-worktree-isolation.md` (gone), working-method §3–§5, rules §3, `AGENTS.md`, truth-model §2.
+`agent-worktree-isolation.md` (gone), working-method §3–§5, rules §3, `AGENTS.md` (gone), truth-model §2.
 actual-outcome: _pending — at next self-audit confirm: a Dan pane resolves to Dan (no
 re-dispatch), Rin resolves to Rin, Thomas verifies by artifact, no doc still mandates the
 old worker dispatch._

@@ -48,8 +48,44 @@ import type { Register } from 'claude-code'
 import type { BoardRow } from '../types'
 
 const MARK = '[astragentic-dispatch]'
+
+// The Builder flow, as the skill names the engine reports at `skill.prompt`. Measured
+// 2026-10-09 on Claude Code 2.1.294: a plugin skill arrives qualified (`mattpocock-skills:tdd`),
+// a built-in bare (`code-review`), so the two reviews that share a word are told apart here
+// where the brief's prose could not (AST-050). The record is the pane's own observation of the
+// call, which a commit message cannot forge the way a `Pass:` line can (AST-055, AST-130).
+const FLOW: ReadonlyArray<readonly [string, string]> = [
+  ['mattpocock-skills:tdd', 'tdd'],
+  ['mattpocock-skills:code-review', "Matt's code-review"],
+  ['code-review', 'built-in code-review'],
+  ['simplify', 'simplify'],
+]
+
+function flowGaps(entry: Entry): string[] {
+  const run = entry?.skills_run ?? {}
+  return FLOW.filter(([name]) => !(name in run)).map(([, label]) => label)
+}
 const PANE = 'dispatch-board'
 const RECORD = '.astraler/state/dispatch-record.json'
+
+// The project's own rules live outside the payload, so a release never overwrites them.
+// `overlays/<role>.md` joins the role's system prompt at every render (measured 2026-10-09 on
+// 2.1.294: a `prompt.compose` section added here was read on the first turn), and
+// `overlays/dispatch-brief.md` joins every brief this mod sends. Measured downstream before this
+// existed: 64 payload files edited in place and re-applied after every upgrade.
+const OVERLAYS = '.astraler/project/overlays'
+
+async function overlayFile($: any, path: string): Promise<string> {
+  try {
+    return (await $.fs.read(path)).trim()
+  } catch {
+    return ''
+  }
+}
+
+function overlay($: any, root: string, name: string): Promise<string> {
+  return overlayFile($, `${root}/${OVERLAYS}/${name}.md`)
+}
 const ACK_GRACE_MS = 90_000
 const TICKET = /^[A-Z][A-Z0-9]*-[0-9]+$/
 const ROLE_BY_PREFIX: Record<string, string> = { ticket: 'builder', spec: 'shaper', qa: 'qa', rin: 'rin' }
@@ -383,6 +419,17 @@ export const register: Register = on => {
     return next(e)
   })
 
+  // A dispatched pane reads its role's overlay; any other Claude session in the repo is the
+  // dispatcher's and reads `thomas.md`. The section is `session`-scoped: after the cache
+  // boundary, so a project's text never breaks the shared prefix.
+  on('prompt.compose', async ($, e, next) => {
+    const res = await next(e)
+    if (!root) return res
+    const text = await overlay($, root, me?.role ?? 'thomas')
+    if (!text) return res
+    return { sections: [...res.sections, { id: 'astragentic-dispatch:overlay', text, scope: 'session' as const }] }
+  })
+
   // ---- dispatched side -------------------------------------------------------------------
 
   on('session.receive', async ($, e, next) => {
@@ -434,6 +481,27 @@ export const register: Register = on => {
     return { consumed: `astragentic-dispatch: dispatcher message run as a user turn` }
   })
 
+  // A Builder's skill calls are recorded as the engine expands them, so the flow the brief
+  // names (tdd → both reviews → simplify) is read from what ran, not from what the handback
+  // says ran. Measured downstream before this existed: implement 44/44, tdd 0/44. A fork's
+  // call is recorded under the Builder too, which is the same attribution git gives it.
+  // Writes are chained: two skills expanding in one turn (a fork's beside the Builder's) would
+  // otherwise read the same map and the second write would erase the first (found by the
+  // 2.18.0 gate).
+  let skillWrites: Promise<void> = Promise.resolve()
+  on('skill.prompt', async ($, e, next) => {
+    if (me?.role === 'builder' && root) {
+      const { key } = me
+      const at = root
+      skillWrites = skillWrites.then(async () => {
+        const prior = ((await readRecord($, at)) ?? {})[key]?.skills_run ?? {}
+        if (!(e.skill in prior)) await patchRecord($, at, key, { skills_run: { ...prior, [e.skill]: await $.clock.now() } })
+      }).catch(() => {})
+      await skillWrites
+    }
+    return next(e)
+  })
+
   on('turn.complete', async ($, e, next) => {
     const res = await next(e)
     if (e.agentId !== undefined) return res
@@ -451,7 +519,13 @@ export const register: Register = on => {
     if (!dispatcher || isSkipped) return res
     if (root) await patchRecord($, root, me.key, { last_turn_end_at: await $.clock.now(), last_turn_reason: e.reason })
     const answer = e.answer.length > 1500 ? `…${e.answer.slice(-1500)}` : e.answer
-    const sent = await $.session.send({ to: dispatcher, text: `${MARK} TURN-END key=${me.key} pane=${me.pane} reason=${e.reason}\n${answer}` })
+    let flow = ''
+    if (me.role === 'builder' && root) {
+      const entry = ((await readRecord($, root)) ?? {})[me.key] ?? {}
+      const ran = Object.keys(entry.skills_run ?? {})
+      flow = `Skills run: ${ran.length ? ran.join(', ') : 'none'}\n`
+    }
+    const sent = await $.session.send({ to: dispatcher, text: `${MARK} TURN-END key=${me.key} pane=${me.pane} reason=${e.reason}\n${flow}${answer}` })
     if (!sent.isDelivered) $.ui.status(`astragentic-dispatch: TURN-END not delivered — ${sent.reason}`)
     return res
   })
@@ -478,6 +552,21 @@ export const register: Register = on => {
           reason: `${MARK} not sent. A harness upgrade stopped part-way (${pending}); its conflicts are unreconciled, ` +
             `so the contracts an agent would read are half old. Reconcile them, stamp applied-version, delete the marker, ` +
             `then send this brief again.\n${detail}`,
+        }
+      }
+      // A release that adds a launcher column cannot write it: orchestrator.md is the owner's
+      // scaffold. So the column is required at the one moment every dispatch passes through, and
+      // the cells stay the owner's — a blank cell launches without an advisor. Unreadable file:
+      // the brief goes; a missing table is check-requirements' finding, not this one.
+      const orch = await overlayFile($, `${root}/.agents/orchestrator.md`)
+      const active = orch.match(/^[ \t]*##[ \t]*Active assignments[ \t#]*$([\s\S]*?)(?=^[ \t]*##[ \t]|$(?![\s\S]))/m)?.[1] ?? ''
+      const header = active.split('\n').find(l => /^\s*\|\s*Role\s*\|/i.test(l)) ?? ''
+      if (header && !/\|\s*Advisor\s*\|/i.test(header)) {
+        return {
+          isDelivered: false,
+          reason: `${MARK} not sent. 2.18.0 added an Advisor column to the Active assignments table in .agents/orchestrator.md, ` +
+            `and the launcher reads it; this table has none. Add the column (header "Advisor", a cell per row: opus, fable, or ` +
+            `blank for none — orchestrator.md § How the columns are read has the pairing), then send this brief again.`,
         }
       }
       // Same harm, second shape: payload content edited in the main checkout and not committed.
@@ -520,7 +609,9 @@ export const register: Register = on => {
         }
       }
     }
-    const res = await next(e)
+    const isBrief = !me && root && e.origin.kind === 'model' && e.agentId === undefined && first.startsWith('/')
+    const brief = isBrief && root ? await overlay($, root, 'dispatch-brief') : ''
+    const res = await next(brief ? { ...e, text: `${e.text.trimEnd()}\n\n${brief}` } : e)
     if (me || !root || e.origin.kind !== 'model' || e.agentId !== undefined || !res.isDelivered) return res
     const rec = (await readRecord($, root)) ?? {}
     const isKnown = Object.values(rec).some(entry => entry?.session_name === e.to)
@@ -647,23 +738,36 @@ export const register: Register = on => {
     const merge = new RegExp(AT_COMMAND + String.raw`(?:git\s+(?:-C\s+\S+\s+)?merge\b|gh\s+pr\s+merge\b)`).test(cmd)
     const ran = await next(e)
     if (!merge || ran.deny !== undefined || ran.isError) return ran
-    if (/\bgh\s+pr\s+merge\b/.test(e.command)) {
-      // A PR merged on the remote never reaches the local base, so ancestry cannot see it.
-      // Mark the entries the command names, by ticket id or by the PR's head branch.
-      const pr = e.command.match(/\bgh\s+pr\s+merge\s+(\S+)/)?.[1]
-      const head = pr && !pr.startsWith('-')
-        ? (await run($, ['gh', 'pr', 'view', pr, '--json', 'headRefName', '-q', '.headRefName'], 30_000)).out
-        : ''
-      for (const [key, entry] of Object.entries(rec)) {
-        if (e.command.includes(key) || (head && entry?.branch === head)) {
-          await patchRecord($, root, key, { merged_at: await $.clock.now() })
+    const isPr = /\bgh\s+pr\s+merge\b/.test(e.command)
+    // A PR merged on the remote never reaches the local base, so ancestry cannot see it.
+    // Mark the entries the command names, by ticket id or by the PR's head branch.
+    const pr = isPr ? e.command.match(/\bgh\s+pr\s+merge\s+(\S+)/)?.[1] : undefined
+    const head = pr && !pr.startsWith('-')
+      ? (await run($, ['gh', 'pr', 'view', pr, '--json', 'headRefName', '-q', '.headRefName'], 30_000)).out
+      : ''
+    const notes: string[] = []
+    for (const [key, entry] of Object.entries(rec)) {
+      // Whole-token matches only: `feature/foo` must not claim `gh pr merge feature/foo-fix`
+      // (found by the 2.18.0 gate), and a ticket id must not match inside a longer one.
+      const words = e.command.split(/\s+/)
+      const isNamed = words.includes(key) || (head && entry?.branch === head) ||
+        (typeof entry?.branch === 'string' && entry.branch.length > 0 && words.includes(entry.branch))
+      if (!isNamed) continue
+      if (isPr) await patchRecord($, root, key, { merged_at: await $.clock.now() })
+      // Only a pane the mod itself registered (it has a session_id) is judged: a Codex or
+      // OpenCode Builder records nothing here and keeps the marker script as its evidence.
+      if (entry?.role === 'builder' && entry.session_id) {
+        const gaps = flowGaps(entry)
+        if (gaps.length > 0) {
+          notes.push(`${MARK} ${key} merged with no record of: ${gaps.join(', ')}. A step the handback names n/a with its reason is fine; any other is a step that did not run.`)
         }
       }
     }
     const owed = await owedTickets($, root)
     await refreshBoard($, root, sends)
-    if (owed.length === 0) return ran
-    return { ...ran, context: [...(ran.context ?? []), `${MARK} ${owedText(owed)} The next brief will not be sent until this is done.`] }
+    if (owed.length > 0) notes.push(`${MARK} ${owedText(owed)} The next brief will not be sent until this is done.`)
+    if (notes.length === 0) return ran
+    return { ...ran, context: [...(ran.context ?? []), ...notes] }
   })
 
   on('command.run', { command: 'dispatch-board' }, async $ => {

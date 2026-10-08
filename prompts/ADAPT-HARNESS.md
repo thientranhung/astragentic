@@ -178,6 +178,16 @@ Classify candidate material before editing anything:
   that path and is committed. A worktree loads the copy on its own branch, and a pane with no
   mod is neither recorded nor watched. It has no `.agents/` twin and needs none: only Claude
   loads it.
+- **`.astraler/project/` is the project's layer, and a release never writes into it.** The
+  plugs (`tracker-state.sh`, `cleanup-worktree.sh`, `work-in-flight.sh`, `tracker-status.sh`,
+  `ticket-done.sh`) are the project's answers to questions the payload asks. Since 2.18.0 the
+  same directory holds **overlays**: `overlays/<role>.md` is appended to that role's system
+  prompt by the dispatch mod on every Claude session in the project, and
+  `overlays/dispatch-brief.md` is appended to every brief the mod sends. A project's own rules
+  — its test rhythm, its merge gate, its brief lines — belong there, so that no payload file has
+  to be edited in place and the drift manifest can read empty. An overlay adds to the contract
+  and never contradicts it; where it would, the contract wins and the conflict goes upstream.
+  Codex and opencode sessions load no mod and read no overlay.
 - **Scaffold — written once, never overwritten.** `.agents/orchestrator.md` carries the owner's
   runtime and model choices, and `.codex/profiles/*.md` carry role instructions they may tune. Write them on
   a FRESH install only. On an upgrade, leave the values alone and report any change in the
@@ -349,6 +359,13 @@ this upgrade meant to do exist on one disk and nowhere else.
 `.codex/profiles/<role>.md` and are passed on the launch command line. Nothing is provisioned
 outside the repository: there is no `$CODEX_HOME` copy to make, no destination to compare
 against, and no owner confirmation to collect for a runtime the project simply has.
+
+**Upgrading to 2.18.0 or later: the Active assignments table gains an `Advisor` column.** The
+file is scaffold, so add the column yourself, keeping every existing cell: header `Advisor`,
+then per row the release default (`fable` for an Opus row, `opus` for a Sonnet row, blank for
+Codex and opencode rows), and report the rows in the receipt for the owner to retune. Until
+the column exists the dispatch mod refuses every brief and `check-requirements.sh` reports
+MISS; the cells themselves are never judged.
 
 **Upgrading a project adapted before 2.12.0.** It carries `.codex/profiles/<role>.config.toml`,
 and `install.sh` reports them under DELETED upstream — it does not remove them, because the
