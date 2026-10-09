@@ -407,7 +407,7 @@ if [ "$APPLY" -eq 1 ]; then
   PREV_DIR="$RELEASES_DIR/$PREV_VERSION/harness"
   [ -n "$PREV_VERSION" ] && [ -d "$PREV_DIR" ] || PREV_DIR=""
 
-  N_NEW=0; N_UPD=0; N_SAME=0; N_OWNER=0; N_CONFLICT=0; N_KEPT=0
+  N_NEW=0; N_UPD=0; N_SAME=0; N_OWNER=0; N_CONFLICT=0; N_KEPT=0; NEW_PATHS=""
   CONFLICTS=""
 
   while IFS= read -r SRC; do
@@ -487,14 +487,16 @@ PY
         fi
       else
         [ "$PLAN" -eq 1 ] || { mkdir -p "$(dirname "$DST")"; cp "$SRC" "$DST"; }
-        echo "  NEW     $REL (owner file, scaffolded — fill its <set-me> rows)"; N_NEW=$((N_NEW+1))
+        echo "  NEW     $REL (owner file, scaffolded — fill its <set-me> rows)"; N_NEW=$((N_NEW+1)); NEW_PATHS="$NEW_PATHS$REL
+"
       fi
       continue
     fi
 
     if [ ! -e "$DST" ]; then
       [ "$PLAN" -eq 1 ] || { mkdir -p "$(dirname "$DST")"; cp "$SRC" "$DST"; }
-      echo "  NEW     $REL"; N_NEW=$((N_NEW+1)); continue
+      echo "  NEW     $REL"; N_NEW=$((N_NEW+1)); NEW_PATHS="$NEW_PATHS$REL
+"; continue
     fi
 
     if cmp -s "$SRC" "$DST"; then N_SAME=$((N_SAME+1)); continue; fi
@@ -585,6 +587,20 @@ PY
 
   echo
   echo "  new $N_NEW · updated $N_UPD · unchanged $N_SAME · kept $N_KEPT · owner-kept $N_OWNER · conflicts $N_CONFLICT · deleted-upstream $N_GONE"
+  # A NEW payload path the project's .gitignore swallows is written and never committed, so a
+  # worktree cut from HEAD does not have it (AST-036) and nothing here said so: a project with
+  # a `.agents/skills/*` ignore rule and per-name exceptions lost two new skills this way, and
+  # found out at check-requirements after the merge. Say it at the one moment it is cheap.
+  if [ -n "$NEW_PATHS" ] && git -C "$TARGET" rev-parse --git-dir >/dev/null 2>&1; then
+    IGNORED_NEW="$(printf '%s' "$NEW_PATHS" | while IFS= read -r P; do
+      [ -n "$P" ] && git -C "$TARGET" check-ignore -q -- "$P" 2>/dev/null && echo "$P"; done)"
+    if [ -n "$IGNORED_NEW" ]; then
+      echo
+      echo "  IGNORED — these NEW payload paths match the project's .gitignore, so they will not be"
+      echo "  committed and no worktree will see them. Add an allow rule (!path) for each, then commit:"
+      printf '%s\n' "$IGNORED_NEW" | sed 's|^|    |'
+    fi
+  fi
   # --apply lands the payload; ADAPT-HARNESS section 7 still owns the semantic half.
   #
   # DO NOT STAMP OVER OUTSTANDING CONFLICTS. `applied-version` is the arbiter for the NEXT

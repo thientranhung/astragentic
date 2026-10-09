@@ -1,3 +1,27 @@
+# Astragentic 2.20.1
+
+**Two findings from the 2.20.0 adoption, one of them a claim 2.20.0 made and did not keep.**
+
+**Reachability check 9 now reads the dispatch mod as an execution surface.** `ledger-rules.py`
+is called from the mod's `register.tsx` and from nothing else, so on a pristine payload check 9
+reported it an orphan; before the project restored its payload files, a substring in project
+prose had hidden that. The mod's hooks modules join the execution surfaces, with `//` comment
+lines dropped the way `#` lines are. `selftest.sh` is declared package-only: `install.sh` runs
+it as the staging gate, no project calls it, and in a project it is not under test. 2.20.0's
+upgrade message to the first adopter said this was in; it was not, and the adopter's own check
+caught it.
+
+**`install.sh --apply` names NEW payload paths the project's `.gitignore` swallows.** A new
+skill written under an ignore rule with per-name exceptions is on disk, uncommitted and absent
+from every worktree, and nothing said so until `check-requirements.sh` ran after the merge.
+The apply summary now lists each such path with the allow rule to add. Verified by planting an
+`.agents/skills/*` rule: both new skills named.
+
+## Upgrade from 2.20.0
+
+Copy `harness/scripts/check-reachability.sh`; `install.sh` is the package's own and needs no
+copy. Or run `./install.sh <target> --apply`.
+
 # Astragentic 2.20.0
 
 **The first project to reach drift zero handed back two months of measured fixes, and this

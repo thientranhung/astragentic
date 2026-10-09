@@ -795,7 +795,7 @@ for sname in sorted(skills):
 # reachable by mention: that is the whole mechanism. An EXECUTION surface (a hook file, a plug,
 # a git hook, the installer) and a script-to-script edge both claim the thing is RUN, and there
 # a mention proves nothing.
-COMMENT_LINE = re.compile(r"^\s*#")
+COMMENT_LINE = re.compile(r"^\s*(#|//)")
 PRINTS_PROSE = re.compile(r"^\s*(note|echo|printf|warn|info|say|die|cat)\b")
 
 
@@ -829,8 +829,14 @@ else:
                                            "scripts", "*")))
     shipped_names = {os.path.basename(p) for p in staged
                      if p.endswith(".sh") or p.endswith(".py")}
+    # PACKAGE-ONLY tools are run by the package (install.sh runs selftest.sh as its staging
+    # gate) and have no call site in a project by design; in a project they are not under
+    # test. Named here rather than hidden: a tool on this list that gains a project call site
+    # comes off it. Measured downstream: selftest.sh "passed" only through a substring match on
+    # project prose, then failed the moment that prose was restored to the payload's text.
+    PACKAGE_ONLY = {"selftest.sh"}
     script_files = [os.path.join(PAYLOAD, "scripts", n)
-                    for n in sorted(shipped_names)
+                    for n in sorted(shipped_names - PACKAGE_ONLY)
                     if os.path.isfile(os.path.join(PAYLOAD, "scripts", n))]
 
 if script_files:
@@ -848,8 +854,13 @@ if script_files:
                if LAYOUT == "project" else [])):
         if os.path.isfile(q):
             context_surfaces["context " + os.path.relpath(q, pkg_root)] = read(q)
+    # A shipped mod's hooks module runs scripts the way a hook does (ledger-rules.py from
+    # register.tsx); it is an execution surface, and until 2.20.1 it was not read, so a script
+    # called only from the mod scored as an orphan (found downstream on a pristine payload).
     exec_paths = ([os.path.join(PAYLOAD, ".claude", "settings.json"),
                    os.path.join(PAYLOAD, ".codex", "hooks.json")] +
+                  glob.glob(os.path.join(PAYLOAD, ".claude", "skills", "*", "hooks", "*.ts")) +
+                  glob.glob(os.path.join(PAYLOAD, ".claude", "skills", "*", "hooks", "*.tsx")) +
                   glob.glob(os.path.join(PAYLOAD, ".claude", "agents", "*")) +
                   glob.glob(os.path.join(PAYLOAD, ".codex", "agents", "*")) +
                   glob.glob(os.path.join(PAYLOAD, ".opencode", "agents", "*")) +
