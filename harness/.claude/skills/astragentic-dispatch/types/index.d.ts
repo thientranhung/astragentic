@@ -11,8 +11,14 @@ export type Banner = {
   extra: string
 }
 
+export type Flow = {
+  ran: string[]
+  tddNa: boolean
+  reviewNa: boolean
+}
+
 declare module 'claude-code' {
   interface PluginState {
-    'astragentic-dispatch': { board: BoardRow[]; banner: Banner }
+    'astragentic-dispatch': { board: BoardRow[]; banner: Banner; flow: Flow }
   }
 }

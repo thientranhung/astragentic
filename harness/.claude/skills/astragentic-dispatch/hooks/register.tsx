@@ -45,7 +45,7 @@
 import { atom, read, update } from 'claude-code'
 import type { Register } from 'claude-code'
 
-import type { BoardRow, Banner } from '../types'
+import type { BoardRow, Banner, Flow } from '../types'
 
 const MARK = '[astragentic-dispatch]'
 
@@ -61,8 +61,15 @@ const FLOW: ReadonlyArray<readonly [string, string]> = [
   ['simplify', 'simplify'],
 ]
 
+// A record is a file anyone can edit; a `skills_run` that is not an object must read as empty,
+// not throw (a throwing gate is a skipped gate).
+function skillsRun(entry: Entry): Record<string, unknown> {
+  const run = entry?.skills_run
+  return run && typeof run === 'object' && !Array.isArray(run) ? run : {}
+}
+
 function flowGaps(entry: Entry): string[] {
-  const run = entry?.skills_run ?? {}
+  const run = skillsRun(entry)
   return FLOW.filter(([name]) => !(name in run)).map(([, label]) => label)
 }
 const PANE = 'dispatch-board'
@@ -101,6 +108,98 @@ const board = atom({ plugin: 'astragentic-dispatch', key: 'board' } as const, []
 // injected into context at session start and never shown, and two gate runs collided while
 // nobody could see who held the token.
 const banner = atom({ plugin: 'astragentic-dispatch', key: 'banner' } as const, { branch: '', extra: '' } as Banner)
+// The Builder pane's own band: which FLOW steps have run, read from the same record the gates
+// read, so the person watching the pane sees the step the Builder is at without reading the
+// transcript (owner's ask, 2026-10-09).
+const flow = atom({ plugin: 'astragentic-dispatch', key: 'flow' } as const, { ran: [], tddNa: false, reviewNa: false } as Flow)
+
+const FLOW_STEPS: ReadonlyArray<readonly [string, string]> = [
+  ['mattpocock-skills:implement', 'implement'],
+  ['mattpocock-skills:tdd', 'tdd'],
+  ['mattpocock-skills:code-review', 'review:matt'],
+  ['code-review', 'review:built-in'],
+  ['simplify', 'simplify'],
+  ['codex-arm', 'arm'],
+]
+
+async function refreshFlow($: any, root: string, key: string): Promise<void> {
+  const entry = ((await readRecord($, root)) ?? {})[key] ?? {}
+  await update($, flow, () => ({ ran: Object.keys(entry.skills_run ?? {}), tddNa: Boolean(entry.tdd_na), reviewNa: Boolean(entry.review_na) }))
+}
+
+// Minimal shell reading for the gates: split on unquoted command separators, then tokens with
+// quotes honoured. No expansion, no heredoc bodies dropped — a heredoc fed to `bash` is a
+// command that runs, so its body is read like any other line (the 2.21.0 gate found the
+// heredoc-stripping reader let `bash <<'EOF' … git commit … EOF` through).
+function shellWords(segment: string): string[] {
+  const out: string[] = []
+  let cur = ''
+  let q: string | null = null
+  let has = false
+  for (const ch of segment) {
+    if (q) {
+      if (ch === q) q = null
+      else cur += ch
+      continue
+    }
+    if (ch === '"' || ch === "'") { q = ch; has = true; continue }
+    if (/\s/.test(ch)) {
+      if (has) { out.push(cur); cur = ''; has = false }
+      continue
+    }
+    cur += ch; has = true
+  }
+  if (has) out.push(cur)
+  return out
+}
+
+function simpleCommands(command: string): string[] {
+  const parts: string[] = []
+  let cur = ''
+  let q: string | null = null
+  for (let i = 0; i < command.length; i++) {
+    const ch = command[i] ?? ''
+    if (q) { cur += ch; if (ch === q) q = null; continue }
+    if (ch === '"' || ch === "'") { q = ch; cur += ch; continue }
+    if (ch === '\n' || ch === ';' || ch === '&' || ch === '|' || ch === '(' || ch === ')' || ch === '`') {
+      if (cur.trim()) parts.push(cur.trim())
+      cur = ''
+      continue
+    }
+    if (ch === '$' && command[i + 1] === '(') { if (cur.trim()) parts.push(cur.trim()); cur = ''; i++; continue }
+    cur += ch
+  }
+  if (cur.trim()) parts.push(cur.trim())
+  return parts
+}
+
+// A `git … commit` simple command, with `-c k=v`, `-C <dir>` and other leading options
+// skipped; returns the words after `commit`, or null.
+function gitCommitArgs(segment: string): string[] | null {
+  const w = shellWords(segment)
+  let i = w.findIndex(t => t === 'git' || t.endsWith('/git'))
+  if (i < 0) return null
+  i++
+  while (i < w.length) {
+    const t = w[i] ?? ''
+    if (t === '-c' || t === '-C' || t === '--git-dir' || t === '--work-tree' || t === '--namespace') { i += 2; continue }
+    if (t.startsWith('-')) { i++; continue }
+    break
+  }
+  return w[i] === 'commit' ? w.slice(i + 1) : null
+}
+
+function printable(text: string, max = 300): string {
+  return text.replace(/\x1b\[[0-9;?]*[ -\/]*[@-~]/g, '').replace(/[\x00-\x09\x0b-\x1f\x7f]/g, '').trim().slice(0, max)
+}
+
+function flowLine(f: Flow): string {
+  return FLOW_STEPS.map(([name, label]) => {
+    const isRan = f.ran.includes(name) || (name === 'codex-arm' && f.ran.includes('codex-claude-arm'))
+    const isNa = (name === 'mattpocock-skills:tdd' && f.tddNa) || (name === 'code-review' && f.reviewNa)
+    return `${isRan ? '✓' : isNa ? 'n/a' : '○'} ${label}`
+  }).join(' · ')
+}
 
 type Me = { role: string; key: string; tab: string; pane: string }
 type Envelope = { from: string; fromName: string; inner: string }
@@ -461,6 +560,7 @@ export const register: Register = on => {
         registered_at: isSameDispatch && prior.registered_at ? prior.registered_at : await $.clock.now(),
       })
       $.ui.status(`dispatched ${me.role} ${me.key} — recorded tab ${me.tab}, pane ${me.pane}`)
+      await refreshFlow($, root, me.key)
     } else if (root) {
       await $.command.register({ name: 'dispatch-board', description: 'Show live dispatches in a pane' })
       await refreshBoard($, root, sends)
@@ -519,7 +619,21 @@ export const register: Register = on => {
     if (env.inner.startsWith(MARK)) return next(e)
     dispatcher = env.from
     const now = await $.clock.now()
-    if (root) await patchRecord($, root, me.key, { dispatcher: env.from, dispatcher_name: env.fromName, last_brief_received_at: now })
+    // The dispatcher's declared exemptions ride in the brief, so the gates below read them from
+    // the one text the mod knows is the brief: `TDD: n/a — <why>` and `REVIEW: n/a — <why>`.
+    // Only a BRIEF (first line a slash command) carries exemptions; a steering message never
+    // touches them (the 2.21.0 gate found a follow-up clearing a valid exemption). Fenced blocks
+    // are dropped first so a quoted example does not grant one.
+    const isBriefText = env.inner.trimStart().startsWith('/')
+    const unfenced = env.inner.replace(/```[\s\S]*?```/g, '')
+    const tddNa = isBriefText ? unfenced.match(/^[ \t]*TDD[ \t]*:[ \t]*n\/a\b[^\n]*/im)?.[0]?.trim() ?? null : undefined
+    const reviewNa = isBriefText ? unfenced.match(/^[ \t]*REVIEW[ \t]*:[ \t]*n\/a\b[^\n]*/im)?.[0]?.trim() ?? null : undefined
+    if (root) {
+      const patch: Entry = { dispatcher: env.from, dispatcher_name: env.fromName, last_brief_received_at: now }
+      if (isBriefText) { patch.tdd_na = tddNa; patch.review_na = reviewNa }
+      await patchRecord($, root, me.key, patch)
+      await refreshFlow($, root, me.key)
+    }
     await $.session.send({ to: env.from, text: `${MARK} RECEIVED key=${me.key} pane=${me.pane}` })
 
     // Mid-turn steering goes the normal way so the running turn can read it.
@@ -556,6 +670,7 @@ export const register: Register = on => {
       skillWrites = skillWrites.then(async () => {
         const prior = ((await readRecord($, at)) ?? {})[key]?.skills_run ?? {}
         if (!(e.skill in prior)) await patchRecord($, at, key, { skills_run: { ...prior, [e.skill]: await $.clock.now() } })
+        await refreshFlow($, at, key)
       }).catch(() => {})
       await skillWrites
     }
@@ -576,7 +691,18 @@ export const register: Register = on => {
     // those woke the dispatcher three times for one task.
     const isSkipped = isNoticeTurn
     isNoticeTurn = false
-    if (!dispatcher || isSkipped) return res
+    if (isSkipped) return res
+    if (!dispatcher) {
+      // No address: the brief did not come through the mod (a held delivery, a brief typed in
+      // by `herdr agent prompt`). Measured downstream: a gate pane in auto mode ended its turn
+      // and nothing reached the dispatcher for minutes. The record is the path that needs no
+      // address; the dispatcher's poll wakes from it.
+      if (root && me.role !== 'resident') {
+        await patchRecord($, root, me.key, { last_turn_end_at: await $.clock.now(), last_turn_reason: e.reason,
+          turn_end_pending: { at: await $.clock.now(), reason: 'no dispatcher address (brief did not arrive through the mod)', text: `${MARK} TURN-END key=${me.key} pane=${me.pane} reason=${e.reason}\n${e.answer.slice(-1500)}` } })
+      }
+      return res
+    }
     if (root) await patchRecord($, root, me.key, { last_turn_end_at: await $.clock.now(), last_turn_reason: e.reason })
     const answer = e.answer.length > 1500 ? `…${e.answer.slice(-1500)}` : e.answer
     let flow = ''
@@ -721,6 +847,38 @@ export const register: Register = on => {
     }
   })
 
+  // THE TWO GATES. Measured on the first two real dispatches after the FLOW line shipped: one
+  // Builder skipped tdd, the other skipped the built-in review, and neither named n/a. A note at
+  // merge made the skip visible; it did not make it impossible. So the skip is refused at the
+  // moment it becomes real — the first commit with content, and the arm — and the dispatcher's
+  // exemption is read from the brief, never from the Builder's own handback.
+  on('tool.call', { tool: 'Bash' }, async ($, e, next) => {
+    if (me?.role !== 'builder' || !root) return next(e)
+    // Every simple command in the call, heredoc bodies included; a commit is a content commit
+    // unless that same command carries `--allow-empty` as a whole word (a marker). One exempt
+    // commit never exempts another in the same call.
+    const commits = simpleCommands(e.command).map(gitCommitArgs).filter((a): a is string[] => a !== null)
+    const contentCommits = commits.filter(a => !a.includes('--allow-empty'))
+    if (contentCommits.length === 0) return next(e)
+    const entry = ((await readRecord($, root)) ?? {})[me.key] ?? {}
+    const ran = skillsRun(entry)
+    if ('mattpocock-skills:tdd' in ran || entry.tdd_na) return next(e)
+    return {
+      deny: `astragentic-dispatch: no record of mattpocock-skills:tdd in this pane, and the brief declares no "TDD: n/a — <why>". A content commit before the red test is the defect this gate exists for. Call Skill(skill: "mattpocock-skills:tdd") first; if this ticket genuinely has no seam, ask the dispatcher to add the TDD: n/a line to the brief.`,
+    }
+  })
+
+  on('tool.call', { tool: 'Skill' }, async ($, e: any, next) => {
+    if (me?.role !== 'builder' || !root) return next(e)
+    if (!/^(codex-arm|codex-claude-arm)$/.test(String(e.skill ?? ''))) return next(e)
+    const entry = ((await readRecord($, root)) ?? {})[me.key] ?? {}
+    const ran = skillsRun(entry)
+    if ('code-review' in ran || entry.review_na) return next(e)
+    return {
+      deny: `astragentic-dispatch: no record of the built-in code-review (Skill(skill: "code-review"), bare name) in this pane, and the brief declares no "REVIEW: n/a — <why>". The arm reads a tree the bug review has not; run it first, then arm.`,
+    }
+  })
+
   on('tool.call', { tool: 'Bash' }, async ($, e, next) => {
     if (me || !root) return next(e)
     const rec = (await readRecord($, root)) ?? {}
@@ -763,10 +921,13 @@ export const register: Register = on => {
     // recorded worktree whose agent is not mid-turn and whose tree is clean, because the
     // release reaps processes and runs the project's teardown: doing that to a worktree the
     // guard is about to refuse for uncommitted work would tear down live state (AST-115).
-    const remove = cmd.match(new RegExp(AT_COMMAND + String.raw`git\s+(?:-C\s+\S+\s+)?worktree\s+remove\s+((?:-f\s+|--force\s+)*)['"]?([^\s'"]+)`))
+    const remove = cmd.match(new RegExp(AT_COMMAND + String.raw`git\s+(?:-C\s+\S+\s+)?worktree\s+remove\s+((?:-f\s+|--force\s+)*)(['"]?)([^\s'"]+)`))
     if (remove) {
       const isForced = Boolean(remove[1])
-      const raw = remove[2] ?? ''
+      // `git worktree remove /p; git worktree prune` arrives with `;` glued to the path, and the
+      // refusal then blamed the path (found downstream). An UNQUOTED token loses the operator
+      // glued to it; a quoted one is taken as written (a path may legitimately end in `;`).
+      const raw = remove[2] ? (remove[3] ?? '') : (remove[3] ?? '').replace(/[;&|)]+$/, '')
       // UNREADABLE IS REFUSED HERE, NOT ALLOWED. This hook runs before the shell, so
       // `git worktree remove $(pwd)/$W` arrives with the variables unexpanded, matches no record,
       // and used to fall through every protection below — the mid-turn refusal included. Measured
@@ -785,7 +946,7 @@ export const register: Register = on => {
       // When `git worktree list` itself fails this check is skipped and the record lookup below
       // decides: a chosen fail-open for a git that cannot list, stated rather than discovered.
       if (listed.code === 0 && !knownReal.includes(target)) {
-        return { deny: `astragentic-dispatch: "${raw}" resolves to ${target}, which is not a worktree of this repository (git worktree list). Pass the worktree's literal absolute path.` }
+        return { deny: `astragentic-dispatch: "${raw}" resolves to ${target}, which is not a worktree of this repository (git worktree list). Pass the worktree's literal absolute path, as the only command in the call.` }
       }
       const hit = Object.entries(rec).find(([, entry]) => typeof entry?.worktree === 'string' && entry.worktree === target)
       if (hit && (await exists($, target))) {
@@ -817,6 +978,48 @@ export const register: Register = on => {
         await refreshBoard($, root, sends)
       }
       return ran
+    }
+
+    // -- a worktree add: the project's setup plug runs right after, in the new worktree --------
+    // Mirrors release-worktree-resources.sh → cleanup-worktree.sh at removal. Measured downstream:
+    // a project whose worktrees need seeding (env files, a local database) seeded them by hand
+    // from prose, and the step was the one skipped. Absent plug: nothing. Failing plug: the
+    // result says so; the worktree stays.
+    const addSeg = simpleCommands(e.command).find(seg => /\bworktree\b/.test(seg) && shellWords(seg).includes('add'))
+    if (addSeg) {
+      const ran = await next(e)
+      if (ran.deny !== undefined || ran.isError) return ran
+      // Tokens with quotes honoured; `-C <dir>` sets the base a relative path resolves against.
+      // The shell's own cwd is not visible here, so a relative path with no -C resolves against
+      // the repo root, which is where a dispatcher runs this (stated, not assumed silently).
+      const w = shellWords(addSeg)
+      let base = root
+      let i = w.findIndex(t => t === 'git' || t.endsWith('/git')) + 1
+      while (i < w.length && w[i] !== 'worktree') {
+        if (w[i] === '-C') base = (w[i + 1] ?? '').startsWith('/') ? (w[i + 1] ?? '') : `${root}/${w[i + 1] ?? ''}`
+        i += (w[i] === '-C' || w[i] === '-c') ? 2 : 1
+      }
+      i = w.indexOf('add', i) + 1
+      let path = ''
+      for (; i < w.length; i++) {
+        const t = w[i] ?? ''
+        if (t === '-b' || t === '-B') { i++; continue }
+        if (t.startsWith('-')) continue
+        path = t
+        break
+      }
+      const plug = `${root}/.astraler/project/setup-worktree.sh`
+      if (!path || /[$`~]/.test(path) || !(await exists($, plug))) return ran
+      const wt = path.startsWith('/') ? path : `${base}/${path}`
+      try {
+        const r = await $.process.run(['bash', plug, wt], { cwd: root, timeoutMs: 120_000 })
+        const note = r.exitCode === 0
+          ? `${MARK} setup-worktree.sh ran for ${wt}.`
+          : `${MARK} setup-worktree.sh FAILED (exit ${r.exitCode}) for ${wt}: ${printable(String(r.stderr ?? r.stdout ?? '').trim().split('\n').slice(-3).join(' / '))}. The worktree exists; do not dispatch into it until the plug passes.`
+        return { ...ran, context: [...(ran.context ?? []), note] }
+      } catch (err) {
+        return { ...ran, context: [...(ran.context ?? []), `${MARK} setup-worktree.sh could not run for ${wt}: ${String(err)}`] }
+      }
     }
 
     // -- a merge: the tracker write-back is owed from this moment, so say so in the result -----
@@ -879,14 +1082,21 @@ export const register: Register = on => {
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     if (me) {
-      if (!undelivered || e.props.hasSurvey) return next(e)
-      const { Text } = $.ui.resolve(e)
+      if (e.props.hasSurvey) return next(e)
+      const { Box, Text } = $.ui.resolve(e)
+      const f = me.role === 'builder' ? await read($, flow) : null
+      if (!undelivered && !f) return next(e)
       const isMode = /auto mode|classifier|permission/i.test(undelivered)
       const hint = isMode ? ' This pane is not in bypass-permissions mode: press shift+tab until it is.' : ''
       return (
-        <Text color="red">
-          TURN-END not delivered to the dispatcher ({undelivered}).{hint} The record carries it meanwhile.
-        </Text>
+        <Box flexDirection="column">
+          {undelivered ? (
+            <Text color="red">
+              TURN-END not delivered to the dispatcher ({undelivered}).{hint} The record carries it meanwhile.
+            </Text>
+          ) : null}
+          {f ? <Text dimColor>flow {me.key}: {flowLine(f)}</Text> : null}
+        </Box>
       )
     }
     if (!root || e.props.hasSurvey) return next(e)

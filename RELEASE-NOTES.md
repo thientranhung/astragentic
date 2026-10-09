@@ -1,3 +1,46 @@
+# Astragentic 2.21.0
+
+**Two steps of the Builder flow are refused, not noted.** The first two real dispatches after
+the `FLOW:` line shipped measured the line's limit: one Builder skipped `tdd`, the other the
+built-in `code-review`, neither named n/a, and the merge note made each visible only after the
+fact. So the Builder's pane now refuses the first content commit until
+`mattpocock-skills:tdd` is in its record, and the arm (`codex-arm`, `codex-claude-arm`) until
+the built-in `code-review` is. Empty commits (markers) pass. The exemption is the dispatcher's
+and travels in the brief — a line `TDD: n/a — <why>` or `REVIEW: n/a — <why>` — read from the
+brief the mod delivers, never from the Builder's handback; a steering message cannot change it
+and a fenced example cannot grant it. The commit gate reads every simple command in the call,
+heredoc bodies included, with `-c`/`-C` options skipped and `--allow-empty` honoured only as a
+whole word on that same command; twelve bypass shapes from the Codex gate are each refused.
+
+**The Builder's band shows the step it is at.** Above the prompt in a Builder pane:
+`flow TRA-123: ✓ implement · ✓ tdd · ○ review:matt · ○ review:built-in · ○ simplify · ○ arm`,
+from the same record the gates read, `n/a` where the brief exempted a step. The owner's ask:
+a person watching the pane sees the step without reading the transcript.
+
+**A turn end with no address is still recorded.** A gate pane in auto mode ended its turn and
+nothing reached the dispatcher: its brief had been typed in by hand, so the mod never learned
+whom to tell. The record is written whenever there is no address, and the dispatcher's poll
+wakes from it.
+
+**Two worktree asks from the first adopter.** `.astraler/project/setup-worktree.sh <path>` runs
+right after a successful `git worktree add` (quoted paths and `-C` honoured; a failure is named
+in the result and the worktree is not to be dispatched into), mirroring the release plug at
+removal. `git worktree remove /p; …` no longer blames the path: an unquoted token loses the
+operator glued to it, a quoted one is taken as written, and the refusal says to run it as the
+only command in the call.
+
+Two bare names in the payload that meant Matt's review now say `mattpocock-skills:code-review`.
+Measured on this machine: the Skill tool resolves bare `code-review` to Claude Code's built-in,
+so 1.3.1's `implement`, which calls the bare word, never reaches Matt's review; the `FLOW:` line
+names both.
+
+## Upgrade from 2.20.5
+
+Copy `harness/`, or run `./install.sh <target> --apply`. The mod, `builder.md`,
+`builder-claude.md`, `.claude/agents/builder.md` and `dispatch-ticket-claude` change. Running
+panes pick the mod up at their next session start. Add `TDD: n/a — <why>` to a brief for a
+docs-only ticket, or the first commit is refused.
+
 # Astragentic 2.20.5
 
 **A blocked turn end is red on both screens.** 2.20.4 carried an undelivered `TURN-END` through

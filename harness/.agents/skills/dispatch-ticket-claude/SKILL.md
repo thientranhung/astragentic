@@ -29,6 +29,8 @@ project loads it with no flag and no setup:
 | Claim on the tracker before the brief | prose in `thomas.md` | a brief for a ticket the tracker reports unclaimed is not sent |
 | Tracker write-back after a merge | refused only at a push of the base | the merge result carries the note, the line turns red, and no brief is sent until `scripts/ticket-done.sh` has stamped it |
 | Release a worktree's resources | `release-worktree-resources.sh` by hand before removal | runs at `git worktree remove`, and the record entry goes with the worktree |
+| See which step a Builder is at | read its transcript | the Builder pane's band shows `flow <ticket>: ✓ implement · ✓ tdd · ○ review:matt · ○ review:built-in · ○ simplify · ○ arm`, from the same record the gates read |
+| Seed a new worktree | prose in the project's docs | `.astraler/project/setup-worktree.sh <path>` runs right after a successful `git worktree add`; a failure is named in the result and the worktree is not to be dispatched into |
 | Know which flow steps ran | a `Pass:` line in a commit message, which anyone can type | the Builder's pane records every Skill call as the engine expands it; `TURN-END` carries the list, and a merge names the steps with no record |
 
 Measured 2026-10-05 on Claude Code 2.1.289 and herdr 0.9.1, with a Builder in its own
@@ -116,6 +118,18 @@ read by the model on the first turn. An overlay **adds** to the contract; where 
 contradict one, the contract wins and the conflict goes upstream. A rule that must refuse
 belongs in a plug script (`ticket-done.sh`, the pre-push hook), not in an overlay: prose can
 instruct, only a hook can stop.
+
+## Two steps are refused, not noted
+
+Measured on the first two real dispatches after the `FLOW:` line: one Builder skipped `tdd`,
+the other the built-in review, neither named n/a, and the merge note made each visible after
+the fact. So the Builder's pane now refuses the first content commit until
+`mattpocock-skills:tdd` is in its record, and the arm (`codex-arm`) until the built-in
+`code-review` is. **The exemption is yours and travels in the brief**: a line `TDD: n/a —
+<why>` (docs-only, no seam) or `REVIEW: n/a — <why>`; the mod reads it from the brief it
+delivers and never from the Builder's handback. A brief delivered outside the mod
+(`herdr agent prompt`) carries no exemption the mod can see, so on a pane you had to prompt by
+hand expect the gate to hold until the brief is re-sent through SendMessage.
 
 ## The flow is read from what ran
 

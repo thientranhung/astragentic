@@ -41,7 +41,7 @@ cadence.
 **`implement` knows nothing about acceptance criteria** — it implements, runs typechecks and
 tests, and commits. Checking the ticket's criteria is yours, after it returns.
 
-**Pass `code-review` the `Base:` your brief carries** — "the increment" is not a git ref, and
+**Pass `mattpocock-skills:code-review` the `Base:` your brief carries** — "the increment" is not a git ref, and
 the skill asks for one when missing, into a pane with nobody in it.
 
 **Call `tdd` and both reviews yourself, by qualified name.** `implement` only points at them;

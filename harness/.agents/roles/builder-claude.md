@@ -3,6 +3,14 @@
 **Read `.agents/roles/builder.md` (the base contract) first.** This file carries only what
 differs on the Claude Code runtime.
 
+## Two gates the mod holds
+
+**No content commit before `mattpocock-skills:tdd` has run in this pane, and no arm before the
+built-in `code-review` has.** The mod refuses the `git commit` (empty marker commits pass) and
+the `codex-arm` call until its record shows the skill ran. The exemption is the dispatcher's,
+not yours: a brief line `TDD: n/a — <why>` or `REVIEW: n/a — <why>`. If a gate fires on a
+ticket that genuinely has no seam, ask Thomas for the line; do not work around the refusal.
+
 ## Bug review — Claude Code invocation
 
 **Invoke `Skill(skill: "code-review")`** after `mattpocock-skills:code-review` and before
