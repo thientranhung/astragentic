@@ -467,14 +467,80 @@ PY
             _hb="$(basename "$_hs")"
             grep -q "$_hb" "$DST" 2>/dev/null || MISSING_SCRIPTS="$MISSING_SCRIPTS $_hb"
           done
+          # MERGE WHAT CANNOT BE A DELIBERATE REMOVAL. A hook event, or a hook script under an
+          # event, that the project has never had — absent from its file AND from the previously
+          # applied release (or no previous release at all, the greenfield case) — is not
+          # something the owner took out; it is machinery the project never received. Those are
+          # merged here, additively: every owner key and every existing hook entry untouched,
+          # each addition named. What a PREVIOUS release shipped and the project lacks may be a
+          # deliberate removal, so it stays an ACTION for ADAPT-HARNESS §4's reader. Measured
+          # 2026-10-10 on a greenfield install: Claude Code had already written a settings.json
+          # (permissions), the file read as owner-kept, all four events were reported missing,
+          # and the adapting agent handed the owner the merge as a to-do.
+          MERGED_EVENTS=""; MERGED_SCRIPTS=""
+          if { [ -n "$MISSING_HOOKS" ] || [ -n "$MISSING_SCRIPTS" ]; } && [ "$PLAN" -eq 0 ]; then
+            _MERGE_OUT="$(python3 - "$SRC" "$DST" "${PREV_DIR:-}" <<'PY' 2>/dev/null || true
+import json, sys, os
+src, dst, prev = sys.argv[1], sys.argv[2], sys.argv[3]
+def load(p):
+    try:
+        with open(p) as f: return json.load(f)
+    except Exception: return None
+def scripts_of(entries):
+    out = set()
+    for e in entries or []:
+        for h in (e or {}).get("hooks", []) or []:
+            cmd = str((h or {}).get("command", ""))
+            for tok in cmd.replace("/", " ").replace('"', " ").split():
+                if tok.startswith("hook-") and tok.endswith(".py"): out.add(tok)
+    return out
+ship, proj = load(src), load(dst)
+if not isinstance(ship, dict) or not isinstance(proj, dict): sys.exit(0)
+prev_hooks = {}
+if prev:
+    pv = load(os.path.join(prev, "harness", ".claude", "settings.json"))
+    if isinstance(pv, dict) and isinstance(pv.get("hooks"), dict): prev_hooks = pv["hooks"]
+ph = proj.setdefault("hooks", {})
+if not isinstance(ph, dict): sys.exit(0)
+with open(dst) as f: dst_text = f.read()
+merged_ev, merged_sc, remaining_ev, remaining_sc = [], [], [], []
+for ev, entries in (ship.get("hooks", {}) or {}).items():
+    if ev not in ph:
+        if ev in prev_hooks: remaining_ev.append(ev); continue
+        ph[ev] = entries; merged_ev.append(ev); continue
+    # event exists: add entries whose scripts the file never names, unless a previous release had them
+    prev_sc = scripts_of(prev_hooks.get(ev))
+    for e in entries or []:
+        sc = scripts_of([e])
+        missing = [x for x in sc if x not in dst_text]
+        if not missing: continue
+        if any(x in prev_sc for x in missing): remaining_sc.extend(missing); continue
+        ph[ev].append(e); merged_sc.extend(missing)
+if merged_ev or merged_sc:
+    with open(dst, "w") as f:
+        json.dump(proj, f, indent=2, ensure_ascii=False); f.write("\n")
+print(" ".join(merged_ev)); print(" ".join(merged_sc)); print(" ".join(remaining_ev)); print(" ".join(sorted(set(remaining_sc))))
+PY
+)"
+            MERGED_EVENTS="$(printf '%s\n' "$_MERGE_OUT" | sed -n 1p)"
+            MERGED_SCRIPTS="$(printf '%s\n' "$_MERGE_OUT" | sed -n 2p)"
+            MISSING_HOOKS="$(printf '%s\n' "$_MERGE_OUT" | sed -n 3p)"
+            MISSING_SCRIPTS="$(printf '%s\n' "$_MERGE_OUT" | sed -n 4p)"
+          fi
+          if [ -n "$MERGED_EVENTS$MERGED_SCRIPTS" ]; then
+            echo "          MERGED into your file (owner keys and existing hooks kept):"
+            [ -n "$MERGED_EVENTS" ]  && echo "            events:  $MERGED_EVENTS"
+            [ -n "$MERGED_SCRIPTS" ] && echo "            scripts: $MERGED_SCRIPTS"
+          fi
           if [ -n "$MISSING_SCRIPTS" ]; then
-            echo "          ACTION: this release ships hook script(s) your copy never names:"
+            echo "          ACTION: this release ships hook script(s) your copy never names, and a"
+            echo "          previous release did ship them, so this may be your own removal:"
             echo "         $MISSING_SCRIPTS"
-            echo "          Your file was KEPT, so they are registered nowhere and will never"
-            echo "          fire. Copy their entries from the candidate's .claude/settings.json."
+            echo "          Decide, and if they belong, copy their entries from the candidate's .claude/settings.json."
           fi
           if [ -n "$MISSING_HOOKS" ]; then
-            echo "          ACTION: this release ships hook event(s) your copy has no entry for:"
+            echo "          ACTION: this release ships hook event(s) your copy has no entry for,"
+            echo "          and a previous release did ship them, so this may be your own removal:"
             echo "          $MISSING_HOOKS"
             echo "          Merge them in, keeping your own keys and hooks (ADAPT-HARNESS §4)."
           fi

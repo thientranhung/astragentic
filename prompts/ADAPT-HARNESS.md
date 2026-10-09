@@ -211,7 +211,11 @@ Classify candidate material before editing anything:
   said a hook was missing. So on an upgrade: **preserve every owner key and every hook the
   project added, and merge in any hook EVENT the release ships that the project has no entry
   for.** Report each one merged in the receipt. Never replace the file wholesale — that is
-  how the owner's `enabledPlugins` and permission tuning would be reverted.
+  how the owner's `enabledPlugins` and permission tuning would be reverted. Since 2.21.5
+  `install.sh --apply` merges an event the project has never had by itself and names it; what
+  it leaves you is an event a previous release shipped and the project lacks, which may be a
+  deliberate removal — decide it, and **do it yourself**: a merge handed back to the owner as a
+  to-do is the step that gets skipped (measured on a greenfield install, 2026-10-10).
 - **Role contracts and their adapters** — `harness/.agents/roles/{thomas,shaper,builder,rin}.md`
   are runtime-neutral and are the single home for each role's phases. Role →
   runtime/model/effort lives in the owner-editable `.agents/orchestrator.md`; contracts carry

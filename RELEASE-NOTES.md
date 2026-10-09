@@ -1,3 +1,28 @@
+# Astragentic 2.21.5
+
+**`install.sh --apply` merges the hooks a project has never had.** On a greenfield install Claude
+Code had already written `.claude/settings.json` (permissions), so the installer read the file
+as owner-kept, reported all four hook events and three hook scripts missing, and the adapting
+agent handed the owner the merge as a to-do: *copy the entries from the release*. Until it is
+done, no guard, no contract re-arm, no tracker status, no worktree release fires, and nothing
+says so again.
+
+The rule that decides what the installer may touch: an event, or a hook script under an event,
+that is absent from the project's file **and** from the previously applied release (or there is
+no previous release) cannot be the owner's deliberate removal — the project never received it.
+Those are merged additively, every owner key and every existing hook entry untouched, and each
+addition is named under `MERGED`. What a previous release did ship and the project lacks may be
+a removal, so it stays an `ACTION` for ADAPT-HARNESS §4's reader, who now must decide it and do
+it rather than hand it back. Verified: a file with permissions, `enabledPlugins` and one custom
+PreToolUse hook gains the three events and the guard script, keeps everything of its own, and a
+second apply changes nothing; a planted "previous release had it, project does not" case is
+reported, not merged.
+
+## Upgrade from 2.21.4
+
+Run `./install.sh <target> --apply` from this package once more; it merges what the earlier
+apply only reported. Nothing in the payload changes.
+
 # Astragentic 2.21.4
 
 **The tdd gate judges commits in the Builder's worktree, not every commit the Builder makes.**
