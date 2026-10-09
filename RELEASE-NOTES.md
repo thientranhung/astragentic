@@ -1,3 +1,21 @@
+# Astragentic 2.20.4
+
+**A turn end the pane cannot send still reaches the dispatcher, from the record, within 30 s.**
+First measured defect of the first real 2.20 dispatch: a Shaper pane toggled into auto mode had
+its `TURN-END` SendMessage classified with no verdict, the pane's footer said so, and nothing
+reached the dispatcher — the owner noticed ten minutes later. The message path can be closed by
+things outside the mod (permission mode, a held cross-session delivery), so the record is now
+the second path: a pane whose send fails writes the turn end into its own record entry, and the
+dispatcher's mod, which already reads the record every 30 s, submits the same wake prompt from
+there, once, marked *read from the record*. A real `TURN-END` arriving later clears the entry.
+`dispatch-ticket-claude` says not to toggle a dispatched pane's permission mode.
+
+## Upgrade from 2.20.3
+
+Copy `harness/.claude/skills/astragentic-dispatch/` and `dispatch-ticket-claude/SKILL.md`, or
+run `./install.sh <target> --apply`. Panes already running keep the old mod until their next
+session start.
+
 # Astragentic 2.20.3
 
 **The package no longer ships what its own git ignores.** When a session loads the dispatch mod,

@@ -402,6 +402,23 @@ async function refreshBoard($: any, root: string | null, sends: Map<string, numb
   }
 }
 
+// The second delivery path for a turn end (see turn.complete on the dispatched side): an entry
+// whose pane could not send its TURN-END has it in the record, and the dispatcher's own mod
+// submits the same prompt from there, once. Measured latency bound: the 30 s poll.
+async function wakeFromRecord($: any, root: string): Promise<void> {
+  const rec = (await readRecord($, root)) ?? {}
+  for (const [key, entry] of Object.entries(rec)) {
+    const pending = entry?.turn_end_pending
+    if (!pending || pending.woken_at) continue
+    const mark = parseMark(String(pending.text ?? ''))
+    await patchRecord($, root, key, { turn_end_pending: { ...pending, woken_at: await $.clock.now() } })
+    const role = entry.role ?? 'agent'
+    void $.prompt.submit({
+      text: `${MARK} ${role} ${key} ended its turn (${mark?.reason ?? 'unknown'}) — read from the record: its TURN-END message was not delivered (${pending.reason}). A bell, not proof: verify by artifact before acting.\n\nIts last words:\n${mark?.body ?? ''}`,
+    })
+  }
+}
+
 function boardLine(rows: BoardRow[], now: number): string {
   return rows
     .map(r => `${r.key} ${r.state} ${ago(now - r.since)}${r.note ? ` (${r.note})` : ''}`)
@@ -440,7 +457,11 @@ export const register: Register = on => {
     } else if (root) {
       await $.command.register({ name: 'dispatch-board', description: 'Show live dispatches in a pane' })
       await refreshBoard($, root, sends)
-      $.clock.every(30_000, () => refreshBoard($, root, sends))
+      const at = root
+      $.clock.every(30_000, async () => {
+        await refreshBoard($, at, sends)
+        await wakeFromRecord($, at)
+      })
     }
     return next(e)
   })
@@ -480,6 +501,7 @@ export const register: Register = on => {
         return { consumed: `astragentic-dispatch: ${mark.key} confirmed receipt` }
       }
       await refreshBoard($, root, sends)
+      if (rec[mark.key]?.turn_end_pending) await patchRecord($, root, mark.key, { turn_end_pending: null })
       const role = rec[mark.key]?.role ?? 'agent'
       void $.prompt.submit({
         text: `${MARK} ${role} ${mark.key} ended its turn (${mark.reason}). A bell, not proof: verify by artifact before acting.\n\nIts last words:\n${mark.body}`,
@@ -556,8 +578,17 @@ export const register: Register = on => {
       const ran = Object.keys(entry.skills_run ?? {})
       flow = `Skills run: ${ran.length ? ran.join(', ') : 'none'}\n`
     }
-    const sent = await $.session.send({ to: dispatcher, text: `${MARK} TURN-END key=${me.key} pane=${me.pane} reason=${e.reason}\n${flow}${answer}` })
-    if (!sent.isDelivered) $.ui.status(`astragentic-dispatch: TURN-END not delivered — ${sent.reason}`)
+    const text = `${MARK} TURN-END key=${me.key} pane=${me.pane} reason=${e.reason}\n${flow}${answer}`
+    const sent = await $.session.send({ to: dispatcher, text })
+    if (!sent.isDelivered) {
+      // The message path can be closed by something outside this mod: measured downstream, a
+      // pane toggled into auto mode had its SendMessage classified with no verdict, and the
+      // dispatcher learned of the finished turn from the owner, ten minutes late. The record
+      // is a second path the dispatcher already reads every 30 s, so the turn end goes there
+      // too and the dispatcher's own mod wakes it from the file.
+      $.ui.status(`astragentic-dispatch: TURN-END not delivered — ${sent.reason}; recorded for the dispatcher to pick up`)
+      if (root) await patchRecord($, root, me.key, { turn_end_pending: { at: await $.clock.now(), reason: String(sent.reason ?? ''), text } })
+    }
     return res
   })
 

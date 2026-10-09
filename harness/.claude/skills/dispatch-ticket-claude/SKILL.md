@@ -81,6 +81,13 @@ is now a second copy of something the mod does, and a second copy is where the t
   another when the background work lands, and both were measured. Verify by artifact.
 - **`reason=command-failed`** means the pane refused the first line, usually an unknown command
   name. Fix the brief and send again.
+- **A TURN-END the pane could not send still arrives, from the record, within 30 s.** Measured
+  downstream: a pane toggled into auto mode (shift+tab) had its SendMessage classified with
+  no verdict, and the dispatcher learned of the finished turn from the owner ten minutes
+  later. The pane now writes the turn end into its record entry when the send fails, and your
+  mod submits the same prompt from there, marked *read from the record*. Do not toggle a
+  dispatched pane's permission mode: the launcher's `--dangerously-skip-permissions` is what
+  keeps the message path open.
 - **No `RECEIVED` within 90 s** turns the line red, and your next prompt carries a note naming
   the pane. Read that pane: the message may be held or lost. The sender's `{"success": true}`
   is true even for a held message (measured), so it proves nothing.
