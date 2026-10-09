@@ -1,3 +1,17 @@
+# Astragentic 2.21.3
+
+**The worktree-add trigger matched `git worktree list`.** Measured on the 2.21.2 apply turn: a
+Bash call holding `git worktree list | grep -c …` was read as a `worktree add`, the path parse
+fell through to the first word, and the result carried *setup-worktree.sh FAILED … do not
+dispatch into it* for a worktree named `git`. Harmless there; on a dispatch turn a false "do not
+dispatch" would stop a correct one. The trigger now requires the word `add` immediately after
+`worktree`, the parse stops when it finds no `add`, and the plug runs only for a path that
+exists. Five shapes tested, including the one measured.
+
+## Upgrade from 2.21.2
+
+Copy `harness/.claude/skills/astragentic-dispatch/`, or run `./install.sh <target> --apply`.
+
 # Astragentic 2.21.2
 
 **Three things the first ticket under the gates measured.**

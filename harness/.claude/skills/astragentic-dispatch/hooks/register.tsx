@@ -1014,7 +1014,14 @@ export const register: Register = on => {
     // a project whose worktrees need seeding (env files, a local database) seeded them by hand
     // from prose, and the step was the one skipped. Absent plug: nothing. Failing plug: the
     // result says so; the worktree stays.
-    const addSeg = simpleCommands(e.command).find(seg => /\bworktree\b/.test(seg) && shellWords(seg).includes('add'))
+    // `worktree` immediately followed by `add`, as words: a segment with `add` anywhere and
+    // `worktree` anywhere matched `git worktree list` once (measured downstream on the apply
+    // turn) and the path parse fell through to the first word, "git".
+    const addSeg = simpleCommands(e.command).find(seg => {
+      const w = shellWords(seg)
+      const i = w.indexOf('worktree')
+      return i >= 0 && w[i + 1] === 'add'
+    })
     if (addSeg) {
       const ran = await next(e)
       if (ran.deny !== undefined || ran.isError) return ran
@@ -1028,7 +1035,9 @@ export const register: Register = on => {
         if (w[i] === '-C') base = (w[i + 1] ?? '').startsWith('/') ? (w[i + 1] ?? '') : `${root}/${w[i + 1] ?? ''}`
         i += (w[i] === '-C' || w[i] === '-c') ? 2 : 1
       }
-      i = w.indexOf('add', i) + 1
+      const addAt = w.indexOf('add', i)
+      if (addAt < 0) return ran
+      i = addAt + 1
       let path = ''
       for (; i < w.length; i++) {
         const t = w[i] ?? ''
@@ -1040,6 +1049,7 @@ export const register: Register = on => {
       const plug = `${root}/.astraler/project/setup-worktree.sh`
       if (!path || /[$`~]/.test(path) || !(await exists($, plug))) return ran
       const wt = path.startsWith('/') ? path : `${base}/${path}`
+      if (!(await exists($, wt))) return ran
       try {
         const r = await $.process.run(['bash', plug, wt], { cwd: root, timeoutMs: 120_000 })
         const note = r.exitCode === 0
