@@ -1,3 +1,29 @@
+# Astragentic 2.19.1
+
+**Two findings from the first 2.19.0 adoption, both carried upstream rather than patched again
+downstream.**
+
+**`check-requirements.sh` read a script's prose as its verdict, backwards.** The liveness check
+runs four payload scripts and searched their whole output for `cannot`; `check-reachability.sh`'s
+closing paragraph says *"what check 10 still cannot do"*, so a green run was reported as "does
+not run in this project's layout" and a run with real findings, which exits before that
+paragraph, read as healthy. The downstream project fixed it on 2026-09-21 and carried the fix
+through three upgrades as a drift entry. The match is now anchored to the first 40 characters of
+a line, where a genuine cannot-operate message sits and prose never does. Verified on three
+outputs: green reachability with the paragraph → no trigger; a stub printing `cannot find role
+contracts` → MISS quoting that line; a stale-index STOP → MISS.
+
+**`core.hooksPath` is now checked live, not just resolved.** It is machine-local config that
+replaces `.git/hooks` entirely; set and pointing at a missing directory or non-executable files,
+every git hook is dead silently. The check reports a missing directory and names each
+non-executable file. The pre-push wiring check is unchanged.
+
+## Upgrade from 2.19.0
+
+Copy `check-requirements.sh` (it lands at `scripts/check-requirements.sh` in an adapted
+project), or run `./install.sh <target> --apply`. A project carrying its own fix of the first
+finding can drop that drift entry.
+
 # Astragentic 2.19.0
 
 **The BMAD role kit moves into the payload, as advisers with a fixed seat.** `docs/bmad-distilled/`

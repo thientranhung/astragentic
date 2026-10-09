@@ -447,6 +447,26 @@ else
     else
       HD="$(git -C "$TARGET" rev-parse --path-format=absolute --git-path hooks 2>/dev/null || true)"
     fi
+    # core.hooksPath is MACHINE-LOCAL and replaces .git/hooks entirely: set and pointing at a
+    # directory that is missing or holds non-executable files, every hook is dead and nothing
+    # says so. Measured downstream: the setting survived a clone, the files did not.
+    if [ -n "$HP" ]; then
+      if [ ! -d "$HD" ]; then
+        miss "git core.hooksPath is '$HP' but $HD is not a directory — every git hook is dead" \
+          "point core.hooksPath at the directory that holds the hooks, or unset it"
+      else
+        DEAD_HOOKS=""
+        for H in "$HD"/*; do
+          [ -f "$H" ] && [ ! -x "$H" ] && DEAD_HOOKS="$DEAD_HOOKS $(basename "$H")"
+        done
+        if [ -n "$DEAD_HOOKS" ]; then
+          miss "core.hooksPath -> $HP holds hooks that are not executable:$DEAD_HOOKS" \
+            "the setting is live and these hooks are not; chmod +x them"
+        else
+          ok "git core.hooksPath -> $HP (directory present, hooks executable)"
+        fi
+      fi
+    fi
     PP="$HD/pre-push"
     if [ ! -f "$TARGET/scripts/pre-push-ticket-done.sh" ]; then
       miss "scripts/pre-push-ticket-done.sh is missing after adaptation" "re-run the payload install"
@@ -671,11 +691,16 @@ PYEOF
       else
         OUT="$(cd "$TARGET" && bash "scripts/$SC" 2>&1 || true)"
       fi
-      case "$OUT" in
-        *"not found"*|*"NOT FOUND"*|*"NO ROLE CONTRACTS"*|*"measured nothing"*|*"cannot"*)
-          miss "scripts/$SC does not run in this project's layout" \
-            "$(printf '%s' "$OUT" | grep -m1 -iE 'not found|no role contracts|measured nothing|cannot' | sed 's/^ *//')" ;;
-        *) ok "scripts/$SC runs here" ;;
+      # ANCHORED NEAR THE START OF A LINE. A substring search over the whole output read the
+      # scripts' own prose as their verdict, backwards: check-reachability's closing paragraph
+      # says "what check 10 still cannot do", so a GREEN run was reported as "does not run
+      # here" while a run with real FAILs exited before that paragraph and read as healthy.
+      # Found and fixed downstream 2026-09-21, carried upstream 2.19.1. A genuine cannot-operate
+      # message leads its line; 40 characters of slack absorbs bullets and indentation.
+      TRIGGER="$(printf '%s' "$OUT" | grep -m1 -iE '^.{0,40}(not found|no role contracts|measured nothing|cannot)' | sed 's/^ *//')"
+      case "$TRIGGER" in
+        ?*) miss "scripts/$SC does not run in this project's layout" "$TRIGGER" ;;
+        *)  ok "scripts/$SC runs here" ;;
       esac
     done
 
