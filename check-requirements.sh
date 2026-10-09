@@ -117,7 +117,7 @@ PY
 MP_VERSION="$(plugin_version)"
 if [ -z "$MP_VERSION" ]; then
   miss "mattpocock-skills plugin not installed" \
-    "in an interactive claude session: /plugin → install 'mattpocock-skills' (marketplace: claude-plugins-official). This package routes every spine step into it"
+    "claude plugin marketplace add mattpocock/skills, then claude plugin install mattpocock-skills@mattpocock (the claude-plugins-official copy is pinned at 1.2.3). This package routes every spine step into it"
 elif [ "$MP_VERSION" = "unknown" ]; then
   warn "mattpocock-skills plugin present, version unreadable" \
     "the install record carries no version; confirm it is >= $PLUGIN_FLOOR with /plugin"

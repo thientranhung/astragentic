@@ -19,9 +19,8 @@ at once.
 | you need a rule | `.agents/memory/RULES.md` | every entry's rule, no narrative — a fifth the size |
 | you need a rule's EVIDENCE | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only; `INDEX.md` finds the id |
 
-**A project's own rules reach you as a section of your system prompt**, from
-`.astraler/project/overlays/builder.md`, when the project has one and you run on Claude Code.
-It adds to this contract and never overrides it.
+**A project's own rules arrive as a system-prompt section** (`.astraler/project/overlays/builder.md`,
+Claude Code only). They add to this contract, never override it.
 
 Every `AST-` id here points into that ledger. Follow one when you need the evidence; the rule
 stands without it.
@@ -47,9 +46,9 @@ tests, and commits. Checking the ticket's criteria is yours, after it returns.
 **Pass `code-review` the `Base:` your brief carries** — "the increment" is not a git ref, and
 the skill asks for one when missing, into a pane with nobody in it.
 
-**Call `tdd` and both reviews yourself, by their qualified names.** `implement` points at them,
-but a pointer is not a call: measured downstream, `tdd` ran in 0 of 44 tickets. A step that
-cannot apply is named in the handback with its reason — `TDD: n/a — <why>` — never left silent.
+**Call `tdd` and both reviews yourself, by qualified name.** `implement` only points at them;
+measured downstream, `tdd` ran in 0 of 44 tickets. A step that cannot apply is named in the
+handback: `TDD: n/a — <why>`.
 
 `implement` is **user-invoked**: drive it by name. The craft layer is model-invoked and needs no
 wiring — `tdd`, `mattpocock-skills:code-review`, `codebase-design`, `domain-modeling`,

@@ -1,3 +1,24 @@
+# Astragentic 2.18.1
+
+**The ledger index was stale in 2.18.0, and staging refuses a stale index.** 2.18.0 repointed
+two `Bound:` lines in the ledger and did not regenerate `INDEX.md`; `install.sh` runs
+`ledger-index.sh --check` at staging and stopped on it. The index is regenerated here. Nothing
+else in the payload changes.
+
+**The plugin floor is reachable now.** The `claude-plugins-official` marketplace pins
+`mattpocock-skills` at 1.2.3 by commit and reports it as latest, so the 1.3.1 floor 2.17.0 set
+could not be met from the marketplace the docs named. The install step now points at Matt's own
+marketplace: `claude plugin marketplace add mattpocock/skills`, then
+`claude plugin install mattpocock-skills@mattpocock`, and uninstall the official copy so one
+name does not resolve to two plugins. The plugin name and the `mattpocock-skills:` prefix are
+unchanged. Measured 2026-10-09: with 1.3.1 installed, every reachability check passes and
+selftest is clean.
+
+## Upgrade from 2.18.0
+
+Copy `harness/.agents/memory/INDEX.md`, or run `./install.sh <target> --apply`. Install the
+plugin as above if `check-requirements.sh` reports the floor unmet.
+
 # Astragentic 2.18.0
 
 **The Builder flow is read from what ran, not from what the handback says ran.** Measured

@@ -38,7 +38,9 @@ that plugin. Without it the contracts point at nothing, so this step comes befor
 integration work.
 
 1. **Confirm the plugin is installed**, version ≥ 1.3.1. Where it is absent, stop and ask the
-   owner to install it (`/plugin` → `mattpocock-skills`, marketplace `claude-plugins-official`).
+   owner to install it from Matt's own marketplace: `claude plugin marketplace add mattpocock/skills`,
+   then `claude plugin install mattpocock-skills@mattpocock`. The `claude-plugins-official` copy is
+   SHA-pinned at 1.2.3 and reports itself as latest; uninstall it, or two plugins share one name.
    This is a genuine blocker: record `PENDING` and return rather than adapting around it.
 
 2. **Ask the OWNER to run `/mattpocock-skills:setup-matt-pocock-skills` in this repo, and wait.** You cannot

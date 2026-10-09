@@ -34,11 +34,11 @@ from this table — read the entry.
 | `AST-019` | Implementer subagent retired; independence moved to the PR | promoted | 27 |   |
 | `AST-020` | Plugin review commands invisible → rescue used as review; raw exec hung | promoted | 37 |   |
 | `AST-021` | Gate workflows blocked on owner presence | promoted | 31 |   |
-| `AST-022` | A filesystem-only tool was invisible to agents | promoted | 69 |   |
+| `AST-022` | A filesystem-only tool was invisible to agents | promoted | 68 |   |
 | `AST-023` | "Main session builds directly" conflated two mechanisms | promoted | 34 |   |
 | `AST-024` | Role rule auto-loads into every session → role-bleed (Worker acted as Thomas) | promoted | 37 | builder.md,qa.md,rin.md,shaper.md,thomas.md |
 | `AST-025` | Gate-able conventions parked in the always-on rule tier tax every loop | proposed | 157 |   |
-| `AST-026` | Named-persona harness: Thomas / Dan / Rin | promoted | 157 |   |
+| `AST-026` | Named-persona harness: Thomas / Dan / Rin | promoted | 158 |   |
 | `AST-027` | TWO ROOT sessions shared the main checkout; one switched branches under the other | promoted | 176 | dispatch-ticket |
 | `AST-028` | Relative worktree path + unverified pane cwd → worktree born in the wrong place, hour-long mi… | promoted | 191 | dispatch-ticket,hook-git-guard.py,review-with-rin,selftest.sh |
 | `AST-029` | Slice finished but Dan tabs survived; `/clear` blurred context and checkout lifecycle | promoted | 212 |   |
@@ -62,12 +62,12 @@ from this table — read the entry.
 | `AST-047` | "Local" is a deployment fact, not a data fact | promoted | 163 | check-reachability.sh |
 | `AST-048` | A rule not present where it must be remembered does not exist | promoted | 276 |   |
 | `AST-049` | Checks 1–4 asked whether things were consistent, never whether a role could START | promoted | 169 |   |
-| `AST-050` | Qualify a plugin command always, not once it is known to collide | promoted | 217 | check-reachability.sh,dispatch-ticket,docs-staleness-audit.sh |
+| `AST-050` | Qualify a plugin command always, not once it is known to collide | promoted | 217 | check-reachability.sh,dispatch-ticket,docs-staleness-audit.sh,register.tsx |
 | `AST-051` | An address the caller cannot use produces a substitute, not an error | promoted | 319 | builder-claude.md,check-reachability.sh,dispatch-ticket,docs-staleness-audit.sh,thomas-claude.md,untangle |
 | `AST-052` | The word-budget audit ran its loop zero times and reported all clean | promoted | 227 | docs-staleness-audit.sh |
 | `AST-053` | An axis read the run's verdict instead of its own, and went mute | promoted | 226 |   |
 | `AST-054` | `git add -A` committed two releases nobody ever applied | promoted | 146 | hook-git-guard.py |
-| `AST-055` | A gate that reads the subject cannot see which pass wrote it | promoted | 325 | builder-claude.md,builder-codex.md,builder-opencode.md,check-reachability.sh,rin-claude.md,rin-codex.md,rin-opencode.md,rin.md,shaper.md,thomas-claude.md |
+| `AST-055` | A gate that reads the subject cannot see which pass wrote it | promoted | 325 | builder-claude.md,builder-codex.md,builder-opencode.md,check-reachability.sh,register.tsx,rin-claude.md,rin-codex.md,rin-opencode.md,rin.md,shaper.md,thomas-claude.md |
 | `AST-056` | A blocking edge expresses order, not exclusion | promoted | 329 | dispatch-qa-walk,dispatch-ticket,thomas.md |
 | `AST-057` | A frontier that is only computed is invisible to the one person who cannot compute | promoted | 689 | check-reachability.sh,dispatch-qa-walk,dispatch-ticket-claude,hook-git-guard.py,pre-push-ticket-done.sh,reconcile-tracker,register.tsx,release-worktree-resources.sh,thomas.md,ticket-done.sh |
 | `AST-058` | The check after the step reported clean when the step was impossible | promoted | 271 |   |
@@ -141,7 +141,7 @@ from this table — read the entry.
 | `AST-127` | The runnable example contradicted the prose eight lines below it | promoted | 242 |   |
 | `AST-128` | Only the adapter is ever standing where both files exist | promoted | 243 |   |
 | `AST-129` | The receipt was a producer with no reader, and it hid the one fact that had readers | promoted | 222 |   |
-| `AST-130` | A report-only fork forged a verification marker using a TRUE excuse | promoted | 427 | builder-claude.md,check-simplify-markers.sh |
+| `AST-130` | A report-only fork forged a verification marker using a TRUE excuse | promoted | 427 | builder-claude.md,check-simplify-markers.sh,register.tsx |
 | `AST-131` | The queue drained and nothing asked whether a slot was free | promoted | 344 | thomas.md |
 | `AST-132` | Two owners for one path, and neither can see the other | promoted | 307 | check-payload-drift.sh,check-reachability.sh,thomas.md |
 | `AST-133` | `--grep` is not a subject matcher, and it failed in both directions on the same day | promoted | 400 | CLEANUP.md,thomas.md,ticket-done.sh |

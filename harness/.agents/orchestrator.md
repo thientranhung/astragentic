@@ -22,11 +22,9 @@ fails at the first cross-vendor call, looking like the provider being down.
 
 `workspace-label` is this project's herdr name, read before dispatch.
 
-`builder-target` is how many Builders Thomas keeps working at once — he counts panes after
-every merge, handback and report, and tops up to it from the frontier. **Thomas defaults to 4
-when this row is absent**, so an upgraded project that never merges the row still dispatches to
-capacity; the row exists to tune it, not to enable it. `thomas.md` carries the rule and its
-evidence.
+`builder-target` is how many Builders Thomas keeps working at once, topped up from the frontier
+after every merge, handback and report. **Absent, it defaults to 4**; the row tunes it, not
+enables it. `thomas.md` carries the rule.
 
 **One project, one workspace.** `herdr workspace list` → match label → reuse; no match →
 `herdr workspace create --label <workspace-label>`. Never a nickname, never a duplicate.
@@ -96,16 +94,9 @@ TUI form has no `--variant`, and the form that does is invisible to herdr, so ef
 orchestration visibility are mutually exclusive there and visibility wins. A non-blank opencode
 Effort cell is a misconfigured row.
 
-**Advisor** is Claude only, and travels as `--advisor <value>` on the launch line when the cell
-is set; blank means none. It names a stronger model the role's session consults at its own
-decision points — before committing to an approach, when an error keeps recurring, before
-declaring done — and the main model decides when. The pairing must rank at or above the
-main model: an Opus role accepts only Opus 5 or later or Fable, so an Opus advisor on an Opus
-row buys little. The default pairs the two Sonnet roles with `opus` and the three Opus roles
-with `fable`. Fable bills to usage credits and needs the owner's one-time consent (`/model
-fable`, once, on this machine); until then a `fable` cell launches without an advisor. It needs a direct Anthropic connection (not Bedrock,
-Vertex or Foundry) and feature-flag fetching; a session that cannot attach it runs without it
-and says so at launch. A Codex or opencode row ignores the cell.
+**Advisor** (Claude only): `--advisor <value>` when the cell is set, blank means none. It must
+rank at or above the main model: Opus rows take `fable` (usage credits; one `/model fable`
+consent per machine), Sonnet rows `opus`. Codex and opencode rows ignore it.
 
 **Mixing runtimes across roles is legal** — a Claude Shaper with a Codex Builder is a valid
 configuration. Each pane launches from its own row.
