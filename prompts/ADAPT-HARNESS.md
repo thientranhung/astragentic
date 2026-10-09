@@ -180,6 +180,10 @@ Classify candidate material before editing anything:
   that path and is committed. A worktree loads the copy on its own branch, and a pane with no
   mod is neither recorded nor watched. It has no `.agents/` twin and needs none: only Claude
   loads it.
+- **The BMAD personas and their two skills are payload.** `agents/bmad-*.md` under the
+  dispatch plugin declare six advisory subagent types; `bmad-party` (owner-invoked, a team
+  round table) and `bmad-ux` (a UX pass, reachable from QA and from a Builder) are the skills
+  that use them. They add viewpoints and never replace a step of the method; nothing to wire.
 - **`.astraler/project/` is the project's layer, and a release never writes into it.** The
   plugs (`tracker-state.sh`, `cleanup-worktree.sh`, `work-in-flight.sh`, `tracker-status.sh`,
   `ticket-done.sh`) are the project's answers to questions the payload asks. Since 2.18.0 the

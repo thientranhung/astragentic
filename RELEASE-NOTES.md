@@ -1,3 +1,43 @@
+# Astragentic 2.19.0
+
+**The BMAD role kit moves into the payload, as advisers with a fixed seat.** `docs/bmad-distilled/`
+has been a kit the owner pasted into a prompt by hand. Six of its roles now ship as agents of the
+dispatch plugin — `astragentic-dispatch:bmad-mary`, `bmad-john`, `bmad-sally`, `bmad-winston`,
+`bmad-murat`, `bmad-paige` — rewritten rather than copied: Winston and Murat speak the method's
+own vocabulary (module, interface, depth, seam, "the interface is the test surface"), every
+persona advises and never writes, commits, arms, merges or messages anyone but its caller, and
+every capability that duplicates a Matt Pocock skill is cut (Amelia, the BMB builder, John's
+epics, Winston's spec, retrospective). Measured 2026-10-09 on Claude Code 2.1.294: a plugin's
+`agents/*.md` declare subagent types the Agent tool can spawn, and the persona's system prompt
+reaches the spawned agent.
+
+Two skills reach them.
+
+**`bmad-party <topic>`, owner-invoked.** Spawns the cast as a **team of peer agents**, not
+subagents: each persona is one named teammate kept for the whole party, so a voice remembers the
+round before and holds its position. The host session runs rounds over SendMessage and weaves
+the replies into one conversation in the personas' own words, does not mediate, and pulls the
+owner in. It ends when the owner says so, and every teammate is stopped by name. It produces
+positions, never artifacts: a conclusion that should become work goes through the Shaper.
+
+**`bmad-ux audit|polish|upgrade <surface>`.** Sally's pass on one surface against the project's
+`DESIGN.md` and `EXPERIENCE.md` spines, rendered rather than read from a diff. In the session as
+a lens, or fanned out read-only in a worktree from a Builder or QA mid-ticket. Findings with the
+evidence each rests on; never a verdict, never a change. QA's contract names it for a surface
+that reads wrong when the guidelines do not say why.
+
+**Two rules keep them from competing with the method.** Every name carries the `bmad-` prefix and
+is called in full, so no word resolves to two skills (the `code-review` lesson). And no persona
+replaces a step of the Builder flow or runs `to-spec`, `to-tickets`, `retro` or `research`
+itself: when its advice needs one, it names the skill and hands back. The mod's `skills_run`
+record shows which personas are called; one that is never called is dropped in a later release.
+
+## Upgrade from 2.18.1
+
+Copy `harness/`, or run `./install.sh <target> --apply`. The plugin gains `agents/`, the payload
+gains two skills, and `qa.md` gains one Load row. Nothing to wire; `/bmad-party` and `/bmad-ux`
+are available in the next session.
+
 # Astragentic 2.18.1
 
 **The ledger index was stale in 2.18.0, and staging refuses a stale index.** 2.18.0 repointed

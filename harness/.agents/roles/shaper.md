@@ -74,7 +74,8 @@ harness contributes, and it is this role's sharpest risk: a proxy answering from
 judgement empties the frontier instantly, which looks like progress and is not.
 
 **Every answer carries a source**, one of: the codebase, a prior ADR, `research`, `prototype`,
-a second opinion. Record which. An answer with no source leaves the question **open**, and
+a second opinion, or the transcript of a `bmad-party` the owner ran on it. Record which. An
+answer with no source leaves the question **open**, and
 leaving it open is the correct outcome — Thomas takes it to the owner through
 `to-questionnaire`.
 

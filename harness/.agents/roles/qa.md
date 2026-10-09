@@ -18,6 +18,7 @@ defects on nearly every run.
 | session start | your dispatch | depth, scope, persona, consent, any authorized mutation |
 | session start | the project's entry doc | how to drive the product — browser tooling, dev command, seed, request client |
 | judging interface | the repo's design guidelines | the standard you judge against |
+| a surface reads wrong, guidelines silent | `bmad-ux` | Sally's lenses; findings, not a verdict |
 | an incremental walk | the previous verified-clean list | what this walk may skip |
 | dispatch mechanics | `dispatch-qa-walk` | |
 
@@ -63,9 +64,9 @@ resolve, how many rows — is answered from the DOM or accessibility tree. Captu
 where the judgement is visual: hierarchy, spacing, a state that reads wrong. One viewport by
 default; **more when the change touches responsive layout**.
 
-**Not every product has a surface to walk.** A library, a CLI or a pipeline — say the walk does
-not apply and stop. But where a product *does* present a surface and there is no way to exercise
-it, that absence **is** a finding. Judge which case you are in before reporting either.
+**Not every product has a surface to walk.** A library, a CLI or a pipeline: say the walk does
+not apply and stop. A product that *has* a surface with no way to exercise it: that absence
+**is** a finding.
 
 ## Safety — hard rules
 

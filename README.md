@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-2.18.1-blue" alt="version"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-2.19.0-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
   <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-157_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
@@ -47,7 +47,7 @@ prove what happened.
 
 # 3. Open your repo in Claude Code and run the adaptive installer
 cd /path/to/your-repo
-claude "Read .astraler/releases/2.18.1/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/2.19.0/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Start the router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium
@@ -213,6 +213,14 @@ rather than the whole set.
 Play Winston in docs/bmad-distilled/roster.md, following
 docs/bmad-distilled/capabilities/architecture.md. Design the architecture for: …
 ```
+
+Since 2.19.0 six of the roles also ship **inside the payload**, as agents of the dispatch
+plugin (`astragentic-dispatch:bmad-mary|john|sally|winston|murat|paige`), rewritten in the
+method's own vocabulary and bound to advise only. Two skills reach them: `/bmad-party <topic>`
+runs a round table of personas as a team of peer agents in the owner's session, and
+`/bmad-ux audit|polish|upgrade <surface>` runs Sally's pass on one surface, in the session or
+fanned out read-only from a Builder or QA. Both produce findings and positions, never
+artifacts; a conclusion enters the pipeline through the Shaper like any other input.
 
 **The limit, stated plainly.** A role kit is prompt level, not contract level. No hook and no
 gate makes an agent follow the file it just read. It improves the shape of an answer; it does

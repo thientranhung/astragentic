@@ -235,8 +235,12 @@ PLUGIN = plugin_skills()
 # dispatch mod.
 SHIPPED_MODS = {os.path.basename(os.path.dirname(os.path.dirname(p))) for p in
                 glob.glob(os.path.join(PAYLOAD, ".claude", "skills", "*", ".claude-plugin", "plugin.json"))}
+# A shipped mod's `agents/*.md` declare subagent types (`<mod>:<name>`), measured 2.19.0: a
+# contract or skill names one in backticks the way it names a skill, and it resolves.
+SHIPPED_AGENTS = {os.path.basename(p)[:-3] for p in
+                  glob.glob(os.path.join(PAYLOAD, ".claude", "skills", "*", "agents", "*.md"))}
 # A name is resolvable when anything on this machine actually provides it.
-KNOWN = set(all_skills) | PLUGIN | USER_SKILLS | SHIPPED_MODS
+KNOWN = set(all_skills) | PLUGIN | USER_SKILLS | SHIPPED_MODS | SHIPPED_AGENTS
 
 # Kebab-case tokens that are vocabulary rather than skill references. Each is here because
 # it appears in backticks and looks like a skill name; the list stays short on purpose,
