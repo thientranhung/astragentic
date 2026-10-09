@@ -559,7 +559,9 @@ export const register: Register = on => {
         start_sha: isSameDispatch ? prior.start_sha : (await run($, ['git', 'rev-parse', 'HEAD'])).out,
         registered_at: isSameDispatch && prior.registered_at ? prior.registered_at : await $.clock.now(),
       })
-      $.ui.status(`dispatched ${me.role} ${me.key} — recorded tab ${me.tab}, pane ${me.pane}`)
+      // A toast, not the status line: the registration is a one-time fact, and the band's first
+      // chip carries the role and key for as long as the pane lives (owner's ask, 2026-10-09).
+      $.ui.toast(`astragentic-dispatch: ${me.role} ${me.key} recorded (tab ${me.tab}, pane ${me.pane})`)
       await refreshFlow($, root, me.key)
     } else if (root) {
       await $.command.register({ name: 'dispatch-board', description: 'Show live dispatches in a pane' })
@@ -1080,39 +1082,62 @@ export const register: Register = on => {
     )
   })
 
+  // The bands, as pills. A terminal has no CSS; what it has is a Text with a background, so
+  // each fact is one chip: done is green, the step in progress is yellow, a step the brief
+  // exempted is grey, a pending one is dim. Red is reserved for what needs a person. The owner
+  // asked for this shape after watching the first measured dispatch (2026-10-09).
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    const { Box, Text } = $.ui.resolve(e)
+    const Chip = ({ bg, fg, dim, label }: { bg?: string; fg?: string; dim?: boolean; label: string }) => (
+      <Box marginRight={1}>
+        <Text backgroundColor={bg} color={fg} dimColor={dim} bold={Boolean(bg)}>{' '}{label}{' '}</Text>
+      </Box>
+    )
     if (me) {
       if (e.props.hasSurvey) return next(e)
-      const { Box, Text } = $.ui.resolve(e)
       const f = me.role === 'builder' ? await read($, flow) : null
       if (!undelivered && !f) return next(e)
       const isMode = /auto mode|classifier|permission/i.test(undelivered)
       const hint = isMode ? ' This pane is not in bypass-permissions mode: press shift+tab until it is.' : ''
+      let isCurrentMarked = false
       return (
         <Box flexDirection="column">
           {undelivered ? (
-            <Text color="red">
+            <Text color="error" bold>
               TURN-END not delivered to the dispatcher ({undelivered}).{hint} The record carries it meanwhile.
             </Text>
           ) : null}
-          {f ? <Text dimColor>flow {me.key}: {flowLine(f)}</Text> : null}
+          {f ? (
+            <Box flexDirection="row" flexWrap="wrap">
+              <Chip bg="claude" fg="inverseText" label={`${me.role} ${me.key}`} />
+              {FLOW_STEPS.map(([name, label]) => {
+                const isRan = f.ran.includes(name) || (name === 'codex-arm' && f.ran.includes('codex-claude-arm'))
+                const isNa = (name === 'mattpocock-skills:tdd' && f.tddNa) || (name === 'code-review' && f.reviewNa)
+                if (isRan) return <Chip bg="success" fg="inverseText" label={`✓ ${label}`} />
+                if (isNa) return <Chip bg="inactive" fg="inverseText" label={`n/a ${label}`} />
+                if (!isCurrentMarked) { isCurrentMarked = true; return <Chip bg="warning" fg="inverseText" label={`▶ ${label}`} /> }
+                return <Chip dim label={`○ ${label}`} />
+              })}
+            </Box>
+          ) : null}
         </Box>
       )
     }
     if (!root || e.props.hasSurvey) return next(e)
     const rows = await read($, board)
     const b = await read($, banner)
-    const { Text } = $.ui.resolve(e)
-    const isAlarm = rows.some(r => r.note === 'not confirmed received' || r.state === 'merged' || (r.note ?? '').startsWith('turn end read from record'))
-    const parts = [
-      b.branch ? `⎇ ${b.branch}` : '',
-      rows.length ? `dispatch: ${boardLine(rows, await $.clock.now())}` : 'dispatch: none',
-      b.extra,
-    ].filter(Boolean)
+    const now = await $.clock.now()
+    const alarmOf = (r: BoardRow) => r.note === 'not confirmed received' || r.state === 'merged' || (r.note ?? '').startsWith('turn end read from record')
+    const bgOf = (r: BoardRow) => alarmOf(r) ? 'error' : r.state === 'working' ? 'success' : r.state === 'sent' ? 'warning' : r.state === 'ended' ? 'subtle' : 'inactive'
     return (
-      <Text dimColor={!isAlarm} color={isAlarm ? 'red' : undefined}>
-        {parts.join(' · ')}
-      </Text>
+      <Box flexDirection="row" flexWrap="wrap">
+        {b.branch ? <Chip bg="claude" fg="inverseText" label={`⎇ ${b.branch}`} /> : null}
+        {rows.length === 0 ? <Chip dim label="no dispatches" /> : null}
+        {rows.map(r => (
+          <Chip bg={bgOf(r)} fg="inverseText" label={`${r.key} ${r.state} ${ago(now - r.since)}${r.note ? ` · ${r.note}` : ''}`} />
+        ))}
+        {b.extra ? <Chip dim label={b.extra} /> : null}
+      </Box>
     )
   })
 }

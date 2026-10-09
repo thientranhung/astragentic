@@ -1,3 +1,23 @@
+# Astragentic 2.21.1
+
+**The bands are pills.** A terminal has no CSS; what it has is a Text with a background, so each
+fact on a band is one chip. In a Builder pane: the role and ticket in the Claude colour, then one
+chip per flow step — green `✓` for a step that ran, yellow `▶` for the step in progress, grey
+`n/a` for one the brief exempted, dim `○` for the rest. In the dispatcher's session: the branch
+chip, one chip per live dispatch coloured by state (working green, sent yellow, ended grey, an
+alarm red), and the project's status line dim at the end. Red stays reserved for what needs a
+person.
+
+**Registration is a toast, not a status line.** *dispatched builder TRA-123 — recorded tab …,
+pane …* sat in the status line for the life of the pane; it is a one-time fact, and the band's
+first chip carries the role and key. It is now a toast at session start. The status line keeps
+only errors (an unreadable record, an undelivered turn end).
+
+## Upgrade from 2.21.0
+
+Copy `harness/.claude/skills/astragentic-dispatch/`, or run `./install.sh <target> --apply`. A
+session with hot reload on takes it live; others at their next start.
+
 # Astragentic 2.21.0
 
 **Two steps of the Builder flow are refused, not noted.** The first two real dispatches after
