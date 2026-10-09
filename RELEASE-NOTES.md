@@ -1,3 +1,18 @@
+# Astragentic 2.20.5
+
+**A blocked turn end is red on both screens.** 2.20.4 carried an undelivered `TURN-END` through
+the record; the owner asked why the pane does not simply say so in red and let a person fix the
+mode. A mod cannot read its session's permission mode, but it does see the send fail and why,
+so now: the dispatched pane shows a red line above its prompt, *TURN-END not delivered … press
+shift+tab until this pane is in bypass-permissions mode*, until a later send lands; and the
+dispatcher's band turns red with *turn end read from record: its message was blocked, check
+that pane mode*. The record path stays, so the wake does not depend on anyone looking.
+
+## Upgrade from 2.20.4
+
+Copy `harness/.claude/skills/astragentic-dispatch/`, or run `./install.sh <target> --apply`.
+Running panes pick it up at their next session start.
+
 # Astragentic 2.20.4
 
 **A turn end the pane cannot send still reaches the dispatcher, from the record, within 30 s.**

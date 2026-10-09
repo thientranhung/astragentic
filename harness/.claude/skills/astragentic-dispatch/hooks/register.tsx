@@ -364,6 +364,10 @@ async function refreshBoard($: any, root: string | null, sends: Map<string, numb
       rows.push({ key, role, state: 'registered', since: entry.registered_at ?? now, note: 'resident' })
       continue
     }
+    if (entry.turn_end_pending) {
+      rows.push({ key, role, state: 'ended', since: entry.turn_end_pending.at ?? now, note: 'turn end read from record: its message was blocked, check that pane mode' })
+      continue
+    }
     if (owed.includes(key)) {
       rows.push({ key, role, state: 'merged', since: entry.merged_at ?? entry.last_turn_end_at ?? now, note: 'tracker not closed' })
     } else if (sentAt !== undefined) {
@@ -431,6 +435,9 @@ export const register: Register = on => {
   let dispatcher: string | null = null
   let isBusy = false
   let isNoticeTurn = false
+  // The dispatched pane's own red line: set when a TURN-END send fails, cleared by the next
+  // one that lands. The footer status alone was missed for ten minutes (measured downstream).
+  let undelivered = ''
   const sends = new Map<string, number>()
 
   on('session.start', async ($, e, next) => {
@@ -580,6 +587,7 @@ export const register: Register = on => {
     }
     const text = `${MARK} TURN-END key=${me.key} pane=${me.pane} reason=${e.reason}\n${flow}${answer}`
     const sent = await $.session.send({ to: dispatcher, text })
+    undelivered = sent.isDelivered ? '' : String(sent.reason ?? 'not delivered')
     if (!sent.isDelivered) {
       // The message path can be closed by something outside this mod: measured downstream, a
       // pane toggled into auto mode had its SendMessage classified with no verdict, and the
@@ -870,11 +878,22 @@ export const register: Register = on => {
   })
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
-    if (me || !root || e.props.hasSurvey) return next(e)
+    if (me) {
+      if (!undelivered || e.props.hasSurvey) return next(e)
+      const { Text } = $.ui.resolve(e)
+      const isMode = /auto mode|classifier|permission/i.test(undelivered)
+      const hint = isMode ? ' This pane is not in bypass-permissions mode: press shift+tab until it is.' : ''
+      return (
+        <Text color="red">
+          TURN-END not delivered to the dispatcher ({undelivered}).{hint} The record carries it meanwhile.
+        </Text>
+      )
+    }
+    if (!root || e.props.hasSurvey) return next(e)
     const rows = await read($, board)
     const b = await read($, banner)
     const { Text } = $.ui.resolve(e)
-    const isAlarm = rows.some(r => r.note === 'not confirmed received' || r.state === 'merged')
+    const isAlarm = rows.some(r => r.note === 'not confirmed received' || r.state === 'merged' || (r.note ?? '').startsWith('turn end read from record'))
     const parts = [
       b.branch ? `⎇ ${b.branch}` : '',
       rows.length ? `dispatch: ${boardLine(rows, await $.clock.now())}` : 'dispatch: none',
