@@ -199,19 +199,53 @@ function simpleCommands(command: string): string[] {
 }
 
 // A `git … commit` simple command, with `-c k=v`, `-C <dir>` and other leading options
-// skipped; returns the words after `commit`, or null.
-function gitCommitArgs(segment: string): string[] | null {
+// skipped; returns the words after `commit` and the `-C` directory if one was given, or null.
+function gitCommitArgs(segment: string): { args: string[]; dir: string | null } | null {
   const w = shellWords(segment)
   let i = w.findIndex(t => t === 'git' || t.endsWith('/git'))
   if (i < 0) return null
   i++
+  let dir: string | null = null
   while (i < w.length) {
     const t = w[i] ?? ''
-    if (t === '-c' || t === '-C' || t === '--git-dir' || t === '--work-tree' || t === '--namespace') { i += 2; continue }
+    if (t === '-C') { dir = w[i + 1] ?? null; i += 2; continue }
+    if (t === '-c' || t === '--git-dir' || t === '--work-tree' || t === '--namespace') { i += 2; continue }
     if (t.startsWith('-')) { i++; continue }
     break
   }
-  return w[i] === 'commit' ? w.slice(i + 1) : null
+  return w[i] === 'commit' ? { args: w.slice(i + 1), dir } : null
+}
+
+// The commits in a call that land INSIDE the given worktree, following `cd` across segments
+// and `-C` on the command. The first measured refusal (2.21.2) was a fixture commit in a
+// throwaway clone under /tmp — a Builder building a mutation fixture — so a commit elsewhere
+// is not this gate's business. The pane's shell starts in the worktree, so the cwd begins
+// there. A `cd` this hook cannot resolve (a variable, `~`, `cd -`) leaves the location UNKNOWN,
+// and unknown is gated: a commit whose place cannot be read is treated as a worktree commit,
+// so `cd $X && git commit` is not a way around the gate. Only a commit at a readable path
+// outside the worktree is let through.
+function commitsInWorktree(command: string, worktree: string): string[][] {
+  const inside = (p: string) => p === worktree || p.startsWith(worktree + '/')
+  const join = (base: string, p: string) => p.startsWith('/') ? p : `${base}/${p}`.replace(/\/\.(?=\/|$)/g, '')
+  let cwd: string | null = worktree
+  const out: string[][] = []
+  for (const seg of simpleCommands(command)) {
+    const w = shellWords(seg)
+    if (w[0] === 'cd' || w[0] === 'pushd') {
+      const target = w[1] ?? ''
+      cwd = !target || target === '-' || /[$`~]/.test(target) ? null : cwd === null ? null : join(cwd, target)
+      continue
+    }
+    const c = gitCommitArgs(seg)
+    if (!c) continue
+    let at: string | null
+    if (c.dir && /[$`~]/.test(c.dir)) at = null
+    else if (c.dir && c.dir.startsWith('/')) at = c.dir
+    else if (c.dir) at = cwd === null ? null : join(cwd, c.dir)
+    else at = cwd
+    if (at === null || inside(at)) out.push(c.args)
+  }
+  return out
 }
 
 function printable(text: string, max = 300): string {
@@ -884,10 +918,13 @@ export const register: Register = on => {
     // Every simple command in the call, heredoc bodies included; a commit is a content commit
     // unless that same command carries `--allow-empty` as a whole word (a marker). One exempt
     // commit never exempts another in the same call.
-    const commits = simpleCommands(e.command).map(gitCommitArgs).filter((a): a is string[] => a !== null)
+    const entry = ((await readRecord($, root)) ?? {})[me.key] ?? {}
+    const worktree = typeof entry.worktree === 'string' && entry.worktree ? entry.worktree : null
+    const commits = worktree
+      ? commitsInWorktree(e.command, worktree)
+      : simpleCommands(e.command).map(gitCommitArgs).filter((c): c is { args: string[]; dir: string | null } => c !== null).map(c => c.args)
     const contentCommits = commits.filter(a => !a.includes('--allow-empty'))
     if (contentCommits.length === 0) return next(e)
-    const entry = ((await readRecord($, root)) ?? {})[me.key] ?? {}
     const ran = skillsRun(entry)
     if ('mattpocock-skills:tdd' in ran || entry.tdd_na) return next(e)
     await logRefusal($, root, me.key, 'tdd-gate', `content commit: ${contentCommits[0]?.join(' ') ?? ''}`)

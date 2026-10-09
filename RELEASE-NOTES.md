@@ -1,3 +1,18 @@
+# Astragentic 2.21.4
+
+**The tdd gate judges commits in the Builder's worktree, not every commit the Builder makes.**
+The first recorded refusal (2.21.2 did its job) was a fixture commit in a throwaway clone under
+`/tmp`: a Builder building a RED mutation fixture for a planner selftest, twelve seconds before
+it ran `tdd` on its own. No harm, wrong reason. The gate now follows `cd` across the call's
+segments and `-C` on the command, and refuses only a content commit whose place resolves inside
+the pane's recorded worktree. A place it cannot read — `cd $X`, `-C "$D"`, `~` — is gated, so
+a variable is not a way around it; only a commit at a readable path outside the worktree is
+let through. Ten shapes tested, the measured one among them.
+
+## Upgrade from 2.21.3
+
+Copy `harness/.claude/skills/astragentic-dispatch/`, or run `./install.sh <target> --apply`.
+
 # Astragentic 2.21.3
 
 **The worktree-add trigger matched `git worktree list`.** Measured on the 2.21.2 apply turn: a
