@@ -83,6 +83,14 @@ is now a second copy of something the mod does, and a second copy is where the t
   another when the background work lands, and both were measured. Verify by artifact.
 - **`reason=command-failed`** means the pane refused the first line, usually an unknown command
   name. Fix the brief and send again.
+- **One ticket yields several `TURN-END`s, and that is correct.** A Builder parks and ends its
+  turn while its review sub-agents and the arm run in the background, then resumes; measured:
+  eight bells for one ticket, each a true turn end, `Skills run:` growing across them. Read the
+  last one; the count is not a defect.
+- **A refused gate leaves a trace.** Each refusal (the tdd gate, the arm gate) is appended to the
+  pane's record entry under `refusals` with its time, written to
+  `/tmp/harness-hook-events.log`, and shown red on the Builder's band for two minutes. "Did the
+  gate fire" is answered from the record, not inferred from the order the steps ended up in.
 - **A TURN-END the pane could not send still arrives, from the record, within 30 s.** Measured
   downstream: a pane toggled into auto mode (shift+tab) had its SendMessage classified with
   no verdict, and the dispatcher learned of the finished turn from the owner ten minutes

@@ -111,7 +111,7 @@ const banner = atom({ plugin: 'astragentic-dispatch', key: 'banner' } as const, 
 // The Builder pane's own band: which FLOW steps have run, read from the same record the gates
 // read, so the person watching the pane sees the step the Builder is at without reading the
 // transcript (owner's ask, 2026-10-09).
-const flow = atom({ plugin: 'astragentic-dispatch', key: 'flow' } as const, { ran: [], tddNa: false, reviewNa: false } as Flow)
+const flow = atom({ plugin: 'astragentic-dispatch', key: 'flow' } as const, { ran: [], tddNa: false, reviewNa: false, refusals: 0, lastRefusal: null } as Flow)
 
 const FLOW_STEPS: ReadonlyArray<readonly [string, string]> = [
   ['mattpocock-skills:implement', 'implement'],
@@ -124,7 +124,32 @@ const FLOW_STEPS: ReadonlyArray<readonly [string, string]> = [
 
 async function refreshFlow($: any, root: string, key: string): Promise<void> {
   const entry = ((await readRecord($, root)) ?? {})[key] ?? {}
-  await update($, flow, () => ({ ran: Object.keys(entry.skills_run ?? {}), tddNa: Boolean(entry.tdd_na), reviewNa: Boolean(entry.review_na) }))
+  const refusals = Array.isArray(entry.refusals) ? entry.refusals : []
+  const last = refusals.length ? refusals[refusals.length - 1] : null
+  await update($, flow, () => ({
+    ran: Object.keys(skillsRun(entry)),
+    tddNa: Boolean(entry.tdd_na),
+    reviewNa: Boolean(entry.review_na),
+    refusals: refusals.length,
+    lastRefusal: last && typeof last === 'object' ? { gate: String(last.gate ?? ''), at: Number(last.at ?? 0) } : null,
+  }))
+}
+
+// A refusal is an event, and until 2.21.2 it left no trace: the first measured dispatch under
+// the gates could say the steps ended up in order, not whether a gate had fired. Each refusal
+// is appended to the record entry and to the machine's hook log, and the band shows it red for
+// two minutes.
+async function logRefusal($: any, root: string, key: string, gate: string, detail: string): Promise<void> {
+  const at = await $.clock.now()
+  const entry = ((await readRecord($, root)) ?? {})[key] ?? {}
+  const prior = Array.isArray(entry.refusals) ? entry.refusals : []
+  await patchRecord($, root, key, { refusals: [...prior, { at, gate, detail: detail.slice(0, 200) }] })
+  try {
+    let prev = ''
+    try { prev = await $.fs.read('/tmp/harness-hook-events.log') } catch {}
+    await $.fs.write('/tmp/harness-hook-events.log', `${prev}${new Date(at).toISOString()} astragentic-dispatch REFUSED ${gate} key=${key} ${detail.slice(0, 200)}\n`)
+  } catch {}
+  await refreshFlow($, root, key)
 }
 
 // Minimal shell reading for the gates: split on unquoted command separators, then tokens with
@@ -865,6 +890,7 @@ export const register: Register = on => {
     const entry = ((await readRecord($, root)) ?? {})[me.key] ?? {}
     const ran = skillsRun(entry)
     if ('mattpocock-skills:tdd' in ran || entry.tdd_na) return next(e)
+    await logRefusal($, root, me.key, 'tdd-gate', `content commit: ${contentCommits[0]?.join(' ') ?? ''}`)
     return {
       deny: `astragentic-dispatch: no record of mattpocock-skills:tdd in this pane, and the brief declares no "TDD: n/a — <why>". A content commit before the red test is the defect this gate exists for. Call Skill(skill: "mattpocock-skills:tdd") first; if this ticket genuinely has no seam, ask the dispatcher to add the TDD: n/a line to the brief.`,
     }
@@ -876,6 +902,7 @@ export const register: Register = on => {
     const entry = ((await readRecord($, root)) ?? {})[me.key] ?? {}
     const ran = skillsRun(entry)
     if ('code-review' in ran || entry.review_na) return next(e)
+    await logRefusal($, root, me.key, 'arm-gate', `arm requested: ${String(e.skill ?? '')}`)
     return {
       deny: `astragentic-dispatch: no record of the built-in code-review (Skill(skill: "code-review"), bare name) in this pane, and the brief declares no "REVIEW: n/a — <why>". The arm reads a tree the bug review has not; run it first, then arm.`,
     }
@@ -1110,6 +1137,9 @@ export const register: Register = on => {
           {f ? (
             <Box flexDirection="row" flexWrap="wrap">
               <Chip bg="claude" fg="inverseText" label={`${me.role} ${me.key}`} />
+              {f.lastRefusal && (await $.clock.now()) - f.lastRefusal.at < 120_000
+                ? <Chip bg="error" fg="inverseText" label={`⛔ ${f.lastRefusal.gate} refused`} />
+                : null}
               {FLOW_STEPS.map(([name, label]) => {
                 const isRan = f.ran.includes(name) || (name === 'codex-arm' && f.ran.includes('codex-claude-arm'))
                 const isNa = (name === 'mattpocock-skills:tdd' && f.tddNa) || (name === 'code-review' && f.reviewNa)

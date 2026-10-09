@@ -208,9 +208,26 @@ fi
 
 # `mapfile` is bash 4+; this box's default `/bin/bash` is 3.2 (macOS), so results are collected
 # through a plain read loop instead — portable back to bash 3.
+# NEVER THIS SCRIPT'S OWN CHAIN. Run from a shell whose cwd is inside the worktree (a Bash
+# tool whose persisted cwd was the worktree, measured downstream), this process, its parent
+# release script and the shell above them are all "rooted in the worktree" by cwd, and the
+# first version killed its own parent mid-run and reported the removal refused. The chain is
+# walked by ppid from this pid up to init and excluded by pid, before any match.
+SELF_CHAIN=" $$ "
+_p=$$
+while [ "$_p" -gt 1 ] 2>/dev/null; do
+  _p=$(ps -o ppid= -p "$_p" 2>/dev/null | tr -d ' ') || break
+  [ -n "$_p" ] || break
+  SELF_CHAIN="$SELF_CHAIN$_p "
+done
+
 CANDIDATES=""
 while IFS=$'\t' read -r pid cwd; do
   [ -n "$pid" ] || continue
+  case "$SELF_CHAIN" in *" $pid "*)
+    echo "reap-worktree-processes: SKIP pid=$pid — this script's own process chain (run from inside the worktree)"
+    continue ;;
+  esac
   case " $CANDIDATES " in *" $pid "*) continue ;; esac   # a pid can hold cwd more than once
   cwd="$(resolve_path "$cwd" 2>/dev/null)" || cwd=""
   cwd_matches "$cwd" && CANDIDATES="$CANDIDATES $pid"

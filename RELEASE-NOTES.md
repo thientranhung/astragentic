@@ -1,3 +1,29 @@
+# Astragentic 2.21.2
+
+**Three things the first ticket under the gates measured.**
+
+**A refusal leaves a trace.** The first gated lane could say its steps ended up in order, not
+whether a gate had fired: the record carried skill times and no refusal events. Each refusal
+(`tdd-gate`, `arm-gate`) is now appended to the pane's record entry under `refusals` with its
+time and what was refused, written to `/tmp/harness-hook-events.log`, and shown as a red chip
+on the Builder's band for two minutes.
+
+**The reap no longer kills its own chain.** `git worktree remove` run from a Bash whose
+persisted cwd was inside that worktree made `reap-worktree-processes.sh` find its own parent
+rooted there and kill it; the removal was refused and succeeded only from the repo root. The
+script walks its own ppid chain to init before matching and skips every pid on it, with a
+`SKIP … own process chain` line. Verified: run from inside a throwaway worktree with a
+background process rooted there, the chain is skipped and the process is reaped, exit 0.
+
+**Several `TURN-END`s per ticket is correct**, and `dispatch-ticket-claude` says so: a Builder
+parks while its review sub-agents and the arm run, then resumes; eight bells for one ticket
+were each a true turn end, `Skills run:` growing across them. Read the last one.
+
+## Upgrade from 2.21.1
+
+Copy `harness/.claude/skills/astragentic-dispatch/`, `harness/scripts/reap-worktree-processes.sh`
+and `dispatch-ticket-claude/SKILL.md`, or run `./install.sh <target> --apply`.
+
 # Astragentic 2.21.1
 
 **The bands are pills.** A terminal has no CSS; what it has is a Text with a background, so each

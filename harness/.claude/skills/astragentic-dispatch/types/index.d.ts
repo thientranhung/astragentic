@@ -15,6 +15,8 @@ export type Flow = {
   ran: string[]
   tddNa: boolean
   reviewNa: boolean
+  refusals: number
+  lastRefusal: { gate: string; at: number } | null
 }
 
 declare module 'claude-code' {
