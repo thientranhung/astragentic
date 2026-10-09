@@ -327,6 +327,14 @@ if bash "$ROOT/install.sh" "$T1" >/dev/null 2>&1 && [ -d "$T1/.astraler/releases
   says "$out" "READ THIS ONE BEFORE DELETING" \
     && ok "the fossil report says where the owner's model and effort have to go first" \
     || bad "profile rename advisory" "the owner is told to delete a file holding values nothing else has"
+  # --apply must EXIT 0 and stamp, not just print. 2.20.1 printed its whole summary and died
+  # on the next line, before the stamp, and this suite passed it on the strings alone.
+  if ASTRALER_IN_SELFTEST=1 bash "$ROOT/install.sh" "$T1" --apply >/dev/null 2>&1 \
+      && grep -qx "$V" "$T1/.astraler/state/applied-version" 2>/dev/null; then
+    ok "--apply exits 0 and stamps applied-version on a fresh target"
+  else
+    bad "apply exit" "--apply failed or did not stamp $V on a fresh target"
+  fi
 else
   bad "install.sh staging" "did not stage $V into a fresh target"
 fi

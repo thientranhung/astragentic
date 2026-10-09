@@ -1,3 +1,19 @@
+# Astragentic 2.20.2
+
+**2.20.1's installer died after its summary, before the stamp. Do not apply 2.20.1.** The
+ignored-paths check added there ran `git check-ignore` inside a command substitution under
+`set -e`; check-ignore answers 1 for every path that is not ignored, which is the normal case,
+so `--apply` exited 1 after printing `new … · updated …` and never wrote `applied-version`. The
+payload was fine; only `install.sh` was broken. Selftest passed it because its apply case read
+the output strings and never the exit status; it now requires exit 0 and the stamp, and that
+case fails on 2.20.1's installer.
+
+## Upgrade from 2.20.0 or 2.20.1
+
+Run `./install.sh <target> --apply` from this package (the installer is the package's own).
+A 2.20.1 apply that was attempted left the files in place and the stamp unwritten; re-running
+from 2.20.2 writes nothing new and stamps.
+
 # Astragentic 2.20.1
 
 **Two findings from the 2.20.0 adoption, one of them a claim 2.20.0 made and did not keep.**

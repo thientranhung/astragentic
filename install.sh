@@ -592,8 +592,12 @@ PY
   # a `.agents/skills/*` ignore rule and per-name exceptions lost two new skills this way, and
   # found out at check-requirements after the merge. Say it at the one moment it is cheap.
   if [ -n "$NEW_PATHS" ] && git -C "$TARGET" rev-parse --git-dir >/dev/null 2>&1; then
+    # `|| true` twice on purpose: under `set -e` the substitution's status is the last
+    # iteration's, and check-ignore answers 1 for every path that is NOT ignored — which is the
+    # normal case. 2.20.1 shipped without it and --apply died here, after the summary and before
+    # the stamp, on every run.
     IGNORED_NEW="$(printf '%s' "$NEW_PATHS" | while IFS= read -r P; do
-      [ -n "$P" ] && git -C "$TARGET" check-ignore -q -- "$P" 2>/dev/null && echo "$P"; done)"
+      [ -n "$P" ] && git -C "$TARGET" check-ignore -q -- "$P" 2>/dev/null && echo "$P" || true; done || true)"
     if [ -n "$IGNORED_NEW" ]; then
       echo
       echo "  IGNORED — these NEW payload paths match the project's .gitignore, so they will not be"
