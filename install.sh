@@ -249,6 +249,18 @@ cp -R "$PAYLOAD" "$STAGING_DIR/harness"
 while IFS= read -r RESIDUE; do
   [ -n "$RESIDUE" ] && rm -rf "$STAGING_DIR/harness/.opencode/$RESIDUE"
 done < "$PAYLOAD/.opencode/.gitignore"
+# The general form of the same rule: anything the PACKAGE's own git ignores inside the payload
+# is local residue, not payload. Measured on 2.20.2: the engine writes
+# `.claude-plugin/types/` beside the dispatch mod when a session loads it (with its own
+# `.gitignore: *`), cp -R shipped it, and the adopter's installer reported those five files as
+# "ignored by your project" — ignored by the release's own rule, and never meant to ship.
+if git -C "$HARNESS_ROOT" rev-parse --git-dir >/dev/null 2>&1; then
+  git -C "$HARNESS_ROOT" ls-files --others --ignored --exclude-standard -z -- "$PAYLOAD" 2>/dev/null \
+    | while IFS= read -r -d '' IGN; do
+        REL="${IGN#harness/}"
+        [ -n "$REL" ] && [ "$REL" != "$IGN" ] && rm -rf "$STAGING_DIR/harness/$REL"
+      done || true
+fi
 cp "$ADAPT_PROMPT"                    "$STAGING_DIR/ADAPT-HARNESS.md"
 # Staged beside its mirror, and for the same reason the release directory is immutable: removal
 # is classified against THIS release's bytes, so the prompt that does the classifying has to be

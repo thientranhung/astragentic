@@ -1,3 +1,18 @@
+# Astragentic 2.20.3
+
+**The package no longer ships what its own git ignores.** When a session loads the dispatch mod,
+the engine writes `.claude-plugin/types/` beside it with its own `.gitignore`; `cp -R` staged
+those five files anyway, and the 2.20.2 adopter's installer reported them as "ignored by your
+project" — ignored by the release's own rule, never meant to ship. Staging now removes every
+path the package's git lists as ignored under the payload, which is the general form of the
+`.opencode` residue rule 2.7.x wrote by hand. Verified: a fresh stage carries `plugin.json`
+alone under `.claude-plugin/`, and `--apply` on a fresh target names no ignored path.
+
+## Upgrade from 2.20.2
+
+Nothing to apply; the change is in `install.sh`. A project that took 2.20.2 may delete
+`.claude/skills/astragentic-dispatch/.claude-plugin/types/` if the apply wrote it.
+
 # Astragentic 2.20.2
 
 **2.20.1's installer died after its summary, before the stamp. Do not apply 2.20.1.** The
