@@ -103,9 +103,11 @@ guard allow 'printf "%s" "rm -rf .claude/worktrees/x"'     # quoted DATA, not a 
 guard allow "printf '%s' ';' echo hi"                      # quoted operator (2.7.2)
 guard allow 'grep -rn "git add -A" docs/'
 guard allow 'git status --short'
+guard deny  'echo "retire the pane (already closed)" && git add -A'  # quoted ( is data: judged
 
 echo "hook-git-guard — out of scope: silent by design, never denied (2.7.3)"
 guard allow 'echo "$(git add -A)"'          # substitution inside quotes
+guard allow 'echo "done (ok) $(true)" && git add -A'   # $( inside quotes still executes: unreadable
 guard allow 'if git add -A; then :; fi'     # reserved word
 guard allow 'FOO=bar git add -A'            # assignment prefix
 guard allow 'xargs git add -A'              # wrapper

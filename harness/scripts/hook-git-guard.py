@@ -44,6 +44,11 @@ existed to stop went out inside a heredoc. "Lint" here means one command in four
 "catches most". So the push rule is no longer this file's: scripts/pre-push-ticket-done.sh runs
 as git's pre-push hook and sees the exact refs. This guard still says it early, when it can.
 
+That count read the raw line. A `(` inside a quoted string is data, not a subshell, and no
+longer takes the line out of scope (`_outside_quotes`); measured on a hook log, 20 of 126 base
+pushes were unjudged and 13 of the 20 carried only a `(` in an echo string. `$(` and backticks
+inside double quotes still refuse the line, because they still execute.
+
 That is why the contract is `dispatch-ticket/CLEANUP.md` and this file is a second layer under
 it. An OpenCode Builder has no equivalent hook, and either Claude or Codex may run with hooks
 disabled or untrusted, so every Builder must still get the ordering right. If a rule matters,
@@ -162,9 +167,55 @@ def _split_unquoted(cmd):
     return [x for x in (seg.strip() for seg in segs) if x]
 
 
+def _outside_quotes(cmd):
+    """`cmd` with quoted spans and backslash-escaped characters blanked out.
+
+    `readable()` used to scan the RAW line, so a parenthesis inside a quoted message,
+    `echo "retire the pane (already closed)"`, read as a subshell and took the WHOLE line out
+    of scope, including a `git push origin main` sitting at its head. Measured over one
+    downstream hook log: of 126 pushes to the base branch, 20 were declared unreadable, and
+    `(` was present in 13 of those 20 against `$(` in 5. The guard was blind to one push in
+    six, and the usual cause was punctuation in an echo string.
+
+    This is not the guard modelling more. Blanking quoted spans is what `_split_unquoted`
+    right below already does to find operators; `readable` simply was not told. A real
+    subshell, a real comment and a real substitution are still outside quotes and still
+    refuse the line.
+    """
+    out = []
+    quote = None
+    i = 0
+    while i < len(cmd):
+        c = cmd[i]
+        if quote:
+            if c == "\\" and quote == '"' and i + 1 < len(cmd):
+                out.append("  "); i += 2; continue
+            if c == quote:
+                quote = None
+                out.append(" "); i += 1; continue
+            # The two quotes are not the same. Inside SINGLE quotes nothing expands, so every
+            # character is inert. Inside DOUBLE quotes `$(...)` and backticks STILL RUN, so
+            # `echo "x $(rm -rf y)"` executes: those two survive and keep refusing the line,
+            # while parentheses, `#` and braces (literal there) are blanked.
+            if quote == '"' and c == "$" and i + 1 < len(cmd) and cmd[i + 1] == "(":
+                # `$(` must survive as a PAIR: emitting `$` and blanking `(` leaves `$ `,
+                # which the token scan does not recognise and would pass a live substitution.
+                out.append("$("); i += 2; continue
+            out.append(c if (quote == '"' and c == "`") else " ")
+            i += 1; continue
+        if c in ("'", '"'):
+            quote = c; out.append(" "); i += 1; continue
+        if c == "\\" and i + 1 < len(cmd):
+            out.append("  "); i += 2; continue
+        out.append(c); i += 1
+    # An unterminated quote is handled by `_split_unquoted`, which returns None and logs
+    # `unterminated-quote`. Returning the blanked text here keeps the two paths independent.
+    return "".join(out)
+
+
 def readable(cmd):
-    """True only when every construct in the line is one this guard models."""
-    depth_free = cmd
+    """True only when every construct OUTSIDE QUOTES is one this guard models."""
+    depth_free = _outside_quotes(cmd)
     for tok in _UNREADABLE:
         if tok in depth_free:
             return False

@@ -44,9 +44,18 @@ FILE_COUNT=$(git diff --name-only <base>...<head-sha> | wc -l | tr -d ' ')
 echo "arm range: $COMMIT_COUNT commits, $FILE_COUNT files changed (<base>..<head-sha>)"
 git diff <base>...<head> > <gate-worktree>/GATE-DIFF.patch
 git log --oneline <base>..<head> > <gate-worktree>/GATE-LOG.txt
+OUT="<ticket-worktree>/.scratch/gates/arm-<artifact-key>-<scope>-pass<N>.md"   # tracked .md, never the gate worktree
+mkdir -p "$(dirname "$OUT")"
 claude -p "<intent-loaded focus; review GATE-DIFF.patch, the net <base>...<head> diff>" \
-  --model claude-sonnet-4-6 --allowedTools "Read,Grep,Glob"
+  --model claude-sonnet-4-6 --allowedTools "Read,Grep,Glob" | tee "$OUT"
 ```
+
+**The report is captured by `tee` into a tracked file and committed.** Without a redirect the
+report exists only on a pane's screen, with no file to lose and none to cite on `Output:`.
+`<ticket-worktree>` is the worktree whose branch carries the artifact, never the gate worktree,
+which is removed. Commit `$OUT` before the `arm(ticket):` receipt (shape and `Tests:`:
+`dispatch-ticket/MARKERS.md`). `GATE-DIFF.patch` and `GATE-LOG.txt` are input evidence, not
+the report, and keep the delete-before-remove treatment below.
 
 Two flags carry the whole boundary. Gates run without `--dangerously-skip-permissions`, and
 the allowlist stays free of a raw `Bash(...)` prefix: **a prefix is not a read boundary**,

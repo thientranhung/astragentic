@@ -56,9 +56,10 @@ echo "=== 1. always-on word budgets (these surfaces bill every session) ==="
 # adding one paragraph to builder.md put it 215 over. A ceiling that passes at 99.9% is not
 # measuring what the comment above it says it measures.
 MIN_MARGIN=100
-budget_check() { # <label> <limit> <count>
+budget_check() { # <label> <limit> <count> [source]
+  local src="${4:+, $4}"
   if [[ "$3" -gt "$2" ]]; then
-    echo "OVER: $1 = $3 words (budget $2)"; FOUND=1
+    echo "OVER: $1 = $3 words (budget $2$src)"; FOUND=1
   elif [[ $(( $2 - $3 )) -lt "$MIN_MARGIN" ]]; then
     echo "TIGHT: $1 = $3/$2 words — only $(( $2 - $3 )) words of margin, under the $MIN_MARGIN"
     echo "       an adapted project adds its own content to this file; that is the point of"
@@ -66,7 +67,7 @@ budget_check() { # <label> <limit> <count>
     echo "       raise the budget with a reason in the same commit."
     FOUND=1
   else
-    echo "ok: $1 = $3/$2 words ($(( $2 - $3 )) margin)"
+    echo "ok: $1 = $3/$2 words ($(( $2 - $3 )) margin$src)"
   fi
 }
 # THROUGH $PAYLOAD, NOT THE CALLER'S CWD. This block shipped with a bare relative
@@ -94,7 +95,20 @@ fi
 # dispatches and merge. A uniform ceiling there stops measuring growth and starts shaving
 # meaning — the last four words cut to reach 1200 all carried some. Raise a budget only with
 # a reason recorded in the same commit.
+# A project may raise a role's budget for content it adds on purpose, in
+# `.astraler/project/role-budgets.txt`, one `role words reason` line per role. The payload
+# numbers below do not change; the project's number is read in their place when present, and
+# the source is printed on the OK/OVER line so a raised budget is visible rather than silent.
+# A line that is not `role <integer> <reason>` is ignored, so a typo falls back to the
+# payload's number instead of to zero.
+project_budget() { # <role> -> words, empty when the project sets none
+  local f="$ROOT/.astraler/project/role-budgets.txt"
+  [[ -f "$f" ]] || return 0
+  awk -v r="$1" '$1==r && $2 ~ /^[0-9]+$/ && NF>=3 {print $2; exit}' "$f"
+}
 role_budget() {
+  local pb; pb="$(project_budget "$1")"
+  if [[ -n "$pb" ]]; then echo "$pb"; return; fi
   # Every number below carries a MARGIN over the package's own shipped word count for that
   # role — the ~150-word headroom AST-085 restored for orchestrator.md, applied here for the
   # same reason: an adapted project MUST add its own content to these files (that is the
@@ -188,7 +202,8 @@ for ROLE in thomas shaper builder rin qa; do
   RF="$PAYLOAD/.agents/roles/$ROLE.md"
   if [[ -f "$RF" ]]; then
     BUDGETS_RUN=$((BUDGETS_RUN + 1))
-    budget_check "roles/$ROLE.md" "$(role_budget "$ROLE")" "$(wc -w < "$RF" | tr -d ' ')"
+    if [[ -n "$(project_budget "$ROLE")" ]]; then BSRC="project"; else BSRC="payload"; fi
+    budget_check "roles/$ROLE.md" "$(role_budget "$ROLE")" "$(wc -w < "$RF" | tr -d ' ')" "$BSRC"
   fi
 done
 

@@ -85,6 +85,13 @@ is now a second copy of something the mod does, and a second copy is where the t
   the pane. Read that pane: the message may be held or lost. The sender's `{"success": true}`
   is true even for a held message (measured), so it proves nothing.
 - **`/dispatch-board`** opens a pane listing every live dispatch with its state and age.
+- **The band above the prompt is always on** in the dispatcher's session: `⎇ <branch>`, the
+  live dispatches (residents included), and one line the project composes in
+  `.astraler/project/status-line.sh` — tracker counts, who holds the gate token, whatever the
+  project measured it needs on screen. The plug prints one line and exits 0; a failing plug
+  shows `status-line.sh failed`; absent, the band shows branch and dispatches only.
+- **`AskUserQuestion` is refused in a dispatched pane.** No human is there; the model decides
+  from its evidence or reports the question in its handback.
 
 ## The project's rules travel as overlays
 
@@ -189,14 +196,10 @@ stamp written, Builder reaped, tab closed, entry gone, with no step besides the 
 - **A pane whose process died.** The mod dies with it. The workspace watchdog still covers this
   (`dispatch-ticket/WATCHING.md`), and it stays mandatory.
 - **A pane that never recorded itself.** See the read-back above.
-- **A resident pane, whose tab carries no `ticket:` / `spec:` / `qa:` / `rin:` label.** The mod
-  treats only a labelled pane as dispatched, so a long-lived pane (a deploy worker, a design or
-  harness partner) never records itself and never reports `TURN-END`. **The refusal to close a
-  mid-turn pane covers dispatched panes only.** A resident pane has no record entry, so a
-  `herdr tab close` on it goes through. The pane killed by a guessed id downstream was a
-  Builder, and that case is covered now. The resident panes are not, and they hold the most
-  context to lose. Giving them a label the mod recognises is an open design question, not a
-  restart.
+- **A resident pane without a `resident:` label.** A long-lived pane the owner keeps (a deploy
+  worker, a design or harness partner) is recorded, shown on the board and refused a close
+  only when its tab is labelled `resident:<name>` before launch. Unlabelled, it is invisible to
+  the mod and a `herdr tab close` on it goes through.
 - **Codex and OpenCode panes.** They run no Claude mod, so they keep the watcher script and its
   protocol in `dispatch-ticket`.
 

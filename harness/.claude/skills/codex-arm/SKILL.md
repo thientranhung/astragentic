@@ -37,34 +37,64 @@ focus without `-` is worse: accepted, discarded, and the run exits 0 having revi
 prompt. The plugin path has no such conflict, taking the focus as a positional beside `--base`,
 and that is the concrete reason it is primary here.
 
+**Define the log before anything runs.** `$OUT` is the arm's output file, on both runtimes:
+
 ```bash
-node "$CLAUDE_PLUGIN_ROOT/scripts/codex-companion.mjs" adversarial-review --wait --base <ref> <focus words>
-node "$CLAUDE_PLUGIN_ROOT/scripts/codex-companion.mjs" review --wait --base <ref>
+OUT="<artifact-worktree>/.scratch/gates/arm-<key>-<scope>-pass<N>.md"
+mkdir -p "$(dirname "$OUT")"
 ```
 
-Plugin root: `~/.claude/plugins/cache/openai-codex/codex/<version>`. Run it in the
-background; the completion notification is your bell.
+`<artifact-worktree>` is the worktree whose branch carries the artifact: the ticket worktree at
+ticket scope, the base checkout at spec and slice. **Never the gate worktree** — it is removed,
+and the log goes with it. Use a `.md` extension and check `git check-ignore -v "$OUT"`: a
+project's ignore rules often track `.md` under `.scratch/` and drop `.log`. Print the range
+header and run the review in ONE brace group piped to `tee`, so the header cannot be skipped and
+nothing is copied out afterwards. Four logs were lost to a separate "copy it out first" step,
+across two Builders, each under handback pressure; removing the step beat reinforcing it.
+Commit the log before the `arm(ticket):` receipt, which names it on `Output:`.
 
-**A hang is a job, not a verdict** (plugin >= 1.0.6; `codex-companion.mjs --help` lists what the
-installed copy has):
+**On a Claude root**, use the plugin runtime (`COMMIT_COUNT` and `FILE_COUNT` come from the
+range header below):
 
 ```bash
 CC="$CLAUDE_PLUGIN_ROOT/scripts/codex-companion.mjs"
-node "$CC" adversarial-review --background --base "$BASE" <focus words>   # returns a job id
+{ echo "arm range: $COMMIT_COUNT commits, $FILE_COUNT files changed ($BASE..HEAD)"
+  node "$CC" adversarial-review --background --base "$BASE" <focus words>   # prints a job id
+} | tee "$OUT"
+```
+
+Plugin root: `~/.claude/plugins/cache/openai-codex/codex/<version>`. Plain `review --background
+--base "$BASE"` takes no focus text. **Poll in the foreground in short increments; do not wait
+for a bell.** A completion notification never comes for a broker that died, and a stall caught
+in minutes costs minutes (one job sat dead for about 44 of 47 minutes).
+
+**A hang is a job now, not a verdict** (plugin >= 1.0.6; `codex-companion.mjs --help` lists what
+the installed copy has):
+
+```bash
 node "$CC" status --all --json    # running[], latestFinished, recent[], needsReview
-node "$CC" result <job-id> --json # the finished review's stored final output
+node "$CC" result <job-id> | tee -a "$OUT"   # the finished review's stored final output
 node "$CC" cancel <job-id> --json # a hang is cancelled, not abandoned
 ```
 
-`result` is the verdict as an ARTIFACT, which is what `Output:` has always wanted; keep the
-`tee` as well, since `$OUT` holds the range header and how the verdict was reached. The findings
-have a declared shape in the plugin's `schemas/review-output.schema.json` — `verdict`, `summary`,
-`findings[]` of `severity / title / body / file / line_start / line_end / confidence /
-recommendation` — so fold by field rather than by parsing prose.
+This retires "treat a hang as NOT RUN". `result` is the verdict as an ARTIFACT, and appending it
+to `$OUT` puts the range header, the job id and the verdict in the one file `Output:` names.
+
+**Take the verdict only from `result`, with a `Verdict:` header.** A broker that dies mid-review
+leaves partial `{"verdict":"approve"}` lines in the streaming log while the job sits in
+`verifying` with `Elapsed:` still rising, so grepping the log fails OPEN, with text that reads
+like a candid reviewer. No finished job and no header means no verdict. **Liveness is `status`
+ADVANCING, not RESPONDING**: take two observations and compare; the same last command twice, or
+a log mtime that has not moved, is a dead job, and `Elapsed:` counts up whether or not a process
+exists. Never reuse a gate-worktree path after a dead run (`-p2` to `-p3`).
+
+The findings have a declared shape in the plugin's `schemas/review-output.schema.json` —
+`verdict`, `summary`, `findings[]` of `severity / title / body / file / line_start / line_end /
+confidence / recommendation` — so fold by field rather than by parsing prose.
 
 Where the plugin is genuinely unavailable, the working raw form is plain `codex exec` with the
-range named in the prompt, not `codex exec review`; `codex-arm` in `.agents/skills/` carries it
-and the measurements behind it.
+range named in the prompt, not `codex exec review`, in the same brace group piped to `tee "$OUT"`;
+`codex-arm` in `.agents/skills/` carries it and the measurements behind it.
 
 ### Bind it to the reviewed head, and fail closed
 
@@ -213,12 +243,11 @@ same-vendor
 lens silently counted as the arm is the thing this rule exists to prevent, so the recorded
 vendor is always the one that actually ran.
 
-Record the outcome once, in the merge decision trail: the date, the verdict, the per-finding
-resolution, the vendor that ran, and a **`Tests:` line** — `RAN` when the arm executed the
-project's test suite, `NOT RUN — <reason>` when it could not (read-only sandbox, missing
-dependencies, test runner failure). A code-reading-only verdict is still valuable — measured
-arm passes have found real defects by reading alone — but a Thomas who does not check this
-line will merge believing tests ran on the other vendor's side. **You classify which findings
+Record the outcome once. **At ticket scope the `arm(ticket):` record IS the receipt**; its
+shape and what its `Tests:` field attests are in `dispatch-ticket/MARKERS.md`, and are not
+restated here. At spec and slice scope the merge decision trail carries the date, the verdict,
+the per-finding resolution, the vendor that ran, and a `Tests:` line read the same way.
+**You classify which findings
 are real** — the arm advises. Where pass 1 returned a blocking finding, **run pass 2 under the rule in `rin.md`** —
 that contract owns when it is required and what it must cover, and this file does not restate
 it in weaker words. Escalate to the owner on a genuine fork.

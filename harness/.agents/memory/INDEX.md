@@ -113,7 +113,7 @@ from this table — read the entry.
 | `AST-099` | Simplify marker exists without skill provenance — the subject is self-applied, only the Pass:… | promoted | 685 | CLEANUP.md,check-simplify-markers.sh |
 | `AST-100` | Codex companion broker leaks one process per arm pass, accumulating silently | promoted | 201 | CLEANUP.md,codex-arm,dispatch-qa-walk,hook-git-guard.py,register.tsx,release-worktree-resources.sh |
 | `AST-101` | Gate worktree removal leaks database containers, not just broker processes | promoted | 182 | CLEANUP.md,dispatch-qa-walk,hook-git-guard.py,register.tsx,release-worktree-resources.sh |
-| `AST-102` | WorktreeRemove hook does not fire, but documentation declares manual cleanup redundant | promoted | 418 | hook-git-guard.py,register.tsx,thomas.md |
+| `AST-102` | WorktreeRemove hook does not fire, but documentation declares manual cleanup redundant | promoted | 418 | hook-git-guard.py,register.tsx |
 | `AST-103` | Cross-vendor arm silently reviews a zero-commit range and returns clean | promoted | 206 | codex-arm |
 | `AST-104` | herdr agent start rejects uppercase in agent names, but dispatch convention generates them | promoted | 87 |   |
 | `AST-105` | Pipe after a command swallows exit code, turning a failed gate into exit 0 | promoted | 182 | WATCHING.md |
@@ -132,7 +132,7 @@ from this table — read the entry.
 | `AST-118` | A fallback that changes what the verdict MEANS, while keeping the same exit code | promoted | 373 | check-reachability.sh |
 | `AST-119` | A fork inside a Builder can message the dispatcher, and nothing marks it as not the Builder | promoted | 677 | builder-claude.md,hook-git-guard.py,thomas.md |
 | `AST-120` | A verification that fired twice on immutable input and disagreed with itself, cause unknown | promoted | 520 |   |
-| `AST-121` | The check had no vocabulary for being obeyed, so honesty registered as failure | promoted | 463 | CLEANUP.md,MARKERS.md,check-simplify-markers.sh |
+| `AST-121` | The check had no vocabulary for being obeyed, so honesty registered as failure | promoted | 463 | CLEANUP.md,MARKERS.md |
 | `AST-122` | Existence is not relationship: a verified pointer that proves nothing about what it points at | promoted | 481 | CLEANUP.md,MARKERS.md,builder.md,check-payload-drift.sh,check-simplify-markers.sh,rin.md |
 | `AST-123` | The scaffold accumulated the identity of whoever last measured a lesson | promoted | 341 | docs-staleness-audit.sh,reap-worktree-processes.sh |
 | `AST-124` | The watcher covers one turn; the protocol never said who covers the next one | promoted | 512 | dispatch-ticket,thomas.md |

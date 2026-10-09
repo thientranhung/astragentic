@@ -45,7 +45,7 @@
 import { atom, read, update } from 'claude-code'
 import type { Register } from 'claude-code'
 
-import type { BoardRow } from '../types'
+import type { BoardRow, Banner } from '../types'
 
 const MARK = '[astragentic-dispatch]'
 
@@ -88,9 +88,19 @@ function overlay($: any, root: string, name: string): Promise<string> {
 }
 const ACK_GRACE_MS = 90_000
 const TICKET = /^[A-Z][A-Z0-9]*-[0-9]+$/
-const ROLE_BY_PREFIX: Record<string, string> = { ticket: 'builder', spec: 'shaper', qa: 'qa', rin: 'rin' }
+// `resident:` is a long-lived pane the owner keeps (a deploy agent, a design partner): it gets
+// no brief and reports no turn end, but it is recorded, shown on the board and protected from
+// a close like any dispatched pane. Measured downstream: resident panes were invisible to the
+// board and the one place a wrong close could not be refused.
+const ROLE_BY_PREFIX: Record<string, string> = { ticket: 'builder', spec: 'shaper', qa: 'qa', rin: 'rin', resident: 'resident' }
 
 const board = atom({ plugin: 'astragentic-dispatch', key: 'board' } as const, [] as BoardRow[])
+// The always-on band: branch and worktree of the dispatcher's checkout, plus one line the
+// project composes (`.astraler/project/status-line.sh`: tracker counts, who holds the gate
+// token, whatever it measured it needed on screen). Measured downstream: the tracker table was
+// injected into context at session start and never shown, and two gate runs collided while
+// nobody could see who held the token.
+const banner = atom({ plugin: 'astragentic-dispatch', key: 'banner' } as const, { branch: '', extra: '' } as Banner)
 
 type Me = { role: string; key: string; tab: string; pane: string }
 type Envelope = { from: string; fromName: string; inner: string }
@@ -132,7 +142,7 @@ async function whoAmI($: any): Promise<Me | null> {
   const pane = await $.env.get('HERDR_PANE_ID')
   if (!tab || !pane) return null
   const got = await herdrJson($, ['tab', 'get', tab])
-  const m = String(got?.result?.tab?.label ?? '').match(/^(ticket|spec|qa|rin):(.+)$/)
+  const m = String(got?.result?.tab?.label ?? '').match(/^(ticket|spec|qa|rin|resident):(.+)$/)
   const role = ROLE_BY_PREFIX[m?.[1] ?? '']
   const key = m?.[2]
   return role && key ? { role, key, tab, pane } : null
@@ -350,6 +360,10 @@ async function refreshBoard($: any, root: string | null, sends: Map<string, numb
       sentAt = undefined
     }
     const role = entry.role ?? 'agent'
+    if (role === 'resident') {
+      rows.push({ key, role, state: 'registered', since: entry.registered_at ?? now, note: 'resident' })
+      continue
+    }
     if (owed.includes(key)) {
       rows.push({ key, role, state: 'merged', since: entry.merged_at ?? entry.last_turn_end_at ?? now, note: 'tracker not closed' })
     } else if (sentAt !== undefined) {
@@ -369,6 +383,23 @@ async function refreshBoard($: any, root: string | null, sends: Map<string, numb
     rows.push({ key: name, role: '?', state: 'sent', since: sentAt, note: isLate ? 'not confirmed received' : undefined })
   }
   await update($, board, () => rows)
+  if (root) {
+    const branch = (await run($, ['git', '-C', root, 'rev-parse', '--abbrev-ref', 'HEAD'])).out
+    let extra = ''
+    const plug = `${root}/.astraler/project/status-line.sh`
+    if (await exists($, plug)) {
+      try {
+        const r = await $.process.run(['bash', plug], { cwd: root, timeoutMs: 5_000 })
+        // One line, printable only: a plug that colours its output or rewrites the line with
+        // carriage returns would otherwise paint the band.
+        const raw = r.exitCode === 0 ? String(r.stdout ?? '').split('\n')[0] ?? '' : 'status-line.sh failed'
+        extra = raw.replace(/\x1b\[[0-9;?]*[ -\/]*[@-~]/g, '').replace(/[\x00-\x1f\x7f]/g, '').trim().slice(0, 160)
+      } catch {
+        extra = 'status-line.sh failed'
+      }
+    }
+    await update($, banner, () => ({ branch, extra }))
+  }
 }
 
 function boardLine(rows: BoardRow[], now: number): string {
@@ -640,6 +671,17 @@ export const register: Register = on => {
     return next({ ...e, context: [...(e.context ?? []), ...notes] })
   })
 
+  // A dispatched pane has no human at it. A picker there blocks the turn until the dispatcher
+  // notices and types into the pane. Measured downstream: Builders kept raising pickers after
+  // the contract banned them; a rule in prose lost to the tool in front of the model.
+  on('tool.call', { tool: 'AskUserQuestion' }, async ($, e, next) => {
+    // A resident pane has its owner at it, and a subagent's picker is its parent's to answer.
+    if (!me || me.role === 'resident' || e.agentId !== undefined) return next(e)
+    return {
+      deny: `astragentic-dispatch: no human is at this pane (${me.role} ${me.key}). Decide from the evidence you have, or report the question to the dispatcher in your handback; a picker here blocks the turn.`,
+    }
+  })
+
   on('tool.call', { tool: 'Bash' }, async ($, e, next) => {
     if (me || !root) return next(e)
     const rec = (await readRecord($, root)) ?? {}
@@ -649,14 +691,18 @@ export const register: Register = on => {
     const close = cmd.match(new RegExp(AT_COMMAND + String.raw`herdr\s+(tab|pane|workspace)\s+close\s+['"]?([A-Za-z0-9:_-]+)`))
     if (close) {
       const [, kind, id] = close
+      // A resident pane is never mid-turn in the record (it gets no brief), and it is the pane
+      // with the most context to lose, so it is refused while it is recorded at all.
       const hit = Object.entries(rec).find(([, entry]) =>
-        isLive(entry) && isMidTurn(entry) &&
+        isLive(entry) && (isMidTurn(entry) || entry.role === 'resident') &&
         (kind === 'tab' ? entry.tab_id === id : kind === 'pane' ? entry.pane_id === id : String(entry.tab_id).startsWith(`${id}:`)),
       )
       if (hit) {
         const [key, entry] = hit
         return {
-          deny: `astragentic-dispatch: ${entry.role} ${key} is mid-turn in ${kind} ${id} (brief received, no TURN-END since). Closing it kills a working agent. Wait for its TURN-END, or ask the owner.`,
+          deny: entry.role === 'resident'
+            ? `astragentic-dispatch: resident pane ${key} lives in ${kind} ${id}. Closing it is the owner's call, not yours.`
+            : `astragentic-dispatch: ${entry.role} ${key} is mid-turn in ${kind} ${id} (brief received, no TURN-END since). Closing it kills a working agent. Wait for its TURN-END, or ask the owner.`,
         }
       }
       const ran = await next(e)
@@ -793,14 +839,19 @@ export const register: Register = on => {
   })
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
-    if (me) return next(e)
+    if (me || !root || e.props.hasSurvey) return next(e)
     const rows = await read($, board)
-    if (rows.length === 0 || e.props.hasSurvey) return next(e)
+    const b = await read($, banner)
     const { Text } = $.ui.resolve(e)
     const isAlarm = rows.some(r => r.note === 'not confirmed received' || r.state === 'merged')
+    const parts = [
+      b.branch ? `⎇ ${b.branch}` : '',
+      rows.length ? `dispatch: ${boardLine(rows, await $.clock.now())}` : 'dispatch: none',
+      b.extra,
+    ].filter(Boolean)
     return (
       <Text dimColor={!isAlarm} color={isAlarm ? 'red' : undefined}>
-        dispatch: {boardLine(rows, await $.clock.now())}
+        {parts.join(' · ')}
       </Text>
     )
   })

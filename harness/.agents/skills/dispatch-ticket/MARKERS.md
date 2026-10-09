@@ -8,12 +8,23 @@ gate law drifted apart in five places.
 The script is the arbiter, on every runtime:
 
 ```bash
-scripts/check-simplify-markers.sh <base> <head> \
-    --marker 'simplify(increment)' --marker 'arm(ticket)'   # exit 0 = green, 1 = STOP
+scripts/check-simplify-markers.sh <base> <head> --marker 'simplify(increment)'   # exit 0 = green, 1 = STOP
+scripts/check-simplify-markers.sh <base> <head> --marker 'arm(ticket)'
 ```
 
 `--marker` is repeatable and the kind is **data**, so a new marker kind costs a flag rather
 than a second script.
+
+**Rule 5 compares trees, not commit counts.** The newest marker of each kind must cover the
+head's tree: an empty `arm(ticket)` receipt committed after `simplify(increment)` leaves the
+tree unchanged, so simplify stays covered and both kinds may be named in one call. Six
+Builders were stopped under the older rule, which counted commits; that STOP is gone. What
+still breaks coverage is a content-bearing commit above the marker — a fold, a fix — and the
+answer to that STOP is the fold re-run (`/simplify <marker>..<head>` <!-- addr-ok: the typed
+form, cited --> then a fresh marker), never an explanation. A committed arm log above the
+marker is the one legitimate exception, and it is declared, not argued: its glob goes in
+`.astraler/project/marker-evidence-paths.txt`, and the script exempts it. `rin(gate)` and
+`qa(walk)` markers stack on top of anything and are exempt from the head check.
 
 ## Existence is not relationship
 
@@ -61,6 +72,18 @@ Reviewed: <sha of the tree the gate read>
 Vendor: <vendor>   Tests: RAN|NOT RUN <prose>   Pass: <n>
 Unreviewed-delta: <from>..<to> — <n> lines, <m> files: <what changed, why it is safe>
 ```
+
+**At ticket scope this record is the arm's receipt** — `codex-arm` and `codex-claude-arm` point
+here rather than redefine it.
+
+**`Tests:` attests whether a GATE RUN stands behind this SHA, not whether the arm itself ran
+tests** (the arm is a code-reading pass and never runs a suite). `Tests: RAN — <citation>`
+covers a gate that already covers this exact SHA, including a docs-only diff ("RAN — <what you
+ran>; no code package touched, so no suite applies"). `Tests: NOT RUN — <reason>` means the
+opposite and only that: a gate applies and none stands behind this SHA, which is why a merge
+on it is the owner's call. Never write `NOT RUN` for "nothing applicable". Measured: two
+Builders read the field opposite ways on the same day, and a correctly gated ticket stopped at
+the merge over the disagreement.
 
 **`Reviewed:` is this commit's parent, OR `Unreviewed-delta:` declares the gap. Never neither**
 (AST-134): a fold moves the tree past what any pass read, so the equality is legitimately false

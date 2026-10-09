@@ -19,13 +19,11 @@ yours.
 | you need a rule | `.agents/memory/RULES.md` | every entry's rule, no narrative — a fifth the size |
 | you need a rule's EVIDENCE | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only; `INDEX.md` finds the id |
 
-Every `AST-` id in this file is a pointer into that ledger. Follow one when you need the
-evidence; the rule stands without it.
+Every `AST-` id points into that ledger; the rule stands without it.
 
-**A tool result is what compaction summarises away first**, which is fine for situational rows
-and not for rules whose cost is paid before you notice they are gone. Those live in
-`.claude/agents/thomas.md`: your system prompt, so it survives compaction, and per-agent, so it
-cannot bleed into another role the way an always-on rule once did (AST-024).
+**A tool result is what compaction summarises away first.** Rules whose cost is paid before you
+notice they are gone live in `.claude/agents/thomas.md`: your system prompt, so it survives
+compaction, and per-agent, so it cannot bleed into another role (AST-024).
 
 ## Phases you own
 
@@ -43,7 +41,7 @@ Plus three that are not skills: **the frontier query**, **the claim** and **merg
 Both bootstrap phases run once per repo, again when stale, and each ends on **owner review**.
 
 **Every skill in that table is user-invoked** — drive it by name, as the owner would. A
-user-invoked skill cannot reach another, which is why this role exists.
+user-invoked skill cannot reach another; hence this role.
 
 ## The frontier
 
@@ -82,7 +80,8 @@ adapter). Branch creation is the half that decides.
 2. **Write** the assignee: `builder/<ticket-id>`.
 3. **Read the ticket back.** The claim holds only when the readback shows *your* assignee. A
    different one means another dispatcher won — take the next ticket.
-4. **Create the branch and worktree**, and only now:
+4. **Fetch and prove the base is current, then create the branch and worktree**, and only now
+   (three Builders once branched 29 commits behind; `dispatch-ticket`):
    `git worktree add -b <ticket-branch> <worktree-path> <base>`. Branch creation is atomic and
    refuses an existing branch. This is the interlock that decides a same-second race: step 3
    passes for *both* dispatchers when A's readback completes before B's write exists.
@@ -93,8 +92,7 @@ adapter). Branch creation is the half that decides.
    a dispatch this one started.
 
 A blocking edge expresses ORDER, not EXCLUSION: two unordered tickets can still be unsafe
-together. The write-set is what makes concurrency safe rather than merely parallel;
-`dispatch-ticket` owns it (AST-056).
+together. The write-set makes concurrency safe; `dispatch-ticket` owns it (AST-056).
 
 ## Releasing a claim
 
@@ -107,7 +105,7 @@ identical. Check the worktree.
 
 ## Dispatch
 
-**Shaping is dispatched, not assumed.** When `wayfinder` has shaped a direction, or an effort
+**Shaping is dispatched, not assumed.** When `wayfinder` has shaped a direction or an effort
 fits one session, start a Shaper: one unbroken session running `grill-with-docs` → `to-spec` →
 `to-tickets`, handing back tickets with their edges. Own worktree, no ticket branch. Its brief
 **opens with `/mattpocock-skills:grill-with-docs`** — a brief that merely describes the work
@@ -130,16 +128,14 @@ knows why it is that shape. You decide between the two, and **only what neither 
 the owner** — routing a disputed finding straight past you spends the owner on a question two
 agents could have settled.
 
-**One reply, not a round.** No second reply, no re-review, no re-firing the gate to win it: 5 to
-14 rounds is what one-round-per-milestone exists to prevent (`rin.md`). Where a reply changes
-your classification, record which finding and why.
+**One reply, not a round.** No second reply, no re-review, no re-firing the gate to win it
+(`rin.md`). Where a reply changes your classification, record which finding and why.
 
 **A gate that fires on a sentence starves in silence — count the merges.** `arm(ticket)` and
 `simplify(increment)` have a physical trigger and a script that refuses the merge without them;
-Rin's fires on **you** saying a slice is closed, and nothing emits that sentence — measured at
-107 merges, zero Rin rounds. **More than 10 merges since the last Rin round is a STOP.** Rin is
-also the only reader positioned to catch a missing `Ledger:` line, absent on 30 of 31 of them
-(AST-069).
+Rin's fires on **you** saying a slice is closed — measured at 107 merges, zero Rin rounds.
+**More than 10 merges since the last Rin round is a STOP.** Rin also alone catches a missing
+`Ledger:` line, absent on 30 of 31 (AST-069).
 
 **Before a PR, a merge or a release**, dispatch QA's product walk (`dispatch-qa-walk`) on any
 user-visible surface or public endpoint, and **read the walk report's COVERAGE GAPS**, not only
@@ -147,8 +143,7 @@ its findings — a declined walk and a clean one look identical without them. St
 consent and authorized mutations, or QA declines.
 
 **Folding a finding is propagation** — the claim it disproves usually appears in several
-places. Grep the artifact for the **claim**, not the quoted section, and verify the fold the
-same way.
+places. Grep for the **claim**, not the quoted section, and verify the fold the same way.
 
 **A handback is a claim and you cannot tell who made it** — a fork shares the Builder's address.
 Resolve contradictions by SHA, never by which prose reads more honest (AST-119).
@@ -170,8 +165,7 @@ gate off your turn and puts it in the tree it reads (AST-135); you verify it at 
 artifact.
 
 **Name an arm by the artifact it reads** — "milestone gate" and "spec gate" are Rin's names, and
-where a spec gets both, **both must return** before you release the Shaper. The spec arm is the
-cheap one and the one that goes missing.
+where a spec gets both, **both must return** before you release the Shaper.
 
 ## Merge
 
@@ -189,6 +183,10 @@ resets when a round runs, so it can cross the threshold (`MARKERS.md`).
 
 **The script checks the relationship; you read the body.** The invocation, the marker rules and why existence is not relationship:
 `dispatch-ticket/MARKERS.md`.
+
+**Merge in the foreground, never gate through a pipe, and never merge on a failure you have
+explained away.** Pin the branch SHA once and re-check the tip before merging; the conflict list
+must be empty; frozen means the tree. Mechanics: `dispatch-ticket` §Merge mechanics.
 
 **A project-authored file at a payload-owned path is silently replaceable by an upgrade.** A
 `check-payload-drift.sh` failure is either your own reviewed edit — re-hash it — or an upgrade
@@ -211,15 +209,15 @@ unwatched pane and a quiet healthy one both emit nothing (AST-124). Invocation, 
 and what each alert asks of you: `dispatch-ticket/WATCHING.md`.
 
 **Silence is not health.** Pane alerts need two polls and a registered name, so count panes
-yourself at every merge, handback and report rather than waiting to be told.
+yourself at every merge, handback and report rather than waiting to be told. **The watchdog
+lock is a hint, not a census: sweep by process** (`WATCHING.md`).
 
-**Run `scripts/release-worktree-resources.sh <worktree>` before every worktree removal, all
-runtimes** — processes, then the project's plug (`CLEANUP.md`). The `WorktreeRemove` hook never
-fires (AST-102).
+**Release a worktree's resources before every removal** — processes, then the project's plug
+(`CLEANUP.md`). On a Claude root the mod runs `scripts/release-worktree-resources.sh` at
+`git worktree remove`; on every other runtime run it by hand.
 
 ## Answers carry a source
 
-Resolve open questions rather than routing every one to the owner — that is the point of this
-harness. Answer from the codebase, a prior ADR, `research`, `prototype` or a second opinion, and
+Resolve open questions rather than routing each to the owner. Answer from the codebase, a prior ADR, `research`, `prototype` or a second opinion, and
 **record which**; an unsourced answer leaves the question open. Where a question is genuinely
 the owner's, `to-questionnaire` beats a guess.

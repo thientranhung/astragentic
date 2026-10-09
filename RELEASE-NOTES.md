@@ -1,3 +1,98 @@
+# Astragentic 2.20.0
+
+**The first project to reach drift zero handed back two months of measured fixes, and this
+release takes them.** After 2.19.1 the downstream project moved its own rules into overlays
+and restored thirteen payload files byte for byte; what remained on its drift manifest was
+five scripts it had fixed and could not stop fixing, and five rules it had nowhere to put. Both
+halves land here, so that project's manifest can reach zero and the next project does not
+re-buy the same defects.
+
+## Six plug points in `.astraler/project/`
+
+A payload script asks the project a question and the project answers in a file no release
+overwrites. New in 2.20.0:
+
+| Plug | Read by | What the project puts there |
+|---|---|---|
+| `marker-kinds.json` | `check-simplify-markers.sh` | extra required fields or flags per marker kind, merged per field as a union: a project can tighten a kind, never loosen it |
+| `marker-output-check.sh <sha> <subject> <path>` | same | the project's rule for an `Output:` path (directory, naming, non-empty); exit 0 passes, anything else stops quoting the reason; absent while a kind needs it is a STOP |
+| `marker-evidence-paths.txt` | same | globs whose changes alone do not break the covers-head rule (an arm log committed after the marker) |
+| `watchdog-probe.sh` | `herdr-watchdog.sh` | run every poll, printing `TYPE\|key\|details` lines that become alerts through the watchdog's own path; a failing probe is one WARN, never silence |
+| `role-budgets.txt` | `docs-staleness-audit.sh` | `role words reason` lines raising a contract's word budget for the project's additions; the source of the budget prints on the line |
+| `status-line.sh` | the dispatch mod | one line for the band above the prompt: tracker counts, who holds the gate token, whatever the project measured it needs on screen |
+
+## The marker gate, rewritten from 560 merges of evidence
+
+`check-simplify-markers.sh` grows from four rules to nine, each one closing a shape the
+downstream project measured: cadence numbers are labelled (an unlabelled `origin/main~60` was
+reported as a 60-merge backlog; it was 9); fields are read from per-paragraph field runs, so
+wrapped prose no longer reads as a field (three Builders stopped on it); a field pushed out of
+its run by a wrap is reported as that, not as absent; `Supersedes:` is validated on every kind
+(three fabricated values passed green on one branch, a 560-merge sweep found five historical
+fabrications and no false positives); the chain resolves regardless of `economy`; the
+covers-head rule compares trees, not commit counts (an empty arm commit refused a merge);
+`Reviewed:` must be reachable even under `Unreviewed-delta:` (20 of 80 were not); `Range:`
+endpoints must be reachable (22 of 77 were stranded); and the covers-head STOP names the fold
+re-run (four refusals across three Builders in one shift, all following the documented loop).
+The field parser ships at `scripts/lib/marker_field_parser.py`, resolved from the script's own
+path. Verified by planting eleven defects, each named.
+
+**The covers-head STOP that six Builders hit is gone, and the STOP that remains has one
+answer.** Under the old rule a call naming both `simplify(increment)` and `arm(ticket)` could
+never pass, because the receipt is always the later commit. Rule 5 now compares trees, so the
+empty receipt leaves simplify covered. A content-bearing commit above a marker still stops the
+merge, and `MARKERS.md` now says the only answers: the fold re-run and a fresh marker, or a
+committed arm log declared in `marker-evidence-paths.txt`. Never an explanation. `rin(gate)`
+and `qa(walk)` markers stack and are exempt from the head check.
+
+## The watcher, the guard, the audit
+
+The watcher touches a heartbeat every iteration and the watchdog reads a heartbeat under 300 s
+as a second liveness probe after `pgrep`: two false `WATCHER_LOST` in twenty minutes were a
+`pgrep` match failing on a live watcher. `hook-git-guard.py` blanks quoted spans before deciding
+readability, keeping `$(` and backticks inside double quotes unreadable: 20 of 126 base pushes
+had gone unjudged, 13 of them for a `(` inside an echo string, and one unstamped merge reached
+the base. Selftest carries one case each way.
+
+## The band, residents, and the picker
+
+**The dispatcher's band is always on**: `⎇ <branch> · dispatch: … · <status-line.sh>`. The
+tracker table had been injected into context at session start and shown nowhere; the branch
+was asked for by hand; two gate runs collided while nobody could see who held the token.
+**A tab labelled `resident:<name>`** is recorded, shown on the board and refused a close —
+resident panes were the ones with the most context to lose and the only ones a wrong close
+could not be refused. **`AskUserQuestion` is refused in a dispatched pane**: no human is there,
+and a picker blocked turns after the contract had banned it in prose.
+
+## Prose that the measurements changed
+
+`codex-arm` defines the log it tees to (both `$OUT` and the `tee` were used undefined; four
+logs lost) and runs one way, `--background` with short foreground polls, where it had said both
+bell and poll (~47 minutes lost on a job dead for ~44). `codex-claude-arm` captures `claude -p`
+output into a tracked file. `MARKERS.md` carries the meaning of `Tests:` (two Builders read it
+opposite ways). `builder.md`: a fork is a source, never a gate (41 minutes parked on fork
+pings); the fold re-run is a named step. `thomas.md`: fetch and prove the base before cutting a
+worktree (three Builders branched 29 commits behind); a merge-mechanics list in
+`dispatch-ticket` (never background merge+gate, never read status through a pipe, pin the SHA,
+`--diff-filter=U` empty, frozen means the tree, never merge on an explained-away failure); the
+watchdog lock is a hint, not a census (two watchdogs alive at 8h57m and 7d11h); the cleanup
+line matches the mod. `dispatch-ticket`: `ctx %` as the delivery receipt, first-arm versus
+re-arm `start_max_s`, a read-only fork's brief forbids the act, the `ADDRESSED TO:` line, and
+one answer on how a brief travels per runtime.
+
+`check-reachability.sh` learns that a shipped mod's `agents/*.md` are resolvable names, and
+`check-requirements.sh` stops reading a script's closing prose as a cannot-run verdict.
+
+## Upgrade from 2.19.1
+
+1. Copy `harness/`, or run `./install.sh <target> --apply`. Six scripts, the mod, two role
+   contracts and five skill files change; `scripts/lib/` is new.
+2. If the project carried its own fixes to `check-simplify-markers.sh`, `herdr-watchdog.sh`,
+   `herdr-watch-terminal.sh` or `hook-git-guard.py`, take the payload copies and express what
+   was project-specific in the plugs above. The drift manifest should reach zero.
+3. Label resident panes `resident:<name>` before their next launch; write `status-line.sh`
+   if the band should carry more than branch and dispatches.
+
 # Astragentic 2.19.1
 
 **Two findings from the first 2.19.0 adoption, both carried upstream rather than patched again

@@ -329,26 +329,36 @@ fi
 # ---------------------------------------------------------------------------
 [ -L "$STATE_DIR" ] && rm -f "$STATE_DIR"   # refuse a pre-planted symlink
 mkdir -p "$STATE_DIR"
-echo 0  > "$STATE_DIR/alert_count"
-date +%s > "$STATE_DIR/alert_reset"
+echo 0  > "$STATE_DIR/alert_count_main"
+date +%s > "$STATE_DIR/alert_reset_main"
 HEARTBEAT_EVERY="${HEARTBEAT_EVERY:-5}"
 
 # ---------------------------------------------------------------------------
 # Rate-limit & cooldown helpers
 # ---------------------------------------------------------------------------
+# Two buckets, on purpose. Project probe alerts (keys `probe:*`) draw on their own allowance,
+# capped lower, so a chatty probe cannot spend the watchdog's six and mute a WATCHER_LOST
+# behind it (found by the 2.20.0 gate: six probe notices, then RATE_LIMITED [WATCHER_LOST]).
+MAX_PROBE_ALERTS_HOUR=3
+bucket_for() { case "$1" in probe:*) echo probe ;; *) echo main ;; esac; }
 can_alert() {
-  local now count reset
-  now=$(date +%s); count=$(cat "$STATE_DIR/alert_count"); reset=$(cat "$STATE_DIR/alert_reset")
+  local bucket="${1:-main}" now count reset max=$MAX_ALERTS_HOUR
+  [[ "$bucket" == probe ]] && max=$MAX_PROBE_ALERTS_HOUR
+  now=$(date +%s)
+  count=$(cat "$STATE_DIR/alert_count_$bucket" 2>/dev/null || echo 0)
+  reset=$(cat "$STATE_DIR/alert_reset_$bucket" 2>/dev/null || echo 0)
   if (( now - reset >= 3600 )); then
-    echo 0    > "$STATE_DIR/alert_count"
-    echo "$now" > "$STATE_DIR/alert_reset"
+    echo 0    > "$STATE_DIR/alert_count_$bucket"
+    echo "$now" > "$STATE_DIR/alert_reset_$bucket"
     count=0
   fi
-  (( count < MAX_ALERTS_HOUR ))
+  (( count < max ))
 }
 
 incr_alert() {
-  local c; c=$(cat "$STATE_DIR/alert_count"); echo $(( c + 1 )) > "$STATE_DIR/alert_count"
+  local bucket="${1:-main}" c
+  c=$(cat "$STATE_DIR/alert_count_$bucket" 2>/dev/null || echo 0)
+  echo $(( c + 1 )) > "$STATE_DIR/alert_count_$bucket"
 }
 
 on_cooldown() {
@@ -366,14 +376,14 @@ set_cooldown() {
 # Alerting — send to Thomas pane if found, else desktop notification
 # ---------------------------------------------------------------------------
 send_alert() {
-  local atype="$1" details="$2" thomas_pane="${3:-}"
-  if ! can_alert; then
+  local atype="$1" details="$2" thomas_pane="${3:-}" bucket="${4:-main}"
+  if ! can_alert "$bucket"; then
     log "RATE_LIMITED [$atype] $details"
     return 1
   fi
   if [ -n "$thomas_pane" ] \
      && herdr agent prompt "$thomas_pane" "WATCHDOG ALERT [$atype]: $details" 2>/dev/null; then
-    incr_alert
+    incr_alert "$bucket"
     log "ALERTED [$atype] $details"
   else
     herdr notification show "WATCHDOG [$WORKSPACE_LABEL]" \
@@ -388,7 +398,7 @@ send_alert() {
 # ---------------------------------------------------------------------------
 analyze() {
   python3 -c '
-import json, sys, subprocess, os, re
+import json, sys, subprocess, os, re, time
 
 raw = sys.stdin.read()
 try:
@@ -550,6 +560,30 @@ elif os.path.isfile(plug):
     except Exception:
         in_flight = True
 
+# Project alerts: `.astraler/project/watchdog-probe.sh`, when present and executable, runs on
+# every poll and prints zero or more `TYPE|key|details` lines. Each becomes an alert of that
+# TYPE through the same path as the watchdog own alerts, so the same cooldown on `key` dedupes it.
+# Nothing is asked of a project that has no plug. A probe that fails or hangs draws ONE warning
+# naming it and the poll goes on: a probe must not mute the watchdog it extends. Lines that are
+# not three fields, or whose TYPE starts with `__` (the internal marker namespace), are dropped.
+probe = os.path.join(project_root, ".astraler", "project", "watchdog-probe.sh")
+if os.path.isfile(probe) and not os.access(probe, os.X_OK):
+    print(f"PLUG_BROKEN|watchdog_probe_plug|{probe} exists but is not executable, so it adds "
+          f"no alerts. chmod +x it.")
+elif os.path.isfile(probe):
+    try:
+        _pr = subprocess.run([probe], cwd=project_root, capture_output=True, text=True, timeout=20)
+        if _pr.returncode != 0:
+            raise RuntimeError("exit %d" % _pr.returncode)
+        for _ln in _pr.stdout.splitlines():
+            _parts = _ln.split("|", 2)
+            if len(_parts) == 3 and _parts[0].strip() and not _parts[0].startswith("__"):
+                # `probe:` marks the key so the bash side charges the probe bucket.
+                print(f"{_parts[0]}|probe:{_parts[1].strip()}|{_parts[2]}")
+    except Exception as _e:
+        print(f"WARN|watchdog_probe_failed|{probe} failed ({_e}); its alerts are skipped "
+              f"this poll and the watchdog carries on.")
+
 # Panes that report themselves. Since 2.14 a Claude pane runs the astragentic-dispatch mod,
 # which records the pane and sends TURN-END from inside it; it never runs the watcher script,
 # by design. The two probes below only know that script, so without this set every working
@@ -591,6 +625,16 @@ for d in dispatched:
         # Fail CLOSED. A pgrep that raised told us nothing, and defaulting to True turned an
         # unanswered question into an all-clear — the AST-032 shape inside the watchdog itself.
         has_w = False
+    if not has_w:
+        # Second positive probe: the watcher touches this file every iteration (see
+        # herdr-watch-terminal.sh), so a fresh one proves it live when the argv match failed.
+        # It only ever sets has_w on EVIDENCE, so it does not reintroduce a fail-open: no file,
+        # a stale file or an unreadable one all leave has_w False.
+        try:
+            hb = "/tmp/herdr-watch-" + dpane.replace(":", "-") + ".heartbeat"
+            has_w = (time.time() - os.path.getmtime(hb)) < 300
+        except Exception:
+            has_w = False
     if dstatus == "blocked":
         print(f"BLOCKED|{dpane}_blocked|workspace={ws_label} thomas={tpane}({tstatus}) {dname}={dpane}(blocked) — builder asking a question, read pane and answer")
     # STUCK asks about THIS pane. It used to require that no pane anywhere was working, so one
@@ -665,7 +709,7 @@ while true; do
     [[ -z "$atype" ]] && continue
     [[ "$atype" == __* ]] && continue
     if ! on_cooldown "$key"; then
-      send_alert "$atype" "$details" "$thomas_pane"
+      send_alert "$atype" "$details" "$thomas_pane" "$(bucket_for "$key")"
       set_cooldown "$key"
     fi
   done <<< "$output"

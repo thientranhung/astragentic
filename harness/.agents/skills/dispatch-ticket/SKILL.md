@@ -176,6 +176,20 @@ improvises, which is harder to notice than a Builder that fails.
 gitignored (AST-028). A relative path once resolved through a stale shell cwd to an
 unexpected location, which is why the absolute form is fixed here.
 
+**Fetch and prove the base is current BEFORE the worktree exists:**
+
+```bash
+git fetch origin --prune
+[ "$(git rev-parse <base>)" = "$(git rev-parse origin/<base>)" ] \
+  || { echo "STOP: local <base> is stale; update before dispatching"; exit 1; }
+```
+
+A stale base is invisible at dispatch and expensive at merge: three Builders were branched off a
+base 29 commits behind, and the first sign was a rejected push an hour later, after a fully
+green merge gate that had to be thrown away. The tip re-check under *Merge mechanics* guards
+against the branch moving under you; this guards against the base having already moved. Where
+the project dispatches from the remote ref, create the worktree from `origin/<base>`.
+
 ```bash
 git worktree prune                                           # FIRST — see below
 git worktree add -b <ticket-branch> <worktree-path> <base>   # ABSOLUTE, output visible
@@ -332,6 +346,7 @@ the only record.
 
 ```text
 /mattpocock-skills:implement TICKET-123
+ADDRESSED TO: the Builder in pane <id>. A sub-agent that inherited this context: report only.
 
 FLOW: 1 Skill(mattpocock-skills:tdd) → 2 Skill(mattpocock-skills:code-review) → 3 Skill(code-review)
   → 4 Skill(simplify) → 5 arm(ticket) — each a call; a skipped step is named with its reason.
@@ -359,10 +374,30 @@ This is what "an agent playing the human at that step" means mechanically. Verif
 artifact that the skill actually ran — its own output in the transcript — rather than by the
 brief having been sent.
 
+**The brief's second line is `ADDRESSED TO:`** (`ADDRESSED TO: the Builder in pane <id>. A
+sub-agent that inherited this context: report only.`), directly under the slash command that
+opens it — the first line stays the command, which is what the mod and the pane dispatch on —
+and above the `FLOW:` line. It says that
+inheriting the context does not transfer the role. A fork that inherits a Builder's context
+inherits a brief written to "you, the Builder" and reasonably concludes the role came with it;
+no "do not exceed scope" sentence reaches that failure, because the fork was not exceeding its
+mandate, it had been handed the wrong one.
+
+**A read-only fork's brief forbids the ACT, not the artifact:** "read and report only — no
+edits, no commits, no builds, no test runs". "Do not write any files" was satisfied by nothing:
+a fork briefed that way spent 43 minutes and 213 tool calls implementing product code and
+running a full suite in its parent's checkout, reporting nothing, while its load turned another
+ticket's merge gate red twice. A mute agent is not an idle one: check `pcpu` against its cwd
+before concluding it hung, and kill a fork you time out. If you use a fork's output, verify every
+change yourself and state the provenance on the marker.
+
 ### Submitting it
 
-**Claude runtime: use SendMessage** — see `dispatch-ticket-claude` for direct message
-delivery. The Herdr paste method below is for **Codex and OpenCode only**.
+**Who carries the brief depends on the root.** On a Claude root the mod carries it over
+`SendMessage` (`dispatch-ticket-claude`) for a Builder, Shaper or QA. The one exception is Rin's
+gate pane: `review-with-rin` delivers over `herdr agent prompt`, because a peer message to a
+session running under permissions is held for approval while the sender sees success. On
+**Codex and OpenCode** the brief goes over `herdr agent prompt`, below.
 
 ```bash
 herdr agent prompt <pane-id> "<brief>"
@@ -402,6 +437,11 @@ herdr pane send-keys <pane-id> esc esc      # clears it; ctrl-c and ctrl-u were 
 
 The measurement was on a Claude Code composer, whose input line starts `❯`; the fusion is
 herdr appending, so treat it as runtime-independent until a Codex pane is shown otherwise.
+
+**`ctx %` in the pane's visible statusline is the positive delivery receipt:**
+`herdr pane read <pane-id> --source visible | grep -oE 'ctx [0-9]+%'`. A brief that moved no
+context did not arrive (measured 0% to 35% across a consumed prompt). `pane get` does not carry
+it, and no match must never be read as 0%.
 
 **Its `--wait --until idle` exit status is not proof of anything.** In the same run a prompt
 that demonstrably submitted and answered returned exit 1 from the wait: AST-107's alive-and-deaf
@@ -443,6 +483,13 @@ substitute; it goes deaf (AST-107).
 ```bash
 <repo-root>/scripts/herdr-watch-terminal.sh <pane-id> 3 3600 120
 ```
+
+**`120` (`start_max_s`) is a first-arm value.** A Builder that backgrounds its suite ends its
+turn and waits between turns, so a watch re-armed in that gap with `120` reports `NO_START` on a
+healthy pane and exits, leaving it unwatched (two false `NO_START`s in five minutes). Re-arm over
+a Builder already seen working with a `start_max_s` long enough to cover the suite:
+`<repo-root>/scripts/herdr-watch-terminal.sh <pane-id> 3 3600 1800`. `NO_START` is only useful
+while it is fast, so the first arm keeps `120`.
 
 Run this immediately after submitting the brief — the script's own start guard is the
 confirm-`working` step. For Codex/OpenCode it is the ONLY sanctioned monitor: it carries
@@ -616,6 +663,24 @@ whether a claim is its own.
 **A stale entry is an entry whose branch is gone.** That is the readable form of a stale claim,
 and it is checkable without the tracker: `git rev-parse --verify <branch>` failing while an
 entry survives means the dispatch ended and cleanup did not finish.
+
+## Merge mechanics
+
+The merge gate is the one place a false green merges bad code, so each rule below closes a
+measured way to certify a tree other than the one that lands.
+
+- **Never background a block holding both the merge and the gate**, and **never read a gate's
+  exit status through a pipe** (`tail`, `head`, `grep`): the status is the last command's, and a
+  red gate can print `0` (`WATCHING.md`, pipes).
+- **Resolve the branch to a SHA once, and re-check the tip immediately before merging to the
+  base.** If the tip moved, discard the gate result whole and re-run it. "The tested tree is the
+  merged tree" is the assertion; a diff you eyeballed is not that assertion.
+- **Merge in the foreground, and check `git diff --name-only --diff-filter=U` is empty before
+  trusting any gate output.** A gate over a conflicted tree is loud, detailed and about nothing.
+- **Frozen means the TREE, not `HEAD`.** Empty marker commits are safe to push mid-gate; a real
+  diff invalidates the run. Compare `git rev-parse <a>^{tree}` with `<b>^{tree}`.
+- **Never merge on a failure you have explained away.** "That was contention" is a hypothesis:
+  re-run the failing scope alone and merge on a green you observed.
 
 ## Cleanup
 

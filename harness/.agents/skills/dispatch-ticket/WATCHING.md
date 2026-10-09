@@ -112,6 +112,21 @@ scripts/herdr-watchdog.sh stop
 Reads `workspace-label` from `orchestrator.md`; `stop` verifies the PID at
 `/tmp/herdr-watchdog-<workspace-label>.lock`.
 
+**The lock is a hint, not a census: sweep by process.** `flock` refuses only while the lock it
+took is still the lock on disk, so a launch is not idempotent. Measured: two watchdogs on one
+workspace, alive 8h57m and 7d11h, with the lock naming only the younger. Derive the label from
+`orchestrator.md` rather than typing it (a guessed label reports DOWN while the watchdog is
+fine), sweep, and read each cwd before killing:
+
+```bash
+ps -Ao pid,ppid,etime,args | awk '/[h]erdr-watchdog\.sh/ {p[$1]=1; l[$1]=$0; pp[$1]=$2}
+  END {for (i in p) if (!(pp[i] in p)) print l[i]}'
+lsof -a -p <pid> -d cwd -Fn | grep '^n'   # -a is load-bearing
+```
+
+Two different ages is the duplicate signature; a parent and its child is not. Sweep first, then
+`rm` a stale lock: removing a lock whose holder is alive hands the next launcher a free `flock`.
+
 | Alert | What it means | Action |
 |---|---|---|
 | `BLOCKED` | Pane asking a question | Read, answer, **restart the watch** — Monitor on Claude, watcher script on Codex/OpenCode |

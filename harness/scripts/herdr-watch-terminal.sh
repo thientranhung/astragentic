@@ -41,6 +41,24 @@ MAX="${3:-3600}"
 START_MAX="${4:-120}"
 WAIT_SLICE="${5:-60}"
 
+# HEARTBEAT. herdr-watchdog.sh asks "is a watcher live" with one `pgrep` for this script's
+# argv, which only holds while the invocation text survives intact: a wrapper, a differently
+# quoted Monitor command or a re-exec chain changes what `pgrep` sees though the watch is
+# live. Measured downstream: two false WATCHER_LOST in twenty minutes on watches that were
+# running. This script is what every runtime actually runs, so it is the one place that can
+# assert its own liveness regardless of how it was launched. It touches a freshness file once
+# per loop iteration and the watchdog reads a file younger than 300s as a second positive
+# probe. Freshness is the signal: a dead watcher stops touching and the file goes stale on
+# its own, so nothing has to clean up.
+HEARTBEAT_FILE="/tmp/herdr-watch-${PANE//:/-}.heartbeat"
+beat() { touch "$HEARTBEAT_FILE" 2>/dev/null || true; }
+# The heartbeat goes with the process. Left behind, a watcher that exited (TERMINAL, NO_START,
+# timeout, killed) reads as live for the freshness window and overrides a failed pgrep (found
+# by the 2.20.0 gate). `exec` below does not run this trap, and the re-executed copy sets it
+# again, so exactly one process owns the file.
+trap 'rm -f "$HEARTBEAT_FILE" 2>/dev/null' EXIT
+beat
+
 # SELF-CAFFEINATE (investigated 2026-08-04, after five watchers died in one session).
 # macOS renews its sleep-prevention assertion in ~300s windows tied to SESSION ACTIVITY.
 # This watcher is deliberately silent for up to MAX seconds, so it renews nothing: the
@@ -98,6 +116,7 @@ start_deadline=$(( $(date +%s) + START_MAX ))
 saw_working=0
 while [ "$(date +%s)" -lt "$start_deadline" ]; do
   left=$(( start_deadline - $(date +%s) ))
+  beat
   slice="$WAIT_SLICE"
   [ "$left" -lt "$slice" ] && slice="$left"
   [ "$slice" -le 0 ] && break
@@ -122,6 +141,7 @@ while :; do
     exit 1
   fi
 
+  beat
   slice="$WAIT_SLICE"
   [ "$remaining" -lt "$slice" ] && slice="$remaining"
 

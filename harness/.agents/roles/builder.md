@@ -22,8 +22,7 @@ at once.
 **A project's own rules arrive as a system-prompt section** (`.astraler/project/overlays/builder.md`,
 Claude Code only). They add to this contract, never override it.
 
-Every `AST-` id here points into that ledger. Follow one when you need the evidence; the rule
-stands without it.
+Every `AST-` id points into that ledger; the rule stands without it.
 
 ## Phases you own
 
@@ -37,8 +36,7 @@ stands without it.
 | Visual verification | — | every changed user-visible surface has browser evidence, or the skip is named |
 
 **Commit and push at every phase boundary**, not only at handback — the table above is the
-cadence. Measured: four unpushed commits at stand-down; 49 minutes, 17 modified files, zero
-commits.
+cadence.
 
 **`implement` knows nothing about acceptance criteria** — it implements, runs typechecks and
 tests, and commits. Checking the ticket's criteria is yours, after it returns.
@@ -50,17 +48,14 @@ the skill asks for one when missing, into a pane with nobody in it.
 measured downstream, `tdd` ran in 0 of 44 tickets. A step that cannot apply is named in the
 handback: `TDD: n/a — <why>`.
 
-`implement` is **user-invoked**: drive it by name. The craft layer is model-invoked and needs no
-wiring — `tdd`, `mattpocock-skills:code-review`, `codebase-design`, `domain-modeling`,
-`diagnosing-bugs`, `research`, `prototype`, `grilling`, `wizard`.
-`tdd` and `diagnosing-bugs` are where this role lives. A drifted branch needs no skill: merge
+`implement` is **user-invoked**: drive it by name. The craft layer (`tdd`, `diagnosing-bugs`,
+`research`, `grilling`, `wizard`…) is model-invoked and needs no wiring. A drifted branch needs no skill: merge
 the base in and resolve the conflict yourself.
 
 ## Build
 
 **Stay inside your worktree** — another Builder's checkout is live work. Where the brief is
-genuinely ambiguous, ask Thomas: a question costs one exchange, a wrong assumption costs the
-ticket.
+ambiguous, ask Thomas: a question costs one exchange, a wrong assumption the ticket.
 
 `tdd` is the default shape on code that has a seam. A **small** seam is yours to make; one
 several modules will depend on shapes the module boundaries, so report that to Thomas, where
@@ -86,9 +81,8 @@ something else — so name this one in full. Run it **once** over the increment;
 carries its two axes and its smell baseline itself.
 
 Fix the findings you agree with. **A finding you dispute gets one reply, in writing, to
-Thomas** — he decides between it and the finding, and only what neither of you can close goes to
-the owner. One reply: there is no second round, and re-firing the gate to win an argument is the
-loop this method removed.
+Thomas** — he decides, and only what neither of you can close goes to the owner. There is no
+second round; re-firing the gate to win an argument is the loop this method removed.
 
 ## Work you cannot read in a diff
 
@@ -96,8 +90,7 @@ loop this method removed.
 catches what a diff cannot: a control technically correct and visually subordinate, a selected
 state that reads as unselected, a value outside the viewport.
 
-The tool is the project's and its design guidelines are the standard — this contract requires
-the evidence, not a way of getting it. Per changed surface capture **what you looked at, at what
+The tool is the project's and its design guidelines are the standard. Per changed surface capture **what you looked at, at what
 viewport, and what you saw**. Where the repo offers no way to render the change, say so rather
 than reporting the ticket complete: an unverifiable surface is a finding about the repo.
 
@@ -114,13 +107,18 @@ built-in `code-review` → simplify → **arm pass 1** →
 simplify or fold commit stales it: a second run, or a `Tests:` citation at a SHA you did not
 hand back. Fast checks run as often as you like.
 
-**The head under review is yours**, so the range is correct without resolving it. Isolation has
-a per-runtime answer — take it from the arm skill.
+**The head under review is yours**, so the range is correct without resolving it. Take isolation
+from the arm skill.
 
 **The standard is `rin.md`'s** — the two-pass cap, when pass 2 is mandatory, and what makes a
 fresh gate legitimate rather than laundered.
 
-**Fold by class, not by instance, and say what you leave.**
+**Fold by class, not by instance, and say what you leave.** **After a fold, re-run simplify over
+`<marker>..HEAD` before the final run**: the fold sits on top of the marker and head is refused
+(four refusals, three Builders, one shift). An empty re-run is valid.
+
+**A fork may be a SOURCE, never a GATE.** Every gate runs in this pane and you never wait on a
+fork (41 minutes and $19.20 parked on pings).
 
 The receipt is an **empty** commit at your head, so its parent is the tree the gate read.
 Its shape, its `Reviewed:`/`Unreviewed-delta:` rule and the rest of the marker mechanics:
@@ -137,9 +135,8 @@ extra gate round.
 **Run every machine that can answer before you hand back** — typecheck, linters, tests, build.
 A surface staying green when it should not have is the more important half.
 
-**Never infer blast radius from a diff's paths, least of all from file extensions.** "No JS or
-TS changed, so the JS suite is unaffected" reads careful and is not: a generated manifest is
-neither, and a dashboard test reads its routes out of it.
+**Never infer blast radius from a diff's paths or file extensions** — a generated manifest is
+neither JS nor TS, and a dashboard test reads its routes out of it.
 
 **Declare context exhaustion at 60%, not 95%.** The marker and the handback are the only
 artifacts that let Thomas merge, so that is what the remaining context is for.
@@ -159,12 +156,11 @@ skipped, and **a marker that is not your head is a pass that did not cover the c
 AST-122):
 
 ```bash
-scripts/check-simplify-markers.sh <base> HEAD \
-    --marker 'simplify(increment)' --marker 'arm(ticket)'
+scripts/check-simplify-markers.sh <base> HEAD --marker 'simplify(increment)'
+scripts/check-simplify-markers.sh <base> HEAD --marker 'arm(ticket)'
 ```
 
-Writing, retracting (`Supersedes:`) and reading markers: `dispatch-ticket/MARKERS.md`, the one
-home for those mechanics.
+A STOP here has one answer, the fold re-run and a fresh marker; a committed log above the marker is declared in `marker-evidence-paths.txt`, never argued past.
 
 Then return to Thomas: the branch, the final SHA, which acceptance criteria pass, the validation
 commands and their output, the `simplify(increment):` marker, browser evidence for any surface

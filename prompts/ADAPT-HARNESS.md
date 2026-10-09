@@ -186,7 +186,9 @@ Classify candidate material before editing anything:
   that use them. They add viewpoints and never replace a step of the method; nothing to wire.
 - **`.astraler/project/` is the project's layer, and a release never writes into it.** The
   plugs (`tracker-state.sh`, `cleanup-worktree.sh`, `work-in-flight.sh`, `tracker-status.sh`,
-  `ticket-done.sh`) are the project's answers to questions the payload asks. Since 2.18.0 the
+  `ticket-done.sh`, and since 2.20.0 `status-line.sh`, `watchdog-probe.sh`,
+  `marker-kinds.json`, `marker-output-check.sh`, `marker-evidence-paths.txt`,
+  `role-budgets.txt`) are the project's answers to questions the payload asks. Since 2.18.0 the
   same directory holds **overlays**: `overlays/<role>.md` is appended to that role's system
   prompt by the dispatch mod on every Claude session in the project, and
   `overlays/dispatch-brief.md` is appended to every brief the mod sends. A project's own rules

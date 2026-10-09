@@ -6,8 +6,13 @@ export type BoardRow = {
   note?: string
 }
 
+export type Banner = {
+  branch: string
+  extra: string
+}
+
 declare module 'claude-code' {
   interface PluginState {
-    'astragentic-dispatch': { board: BoardRow[] }
+    'astragentic-dispatch': { board: BoardRow[]; banner: Banner }
   }
 }
