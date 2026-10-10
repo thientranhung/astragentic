@@ -1,3 +1,29 @@
+# Astragentic 2.22.0
+
+**A project pulls its own release.** Until now every install and upgrade ran from the package's
+checkout, pointed at the project: a second repository on the machine and a person standing
+between the two. `get.sh` at the package root is the one-liner the well-known tools use, run in
+the project's root:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 2.22.0 --apply
+```
+
+It resolves `latest` from the remote's release tags (or takes a pinned version), clones that tag
+into `~/.cache/astragentic/<version>/`, refuses a cache whose `VERSION` disagrees, and runs
+**that release's own** `install.sh` against the current directory — so staging, the three-way
+arbitration and the hook merge are the ones the release shipped with, never a newer installer
+reading an older payload. By default it stages only and prints the ADAPT instruction; `--apply`
+and `--plan` pass through. `ASTRAGENTIC_REPO` and `ASTRAGENTIC_CACHE` override the source and
+the cache. Verified: a fresh clone from GitHub of the latest tag stages; a pinned `--apply`
+stamps `applied-version`; an unknown tag is refused. Both READMEs' Quickstart start with it.
+
+## Upgrade from 2.21.6
+
+Nothing in the payload changes. From this release on, upgrade from inside the project with the
+one-liner above; the package checkout is no longer needed on the project's machine.
+
 # Astragentic 2.21.6
 
 **2.21.5's merge did not read the previous release, so it merged what it should only have

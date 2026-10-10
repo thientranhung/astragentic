@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-2.21.6-blue" alt="version"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-2.22.0-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
   <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-157_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/vi/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
@@ -39,15 +39,16 @@ nhau, review xong trong một vòng, và artifact chứng minh được điều 
 ## Bắt đầu nhanh
 
 ```bash
-# 1. Kiểm máy đã đủ thứ cần chưa
-./check-requirements.sh
-
-# 2. Stage harness vào project của bạn
-./install.sh /path/to/your-repo
-
-# 3. Mở repo bằng Claude Code và chạy bộ cài thích nghi
+# 1. Đứng ở gốc project, stage bản mới nhất (không ghi file nào của project)
 cd /path/to/your-repo
-claude "Read .astraler/releases/2.21.6/ADAPT-HARNESS.md completely and execute it."
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
+#    …hoặc ghim một bản:  | bash -s -- 2.22.0
+
+# 2. Kiểm máy đã đủ thứ cần chưa
+bash .astraler/releases/2.22.0/check-requirements.sh
+
+# 3. Chạy bộ cài thích nghi trong Claude Code
+claude "Read .astraler/releases/2.22.0/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Mở router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium
