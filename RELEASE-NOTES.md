@@ -1,3 +1,17 @@
+# Astragentic 2.22.2
+
+**Every dispatched pane shows its steps, not only the Builder's.** The owner's ask: see on a
+Shaper or Rin pane which step it is at, so a dropped step shows as a gap in the order. The mod
+records skill calls for every dispatched role and the band renders one step list per role —
+Builder: implement · tdd · review:matt · review:built-in · simplify · arm; Shaper: align
+(`grill-with-docs`) · spec (`to-spec`) · tickets (`to-tickets`); Rin: review:matt. QA walks the
+product and calls no skill, so its band is the role chip. `TURN-END` carries `Skills run:` for
+every role. The gates are unchanged: they hold the Builder only.
+
+## Upgrade from 2.22.1
+
+Run the one-liner with `--apply` between tickets; panes pick the mod up at their next start.
+
 # Astragentic 2.22.1
 
 **The READMEs describe installing and upgrading the way it is now done.** Phase 1 of

@@ -113,14 +113,30 @@ const banner = atom({ plugin: 'astragentic-dispatch', key: 'banner' } as const, 
 // transcript (owner's ask, 2026-10-09).
 const flow = atom({ plugin: 'astragentic-dispatch', key: 'flow' } as const, { ran: [], tddNa: false, reviewNa: false, refusals: 0, lastRefusal: null } as Flow)
 
-const FLOW_STEPS: ReadonlyArray<readonly [string, string]> = [
-  ['mattpocock-skills:implement', 'implement'],
-  ['mattpocock-skills:tdd', 'tdd'],
-  ['mattpocock-skills:code-review', 'review:matt'],
-  ['code-review', 'review:built-in'],
-  ['simplify', 'simplify'],
-  ['codex-arm', 'arm'],
-]
+// One step list per dispatched role, in the order the contract names the phases, each step
+// the skill name the engine reports at `skill.prompt`. Builder's is the gated flow; Shaper's
+// is its three phases; Rin's gate is one call and a report. QA walks the product and calls no
+// skill, so its band carries the role chip only. The owner's ask (2026-10-10): see on every
+// dispatched pane which step it is at, so a dropped step shows as a gap in the order.
+const FLOW_BY_ROLE: Record<string, ReadonlyArray<readonly [string, string]>> = {
+  builder: [
+    ['mattpocock-skills:implement', 'implement'],
+    ['mattpocock-skills:tdd', 'tdd'],
+    ['mattpocock-skills:code-review', 'review:matt'],
+    ['code-review', 'review:built-in'],
+    ['simplify', 'simplify'],
+    ['codex-arm', 'arm'],
+  ],
+  shaper: [
+    ['mattpocock-skills:grill-with-docs', 'align'],
+    ['mattpocock-skills:to-spec', 'spec'],
+    ['mattpocock-skills:to-tickets', 'tickets'],
+  ],
+  rin: [
+    ['mattpocock-skills:code-review', 'review:matt'],
+  ],
+  qa: [],
+}
 
 async function refreshFlow($: any, root: string, key: string): Promise<void> {
   const entry = ((await readRecord($, root)) ?? {})[key] ?? {}
@@ -252,13 +268,6 @@ function printable(text: string, max = 300): string {
   return text.replace(/\x1b\[[0-9;?]*[ -\/]*[@-~]/g, '').replace(/[\x00-\x09\x0b-\x1f\x7f]/g, '').trim().slice(0, max)
 }
 
-function flowLine(f: Flow): string {
-  return FLOW_STEPS.map(([name, label]) => {
-    const isRan = f.ran.includes(name) || (name === 'codex-arm' && f.ran.includes('codex-claude-arm'))
-    const isNa = (name === 'mattpocock-skills:tdd' && f.tddNa) || (name === 'code-review' && f.reviewNa)
-    return `${isRan ? '✓' : isNa ? 'n/a' : '○'} ${label}`
-  }).join(' · ')
-}
 
 type Me = { role: string; key: string; tab: string; pane: string }
 type Envelope = { from: string; fromName: string; inner: string }
@@ -725,7 +734,7 @@ export const register: Register = on => {
   // 2.18.0 gate).
   let skillWrites: Promise<void> = Promise.resolve()
   on('skill.prompt', async ($, e, next) => {
-    if (me?.role === 'builder' && root) {
+    if (me && me.role !== 'resident' && root) {
       const { key } = me
       const at = root
       skillWrites = skillWrites.then(async () => {
@@ -767,7 +776,7 @@ export const register: Register = on => {
     if (root) await patchRecord($, root, me.key, { last_turn_end_at: await $.clock.now(), last_turn_reason: e.reason })
     const answer = e.answer.length > 1500 ? `…${e.answer.slice(-1500)}` : e.answer
     let flow = ''
-    if (me.role === 'builder' && root) {
+    if (me.role !== 'resident' && root) {
       const entry = ((await readRecord($, root)) ?? {})[me.key] ?? {}
       const ran = Object.keys(entry.skills_run ?? {})
       flow = `Skills run: ${ran.length ? ran.join(', ') : 'none'}\n`
@@ -1169,7 +1178,8 @@ export const register: Register = on => {
     )
     if (me) {
       if (e.props.hasSurvey) return next(e)
-      const f = me.role === 'builder' ? await read($, flow) : null
+      const steps = FLOW_BY_ROLE[me.role]
+      const f = steps ? await read($, flow) : null
       if (!undelivered && !f) return next(e)
       const isMode = /auto mode|classifier|permission/i.test(undelivered)
       const hint = isMode ? ' This pane is not in bypass-permissions mode: press shift+tab until it is.' : ''
@@ -1187,7 +1197,7 @@ export const register: Register = on => {
               {f.lastRefusal && (await $.clock.now()) - f.lastRefusal.at < 120_000
                 ? <Chip bg="error" fg="inverseText" label={`⛔ ${f.lastRefusal.gate} refused`} />
                 : null}
-              {FLOW_STEPS.map(([name, label]) => {
+              {(steps ?? []).map(([name, label]) => {
                 const isRan = f.ran.includes(name) || (name === 'codex-arm' && f.ran.includes('codex-claude-arm'))
                 const isNa = (name === 'mattpocock-skills:tdd' && f.tddNa) || (name === 'code-review' && f.reviewNa)
                 if (isRan) return <Chip bg="success" fg="inverseText" label={`✓ ${label}`} />

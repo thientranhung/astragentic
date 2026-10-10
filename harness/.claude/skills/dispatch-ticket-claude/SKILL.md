@@ -29,7 +29,7 @@ project loads it with no flag and no setup:
 | Claim on the tracker before the brief | prose in `thomas.md` | a brief for a ticket the tracker reports unclaimed is not sent |
 | Tracker write-back after a merge | refused only at a push of the base | the merge result carries the note, the line turns red, and no brief is sent until `scripts/ticket-done.sh` has stamped it |
 | Release a worktree's resources | `release-worktree-resources.sh` by hand before removal | runs at `git worktree remove`, and the record entry goes with the worktree |
-| See which step a Builder is at | read its transcript | the Builder pane's band shows `flow <ticket>: ✓ implement · ✓ tdd · ○ review:matt · ○ review:built-in · ○ simplify · ○ arm`, from the same record the gates read |
+| See which step a pane is at | read its transcript | every dispatched pane's band shows its steps as chips, from the same record the gates read — Builder: implement · tdd · review:matt · review:built-in · simplify · arm; Shaper: align · spec · tickets; Rin: review:matt; QA: the role chip only |
 | Seed a new worktree | prose in the project's docs | `.astraler/project/setup-worktree.sh <path>` runs right after a successful `git worktree add`; a failure is named in the result and the worktree is not to be dispatched into |
 | Know which flow steps ran | a `Pass:` line in a commit message, which anyone can type | the Builder's pane records every Skill call as the engine expands it; `TURN-END` carries the list, and a merge names the steps with no record |
 
