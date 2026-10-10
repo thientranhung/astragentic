@@ -141,6 +141,13 @@ hand expect the gate to hold until the brief is re-sent through SendMessage.
 
 ## The station owes QA, and the brief says which
 
+**No QA plan, no dispatch.** The owner's rule: a Builder brief is not sent until a committed
+`docs/qa/plan-<slug>.md` covers the ticket. The brief names it on a `QA plan: <path>` line, and
+the mod refuses a brief whose `QA:` mode is not `none` without one, or whose path does not
+exist in this checkout. A loose ticket with no spec gets its plan from `test-design` run over
+its acceptance criteria and the source it cites; a ticket with no surface gets `QA: none —
+<why>` and needs no plan line.
+
 **A Builder's brief carries `QA: walk|probe|verify|none — <why>`.** The mod records it; the
 board shows `qa ○ walk` on that ticket until a QA pane keyed `qa:<key>` ends a turn after the
 Builder's last, then `qa ✓ walk`; a merge without it carries a red note naming the mode owed.

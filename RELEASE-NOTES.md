@@ -1,3 +1,30 @@
+# Astragentic 3.0.1
+
+**No QA plan, no dispatch.** The owner's rule, stated on 3.0.0's first day and replacing the
+payload's default where QA inferred a plan and capped its verdict at CONCERNS: a Builder brief is
+not sent until a committed `docs/qa/plan-<slug>.md` covers the ticket. The brief names it on a
+`QA plan: <path>` line; the mod refuses a brief whose `QA:` mode is not `none` without one, or
+whose path does not exist in the checkout, and a brief with no `QA:` line at all. `test-design`
+takes a second input for this: loose tickets with no spec — a gate's follow-ups, small fixes —
+planned from each ticket's acceptance criteria and the source it cites, one section per ticket,
+`QA: none — <why>` for a ticket with no surface. `qa.md` no longer describes an inferred oracle.
+
+**The claim check reads the Builder's ticket, not any id on the line.** A Shaper brief for
+`test-design` whose first line named the tickets it was planning for was refused as "not
+claimed" on one of them. The check now applies to `implement` briefs only, on the ticket that
+is `implement`'s argument.
+
+Two notes from the first adoption, for projects like it: a `.gitignore` written as an allowlist
+swallows a new payload skill directory, and `install.sh --apply` names it under `IGNORED` —
+add the allow rule before committing; a project that wired its own marker tooling to the
+`rin(gate)` kind re-homes it to `arm(slice)` / `qa(walk)`.
+
+## Upgrade from 3.0.0
+
+`curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.0.1 --apply`
+between tickets, then ADAPT. From the next brief on, add `QA plan: docs/qa/plan-<slug>.md`
+under the `QA:` line; a brief without it is refused.
+
 # Astragentic 3.0.0
 
 **QA and testing enter the chain of every role, and Rin leaves it.** Four roles — Thomas,

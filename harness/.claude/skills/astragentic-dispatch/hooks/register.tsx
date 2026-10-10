@@ -724,13 +724,14 @@ export const register: Register = on => {
     // what the station owes this ticket before merge; `Mode: walk|probe|verify` on a QA brief is
     // which of the three the pane runs. Both are read here, from the delivered brief only.
     const qaLine = isBriefText ? unfenced.match(/^[ \t]*QA[ \t]*:[ \t]*(walk|probe|verify|none)\b[^\n]*/im) : null
+    const qaPlan = isBriefText ? unfenced.match(/^[ \t]*QA plan[ \t]*:[ \t]*(\S+)/im)?.[1] ?? null : undefined
     const qaRequired = qaLine ? qaLine[1]?.toLowerCase() ?? null : undefined
     const qaMode = isBriefText ? unfenced.match(/^[ \t]*Mode[ \t]*:[ \t]*(walk|probe|verify)\b/im)?.[1]?.toLowerCase() ?? null : undefined
     if (root) {
       const patch: Entry = { dispatcher: env.from, dispatcher_name: env.fromName, last_brief_received_at: now }
       if (isBriefText) {
         patch.tdd_na = tddNa; patch.review_na = reviewNa
-        if (me.role === 'builder') patch.qa_required = qaRequired
+        if (me.role === 'builder') { patch.qa_required = qaRequired; patch.qa_plan = qaPlan }
         if (me.role === 'qa') patch.qa_mode = qaMode
       }
       await patchRecord($, root, me.key, patch)
@@ -903,7 +904,12 @@ export const register: Register = on => {
       if (owed.length > 0) {
         return { isDelivered: false, reason: `${MARK} not sent. ${owedText(owed)} Then send this brief again.` }
       }
-      const id = first.split(/\s+/).slice(1).find(word => TICKET.test(word))
+      // The claim check is a BUILDER brief's: the ticket is the argument of `implement`. A Shaper
+      // brief whose first line merely names the tickets it plans for was refused on one of them
+      // (measured downstream, 3.0.0's first day), so the role is read from the command, not the
+      // id from any word.
+      const isBuilderBrief = /^\/mattpocock-skills:implement\b/.test(first)
+      const id = isBuilderBrief ? first.split(/\s+/).slice(1).find(word => TICKET.test(word)) : undefined
       const ts = id ? await trackerState($, root, id) : null
       if (id && ts && (ts.assignee === '-' || ts.assignee === '' || /^(closed|unclaimed)$/i.test(ts.state))) {
         return {
@@ -911,6 +917,30 @@ export const register: Register = on => {
           reason: `${MARK} not sent. The tracker says ${id} is "${ts.line}", so it is not claimed. ` +
             `Claim it first (thomas.md § The claim protocol: assignee written and read back; status or label per ` +
             `docs/agents/issue-tracker.md), then send this brief again.`,
+        }
+      }
+    }
+    // NO QA PLAN, NO DISPATCH — the owner's rule (2026-10-10), replacing the payload's earlier
+    // default where QA inferred a plan and capped its verdict at CONCERNS. A Builder brief
+    // carries `QA: walk|probe|verify|none — <why>` and, unless none, `QA plan: <path>` naming a
+    // committed docs/qa/plan-*.md that exists in this checkout. A loose ticket with no spec gets
+    // its plan from test-design run over its acceptance criteria; a ticket with no surface gets a
+    // plan line saying none. The gate is here because the brief is the one moment every dispatch
+    // passes through.
+    if (!me && root && e.origin.kind === 'model' && e.agentId === undefined && /^\/mattpocock-skills:implement\b/.test(first)) {
+      const body = e.text.replace(/```[\s\S]*?```/g, '')
+      const qa = body.match(/^[ \t]*QA[ \t]*:[ \t]*(walk|probe|verify|none)\b/im)?.[1]?.toLowerCase()
+      const plan = body.match(/^[ \t]*QA plan[ \t]*:[ \t]*(\S+)/im)?.[1]?.replace(/^['"`]|['"`]$/g, '')
+      if (!qa) {
+        return { isDelivered: false, reason: `${MARK} not sent. The brief carries no "QA: walk|probe|verify|none — <why>" line. Every Builder brief declares what the station owes the ticket before merge (dispatch-ticket-claude § The station owes QA).` }
+      }
+      if (qa !== 'none') {
+        if (!plan) {
+          return { isDelivered: false, reason: `${MARK} not sent. QA: ${qa} is declared but no "QA plan: docs/qa/plan-<slug>.md" line names the plan. No QA plan, no dispatch: run test-design over the spec, or over the ticket's acceptance criteria when it has no spec, commit the plan, then send this brief again.` }
+        }
+        const planPath = plan.startsWith('/') ? plan : `${root}/${plan}`
+        if (!(await exists($, planPath))) {
+          return { isDelivered: false, reason: `${MARK} not sent. QA plan: ${plan} does not exist in this checkout. Commit the plan test-design wrote, then send this brief again.` }
         }
       }
     }

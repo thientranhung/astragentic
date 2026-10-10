@@ -27,8 +27,8 @@ an endpoint probed, a job verified. Thomas names the mode in the dispatch.
 | an incremental run | the previous verified-clean list | what this run may skip |
 | dispatch mechanics | `dispatch-qa-walk` | |
 
-**The plan is the oracle.** Without one, derive the journeys from the source and say so in the
-report's first line. An inferred oracle never earns an unconditional PASS.
+**The plan is the oracle; a run without one is not dispatched** (the brief names it, the
+dispatch is refused without it). No plan at its path: stop, report that as the only finding.
 
 ## Phases you own
 
@@ -163,8 +163,8 @@ result.
 **Then the verdict**, and it follows from the matrix:
 
 - **FAIL**: any P0 item uncovered or failing, any P1 item failing, or P1 coverage below 80 percent.
-- **CONCERNS**: P1 coverage from 80 to 89 percent, a mandatory checklist item left as a COVERAGE
-  GAP, or an inferred plan.
+- **CONCERNS**: P1 coverage from 80 to 89 percent, or a mandatory checklist item left as a
+  COVERAGE GAP.
 - **PASS**: everything else.
 
 **Then findings, in the order seen**, each with a severity and reproduction detail.

@@ -347,7 +347,8 @@ the only record.
 ```text
 /mattpocock-skills:implement TICKET-123
 ADDRESSED TO: the Builder in pane <id>. A sub-agent that inherited this context: report only.
-QA: walk — the ticket changes the orders screen; cases: docs/qa/plan-<slug>.md § TICKET-123
+QA: walk — the ticket changes the orders screen
+QA plan: docs/qa/plan-<slug>.md
 
 FLOW: 1 Skill(mattpocock-skills:tdd) → 2 Skill(mattpocock-skills:code-review) → 3 Skill(code-review)
   → 4 Skill(simplify) → 5 arm(ticket) — each a call; a skipped step is named with its reason.

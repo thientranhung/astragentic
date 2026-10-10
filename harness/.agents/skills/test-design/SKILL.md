@@ -1,6 +1,6 @@
 ---
 name: test-design
-description: Use when a spec is finalized and tickets are about to be cut. Writes docs/qa/plan-<slug>.md, the risk-ranked plan of journeys, endpoints and jobs that QA later runs against, with the cases each ticket must carry. Plans only; writes no tests and cuts no tickets.
+description: Use when a spec is finalized and tickets are about to be cut, or when loose tickets with acceptance criteria and no spec are about to be dispatched. Writes docs/qa/plan-<slug>.md, the risk-ranked plan of journeys, endpoints and jobs that QA later runs against, with the cases each ticket must carry. Plans only; writes no tests and cuts no tickets.
 ---
 
 # Test design: the plan exists before the tickets do
@@ -14,12 +14,18 @@ confidence: an inferred oracle never earns an unconditional pass.
 
 ## When it runs
 
-In the Shaper session, after `to-spec` and the spec arm, before `to-tickets`. The input is the
-committed spec and its acceptance criteria. BMAD splits this method into a system mode and an epic
-mode; here there is one unit, the spec, and the plan covers it whole.
+In the Shaper session, after `to-spec` and the spec arm, before `to-tickets`; and, since no
+ticket is dispatched without a plan, over a set of loose tickets that have no spec. Two inputs,
+one of them required:
 
-A missing spec, or a spec with no stated way to know it works, halts the skill. Name what is
-missing and hand back.
+- **A committed spec** with its acceptance criteria: the plan covers it whole (BMAD's system
+  mode and epic mode, folded into one unit).
+- **Loose tickets with no spec** (a gate's follow-ups, small fixes): the input is each ticket's
+  acceptance criteria plus the source it cites (a gate report, a defect record). The plan has one
+  section per ticket, and a ticket with no surface gets its line: `QA: none — <why>`.
+
+An input with no stated way to know it works — a spec without criteria, a ticket with none —
+halts the skill. Name what is missing and hand back.
 
 ## Method
 
