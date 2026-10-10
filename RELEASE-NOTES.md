@@ -1,3 +1,18 @@
+# Astragentic 2.22.1
+
+**The READMEs describe installing and upgrading the way it is now done.** Phase 1 of
+Installation is the `get.sh` one-liner in the project's root — latest, pinned, `--plan`,
+`--apply` — with what `--apply` keeps, merges and lists for Phase 2, and the package-checkout
+form named as the same thing fetched by hand. A new **Upgrading** section gives the three
+commands (read `applied-version`, `latest --apply`, run ADAPT) and the three things an upgrade
+does not do: change a running pane, touch the project's layer, or announce that a newer tag
+exists. `install.sh` now keeps the two new version-bearing README lines current along with the
+badge and the ADAPT path. Both languages.
+
+## Upgrade from 2.22.0
+
+Nothing in the payload changes.
+
 # Astragentic 2.22.0
 
 **A project pulls its own release.** Until now every install and upgrade ran from the package's

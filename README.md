@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-2.22.0-blue" alt="version"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-2.22.1-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
   <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-157_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
@@ -42,13 +42,13 @@ prove what happened.
 # 1. In your project's root, stage the latest release (no project file is written)
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
-#    …or pin a version:  | bash -s -- 2.22.0
+#    …or pin a version:  | bash -s -- 2.22.1
 
 # 2. Verify your machine has what's needed
-bash .astraler/releases/2.22.0/check-requirements.sh
+bash .astraler/releases/2.22.1/check-requirements.sh
 
 # 3. Run the adaptive installer in Claude Code
-claude "Read .astraler/releases/2.22.0/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/2.22.1/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Start the router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium
@@ -290,16 +290,29 @@ telling the truth, not Thomas idling.
 
 ### Phase 1 — Stage
 
+Run in the project's root. `get.sh` fetches one tagged release into
+`~/.cache/astragentic/<version>/` and runs **that release's own** `install.sh` against the
+current directory, so the staging, the three-way arbitration and the hook merge are the ones
+the release shipped with.
+
 ```bash
-./check-requirements.sh              # verify machine readiness
-./install.sh <target-repo>           # stage the release (edits no project file)
-./install.sh <target-repo> --plan    # show what --apply would write
-./install.sh <target-repo> --apply   # write the payload in directly
+cd /path/to/your-repo
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash                      # latest, stage only
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 2.22.1         # pin a version
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --plan  # show what --apply would write
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply # write the payload in
 ```
 
-This copies the harness into `<target>/.astraler/releases/<version>/`. No project files
-are touched. Idempotent and immutable — rerunning does nothing, a staged release is a
-fixed record.
+Staging copies the harness into `<project>/.astraler/releases/<version>/` and touches no
+project file; it is idempotent and immutable. `--apply` writes the payload in: new files land,
+unchanged files are skipped, your scaffold (`orchestrator.md`, `settings.json`'s own keys,
+`.codex/profiles/`) is kept, hook events and scripts the project has never had are merged
+into `settings.json` and named under `MERGED`, and anything both sides changed is listed under
+`CONFLICTS` for Phase 2 to decide. `ASTRAGENTIC_REPO` and `ASTRAGENTIC_CACHE` override the
+source and the cache.
+
+From a checkout of this package the same two steps are `./install.sh <target-repo>` and
+`./install.sh <target-repo> --apply`; `get.sh` is that, fetched for you.
 
 ### Phase 2 — Adapt
 
@@ -357,6 +370,25 @@ The rule when upgrading: read the entry for **every** version between yours and 
 A patch release in this package is often the correction of a defect the previous one shipped,
 so the interesting sentence is rarely in the newest entry alone.
 
+### Upgrading
+
+The same one-liner, between tickets, in the project's root:
+
+```bash
+cat .astraler/state/applied-version                                                                             # what you are on
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply   # stage + write the new payload
+claude "Read .astraler/releases/<new-version>/ADAPT-HARNESS.md completely and execute it."                        # verify, reconcile conflicts, record the receipt
+```
+
+Three things the upgrade does not do for you, each stated because it was measured: it does
+not change a running pane — the dispatch mod loads at session start, so a Builder keeps the
+mod it was launched with and the dispatcher's session reloads only with hot reload on; it does
+not touch the project's layer — `.astraler/project/` (plugs, overlays) and `orchestrator.md`
+are yours, and a release that adds a column there says so and leaves the edit to you; and it
+does not announce itself — nothing in the project knows a newer tag exists until you run the
+command, so check `git ls-remote --tags https://github.com/thientranhung/astragentic.git` or
+the releases page when you want to know.
+
 ---
 
 ## At a glance
@@ -393,6 +425,7 @@ harness/
 docs/adr/                      architectural decision records
 docs/bmad-distilled/           the BMAD role kit — roster + 44 capability files
 prompts/ADAPT-HARNESS.md       the semantic installer
+get.sh                         the one-liner: fetch a tagged release, run its install.sh here
 install.sh                     staging script
 check-requirements.sh          machine readiness check
 VERSION                        the number a staged release is named after

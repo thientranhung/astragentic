@@ -154,7 +154,9 @@ for README in "$HARNESS_ROOT/README.md" "$HARNESS_ROOT/README.vn.md"; do
   BEFORE=$(cat "$README")
   sed -i '' -E "s|badge/version-[0-9]+\.[0-9]+\.[0-9]+-blue|badge/version-$VERSION-blue|g; \
                 s|badge/failure_modes-[0-9]+_measured-red|badge/failure_modes-${LEDGER_COUNT}_measured-red|g; \
-                s|releases/[0-9]+\.[0-9]+\.[0-9]+/ADAPT-HARNESS\.md|releases/$VERSION/ADAPT-HARNESS.md|g" "$README"
+                s|releases/[0-9]+\.[0-9]+\.[0-9]+/ADAPT-HARNESS\.md|releases/$VERSION/ADAPT-HARNESS.md|g; \
+                s|releases/[0-9]+\.[0-9]+\.[0-9]+/check-requirements\.sh|releases/$VERSION/check-requirements.sh|g; \
+                s|bash -s -- [0-9]+\.[0-9]+\.[0-9]+|bash -s -- $VERSION|g" "$README"
   [ "$BEFORE" = "$(cat "$README")" ] || echo "$(basename "$README") badges auto-updated: version $VERSION, $LEDGER_COUNT failure modes"
 done
 

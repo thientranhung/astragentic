@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-2.22.0-blue" alt="version"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-2.22.1-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
   <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-157_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/vi/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
@@ -42,13 +42,13 @@ nhau, review xong trong một vòng, và artifact chứng minh được điều 
 # 1. Đứng ở gốc project, stage bản mới nhất (không ghi file nào của project)
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
-#    …hoặc ghim một bản:  | bash -s -- 2.22.0
+#    …hoặc ghim một bản:  | bash -s -- 2.22.1
 
 # 2. Kiểm máy đã đủ thứ cần chưa
-bash .astraler/releases/2.22.0/check-requirements.sh
+bash .astraler/releases/2.22.1/check-requirements.sh
 
 # 3. Chạy bộ cài thích nghi trong Claude Code
-claude "Read .astraler/releases/2.22.0/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/2.22.1/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Mở router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium
@@ -282,16 +282,27 @@ không phải Thomas ngồi không.
 
 ### Pha 1 — Stage
 
+Chạy ở gốc project. `get.sh` tải đúng một bản release có tag về `~/.cache/astragentic/<version>/`
+và chạy `install.sh` **của chính bản đó** vào thư mục hiện tại, nên bước stage, phân xử ba bên
+và merge hook đều là của bản release ấy.
+
 ```bash
-./check-requirements.sh              # kiểm máy đã sẵn sàng chưa
-./install.sh <target-repo>           # stage release (không sửa file nào của project)
-./install.sh <target-repo> --plan    # xem --apply sẽ ghi những gì
-./install.sh <target-repo> --apply   # ghi thẳng payload vào
+cd /path/to/your-repo
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash                      # bản mới nhất, chỉ stage
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 2.22.1         # ghim một bản
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --plan  # xem --apply sẽ ghi gì
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply # ghi payload vào
 ```
 
-Lệnh này chép harness vào `<target>/.astraler/releases/<version>/`. Không file nào của project
-bị đụng tới. Idempotent và bất biến — chạy lại không làm gì thêm, một release đã stage là một
-bản ghi cố định.
+Stage chép harness vào `<project>/.astraler/releases/<version>/`, không đụng file nào của
+project; idempotent và bất biến. `--apply` ghi payload vào: file mới được thêm, file không đổi
+bỏ qua, scaffold của bạn (`orchestrator.md`, các key riêng trong `settings.json`,
+`.codex/profiles/`) được giữ, hook event và hook script mà project chưa từng có được merge vào
+`settings.json` và liệt kê dưới `MERGED`, còn thứ cả hai bên cùng sửa nằm dưới `CONFLICTS` để
+Pha 2 quyết. `ASTRAGENTIC_REPO` và `ASTRAGENTIC_CACHE` đổi nguồn và chỗ cache.
+
+Từ một checkout của package này, hai bước đó là `./install.sh <target-repo>` và
+`./install.sh <target-repo> --apply`; `get.sh` chính là việc ấy, tải sẵn cho bạn.
 
 ### Pha 2 — Thích nghi
 
@@ -350,6 +361,23 @@ Luật khi nâng cấp: đọc mục của **mọi** version nằm giữa bản 
 patch ở đây thường là bản sửa cho một defect mà bản trước vừa ship, nên câu đáng đọc hiếm khi
 nằm riêng trong mục mới nhất.
 
+### Nâng cấp
+
+Vẫn câu lệnh một dòng đó, giữa hai ticket, ở gốc project:
+
+```bash
+cat .astraler/state/applied-version                                                                             # bạn đang ở bản nào
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply   # stage + ghi payload mới
+claude "Read .astraler/releases/<bản-mới>/ADAPT-HARNESS.md completely and execute it."                            # kiểm, giải conflict, ghi receipt
+```
+
+Ba điều bản nâng cấp không làm thay bạn, nêu ra vì đã đo được: nó không đổi pane đang chạy —
+mod dispatch nạp lúc mở phiên, nên Builder giữ mod lúc nó được mở, còn phiên của Thomas chỉ nạp
+lại khi bật hot reload; nó không đụng lớp của project — `.astraler/project/` (plug, overlay) và
+`orchestrator.md` là của bạn, release nào thêm cột ở đó sẽ nói rõ và để bạn tự sửa; và nó không
+tự báo — trong project không có gì biết đã có tag mới cho tới khi bạn chạy lệnh, muốn biết thì
+xem `git ls-remote --tags https://github.com/thientranhung/astragentic.git` hoặc trang releases.
+
 ---
 
 ## Nhìn nhanh
@@ -386,6 +414,7 @@ harness/
 docs/adr/                      architectural decision record
 docs/bmad-distilled/           BMAD role kit — roster + 44 file capability
 prompts/ADAPT-HARNESS.md       bộ cài ngữ nghĩa
+get.sh                         lệnh một dòng: tải bản release có tag, chạy install.sh của nó tại đây
 install.sh                     script stage
 check-requirements.sh          kiểm máy
 VERSION                        con số đặt tên cho một release đã stage
