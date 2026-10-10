@@ -1,3 +1,87 @@
+# Astragentic 3.0.0
+
+**QA and testing enter the chain of every role, and Rin leaves it.** Four roles — Thomas,
+Shaper, Builder, QA — and more measured steps than five had.
+
+## Why the major
+
+Measured on the first adopter over a month: QA's product walk produced 75 findings in 27 walks,
+five of them on surfaces the ticket had not touched — the catch no author's check can make — yet
+only 4 walks left a mark at merge, the verified-clean list was three weeks stale, and the
+reports lived in a temp directory that a reboot empties. Rin's milestone gate, over 20 merged
+tickets, produced 15 findings the Builder's three reviews had not, of which 3 changed an outcome;
+Rin's spec gate ran 0 times on the last 3 specs while the codex arm at spec scope ran on all 3
+and its findings were folded. Test was the most valuable step and the least held; Rin's two jobs
+were already being done elsewhere.
+
+## The chain
+
+```
+Shaper   align → spec → arm:spec → test-design → tickets
+Builder  implement → tdd (+ atdd) → review:matt → review:built-in (+ ux) → simplify → arm
+Thomas   handback → QA (walk | probe | verify, by the ticket's surface) → merge → ticket-done
+         slice close → arm:slice + adversarial fan-out → release
+```
+
+**`test-design` (Shaper, before tickets).** From the finalized spec, Murat's method produces
+`docs/qa/plan-<slug>.md`: journeys, endpoints and jobs with risk P0–P3, the mandatory checks per
+mode, and each ticket's cases. The cases ride into the ticket's brief. The plan is written
+before a line of code, so a later change is walked against what the product was meant to do.
+
+**QA is one plan with three ways to run it**, chosen by the ticket's surface: `walk` for UI
+(journeys; numbers agreeing on every screen that shows a concept; deeplinks opening the exact
+record; end-of-journey links reaching their target — the owner's three measured production
+defect classes, as mandatory checklist items), `probe` for an API or service (contract, status
+codes, error paths, permission-denied paths, data after the call), `verify` for a job or
+pipeline (it ran, data landed, logs clean, numbers agree with the source). A ticket with no
+user-visible surface and no endpoint is not skipped; it gets the mode its surface has. The
+report is a trace matrix — plan item → coverage → result — with a verdict PASS / CONCERNS /
+FAIL and COVERAGE GAPS, committed under `.scratch/qa/` (a plug may redirect it), never left in
+a temp directory. The verified-clean list is rebuilt at every full walk with its SHA.
+
+**Builder gains two optional steps**: `atdd`, red acceptance tests from the ticket's criteria
+before implementation (level chosen per stack, never duplicating `tdd`), and for a UI ticket a
+read-only `bmad-ux audit` before handback. Both are named with a reason when skipped.
+
+**The station owes QA and says so.** A Builder's brief carries `QA: walk|probe|verify|none —
+<why>`; the mod records it, the dispatcher's board shows `qa ○ walk` until a QA pane keyed
+`qa:<key>` ends a turn after the Builder's last, and a merge without it carries a red note.
+QA panes are recorded under `qa:<key>` so they never overwrite the Builder's entry. The band
+on a Shaper pane shows `test-design` and `arm:spec`; on a Builder pane `atdd` and `ux` as
+dim optional chips; on a QA pane its mode.
+
+**A wait that cannot end is refused.** Four Builders in a row, two with the brief saying the
+rule in so many words, waited on backgrounded work with a loop that never exits: a name-keyed
+wait (`until ! pgrep -f <name>` matches its own shell's argv; `until ! ps | grep <name>` matches
+a sibling) or a body with no sleep (`do :; done` at full CPU). Each parked the pane for ten
+minutes and was found by a person. The mod refuses the shape in any dispatched pane, records the
+refusal, and the deny carries the wait that works: `cmd & pid=$!; while kill -0 $pid 2>/dev/null;
+do sleep 10; done; wait $pid`. Ten shapes tested, the four measured ones among them; `for`,
+`while read`, `while kill -0 … sleep` and a plain `sleep` pass.
+
+**The worktree setup plug keys on the worktree, not the call.** `git worktree add … && herdr
+agent start …` in one call exited 1 on the later command with the worktree already created, and
+the plug never ran; a Builder found its worktree unseeded mid-ticket. The plug now runs when the
+worktree exists at the parsed path, whatever the rest of the call returned.
+
+**Rin is removed.** The spec gate is the arm the Shaper fires over the finalized spec. The
+slice gate is Thomas firing the slice arm plus one read-only adversarial fan-out
+(`astragentic-dispatch:bmad-reviewer`, distilled from BMAD's adversarial and edge-case
+reviewers), folded together on the slice's marker. The gate mechanics that lived in
+`review-with-rin` (gate worktree, pane, collection) move to `dispatch-ticket/GATE.md`. The
+`rin(gate)` marker kind is gone; `qa(walk)` covers all three QA modes with `Mode:` in its body.
+
+## Upgrade from 2.22.2
+
+1. `curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.0.0 --apply`
+   in the project's root, between tickets, then run ADAPT.
+2. Delete your `rin` row from `orchestrator.md` and any `rin:` tab label convention; relabel
+   nothing else.
+3. Write `docs/qa/plan-<slug>.md` for the current spec with `test-design` before the next
+   ticket is cut; add `QA: <mode> — <why>` to every Builder brief from now on.
+4. Move existing QA reports out of the temp directory into `.scratch/qa/` if you want them
+   kept; the next full walk rebuilds the verified-clean list.
+
 # Astragentic 2.22.2
 
 **Every dispatched pane shows its steps, not only the Builder's.** The owner's ask: see on a

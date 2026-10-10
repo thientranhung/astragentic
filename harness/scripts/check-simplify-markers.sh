@@ -13,7 +13,7 @@
 # data rather than a second script. `--marker` is repeatable; the default is the simplify pass.
 # A kind is a list of the body lines a well-formed marker must carry plus a policy (the KINDS
 # table below). Four ship: `simplify(increment)`, `arm(ticket)`, and the advisory milestone
-# markers `rin(gate)` and `qa(walk)`.
+# markers `arm(slice)` and `qa(walk)`.
 #
 # PROJECT PLUG POINTS. Everything a project would otherwise edit this file for lives in
 # `<repo-root>/.astraler/project/`, which a release never overwrites. The repo root is
@@ -125,7 +125,7 @@ PROJECT_DIR = os.path.join(ROOT, ".astraler", "project")
 def advisory_on_base(kind, base):
     """Distance on the BASE branch since the last marker of this kind.
 
-    THE SPAN, NOT THE MESSAGE, WAS WRONG. `rin(gate)` is a MILESTONE marker and a merge range
+    THE SPAN, NOT THE MESSAGE, WAS WRONG. `arm(slice)` is a MILESTONE marker and a merge range
     is a TICKET branch, so its absence in-range is true BY CONSTRUCTION at every merge — a
     downstream project measured sixteen NONE lines across eight merges, every one structurally
     guaranteed. A line that is always right is wallpaper inside a week, and then it teaches the
@@ -209,24 +209,26 @@ KINDS = {
         "economy": False,
         "reviewed": True,
     },
-    # rin(gate) and qa(walk). The sharpest thing a downstream project has told this package:
-    # over 200 commits it counted 35 `arm(ticket):`, 22 `simplify(increment):` and ZERO Rin
+    # arm(slice) and qa(walk). The sharpest thing a downstream project has told this package:
+    # over 200 commits it counted 35 `arm(ticket):`, 22 `simplify(increment):` and ZERO milestone
     # rounds across 107 merges. The gates that fire are the ones with a PHYSICAL ARTIFACT that a
     # script the router already runs REFUSES TO PROCEED WITHOUT. Nobody remembers the arm; they
-    # cannot merge without it. Rin's gate had a report outside every checkout, no marker, and no
-    # reader — so ">10 merges since the last round is a STOP" was a quantity NOTHING COMPUTED.
-    # The counter was answering "the router did not know the number"; the measured problem was
-    # "nothing was ever going to tell it". `qa(walk)` is here for the same shape, before the same
-    # evidence arrives. Both are ADVISORY: milestone gates do not fire per ticket.
-    "rin(gate)": {
-        "required": ["Scope:", "Verdict:", "Report:"],
+    # cannot merge without it. A milestone gate had a report outside every checkout, no marker,
+    # and no reader — so ">10 merges since the last round is a STOP" was a quantity NOTHING
+    # COMPUTED. The counter was answering "the router did not know the number"; the measured
+    # problem was "nothing was ever going to tell it". `qa(walk)` has the same shape. Both are
+    # ADVISORY: milestone gates do not fire per ticket.
+    "arm(slice)": {
+        "required": ["Scope:", "Vendor:", "Verdict:"],
         "tokens": {"Verdict:": ("PASS", "BLOCKING", "NON-BLOCKING")},
         "scope": "advisory",
         "economy": False,
     },
     "qa(walk)": {
-        "required": ["Scope:", "Verdict:", "Report:"],
-        "tokens": {"Verdict:": ("PASS", "BLOCKING", "NON-BLOCKING")},
+        # 3.0.0: one kind for the three QA modes; `Mode:` names which, the verdict is the trace
+        # matrix's (PASS / CONCERNS / FAIL), not the arm's BLOCKING vocabulary.
+        "required": ["Scope:", "Mode:", "Verdict:", "Report:"],
+        "tokens": {"Verdict:": ("PASS", "CONCERNS", "FAIL"), "Mode:": ("walk", "probe", "verify")},
         "scope": "advisory",
         "economy": False,
     },

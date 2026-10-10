@@ -250,10 +250,11 @@ echo "marker gate — advisory span and regex dialect (2.7.3, AST-136)"
 R="$TMP/markers"; mkdir -p "$R"
 ( cd "$R" && git init -q . && git config user.email t@t && git config user.name t \
   && git commit -q --allow-empty -m init \
-  && git commit -q --allow-empty -m 'rin(gate): s1 — PASS
+  && git commit -q --allow-empty -m 'qa(walk): s1 — PASS
 
 Scope: s1
-Verdict: PASS (0 blocking, 0 non-blocking)
+Mode: walk
+Verdict: PASS (0 fail, 0 concerns)
 Report: /tmp/g.md' ) >/dev/null 2>&1
 B="$( cd "$R" && git rev-parse HEAD )"
 ( cd "$R" && for i in 1 2 3; do
@@ -261,7 +262,7 @@ B="$( cd "$R" && git rev-parse HEAD )"
       && git checkout -q - && git merge -q --no-ff "t$i" -m "merge t$i"
   done ) >/dev/null 2>&1
 # A 40-character SHA is what the router passes at merge; a branch name is what gets tested.
-out="$( cd "$R" && bash "$S/check-simplify-markers.sh" "$B" HEAD --marker 'rin(gate)' 2>&1 | head -1 )"
+out="$( cd "$R" && bash "$S/check-simplify-markers.sh" "$B" HEAD --marker 'qa(walk)' 2>&1 | head -1 )"
 case "$out" in
   *"never recorded"*) bad "advisory finds a marker on the base" "grep dialect: $out" ;;
   *"merge(s) since"*) ok  "advisory reports distance on the base, not absence in range" ;;
@@ -675,17 +676,17 @@ fi
 echo "one rule, every runtime"
 
 # WHY THIS SECTION IS NO LONGER `pkg_only` (2.10.0). It was, and that was the same defect it
-# exists to catch, one floor down. The payload is where these five files are AUTHORED; the
+# exists to catch, one floor down. The payload is where these four files are AUTHORED; the
 # adapted project is where they are actually LOADED, and it is the only place they can drift —
 # `.codex/profiles/` is a scaffold path `install.sh` keeps for the owner, so a project that
 # already had one received none of 2.9.0's headline fix and its suite stayed green about it.
 # The check that proves a rule reached every runtime must run where the runtimes are.
 PAY="$ROOT/harness"; [ "$LAYOUT" = project ] && PAY="$ROOT"
-for role in thomas shaper builder rin qa; do
+for role in thomas shaper builder qa; do
   cla="$PAY/.claude/agents/$role.md"
   opc="$PAY/.opencode/agents/$role.md"
   cdx="$PAY/.codex/profiles/$role.md"
-  # A project may not run all five roles, and a surface that does not exist there is not a
+  # A project may not run all four roles, and a surface that does not exist there is not a
   # drifted surface. Absent files are reported as scope, never as a failure.
   present=0; miss=""
   for f in "$cla" "$opc" "$cdx"; do [ -f "$f" ] && present=$((present+1)); done

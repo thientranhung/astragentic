@@ -35,7 +35,6 @@ enables it. `thomas.md` carries the rule.
 | Builder | `ticket:<id>` | `ticket:ABC-129` |
 | Shaper | `spec:<id>` | `spec:ABC-128` |
 | QA | `qa:<id>` | `qa:ABC-130` |
-| Rin | `rin:<id>` | `rin:ABC-130` |
 | Owner (manual) | anything | `deploy` |
 
 **Owner tabs are not yours** — always create a fresh tab rather than splitting, renaming or
@@ -48,7 +47,6 @@ closing one.
 | thomas | claude | claude-opus-5 | medium | fable |
 | shaper | claude | claude-opus-5 | high | fable |
 | builder | claude | claude-sonnet-5 | medium | opus |
-| rin | claude | claude-opus-5 | high | fable |
 | qa | claude | claude-sonnet-5 | low | opus |
 
 ## Fallback providers
@@ -68,11 +66,6 @@ written back into this file.
 launcher, and the doctor stops asking about one. That is how you decline a runtime deliberately,
 rather than leaving `<set-me>` in place and being warned about it every run. Re-add the row when
 you want it back.
-
-**`rin` has no fallback row, and its absence is the correct state.** The gate is a Herdr pane on
-the root provider's runtime, and no Codex or opencode adapter can host it. No available Claude
-root means STOP and ask the owner, rather than a degraded gate. A project that has re-added the
-row has regressed.
 
 ## How the columns are read
 

@@ -114,7 +114,7 @@ role_budget() {
   # same reason: an adapted project MUST add its own content to these files (that is the
   # point of adapting), and a budget with near-zero margin over ship size fails a project the
   # moment it does the one thing adaptation requires. Measured 2026-08-18, package vs budget:
-  # thomas 1818/1850 (32 margin), rin 1177/1200 (23), qa 1149/1200 (51) — all three read as
+  # thomas 1818/1850 (32 margin), qa 1149/1200 (51) — both read as
   # "raised enough" while leaving less headroom than a single sentence. Found live, by an
   # adapted project whose own thomas.md sat at 1878 words before anyone touched it that
   # session: 178 over the PRIOR 1700 budget, then still 28 over the 1850 this file raised it
@@ -174,17 +174,14 @@ role_budget() {
                            # 250 words first, and what is left is the receipt shape and the
                            # Reviewed-or-delta rule — a Builder cannot write the artifact
                            # without either.
-    rin)     echo 1460 ;;
                            # RAISED 2.7.0, reason in this commit: that release added real
                            # scope here — the tracker interlock told honestly, the
                            # ready-for-agent gate, reading QA's coverage gaps, the
                            # compaction tier, and the one-reply rebuttal. Compression
                            # brought the file back under the OLD ceiling with ONE word
                            # spare, which is the failure the block above names, not a
-                           # pass. The margin is the budget; 1305 ship + ~155 headroom.  # ships at 1177 (23-word margin before this pass) — second
-                           # opinion, artifact verification, the arm's standard. Raised
-                           # under the same margin-calibration pass as thomas and qa.
-    qa)      echo 1450 ;;
+                           # pass. The margin is the budget; 1305 ship + ~155 headroom.
+    qa)      echo 2000 ;;   # 3.0.0: QA carries three modes (walk/probe/verify), the mandatory checklists and the trace report
                            # RAISED 2.7.0, reason in this commit: that release added real
                            # scope here — the tracker interlock told honestly, the
                            # ready-for-agent gate, reading QA's coverage gaps, the
@@ -193,12 +190,12 @@ role_budget() {
                            # spare, which is the failure the block above names, not a
                            # pass. The margin is the budget; 1294 ship + ~156 headroom.  # ships at 1149 (51-word margin before this pass) — the running-
                            # product walk, interface/journey/contract/data axes. Raised
-                           # under the same margin-calibration pass as thomas and rin.
+                           # under the same margin-calibration pass as thomas.
     *)       echo 1200 ;;  # shaper ships at 979, a 221-word margin already above the floor.
   esac
 }
 BUDGETS_RUN=0
-for ROLE in thomas shaper builder rin qa; do
+for ROLE in thomas shaper builder qa; do
   RF="$PAYLOAD/.agents/roles/$ROLE.md"
   if [[ -f "$RF" ]]; then
     BUDGETS_RUN=$((BUDGETS_RUN + 1))

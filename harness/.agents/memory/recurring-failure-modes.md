@@ -268,7 +268,7 @@ dispatch always uses the Active row; the Fallback row is consulted only on degra
 or an explicit `runtime=` override; a fallback naming a runtime with no dispatch path
 (or duplicating the active runtime) means that role has NO fallback — STOP and ask the
 owner, never invent a model ID.** Bound: `.agents/orchestrator.md` (header),
-`.agents/skills/dispatch-slice/SKILL.md` (gone), `.claude/skills/review-with-rin/SKILL.md`.
+`.agents/skills/dispatch-slice/SKILL.md` (gone), `.claude/skills/review-with-rin/SKILL.md` (gone).
 
 ### AST-031 — A prose instruction telling an agent to suppress its tool's own default is not a boundary · promoted 2026-08-03
 Release 0.11.4 authorized Dan — the READ-ONLY slice lead — to invoke Claude Code's
@@ -366,7 +366,7 @@ mechanically evaluable but wrong is worse than a judgement call, because it is c
 wrong every time and nobody re-examines it.** Corollary for reviewers: when a rule is
 tightened from discretion to a test, the review question is not "is this test objective"
 but "what does this test RETURN in each situation it governs". Bound:
-`.claude/skills/review-with-rin/SKILL.md` §2, `.agents/skills/dispatch-slice/SKILL.md` (gone)
+`.claude/skills/review-with-rin/SKILL.md` (gone) §2, `.agents/skills/dispatch-slice/SKILL.md` (gone)
 (rin-reviewer row), `.claude/agents/rin-reviewer.md` (gone), `.claude/rules/build-loop-gates.md` (gone).
 
 ### AST-034 — A mandatory rule that lives only in load-on-demand docs is skipped, and only the owner notices · promoted 2026-08-07
@@ -577,7 +577,7 @@ reading against the contracts by hand whenever either changes.
 
 The fix is the boring one: the contract that owes the artifact says so, and the gate treats
 an unexplained absence as a finding rather than as nothing.
-Bound: `harness/.agents/roles/builder.md`, `harness/.agents/roles/rin.md`,
+Bound: `harness/.agents/roles/builder.md`, `harness/.agents/roles/rin.md` (gone),
 `prompts/ADAPT-HARNESS.md` §5.
 
 ### AST-044 — Reading a diff cannot find a disagreement between two screens · promoted 2026-08-11
@@ -603,7 +603,7 @@ persona, data state, surfaces including the unchanged ones showing the same conc
 journeys. Two outputs make it compound: a verified-clean list, and an honest statement of
 what could not be reached. Upstream ships nothing for this; the plugin has no QA, browser or
 e2e skill at all.
-Bound: `harness/.agents/roles/rin.md`, `harness/.claude/skills/review-with-rin/SKILL.md` §2b.
+Bound: `harness/.agents/roles/rin.md` (gone), `harness/.claude/skills/review-with-rin/SKILL.md` (gone) §2b.
 
 ### AST-045 — A green test suite and a coherent product are different claims · promoted 2026-08-11
 The prior package shipped a browser-walking agent for several releases and it **never ran
@@ -862,7 +862,7 @@ report rather than a step to route around. More qualifying prose in the same pla
 skimmed is not a fix.
 
 Bound: `harness/.agents/roles/builder.md`, `harness/.agents/roles/thomas.md`,
-`harness/.agents/roles/rin.md`, `harness/.agents/skills/dispatch-ticket/SKILL.md`,
+`harness/.agents/roles/rin.md` (gone), `harness/.agents/skills/dispatch-ticket/SKILL.md`,
 `harness/scripts/check-reachability.sh`.
 
 ### AST-056 — A blocking edge expresses order, not exclusion · promoted 2026-08-12
@@ -1059,7 +1059,7 @@ the only unstick path the product had.
 The rule is now a step rather than a judgement, and it lives in exactly one contract — the
 first repair of this made four files normative about it at once, which is the drift the
 one-home rule exists to stop.
-Bound: `harness/.agents/roles/rin.md`.
+Bound: `harness/.agents/roles/rin.md` (gone).
 
 ### AST-063 — A gate with no window in the sequence never fires, and nobody forgets it · promoted 2026-08-13
 
@@ -2110,7 +2110,7 @@ one trigger.
 **`rm -rf` is not `git worktree remove`.** The first removes a directory; the second removes
 a directory AND its registration. Using the first where the second is meant leaves a ghost
 registration that blocks the path forever, silently when output is redirected.
-Bound: codex-arm/SKILL.md, review-with-rin/SKILL.md.
+Bound: codex-arm/SKILL.md, review-with-rin/SKILL.md (gone).
 
 ### AST-097 — TERMINAL:done means the turn ended, not that the work finished · promoted 2026-08-18
 
@@ -3446,7 +3446,7 @@ calls the script instead of carrying its own command.
 hand-rolled `git log` beside a script that does the job properly is machinery to delete, not to
 keep in sync — and keeping it in sync is the failure this entry is about.
 
-Bound: `scripts/check-simplify-markers.sh`, `dispatch-ticket/CLEANUP.md`, `thomas.md`, `rin.md`.
+Bound: `scripts/check-simplify-markers.sh`, `dispatch-ticket/CLEANUP.md`, `thomas.md`, `rin.md` (gone).
 
 ### AST-134 — After the fold, "the gate read this tree" is structurally false and the protocol had no way to say so · promoted 2026-08-22
 
@@ -3506,7 +3506,7 @@ script that already reads `simplify(increment):`. No new file, no new script, no
 Residual, and it is the same one AST-130 names: the receipt is a commit written by the agent
 being verified. That is the trade the queue is worth, and it is stated rather than implied.
 
-Bound: `builder.md`, `thomas.md`, `rin.md`, `codex-arm/SKILL.md`, `codex-claude-arm/SKILL.md`.
+Bound: `builder.md`, `thomas.md`, `rin.md` (gone), `codex-arm/SKILL.md`, `codex-claude-arm/SKILL.md`.
 
 ### AST-136 — `--grep` is BASIC regex, and every marker kind in this system contains parentheses · promoted 2026-08-27
 
@@ -4104,7 +4104,7 @@ slash command already ran improvises from it and reads `working`. Delivery evide
 belongs at the receiver — a phrase only the brief could have supplied, read from the pane — and
 a gate brief goes by `herdr agent prompt`, typed input that crosses no permission boundary.
 
-Bound: `.agents/skills/review-with-rin/SKILL.md`, `.agents/skills/dispatch-ticket-claude/SKILL.md`.
+Bound: `.agents/skills/review-with-rin/SKILL.md` (gone), `.agents/skills/dispatch-ticket-claude/SKILL.md`.
 
 ### AST-154 — The obvious retry for an unsent brief fused it with the next one and reported success · promoted 2026-09-25
 

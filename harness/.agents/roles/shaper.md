@@ -27,10 +27,13 @@ and one session is one agent.
 |---|---|---|
 | Align | `mattpocock-skills:grill-with-docs` | the question frontier is empty and every answer carries a source |
 | Spec | `mattpocock-skills:to-spec` | the spec states what is being built and how it will be known to work |
+| Arm | `codex-arm` (`arm: spec`; `codex-claude-arm` on a Codex root) | you fired the arm over the finalized spec, its findings are folded and the spec is committed |
+| Test design | `test-design` | `docs/qa/plan-<slug>.md` names every P0 journey, endpoint and job with a case |
 | Tickets | `mattpocock-skills:to-tickets` | every ticket is independently buildable and its blocking edges are set |
 
-They run in that order; each output is the next input. All three are **user-invoked** — drive
-them by name. The craft layer is model-invoked and needs no wiring.
+They run in that order; each output is the next input. Align, Spec and Tickets are
+**user-invoked**: drive them by name. `codex-arm` and `test-design` are skills you call by name
+too. The rest of the craft layer is model-invoked and needs no wiring.
 
 **If a skill invocation fails, the failure IS the finding.** Report the exact error to Thomas
 and stop. Working from the skill's own file, or improvising the phase from the table above,
@@ -39,21 +42,16 @@ produces something shaped like a spec that nothing downstream can tell from the 
 
 ## STOP after Spec
 
-`arm: spec` fires between Spec and Tickets.
+`arm: spec` fires between Spec and Tickets, and **you fire it**, over the spec as committed.
 
 **Publish the spec at `needs-triage`, not at `ready-for-agent`.** `to-spec` applies
 `ready-for-agent` at publish, and that is the label Thomas's frontier query treats as
-claimable — so an unreviewed spec's tickets sit on the frontier while `arm: spec` has not yet
-run. Downgrade the label in the same turn `to-spec` closes; Thomas promotes it after he
-classifies the arm's findings.
+claimable, so an unreviewed spec's tickets would sit on the frontier before the arm has run.
+Downgrade the label in the same turn `to-spec` closes; Thomas promotes it after he classifies
+the findings.
 
-**When `to-spec` closes, hand the spec back to Thomas and wait.** Thomas fires the
-cross-vendor **`arm: spec`**, classifies what it returns, and only then tells you to cut the
-tickets — in this same session, context intact.
-
-**`arm: spec` is not Rin's spec gate**, and neither stands in for the other: Rin's is a
-same-vendor `mode=adversarial` round (`rin.md`); this one is the OTHER vendor. Where Thomas
-runs both, both must return and be classified before he releases you.
+**Fire the arm, hand Thomas the spec and its findings, and wait.** He classifies; you fold in
+this same session, context intact. The arm reads the spec before `test-design` runs, so the plan is built on the reviewed spec.
 
 **A blocking finding is repaired in the SPEC, here, before any ticket is cut.** You repair and
 re-commit, and the mandatory second pass runs over the whole revised spec before Thomas
@@ -61,11 +59,18 @@ releases you. Only the **owner** may accept cutting tickets on a blocking findin
 acceptance is recorded.
 
 The pause exists because a contract that closed "when `to-tickets` has produced the tickets"
-leaves **no moment where the spec exists and the tickets do not** — so the pass has nowhere to
+leaves **no moment where the spec exists and the tickets do not**, so the pass has nowhere to
 fire. Measured: it silently did not fire for two consecutive slices, the second a 44k spec with
-44 acceptance criteria and ten tickets. Nobody forgot it; the sequence gave it no window.
+44 acceptance criteria and ten tickets.
 
 **No `/compact`, no `/clear` while you wait.** The pause is a handback, not a session boundary.
+
+## Test design: the plan is written before the tickets
+
+`test-design` reads the committed spec and writes `docs/qa/plan-<slug>.md`: every journey,
+endpoint and job, a risk rank P0 to P3, and the cases each ticket must carry. **QA runs from that
+plan** at Thomas's station, so a surface nobody listed is a surface nobody walks. Thomas copies
+each ticket's cases into its brief and names the plan as their source.
 
 ## Align: the frontier and its sources
 
@@ -95,11 +100,11 @@ radius — usually the right shape when a change touches many call sites.
 
 **Twice, not once.**
 
-1. **At Spec** — hand back the spec path plus every question that stayed open with the reason
-   it did, and stop for `arm: spec`.
-2. **At Tickets**, once Thomas releases you — hand back the ticket IDs, the blocking graph, and
-   **how each spec-stage finding was resolved in the tickets**, so a finding cannot be waved
-   through by cutting tickets that ignore it.
+1. **At Spec** — hand back the spec path, the arm's findings, and every question that stayed open
+   with the reason it did, and stop for Thomas to classify.
+2. **At Tickets**, once Thomas releases you — hand back the ticket IDs, the blocking graph, the
+   plan path, and **how each spec-stage finding was resolved in the tickets**, so a finding cannot
+   be waved through by cutting tickets that ignore it.
 
 Where the effort turns out to be larger or foggier than one session can shape, say so and hand
 it back for `wayfinder` rather than compacting to make room — a compacted Align session has

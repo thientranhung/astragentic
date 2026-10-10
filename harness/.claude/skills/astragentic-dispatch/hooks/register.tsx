@@ -8,7 +8,7 @@
 // one was a rule in prose read hours earlier. This module removes the steps instead of
 // policing them:
 //
-//   - A pane whose tab label is `ticket:` / `spec:` / `qa:` / `rin:` writes its own tab and
+//   - A pane whose tab label is `ticket:` / `spec:` / `qa:` / `resident:` writes its own tab and
 //     pane ids into `.astraler/state/dispatch-record.json` at session start. The ids come from
 //     herdr's environment, never from anyone's memory.
 //   - A message from the dispatcher becomes a real user turn: a first line starting with `/`
@@ -68,6 +68,21 @@ function skillsRun(entry: Entry): Record<string, unknown> {
   return run && typeof run === 'object' && !Array.isArray(run) ? run : {}
 }
 
+// What the station owes a ticket before merge, declared on its brief (`QA: walk|probe|verify`)
+// and answered by a QA pane keyed `qa:<key>` that ended a turn AFTER the Builder's last one.
+// Measured on the first adopter: 27 QA reports in a month but 4 markers at merge — the walk
+// ran, and nothing at the merge could say for which ticket. 'none' and an undeclared brief owe
+// nothing; a declared mode with no QA turn after the Builder's last is the gap named here.
+function qaOwed(rec: Record<string, Entry>, key: string): string | null {
+  const b = rec[key]
+  const mode = typeof b?.qa_required === 'string' ? b.qa_required : null
+  if (!mode || mode === 'none') return null
+  const q = rec[`qa:${key}`]
+  const qaEnd = Math.max(Number(q?.last_turn_end_at ?? 0), Number(b?.qa_last_turn_end_at ?? 0))
+  const builderEnd = Number(b?.last_turn_end_at ?? 0)
+  return qaEnd > 0 && qaEnd >= builderEnd ? null : mode
+}
+
 function flowGaps(entry: Entry): string[] {
   const run = skillsRun(entry)
   return FLOW.filter(([name]) => !(name in run)).map(([, label]) => label)
@@ -99,7 +114,7 @@ const TICKET = /^[A-Z][A-Z0-9]*-[0-9]+$/
 // no brief and reports no turn end, but it is recorded, shown on the board and protected from
 // a close like any dispatched pane. Measured downstream: resident panes were invisible to the
 // board and the one place a wrong close could not be refused.
-const ROLE_BY_PREFIX: Record<string, string> = { ticket: 'builder', spec: 'shaper', qa: 'qa', rin: 'rin', resident: 'resident' }
+const ROLE_BY_PREFIX: Record<string, string> = { ticket: 'builder', spec: 'shaper', qa: 'qa', resident: 'resident' }
 
 const board = atom({ plugin: 'astragentic-dispatch', key: 'board' } as const, [] as BoardRow[])
 // The always-on band: branch and worktree of the dispatcher's checkout, plus one line the
@@ -111,29 +126,31 @@ const banner = atom({ plugin: 'astragentic-dispatch', key: 'banner' } as const, 
 // The Builder pane's own band: which FLOW steps have run, read from the same record the gates
 // read, so the person watching the pane sees the step the Builder is at without reading the
 // transcript (owner's ask, 2026-10-09).
-const flow = atom({ plugin: 'astragentic-dispatch', key: 'flow' } as const, { ran: [], tddNa: false, reviewNa: false, refusals: 0, lastRefusal: null } as Flow)
+const flow = atom({ plugin: 'astragentic-dispatch', key: 'flow' } as const, { ran: [], tddNa: false, reviewNa: false, refusals: 0, lastRefusal: null, qaMode: null } as Flow)
 
 // One step list per dispatched role, in the order the contract names the phases, each step
-// the skill name the engine reports at `skill.prompt`. Builder's is the gated flow; Shaper's
-// is its three phases; Rin's gate is one call and a report. QA walks the product and calls no
-// skill, so its band carries the role chip only. The owner's ask (2026-10-10): see on every
-// dispatched pane which step it is at, so a dropped step shows as a gap in the order.
-const FLOW_BY_ROLE: Record<string, ReadonlyArray<readonly [string, string]>> = {
+// the skill name the engine reports at `skill.prompt`. Builder's is the gated flow with two
+// optional steps; Shaper's is its five phases. QA runs its plan in the product and calls no
+// skill, so its band carries the role chip and the mode chip. The owner's ask (2026-10-10): see
+// on every dispatched pane which step it is at, so a dropped step shows as a gap in the order.
+type Step = readonly [string, string, boolean?]   // skill name, chip label, optional
+const FLOW_BY_ROLE: Record<string, ReadonlyArray<Step>> = {
   builder: [
     ['mattpocock-skills:implement', 'implement'],
     ['mattpocock-skills:tdd', 'tdd'],
+    ['atdd', 'atdd', true],
     ['mattpocock-skills:code-review', 'review:matt'],
     ['code-review', 'review:built-in'],
+    ['bmad-ux', 'ux', true],
     ['simplify', 'simplify'],
     ['codex-arm', 'arm'],
   ],
   shaper: [
     ['mattpocock-skills:grill-with-docs', 'align'],
     ['mattpocock-skills:to-spec', 'spec'],
+    ['codex-arm', 'arm:spec'],
+    ['test-design', 'test-design'],
     ['mattpocock-skills:to-tickets', 'tickets'],
-  ],
-  rin: [
-    ['mattpocock-skills:code-review', 'review:matt'],
   ],
   qa: [],
 }
@@ -148,6 +165,7 @@ async function refreshFlow($: any, root: string, key: string): Promise<void> {
     reviewNa: Boolean(entry.review_na),
     refusals: refusals.length,
     lastRefusal: last && typeof last === 'object' ? { gate: String(last.gate ?? ''), at: Number(last.at ?? 0) } : null,
+    qaMode: typeof entry.qa_mode === 'string' ? entry.qa_mode : null,
   }))
 }
 
@@ -309,9 +327,11 @@ async function whoAmI($: any): Promise<Me | null> {
   const pane = await $.env.get('HERDR_PANE_ID')
   if (!tab || !pane) return null
   const got = await herdrJson($, ['tab', 'get', tab])
-  const m = String(got?.result?.tab?.label ?? '').match(/^(ticket|spec|qa|rin|resident):(.+)$/)
+  const m = String(got?.result?.tab?.label ?? '').match(/^(ticket|spec|qa|resident):(.+)$/)
   const role = ROLE_BY_PREFIX[m?.[1] ?? '']
-  const key = m?.[2]
+  // A QA pane walks a Builder's ticket, so its record entry is keyed `qa:<key>`: the same key as
+  // the Builder's would overwrite the Builder's entry (role, pane, skills) at QA's session start.
+  const key = m?.[2] ? (role === 'qa' ? `qa:${m[2]}` : m[2]) : undefined
   return role && key ? { role, key, tab, pane } : null
 }
 
@@ -535,6 +555,8 @@ async function refreshBoard($: any, root: string | null, sends: Map<string, numb
       rows.push({ key, role, state: 'ended', since: entry.turn_end_pending.at ?? now, note: 'turn end read from record: its message was blocked, check that pane mode' })
       continue
     }
+    const owedQa = role === 'builder' ? qaOwed(rec, key) : null
+    const qaNote = owedQa ? `qa ○ ${owedQa}` : (role === 'builder' && entry.qa_required && entry.qa_required !== 'none' ? `qa ✓ ${entry.qa_required}` : undefined)
     if (owed.includes(key)) {
       rows.push({ key, role, state: 'merged', since: entry.merged_at ?? entry.last_turn_end_at ?? now, note: 'tracker not closed' })
     } else if (sentAt !== undefined) {
@@ -543,7 +565,7 @@ async function refreshBoard($: any, root: string | null, sends: Map<string, numb
     } else if (isMidTurn(entry)) {
       rows.push({ key, role, state: 'working', since: entry.last_brief_received_at })
     } else if (entry.last_turn_end_at) {
-      rows.push({ key, role, state: 'ended', since: entry.last_turn_end_at, note: entry.last_turn_reason })
+      rows.push({ key, role, state: 'ended', since: entry.last_turn_end_at, note: [entry.last_turn_reason, qaNote].filter(Boolean).join(' · ') || undefined })
     } else {
       rows.push({ key, role, state: 'registered', since: entry.registered_at ?? now, note: 'no brief yet' })
     }
@@ -698,9 +720,19 @@ export const register: Register = on => {
     const unfenced = env.inner.replace(/```[\s\S]*?```/g, '')
     const tddNa = isBriefText ? unfenced.match(/^[ \t]*TDD[ \t]*:[ \t]*n\/a\b[^\n]*/im)?.[0]?.trim() ?? null : undefined
     const reviewNa = isBriefText ? unfenced.match(/^[ \t]*REVIEW[ \t]*:[ \t]*n\/a\b[^\n]*/im)?.[0]?.trim() ?? null : undefined
+    // `QA: walk|probe|verify|none — <why>` on a Builder's brief is the dispatcher's declaration of
+    // what the station owes this ticket before merge; `Mode: walk|probe|verify` on a QA brief is
+    // which of the three the pane runs. Both are read here, from the delivered brief only.
+    const qaLine = isBriefText ? unfenced.match(/^[ \t]*QA[ \t]*:[ \t]*(walk|probe|verify|none)\b[^\n]*/im) : null
+    const qaRequired = qaLine ? qaLine[1]?.toLowerCase() ?? null : undefined
+    const qaMode = isBriefText ? unfenced.match(/^[ \t]*Mode[ \t]*:[ \t]*(walk|probe|verify)\b/im)?.[1]?.toLowerCase() ?? null : undefined
     if (root) {
       const patch: Entry = { dispatcher: env.from, dispatcher_name: env.fromName, last_brief_received_at: now }
-      if (isBriefText) { patch.tdd_na = tddNa; patch.review_na = reviewNa }
+      if (isBriefText) {
+        patch.tdd_na = tddNa; patch.review_na = reviewNa
+        if (me.role === 'builder') patch.qa_required = qaRequired
+        if (me.role === 'qa') patch.qa_mode = qaMode
+      }
       await patchRecord($, root, me.key, patch)
       await refreshFlow($, root, me.key)
     }
@@ -774,6 +806,13 @@ export const register: Register = on => {
       return res
     }
     if (root) await patchRecord($, root, me.key, { last_turn_end_at: await $.clock.now(), last_turn_reason: e.reason })
+    // A QA pane's entry goes with its worktree at cleanup, so the fact that QA ended a turn is
+    // also written onto the ticket's own entry (`qa:<key>` → `<key>`), where the owed check and
+    // the board read it after the QA pane is gone (found by the 3.0.0 gate).
+    if (root && me.role === 'qa' && me.key.startsWith('qa:')) {
+      const own = ((await readRecord($, root)) ?? {})[me.key] ?? {}
+      await patchRecord($, root, me.key.slice(3), { qa_last_turn_end_at: await $.clock.now(), qa_last_mode: own.qa_mode ?? null })
+    }
     const answer = e.answer.length > 1500 ? `…${e.answer.slice(-1500)}` : e.answer
     let flow = ''
     if (me.role !== 'resident' && root) {
@@ -942,6 +981,28 @@ export const register: Register = on => {
     }
   })
 
+  // THE WAITER RULE. Four Builders in a row, two of them with the brief saying the rule in so
+  // many words, waited on backgrounded work with a loop that cannot end: a name-keyed wait
+  // (`until ! pgrep -f <name>` matches its own shell's argv; `until ! ps | grep <name>` matches a
+  // sibling) or a body with no sleep (`do :; done` greps /dev/null at full CPU). Each parked the
+  // pane for ten minutes and was found by a person. The shape is refused; the deny carries the
+  // one-liner that works.
+  const brokenWait = (cmd: string): string | null => {
+    const c = cmd.replace(/\s+/g, ' ')
+    if (/\buntil\s+!\s*(pgrep|ps\b)/.test(c) || /\b(until|while)\b[^;]*\bps\b[^;]*\|\s*grep/.test(c)) return 'a wait keyed on a process NAME (pgrep -f / ps | grep) matches its own shell or a sibling and never ends'
+    if (/\b(until|while)\b[^\n]*?\bdo\s*(:|true)\s*;?\s*done/.test(c)) return 'a loop body with no sleep spins at full CPU'
+    if (/\b(until|while)\b[^\n]*?\bdo\b(?:(?!\bdone\b)(?!\bsleep\b)(?!\bwait\b)(?!\bread\b).)*\bdone\b/.test(c) && /\b(until|while)\s+!?\s*(kill\s+-0|grep|test|\[)/.test(c)) return 'a polling loop with no sleep spins at full CPU'
+    return null
+  }
+  const WAIT_FIX = 'Key the wait on the pid you launched: `cmd & pid=$!; while kill -0 $pid 2>/dev/null; do sleep 10; done; wait $pid`, or run it in the foreground with a timeout.'
+  on('tool.call', { tool: 'Bash' }, async ($, e, next) => {
+    if (!me || me.role === 'resident' || !root) return next(e)
+    const why = brokenWait(e.command)
+    if (!why) return next(e)
+    await logRefusal($, root, me.key, 'wait-gate', e.command.slice(0, 120))
+    return { deny: `astragentic-dispatch: refused — ${why}. ${WAIT_FIX}` }
+  })
+
   on('tool.call', { tool: 'Skill' }, async ($, e: any, next) => {
     if (me?.role !== 'builder' || !root) return next(e)
     if (!/^(codex-arm|codex-claude-arm)$/.test(String(e.skill ?? ''))) return next(e)
@@ -1070,7 +1131,11 @@ export const register: Register = on => {
     })
     if (addSeg) {
       const ran = await next(e)
-      if (ran.deny !== undefined || ran.isError) return ran
+      // Not the call's exit status: `git worktree add … && herdr agent start …` in one call can
+      // exit 1 on the LATER command with the worktree already created, and the plug then never
+      // ran (measured downstream: a Builder found its worktree unseeded mid-ticket). What decides
+      // is whether the worktree now exists at the parsed path.
+      if (ran.deny !== undefined) return ran
       // Tokens with quotes honoured; `-C <dir>` sets the base a relative path resolves against.
       // The shell's own cwd is not visible here, so a relative path with no -C resolves against
       // the repo root, which is where a dispatcher runs this (stated, not assumed silently).
@@ -1133,6 +1198,10 @@ export const register: Register = on => {
         const gaps = flowGaps(entry)
         if (gaps.length > 0) {
           notes.push(`${MARK} ${key} merged with no record of: ${gaps.join(', ')}. A step the handback names n/a with its reason is fine; any other is a step that did not run.`)
+        }
+        const owedQa = qaOwed(rec, key)
+        if (owedQa) {
+          notes.push(`${MARK} ${key} merged owing a QA ${owedQa} (declared on its brief) with no QA turn after the Builder's last. Dispatch it on the merged head (dispatch-qa-walk) or record why not.`)
         }
       }
     }
@@ -1197,14 +1266,16 @@ export const register: Register = on => {
               {f.lastRefusal && (await $.clock.now()) - f.lastRefusal.at < 120_000
                 ? <Chip bg="error" fg="inverseText" label={`⛔ ${f.lastRefusal.gate} refused`} />
                 : null}
-              {(steps ?? []).map(([name, label]) => {
+              {(steps ?? []).map(([name, label, isOptional]) => {
                 const isRan = f.ran.includes(name) || (name === 'codex-arm' && f.ran.includes('codex-claude-arm'))
                 const isNa = (name === 'mattpocock-skills:tdd' && f.tddNa) || (name === 'code-review' && f.reviewNa)
                 if (isRan) return <Chip bg="success" fg="inverseText" label={`✓ ${label}`} />
                 if (isNa) return <Chip bg="inactive" fg="inverseText" label={`n/a ${label}`} />
+                if (isOptional) return <Chip dim label={`· ${label}`} />
                 if (!isCurrentMarked) { isCurrentMarked = true; return <Chip bg="warning" fg="inverseText" label={`▶ ${label}`} /> }
                 return <Chip dim label={`○ ${label}`} />
               })}
+              {me.role === 'qa' && f.qaMode ? <Chip bg="claude" fg="inverseText" label={`mode ${f.qaMode}`} /> : null}
             </Box>
           ) : null}
         </Box>

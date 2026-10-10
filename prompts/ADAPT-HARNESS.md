@@ -216,7 +216,7 @@ Classify candidate material before editing anything:
   it leaves you is an event a previous release shipped and the project lacks, which may be a
   deliberate removal — decide it, and **do it yourself**: a merge handed back to the owner as a
   to-do is the step that gets skipped (measured on a greenfield install, 2026-10-10).
-- **Role contracts and their adapters** — `harness/.agents/roles/{thomas,shaper,builder,rin}.md`
+- **Role contracts and their adapters** — `harness/.agents/roles/{thomas,shaper,builder,qa}.md`
   are runtime-neutral and are the single home for each role's phases. Role →
   runtime/model/effort lives in the owner-editable `.agents/orchestrator.md`; contracts carry
   no model IDs. On upgrade, preserve the owner's tuned row values and merge new rows or
@@ -367,10 +367,17 @@ history, and the next run either applies it or the owner deletes the directory. 
 applied one left untracked is a different thing**: the notes and the prompt describing what
 this upgrade meant to do exist on one disk and nowhere else.
 
-**Codex role instructions** (`thomas`, `shaper`, `builder`, `qa`, `rin`) are in-repo at
+**Codex role instructions** (`thomas`, `shaper`, `builder`, `qa`) are in-repo at
 `.codex/profiles/<role>.md` and are passed on the launch command line. Nothing is provisioned
 outside the repository: there is no `$CODEX_HOME` copy to make, no destination to compare
 against, and no owner confirmation to collect for a runtime the project simply has.
+
+**Upgrading to 3.0.0 or later: the fifth role is retired.** A row for it in `orchestrator.md`
+(Active assignments and Fallback providers), its adapter files under `.claude/agents/`,
+`.codex/profiles/`, `.opencode/agents/`, its tab-label convention and any `review-with-…` skill
+copy the project kept are deleted, not merged; its spec gate is the arm the Shaper fires and its
+slice gate is the arm plus the adversarial fan-out Thomas fires (`thomas.md` § Slice gate). Say
+so in the receipt.
 
 **Upgrading to 2.18.0 or later: the Active assignments table gains an `Advisor` column.** The
 file is scaffold, so add the column yourself, keeping every existing cell: header `Advisor`,
@@ -387,10 +394,6 @@ the owner added into `<role>.md`, then delete the TOML and its copy under `$CODE
 reads either one any more. `check-requirements.sh` WARNs while a leftover remains, and WARNs
 again if a `<role>.md` still mentions `--profile` or `CODEX_HOME` — that file is the pane's
 system prompt, so a sentence about a retired mechanism is read as an instruction (AST-145).
-
-**Rin has no fallback row, and its absence is the correct state — preserve it.** The gate is
-a Herdr pane on the root provider's runtime, so a fallback would name a runtime that cannot
-host it. A project that has re-added the row has regressed; report it.
 
 ## 5. Brownfield entry
 
@@ -422,7 +425,7 @@ seam for `tdd` to attach to, and `untangle` when a refactor is too tangled for
 reaching them is the agents' business, not this run's.
 
 **Name the repo's rendering path, or record that it has none.** The Builder's contract
-requires browser evidence for work that changes a user-visible surface, and Rin's gate checks
+requires browser evidence for work that changes a user-visible surface, and QA's walk checks
 for it, but the *tool* is the project's — a browser skill, a preview or dev command, a
 storybook. Find what this repo already uses and **record it in the project's entry doc**
 (`AGENTS.md` or `CLAUDE.md`), beside the tracker pointer — its readers are the Builder per

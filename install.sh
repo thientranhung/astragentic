@@ -52,7 +52,7 @@ fi
 SKILL_SYNC_FAIL=0
 # ALLOWLIST ONE PAIR, AND ONLY WHILE IT ACTUALLY DIVERGES. `codex-arm` diverges on purpose:
 # the .claude copy drops the `codex exec review` fallback, which exists only for a non-Claude
-# root. `review-with-rin` was allowlisted too and diffs zero lines — a dead exemption that
+# root. A second pair was once allowlisted and diffed zero lines — a dead exemption that
 # masks any future drift in exactly the pair it names. An allowlist entry that no longer
 # describes a real difference is worse than no allowlist, so an unused one now fails here.
 # EXACT FILE PAIRS, not skill directories. Exempting a directory skipped every file under

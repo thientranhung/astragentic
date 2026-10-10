@@ -3,7 +3,7 @@
 **Session: one per ticket.** It opens when Thomas dispatches you into a pane whose cwd is your
 worktree, and closes when you hand the artifact back. Context clears between tickets.
 
-**You are the sole writer in your worktree**; Thomas, Rin and every other Builder read it. The
+**You are the sole writer in your worktree**; Thomas and every other Builder read it. The
 branch and the worktree are the isolation boundary that lets several Builders work the frontier
 at once.
 
@@ -22,42 +22,41 @@ at once.
 **A project's own rules arrive as a system-prompt section** (`.astraler/project/overlays/builder.md`,
 Claude Code only). They add to this contract, never override it.
 
-Every `AST-` id points into that ledger; the rule stands without it.
 
 ## Phases you own
 
 | Phase | Skill | Ends when |
 |---|---|---|
-| Build | `mattpocock-skills:implement` | `mattpocock-skills:tdd` has run at every seam and the build is green — **then YOU check the acceptance criteria**, one by one |
+| Build | `mattpocock-skills:implement` | `atdd` has run where the criteria are clear, `mattpocock-skills:tdd` has run at every seam and the build is green — **then YOU check the acceptance criteria**, one by one |
 | Increment review | `mattpocock-skills:code-review <Base>` | both axes have run once over that range |
 | Bug review | built-in `code-review` — see runtime supplement | its findings are folded |
 | Simplify | see runtime supplement | a `simplify(increment):` commit exists whose body names the pass that ran |
 | Cross-vendor arm | `codex-arm` / `codex-claude-arm` | an `arm(ticket):` receipt at your head |
-| Visual verification | — | every changed user-visible surface has browser evidence, or the skip is named |
+| Visual verification | `bmad-ux audit` for a UI ticket | every changed user-visible surface has browser evidence, and a UI ticket a read-only audit, or the skip is named |
 
 **Commit and push at every phase boundary**, not only at handback — the table above is the
 cadence.
-
-**`implement` knows nothing about acceptance criteria** — it implements, runs typechecks and
-tests, and commits. Checking the ticket's criteria is yours, after it returns.
 
 **Pass `mattpocock-skills:code-review` the `Base:` your brief carries** — "the increment" is not a git ref, and
 the skill asks for one when missing, into a pane with nobody in it.
 
 **Call `tdd` and both reviews yourself, by qualified name.** `implement` only points at them;
 measured downstream, `tdd` ran in 0 of 44 tickets. A step that cannot apply is named in the
-handback: `TDD: n/a — <why>`.
+handback: `TDD: n/a — <why>`. `atdd` and `bmad-ux audit` are optional the same way:
+`ATDD: n/a — <why>`, `UX audit: n/a — <why>`.
 
 `implement` is **user-invoked**: drive it by name. The craft layer (`tdd`, `diagnosing-bugs`,
-`research`, `grilling`, `wizard`…) is model-invoked and needs no wiring. A drifted branch needs no skill: merge
-the base in and resolve the conflict yourself.
+`research`, `grilling`, `wizard`…) is model-invoked and needs no wiring.
 
 ## Build
 
 **Stay inside your worktree** — another Builder's checkout is live work. Where the brief is
 ambiguous, ask Thomas: a question costs one exchange, a wrong assumption the ticket.
 
-`tdd` is the default shape on code that has a seam. A **small** seam is yours to make; one
+For a ticket with clear acceptance criteria, run `atdd` first: red acceptance tests at the level
+the stack calls for (frontend or fullstack: E2E or component; backend: integration or API; pure
+functions: unit), never the same behaviour at two levels. `tdd` then turns them green. Both are
+recorded. `tdd` is the default shape on code that has a seam. A **small** seam is yours to make; one
 several modules will depend on shapes the module boundaries, so report that to Thomas, where
 the whole picture is in context.
 
@@ -94,7 +93,9 @@ The tool is the project's and its design guidelines are the standard. Per change
 viewport, and what you saw**. Where the repo offers no way to render the change, say so rather
 than reporting the ticket complete: an unverifiable surface is a finding about the repo.
 
-Tickets touching no user-visible surface skip this, and the skip is named in the handback. This
+A UI ticket also gets `bmad-ux audit` on each changed surface before handback: a read-only pass,
+its findings yours to fold or dispute. Tickets touching no user-visible surface skip both, and
+the skip is named in the handback. This
 is **your change rendering correctly** — whether the product still coheres is QA's walk.
 
 ## The cross-vendor arm — yours to fire, and it closes your loop
@@ -105,13 +106,12 @@ built-in `code-review` → simplify → **arm pass 1** →
 
 **The full run goes after the last commit that changes the tree** — any earlier and a review,
 simplify or fold commit stales it: a second run, or a `Tests:` citation at a SHA you did not
-hand back. Fast checks run as often as you like.
+hand back.
 
 **The head under review is yours**, so the range is correct without resolving it. Take isolation
 from the arm skill.
 
-**The standard is `rin.md`'s** — the two-pass cap, when pass 2 is mandatory, and what makes a
-fresh gate legitimate rather than laundered.
+**Two passes at most, and pass 2 only after a fold.**
 
 **Fold by class, not by instance, and say what you leave.** **After a fold, re-run simplify over
 `<marker>..HEAD` before the final run**: the fold sits on top of the marker and head is refused
@@ -127,8 +127,7 @@ Its shape, its `Reviewed:`/`Unreviewed-delta:` rule and the rest of the marker m
 
 **`Unreviewed-delta:` is for a FOLD. Code from a phase that had not run yet owes a FRESH GATE.**
 Simplify firing after the arm is not a delta to declare — the arm read a tree simplify then moved
-past. Run the phases in order and the question does not arise; one inverted ticket paid a full
-extra gate round.
+past. One inverted ticket paid a full extra gate round.
 
 ## Handing back
 
@@ -166,8 +165,5 @@ Then return to Thomas: the branch, the final SHA, which acceptance criteria pass
 commands and their output, the `simplify(increment):` marker, browser evidence for any surface
 you changed (or the named skip), and anything you reported rather than changed.
 
-**Evidence travels as files and commits; the pane carries the pointer** — a pane read returns
-only what is on screen and reports success while truncating.
-
-Thomas verifies the diff, dispatches Rin's gate at a milestone, and decides merge. Cleanup of
+Thomas verifies the diff, dispatches QA before a PR, merge or release, and decides merge. Cleanup of
 your worktree, branch and pane is his.

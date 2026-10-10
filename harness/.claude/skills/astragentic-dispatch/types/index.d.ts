@@ -17,6 +17,7 @@ export type Flow = {
   reviewNa: boolean
   refusals: number
   lastRefusal: { gate: string; at: number } | null
+  qaMode: string | null
 }
 
 declare module 'claude-code' {

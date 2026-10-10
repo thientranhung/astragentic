@@ -29,7 +29,7 @@ project loads it with no flag and no setup:
 | Claim on the tracker before the brief | prose in `thomas.md` | a brief for a ticket the tracker reports unclaimed is not sent |
 | Tracker write-back after a merge | refused only at a push of the base | the merge result carries the note, the line turns red, and no brief is sent until `scripts/ticket-done.sh` has stamped it |
 | Release a worktree's resources | `release-worktree-resources.sh` by hand before removal | runs at `git worktree remove`, and the record entry goes with the worktree |
-| See which step a pane is at | read its transcript | every dispatched pane's band shows its steps as chips, from the same record the gates read — Builder: implement · tdd · review:matt · review:built-in · simplify · arm; Shaper: align · spec · tickets; Rin: review:matt; QA: the role chip only |
+| See which step a pane is at | read its transcript | every dispatched pane's band shows its steps as chips, from the same record the gates read — Builder: implement · tdd · review:matt · review:built-in · simplify · arm; Shaper: align · spec · tickets; QA: the role chip only |
 | Seed a new worktree | prose in the project's docs | `.astraler/project/setup-worktree.sh <path>` runs right after a successful `git worktree add`; a failure is named in the result and the worktree is not to be dispatched into |
 | Know which flow steps ran | a `Pass:` line in a commit message, which anyone can type | the Builder's pane records every Skill call as the engine expands it; `TURN-END` carries the list, and a merge names the steps with no record |
 
@@ -43,7 +43,7 @@ Builder's tab was refused.
 
 - **Claude Code 2.1.294 or later.** `check-requirements.sh` refuses older versions. Below the
   floor the mod does not load, and nothing else watches the pane.
-- **The tab label is set before launch.** The mod reads `ticket:` / `spec:` / `qa:` / `rin:`
+- **The tab label is set before launch.** The mod reads `ticket:` / `spec:` / `qa:`
   from its tab at session start. A pane labelled after launch never records itself.
 - **The mod is committed on the branch the worktree checks out.** The pane loads the copy in
   its own worktree, so a payload that is not committed is not there (AST-036).
@@ -117,7 +117,7 @@ on every Claude session in the project:
 
 | File | Where it lands |
 |---|---|
-| `overlays/<role>.md` (`builder`, `shaper`, `qa`, `rin`) | appended to that role's system prompt, on every render, so it survives compaction |
+| `overlays/<role>.md` (`builder`, `shaper`, `qa`) | appended to that role's system prompt, on every render, so it survives compaction |
 | `overlays/thomas.md` | the same, in the dispatcher's own session (any Claude session in the repo that is not a dispatched pane) |
 | `overlays/dispatch-brief.md` | appended to every brief the mod sends, after the brief's own text |
 
@@ -138,6 +138,27 @@ the fact. So the Builder's pane now refuses the first content commit until
 delivers and never from the Builder's handback. A brief delivered outside the mod
 (`herdr agent prompt`) carries no exemption the mod can see, so on a pane you had to prompt by
 hand expect the gate to hold until the brief is re-sent through SendMessage.
+
+## The station owes QA, and the brief says which
+
+**A Builder's brief carries `QA: walk|probe|verify|none — <why>`.** The mod records it; the
+board shows `qa ○ walk` on that ticket until a QA pane keyed `qa:<key>` ends a turn after the
+Builder's last, then `qa ✓ walk`; a merge without it carries a red note naming the mode owed.
+`none` with a reason owes nothing. Measured on the first adopter: 27 QA reports in a month and
+4 marks at merge — the walk ran, and nothing at the merge could say for which ticket.
+
+**A QA pane is recorded under `qa:<key>`**, never under the ticket's own key: the same key
+would overwrite the Builder's entry at QA's session start. Its brief carries `Mode: walk|probe|
+verify`, which the mod records and shows as a chip on the QA pane's band.
+
+## A wait that cannot end is refused
+
+In any dispatched pane the mod refuses a Bash command whose wait is keyed on a process name
+(`until ! pgrep -f …`, `until ! ps … | grep …`: it matches its own shell or a sibling and never
+exits) or whose loop body has no sleep (`do :; done`, full CPU). Measured: four Builders in a
+row, two briefed against it in so many words. The refusal is recorded like a gate refusal and
+carries the wait that works: `cmd & pid=$!; while kill -0 $pid 2>/dev/null; do sleep 10; done;
+wait $pid`.
 
 ## The flow is read from what ran
 
@@ -242,7 +263,6 @@ launched with `--dangerously-skip-permissions` already extends to its dispatcher
 ```text
 builder  → claude --dangerously-skip-permissions --agent builder --model <row: Model> <--effort only when the row sets one> <--advisor only when the row sets one>
 shaper   → claude --dangerously-skip-permissions --agent shaper --model <row: Model> <--effort only when the row sets one> <--advisor only when the row sets one>
-rin      → claude --agent rin --model <row: Model> <--effort only when the row sets one> <--advisor only when the row sets one>
 qa       → claude --agent qa --model <row: Model> <--effort only when the row sets one> <--advisor only when the row sets one>
 ```
 
@@ -252,8 +272,8 @@ Add `--effort` only when the row sets it (`low|medium|high|xhigh|max`); blank me
 runtime default. Add `--advisor <value>` only when the row's Advisor cell is set; the pairing
 rules are in `orchestrator.md`. Not yet measured through `herdr agent start`: the flag is
 undocumented in `claude --help`, so the first launch with it is the measurement — a session
-that could not attach the advisor says `cannot advise` at launch and runs without it. **Rin runs without `--dangerously-skip-permissions`**: a gate runs under
-permissions, and rin has no fallback row, so no other runtime is legal here.
+that could not attach the advisor says `cannot advise` at launch and runs without it. **QA runs without `--dangerously-skip-permissions`**: a gate runs under
+permissions.
 
 ## Pre-dispatch verification
 
@@ -283,7 +303,7 @@ herdr agent start "<role>-<ticket-id>" --kind claude --pane <pane-id> --timeout 
   -- --dangerously-skip-permissions --agent <role> --model <row: Model> <--effort only when the row sets one> <--advisor only when the row sets one>
 ```
 
-For **rin** and **qa** (review roles — no `--dangerously-skip-permissions`):
+For **qa** (a review role — no `--dangerously-skip-permissions`):
 
 ```bash
 herdr agent start "<role>-<artifact-key>" --kind claude --pane <pane-id> --timeout 60000 \

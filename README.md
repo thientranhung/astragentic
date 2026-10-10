@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-2.22.2-blue" alt="version"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-3.0.0-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
   <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-157_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
@@ -42,13 +42,13 @@ prove what happened.
 # 1. In your project's root, stage the latest release (no project file is written)
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
-#    …or pin a version:  | bash -s -- 2.22.2
+#    …or pin a version:  | bash -s -- 3.0.0
 
 # 2. Verify your machine has what's needed
-bash .astraler/releases/2.22.2/check-requirements.sh
+bash .astraler/releases/3.0.0/check-requirements.sh
 
 # 3. Run the adaptive installer in Claude Code
-claude "Read .astraler/releases/2.22.2/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/3.0.0/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Start the router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium
@@ -94,14 +94,13 @@ token-unique path.
 
 ## How it works
 
-### Five roles, clear boundaries
+### Four roles, clear boundaries
 
 | Role | Session | What it does |
 |---|---|---|
-| **Thomas** | resident | Routes work, manages the frontier, dispatches tickets, runs cross-vendor arm |
+| **Thomas** | resident | Routes work, manages the frontier, dispatches tickets, fires the slice gate |
 | **Shaper** | one unbroken session | Grills requirements, writes specs, cuts tickets — while the whole picture is in context |
 | **Builder** | one per ticket | Implements in its own worktree — sole writer there |
-| **Rin** | per milestone | Adversarial reviewer — verifies both the artifact and the process traces |
 | **QA** | per walk | Exercises the running product — UI journeys, API contracts, real data |
 
 ### The workflow
@@ -110,9 +109,10 @@ token-unique path.
 flowchart LR
     A["wayfinder\nfoggy, > 1 session"] --> C[to-spec]
     B["grill-with-docs\nfits 1 session"] --> C
-    C --> D[to-tickets]
+    C --> C2["arm:spec"] --> C3["test-design\ndocs/qa/plan"] --> D[to-tickets]
     D --> E["implement\n(one per ticket)"]
     E --> F["code-review"]
+    F --> G["QA\nwalk · probe · verify"]
     F -.->|blocking finding| Q[to-questionnaire] -.-> Owner((owner))
 
     style A fill:#e8f0fe,stroke:#4285f4
@@ -122,7 +122,7 @@ flowchart LR
 ```
 
 Work enters through two doors based on scope. Both converge into the same pipeline:
-**spec → tickets → implement → review**. The engineering method comes from
+**spec → arm → test-design → tickets → implement → review → QA**. The engineering method comes from
 [Matt Pocock's skills](https://github.com/mattpocock/skills) — Astragentic wraps it with
 orchestration and extends it to brownfield.
 
@@ -136,20 +136,17 @@ flowchart TB
         T2["ticket:TRA-142\nBuilder"]
         T3["spec:TRA-87\nShaper"]
         T4["qa:TRA-125\nQA"]
-        T5["rin:TRA-125\nRin"]
     end
 
     T -->|dispatch| T1
     T -->|dispatch| T2
     T -->|dispatch| T3
     T -->|dispatch-qa| T4
-    T -->|review| T5
 
     style T fill:#e8f0fe,stroke:#4285f4
     style T1 fill:#fef7e0,stroke:#f9ab00
     style T2 fill:#fef7e0,stroke:#f9ab00
     style T3 fill:#fce8e6,stroke:#ea4335
-    style T5 fill:#e6f4ea,stroke:#34a853
 ```
 
 Each Builder gets its own terminal pane and git worktree.
@@ -159,24 +156,29 @@ Each Builder gets its own terminal pane and git worktree.
 
 ```mermaid
 flowchart LR
-    subgraph PT["Per ticket"]
+    subgraph PT["Per ticket — Builder lane"]
         direction LR
-        R1["code-review\nStandards + Spec"] --> R2["simplify\nmarker commit"] --> R3["cross-vendor\nCodex ↔ Claude"]
+        R0["tdd (+ atdd)"] --> R1["code-review\nStandards + Spec"] --> R2["built-in\ncode-review"] --> R3["simplify\nmarker commit"] --> R4["ticket arm\nCodex ↔ Claude"]
     end
-    PT --> M["merge"]
-    M --> RM{"milestone?"}
-    RM -->|yes| Rin["Rin gate"]
-    RM -->|no| Next["next ticket"]
-    Rin -->|design blocker| Owner(("owner"))
+    PT --> QA["QA, by the ticket's surface\nwalk · probe · verify\nagainst docs/qa/plan"]
+    QA --> M["merge"]
+    M --> SC{"slice closed?"}
+    SC -->|yes| SG["slice gate\nslice arm + adversarial fan-out"]
+    SC -->|no| Next["next ticket"]
+    QA -->|FAIL| Owner(("owner"))
+    SG -->|design blocker| Owner
 
     style R1 fill:#e6f4ea,stroke:#34a853
     style R2 fill:#e6f4ea,stroke:#34a853
     style R3 fill:#e6f4ea,stroke:#34a853
-    style Rin fill:#fce8e6,stroke:#ea4335
+    style R4 fill:#e6f4ea,stroke:#34a853
+    style QA fill:#fce8e6,stroke:#ea4335
+    style SG fill:#fce8e6,stroke:#ea4335
 ```
 
-Every ticket passes all three layers — no exceptions. At milestones, Rin runs an additional
-gate verifying both the artifact and the process traces. Design-level blockers go to the
+Every ticket passes the Builder lane reviews — no exceptions. Before a PR, a merge or a
+release, QA walks the running product. When a slice closes, Thomas fires the slice arm and one
+read-only adversarial fan-out, then folds what both find. Design-level blockers go to the
 owner, not to another review round.
 
 ---
@@ -298,7 +300,7 @@ the release shipped with.
 ```bash
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash                      # latest, stage only
-curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 2.22.2         # pin a version
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.0.0         # pin a version
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --plan  # show what --apply would write
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply # write the payload in
 ```
@@ -341,7 +343,6 @@ Edit `.agents/orchestrator.md` — your file, never overwritten by upgrades:
 | thomas  | claude  | claude-opus-5   | medium |
 | shaper  | claude  | claude-opus-5   | high   |
 | builder | claude  | claude-sonnet-5 | medium |
-| rin     | claude  | claude-opus-5   | medium |
 | qa      | claude  | claude-sonnet-5 | low    |
 ```
 
@@ -395,7 +396,7 @@ the releases page when you want to know.
 
 | | |
 |---|---|
-| **Roles** | 5 — Thomas, Shaper, Builder, Rin, QA |
+| **Roles** | 4 — Thomas, Shaper, Builder, QA |
 | **Skills** | 16 in the harness, 4 of them brownfield-specific |
 | **Runtimes** | Claude Code, Codex, OpenCode |
 | **Review layers** | 3 per ticket (prior system: 5-14 rounds) |
@@ -409,9 +410,9 @@ the releases page when you want to know.
 ```
 harness/
   .agents/
-    roles/            five role contracts + runtime supplements
+    roles/            four role contracts + runtime supplements
     orchestrator.md   role -> runtime/model/effort (your file)
-    skills/           13+ skills — dispatch, review, brownfield, arm
+    skills/           19 skills — dispatch, QA, test design, brownfield, arm, BMAD
     memory/
       recurring-failure-modes.md
   .claude/
@@ -504,5 +505,5 @@ there.**
 | **payload** | What a release stages (may overwrite freely) |
 | **scaffold** | Owner's config, written once, never overwritten (`orchestrator.md`) |
 | **frontier** | The set of tickets currently claimable by agents |
-| **gate** | A verification checkpoint — Rin's review at milestones |
+| **gate** | A verification checkpoint — QA's walk of the running product, or the slice gate at slice close |
 | **arm** | Cross-vendor review pass (Codex reviews Claude's work, or vice versa) |

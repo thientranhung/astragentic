@@ -29,8 +29,7 @@ its body counts as carrying one — measured downstream at **193 matches over 23
 
 ## Review and cleanup
 
-The Builder pushes and returns the artifact. Thomas reads the real diff, dispatches Rin's
-milestone gate, and alone decides merge. A settled Herdr status does not authorize cleanup:
+The Builder pushes and returns the artifact. Thomas reads the real diff and alone decides merge. A settled Herdr status does not authorize cleanup:
 capture the final transcript and verify the merge or an explicit owner-approved abandonment
 first. Herdr refuses to close the last tab in a workspace, so resolve the topology rather
 than calling `tab close` blindly:

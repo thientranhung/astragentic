@@ -1,21 +1,18 @@
 ---
 name: codex-claude-arm
-description: ARM ONLY — the Claude pass a Codex root fires over a completed artifact: the Builder fires it per ticket from its own worktree, Thomas fires it at spec and at slice close. Covers the isolated worktree, the read-only allowlist, cleanup order, and recording. This skill never dispatches a reviewer and never hosts a gate; a Codex root cannot host the gate (see review-with-rin). Use on a Codex root when an artifact is committed and ready for its arm.
+description: ARM ONLY — the Claude pass a Codex root fires over a completed artifact: the Builder fires it per ticket from its own worktree, the Shaper fires it at spec, Thomas at slice close. Covers the isolated worktree, the read-only allowlist, cleanup order, and recording. This skill never dispatches a reviewer and never hosts a gate. Use on a Codex root when an artifact is committed and ready for its arm.
 ---
 
 # The cross-vendor arm on a Codex root
 
 **Scope: one thing — the `claude -p` pass a Codex root fires over a finished artifact.** When
-it fires, and the two-pass rule, belong to `thomas.md` and `rin.md`. The gate itself, its
-form and its report mechanics belong to `review-with-rin`, and none of it is restated here.
+it fires, and the two-pass rule, belong to `thomas.md`, and none of it is restated here. A QA gate's form and report
+mechanics belong to `dispatch-ticket/GATE.md`.
 
-**A Codex root cannot host the gate at all**: the gate is a Herdr pane on the root
-provider's runtime, and no Codex adapter can host it, so a `rin` row naming Codex is a
-misconfigured row to raise with the owner. The gate runs on a Claude root; this pass is what
-a Codex root contributes. The arm always calls the OTHER vendor.
+The arm always calls the OTHER vendor, so on a Codex root it is a Claude pass.
 
 **Never the reviewer.** Who fires it follows the artifact: the **Builder** fires `arm: ticket`,
-**Thomas** fires `arm: spec` and `arm: slice`.
+the **Shaper** fires `arm: spec`, **Thomas** fires `arm: slice`.
 
 **The ticket scope is NOT symmetric with `codex-arm`, and the difference is load-bearing.** A
 Builder firing the Codex arm runs it in its own worktree, because the Codex arm reads — both
@@ -81,13 +78,14 @@ The arm never removes its own worktree.
    the two permitted passes on something still in motion.
 2. Confirm the artifact is COMMITTED, resolve the exact base ref and the FINAL head SHA,
    then run the pass above. A verdict for an older SHA cannot authorize a merge.
-3. **You classify which findings are real**; the arm advises. Route them to whoever owns the
-   artifact you just reviewed — **a spec goes back to the paused Shaper**, a ticket to its
-   Builder — and `rin.md` owns that rule. Where pass 1 returned a blocking finding, run pass 2
+3. **Thomas classifies which findings are real**; the arm advises. When Thomas fired it, he
+   routes them to whoever owns the artifact — a ticket to its Builder. When the Shaper fired it
+   at spec, the Shaper hands the findings to Thomas with the spec, waits for his classification,
+   and folds in its own session (`shaper.md` § Arm); `thomas.md` owns the classification rule. Where pass 1 returned a blocking finding, run pass 2
    under the same contract. Any fix means a new SHA.
 4. **Record the arm once** in the decision trail — the vendor that ran, or
    `cross-vendor arm: NOT RUN — <reason>`, which only the OWNER may accept, on the terms
-   `rin.md` sets per artifact. Claude unavailable or out of quota means the arm did not run;
+   `thomas.md` sets. Claude unavailable or out of quota means the arm did not run;
    the native lens is advisory.
 5. **Exit by artifact, and only one of the three is a merge**: at spec, release the paused
    Shaper to cut tickets; at ticket, verify the artifact, run the required tests and merge on

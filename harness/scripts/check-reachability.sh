@@ -644,16 +644,18 @@ for path, text in sorted(addr_sources.items()):
 # the marker got wrong. A check that fires inside the skill's own run may live in the SKILL.
 ARTIFACTS = [
     # (artifact, regex, producer, verifiers — each a role contract or a shipped skill)
-    ("simplify(increment): marker", r"simplify\(increment\)", "builder", ["thomas", "rin"]),
+    ("simplify(increment): marker", r"simplify\(increment\)", "builder", ["thomas"]),
     # The marker's subject proves a commit happened, never which pass wrote it. A Builder
     # whose invocation errored substituted another tool, committed the same subject, and
     # every check downstream read as satisfied (AST-055). The `Pass:` line in the body is
     # the half that can disagree with a substitute, so it needs its own producer/verifier
     # row — a second artifact, not a detail of the first.
-    ("simplify pass provenance", r"`Pass:`|Pass: Skill\(", "builder", ["thomas", "rin"]),
-    ("browser evidence",            r"browser evidence",      "builder", ["rin"]),
-    ("gate file",                   r"GATE_FILE",             "rin",     ["review-with-rin"]),
-    ("ledger line",                 r"`Ledger:`",             "thomas",  ["rin"]),
+    ("simplify pass provenance", r"`Pass:`|Pass: Skill\(", "builder", ["thomas"]),
+    ("browser evidence",            r"browser evidence",      "builder", ["thomas"]),
+    ("gate file",                   r"GATE_FILE",             "qa",      ["dispatch-qa-walk"]),
+    # The merge commit's `Ledger:` line: Thomas writes it and Thomas's merge section is where it is
+    # checked, since 3.0.0 removed the role that used to read it at the milestone gate.
+    ("ledger line",                 r"`Ledger:`",             "thomas",  ["thomas"]),
     # The dispatch record was named as durable state by `thomas.md` and defined by nothing —
     # no path, no shape, no owner — while four rules read it: the write-set overlap check,
     # cleanup's exact IDs, a later session finishing a dispatch, and the Builder identity on
@@ -1028,7 +1030,7 @@ for _ledger in LEDGERS:
                    for cand in (ref, stripped)):
                 continue
             # A `Bound:` list writes the directory once and then shorthand —
-            # `.agents/roles/thomas.md, builder.md, rin.md` — and a skill is cited as
+            # `.agents/roles/thomas.md, builder.md, qa.md` — and a skill is cited as
             # `codex-arm/SKILL.md` wherever it lives. Neither is a rot claim, and failing them
             # would bury the two findings that are real under thirty that are not. What this
             # check is for is a file that exists NOWHERE, so resolve by basename before

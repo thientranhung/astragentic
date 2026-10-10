@@ -1,6 +1,6 @@
 ---
 name: dispatch-ticket
-description: "Dispatch one claimed ticket as a visible Herdr pane — one Builder, one worktree, one branch, one pane. Use when launching a Builder, a Shaper, QA or Rin into a pane. Pair with dispatch-ticket-claude, dispatch-ticket-codex or dispatch-ticket-opencode for the launcher."
+description: "Dispatch one claimed ticket as a visible Herdr pane — one Builder, one worktree, one branch, one pane. Use when launching a Builder, a Shaper or QA into a pane. Pair with dispatch-ticket-claude, dispatch-ticket-codex or dispatch-ticket-opencode for the launcher."
 ---
 
 # Dispatch a ticket — shared protocol
@@ -45,7 +45,7 @@ exists, so two sessions picking from the same frontier see each other's claims. 
 applies this to decision tickets; here it extends to build tickets, and it is the whole
 concurrency mechanism.
 
-**The Builder is the sole writer in its worktree.** Everyone else — Thomas, Rin, a reviewer,
+**The Builder is the sole writer in its worktree.** Everyone else — Thomas, QA, a reviewer,
 another Builder — reads. The branch and worktree are the real isolation boundary; Herdr is
 the visible control surface over it.
 
@@ -231,7 +231,7 @@ first worktree.
 
 **The commands below show a Builder dispatch. Substitute the tab/pane prefix for the role
 actually being dispatched** — tab `ticket:<id>`/pane `builder:<id>` for a Builder, but tab
-AND pane both `spec:<id>` for a Shaper, `qa:<id>` for QA, `rin:<id>` for Rin — per the table
+AND pane both `spec:<id>` for a Shaper and `qa:<id>` for QA, per the table
 right after them. This same skill dispatches a Shaper too (`thomas.md`: "same mechanics as
 any dispatch"). An invented prefix — `shaper:<id>` — is one the watchdog's
 `TITLE_PREFIXES` does not recognize, so that pane dispatches unmonitored, silently.
@@ -258,7 +258,7 @@ herdr pane rename <returned-root-pane-id> "builder:<ticket-id>"
 
 Both commands above carry a label, and **for a Builder the two DIFFER**: tab `ticket:<id>`,
 pane `builder:<id>`, exactly as written. `orchestrator.md` § Workspace identity is a **tab**
-table — it does not name pane labels. For a Shaper, QA and Rin the two coincide, and the
+table — it does not name pane labels. For a Shaper and QA the two coincide, and the
 substitution applies to BOTH commands, not the tab alone: a Shaper's pane is `spec:<id>`, never
 `shaper:<id>`. `builder:` and `ticket:` are both in the watchdog's `TITLE_PREFIXES`, so the
 Builder's two labels differing is safe; `shaper:` is not in it, which is the whole finding
@@ -347,6 +347,7 @@ the only record.
 ```text
 /mattpocock-skills:implement TICKET-123
 ADDRESSED TO: the Builder in pane <id>. A sub-agent that inherited this context: report only.
+QA: walk — the ticket changes the orders screen; cases: docs/qa/plan-<slug>.md § TICKET-123
 
 FLOW: 1 Skill(mattpocock-skills:tdd) → 2 Skill(mattpocock-skills:code-review) → 3 Skill(code-review)
   → 4 Skill(simplify) → 5 arm(ticket) — each a call; a skipped step is named with its reason.
@@ -394,8 +395,8 @@ change yourself and state the provenance on the marker.
 ### Submitting it
 
 **Who carries the brief depends on the root.** On a Claude root the mod carries it over
-`SendMessage` (`dispatch-ticket-claude`) for a Builder, Shaper or QA. The one exception is Rin's
-gate pane: `review-with-rin` delivers over `herdr agent prompt`, because a peer message to a
+`SendMessage` (`dispatch-ticket-claude`) for a Builder, Shaper or QA. The one exception is a QA
+gate pane: `GATE.md` delivers over `herdr agent prompt`, because a peer message to a
 session running under permissions is held for approval while the sender sees success. On
 **Codex and OpenCode** the brief goes over `herdr agent prompt`, below.
 
@@ -574,8 +575,8 @@ than the viewport comes back silently cut. **Truncation is detectable**: `tab cr
 the signal — compare the count rather than judging by eye.
 
 **Who writes the file follows the role.** An agent that may write (the Builder) writes into
-the worktree it owns and replies with the path. A READ-ONLY agent (Rin)
-returns its report and the DISPATCHER persists it — which keeps an artifact out of a
+the worktree it owns and replies with the path. A READ-ONLY agent (a QA gate)
+returns its report and the DISPATCHER persists it (`GATE.md` §3) — which keeps an artifact out of a
 disposable gate worktree that cleanup is about to delete (AST-031, AST-032).
 
 **herdr fails loudly, so its EXIT STATUS is trustworthy — it is the status FIELD that

@@ -27,7 +27,7 @@ from this table — read the entry.
 | `AST-012` | Two review rounds not stated as both-mandatory | promoted | 53 | ledger-rules.py |
 | `AST-013` | Ad-hoc build delegation; false tooling-gap assumed | superseded | 22 |   |
 | `AST-014` | Multi-slice rebuild needs a gated integration branch | promoted | 22 |   |
-| `AST-015` | Export step committed live secrets + buyer PII | promoted | 36 | review-with-rin |
+| `AST-015` | Export step committed live secrets + buyer PII | promoted | 36 |   |
 | `AST-016` | Agents sharing one checkout moved HEAD under each other | promoted | 39 | codex-claude-arm,dispatch-ticket |
 | `AST-017` | Per-package typecheck missed a cross-package break | promoted | 20 |   |
 | `AST-018` | Dispatch emitted as text, never executed; no liveness signal | promoted | 38 |   |
@@ -36,16 +36,16 @@ from this table — read the entry.
 | `AST-021` | Gate workflows blocked on owner presence | promoted | 31 |   |
 | `AST-022` | A filesystem-only tool was invisible to agents | promoted | 68 |   |
 | `AST-023` | "Main session builds directly" conflated two mechanisms | promoted | 34 |   |
-| `AST-024` | Role rule auto-loads into every session → role-bleed (Worker acted as Thomas) | promoted | 37 | builder.md,qa.md,rin.md,shaper.md,thomas.md |
+| `AST-024` | Role rule auto-loads into every session → role-bleed (Worker acted as Thomas) | promoted | 37 | builder.md,qa.md,shaper.md,thomas.md |
 | `AST-025` | Gate-able conventions parked in the always-on rule tier tax every loop | proposed | 157 |   |
 | `AST-026` | Named-persona harness: Thomas / Dan / Rin | promoted | 158 |   |
 | `AST-027` | TWO ROOT sessions shared the main checkout; one switched branches under the other | promoted | 176 | dispatch-ticket |
-| `AST-028` | Relative worktree path + unverified pane cwd → worktree born in the wrong place, hour-long mi… | promoted | 191 | dispatch-ticket,hook-git-guard.py,review-with-rin,selftest.sh |
+| `AST-028` | Relative worktree path + unverified pane cwd → worktree born in the wrong place, hour-long mi… | promoted | 191 | dispatch-ticket,hook-git-guard.py,selftest.sh |
 | `AST-029` | Slice finished but Dan tabs survived; `/clear` blurred context and checkout lifecycle | promoted | 212 |   |
-| `AST-030` | Orchestrator row named a runtime with no dispatch path for the role; Rin went undispatchable | promoted | 216 | dispatch-ticket,review-with-rin |
+| `AST-030` | Orchestrator row named a runtime with no dispatch path for the role; Rin went undispatchable | promoted | 217 | dispatch-ticket |
 | `AST-031` | A prose instruction telling an agent to suppress its tool's own default is not a boundary | promoted | 229 | dispatch-ticket |
-| `AST-032` | A signal that cannot fail is not evidence | promoted | 776 | WATCHING.md,codex-arm,dispatch-ticket,dispatch-ticket-claude,dispatch-ticket-opencode,docs-staleness-audit.sh,herdr-watch-terminal.sh,herdr-watchdog.sh,review-with-rin |
-| `AST-033` | A lookup whose question has no referent at one of its call sites | promoted | 265 | review-with-rin |
+| `AST-032` | A signal that cannot fail is not evidence | promoted | 776 | WATCHING.md,codex-arm,dispatch-ticket,dispatch-ticket-claude,dispatch-ticket-opencode,docs-staleness-audit.sh,herdr-watch-terminal.sh,herdr-watchdog.sh |
+| `AST-033` | A lookup whose question has no referent at one of its call sites | promoted | 266 |   |
 | `AST-034` | A mandatory rule that lives only in load-on-demand docs is skipped, and only the owner notices | promoted | 759 |   |
 | `AST-035` | `set -euo pipefail` plus a no-match `grep` aborts before its own guard | promoted | 273 |   |
 | `AST-036` | A git worktree carries TRACKED content only | promoted | 154 | builder-claude.md,dispatch-ticket,dispatch-ticket-claude,register.tsx |
@@ -55,9 +55,9 @@ from this table — read the entry.
 | `AST-040` | A placeholder that looks like a real id fails later than a missing one | promoted | 169 | selftest.sh |
 | `AST-041` | A file called "the owner's" that ships in the payload has two homes and the shipped one wins | promoted | 119 | dispatch-ticket-claude,orchestrator.md |
 | `AST-042` | Two skills answering to one name means the model-invoked path picks the wrong one | promoted | 126 | selftest.sh |
-| `AST-043` | A gate that requires an artifact no contract produces | promoted | 191 |   |
-| `AST-044` | Reading a diff cannot find a disagreement between two screens | promoted | 280 |   |
-| `AST-045` | A green test suite and a coherent product are different claims | promoted | 331 | check-reachability.sh,dispatch-qa-walk |
+| `AST-043` | A gate that requires an artifact no contract produces | promoted | 192 |   |
+| `AST-044` | Reading a diff cannot find a disagreement between two screens | promoted | 282 |   |
+| `AST-045` | A green test suite and a coherent product are different claims | promoted | 331 | check-reachability.sh |
 | `AST-046` | A block moved between documents keeps the old document's referents | promoted | 143 |   |
 | `AST-047` | "Local" is a deployment fact, not a data fact | promoted | 163 | check-reachability.sh |
 | `AST-048` | A rule not present where it must be remembered does not exist | promoted | 276 |   |
@@ -67,14 +67,14 @@ from this table — read the entry.
 | `AST-052` | The word-budget audit ran its loop zero times and reported all clean | promoted | 227 | docs-staleness-audit.sh |
 | `AST-053` | An axis read the run's verdict instead of its own, and went mute | promoted | 226 |   |
 | `AST-054` | `git add -A` committed two releases nobody ever applied | promoted | 146 | hook-git-guard.py |
-| `AST-055` | A gate that reads the subject cannot see which pass wrote it | promoted | 325 | builder-claude.md,builder-codex.md,builder-opencode.md,check-reachability.sh,register.tsx,rin-claude.md,rin-codex.md,rin-opencode.md,rin.md,shaper.md,thomas-claude.md |
-| `AST-056` | A blocking edge expresses order, not exclusion | promoted | 329 | dispatch-qa-walk,dispatch-ticket,thomas.md |
-| `AST-057` | A frontier that is only computed is invisible to the one person who cannot compute | promoted | 689 | check-reachability.sh,dispatch-qa-walk,dispatch-ticket-claude,hook-git-guard.py,pre-push-ticket-done.sh,reconcile-tracker,register.tsx,release-worktree-resources.sh,thomas.md,ticket-done.sh |
+| `AST-055` | A gate that reads the subject cannot see which pass wrote it | promoted | 326 | builder-claude.md,builder-codex.md,builder-opencode.md,check-reachability.sh,register.tsx,shaper.md,thomas-claude.md |
+| `AST-056` | A blocking edge expresses order, not exclusion | promoted | 329 | dispatch-ticket,thomas.md |
+| `AST-057` | A frontier that is only computed is invisible to the one person who cannot compute | promoted | 689 | check-reachability.sh,dispatch-ticket-claude,hook-git-guard.py,pre-push-ticket-done.sh,reconcile-tracker,register.tsx,release-worktree-resources.sh,thomas.md,ticket-done.sh |
 | `AST-058` | The check after the step reported clean when the step was impossible | promoted | 271 |   |
 | `AST-059` | The repo kept one self-check and lost the other to a directory it may ignore | promoted | 193 |   |
 | `AST-060` | Check 3 printed green about the skills it had not opened | promoted | 170 |   |
 | `AST-061` | The arm batched to phase end built a payload only skimming could finish | promoted | 219 |   |
-| `AST-062` | A second pass left to judgement is a second pass that does not run | promoted | 206 |   |
+| `AST-062` | A second pass left to judgement is a second pass that does not run | promoted | 207 |   |
 | `AST-063` | A gate with no window in the sequence never fires, and nobody forgets it | promoted | 203 |   |
 | `AST-064` | The one always-on file no release can repair had no budget | promoted | 192 |   |
 | `AST-065` | Two reviewers sharing one name, each in the other's contract | promoted | 189 |   |
@@ -107,12 +107,12 @@ from this table — read the entry.
 | `AST-093` | A fix landing in .agents/skills/ but not .claude/skills/ is unreachable on the runtime that l… | promoted | 186 |   |
 | `AST-094` | Builder commits and pushes correctly but silently skips the simplify pass | promoted | 426 | CLEANUP.md,MARKERS.md,builder.md,check-simplify-markers.sh |
 | `AST-095` | The cross-vendor companion exits 0 on configuration failure and caches state that survives a… | promoted | 335 | codex-arm |
-| `AST-096` | rm -rf on a worktree directory leaves git's registration behind; the next add at that path re… | promoted | 296 | CLEANUP.md,codex-arm,dispatch-ticket,hook-git-guard.py,review-with-rin,thomas.md |
+| `AST-096` | rm -rf on a worktree directory leaves git's registration behind; the next add at that path re… | promoted | 297 | CLEANUP.md,codex-arm,dispatch-ticket,hook-git-guard.py,thomas.md |
 | `AST-097` | TERMINAL:done means the turn ended, not that the work finished | promoted | 831 | builder-claude.md,dispatch-ticket,dispatch-ticket-claude,dispatch-ticket-opencode,hook-git-guard.py,register.tsx |
 | `AST-098` | Fork sub-agents return the coordinator's own narration instead of doing their assigned task | promoted | 385 | builder-claude.md |
 | `AST-099` | Simplify marker exists without skill provenance — the subject is self-applied, only the Pass:… | promoted | 685 | CLEANUP.md,check-simplify-markers.sh |
-| `AST-100` | Codex companion broker leaks one process per arm pass, accumulating silently | promoted | 201 | CLEANUP.md,codex-arm,dispatch-qa-walk,hook-git-guard.py,register.tsx,release-worktree-resources.sh |
-| `AST-101` | Gate worktree removal leaks database containers, not just broker processes | promoted | 182 | CLEANUP.md,dispatch-qa-walk,hook-git-guard.py,register.tsx,release-worktree-resources.sh |
+| `AST-100` | Codex companion broker leaks one process per arm pass, accumulating silently | promoted | 201 | CLEANUP.md,codex-arm,hook-git-guard.py,register.tsx,release-worktree-resources.sh |
+| `AST-101` | Gate worktree removal leaks database containers, not just broker processes | promoted | 182 | CLEANUP.md,hook-git-guard.py,register.tsx,release-worktree-resources.sh |
 | `AST-102` | WorktreeRemove hook does not fire, but documentation declares manual cleanup redundant | promoted | 418 | hook-git-guard.py,register.tsx |
 | `AST-103` | Cross-vendor arm silently reviews a zero-commit range and returns clean | promoted | 206 | codex-arm |
 | `AST-104` | herdr agent start rejects uppercase in agent names, but dispatch convention generates them | promoted | 87 |   |
@@ -126,14 +126,14 @@ from this table — read the entry.
 | `AST-112` | SendMessage is not a user turn, so the brief's slash command never fires | promoted | 443 | dispatch-ticket-claude,register.tsx,shaper.md |
 | `AST-113` | An audit that always screams is an audit nobody reads | promoted | 290 | docs-staleness-audit.sh |
 | `AST-114` | Splitting submission into two steps left the watch armed against the wrong one | promoted | 207 |   |
-| `AST-115` | Two correct changes composed into a live one, and the repair is what armed it | promoted | 447 | CLEANUP.md,codex-arm,dispatch-qa-walk,dispatch-ticket-claude,hook-git-guard.py,register.tsx,release-worktree-resources.sh |
+| `AST-115` | Two correct changes composed into a live one, and the repair is what armed it | promoted | 447 | CLEANUP.md,codex-arm,dispatch-ticket-claude,hook-git-guard.py,register.tsx,release-worktree-resources.sh |
 | `AST-116` | A local fix that never goes upstream is a defect every fresh install re-buys | promoted | 335 | check-reachability.sh,docs-staleness-audit.sh |
 | `AST-117` | A worktree isolates git, not a tool that writes to a fixed path | promoted | 329 |   |
 | `AST-118` | A fallback that changes what the verdict MEANS, while keeping the same exit code | promoted | 373 | check-reachability.sh |
 | `AST-119` | A fork inside a Builder can message the dispatcher, and nothing marks it as not the Builder | promoted | 677 | builder-claude.md,hook-git-guard.py,thomas.md |
 | `AST-120` | A verification that fired twice on immutable input and disagreed with itself, cause unknown | promoted | 520 |   |
 | `AST-121` | The check had no vocabulary for being obeyed, so honesty registered as failure | promoted | 463 | CLEANUP.md,MARKERS.md |
-| `AST-122` | Existence is not relationship: a verified pointer that proves nothing about what it points at | promoted | 481 | CLEANUP.md,MARKERS.md,builder.md,check-payload-drift.sh,check-simplify-markers.sh,rin.md |
+| `AST-122` | Existence is not relationship: a verified pointer that proves nothing about what it points at | promoted | 481 | CLEANUP.md,MARKERS.md,builder.md,check-payload-drift.sh,check-simplify-markers.sh |
 | `AST-123` | The scaffold accumulated the identity of whoever last measured a lesson | promoted | 341 | docs-staleness-audit.sh,reap-worktree-processes.sh |
 | `AST-124` | The watcher covers one turn; the protocol never said who covers the next one | promoted | 512 | dispatch-ticket,thomas.md |
 | `AST-125` | The alert for the failure existed, and was suppressed by the state that defines the failure | promoted | 396 | herdr-watchdog.sh |
@@ -144,9 +144,9 @@ from this table — read the entry.
 | `AST-130` | A report-only fork forged a verification marker using a TRUE excuse | promoted | 427 | builder-claude.md,check-simplify-markers.sh,register.tsx |
 | `AST-131` | The queue drained and nothing asked whether a slot was free | promoted | 344 | thomas.md |
 | `AST-132` | Two owners for one path, and neither can see the other | promoted | 307 | check-payload-drift.sh,check-reachability.sh,thomas.md |
-| `AST-133` | `--grep` is not a subject matcher, and it failed in both directions on the same day | promoted | 400 | CLEANUP.md,thomas.md,ticket-done.sh |
+| `AST-133` | `--grep` is not a subject matcher, and it failed in both directions on the same day | promoted | 401 | CLEANUP.md,thomas.md,ticket-done.sh |
 | `AST-134` | After the fold, "the gate read this tree" is structurally false and the protocol had no way t… | promoted | 238 | MARKERS.md,check-simplify-markers.sh |
-| `AST-135` | The verifier's queue was invisible to itself, and the fire point had to follow the artifact | promoted | 363 | dispatch-qa-walk,thomas.md |
+| `AST-135` | The verifier's queue was invisible to itself, and the fire point had to follow the artifact | promoted | 364 | thomas.md |
 | `AST-136` | `--grep` is BASIC regex, and every marker kind in this system contains parentheses | promoted | 287 | check-simplify-markers.sh,selftest.sh |
 | `AST-137` | Every defect a live project found lived between a tested invocation and a real one | promoted | 418 | selftest.sh |
 | `AST-138` | A rule reaches every runtime or it reaches one, and nothing in the package asked which | promoted | 485 | check-reachability.sh,hook-git-guard.py,hook-tracker-status.py |
@@ -164,7 +164,7 @@ from this table — read the entry.
 | `AST-150` | The launcher the shared protocol asks for cannot encode the identity the runtime needs | promoted | 258 |   |
 | `AST-151` | An empty cell read as "the default" was refused at bootstrap | promoted | 182 | selftest.sh |
 | `AST-152` | Each watchdog alert was scoped by the wrong subject, so one busy pane hid the rest | promoted | 251 | WATCHING.md,herdr-watchdog.sh |
-| `AST-153` | A transport that can hold a message returned success, and the sender had no other evidence | promoted | 188 | review-with-rin |
+| `AST-153` | A transport that can hold a message returned success, and the sender had no other evidence | promoted | 189 |   |
 | `AST-154` | The obvious retry for an unsent brief fused it with the next one and reported success | promoted | 133 | dispatch-ticket |
 | `AST-155` | The teardown removed what it started and kept what it built | promoted | 247 | CLEANUP.md,release-worktree-resources.sh,selftest.sh |
 | `AST-156` | Three dispatch steps had no lock, and the same agent skipped two of them on the same day | promoted | 369 |   |

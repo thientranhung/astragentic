@@ -63,10 +63,9 @@ echo "MACHINE (required):"
 HAVE_CLAUDE=0; command -v claude >/dev/null 2>&1 && HAVE_CLAUDE=1
 HAVE_CODEX=0;  command -v codex  >/dev/null 2>&1 && HAVE_CODEX=1
 
-# 1. Claude Code CLI. Rin's milestone gate runs as a Herdr pane on the root provider's
-# runtime, and no Codex or opencode adapter can host it, so a missing Claude means the
-# machine cannot gate at all — a MISS rather than a warning. Codex remains the
-# cross-vendor arm, which Thomas fires at phase end.
+# 1. Claude Code CLI. QA's gate runs as a Herdr pane on the root provider's runtime, and no
+# Codex or opencode adapter hosts the dispatch mod, so a missing Claude means the machine
+# cannot gate at all — a MISS rather than a warning. Codex remains the cross-vendor arm.
 if [ "$HAVE_CLAUDE" -eq 1 ]; then
   ok "claude CLI ($(command -v claude))"
   # The dispatch mod is what records, briefs and watches every Claude pane; there is no watcher
@@ -82,7 +81,7 @@ if [ "$HAVE_CLAUDE" -eq 1 ]; then
   fi
 elif [ "$HAVE_CODEX" -eq 1 ]; then
   miss "claude CLI not on PATH — the milestone gate cannot run" \
-    "install Claude Code: https://claude.com/claude-code. Rin has no fallback row by design (AST-030): with no Claude the answer is STOP and ask the owner, and Codex stays the cross-vendor arm"
+    "install Claude Code: https://claude.com/claude-code. With no Claude the answer is STOP and ask the owner, and Codex stays the cross-vendor arm"
 else
   miss "no runtime CLI on PATH (need claude or codex)" \
     "install Claude Code (https://claude.com/claude-code) and/or the OpenAI Codex CLI"
@@ -295,12 +294,10 @@ orchestrator_codex_row() {
 
 # A role with NO codex row never runs on Codex, so it needs no instruction file and warning
 # about one is noise the owner cannot act on. Absence is how this table already says "not this
-# runtime" — `rin` has said it since 1.0.0 — so read it the same way here. `rin` stays in the
-# loop because its file is the pane launcher for the day that trade is revisited; its write
-# posture is UNVERIFIED and would need measuring before anyone relies on it.
-for ROLE in thomas shaper builder rin qa; do
+# runtime", so read it the same way here.
+for ROLE in thomas shaper builder qa; do
   ROW="$(orchestrator_codex_row "$ROLE" 2>/dev/null || true)"
-  if [ "$ROLE" != "rin" ] && [ -n "$ORCH" ] && [ -z "$ROW" ]; then
+  if [ -n "$ORCH" ] && [ -z "$ROW" ]; then
     ok "Codex ${ROLE}: no codex row — this role does not run on Codex"
     continue
   fi
@@ -568,7 +565,7 @@ PYEOF
 
     # Project custom agents are not launcher profiles. These two request read-only mode and
     # forbid writes in their instructions; parent live permission overrides can still win,
-    # so they must never become an alternate path for a Builder or Rin gate.
+    # so they must never become an alternate path for a Builder or a QA gate.
     CODEX_AGENTS_REG=$(python3 - "$TARGET" <<'PYEOF'
 import os, sys
 try:

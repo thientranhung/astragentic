@@ -1,6 +1,6 @@
 ---
 name: codex-arm
-description: Invocation mechanics for the cross-vendor arm on a Claude root — the Codex pass Thomas fires over a completed artifact. Covers the runtime invocation, argv and quoting gotchas, intent-loaded focus text, failover, and where the outcome is recorded. The BUILDER fires the ticket arm from its own worktree; Thomas fires spec and slice from the base checkout. Never Rin. Cadence lives in thomas.md and builder.md.
+description: Invocation mechanics for the cross-vendor arm on a Claude root — the Codex pass fired over a completed artifact. Covers the runtime invocation, argv and quoting gotchas, intent-loaded focus text, failover, and where the outcome is recorded. The BUILDER fires the ticket arm from its own worktree, the SHAPER fires the spec arm, and Thomas fires the slice arm from the base checkout. Cadence lives in thomas.md and builder.md.
 ---
 
 # The cross-vendor arm on a Claude root
@@ -9,14 +9,13 @@ description: Invocation mechanics for the cross-vendor arm on a Claude root — 
 passes **per gate invocation**. Do not restate the cadence in this file; this skill owns the HOW.
 `codex-claude-arm` is the mirror for a Codex root.
 
-**Who fires it depends on the scope**, and it is never Rin — Rin is dispatched per gate and would
-otherwise fire the arm from inside its own review.
+**Who fires it depends on the scope**: the one who owns the artifact at that scope.
 
 | Scope | Fired by | Standing in |
 |---|---|---|
-| `arm: spec` | Thomas | the base checkout |
+| `arm: spec` | **the Shaper**, before it cuts tickets | a detached checkout at the spec commit |
 | `arm: ticket` | **the Builder**, inside its own closed loop | its own worktree, which holds the reviewed commits |
-| `arm: slice` | Thomas | the base checkout |
+| `arm: slice` | Thomas | a detached checkout at the slice head |
 
 Whoever fires it records which vendor actually ran.
 
@@ -45,7 +44,7 @@ mkdir -p "$(dirname "$OUT")"
 ```
 
 `<artifact-worktree>` is the worktree whose branch carries the artifact: the ticket worktree at
-ticket scope, the base checkout at spec and slice. **Never the gate worktree** — it is removed,
+ticket scope, the base checkout at slice, the Shaper's worktree at spec. **Never the gate worktree** — it is removed,
 and the log goes with it. Use a `.md` extension and check `git check-ignore -v "$OUT"`: a
 project's ignore rules often track `.md` under `.scratch/` and drop `.log`. Print the range
 header and run the review in ONE brace group piped to `tee`, so the header cannot be skipped and
@@ -122,7 +121,7 @@ FILE_COUNT=$(git diff --name-only <base>...HEAD | wc -l | tr -d ' ')
 echo "arm range: $COMMIT_COUNT commits, $FILE_COUNT files changed (<base>..HEAD)"
 ```
 
-#### At SPEC and SLICE scope — Thomas fires from the base checkout
+#### At SPEC and SLICE scope — fired from a detached checkout (the Shaper at spec, Thomas at slice)
 
 Here the two can disagree, so resolve the head yourself and review from a detached checkout at
 that SHA:
@@ -235,10 +234,10 @@ instruction to attack the diff AGAINST THAT INTENT.
 
 ## Failover and recording
 
-Codex unavailable or out of quota → **the arm DID NOT RUN.** Rin's own fresh-context lens is
+Codex unavailable or out of quota → **the arm DID NOT RUN.** A same-vendor lens is
 advisory and never completes it: record `cross-vendor arm: NOT RUN — <reason>`, and only the
-OWNER may accept proceeding without it, on the terms `rin.md` sets for the artifact under
-review — they are not the same at spec, ticket and slice. Single-provider mode is legal. A
+OWNER may accept proceeding without it, on the terms `thomas.md` sets for the artifact under
+review. Single-provider mode is legal. A
 same-vendor
 lens silently counted as the arm is the thing this rule exists to prevent, so the recorded
 vendor is always the one that actually ran.
@@ -248,6 +247,6 @@ shape and what its `Tests:` field attests are in `dispatch-ticket/MARKERS.md`, a
 restated here. At spec and slice scope the merge decision trail carries the date, the verdict,
 the per-finding resolution, the vendor that ran, and a `Tests:` line read the same way.
 **You classify which findings
-are real** — the arm advises. Where pass 1 returned a blocking finding, **run pass 2 under the rule in `rin.md`** —
+are real** — the arm advises. Where pass 1 returned a blocking finding, **run pass 2 under the rule in `thomas.md`** (§The cross-vendor arm) —
 that contract owns when it is required and what it must cover, and this file does not restate
 it in weaker words. Escalate to the owner on a genuine fork.

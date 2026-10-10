@@ -413,7 +413,7 @@ state_dir = "'"$STATE_DIR"'"
 # Two independent signals can name a dispatched pane, checked in order.
 #
 # The herdr AGENT NAME, set once at `herdr agent start "<role>-<id>"`
-# (dispatch-ticket-<runtime>, review-with-rin) and never touched again by
+# (dispatch-ticket-<runtime>, dispatch-ticket/GATE.md) and never touched again by
 # anything the harness controls, is the primary signal. `terminal_title` /
 # `terminal_title_stripped`, set by `herdr pane rename "<role>:<id>"`, is a
 # fallback only — measured directly on a real, running dispatch: a
@@ -427,13 +427,13 @@ state_dir = "'"$STATE_DIR"'"
 # guard that cannot fail (the AST-072 class, one level up: a coordination
 # primitive trusted at launch time and never re-checked for whether the
 # runtime it targets still lets it be seen).
-AGENT_NAME_PREFIXES = ("builder-", "shaper-", "qa-", "rin-")
+AGENT_NAME_PREFIXES = ("builder-", "shaper-", "qa-")
 # "ticket:", "spec:" and "qa:" are the TAB label convention in
 # orchestrator.md, kept in the title fallback so a pane a dispatcher
 # renamed to match a tab label is still recognized without a further
 # change here. Anything else — including an owner tab created by hand —
 # is never treated as a dispatched pane.
-TITLE_PREFIXES = ("builder:", "ticket:", "spec:", "qa:", "rin:")
+TITLE_PREFIXES = ("builder:", "ticket:", "spec:", "qa:")
 
 def is_dispatched(agent_name, title):
     if agent_name and any(agent_name.startswith(p) for p in AGENT_NAME_PREFIXES):

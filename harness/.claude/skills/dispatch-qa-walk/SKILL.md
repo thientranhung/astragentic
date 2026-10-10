@@ -1,147 +1,172 @@
 ---
 name: dispatch-qa-walk
-description: Thomas-only recipe to dispatch QA's product walk — the gate that uses the running system instead of reading the diff. Arrange an app at the reviewed SHA in its own worktree, pack the plan inputs (persona, data state, surfaces including unchanged ones, contracts, journeys, the previous verified-clean list), collect the report, then stop the app. Use before a PR, a merge or a release.
+description: Thomas-only recipe to dispatch QA, the gate that uses the running system instead of reading the diff. Pick the mode from the ticket's surface (walk for UI, probe for API, verify for a job), arrange the target at the reviewed SHA in its own worktree, pack the plan and the brief, collect the trace report and commit it, then stop what you started. Use at your station before a PR, a merge or a release.
 ---
 
-# Dispatch a QA product walk
+# Dispatch QA: walk, probe or verify
 
-Role contract: `.agents/roles/qa.md`. The gate-file setup, the pane form and the collection
-checks are identical to `review-with-rin` §2–3 and are **not restated here** — that skill is
-their one home. This skill owns only what a walk needs and the other gates do not.
+Role contract: `.agents/roles/qa.md`. The gate worktree, the pane, the brief's common fields and
+the collection checks are in `dispatch-ticket/GATE.md` and are **not restated here**. That file is
+their one home. This skill owns what a QA run needs and the other gates do not.
 
-## When it fires — count, do not judge
+## When it fires: count, do not judge
 
 **Before a PR, a merge or a release**, on anything with a user-visible surface or a public
-endpoint. That is a judgement about your own workload, and a gate that fires on a judgement
-starves exactly as one that fires on a sentence does. It has been measured three times, on
-three designs: a browser walker shipped across releases and **never ran once** (AST-045,
-AST-057), and nine fold rounds with one merge in half a day where **QA was never dispatched at
-all** (AST-135).
+endpoint. Whether a change touched a surface is a judgement about your own workload, and a gate
+that fires on a judgement starves. Measured three times on three designs: a browser walker that
+shipped across releases and never ran once, and nine fold rounds in half a day with one merge in
+which QA was never dispatched at all.
 
-So carry the same counter Rin's gate carries: **more than 10 merges touching a user-visible
-surface since the last walk is a STOP** — dispatch the walk, or write down why not. `none
-touched a surface` is a valid answer; not having counted is not.
+So carry a counter. **More than 10 merges touching a user-visible surface or a public endpoint
+since the last run is a STOP.** Dispatch QA, or write down why not. "None touched a surface" is a
+valid answer. Not having counted is not.
+
+A project with no user-visible surface, no public endpoint and no job or pipeline anyone
+depends on skips, and says so. A jobs-only product is not that project: it gets `verify`.
+
+## Pick the mode from the ticket's surface
+
+One plan, three modes. Read the surface from the plan, not from the diff's file names.
+
+| The ticket changes | Mode | QA does |
+|---|---|---|
+| screens, journeys, links | walk | uses the UI as the user: journeys, numbers across screens, deeplinks, end-of-journey links |
+| an endpoint or a service contract | probe | calls the API: contract, status codes, error and denied paths, data after the call |
+| a job, a pipeline or data movement | verify | checks the job ran, data landed, logs are clean, numbers match the source |
+
+A batch can need several. Dispatch one run per mode that applies, each with its own report. **One
+run covers a batch**: when several tickets land together toward one PR or release, dispatch at the
+batch head SHA rather than one per merge, and scope the brief to the union of their surfaces.
 
 ## The sequence
 
-1. **Create the gate worktree** at the reviewed SHA — never the Builder's checkout. The
-   command is `review-with-rin` §2, which names it `gate-<artifact-key>`; this skill used to
-   call it `gate-walk-…`, and the skill that owns the command wins.
-2. **Start the app there** with the project's own command.
-3. **Pack the brief** — `review-with-rin` §1 plus the five below.
-4. **Dispatch as a gate pane** and collect the report — mechanics are `review-with-rin` §2–3.
-5. **Stop the app and confirm the port is free**, then remove the worktree.
+1. **Create the gate worktree** at the reviewed SHA, never the Builder's checkout. The command is
+   in `dispatch-ticket/GATE.md` §2.
+2. **Start the target there**, for `walk` and `probe` only. Use the project's own command from its
+   entry doc. A repo with none cannot be run, and that is a finding for the owner, not a reason to
+   approximate one.
+3. **Pack the brief**: `dispatch-ticket/GATE.md` §1 plus the fields below.
+4. **Dispatch as a gate pane** and collect the report: `dispatch-ticket/GATE.md` §2 and §3.
+5. **Commit the report and the marker**, then **stop what you started** and confirm the port is
+   free.
 
-Step 5 is the one this gate adds; a surviving dev server binds a port the next walk needs.
+## The brief
 
-## The running app
+- **The plan path**, `docs/qa/plan-<slug>.md`, and the items of it this run covers. The plan is
+  the oracle. Where there is none, say so and QA derives the journeys from the source at lower
+  confidence.
+- **The mode**: walk, probe or verify.
+- **The depth**: incremental by default before a PR or a merge, full at a release or a slice
+  close. `qa.md` owns what each covers.
+- **Persona and data state.** Who QA acts as, and what the data looks like. A run on empty data
+  and a run on realistic volume find different defects, so a verdict only reads against the state
+  that produced it. Name the seed command. A stale seed once produced a 500 that read as a code
+  bug and was an environment artifact with a real production implication behind it.
+- **Surfaces in scope**: what this work changed, **plus every surface showing the same concept**.
+  Naming only the changed ones guarantees QA cannot find the class of defect it exists to find.
+- **Journeys, endpoints or jobs**, from the plan, and what correct means for each.
+- **The reference material**: the design guidelines for `walk`, the API description for `probe`,
+  the job definition and the source of truth for `verify`. Without a reference a finding is an
+  observation rather than a violation.
+- **The previous verified-clean list**, its contents packed into the brief from
+  `.astraler/state/qa-verified-clean.md` in the base checkout. Where there is none, say so and QA
+  runs full.
+- **Consent, and every authorized mutation, named exactly.** `qa.md` calls consent a required
+  dispatch field, and this list is where it becomes one. Without it QA declines and records a
+  COVERAGE GAP, and a declined run looks clean to everything downstream.
+- **Two absolute paths outside every checkout**: `$GATE_FILE` and `$VERIFIED_CLEAN_FILE`. The
+  committed report path (Collection, below) is inside the repo; you copy `$GATE_FILE` into it. Derive `$VERIFIED_CLEAN_FILE` from the same per-dispatch token
+  as `$GATE_FILE`, and verify it does not already exist. A reused path lets a run that never wrote
+  its list pass a `test -s` on the previous run's file.
 
-The other two modes read a detached worktree. A walk needs the product **running** at the
-reviewed SHA, which makes it the only gate with an environment to arrange.
+## The running target
 
-**Not the Builder's checkout.** Independence is the same rule as always, and a running app
-writes caches, logs and local state — sharing the author's tree would corrupt what is being
-judged. Create `gate-walk-<artifact-key>` at the reviewed SHA and start the app there with
-the project's own command. The project's entry doc records that command as the rendering
-path; where a repo has none, a walk cannot run and that is a finding for the owner, not a
-reason to approximate one.
+`walk` and `probe` need the product running at the reviewed SHA, which makes them the only gates
+with an environment to arrange. It runs in the gate worktree because a running app writes caches,
+logs and local state, and sharing the author's tree would corrupt what is being judged.
 
-**One walk covers a batch.** When several tickets land together toward one PR or one
-release, dispatch one walk at the batch head SHA rather than one per merge — the verdict is
-valid for the SHA it walked, and that SHA carries every ticket in the batch. Scope the brief
-to the union of their surfaces.
+`verify` starts nothing. It reads the environment the job ran in: the run record, the target
+store, the logs, the source. It needs the worktree only for the job definition.
 
-The brief carries §1's contents plus five more:
+## Collection
 
-- **The walk depth** — incremental (the default, before a PR or a merge) or full (at a
-  release or a slice close). `qa.md` § Two walk depths owns what each covers.
-
-- **Persona and data state.** Who QA acts as, and what the data looks like. A walk on empty
-  data and a walk on realistic volume find different defects, so the verdict is only
-  interpretable against the state that produced it. Where the repo has a seed command, name
-  it — a stale seed once produced a 500 that read as a code bug and was an environment
-  artifact, with a real production implication hiding behind it.
-- **Surfaces in scope.** What this work changed, **plus every surface showing the same
-  concept.** Naming only the changed ones guarantees the walk cannot find the class of defect
-  it exists to find.
-- **The design guidelines**, by path. Without them a finding is an observation rather than a
-  violation, and QA will say so.
-- **`$VERIFIED_CLEAN_FILE`** — an absolute path outside every checkout, for this walk's
-  output, alongside `$GATE_FILE`. QA's cwd is the gate worktree you force-remove at cleanup,
-  so a relative path writes the one artifact that is supposed to compound into the thing about
-  to be deleted. **Derive it from the same per-dispatch token `$GATE_FILE` uses, and verify it
-  does not already exist before you dispatch** — a reused path lets a walk that never wrote
-  its list pass a `test -s` on the previous walk's file and overwrite durable coverage with
-  stale coverage. Same reasoning as the gate file's uniqueness, same failure if skipped.
-- **The previous walk's verified-clean list**, its contents packed into the brief from
-  `.astraler/state/qa-verified-clean.md` in the BASE checkout. Where there is none, say so —
-  QA runs full rather than guessing what was covered.
-- **Browser consent, and every authorized mutation, named exactly.** `qa.md` calls this a
-  required dispatch field and this list is where it becomes one: a rule a careful operator
-  forgets within the hour needs a slot that blocks the launch, not a sentence elsewhere
-  (AST-056). Without it QA declines and records a COVERAGE GAP, and a declined walk is
-  indistinguishable from a clean one to everything downstream.
-
-Findings route as every gate's do (`thomas.md` §Review): QA advises, **you classify**, the Builder fixes,
-and a design-level blocker goes to the owner through `to-questionnaire`. A walk finding that
-is a *product* decision — two labels that disagree because the concepts genuinely differ — is
-the owner's, not a bug to assign.
-
-## 4. Write `.astraler/state/gate-history/walk-<artifact-key>-<short-sha>.md`
-
-The walk report, copied out of `$GATE_FILE` by `review-with-rin` §3 before any cleanup. Same
-archive as every other gate's, so "why did we merge this SHA" has one place to look. **You read
-it** — the findings become your work orders and the COVERAGE GAPS section tells you what the
-walk did not cover, which is the half a green verdict hides.
-
-**The verified-clean list is written separately**, by QA, to `$VERIFIED_CLEAN_FILE`. **Collect
-it before cleanup**, in the same breath as the report — it is the only artifact of a walk that
-compounds, and the gate worktree it was written beside is about to be removed:
+**The report path.** Resolve it before dispatch. A project may redirect it with the plug
+`.astraler/project/qa-report-path.sh <key> <sha> <mode>`, which prints one path. Absent the plug,
+the path is `.scratch/qa/<key>-<mode>-<sha>.md`: a walk and a probe on one SHA are two reports. It must be inside the repo and not gitignored:
+`git check-ignore` on it must print nothing. Measured: an adopter's reports lived under the system
+temp folder and were gone after a reboot.
 
 ```bash
-# before dispatch — the path must be unique and must NOT already exist
-VERIFIED_CLEAN_FILE="/tmp/qa-verified-clean-<artifact-key>-<short-sha>.md"
-[ -e "$VERIFIED_CLEAN_FILE" ] && { echo "STOP: $VERIFIED_CLEAN_FILE exists — a previous walk's
-  list, or a concurrent walk on the same SHA; take it to the owner"; exit 1; }
+KEY="<artifact-key>"; SHA="<reviewed-sha>"
+if [ -x .astraler/project/qa-report-path.sh ]; then
+  REPORT="$(.astraler/project/qa-report-path.sh "$KEY" "$SHA")"
+else
+  REPORT=".scratch/qa/$KEY-$SHA.md"
+fi
+test -n "$REPORT"
+! git check-ignore -q "$REPORT"
+```
 
-# after the pane reports, BEFORE cleanup — all fail-closed
+**After the pane reports, before any cleanup:**
+
+1. Collect `$GATE_FILE` as `dispatch-ticket/GATE.md` §3 says: non-empty, copied, source removed.
+2. Copy it to `$REPORT` in the base checkout and commit it alone. That commit changes nothing
+   else, so the tree QA walked is intact beneath it.
+3. **Read the trace matrix.** Plan item, coverage (covered, partial or none), result. Then the
+   verdict: PASS, CONCERNS or FAIL. Then COVERAGE GAPS, which tell you what the run did not
+   cover, the half a green verdict hides. Findings become your work orders.
+4. **Commit the marker**, an empty commit after the report:
+
+```
+qa(walk): <artifact-key> — <verdict>
+
+Mode: walk|probe|verify
+Scope: <what was in scope>
+Verdict: PASS|CONCERNS|FAIL
+Report: <the committed report path>
+```
+
+One marker kind covers all three modes. The `Mode:` line names which one. A run that leaves only
+a report file leaves nothing the merge gate can count.
+
+**The verified-clean list is collected in the same breath.** It is the one artifact of a run that
+compounds, and the worktree it was written beside is about to be removed. It is headed by its SHA
+and rebuilt at every full run.
+
+```bash
 set -euo pipefail
-test -s "$VERIFIED_CLEAN_FILE"                       # this walk wrote it, not a previous one
+test -s "$VERIFIED_CLEAN_FILE"                       # this run wrote it, not a previous one
 DEST="$(git rev-parse --show-toplevel)/.astraler/state/qa-verified-clean.md"
 mkdir -p "$(dirname "$DEST")"
 cp "$VERIFIED_CLEAN_FILE" "$DEST"
 test -s "$DEST"                                      # MUST pass before cleanup
-rm -f "$VERIFIED_CLEAN_FILE"                         # only this dispatch's unique source
+rm -f "$VERIFIED_CLEAN_FILE"
 ```
 
-A walk whose list did not land is a walk whose next incremental run silently re-covers
-everything, or skips on coverage it cannot prove.
+Findings route as every gate's do: QA advises, **you classify**, the Builder fixes, and a
+design-level blocker goes to the owner through `to-questionnaire`. A finding that is a product
+decision, two labels that disagree because the concepts differ, is the owner's, not a bug to
+assign.
 
-## 5. Cleanup — ordered, and different from every other gate's
+## Cleanup: ordered, and different from the read-only gates
 
-A walk is the most resource-bearing operation in the harness: it starts an app. `review-with-rin`
-removes its worktree with a plain `git worktree remove` and explains why that succeeds — *"Rin
-writes nothing inside the gate worktree"*. **That reasoning does not transfer.** A running app
-writes caches, logs and local state, so the plain form refuses on untracked files, and the
-refusal is this gate's NORMAL outcome rather than a signal.
-
-Order matters, and the reason is that a resource bound to the directory — by cwd, or by a name
-derived from the path — cannot be matched once the directory is gone (AST-100, AST-101):
+A run that starts an app is the most resource-bearing operation in the harness. The plain
+`git worktree remove` in `dispatch-ticket/GATE.md` §4 refuses on untracked files, and for this gate
+that refusal is the normal outcome. Order matters, because a resource bound to the directory by
+cwd, or by a name derived from the path, cannot be matched once the directory is gone:
 
 ```bash
-kill "$APP_PID"                                     # the pid you captured at step 2
-lsof -ti :"$APP_PORT" | xargs -r kill               # confirm the port is actually free
+[ -n "${APP_PID:-}" ] && kill "$APP_PID"             # the pid you captured at step 2; verify starts nothing
+[ -n "${APP_PORT:-}" ] && { lsof -ti :"$APP_PORT" | xargs -r kill; }   # confirm the port is actually free
 scripts/release-worktree-resources.sh "$GATE_WORKTREE"  # processes, then the project's own plug
 git worktree remove --force "$GATE_WORKTREE"        # --force: the app dirtied the tree
 git worktree prune
 ```
 
 **The project's plug must scope to this worktree, never to a project-level target.** One
-scoped-looking teardown target stopped the shared test container every live Builder was standing
-on (AST-115). Release what this worktree allocated, or release nothing.
+scoped-looking teardown target once stopped the shared test container every live Builder was
+standing on. Release what this worktree allocated, or release nothing.
 
-On a Claude root `scripts/hook-git-guard.py` **refuses the removal while the broker or the
-containers are still up** — it does not stop them for you, because a `PreToolUse` hook acting
-would be a side effect of a command that has not been permitted yet. The block above is the
-contract on every runtime; the hook only declines to let you skip it.
-
+On a Claude root the git-guard hook refuses the removal while the broker or its containers are
+still up. It does not stop them for you. The block above is the contract on every runtime. The
+hook only declines to let you skip it.

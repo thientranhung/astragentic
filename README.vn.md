@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-2.22.2-blue" alt="version"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-3.0.0-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
   <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-157_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/vi/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
@@ -42,13 +42,13 @@ nhau, review xong trong một vòng, và artifact chứng minh được điều 
 # 1. Đứng ở gốc project, stage bản mới nhất (không ghi file nào của project)
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
-#    …hoặc ghim một bản:  | bash -s -- 2.22.2
+#    …hoặc ghim một bản:  | bash -s -- 3.0.0
 
 # 2. Kiểm máy đã đủ thứ cần chưa
-bash .astraler/releases/2.22.2/check-requirements.sh
+bash .astraler/releases/3.0.0/check-requirements.sh
 
 # 3. Chạy bộ cài thích nghi trong Claude Code
-claude "Read .astraler/releases/2.22.2/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/3.0.0/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Mở router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium
@@ -96,26 +96,26 @@ nhất theo token.
 
 ## Nó hoạt động thế nào
 
-### Năm role, ranh giới rõ
+### Bốn role, ranh giới rõ
 
 | Role | Session | Làm gì |
 |---|---|---|
-| **Thomas** | thường trực | Điều phối, giữ frontier, dispatch ticket, chạy arm chéo hãng |
+| **Thomas** | thường trực | Điều phối, giữ frontier, dispatch ticket, chạy gate slice |
 | **Shaper** | một session liền mạch | Grill yêu cầu, viết spec, cắt ticket — khi cả bức tranh còn trong context |
 | **Builder** | một session mỗi ticket | Thi công trong worktree riêng — là người ghi duy nhất ở đó |
-| **Rin** | một lần mỗi milestone | Reviewer đối kháng — kiểm cả artifact lẫn dấu vết quy trình |
 | **QA** | một lần mỗi walk | Dùng sản phẩm đang chạy — hành trình UI, hợp đồng API, dữ liệu thật |
 
 ### Quy trình
 
 ```mermaid
 flowchart LR
-    A["wayfinder\nmơ hồ, > 1 session"] --> C[to-spec]
-    B["grill-with-docs\nvừa 1 session"] --> C
-    C --> D[to-tickets]
-    D --> E["implement\n(một ticket một session)"]
+    A["wayfinder\nfoggy, > 1 session"] --> C[to-spec]
+    B["grill-with-docs\nfits 1 session"] --> C
+    C --> C2["arm:spec"] --> C3["test-design\ndocs/qa/plan"] --> D[to-tickets]
+    D --> E["implement\n(one per ticket)"]
     E --> F["code-review"]
-    F -.->|phát hiện chặn| Q[to-questionnaire] -.-> Owner((owner))
+    F --> G["QA\nwalk · probe · verify"]
+    F -.->|blocking finding| Q[to-questionnaire] -.-> Owner((owner))
 
     style A fill:#e8f0fe,stroke:#4285f4
     style B fill:#e8f0fe,stroke:#4285f4
@@ -138,20 +138,17 @@ flowchart TB
         T2["ticket:TRA-142\nBuilder"]
         T3["spec:TRA-87\nShaper"]
         T4["qa:TRA-125\nQA"]
-        T5["rin:TRA-125\nRin"]
     end
 
     T -->|dispatch| T1
     T -->|dispatch| T2
     T -->|dispatch| T3
     T -->|dispatch-qa| T4
-    T -->|review| T5
 
     style T fill:#e8f0fe,stroke:#4285f4
     style T1 fill:#fef7e0,stroke:#f9ab00
     style T2 fill:#fef7e0,stroke:#f9ab00
     style T3 fill:#fce8e6,stroke:#ea4335
-    style T5 fill:#e6f4ea,stroke:#34a853
 ```
 
 Mỗi Builder có một pane terminal riêng và một git worktree riêng.
@@ -161,25 +158,30 @@ Mỗi Builder có một pane terminal riêng và một git worktree riêng.
 
 ```mermaid
 flowchart LR
-    subgraph PT["Mỗi ticket"]
+    subgraph PT["Mỗi ticket — làn Builder"]
         direction LR
-        R1["code-review\nStandards + Spec"] --> R2["simplify\nmarker commit"] --> R3["chéo hãng\nCodex ↔ Claude"]
+        R0["tdd (+ atdd)"] --> R1["code-review\nStandards + Spec"] --> R2["code-review\nbuilt-in"] --> R3["simplify\nmarker commit"] --> R4["arm ticket\nCodex ↔ Claude"]
     end
-    PT --> M["merge"]
-    M --> RM{"milestone?"}
-    RM -->|có| Rin["gate của Rin"]
-    RM -->|không| Next["ticket kế"]
-    Rin -->|chặn ở mức thiết kế| Owner(("owner"))
+    PT --> QA["QA theo bề mặt ticket\nwalk · probe · verify\nđối chiếu docs/qa/plan"]
+    QA --> M["merge"]
+    M --> SC{"slice đã đóng?"}
+    SC -->|có| SG["gate slice\narm slice + fan-out đối kháng"]
+    SC -->|không| Next["ticket kế"]
+    QA -->|FAIL| Owner(("owner"))
+    SG -->|chặn ở mức thiết kế| Owner
 
     style R1 fill:#e6f4ea,stroke:#34a853
     style R2 fill:#e6f4ea,stroke:#34a853
     style R3 fill:#e6f4ea,stroke:#34a853
-    style Rin fill:#fce8e6,stroke:#ea4335
+    style R4 fill:#e6f4ea,stroke:#34a853
+    style QA fill:#fce8e6,stroke:#ea4335
+    style SG fill:#fce8e6,stroke:#ea4335
 ```
 
-Mọi ticket đều đi qua cả ba lớp — không có ngoại lệ. Ở mỗi milestone, Rin chạy thêm một gate
-kiểm cả artifact lẫn dấu vết quy trình. Thứ chặn ở mức thiết kế đi lên owner, không đi vào
-thêm một vòng review nữa.
+Mọi ticket đều đi qua các review của làn Builder — không có ngoại lệ. Trước PR, merge hay
+release, QA walk sản phẩm đang chạy. Khi một slice đóng, Thomas chạy arm slice và một fan-out
+đối kháng chỉ-đọc, rồi gộp những gì cả hai tìm ra. Thứ chặn ở mức thiết kế đi lên owner,
+không đi vào thêm một vòng review nữa.
 
 ---
 
@@ -289,7 +291,7 @@ và merge hook đều là của bản release ấy.
 ```bash
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash                      # bản mới nhất, chỉ stage
-curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 2.22.2         # ghim một bản
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.0.0         # ghim một bản
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --plan  # xem --apply sẽ ghi gì
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply # ghi payload vào
 ```
@@ -331,7 +333,6 @@ Sửa `.agents/orchestrator.md` — file của bạn, không bao giờ bị bả
 | thomas  | claude  | claude-opus-5   | medium |
 | shaper  | claude  | claude-opus-5   | high   |
 | builder | claude  | claude-sonnet-5 | medium |
-| rin     | claude  | claude-opus-5   | medium |
 | qa      | claude  | claude-sonnet-5 | low    |
 ```
 
@@ -384,7 +385,7 @@ xem `git ls-remote --tags https://github.com/thientranhung/astragentic.git` ho�
 
 | | |
 |---|---|
-| **Role** | 5 — Thomas, Shaper, Builder, Rin, QA |
+| **Role** | 4 — Thomas, Shaper, Builder, QA |
 | **Skill** | 16 trong harness, 4 trong số đó dành cho brownfield |
 | **Runtime** | Claude Code, Codex, OpenCode |
 | **Lớp review** | 3 mỗi ticket (hệ thống trước: 5–14 vòng) |
@@ -398,9 +399,9 @@ xem `git ls-remote --tags https://github.com/thientranhung/astragentic.git` ho�
 ```
 harness/
   .agents/
-    roles/            năm contract role + phần bổ sung theo runtime
+    roles/            bốn contract role + phần bổ sung theo runtime
     orchestrator.md   role -> runtime/model/effort (file của bạn)
-    skills/           16 skill — dispatch, review, brownfield, arm
+    skills/           19 skill — dispatch, QA, test design, brownfield, arm, BMAD
     memory/
       recurring-failure-modes.md
   .claude/
@@ -495,5 +496,5 @@ các ngày không ai cần thì không thuộc về chỗ đó.**
 | **payload** | Thứ một release stage (được phép ghi đè thoải mái) |
 | **scaffold** | Cấu hình của owner, viết một lần, không bao giờ bị ghi đè (`orchestrator.md`) |
 | **frontier** | Tập ticket mà agent đang có thể claim |
-| **gate** | Một chốt kiểm — review của Rin ở milestone |
+| **gate** | Một chốt kiểm — QA walk sản phẩm đang chạy, hoặc gate slice khi đóng slice |
 | **arm** | Lượt review chéo hãng (Codex đọc lại việc của Claude, hoặc ngược lại) |
