@@ -498,7 +498,7 @@ ship, proj = load(src), load(dst)
 if not isinstance(ship, dict) or not isinstance(proj, dict): sys.exit(0)
 prev_hooks = {}
 if prev:
-    pv = load(os.path.join(prev, "harness", ".claude", "settings.json"))
+    pv = load(os.path.join(prev, ".claude", "settings.json"))   # PREV_DIR already ends in /harness
     if isinstance(pv, dict) and isinstance(pv.get("hooks"), dict): prev_hooks = pv["hooks"]
 ph = proj.setdefault("hooks", {})
 if not isinstance(ph, dict): sys.exit(0)

@@ -1,3 +1,16 @@
+# Astragentic 2.21.6
+
+**2.21.5's merge did not read the previous release, so it merged what it should only have
+reported.** The path to the prior release's `settings.json` was joined with a second `harness/`
+segment, the file was never found, and an event the previous release shipped and the project had
+removed was merged back in. 2.21.5's notes claimed the opposite; the plant that would have shown
+it was read wrongly. The path is fixed and the plant now shows the split: a previously shipped
+event stays an `ACTION`, the two events and the guard script the project never had are merged.
+
+## Upgrade from 2.21.5
+
+Nothing in the payload changes; use this package's `install.sh` for the next apply.
+
 # Astragentic 2.21.5
 
 **`install.sh --apply` merges the hooks a project has never had.** On a greenfield install Claude
