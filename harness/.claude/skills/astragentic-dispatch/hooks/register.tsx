@@ -122,7 +122,7 @@ const board = atom({ plugin: 'astragentic-dispatch', key: 'board' } as const, []
 // token, whatever it measured it needed on screen). Measured downstream: the tracker table was
 // injected into context at session start and never shown, and two gate runs collided while
 // nobody could see who held the token.
-const banner = atom({ plugin: 'astragentic-dispatch', key: 'banner' } as const, { branch: '', extra: '' } as Banner)
+const banner = atom({ plugin: 'astragentic-dispatch', key: 'banner' } as const, { branch: '', extra: '', version: '' } as Banner)
 // The Builder pane's own band: which FLOW steps have run, read from the same record the gates
 // read, so the person watching the pane sees the step the Builder is at without reading the
 // transcript (owner's ask, 2026-10-09).
@@ -591,7 +591,11 @@ async function refreshBoard($: any, root: string | null, sends: Map<string, numb
         extra = 'status-line.sh failed'
       }
     }
-    await update($, banner, () => ({ branch, extra }))
+    // The applied harness version, for an owner who runs several projects and needs to see at a
+    // glance which one is behind (owner's ask, 2026-10-10).
+    let version = ''
+    try { version = (await $.fs.read(`${root}/.astraler/state/applied-version`)).trim() } catch {}
+    await update($, banner, () => ({ branch, extra, version }))
   }
 }
 
@@ -1251,9 +1255,11 @@ export const register: Register = on => {
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     const { Box, Text } = $.ui.resolve(e)
     const rows = await read($, board)
+    const b = await read($, banner)
     const now = await $.clock.now()
     return (
       <Box flexDirection="column">
+        <Text dimColor>{[b.version ? `astragentic ${b.version}` : '', b.branch ? `⎇ ${b.branch}` : ''].filter(Boolean).join(' · ')}</Text>
         {rows.length === 0 && <Text dimColor>No live dispatches.</Text>}
         {rows.map(r => (
           <Text color={r.note === 'not confirmed received' || r.state === 'merged' ? 'red' : undefined}>
@@ -1320,6 +1326,7 @@ export const register: Register = on => {
     return (
       <Box flexDirection="row" flexWrap="wrap">
         {b.branch ? <Chip bg="claude" fg="inverseText" label={`⎇ ${b.branch}`} /> : null}
+        {b.version ? <Chip dim label={`astragentic ${b.version}`} /> : null}
         {rows.length === 0 ? <Chip dim label="no dispatches" /> : null}
         {rows.map(r => (
           <Chip bg={bgOf(r)} fg="inverseText" label={`${r.key} ${r.state} ${ago(now - r.since)}${r.note ? ` · ${r.note}` : ''}`} />

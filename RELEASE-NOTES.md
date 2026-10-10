@@ -1,3 +1,15 @@
+# Astragentic 3.0.2
+
+**The applied version is on the band and the board.** An owner running several projects asked
+to see at a glance which one is behind. The dispatcher's band carries a dim `astragentic
+<version>` chip beside the branch, read from `.astraler/state/applied-version`, and
+`/dispatch-board` opens with the same line. Mod only.
+
+## Upgrade from 3.0.1
+
+`curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.0.2 --apply`,
+then restart the dispatcher's session.
+
 # Astragentic 3.0.1
 
 **No QA plan, no dispatch.** The owner's rule, stated on 3.0.0's first day and replacing the

@@ -9,6 +9,7 @@ export type BoardRow = {
 export type Banner = {
   branch: string
   extra: string
+  version: string
 }
 
 export type Flow = {

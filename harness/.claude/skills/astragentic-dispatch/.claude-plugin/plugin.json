@@ -1,6 +1,6 @@
 {
   "name": "astragentic-dispatch",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A dispatched pane records itself, runs its brief as a user turn, and reports its turn end; the dispatcher is woken and shown the board",
   "author": { "name": "Astraler" },
   "types": "./types/index.d.ts"
