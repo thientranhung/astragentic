@@ -223,7 +223,7 @@ done
 # The one that cost an adaptation step: this file is Python behind a `.sh` name.
 # In an adapted project this check needs the staged release manifest; without one it hard-
 # fails at check 0 by design, which is not the invocation shape this case is about.
-if head -1 "$S/check-reachability.sh" | grep -q python && { [ "$LAYOUT" = package ] || [ -d "$ROOT/.astraler/releases" ]; }; then
+if head -1 "$S/check-reachability.py" | grep -q python && { [ "$LAYOUT" = package ] || [ -d "$ROOT/.astraler/releases" ]; }; then
   # ASSERT THE INTERPRETER RAN, NOT THAT THE TREE IS CLEAN. This case is about invocation
   # shape — the file is python with a `.sh` name, and `bash -n` on it is the defect. It used
   # to assert exit 0, but check-reachability exits 1 on ANY finding, so an adapted project
@@ -231,7 +231,7 @@ if head -1 "$S/check-reachability.sh" | grep -q python && { [ "$LAYOUT" = packag
   # first real project to run it: a benign Docker container name in a contract produced one
   # check-4 finding, and the suite reported the invocation as failed. A gate that cannot go
   # green on a healthy project is a gate people stop reading.
-  _cr="$(python3 "$S/check-reachability.sh" "$ROOT" 2>&1)"; _crx=$?
+  _cr="$(python3 "$S/check-reachability.py" "$ROOT" 2>&1)"; _crx=$?
   case "$_cr" in
     *"Reachability check"*)
       [ "$_crx" -le 1 ] \
@@ -794,14 +794,14 @@ cp "$ROOT/prompts/ADAPT-HARNESS.md" "$RX/prompts/" 2>/dev/null \
   || cp "$ROOT/ADAPT-HARNESS.md" "$RX/prompts/" 2>/dev/null
 cp "$ROOT/README.md" "$ROOT/install.sh" "$ROOT/check-requirements.sh" "$RX/" 2>/dev/null
 
-# CAPTURE, NEVER PIPE. This file runs under `set -o pipefail` and check-reachability.sh exits 1
+# CAPTURE, NEVER PIPE. This file runs under `set -o pipefail` and check-reachability.py exits 1
 # when it has findings, so `rx | grep -q "the finding"` returns 1 — the pipeline inherits the
 # tool's failure — and the case reads a CORRECT detection as a miss. The mirror is worse: the
 # `goes quiet` cases were passing because grep found nothing on a clean tree, which is also what
 # they would do if the tool were broken and printed nothing at all. Both halves were measured
 # here on 2026-09-16 before this comment existed.
-rx()  { python3 "$S/check-reachability.sh" "$RX" 2>&1; }
-rxp() { python3 "$S/check-reachability.sh" "$RP" 2>&1; }
+rx()  { python3 "$S/check-reachability.py" "$RX" 2>&1; }
+rxp() { python3 "$S/check-reachability.py" "$RP" 2>&1; }
 
 out="$(rx)"
 says "$out" "All reachability checks passed" \
@@ -927,7 +927,7 @@ else
 fi
 
 # 4 — a project's own vocabulary. Before 2.10.0 the only place to silence a skill-shaped token
-# was the payload set inside check-reachability.sh, so the project redid that edit on every
+# was the payload set inside check-reachability.py, so the project redid that edit on every
 # upgrade and the error text told it to. Watched here both ways: red without the plug, green
 # with it — the second half matters more, because an allowance that does not actually allow is
 # how a gate stays permanently red and stops being read.
@@ -937,13 +937,13 @@ import sys, os
 p = os.path.join(sys.argv[1], "harness", ".agents", "roles", "thomas.md")
 open(p, "a").write("\n\nA container this project runs: `some-project-stage-server`.\n")
 EOS
-out="$(python3 "$S/check-reachability.sh" "$VOC" 2>&1)"
+out="$(python3 "$S/check-reachability.py" "$VOC" 2>&1)"
 says "$out" "names 'some-project-stage-server'" \
   && ok "check 4 flags a skill-shaped token it does not know" \
   || bad "check 4 vocabulary" "an unknown skill-shaped token passed unreported"
 mkdir -p "$VOC/.astraler/project"
 printf '# this project'"'"'s own words\nsome-project-stage-server\n' > "$VOC/.astraler/project/not-a-skill.txt"
-out="$(python3 "$S/check-reachability.sh" "$VOC" 2>&1)"
+out="$(python3 "$S/check-reachability.py" "$VOC" 2>&1)"
 says "$out" "names 'some-project-stage-server'" \
   && bad "check 4 project vocabulary" "the plug was declared and the token is still reported" \
   || ok "check 4 accepts .astraler/project/not-a-skill.txt"

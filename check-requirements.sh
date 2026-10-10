@@ -803,7 +803,7 @@ PYEOF
         # name list. A fixed list is correct the day it is written and silently stops
         # covering whatever the package later adds beside it: measured directly, this list
         # named three scripts while the package shipped five into scripts/, missing
-        # check-reachability.sh, docs-staleness-audit.sh AND this file itself — so a
+        # check-reachability.py, docs-staleness-audit.sh AND this file itself — so a
         # project whose only stale payload was one of those got a green from the one check
         # whose job is to say the payload is stale, up to and including the checker being
         # the stale file. Falls back to a fixed list only when this file is the VENDORED
@@ -824,7 +824,7 @@ PYEOF
           NAMED_SCRIPTS='herdr-watchdog.sh
 herdr-watch-terminal.sh
 ticket-git-facts.sh
-check-reachability.sh
+check-reachability.py
 docs-staleness-audit.sh
 check-requirements.sh'
         fi

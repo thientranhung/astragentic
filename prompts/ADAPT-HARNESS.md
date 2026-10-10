@@ -154,7 +154,7 @@ Classify candidate material before editing anything:
   - **`not-a-skill.txt`** (a list, not a script) — *which skill-shaped words in this project's
     own documents are not skills?* One token per line, `#` comments allowed. Every project has
     them: a container name, a queue, a feature flag, written in backticks in a contract.
-    `scripts/check-reachability.sh` check 4 reads this file and adds it to the payload's own
+    `scripts/check-reachability.py` check 4 reads this file and adds it to the payload's own
     vocabulary; it never replaces it, so a project cannot silence the harness's words with it.
     Before 2.10.0 the only place to put such a token was the payload set inside that script,
     which the next release overwrites — the project redid the work every upgrade, and the
@@ -451,13 +451,13 @@ counts go to the owner in your handback; they have no later reader and do not ne
 Run checks proportional to what changed:
 
 - `git diff` — confirm unrelated project work is untouched;
-- `bash -n` on shell scripts, and parse any Codex TOML. **`scripts/check-reachability.sh` is
+- `bash -n` on shell scripts, and parse any Codex TOML. **`scripts/check-reachability.py` is
   Python despite its extension** — `bash -n` on it exits 2 with `import: command not found`;
-  run `python3 scripts/check-reachability.sh .` instead;
+  run `python3 scripts/check-reachability.py .` instead;
 - **`./check-requirements.sh . --adapted` passes both axes.** The `--adapted` flag is what
   makes the three `docs/agents/*.md` files REQUIRED rather than expected-absent; without it a
   repo with no harness at all still reports "All required checks passed";
-- **`scripts/check-reachability.sh` exits 0.** It enforces that every phase the method names
+- **`scripts/check-reachability.py` exits 0.** It enforces that every phase the method names
   is owned by exactly one contract, that every shipped skill is reached by something, and
   that every path, agent and profile a contract or skill names actually exists. A contract
   naming a file that does not exist is how the prior package failed, so this is a hard
@@ -506,7 +506,7 @@ Run checks proportional to what changed:
   `gh` is missing skips everything after it. **An absolute `core.hooksPath` pointing at the
   main checkout makes every worktree run main's hooks**, so the gate takes effect only once it
   is merged to main, and one place can disable it for all;
-- **A project that gitignores `.astraler/` must say so here.** `check-reachability.sh` reads
+- **A project that gitignores `.astraler/` must say so here.** `check-reachability.py` reads
   its ownership manifest from the staged release and hard-fails at check 0 when that
   directory is absent — so on a fresh clone of such a project the gate can never pass. Either
   commit `.astraler/state/applied-version` (it is one line and names no secret), or record in

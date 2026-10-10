@@ -8,9 +8,10 @@ across releases while looking installed (AST-102). This one runs standalone:
     echo '{"hook_event_name":"PreToolUse","tool_name":"Bash",
            "tool_input":{"command":"git add -A"}}' | python3 scripts/hook-git-guard.py
 
-WHY .py AND NOT .sh. `check-reachability.sh` is Python behind a `.sh` name, and the cost of
-that showed up as an adaptation step telling operators to run `bash -n` on it. One such file
-is enough.
+WHY .py AND NOT .sh. Until 3.1.0 `check-reachability` was Python behind a `.sh` name, and the
+cost showed up twice: an adaptation step telling operators to run `bash -n` on it, and a
+downstream merge gate that parsed it as shell and went red on every release fold. A file is
+named for what runs it.
 
 WHY TOKENS, NOT REGEXES. The first version matched regexes against the raw command string. A
 cross-vendor pass proved that form is bypassable and over-broad in the same breath:

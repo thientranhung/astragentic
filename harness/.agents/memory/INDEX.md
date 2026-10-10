@@ -50,26 +50,26 @@ from this table — read the entry.
 | `AST-035` | `set -euo pipefail` plus a no-match `grep` aborts before its own guard | promoted | 273 |   |
 | `AST-036` | A git worktree carries TRACKED content only | promoted | 154 | builder-claude.md,dispatch-ticket,dispatch-ticket-claude,register.tsx |
 | `AST-037` | A multi-line prompt pastes without submitting, and the pane calls it idle | promoted | 140 | dispatch-ticket,dispatch-ticket-claude |
-| `AST-038` | A checker that cannot tell project content from package content fires on every adopted repo | promoted | 146 | check-reachability.sh |
+| `AST-038` | A checker that cannot tell project content from package content fires on every adopted repo | promoted | 146 | check-reachability.py |
 | `AST-039` | An ID namespace shared with the host project resolves confidently to the wrong lesson | promoted | 160 |   |
 | `AST-040` | A placeholder that looks like a real id fails later than a missing one | promoted | 169 | selftest.sh |
 | `AST-041` | A file called "the owner's" that ships in the payload has two homes and the shipped one wins | promoted | 119 | dispatch-ticket-claude,orchestrator.md |
 | `AST-042` | Two skills answering to one name means the model-invoked path picks the wrong one | promoted | 126 | selftest.sh |
 | `AST-043` | A gate that requires an artifact no contract produces | promoted | 192 |   |
 | `AST-044` | Reading a diff cannot find a disagreement between two screens | promoted | 282 |   |
-| `AST-045` | A green test suite and a coherent product are different claims | promoted | 331 | check-reachability.sh |
+| `AST-045` | A green test suite and a coherent product are different claims | promoted | 331 | check-reachability.py |
 | `AST-046` | A block moved between documents keeps the old document's referents | promoted | 143 |   |
-| `AST-047` | "Local" is a deployment fact, not a data fact | promoted | 163 | check-reachability.sh |
+| `AST-047` | "Local" is a deployment fact, not a data fact | promoted | 163 | check-reachability.py |
 | `AST-048` | A rule not present where it must be remembered does not exist | promoted | 276 |   |
 | `AST-049` | Checks 1–4 asked whether things were consistent, never whether a role could START | promoted | 169 |   |
-| `AST-050` | Qualify a plugin command always, not once it is known to collide | promoted | 217 | check-reachability.sh,dispatch-ticket,docs-staleness-audit.sh,register.tsx |
-| `AST-051` | An address the caller cannot use produces a substitute, not an error | promoted | 319 | builder-claude.md,check-reachability.sh,dispatch-ticket,docs-staleness-audit.sh,thomas-claude.md,untangle |
+| `AST-050` | Qualify a plugin command always, not once it is known to collide | promoted | 217 | check-reachability.cpython-314.pyc,check-reachability.py,dispatch-ticket,docs-staleness-audit.sh,register.tsx |
+| `AST-051` | An address the caller cannot use produces a substitute, not an error | promoted | 319 | builder-claude.md,check-reachability.cpython-314.pyc,check-reachability.py,dispatch-ticket,docs-staleness-audit.sh,thomas-claude.md,untangle |
 | `AST-052` | The word-budget audit ran its loop zero times and reported all clean | promoted | 227 | docs-staleness-audit.sh |
 | `AST-053` | An axis read the run's verdict instead of its own, and went mute | promoted | 226 |   |
 | `AST-054` | `git add -A` committed two releases nobody ever applied | promoted | 146 | hook-git-guard.py |
-| `AST-055` | A gate that reads the subject cannot see which pass wrote it | promoted | 326 | builder-claude.md,builder-codex.md,builder-opencode.md,check-reachability.sh,register.tsx,shaper.md,thomas-claude.md |
+| `AST-055` | A gate that reads the subject cannot see which pass wrote it | promoted | 326 | builder-claude.md,builder-codex.md,builder-opencode.md,check-reachability.py,register.tsx,shaper.md,thomas-claude.md |
 | `AST-056` | A blocking edge expresses order, not exclusion | promoted | 329 | dispatch-ticket,thomas.md |
-| `AST-057` | A frontier that is only computed is invisible to the one person who cannot compute | promoted | 689 | check-reachability.sh,dispatch-ticket-claude,hook-git-guard.py,pre-push-ticket-done.sh,reconcile-tracker,register.tsx,release-worktree-resources.sh,thomas.md,ticket-done.sh |
+| `AST-057` | A frontier that is only computed is invisible to the one person who cannot compute | promoted | 689 | check-reachability.py,dispatch-ticket-claude,hook-git-guard.py,pre-push-ticket-done.sh,reconcile-tracker,register.tsx,release-worktree-resources.sh,thomas.md,ticket-done.sh |
 | `AST-058` | The check after the step reported clean when the step was impossible | promoted | 271 |   |
 | `AST-059` | The repo kept one self-check and lost the other to a directory it may ignore | promoted | 193 |   |
 | `AST-060` | Check 3 printed green about the skills it had not opened | promoted | 170 |   |
@@ -80,9 +80,9 @@ from this table — read the entry.
 | `AST-065` | Two reviewers sharing one name, each in the other's contract | promoted | 189 |   |
 | `AST-066` | A review bound to the wrong checkout returns clean without reading anything | promoted | 255 |   |
 | `AST-068` | A lesson closed at instance level reopens at class level | promoted | 259 |   |
-| `AST-069` | An instruction with no moment attached measures zero | promoted | 272 | check-reachability.sh,dispatch-ticket-claude,hook-contract-reload.py,hook-git-guard.py,hook-tracker-status.py,pre-push-ticket-done.sh,selftest.sh,thomas.md |
+| `AST-069` | An instruction with no moment attached measures zero | promoted | 272 | check-reachability.py,dispatch-ticket-claude,hook-contract-reload.py,hook-git-guard.py,hook-tracker-status.py,pre-push-ticket-done.sh,selftest.sh,thomas.md |
 | `AST-070` | A bounded exception nobody asked for is a contradiction carried on speculation | promoted | 275 | dispatch-ticket,ledger-rules.py |
-| `AST-071` | Every check asked whether a thing was NAMED, none asked whether anything READ it | promoted | 312 | check-reachability.sh |
+| `AST-071` | Every check asked whether a thing was NAMED, none asked whether anything READ it | promoted | 312 | check-reachability.py |
 | `AST-072` | Self-monitoring shipped without proof it cannot harm what it monitors | promoted | 345 | herdr-watchdog.sh |
 | `AST-073` | A global script is only shared if something keeps it updated | promoted | 200 |   |
 | `AST-074` | A tracker measured only against itself cannot detect its own drift | promoted | 484 | dispatch-ticket-claude,register.tsx,thomas.md |
@@ -127,9 +127,9 @@ from this table — read the entry.
 | `AST-113` | An audit that always screams is an audit nobody reads | promoted | 290 | docs-staleness-audit.sh |
 | `AST-114` | Splitting submission into two steps left the watch armed against the wrong one | promoted | 207 |   |
 | `AST-115` | Two correct changes composed into a live one, and the repair is what armed it | promoted | 447 | CLEANUP.md,codex-arm,dispatch-ticket-claude,hook-git-guard.py,register.tsx,release-worktree-resources.sh |
-| `AST-116` | A local fix that never goes upstream is a defect every fresh install re-buys | promoted | 335 | check-reachability.sh,docs-staleness-audit.sh |
+| `AST-116` | A local fix that never goes upstream is a defect every fresh install re-buys | promoted | 335 | check-reachability.py,docs-staleness-audit.sh |
 | `AST-117` | A worktree isolates git, not a tool that writes to a fixed path | promoted | 329 |   |
-| `AST-118` | A fallback that changes what the verdict MEANS, while keeping the same exit code | promoted | 373 | check-reachability.sh |
+| `AST-118` | A fallback that changes what the verdict MEANS, while keeping the same exit code | promoted | 373 | check-reachability.py |
 | `AST-119` | A fork inside a Builder can message the dispatcher, and nothing marks it as not the Builder | promoted | 677 | builder-claude.md,hook-git-guard.py,thomas.md |
 | `AST-120` | A verification that fired twice on immutable input and disagreed with itself, cause unknown | promoted | 520 |   |
 | `AST-121` | The check had no vocabulary for being obeyed, so honesty registered as failure | promoted | 463 | CLEANUP.md,MARKERS.md |
@@ -143,13 +143,13 @@ from this table — read the entry.
 | `AST-129` | The receipt was a producer with no reader, and it hid the one fact that had readers | promoted | 222 |   |
 | `AST-130` | A report-only fork forged a verification marker using a TRUE excuse | promoted | 427 | builder-claude.md,check-simplify-markers.sh,register.tsx |
 | `AST-131` | The queue drained and nothing asked whether a slot was free | promoted | 344 | thomas.md |
-| `AST-132` | Two owners for one path, and neither can see the other | promoted | 307 | check-payload-drift.sh,check-reachability.sh,thomas.md |
+| `AST-132` | Two owners for one path, and neither can see the other | promoted | 307 | check-payload-drift.sh,check-reachability.cpython-314.pyc,check-reachability.py,thomas.md |
 | `AST-133` | `--grep` is not a subject matcher, and it failed in both directions on the same day | promoted | 401 | CLEANUP.md,thomas.md,ticket-done.sh |
 | `AST-134` | After the fold, "the gate read this tree" is structurally false and the protocol had no way t… | promoted | 238 | MARKERS.md,check-simplify-markers.sh |
 | `AST-135` | The verifier's queue was invisible to itself, and the fire point had to follow the artifact | promoted | 364 | thomas.md |
 | `AST-136` | `--grep` is BASIC regex, and every marker kind in this system contains parentheses | promoted | 287 | check-simplify-markers.sh,selftest.sh |
 | `AST-137` | Every defect a live project found lived between a tested invocation and a real one | promoted | 418 | selftest.sh |
-| `AST-138` | A rule reaches every runtime or it reaches one, and nothing in the package asked which | promoted | 485 | check-reachability.sh,hook-git-guard.py,hook-tracker-status.py |
+| `AST-138` | A rule reaches every runtime or it reaches one, and nothing in the package asked which | promoted | 485 | check-reachability.cpython-314.pyc,check-reachability.py,hook-git-guard.py,hook-tracker-status.py |
 | `AST-139` | The fork guard AST-119 asked for cannot be built today, measured three ways | promoted | 449 |   |
 | `AST-140` | A wiring count is an artifact of its definition, and three honest definitions gave three answers | promoted | 417 | selftest.sh |
 | `AST-141` | The ledger's `Bound:` line claims the present, and nothing had ever checked it | promoted | 335 |   |
@@ -157,8 +157,8 @@ from this table — read the entry.
 | `AST-143` | A scaffold path swallowed this package's own headline fix, silently, and the receipt said clean | promoted | 272 | selftest.sh |
 | `AST-144` | Three gates met their first real project on the same day and all three answered about the wro… | promoted | 634 |   |
 | `AST-145` | A role identity routed through a namespace the project does not own | promoted | 359 |   |
-| `AST-146` | An unrecognised configuration key is accepted in silence, so "it launched" is not evidence | promoted | 345 | check-reachability.sh |
-| `AST-147` | A `Bound:` line with a star in it was invisible to the check whose whole job is `Bound:` lines | promoted | 298 | check-reachability.sh,selftest.sh |
+| `AST-146` | An unrecognised configuration key is accepted in silence, so "it launched" is not evidence | promoted | 345 | check-reachability.py |
+| `AST-147` | A `Bound:` line with a star in it was invisible to the check whose whole job is `Bound:` lines | promoted | 298 | check-reachability.py,selftest.sh |
 | `AST-148` | One condition answering two questions delivered the second answer as the first | promoted | 275 |   |
 | `AST-149` | No form of the command carried both the range and the intent, and the repair that suggested i… | promoted | 325 |   |
 | `AST-150` | The launcher the shared protocol asks for cannot encode the identity the runtime needs | promoted | 258 |   |

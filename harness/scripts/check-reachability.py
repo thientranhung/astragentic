@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""check-reachability.sh — does the method the docs describe actually exist?
+"""check-reachability.py — does the method the docs describe actually exist?
 
 The prior package lost two weeks to an Align phase that lived in a method document and in
 no role's contract, so nothing ever ran it. Every check here exists to make that class of

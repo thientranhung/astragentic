@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-3.0.3-blue" alt="version"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-3.1.0-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
   <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-157_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
@@ -42,13 +42,13 @@ prove what happened.
 # 1. In your project's root, stage the latest release (no project file is written)
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
-#    …or pin a version:  | bash -s -- 3.0.3
+#    …or pin a version:  | bash -s -- 3.1.0
 
 # 2. Verify your machine has what's needed
-bash .astraler/releases/3.0.3/check-requirements.sh
+bash .astraler/releases/3.1.0/check-requirements.sh
 
 # 3. Run the adaptive installer in Claude Code
-claude "Read .astraler/releases/3.0.3/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/3.1.0/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Start the router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium
@@ -300,7 +300,7 @@ the release shipped with.
 ```bash
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash                      # latest, stage only
-curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.0.3         # pin a version
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.1.0         # pin a version
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --plan  # show what --apply would write
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply # write the payload in
 ```
@@ -476,7 +476,7 @@ something has already gone wrong.
 
 | Script | Moment |
 |---|---|
-| `check-reachability.sh` | after editing any contract, skill or the README role table |
+| `check-reachability.py` | after editing any contract, skill or the README role table |
 | `docs-staleness-audit.sh` | same moment — it measures the surfaces that bill every session |
 | `ledger-index.sh` | after adding or editing a ledger entry |
 
@@ -486,7 +486,7 @@ index, and two contracts over their word budget — three classes, none visible 
 introduced by careful work an hour earlier. 2.5.1 is those fixes and nothing else.
 
 ```bash
-python3 scripts/check-reachability.sh .   # exit 0 required
+python3 scripts/check-reachability.py .   # exit 0 required
 bash scripts/ledger-index.sh              # regenerates INDEX.md
 bash scripts/docs-staleness-audit.sh .    # exit 1 = read every finding
 ```

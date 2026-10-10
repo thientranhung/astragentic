@@ -487,7 +487,7 @@ Reaching `idle`/`done` without ever seeing `working` means it never ran.
 Bound: `dispatch-ticket` (Submitting it).
 
 ### AST-038 — A checker that cannot tell project content from package content fires on every adopted repo · promoted 2026-08-10
-`check-reachability.sh` globbed `.claude/skills/*/SKILL.md` and treated everything it found
+`check-reachability.py` globbed `.claude/skills/*/SKILL.md` and treated everything it found
 as harness-owned. In the package that is true. In an adopted repo the project's own skills
 sit in the same directory, so the checker reported four of them as unreachable defects and
 one as naming unknown skills — six findings, none real, on a correct installation.
@@ -500,7 +500,7 @@ skipped — reported by name, so the skip is visible rather than silent.
 
 The general shape: **tooling that ships INTO other repos must be able to name its own
 files.** Location is not ownership.
-Bound: `harness/scripts/check-reachability.sh`.
+Bound: `harness/scripts/check-reachability.py`.
 
 ### AST-039 — An ID namespace shared with the host project resolves confidently to the wrong lesson · promoted 2026-08-10
 The first upgrade into a mature repo landed a payload citing `AST-036` and `AST-037` beside a
@@ -570,7 +570,7 @@ prevent it: a step described in one document, owned by nobody in the contract th
 it. A consuming repo shipped a visually-wrong control to main this way, and it was caught by
 a human noticing, not by any gate.
 
-`check-reachability.sh` does not catch this class. It verifies that every phase has an owner
+`check-reachability.py` does not catch this class. It verifies that every phase has an owner
 and every reference resolves — not that **every artifact a gate demands has a producer**.
 That is the harder check and it is not written. Until it is, a gate's input list is worth
 reading against the contracts by hand whenever either changes.
@@ -609,7 +609,7 @@ Bound: `harness/.agents/roles/rin.md` (gone), `harness/.claude/skills/review-wit
 The prior package shipped a browser-walking agent for several releases and it **never ran
 once**. A grep of the whole payload found no file naming it outside its own two definition
 files: no role contract, no dispatch path. It was correct, it was valuable, and it was
-unreachable — the exact class `check-reachability.sh` exists to catch, sitting in the package
+unreachable — the exact class `check-reachability.py` exists to catch, sitting in the package
 that later wrote that checker.
 
 So the work of adopting it was never the file. It was the wiring: a contract that owns it, a
@@ -643,7 +643,7 @@ on naming the walker "Rin" and calling the walk "a mode", which is 1.2.0's desig
 inside the release that reversed it. The dispatcher reads that skill to pack the brief, so
 one of those lines would have set the persona for the wrong agent.
 
-`check-reachability.sh` cannot see this: every path resolves, every name exists, nothing
+`check-reachability.py` cannot see this: every path resolves, every name exists, nothing
 dangles. It is a **semantic** error, and the checker verifies references, not meaning.
 
 Moving text is not the same as re-homing it. **Re-read a moved block in its new context
@@ -695,7 +695,7 @@ Bound: `harness/.agents/skills/dispatch-ticket/SKILL.md` (one checkout),
 `harness/.claude/agents/*.md` (spawn-decides-role), `prompts/ADAPT-HARNESS.md` §3.
 
 ### AST-049 — Checks 1–4 asked whether things were consistent, never whether a role could START · promoted 2026-08-11
-`check-reachability.sh` verified that every phase had an owner and every reference resolved,
+`check-reachability.py` verified that every phase had an owner and every reference resolved,
 and passed on a package where **three of four dispatchable roles had no launcher written
 anywhere** and the shaper was never named by the dispatcher's contract. Dispatching Rin by the
 documentation was impossible: `review-with-rin` said "argv from the dispatch-ticket launcher
@@ -710,7 +710,7 @@ A role needs **two** things to be startable: a written launcher, and a dispatche
 contract names it. Check 5 requires both. The general shape: **a consistency check answers
 "does this agree with itself", which a completely inert system also passes.** At least one
 check has to ask whether the thing can run.
-Bound: `harness/scripts/check-reachability.sh` (check 5).
+Bound: `harness/scripts/check-reachability.py` (check 5).
 
 ### AST-050 — Qualify a plugin command always, not once it is known to collide · promoted 2026-08-11
 AST-042 fixed one name — `code-review`, where a plugin skill and a built-in already answered
@@ -765,7 +765,7 @@ plugin skills only, and `simplify` is a built-in — a check blind to a whole cl
 thing it checks. Reachability check 6 reads both, and rejects an unknown name rather than
 passing it. Found by the project running the harness, not by the harness.
 Bound: `harness/.agents/roles/builder.md`, `harness/.agents/skills/dispatch-ticket/SKILL.md`,
-`harness/scripts/check-reachability.sh`.
+`harness/scripts/check-reachability.py`.
 
 ### AST-052 — The word-budget audit ran its loop zero times and reported all clean · promoted 2026-08-11
 
@@ -863,7 +863,7 @@ skimmed is not a fix.
 
 Bound: `harness/.agents/roles/builder.md`, `harness/.agents/roles/thomas.md`,
 `harness/.agents/roles/rin.md` (gone), `harness/.agents/skills/dispatch-ticket/SKILL.md`,
-`harness/scripts/check-reachability.sh`.
+`harness/scripts/check-reachability.py`.
 
 ### AST-056 — A blocking edge expresses order, not exclusion · promoted 2026-08-12
 
@@ -950,7 +950,7 @@ package rather than about trackers: **naming a skill in a contract clears check 
 nothing run.** Check 3 asks whether a skill is reachable, never whether anything reaches it. The
 package's own history has the proof, recorded in the checker's docstring — *a browser walker
 shipped across releases that never ran once.* A new skill needs a moment, not only a mention.
-Bound: `harness/.agents/roles/thomas.md`, `harness/scripts/check-reachability.sh`.
+Bound: `harness/.agents/roles/thomas.md`, `harness/scripts/check-reachability.py`.
 
 ### AST-058 — The check after the step reported clean when the step was impossible · promoted 2026-08-12
 
@@ -986,7 +986,7 @@ Bound: `prompts/ADAPT-HARNESS.md`.
 ### AST-059 — The repo kept one self-check and lost the other to a directory it may ignore · promoted 2026-08-12
 
 `install.sh` staged `check-requirements.sh` into `.astraler/releases/<version>/` only, while
-`check-reachability.sh` travelled inside the payload and therefore landed in the project's
+`check-reachability.py` travelled inside the payload and therefore landed in the project's
 `scripts/` and was tracked. Same class of tool, two fates. A project that deletes or ignores
 its releases directory — which AST-054 says is a legitimate resting state — silently loses its
 own doctor while keeping the other one, and nothing reports the asymmetry.
@@ -1019,7 +1019,7 @@ Check 3 now names its own scope in its own line, and the skipped set moved into 
 beside check 4's exclusion. Third instance of one shape: **a green line that speaks for more
 than the check looked at** — after check 4's referenced-path claim, and the staleness audit's
 `RESULT: all clean` over a loop that ran zero times.
-Bound: `harness/scripts/check-reachability.sh`.
+Bound: `harness/scripts/check-reachability.py`.
 
 ### AST-061 — The arm batched to phase end built a payload only skimming could finish · promoted 2026-08-13
 
@@ -1249,7 +1249,7 @@ not try to infer readers — `batch-triage` asked for "the code map" in prose fo
 filename grep called that artifact an orphan while a shipped skill wanted it every run. **A
 grep for a name is not a search for a consumer**, so the registry is written by hand and the
 check only enforces that nothing escapes it.
-Bound: `harness/scripts/check-reachability.sh`.
+Bound: `harness/scripts/check-reachability.py`.
 
 ### AST-072 — Self-monitoring shipped without proof it cannot harm what it monitors · promoted 2026-08-18
 
@@ -1793,7 +1793,7 @@ code. `check-requirements.sh`'s payload-committed check walked every file under
 ships FIVE scripts into a project's `scripts/` directory — `harness/scripts/*.sh` plus this
 file itself, staged separately from the package root by `install.sh` — and the list named
 three. Measured directly on a real dirty tree: ten payload files modified, seven counted, the
-missing three being `check-reachability.sh`, `docs-staleness-audit.sh` and (found separately,
+missing three being `check-reachability.py`, `docs-staleness-audit.sh` and (found separately,
 by checking the package's own script directory rather than trusting the report alone)
 `check-requirements.sh` itself. A project whose only stale payload was one of those scripts
 got a green from the one check whose whole job is to say the payload is stale — up to and
@@ -2748,7 +2748,7 @@ Bound: codex-arm/SKILL.md (both variants), .claude/settings.json.
 
 ### AST-116 — A local fix that never goes upstream is a defect every fresh install re-buys · promoted 2026-08-20
 
-`check-reachability.sh` has been FAILING in the upstream payload since 2.3.2, and nobody
+`check-reachability.py` has been FAILING in the upstream payload since 2.3.2, and nobody
 upstream knew. The 2.3.2 release genericised an example agent name to `builder-tra-123`; the
 check treats any backticked kebab-case token as a candidate skill reference, so the example
 tripped it. Downstream, the operator added the name to that script's `NOT_A_SKILL` list and
@@ -2779,7 +2779,7 @@ The check was break-tested after both fixes, because a repair that silences a ch
 indistinguishable from a repair that fixes what it complained about: a planted
 `some-nonexistent-skill` still fails, and the payload is clean without it.
 
-Bound: scripts/check-reachability.sh, codex-arm/SKILL.md (both variants), this ledger.
+Bound: scripts/check-reachability.py, codex-arm/SKILL.md (both variants), this ledger.
 
 ### AST-117 — A worktree isolates git, not a tool that writes to a fixed path · promoted 2026-08-20
 
@@ -2815,7 +2815,7 @@ Bound: install.sh.
 
 ### AST-118 — A fallback that changes what the verdict MEANS, while keeping the same exit code · promoted 2026-08-20
 
-`check-reachability.sh` decides which skills the harness owns by reading the staged release
+`check-reachability.py` decides which skills the harness owns by reading the staged release
 archive for the applied version. With no archive, it fell back to "treat every skill as
 harness-owned", **printed that it was doing so**, and carried on — same checks, same exit
 codes, different meaning.
@@ -2849,7 +2849,7 @@ Found by the downstream agent auditing its OWN process rather than the release �
 noticing that an earlier "all 8 checks OK" it had reported was unearned. That is a harder thing
 to look for than a defect in someone else's work.
 
-Bound: scripts/check-reachability.sh.
+Bound: scripts/check-reachability.py.
 
 ### AST-119 — A fork inside a Builder can message the dispatcher, and nothing marks it as not the Builder · promoted 2026-08-20
 
@@ -3049,7 +3049,7 @@ used `declare -A` and `mapfile`. macOS ships bash 3.2, where both fail — and t
 failure was `markers=0`, which this check reports as GREEN. A checker that reads nothing and
 says nothing is wrong is the exact defect this ledger is mostly about, and it would have shipped
 to every macOS operator. That is why it is now a script running python3, like
-`check-reachability.sh`, rather than inline shell.
+`check-reachability.py`, rather than inline shell.
 
 **The testbed produced a vacuous pass twice before it produced a result.** First it forgot to
 tag the base, so the range was empty and every case reported green. Then its fixtures omitted
@@ -3703,7 +3703,7 @@ hook, a plug, a VCS hook, the installer) and a script-to-script edge both claim 
 and there a mention proves nothing. Fix both halves in one change or the false-clean becomes a
 false-alarm. Publish no count until each branch has been watched to go red (AST-137).
 
-Bound: `scripts/check-reachability.sh` (check 9), `scripts/selftest.sh`.
+Bound: `scripts/check-reachability.py` (check 9), `scripts/selftest.sh`.
 
 ### AST-141 — The ledger's `Bound:` line claims the present, and nothing had ever checked it · promoted 2026-09-16
 
@@ -3721,7 +3721,7 @@ Measured on 2026-09-16, both halves on live repositories. In this package: `Boun
 reading `"Wired 2026-08-29 (report-only; --kill opt-in)"` about a tool with no call site
 anywhere in the tree.
 
-**The part worth keeping is what the package had already done about it.** `check-reachability.sh`
+**The part worth keeping is what the package had already done about it.** `check-reachability.py`
 knew. Its closing scope line said so in plain words — *"Not scanned, and check 4 does not speak
 for it: the failure-mode ledger's historical `Bound:` provenance. A live project measured five
 citations there to a file that had been deleted, while check 4 reported clean."* The finding had
@@ -3735,7 +3735,7 @@ live file and one dead one keeps its live half under the check instead of being 
 wholesale. And when a check's scope line names a defect the check does not cover, that sentence
 is a ticket, not documentation.
 
-Bound: `scripts/check-reachability.sh` (check 10), `.agents/memory/recurring-failure-modes.md`.
+Bound: `scripts/check-reachability.py` (check 10), `.agents/memory/recurring-failure-modes.md`.
 
 ### AST-142 — Where what is owed is DATA, inject it; raising a document's tier only makes the duty louder · promoted 2026-09-16
 
@@ -3845,7 +3845,7 @@ project's** — repoint the existing registration at the payload script, verify 
 renders end-to-end, and only then retire the old file. An advisory that can only say "add mine"
 cannot describe "yours and mine are duplicates and one has to die."
 
-Bound: `scripts/docs-staleness-audit.sh`, `scripts/check-reachability.sh` (check 4),
+Bound: `scripts/docs-staleness-audit.sh`, `scripts/check-reachability.py` (check 4),
 `scripts/selftest.sh`, `install.sh`, `prompts/ADAPT-HARNESS.md` (§3 plugs).
 
 ### AST-145 — A role identity routed through a namespace the project does not own · promoted 2026-09-20
@@ -3885,7 +3885,7 @@ exists so `codex --profile <role>` resolves"* had to be removed from all five ra
 as a stale comment: a pane launched with it reads it as current instruction (AST-146).
 
 Bound: `.agents/skills/dispatch-ticket-codex/SKILL.md`, `.codex/profiles/*.md`,
-`.agents/orchestrator.md`, `check-requirements.sh`, `scripts/check-reachability.sh` (check 4).
+`.agents/orchestrator.md`, `check-requirements.sh`, `scripts/check-reachability.py` (check 4).
 
 ### AST-146 — An unrecognised configuration key is accepted in silence, so "it launched" is not evidence · promoted 2026-09-20
 
@@ -3949,7 +3949,7 @@ shapes the document actually contains, including the ones written in a different
 A globbed citation is also a different CLAIM: it says the set is non-empty. Check 10 resolves it
 with a glob and fails when the set is empty, which is what a renamed-away file leaves behind.
 
-Bound: `scripts/check-reachability.sh` (check 10), `scripts/selftest.sh`,
+Bound: `scripts/check-reachability.py` (check 10), `scripts/selftest.sh`,
 `.agents/memory/recurring-failure-modes.md` (AST-141).
 
 ### AST-148 — One condition answering two questions delivered the second answer as the first · promoted 2026-09-20

@@ -1,3 +1,20 @@
+# Astragentic 3.1.0
+
+**`scripts/check-reachability.sh` is `scripts/check-reachability.py`.** It has always been a
+Python program; the `.sh` name cost an adaptation step ("run `bash -n` on it") and, measured
+downstream on 3.0.1's fold, a project merge gate that syntax-checks every `*.sh` in a diff parsed
+Python as shell and went red on every release fold. A file is named for what runs it. Every
+payload reference, the installer's staging gate, `check-requirements.sh`, the READMEs, ADAPT and
+the ledger's bindings follow the rename. A project that cites the old path in its own docs or
+tooling (`AGENTS.md`, a gate planner) updates it on apply; `install.sh` reports the old file
+under DELETED upstream.
+
+## Upgrade from 3.0.3
+
+`curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.1.0 --apply`,
+then delete `scripts/check-reachability.sh` when the apply lists it as deleted upstream, and
+replace the old name in any project file that cites it.
+
 # Astragentic 3.0.3
 
 **The version chip is on every pane, not only the dispatcher's.** 3.0.2 put `astragentic

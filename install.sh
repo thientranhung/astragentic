@@ -272,7 +272,7 @@ cp "$HARNESS_ROOT/README.md"          "$STAGING_DIR/README.md"
 cp "$RELEASE_NOTES"                   "$STAGING_DIR/RELEASE-NOTES.md"
 cp "$HARNESS_ROOT/check-requirements.sh" "$STAGING_DIR/check-requirements.sh"
 # ...and into the PAYLOAD, so adaptation lands it in the project's scripts/ beside
-# check-reachability.sh. Staged-only was asymmetric: one self-check survived in the repo and
+# check-reachability.py. Staged-only was asymmetric: one self-check survived in the repo and
 # the other lived solely inside .astraler/releases/, which a project may legitimately ignore —
 # so deleting that directory took the repo's own doctor with it (AST-059). One source file
 # here, copied to two destinations; the package keeps a single home for it.
@@ -317,7 +317,7 @@ run_selfcheck() {  # $1 = label, rest = argv
     SELFCHECK_FAIL=1
   fi
 }
-run_selfcheck check-reachability python3 "$HARNESS_ROOT/harness/scripts/check-reachability.sh" "$HARNESS_ROOT"
+run_selfcheck check-reachability python3 "$HARNESS_ROOT/harness/scripts/check-reachability.py" "$HARNESS_ROOT"
 run_selfcheck docs-staleness     bash    "$HARNESS_ROOT/harness/scripts/docs-staleness-audit.sh" "$HARNESS_ROOT"
 # These two run against the STAGED tree: it is what a project receives, and it differs from the
 # source by the injected check-requirements.sh above.
@@ -688,7 +688,7 @@ PY
   # --apply lands the payload; ADAPT-HARNESS section 7 still owns the semantic half.
   #
   # DO NOT STAMP OVER OUTSTANDING CONFLICTS. `applied-version` is the arbiter for the NEXT
-  # upgrade and the ownership manifest `check-reachability.sh` reads. Stamping it while files
+  # upgrade and the ownership manifest `check-reachability.py` reads. Stamping it while files
   # are unreconciled tells both consumers a release landed cleanly when it did not, and the
   # lie is silent. A run with conflicts leaves the previous marker in place; re-run once the
   # conflicts are resolved, or stamp by hand having decided.
