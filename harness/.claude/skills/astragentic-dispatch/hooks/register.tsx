@@ -631,11 +631,15 @@ export const register: Register = on => {
   // The dispatched pane's own red line: set when a TURN-END send fails, cleared by the next
   // one that lands. The footer status alone was missed for ten minutes (measured downstream).
   let undelivered = ''
+  // The applied harness version, shown on every pane's band — not only the dispatcher's — so an
+  // owner with several projects and many panes reads it wherever they look (2026-10-10).
+  let appliedVersion = ''
   const sends = new Map<string, number>()
 
   on('session.start', async ($, e, next) => {
     root = await repoRoot($)
     me = await whoAmI($)
+    if (root) { try { appliedVersion = (await $.fs.read(`${root}/.astraler/state/applied-version`)).trim() } catch {} }
     if (me && root) {
       // session.start fires again on every reload and resume. The start commit is kept from the
       // first registration: rewritten at a reload after the Builder committed, it equalled the
@@ -1285,7 +1289,7 @@ export const register: Register = on => {
       if (e.props.hasSurvey) return next(e)
       const steps = FLOW_BY_ROLE[me.role]
       const f = steps ? await read($, flow) : null
-      if (!undelivered && !f) return next(e)
+      if (!undelivered && !f && !appliedVersion) return next(e)
       const isMode = /auto mode|classifier|permission/i.test(undelivered)
       const hint = isMode ? ' This pane is not in bypass-permissions mode: press shift+tab until it is.' : ''
       let isCurrentMarked = false
@@ -1312,8 +1316,14 @@ export const register: Register = on => {
                 return <Chip dim label={`○ ${label}`} />
               })}
               {me.role === 'qa' && f.qaMode ? <Chip bg="claude" fg="inverseText" label={`mode ${f.qaMode}`} /> : null}
+              {appliedVersion ? <Chip dim label={`astragentic ${appliedVersion}`} /> : null}
             </Box>
-          ) : null}
+          ) : (appliedVersion ? (
+            <Box flexDirection="row">
+              <Chip bg="claude" fg="inverseText" label={`${me.role} ${me.key}`} />
+              <Chip dim label={`astragentic ${appliedVersion}`} />
+            </Box>
+          ) : null)}
         </Box>
       )
     }

@@ -1,3 +1,15 @@
+# Astragentic 3.0.3
+
+**The version chip is on every pane, not only the dispatcher's.** 3.0.2 put `astragentic
+<version>` on the dispatcher's band and the board; the owner's ask was every agent. A Builder,
+Shaper or QA pane now ends its band with the same dim chip, and a resident pane shows its role
+chip and the version. Read once at session start from `.astraler/state/applied-version`.
+
+## Upgrade from 3.0.2
+
+`curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.0.3 --apply`;
+panes pick it up at their next start.
+
 # Astragentic 3.0.2
 
 **The applied version is on the band and the board.** An owner running several projects asked
