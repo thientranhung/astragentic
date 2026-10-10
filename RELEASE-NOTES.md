@@ -1,3 +1,24 @@
+# Astragentic 3.1.1
+
+**3.1.0 shipped a build artifact, and the adoption check could not excuse its absence.** A
+`py_compile` run during the rename left `harness/scripts/__pycache__/…pyc` in the tree and it was
+committed; the release carried it, `install.sh` listed it as NEW and advised an allow rule for a
+file every project ignores. It is removed, `__pycache__/` and `*.pyc` are ignored in the package
+(staging already drops what the package's git ignores), and `check-requirements.sh` check 3 now
+reads ADAPTATION-REPORT.md for an absent payload file the way it does for a differing one: a
+recorded kept-on-purpose decision clears it. Until now absence short-circuited before the report
+was read, so the only way to clear the MISS was to materialise the artifact.
+
+**Transition note for 3.1.0's rename.** A project whose own merge gate hardcodes
+`scripts/check-reachability.sh` cannot take the rename in one merge: keeping the `.sh` fails
+reachability check 9 (orphan), deleting it breaks the gate on the base. Bridge with one merge
+whose gate runs whichever name exists, then delete the `.sh`.
+
+## Upgrade from 3.1.0
+
+`curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.1.1 --apply`;
+delete `scripts/__pycache__/` if the 3.1.0 apply wrote it, or record it absent on purpose.
+
 # Astragentic 3.1.0
 
 **`scripts/check-reachability.sh` is `scripts/check-reachability.py`.** It has always been a

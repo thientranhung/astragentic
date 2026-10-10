@@ -725,8 +725,11 @@ PYEOF
           # reader to skim this list, which is the one thing it cannot afford.
           .agents/memory/INDEX.md|.agents/memory/RULES.md) continue ;;
         esac
-        [ -f "$TARGET/$f" ] || { UNDECLARED="$UNDECLARED  $f (absent)\n"; continue; }
-        diff -q "$REL/$f" "$TARGET/$f" >/dev/null 2>&1 && continue
+        # An ABSENT payload file is judged like a differing one: a recorded decision in the
+        # report excuses it. Until 3.1.1 absence short-circuited before the report was read, so
+        # a file an adopter had every reason not to materialise (a build artifact a release
+        # shipped by mistake) was a MISS nothing could clear (found downstream on 3.1.0).
+        [ -f "$TARGET/$f" ] && { diff -q "$REL/$f" "$TARGET/$f" >/dev/null 2>&1 && continue; }
         # MATCH THE WAY A HUMAN WRITES IT, not the way find prints it. An adapter recorded
         # all eighteen of its decisions as `roles/builder.md` and `dispatch-ticket/CLEANUP.md`
         # — the payload-relative form with the tree prefix dropped, which is how anyone refers
@@ -740,7 +743,7 @@ PYEOF
            || grep -qF -- "$F_NOPREFIX" "$REPORT" 2>/dev/null; then
           continue
         fi
-        UNDECLARED="$UNDECLARED  $f\n"
+        if [ -f "$TARGET/$f" ]; then UNDECLARED="$UNDECLARED  $f\n"; else UNDECLARED="$UNDECLARED  $f (absent)\n"; fi
       done < <(cd "$REL" && find . -type f | sed 's|^\./||' | sort)
       if [ -z "$UNDECLARED" ]; then
         ok "every payload file matches the release, is owner-owned, or is named in ADAPTATION-REPORT.md"

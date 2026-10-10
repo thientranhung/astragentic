@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-3.1.0-blue" alt="version"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-3.1.1-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
   <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-157_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/vi/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
@@ -42,13 +42,13 @@ nhau, review xong trong một vòng, và artifact chứng minh được điều 
 # 1. Đứng ở gốc project, stage bản mới nhất (không ghi file nào của project)
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
-#    …hoặc ghim một bản:  | bash -s -- 3.1.0
+#    …hoặc ghim một bản:  | bash -s -- 3.1.1
 
 # 2. Kiểm máy đã đủ thứ cần chưa
-bash .astraler/releases/3.1.0/check-requirements.sh
+bash .astraler/releases/3.1.1/check-requirements.sh
 
 # 3. Chạy bộ cài thích nghi trong Claude Code
-claude "Read .astraler/releases/3.1.0/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/3.1.1/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Mở router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium
@@ -291,7 +291,7 @@ và merge hook đều là của bản release ấy.
 ```bash
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash                      # bản mới nhất, chỉ stage
-curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.1.0         # ghim một bản
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.1.1         # ghim một bản
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --plan  # xem --apply sẽ ghi gì
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply # ghi payload vào
 ```

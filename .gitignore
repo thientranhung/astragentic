@@ -2,3 +2,5 @@
 *.log
 .scratch/
 /.claude/worktrees/
+__pycache__/
+*.pyc

@@ -62,8 +62,8 @@ from this table — read the entry.
 | `AST-047` | "Local" is a deployment fact, not a data fact | promoted | 163 | check-reachability.py |
 | `AST-048` | A rule not present where it must be remembered does not exist | promoted | 276 |   |
 | `AST-049` | Checks 1–4 asked whether things were consistent, never whether a role could START | promoted | 169 |   |
-| `AST-050` | Qualify a plugin command always, not once it is known to collide | promoted | 217 | check-reachability.cpython-314.pyc,check-reachability.py,dispatch-ticket,docs-staleness-audit.sh,register.tsx |
-| `AST-051` | An address the caller cannot use produces a substitute, not an error | promoted | 319 | builder-claude.md,check-reachability.cpython-314.pyc,check-reachability.py,dispatch-ticket,docs-staleness-audit.sh,thomas-claude.md,untangle |
+| `AST-050` | Qualify a plugin command always, not once it is known to collide | promoted | 217 | check-reachability.py,dispatch-ticket,docs-staleness-audit.sh,register.tsx |
+| `AST-051` | An address the caller cannot use produces a substitute, not an error | promoted | 319 | builder-claude.md,check-reachability.py,dispatch-ticket,docs-staleness-audit.sh,thomas-claude.md,untangle |
 | `AST-052` | The word-budget audit ran its loop zero times and reported all clean | promoted | 227 | docs-staleness-audit.sh |
 | `AST-053` | An axis read the run's verdict instead of its own, and went mute | promoted | 226 |   |
 | `AST-054` | `git add -A` committed two releases nobody ever applied | promoted | 146 | hook-git-guard.py |
@@ -143,13 +143,13 @@ from this table — read the entry.
 | `AST-129` | The receipt was a producer with no reader, and it hid the one fact that had readers | promoted | 222 |   |
 | `AST-130` | A report-only fork forged a verification marker using a TRUE excuse | promoted | 427 | builder-claude.md,check-simplify-markers.sh,register.tsx |
 | `AST-131` | The queue drained and nothing asked whether a slot was free | promoted | 344 | thomas.md |
-| `AST-132` | Two owners for one path, and neither can see the other | promoted | 307 | check-payload-drift.sh,check-reachability.cpython-314.pyc,check-reachability.py,thomas.md |
+| `AST-132` | Two owners for one path, and neither can see the other | promoted | 307 | check-payload-drift.sh,check-reachability.py,thomas.md |
 | `AST-133` | `--grep` is not a subject matcher, and it failed in both directions on the same day | promoted | 401 | CLEANUP.md,thomas.md,ticket-done.sh |
 | `AST-134` | After the fold, "the gate read this tree" is structurally false and the protocol had no way t… | promoted | 238 | MARKERS.md,check-simplify-markers.sh |
 | `AST-135` | The verifier's queue was invisible to itself, and the fire point had to follow the artifact | promoted | 364 | thomas.md |
 | `AST-136` | `--grep` is BASIC regex, and every marker kind in this system contains parentheses | promoted | 287 | check-simplify-markers.sh,selftest.sh |
 | `AST-137` | Every defect a live project found lived between a tested invocation and a real one | promoted | 418 | selftest.sh |
-| `AST-138` | A rule reaches every runtime or it reaches one, and nothing in the package asked which | promoted | 485 | check-reachability.cpython-314.pyc,check-reachability.py,hook-git-guard.py,hook-tracker-status.py |
+| `AST-138` | A rule reaches every runtime or it reaches one, and nothing in the package asked which | promoted | 485 | check-reachability.py,hook-git-guard.py,hook-tracker-status.py |
 | `AST-139` | The fork guard AST-119 asked for cannot be built today, measured three ways | promoted | 449 |   |
 | `AST-140` | A wiring count is an artifact of its definition, and three honest definitions gave three answers | promoted | 417 | selftest.sh |
 | `AST-141` | The ledger's `Bound:` line claims the present, and nothing had ever checked it | promoted | 335 |   |
