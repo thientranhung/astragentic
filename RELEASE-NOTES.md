@@ -1,3 +1,19 @@
+# Astragentic 3.2.4
+
+**A retired lane's late turn end rings no bell, on either path.** nizzy-ecom measured two under
+3.2.2: a pane whose worktree, branch and record entry were already gone ended one more turn,
+could not reach its dispatcher (that session had restarted, so the recorded address was dead),
+and wrote its turn end into the record for pickup. The write recreated a stub entry with no
+pane, and the dispatcher's record poll rang from it: a recap of finished work, one dispatcher
+turn each. Now a pane whose entry has left the record, or names another pane, writes and sends
+nothing; and the dispatcher's poll removes a stub that carries a pending turn end instead of
+ringing. The selftest driver covers the dispatcher side, planted.
+
+## Upgrade from 3.2.3
+
+`curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.2.4 --apply`;
+the dispatcher pane carries the poll guard after its next start, dispatched panes after theirs.
+
 # Astragentic 3.2.3
 
 **The dispatcher's "not confirmed received" chip clears when the ack arrives.** When two

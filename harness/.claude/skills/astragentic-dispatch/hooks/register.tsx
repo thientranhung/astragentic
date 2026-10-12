@@ -623,6 +623,10 @@ async function wakeFromRecord($: any, root: string, bell: (text: string) => void
   for (const [key, entry] of Object.entries(rec)) {
     const pending = entry?.turn_end_pending
     if (!pending || pending.woken_at) continue
+    // An entry with a pending turn end and no pane is a stub a retired pane wrote back after
+    // cleanup removed its lane (measured downstream, 2026-10-13: two bells after merge and
+    // worktree removal, both undelivered because the dispatcher had restarted). Not a lane.
+    if (!isLive(entry)) { await deleteRecordKey($, root, key); continue }
     const mark = parseMark(String(pending.text ?? ''))
     await patchRecord($, root, key, { turn_end_pending: { ...pending, woken_at: await $.clock.now() } })
     const role = entry.role ?? 'agent'
@@ -880,6 +884,16 @@ export const register: Register = on => {
       if (live.length > 0) {
         if (root) await patchRecord($, root, me.key, { waiting_on: { n: live.length, at: await $.clock.now(), what: live.slice(0, 3).map(a => a.description) } })
         $.ui.status(`astragentic-dispatch: ${live.length} agent(s) still running — TURN-END held until they finish`)
+        return res
+      }
+    }
+    // The lane is retired when its entry has left the record (cleanup) or names another pane:
+    // writing here would recreate a stub entry, and the turn end would reach the dispatcher as
+    // a recap of finished work (measured downstream, 2026-10-13).
+    if (root && me.role !== 'resident') {
+      const own = ((await readRecord($, root)) ?? {})[me.key]
+      if (own?.pane_id !== me.pane) {
+        $.ui.status(`astragentic-dispatch: ${me.key} is no longer in the record (lane retired) — turn end not reported`)
         return res
       }
     }
