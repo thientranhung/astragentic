@@ -1,3 +1,39 @@
+# Astragentic 3.2.0
+
+**The bells that were not news are gone.** Two sources of wake-ups said the same thing to the
+dispatcher over and over, and one of them did it through the owner's night.
+
+- **A turn that ends while the pane's own sub-agents still run is not a turn end.** The
+  built-in code-review runs its agents in the background; each one finishing woke the Builder,
+  the Builder answered "still waiting", and the mod rang the dispatcher for it — twice in a row
+  on one ticket (2026-10-12). The dispatched pane now asks the engine which of its agents are
+  live (`$.agent.list()`) at every turn end: while any is `running`, `waiting` or `pending`, the
+  TURN-END is held, the record notes `waiting_on`, and the board row reads *N agent(s) still
+  running, turn end held*. The one TURN-END goes when a turn ends with nothing live. An
+  aborted or errored turn is sent as it is.
+- **Bells wait for the dispatcher's turn to end, and arrive as one.** A bell that lands while
+  the dispatcher runs a gate pass or holds a picker for the owner is kept (the footer counts
+  them) and flushed as one prompt when the turn ends. The owner slept through a picker and
+  read a row of one-line "still running" answers before this.
+- **The watchdog is silent about a pane the mod recorded.** Its STUCK, NEVER_STARTED and
+  BLOCKED rules fired on self-reporting panes; only WATCHER_LOST read the record. Measured on
+  nizzy-ecom: 26 STUCK alerts, fifteen minutes apart, through one night, for a Shaper that had
+  finished and reported. A recorded pane draws no pane alert; the watchdog keeps THOMAS_CRASHED,
+  the Codex/OpenCode panes and the project probe.
+- **Every watchdog alert fires on the edge of its condition**: once when first seen, again only
+  after a poll on which the condition was gone. The cooldown now only spaces a flapping one. A
+  rate-limited alert is not marked fired, so it is retried. Planted: the 3.1.1 loop fired 7
+  times in 9 seconds on a constant stall; this one fires once (selftest case).
+
+No new script, no new plug, no new doc. `/loop` was never part of the dispatch path and stays
+out of it: the dispatcher is woken by events through the mod and by the 30 s record poll.
+
+## Upgrade from 3.1.1
+
+`curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.2.0 --apply`,
+then restart the dispatcher's pane (the mod loads at session start) and the workspace watchdog
+(`scripts/herdr-watchdog.sh stop`, then the usual `nohup` start).
+
 # Astragentic 3.1.1
 
 **3.1.0 shipped a build artifact, and the adoption check could not excuse its absence.** A

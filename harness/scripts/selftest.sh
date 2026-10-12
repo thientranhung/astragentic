@@ -1147,8 +1147,51 @@ else
   out="$(wd_polls working)"
   case "$out" in *WATCHER_LOST*) bad "self-reporting pane" "a pane the mod recorded drew WATCHER_LOST: '$out'" ;;
                  *) ok "a pane the dispatch mod recorded is not WATCHER_LOST" ;; esac
+  # A recorded pane that worked and stopped is one that reported its turn end through the mod;
+  # 26 STUCK alerts through one night said otherwise (nizzy-ecom, 2026-10-12). Nothing fires on
+  # a self-reporting pane. The baseline above (no record → STUCK) keeps this case honest.
+  out="$(wd_polls working idle idle)"
+  case "$out" in *STUCK*|*NEVER_STARTED*|*BLOCKED*) bad "self-reporting pane, stopped" "a pane the mod recorded drew an alert after it reported: '$out'" ;;
+                 *) ok "a pane the dispatch mod recorded draws no STUCK, NEVER_STARTED or BLOCKED" ;; esac
   rm -f "$W/proj/.astraler/state/dispatch-record.json"
 fi
+
+# ---------------------------------------------------------------------------------------------
+# AN ALERT FIRES ON THE EDGE (3.2.0). The whole script runs here against a stubbed `herdr` that
+# always answers the same stalled Builder, with no cooldown, for a few polls: once fires once.
+# The 3.1.1 loop fires on every poll a condition holds (the overnight 26), so the case fails on it.
+# ---------------------------------------------------------------------------------------------
+echo "watchdog — one alert per episode, not one per poll"
+E="$TMP/wd-edge"; mkdir -p "$E/bin" "$E/repo/.agents"
+( cd "$E/repo" && git init -q . && printf '| workspace-label | `wdedge` |\n' > .agents/orchestrator.md )
+cat > "$E/bin/herdr" <<'EOS'
+#!/bin/sh
+case "$1 $2" in
+  "agent list") echo '{"result":{"agents":[{"pane_id":"w9:t","name":"thomas","agent_status":"done","workspace_id":"w9"},{"pane_id":"w9:b","name":"builder-e","agent_status":"idle","workspace_id":"w9"}]}}' ;;
+  "workspace list") echo '{"result":{"workspaces":[{"label":"wdedge","workspace_id":"w9"}]}}' ;;
+  "agent prompt") echo "PROMPTED $3" >> "$E_LOG"; exit 0 ;;
+  *) echo '{"result":{}}' ;;
+esac
+EOS
+printf '#!/bin/sh\nexit 1\n' > "$E/bin/pgrep"; printf '#!/bin/sh\nexit 0\n' > "$E/bin/caffeinate"
+chmod +x "$E/bin/"*
+rm -f /tmp/herdr-watchdog-wdedge.lock; rm -rf /tmp/herdr-watchdog-wdedge.state /tmp/herdr-watchdog-wdedge.log
+export E_LOG="$E/prompts.log"; : > "$E_LOG"
+# Started as a plain child and ended by its own PID: the script's `stop` signals a process
+# group, and under a test runner that group can be the runner's (measured: the first draft of
+# this case stopped the selftest). TERM lands on its `trap 'exit 0'`.
+( cd "$E/repo" && PATH="$E/bin:$PATH" exec bash "$WD" 1 0 50 ) >/dev/null 2>&1 &
+wdpid=$!
+sleep 9
+kill -TERM "$wdpid" 2>/dev/null; sleep 1; kill -KILL "$wdpid" 2>/dev/null; wait "$wdpid" 2>/dev/null || true
+pkill -f "herdr-watchdog.sh 1 0 50" 2>/dev/null || true
+rm -f /tmp/herdr-watchdog-wdedge.lock
+n="$(grep -c '^PROMPTED' "$E_LOG" 2>/dev/null || true)"
+# seen on first poll, idle on the second → STUCK or NEVER_STARTED fires on poll 2; polls 3..8 must not repeat it
+if [ "${n:-0}" -eq 1 ]; then ok "a condition that holds across eight polls alerts once"
+elif [ "${n:-0}" -eq 0 ]; then bad "edge alert baseline" "no alert fired at all in nine seconds (log: $(cat /tmp/herdr-watchdog-wdedge.log 2>/dev/null | tail -3))"
+else bad "alert per poll" "the same condition alerted $n times in nine seconds — level-triggered again"; fi
+unset E_LOG
 
 # ---------------------------------------------------------------------------------------------
 # The dispatch mod. On a Claude root it is the only thing that records a pane, delivers its

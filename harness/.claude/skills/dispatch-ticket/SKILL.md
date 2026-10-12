@@ -112,7 +112,8 @@ command that writes to disk — the arm already does, one detached worktree per 
 
 **On a Claude root the per-turn watcher is the mod's** (`dispatch-ticket-claude`): the pane
 reports its own turn end. This workspace watchdog is still yours on every runtime, because it
-covers the one thing a mod cannot report — a pane whose process died.
+covers the one thing a mod cannot report — a pane whose process died. It is silent about a
+Claude pane the mod recorded; its alerts are for Codex/OpenCode panes, once per episode.
 
 ```bash
 # Scoped to THIS workspace, and by the same identity test the watchdog uses on itself: a bare

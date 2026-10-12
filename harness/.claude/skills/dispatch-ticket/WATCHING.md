@@ -5,7 +5,10 @@ Companion to `dispatch-ticket`. Read when a watch returns something unexpected.
 **On a Claude root the per-turn watcher is gone.** The `astragentic-dispatch` mod reports turn
 ends from inside the pane (`dispatch-ticket-claude`). The watcher sections below are for Codex
 and OpenCode panes. The pipe table and the workspace watchdog apply to every runtime, and the
-watchdog stays mandatory: it is the only thing that sees a pane whose process died.
+watchdog stays mandatory: it is the only thing that sees a pane whose process died. **A pane
+the mod recorded draws no pane alert at all** (3.2.0): its turn ends arrive as `TURN-END`, a
+turn end it is holding is on the board, and the mod refuses it a picker. Measured before: 26
+`STUCK` alerts through one night for a Shaper that had finished and reported.
 
 ## Pipes swallow exit codes — all runtimes
 
@@ -126,6 +129,10 @@ lsof -a -p <pid> -d cwd -Fn | grep '^n'   # -a is load-bearing
 
 Two different ages is the duplicate signature; a parent and its child is not. Sweep first, then
 `rm` a stale lock: removing a lock whose holder is alive hands the next launcher a free `flock`.
+
+**Every alert fires once per episode** (3.2.0): when its condition is first seen, and again only
+after a poll on which it was not. The cooldown only spaces a condition that flaps. Codex and
+OpenCode panes only; a Claude pane's state is on the board.
 
 | Alert | What it means | Action |
 |---|---|---|

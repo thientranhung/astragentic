@@ -617,6 +617,16 @@ for d in dispatched:
     # For the heartbeat pane count below — a marker line, not an alert.
     print(f"__seen|{dpane}")
 
+    # A pane the dispatch mod recorded reports itself: its turn ends reach the dispatcher as
+    # TURN-END, a held turn end is on the record as `waiting_on`, and the mod refuses it a
+    # picker. Nothing below can add to that, and every alert below fired on one anyway:
+    # measured on nizzy-ecom, 26 STUCK alerts, fifteen minutes apart, for a Shaper that had
+    # finished and reported, through one night (2026-10-12). The watchdog keeps the Codex and
+    # OpenCode panes, which run the watcher script, and the one thing no mod reports: a
+    # dispatcher whose process died.
+    if dpane in self_reporting:
+        continue
+
     try:
         has_w = subprocess.run(
             ["pgrep", "-f", f"herdr-watch-terminal.sh {dpane}"],
@@ -704,15 +714,31 @@ while true; do
   # Extract Thomas pane for alerting
   thomas_pane=$(echo "$output" | grep '^__THOMAS__' | cut -d'|' -f2)
 
-  # Process anomalies (skip internal lines)
+  # Process anomalies (skip internal lines). An alert fires on the EDGE of its condition: once
+  # when the condition is first seen, and again only after a poll on which it was not. Until
+  # 3.2.0 it fired every COOLDOWN seconds for as long as the condition held — 26 identical
+  # STUCK alerts through one night for a pane that had simply finished (nizzy-ecom,
+  # 2026-10-12). The cooldown now only spaces a condition that flaps. A rate-limited alert is
+  # not marked fired, so it is tried again on the next poll.
+  fired_now=" "
   while IFS='|' read -r atype key details; do
     [[ -z "$atype" ]] && continue
     [[ "$atype" == __* ]] && continue
+    san="${key//[^a-zA-Z0-9]/_}"
+    fired_now="$fired_now$san "
+    [[ -f "$STATE_DIR/fired_$san" ]] && continue
     if ! on_cooldown "$key"; then
-      send_alert "$atype" "$details" "$thomas_pane" "$(bucket_for "$key")"
+      if send_alert "$atype" "$details" "$thomas_pane" "$(bucket_for "$key")"; then
+        touch "$STATE_DIR/fired_$san"
+      fi
       set_cooldown "$key"
     fi
   done <<< "$output"
+  for f in "$STATE_DIR"/fired_*; do
+    [ -e "$f" ] || continue
+    san="${f##*/fired_}"
+    [[ "$fired_now" == *" $san "* ]] || rm -f "$f"
+  done
 
   # Heartbeat — see the header comment for why nothing else here proves the
   # loop is alive. Written every HEARTBEAT_EVERY-th poll, in place rather

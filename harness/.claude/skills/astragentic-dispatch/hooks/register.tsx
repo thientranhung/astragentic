@@ -563,7 +563,8 @@ async function refreshBoard($: any, root: string | null, sends: Map<string, numb
       const isLate = now - sentAt > ACK_GRACE_MS
       rows.push({ key, role, state: 'sent', since: sentAt, note: isLate ? 'not confirmed received' : undefined })
     } else if (isMidTurn(entry)) {
-      rows.push({ key, role, state: 'working', since: entry.last_brief_received_at })
+      const w = entry.waiting_on
+      rows.push({ key, role, state: 'working', since: entry.last_brief_received_at, note: w ? `${w.n} agent(s) still running, turn end held` : undefined })
     } else if (entry.last_turn_end_at) {
       rows.push({ key, role, state: 'ended', since: entry.last_turn_end_at, note: [entry.last_turn_reason, qaNote].filter(Boolean).join(' · ') || undefined })
     } else {
@@ -602,7 +603,7 @@ async function refreshBoard($: any, root: string | null, sends: Map<string, numb
 // The second delivery path for a turn end (see turn.complete on the dispatched side): an entry
 // whose pane could not send its TURN-END has it in the record, and the dispatcher's own mod
 // submits the same prompt from there, once. Measured latency bound: the 30 s poll.
-async function wakeFromRecord($: any, root: string): Promise<void> {
+async function wakeFromRecord($: any, root: string, bell: (text: string) => void): Promise<void> {
   const rec = (await readRecord($, root)) ?? {}
   for (const [key, entry] of Object.entries(rec)) {
     const pending = entry?.turn_end_pending
@@ -610,9 +611,44 @@ async function wakeFromRecord($: any, root: string): Promise<void> {
     const mark = parseMark(String(pending.text ?? ''))
     await patchRecord($, root, key, { turn_end_pending: { ...pending, woken_at: await $.clock.now() } })
     const role = entry.role ?? 'agent'
-    void $.prompt.submit({
-      text: `${MARK} ${role} ${key} ended its turn (${mark?.reason ?? 'unknown'}) — read from the record: its TURN-END message was not delivered (${pending.reason}). A bell, not proof: verify by artifact before acting.\n\nIts last words:\n${mark?.body ?? ''}`,
-    })
+    bell(`${MARK} ${role} ${key} ended its turn (${mark?.reason ?? 'unknown'}) — read from the record: its TURN-END message was not delivered (${pending.reason}). A bell, not proof: verify by artifact before acting.\n\nIts last words:\n${mark?.body ?? ''}`)
+  }
+}
+
+// Whether this session's main turn is running (turn.start … turn.complete). Module-level so
+// the bell functions below are plain declarations, as the engine's reader requires.
+let isBusy = false
+
+// Bells that arrived while the dispatcher's own turn was running (a gate pass, a picker
+// waiting on the owner). Each would have become a turn of its own once the session went
+// idle: the owner read a row of "still waiting" answers after sleeping through a picker
+// (2026-10-12). They are flushed as one prompt when the turn ends.
+const heldBells: string[] = []
+function bell($: any, text: string): void {
+  if (isBusy) {
+    heldBells.push(text)
+    $.ui.status(`astragentic-dispatch: ${heldBells.length} bell(s) held until this turn ends`)
+    return
+  }
+  void $.prompt.submit({ text })
+}
+function flushBells($: any): void {
+  if (heldBells.length === 0) return
+  const texts = heldBells.splice(0)
+  const text = texts.length === 1 ? texts[0] : `${MARK} ${texts.length} turn ends arrived while you were busy; read them together.\n\n${texts.join('\n\n---\n\n')}`
+  void $.prompt.submit({ text })
+}
+
+// The agents of this session that are still at work: a background review's sub-agents, a
+// fork. A turn that ends while any of these runs is a pause, not a turn end worth a bell
+// (measured downstream: two bells in a row that said "still waiting on code-review"). A team
+// mate waiting for a message is `idle` and does not count.
+async function liveAgents($: any): Promise<Array<{ description: string; status: string }>> {
+  try {
+    const list = await $.agent.list()
+    return (list ?? []).filter((a: any) => a.status === 'pending' || a.status === 'running' || a.status === 'waiting')
+  } catch {
+    return []
   }
 }
 
@@ -626,7 +662,6 @@ export const register: Register = on => {
   let me: Me | null = null
   let root: string | null = null
   let dispatcher: string | null = null
-  let isBusy = false
   let isNoticeTurn = false
   // The dispatched pane's own red line: set when a TURN-END send fails, cleared by the next
   // one that lands. The footer status alone was missed for ten minutes (measured downstream).
@@ -667,7 +702,7 @@ export const register: Register = on => {
       const at = root
       $.clock.every(30_000, async () => {
         await refreshBoard($, at, sends)
-        await wakeFromRecord($, at)
+        await wakeFromRecord($, at, text => bell($, text))
       })
     }
     return next(e)
@@ -710,9 +745,7 @@ export const register: Register = on => {
       await refreshBoard($, root, sends)
       if (rec[mark.key]?.turn_end_pending) await patchRecord($, root, mark.key, { turn_end_pending: null })
       const role = rec[mark.key]?.role ?? 'agent'
-      void $.prompt.submit({
-        text: `${MARK} ${role} ${mark.key} ended its turn (${mark.reason}). A bell, not proof: verify by artifact before acting.\n\nIts last words:\n${mark.body}`,
-      })
+      bell($, `${MARK} ${role} ${mark.key} ended its turn (${mark.reason}). A bell, not proof: verify by artifact before acting.\n\nIts last words:\n${mark.body}`)
       return { consumed: `astragentic-dispatch: ${mark.key} turn end handed to the dispatcher` }
     }
 
@@ -794,6 +827,7 @@ export const register: Register = on => {
     isBusy = false
     if (!me) {
       if (root) await refreshBoard($, root, sends)
+      flushBells($)
       return res
     }
     // Every turn after the first brief is reported, so a Builder that backgrounds its work and
@@ -803,6 +837,19 @@ export const register: Register = on => {
     const isSkipped = isNoticeTurn
     isNoticeTurn = false
     if (isSkipped) return res
+    // A turn that ends while this pane's own agents still run is a pause. The built-in
+    // code-review and a backgrounded Agent call end the main turn and wake it again per
+    // notification; each wake ended in a bell that said "still waiting" (measured downstream, 2026-10-12).
+    // The record notes what is waited on, the board shows it, and the one TURN-END goes when
+    // the first turn ends with nothing live. An aborted or errored turn is sent as it is.
+    if (e.reason === 'answer' && me.role !== 'resident') {
+      const live = await liveAgents($)
+      if (live.length > 0) {
+        if (root) await patchRecord($, root, me.key, { waiting_on: { n: live.length, at: await $.clock.now(), what: live.slice(0, 3).map(a => a.description) } })
+        $.ui.status(`astragentic-dispatch: ${live.length} agent(s) still running — TURN-END held until they finish`)
+        return res
+      }
+    }
     if (!dispatcher) {
       // No address: the brief did not come through the mod (a held delivery, a brief typed in
       // by `herdr agent prompt`). Measured downstream: a gate pane in auto mode ended its turn
@@ -814,7 +861,7 @@ export const register: Register = on => {
       }
       return res
     }
-    if (root) await patchRecord($, root, me.key, { last_turn_end_at: await $.clock.now(), last_turn_reason: e.reason })
+    if (root) await patchRecord($, root, me.key, { last_turn_end_at: await $.clock.now(), last_turn_reason: e.reason, waiting_on: null })
     // A QA pane's entry goes with its worktree at cleanup, so the fact that QA ended a turn is
     // also written onto the ticket's own entry (`qa:<key>` → `<key>`), where the owed check and
     // the board read it after the QA pane is gone (found by the 3.0.0 gate).

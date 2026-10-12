@@ -24,7 +24,7 @@ project loads it with no flag and no setup:
 | Record tab and pane ids | copied by hand from the create output | the pane writes them at session start, from herdr's own environment |
 | Deliver the slash command | SendMessage for the body, type the command into the pane, confirm the echo | **one SendMessage**; the pane runs the first line as a real command |
 | Confirm delivery | read the pane for a phrase only the brief had | the pane answers `RECEIVED` |
-| Watch the turn | a Monitor wrapping the watcher script, re-armed for every turn | the pane reports `TURN-END` at every turn end, and the mod wakes you with a prompt |
+| Watch the turn | a Monitor wrapping the watcher script, re-armed for every turn | the pane reports `TURN-END` when a turn ends with none of its agents still running, and the mod wakes you with a prompt; bells that land while you are mid-turn are held and flushed as one |
 | Protect a working pane | nothing | `herdr tab\|pane\|workspace close` on a mid-turn pane is refused |
 | Claim on the tracker before the brief | prose in `thomas.md` | a brief for a ticket the tracker reports unclaimed is not sent |
 | Tracker write-back after a merge | refused only at a push of the base | the merge result carries the note, the line turns red, and no brief is sent until `scripts/ticket-done.sh` has stamped it |
@@ -84,9 +84,15 @@ is now a second copy of something the mod does, and a second copy is where the t
 - **`reason=command-failed`** means the pane refused the first line, usually an unknown command
   name. Fix the brief and send again.
 - **One ticket yields several `TURN-END`s, and that is correct.** A Builder parks and ends its
-  turn while its review sub-agents and the arm run in the background, then resumes; measured:
-  eight bells for one ticket, each a true turn end, `Skills run:` growing across them. Read the
-  last one; the count is not a defect.
+  turn while the arm runs in the background, then resumes; each bell is a true turn end,
+  `Skills run:` growing across them. Read the last one. **A turn that ends while the pane's own
+  sub-agents still run is not one of them** (3.2.0): the built-in review's agents woke the
+  Builder per notification and each wake rang "still waiting" (measured downstream, 2026-10-12). The pane holds the
+  bell, the board row reads *N agent(s) still running, turn end held*, and the one TURN-END
+  comes when a turn ends with nothing live.
+- **Bells wait for your turn to end.** While you run a gate pass or hold a picker for the owner,
+  arriving turn ends are held (the footer counts them) and flushed as one prompt when your turn
+  ends; the owner slept through a picker and read a row of one-line answers before this.
 - **A refused gate leaves a trace.** Each refusal (the tdd gate, the arm gate) is appended to the
   pane's record entry under `refusals` with its time, written to
   `/tmp/harness-hook-events.log`, and shown red on the Builder's band for two minutes. "Did the
