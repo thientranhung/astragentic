@@ -89,6 +89,14 @@ if [ -x "$TS" ]; then
       fi
       notes+=("tracker: $state, unassigned (via tracker-state.sh)") ;;
     "") echo "ticket-done: STOP — tracker-state.sh printed nothing for $ID; the plug must print '<state> <assignee-or-dash>'." >&2; exit 1 ;;
+    # ADAPT-HARNESS asks a project whose tracker no shell can reach (an MCP-only Jira or Linear)
+    # to write a plug that prints `unreachable -`. Until 3.2.1 this branch refused that answer
+    # as "not closed", so every ticket on such a project was undone and every base push was
+    # blocked — a project measured it and said so. Unreachable is the empty socket spelled out:
+    # the tracker half is unverified, said in the stamp, and the push is admitted with that said.
+    unreachable|Unreachable|UNREACHABLE)
+      notes+=("tracker: UNVERIFIED — tracker-state.sh reports the tracker unreachable from a shell (ADAPT-HARNESS §3); the write-back is on the agent's word")
+      echo "ticket-done: NOTE — tracker half unverified: the plug reports the tracker unreachable from a shell. Record the write-back in the handback." ;;
     *)  echo "ticket-done: STOP — tracker says $ID is '$state' (assignee '$assignee'). The write-back has not landed: move it to the done state and release the assignee, then re-run." >&2; exit 1 ;;
   esac
 elif [ -e "$TS" ]; then

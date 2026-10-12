@@ -735,7 +735,17 @@ export const register: Register = on => {
       const mark = parseMark(env.inner)
       if (!mark || !root) return next(e)
       const rec = (await readRecord($, root)) ?? {}
-      if (rec[mark.key]?.pane_id !== mark.pane) return next(e)
+      if (rec[mark.key]?.pane_id !== mark.pane) {
+        // A TURN-END from a lane the record no longer holds — its worktree removed, its entry
+        // reaped — read as live work when it fell through here as a plain message (measured
+        // downstream: a recap bell after merge and tab close, 2026-10-12). A RECEIVED from an
+        // unknown pane still passes through, so a mis-keyed brief is seen.
+        if (mark.kind === 'TURN-END') {
+          $.ui.status(`astragentic-dispatch: a turn end from ${mark.key} (pane ${mark.pane}) arrived after its lane was retired — dropped`)
+          return { consumed: `astragentic-dispatch: ${mark.key} turn end from a retired lane` }
+        }
+        return next(e)
+      }
       sends.delete(env.fromName)
       if (mark.kind === 'RECEIVED') {
         await patchRecord($, root, mark.key, { session_name: env.fromName, acked_at: await $.clock.now() })

@@ -492,6 +492,20 @@ printf '#!/bin/sh\necho "closed -"\n' > "$TD/.astraler/project/tracker-state.sh"
   && ok "ticket-done stamps a merged, closed, released ticket" \
   || bad "ticket-done closed ticket" "did not stamp"
 guard_in "$TD" allow "git push origin main"
+# ADAPT tells an MCP-only tracker project to print `unreachable -`; until 3.2.1 ticket-done read
+# that as "not closed" and refused every ticket, so every base push on that project was blocked
+# (measured on an adopting project, 2026-10-12). Unreachable stamps as UNVERIFIED, like no plug.
+( cd "$TD" && git checkout -qb builder/ABC-15 && git commit -q --allow-empty -m "ABC-15 y" && git checkout -q main \
+  && git merge -q --no-ff builder/ABC-15 -m "Merge ABC-15: y
+Ledger: none" ) >/dev/null 2>&1
+printf '#!/bin/sh\necho "unreachable -"\n' > "$TD/.astraler/project/tracker-state.sh"
+if ( cd "$TD" && bash "$S/ticket-done.sh" ABC-15 --moved none ) >/dev/null 2>&1 \
+   && grep -q "UNVERIFIED" "$HARNESS_STAMP_ROOT/harness-ticket-done/ABC-15" 2>/dev/null; then
+  ok "ticket-done stamps an unreachable tracker as UNVERIFIED, as ADAPT promised"
+else
+  bad "ticket-done unreachable" "a plug printing 'unreachable -' (what ADAPT asks for) refused the ticket or left no UNVERIFIED stamp"
+fi
+printf '#!/bin/sh\necho "closed -"\n' > "$TD/.astraler/project/tracker-state.sh"
 ( cd "$TD" && bash "$S/ticket-done.sh" ABC-9 ) >/dev/null 2>&1 \
   && bad "ticket-done unmerged" "stamped a ticket with nothing on the base" \
   || ok "ticket-done refuses a ticket with nothing on the base"

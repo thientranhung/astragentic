@@ -1,3 +1,27 @@
+# Astragentic 3.2.1
+
+**A tracker the shell cannot reach no longer blocks every push.** ADAPT-HARNESS tells a project
+whose tracker is MCP-only (Jira, Linear through their official plugins) to write a
+`tracker-state.sh` that prints `unreachable -`. `scripts/ticket-done.sh` read that answer as
+"not closed" and refused the ticket, so on such a project no ticket could be stamped and the git
+guard refused every push of the base — an adopting project measured it and reported it. Now
+`unreachable` stamps the tracker half as UNVERIFIED, the way an absent plug does, and the push is
+admitted with that stated. Selftest case; planted: the 3.2.0 script refuses, this one stamps.
+
+**A turn end from a retired lane is dropped.** nizzy-ecom's first 3.2.0 lane rang a fourth bell
+after the merge, the worktree removal and the tab close: a recap, from an entry the record no
+longer held, that fell through the mod as a plain message and read like live work. A TURN-END
+whose key and pane the record does not hold is consumed with a footer line; a RECEIVED from an
+unknown pane still passes through.
+
+nizzy-ecom's measurement of 3.2.0 on that lane: zero "still waiting" bells during the built-in
+review (6–8 per Builder on 3.1.1); two true parks on a backgrounded test run, one handback.
+
+## Upgrade from 3.2.0
+
+`curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.2.1 --apply`;
+restart the dispatcher's pane for the mod.
+
 # Astragentic 3.2.0
 
 **The bells that were not news are gone.** Two sources of wake-ups said the same thing to the
