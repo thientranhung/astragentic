@@ -51,10 +51,13 @@ bash .astraler/releases/3.2.0/check-requirements.sh
 claude "Read .astraler/releases/3.2.0/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Start the router
-claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium
+claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable
 ```
 
-Thomas reads your orchestrator config, claims the workspace, and begins routing work.
+Thomas reads your orchestrator config, claims the workspace, and begins routing work. The
+`--advisor` value comes from the Advisor column of `.agents/orchestrator.md` (Opus rows take
+`fable`, Sonnet rows `opus`, blank means none); `fable` spends usage credits and asks for one
+`/model fable` consent per machine the first time.
 
 > **Prerequisites:** [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code),
 > Git (with worktree support),
@@ -346,7 +349,7 @@ Edit `.agents/orchestrator.md` — your file, never overwritten by upgrades:
 | qa      | claude  | claude-sonnet-5 | low    |
 ```
 
-Then: `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium`
+Then: `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable`
 
 ---
 

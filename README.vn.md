@@ -51,10 +51,13 @@ bash .astraler/releases/3.2.0/check-requirements.sh
 claude "Read .astraler/releases/3.2.0/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Mở router
-claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium
+claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable
 ```
 
-Thomas đọc file cấu hình orchestrator, claim workspace, rồi bắt đầu điều phối công việc.
+Thomas đọc file cấu hình orchestrator, claim workspace, rồi bắt đầu điều phối công việc. Giá trị
+`--advisor` lấy từ cột Advisor trong `.agents/orchestrator.md` (dòng Opus dùng `fable`, dòng Sonnet
+dùng `opus`, để trống là không có); `fable` tiêu usage credits và hỏi một lần `/model fable` trên
+mỗi máy ở lần đầu.
 
 > **Cần có trước:** [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code),
 > Git (có worktree),
@@ -336,7 +339,7 @@ Sửa `.agents/orchestrator.md` — file của bạn, không bao giờ bị bả
 | qa      | claude  | claude-sonnet-5 | low    |
 ```
 
-Rồi: `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium`
+Rồi: `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable`
 
 ---
 
