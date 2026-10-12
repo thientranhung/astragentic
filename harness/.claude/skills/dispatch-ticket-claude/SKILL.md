@@ -25,6 +25,7 @@ project loads it with no flag and no setup:
 | Deliver the slash command | SendMessage for the body, type the command into the pane, confirm the echo | **one SendMessage**; the pane runs the first line as a real command |
 | Confirm delivery | read the pane for a phrase only the brief had | the pane answers `RECEIVED` |
 | Watch the turn | a Monitor wrapping the watcher script, re-armed for every turn | the pane reports `TURN-END` when a turn ends with none of its agents still running, and the mod wakes you with a prompt; bells that land while you are mid-turn are held and flushed as one |
+| A pane's written reply reaches you, not a namesake | the pane guessed your name; "thomas" went to another project's session named that (2026-10-12) | the pane's overlay names your session; a SendMessage from it to any name no agent of its own carries is readdressed to you |
 | Protect a working pane | nothing | `herdr tab\|pane\|workspace close` on a mid-turn pane is refused |
 | Claim on the tracker before the brief | prose in `thomas.md` | a brief for a ticket the tracker reports unclaimed is not sent |
 | Tracker write-back after a merge | refused only at a push of the base | the merge result carries the note, the line turns red, and no brief is sent until `scripts/ticket-done.sh` has stamped it |

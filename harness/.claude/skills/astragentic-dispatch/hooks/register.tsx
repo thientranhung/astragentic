@@ -662,6 +662,7 @@ export const register: Register = on => {
   let me: Me | null = null
   let root: string | null = null
   let dispatcher: string | null = null
+  let dispatcherName = ''
   let isNoticeTurn = false
   // The dispatched pane's own red line: set when a TURN-END send fails, cleared by the next
   // one that lands. The footer status alone was missed for ten minutes (measured downstream).
@@ -719,7 +720,13 @@ export const register: Register = on => {
   on('prompt.compose', async ($, e, next) => {
     const res = await next(e)
     if (!root) return res
-    const text = await overlay($, root, me?.role ?? 'thomas')
+    let text = await overlay($, root, me?.role ?? 'thomas')
+    if (me && me.role !== 'resident' && dispatcher) {
+      // The one address a written reply may go to, in the pane's own words: the role name is
+      // not an address, and another project's session may carry it.
+      const who = dispatcherName ? `${dispatcherName} (${dispatcher})` : dispatcher
+      text = `${text ? text + '\n\n' : ''}Your dispatcher is the session ${who}. A written reply goes there and nowhere else: SendMessage to any other name is readdressed to it. "thomas" is a role, not an address.`
+    }
     if (!text) return res
     return { sections: [...res.sections, { id: 'astragentic-dispatch:overlay', text, scope: 'session' as const }] }
   })
@@ -761,6 +768,7 @@ export const register: Register = on => {
 
     if (env.inner.startsWith(MARK)) return next(e)
     dispatcher = env.from
+    dispatcherName = env.fromName
     const now = await $.clock.now()
     // The dispatcher's declared exemptions ride in the brief, so the gates below read them from
     // the one text the mod knows is the brief: `TDD: n/a — <why>` and `REVIEW: n/a — <why>`.
@@ -904,6 +912,21 @@ export const register: Register = on => {
   // ---- dispatcher side -------------------------------------------------------------------
 
   on('session.send', async ($, e, next) => {
+    // A dispatched pane's own written reply goes to its dispatcher, whatever name the model
+    // typed. The cross-session namespace is flat across projects: a Builder answered its
+    // dispatcher's question by sending to "thomas", and another project on the machine ran a
+    // session named exactly that, which received it (measured downstream, 2026-10-12). The
+    // pane knows its dispatcher's address from the brief's envelope; a send to any other name
+    // that no agent of this session carries (a team mate's name still routes) is readdressed.
+    if (me && me.role !== 'resident' && dispatcher && e.origin.kind === 'model' && e.agentId === undefined
+        && e.to !== dispatcher && e.to !== dispatcherName) {
+      const mine = await $.agent.list().catch(() => [])
+      const isAgent = (mine ?? []).some((a: any) => a.id === e.to || a.teammateId === e.to || a.teammateId?.split('@')[0] === e.to)
+      if (!isAgent) {
+        $.ui.status(`astragentic-dispatch: a reply to "${e.to}" readdressed to the dispatcher (${dispatcherName || dispatcher})`)
+        return next({ ...e, to: dispatcher })
+      }
+    }
     // A brief is a send whose first line is a slash command. Two things are checked at the one
     // moment every dispatch passes through, because both were skipped when they were prose:
     // the previous merge's tracker write-back, and this ticket's claim.

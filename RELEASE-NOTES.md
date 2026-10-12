@@ -1,3 +1,21 @@
+# Astragentic 3.2.2
+
+**A dispatched pane's written reply goes to its dispatcher, whatever name the model typed.**
+The cross-session namespace is flat across every project on the machine. A nizzy-ecom Builder
+answered its dispatcher's question with a SendMessage to "thomas"; another project ran a
+background session named exactly that, and the reply landed there (2026-10-12). It came back
+only because that project's dispatcher forwarded it, and because the mod's TURN-END had carried
+the Builder's last words. The pane knows its dispatcher's address from the brief's envelope, so
+the mod now (1) names that session in the pane's overlay — *your dispatcher is the session
+…; "thomas" is a role, not an address* — and (2) readdresses a model send from a dispatched
+pane to any name that none of its own agents carries. A team mate's name still routes within
+the pane. The mod's own sends and a resident pane are untouched.
+
+## Upgrade from 3.2.1
+
+`curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.2.2 --apply`;
+panes dispatched after the apply carry it (the mod loads at a pane's session start).
+
 # Astragentic 3.2.1
 
 **A tracker the shell cannot reach no longer blocks every push.** ADAPT-HARNESS tells a project
