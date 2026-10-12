@@ -218,7 +218,7 @@ Classify candidate material before editing anything:
   to-do is the step that gets skipped (measured on a greenfield install, 2026-10-10).
 - **Role contracts and their adapters** — `harness/.agents/roles/{thomas,shaper,builder,qa}.md`
   are runtime-neutral and are the single home for each role's phases. Role →
-  runtime/model/effort lives in the owner-editable `.agents/orchestrator.md`; contracts carry
+  runtime/model/effort/advisor lives in the owner-editable `.agents/orchestrator.md`; contracts carry
   no model IDs. On upgrade, preserve the owner's tuned row values and merge new rows or
   columns.
 

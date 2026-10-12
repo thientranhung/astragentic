@@ -55,7 +55,7 @@ turns an old pane into an empty pane, not an isolated ticket.
 
 ## Inputs and resolution
 
-- runtime/model/effort from `.agents/orchestrator.md` (the default source)
+- runtime/model/effort/advisor from `.agents/orchestrator.md` (the default source)
 - `runtime=claude|codex|opencode` — an explicit per-dispatch override, never written back
 - `visibility=herdr|headless` (default `herdr`)
 - workspace label, ticket ID, branch, base, worktree path, the ticket body, owner intent,
