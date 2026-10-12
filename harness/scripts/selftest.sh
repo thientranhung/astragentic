@@ -1246,6 +1246,96 @@ EOS
 fi
 
 # ---------------------------------------------------------------------------------------------
+echo "dispatch mod — a brief sent to \"name [ref]\" is cleared by the ack from \"name\""
+# The driver transpiles register.tsx with the engine's own TypeScript and replays the hooks with
+# a stub engine: a brief to the address SendMessage demands when names share a prefix, then the
+# RECEIVED ack, whose envelope carries the bare name. Measured downstream (2026-10-13): the chip
+# "not confirmed received" never cleared on 6 of 6 lanes, and outlived three retired lanes.
+TSC_PKG=""
+for cand in "$(npm root -g 2>/dev/null)/skillkit/node_modules/typescript" "$(npm root -g 2>/dev/null)/typescript"; do
+  [ -f "$cand/package.json" ] && { TSC_PKG="$cand"; break; }
+done
+if ! have node || [ -z "$TSC_PKG" ] || [ ! -d "$MOD" ]; then
+  SKIPPED=$((SKIPPED+1)); echo "  skip mod driver — needs node and a typescript package under npm root -g"
+else
+  cat > "$TMP/mod-drive.cjs" <<'DRVEOS'
+// Drives the dispatch mod under node: transpiles register.tsx, stubs the engine, and replays
+// a brief sent to a "name [ref]" address followed by its RECEIVED ack from the bare name.
+const fs = require('fs'), path = require('path'), Module = require('module')
+const [,, modDir, root, tsPath] = process.argv
+const ts = require(tsPath)
+const src = fs.readFileSync(path.join(modDir, 'hooks/register.tsx'), 'utf8')
+const js = ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React, jsxFactory: 'h', jsxFragmentFactory: 'Fragment' } }).outputText
+const state = new Map()
+const engine = {
+  atom: (id, init) => ({ id: `${id.plugin}.${id.key}`, init }),
+  read: async (_$, a) => state.has(a.id) ? state.get(a.id) : a.init,
+  update: async (_$, a, f) => { state.set(a.id, f(state.has(a.id) ? state.get(a.id) : a.init)) },
+}
+const origLoad = Module._load
+Module._load = function (req, ...rest) { return req === 'claude-code' ? engine : origLoad.call(this, req, ...rest) }
+const m = new Module(path.join(modDir, 'hooks/register.cjs')); m.filename = m.id; m.paths = []
+m._compile(js, m.filename)
+const hooks = {}
+m.exports.register((name, fn) => { (hooks[name] ??= []).push(fn) })
+const log = []
+const $ = {
+  env: { get: async () => undefined },
+  clock: { now: async () => Date.now(), every: () => {} },
+  command: { register: () => {}, run: async () => ({}) },
+  session: { id: 'disp', send: async () => ({ isDelivered: true }) },
+  fs: { read: async p => fs.readFileSync(p, 'utf8'), write: async (p, t) => fs.writeFileSync(p, t), exists: async p => fs.existsSync(p) },
+  process: { run: async (argv, o = {}) => { const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8' }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
+  ui: { status: t => log.push(t), toast: () => {}, open: () => {}, resolve: () => {} },
+  prompt: { submit: async () => {} },
+  agent: { list: async () => [] },
+}
+const fire = async (name, e, next) => { for (const fn of hooks[name] ?? []) { const r = await fn($, e, next ?? (x => x)); if (r !== undefined && name !== 'session.start') return r } }
+const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board', init: [] })).map(r => `${r.key}:${r.state}:${r.note ?? ''}`).join(' ')
+;(async () => {
+  await fire('session.start', {}, async () => ({}))
+  await fire('session.send', { to: 'builder-ab-1-32 [1c2d95]', text: '/mattpocock-skills:verify AB-1', origin: { kind: 'model' } }, async () => ({ isDelivered: true }))
+  const afterSend = await rows()
+  const ack = `<cross-session-message from="uds:/tmp/x.sock" from-name="builder-ab-1-32">\n[astragentic-dispatch] RECEIVED key=AB-1 pane=p1\n</cross-session-message>`
+  await fire('session.receive', { text: ack, origin: { kind: 'plugin' } }, async () => ({}))
+  const afterAck = await rows()
+  // retire the lane: the entry leaves the record, the next board refresh must forget the send
+  await fire('session.send', { to: 'builder-ab-1-32', text: 'one more', origin: { kind: 'model' } }, async () => ({ isDelivered: true }))
+  fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), '{}')
+  await fire('prompt.submit', { text: 'hello', origin: { kind: 'composer' } }, async () => ({}))
+  const afterRetire = await rows()
+  console.log(JSON.stringify({ afterSend, afterAck, afterRetire, log }))
+})().catch(e => { console.error(e); process.exit(2) })
+DRVEOS
+  mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
+    rm -rf "$TMP/mod-drive-repo"; mkdir -p "$TMP/mod-drive-repo/.astraler/state"
+    ( cd "$TMP/mod-drive-repo" && git init -q && git -c user.name=t -c user.email=t@t commit -q --allow-empty -m init )
+    echo '{"AB-1":{"role":"builder","pane_id":"p1","tab_id":"t1","session_name":"builder-ab-1-32","registered_at":1,"branch":"feat/ab-1","start_sha":"abc"}}' > "$TMP/mod-drive-repo/.astraler/state/dispatch-record.json"
+    node "$TMP/mod-drive.cjs" "$1" "$TMP/mod-drive-repo" "$TSC_PKG" 2>&1
+  }
+  out="$(mod_drive "$MOD")"
+  if says "$out" '"afterSend":"AB-1:sent:"' && says "$out" '"afterAck":"AB-1:registered:no brief yet"' && says "$out" '"afterRetire":""'; then
+    ok "the ack from the bare name clears the send keyed by \"name [ref]\"; a retired lane's send goes with its entry"
+  else
+    bad "mod send/ack keys" "$out"
+  fi
+  rm -rf "$TMP/mod-stuck"; cp -R "$MOD" "$TMP/mod-stuck"
+  python3 - "$TMP/mod-stuck/hooks/register.tsx" <<'EOS'
+import sys
+p = sys.argv[1]; s = open(p).read()
+old = "return to.replace(/\\s*\\[[0-9a-f]{4,}\\]\\s*$/i, '').trim()"
+assert old in s, "addressName body not found"
+open(p, 'w').write(s.replace(old, "return to", 1))
+EOS
+  out="$(mod_drive "$TMP/mod-stuck")"
+  if says "$out" 'builder-ab-1-32 [1c2d95]:sent:' && says "$out" '"afterRetire":"builder-ab-1-32'; then
+    ok "planted: a send keyed by the typed string stays \"sent\" through the ack and past the lane's retirement"
+  else
+    bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"
+  fi
+fi
+
+# ---------------------------------------------------------------------------------------------
 echo
 if [ "$FAIL" -eq 0 ]; then
   echo "selftest: $PASS passed, 0 failed ($LAYOUT layout, $SKIPPED package-only section(s) skipped)."

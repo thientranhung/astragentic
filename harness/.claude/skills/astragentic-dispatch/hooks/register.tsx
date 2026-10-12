@@ -109,6 +109,8 @@ function overlay($: any, root: string, name: string): Promise<string> {
   return overlayFile($, `${root}/${OVERLAYS}/${name}.md`)
 }
 const ACK_GRACE_MS = 90_000
+// Session names the dispatch record has held in this process; see refreshBoard.
+const onceNamed = new Set<string>()
 const TICKET = /^[A-Z][A-Z0-9]*-[0-9]+$/
 // `resident:` is a long-lived pane the owner keeps (a deploy agent, a design partner): it gets
 // no brief and reports no turn end, but it is recorded, shown on the board and protected from
@@ -289,6 +291,14 @@ function printable(text: string, max = 300): string {
 
 type Me = { role: string; key: string; tab: string; pane: string }
 type Envelope = { from: string; fromName: string; inner: string }
+
+// A session name as the dispatcher must type it when two sessions share a prefix: SendMessage
+// refuses "builder-in-92" and demands "builder-in-92-32 [1c2d95]". The ack comes back with the
+// bare name in `from-name`, so a send keyed by the typed string never matched its ack and the
+// band read "not confirmed received" on 6 of 6 lanes (measured downstream, 2026-10-13).
+function addressName(to: string): string {
+  return to.replace(/\s*\[[0-9a-f]{4,}\]\s*$/i, '').trim()
+}
 type Entry = Record<string, any>
 
 function parseEnvelope(text: string): Envelope | null {
@@ -533,9 +543,14 @@ async function refreshBoard($: any, root: string | null, sends: Map<string, numb
   const rows: BoardRow[] = []
   const named = new Set<string>()
   const owed = root ? await owedTickets($, root) : []
+  for (const entry of Object.values(rec)) if (entry?.session_name) named.add(entry.session_name)
+  // A lane the record once named and no longer holds was retired: its ack can never come, so
+  // its send is forgotten with the entry (three such chips outlived their panes, measured
+  // downstream, 2026-10-13). A send to a name the record never held stays: a mis-keyed brief.
+  for (const name of sends.keys()) if (onceNamed.has(name) && !named.has(name)) sends.delete(name)
+  for (const name of named) onceNamed.add(name)
   for (const [key, entry] of Object.entries(rec)) {
     if (!isLive(entry)) continue
-    if (entry.session_name) named.add(entry.session_name)
     let sentAt = entry.session_name ? sends.get(entry.session_name) : undefined
     // The record outranks this process's memory. A pane can answer RECEIVED within tens of
     // milliseconds (34 ms measured), before the send hook has noted the send, so the note lands
@@ -919,9 +934,10 @@ export const register: Register = on => {
     // pane knows its dispatcher's address from the brief's envelope; a send to any other name
     // that no agent of this session carries (a team mate's name still routes) is readdressed.
     if (me && me.role !== 'resident' && dispatcher && e.origin.kind === 'model' && e.agentId === undefined
-        && e.to !== dispatcher && e.to !== dispatcherName) {
+        && e.to !== dispatcher && addressName(e.to) !== dispatcherName) {
+      const to = addressName(e.to)
       const mine = await $.agent.list().catch(() => [])
-      const isAgent = (mine ?? []).some((a: any) => a.id === e.to || a.teammateId === e.to || a.teammateId?.split('@')[0] === e.to)
+      const isAgent = (mine ?? []).some((a: any) => a.id === to || a.teammateId === to || a.teammateId?.split('@')[0] === to)
       if (!isAgent) {
         $.ui.status(`astragentic-dispatch: a reply to "${e.to}" readdressed to the dispatcher (${dispatcherName || dispatcher})`)
         return next({ ...e, to: dispatcher })
@@ -1037,9 +1053,10 @@ export const register: Register = on => {
     const res = await next(brief ? { ...e, text: `${e.text.trimEnd()}\n\n${brief}` } : e)
     if (me || !root || e.origin.kind !== 'model' || e.agentId !== undefined || !res.isDelivered) return res
     const rec = (await readRecord($, root)) ?? {}
-    const isKnown = Object.values(rec).some(entry => entry?.session_name === e.to)
+    const to = addressName(e.to)
+    const isKnown = Object.values(rec).some(entry => entry?.session_name === to)
     if (isKnown || e.text.trimStart().startsWith('/')) {
-      sends.set(e.to, await $.clock.now())
+      sends.set(to, await $.clock.now())
       await refreshBoard($, root, sends)
     }
     return res

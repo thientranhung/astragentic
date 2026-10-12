@@ -1,3 +1,24 @@
+# Astragentic 3.2.3
+
+**The dispatcher's "not confirmed received" chip clears when the ack arrives.** When two
+sessions share a name prefix, SendMessage refuses the bare name and demands the typed form
+`builder-in-92-32 [1c2d95]`. The mod keyed the send by that typed string and cleared it by the
+ack's bare `from-name`, so the two never met: an adopting project measured the red chip on 6 of
+6 lanes overnight, one of them a steering message the Builder had read, verified and folded into
+a commit. Three chips outlived their lanes, since the state lived in the mod's memory and only a
+dispatcher restart emptied it. Now the mod keys a send by the bare session name, and a send to a
+name the record once held and no longer does is forgotten with the entry. The dispatched pane's
+readdress rule (3.2.2) compares bare names the same way.
+
+Selftest drives the mod under node — the engine's own TypeScript transpiles `register.tsx`, a
+stub engine replays the brief, the ack and the lane's retirement — and the 3.2.2 shape is
+planted: the typed-string key stays "sent" through both.
+
+## Upgrade from 3.2.2
+
+`curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.2.3 --apply`;
+the dispatcher pane carries it after its next start (the chips are in that pane's memory).
+
 # Astragentic 3.2.2
 
 **A dispatched pane's written reply goes to its dispatcher, whatever name the model typed.**
