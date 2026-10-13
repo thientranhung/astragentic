@@ -1,3 +1,23 @@
+# Astragentic 3.2.5
+
+**A Compose stack every worktree shares is not released with one worktree.**
+`release-worktree-resources.sh` named a stack as the worktree's by Docker's `working_dir`
+label, and that label names whichever worktree last started the stack, not its owner.
+nizzy-ecom measured it on 2026-10-13: the one test Postgres all Builders use had last been
+recreated by a finished Builder's `make db-up`, the release read it as that worktree's, refused
+the stamp, and advised `down -v`, which would have dropped every live Builder's database
+(the harm AST-115 names). Labels cannot tell a shared stack from an owned one, so the project
+declares them: one project name or shell glob per line in
+`.astraler/project/shared-compose-projects`, read by the release and left alone. The refusal's
+advice now states both cases and names the declaration. ADAPT-HARNESS §3 asks for the file
+beside `cleanup-worktree.sh`. Selftest: a declared stack stamps; an undeclared one is still
+refused, and the refusal names the declaration.
+
+## Upgrade from 3.2.4
+
+`curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.2.5 --apply`;
+a project with a shared stack writes the declaration once.
+
 # Astragentic 3.2.4
 
 **A retired lane's late turn end rings no bell, on either path.** nizzy-ecom measured two under

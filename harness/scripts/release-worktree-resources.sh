@@ -69,6 +69,25 @@ fi
 #    never flagged. Resolved before the plug on purpose: after `down`, no container is left to
 #    say which project was this worktree's. A stack whose containers were already gone before
 #    this ran is not seen, and nothing here deletes anything.
+#
+#    THE LABEL NAMES THE LAST STARTER, NOT THE OWNER. A stack every worktree shares (one test
+#    Postgres, started by whichever Builder last ran `make db-up`) carries the working_dir of
+#    that Builder's worktree, and read as "rooted here" it drew the `down -v` advice that would
+#    have dropped every live Builder's database (measured downstream, 2026-10-13; AST-115 is
+#    the same harm). The harness cannot tell a shared stack from an owned one by labels, so the
+#    project declares them: one project name or shell glob per line in
+#    `.astraler/project/shared-compose-projects`. A declared stack is reported and never
+#    counted against the stamp.
+SHARED="$ROOT/.astraler/project/shared-compose-projects"
+is_shared() {  # $1 project name → 0 when a line of the declaration matches it
+  [ -f "$SHARED" ] || return 1
+  while IFS= read -r pat || [ -n "$pat" ]; do
+    case "$pat" in ''|'#'*) continue ;; esac
+    # shellcheck disable=SC2254
+    case "$1" in $pat) return 0 ;; esac
+  done < "$SHARED"
+  return 1
+}
 compose_projects=""
 if command -v docker >/dev/null 2>&1 && docker version >/dev/null 2>&1; then
   real_wt="$(cd "$WT" 2>/dev/null && pwd -P || printf '%s' "$WT")"
@@ -88,14 +107,19 @@ else
 fi
 
 for p in $compose_projects; do
+  if is_shared "$p"; then
+    echo "release-worktree-resources: compose project '$p' was last started from this worktree and is declared shared ($SHARED) — left alone, not this worktree's to release"
+    continue
+  fi
   left="$(docker ps -a --filter "label=com.docker.compose.project=$p" --format 'container {{.Names}}' 2>/dev/null
           docker volume ls -q --filter "label=com.docker.compose.project=$p" 2>/dev/null | sed 's/^/volume /'
           docker images --filter "label=com.docker.compose.project=$p" --format '{{.Repository}}' 2>/dev/null \
             | grep "^$p-" | sort -u | sed 's/^/image /')"
   if [ -n "$left" ]; then
-    echo "release-worktree-resources: WARN compose project '$p' was rooted in this worktree and still holds:" >&2
+    echo "release-worktree-resources: WARN compose project '$p' was last started from this worktree and still holds:" >&2
     printf '%s\n' "$left" | sed 's/^/  /' >&2
-    echo "release-worktree-resources:      the plug should release it: docker compose -p $p ... down -v --rmi local" >&2
+    echo "release-worktree-resources:      if this worktree owns the stack, the plug releases it: docker compose -p $p ... down -v --rmi local" >&2
+    echo "release-worktree-resources:      if every worktree shares it, never take it down: declare it in .astraler/project/shared-compose-projects" >&2
     rc=1
   else
     echo "release-worktree-resources: compose project '$p' — no container, volume or built image left"

@@ -438,6 +438,24 @@ case "$out" in
   *"no container, volume or built image left"*"rc=0"*) ok "rwr passes a stack the plug fully released" ;;
   *) bad "rwr compose clean" "$out" ;;
 esac
+# A stack every worktree shares carries the working_dir of whichever Builder last started it
+# (measured downstream 2026-10-13: the one test Postgres, read as this worktree's, drew the
+# `down -v` advice that would have dropped every live Builder's database). Declared in
+# `.astraler/project/shared-compose-projects`, it is left alone; undeclared, it still refuses.
+printf 'stubproj-app\n' > "$DK/images"
+printf '# shared stacks\nstub*\n' > "$R/.astraler/project/shared-compose-projects"
+out="$( (cd "$R" && PATH="$DK:$PATH" bash "$S/release-worktree-resources.sh" "$R/wt" 2>&1); echo "rc=$?" )"
+case "$out" in
+  *"'stubproj'"*"declared shared"*"rc=0"*) ok "rwr leaves a declared shared stack alone and stamps" ;;
+  *) bad "rwr shared stack" "$out" ;;
+esac
+printf 'otherstack\n' > "$R/.astraler/project/shared-compose-projects"
+out="$( (cd "$R" && PATH="$DK:$PATH" bash "$S/release-worktree-resources.sh" "$R/wt" 2>&1); echo "rc=$?" )"
+case "$out" in
+  *"WARN compose project 'stubproj'"*"shared-compose-projects"*"rc=1"*) ok "planted: a stack the declaration does not name is still refused, and the refusal names the declaration" ;;
+  *) bad "rwr shared stack planted" "$out" ;;
+esac
+rm -f "$R/.astraler/project/shared-compose-projects"
 
 
 # The release is ENFORCED by the git guard (2.7.15): an unstamped path is refused, a stamped

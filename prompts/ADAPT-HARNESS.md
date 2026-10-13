@@ -122,7 +122,11 @@ Classify candidate material before editing anything:
     with `down -v --rmi local`: `down -v` leaves the image the stack built, measured at 99
     images and ~48 GB on one machine, and `release-worktree-resources.sh` now refuses the stamp
     over it (AST-155). Never a machine-wide prune — build cache and anonymous volumes no
-    worktree owns are the owner's to clear, so report them and leave them. A project whose worktrees
+    worktree owns are the owner's to clear, so report them and leave them. A Compose stack
+    every worktree shares (one test database all Builders use) carries the working_dir label
+    of whichever worktree last started it, and the release would read it as that worktree's:
+    list its project name, or a shell glob, one per line in
+    `.astraler/project/shared-compose-projects`, and the release leaves it alone. A project whose worktrees
     allocate nothing writes one that says exactly that — an absent plug is reported as an
     empty socket by `scripts/release-worktree-resources.sh`, and an empty socket on a project
     that does allocate is the gap that produced 43 orphaned processes and 3,405 leftover
