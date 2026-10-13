@@ -90,7 +90,11 @@ is now a second copy of something the mod does, and a second copy is where the t
   sub-agents still run is not one of them** (3.2.0): the built-in review's agents woke the
   Builder per notification and each wake rang "still waiting" (measured downstream, 2026-10-12). The pane holds the
   bell, the board row reads *N agent(s) still running, turn end held*, and the one TURN-END
-  comes when a turn ends with nothing live.
+  comes when a turn ends with nothing live. **The hold has a ceiling of 20 minutes** (3.2.6):
+  eight review finders that never returned held a Builder's bell for four hours and the owner
+  noticed before the dispatcher did. Past the ceiling your mod rings once with
+  `reason=held-stale`, naming the agent count and age, and the row turns red; a stuck pane and
+  a quiet one look the same from here, so read that pane and steer it to stop waiting.
 - **Bells wait for your turn to end.** While you run a gate pass or hold a picker for the owner,
   arriving turn ends are held (the footer counts them) and flushed as one prompt when your turn
   ends; the owner slept through a picker and read a row of one-line answers before this.

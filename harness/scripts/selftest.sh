@@ -1329,7 +1329,13 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
   fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify({ 'AB-2': { role: 'builder', turn_end_pending: { at: 1, reason: 'dead address', text: '[astragentic-dispatch] TURN-END key=AB-2 pane=p2 reason=answer\nWork is complete' } } }))
   await every()
   const stubBells = bells.length, stubLeft = Object.keys(JSON.parse(fs.readFileSync(path.join(root, '.astraler/state/dispatch-record.json'), 'utf8'))).length
-  console.log(JSON.stringify({ afterSend, afterAck, afterRetire, stubBells, stubLeft, log }))
+  // a held turn end older than the ceiling rings once as held-stale, and the row reads stale
+  bells.length = 0
+  fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify({ 'AB-3': { role: 'builder', pane_id: 'p3', tab_id: 't3', last_brief_received_at: Date.now() - 5 * 3600_000, waiting_on: { n: 8, at: Date.now() - 4 * 3600_000, what: ['code-review finder'] } } }))
+  await every(); await every()
+  const staleBells = bells.filter(b => b.includes('reason=held-stale')).length
+  const staleRow = (await rows()).includes('— stale')
+  console.log(JSON.stringify({ afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
@@ -1339,8 +1345,8 @@ DRVEOS
     node "$TMP/mod-drive.cjs" "$1" "$TMP/mod-drive-repo" "$TSC_PKG" 2>&1
   }
   out="$(mod_drive "$MOD")"
-  if says "$out" '"afterSend":"AB-1:sent:"' && says "$out" '"afterAck":"AB-1:registered:no brief yet"' && says "$out" '"afterRetire":""' && says "$out" '"stubBells":0,"stubLeft":0'; then
-    ok "the ack from the bare name clears the send keyed by \"name [ref]\"; a retired lane's send goes with its entry; a stub entry's pending turn end rings no bell"
+  if says "$out" '"afterSend":"AB-1:sent:"' && says "$out" '"afterAck":"AB-1:registered:no brief yet"' && says "$out" '"afterRetire":""' && says "$out" '"stubBells":0,"stubLeft":0,"staleBells":1,"staleRow":true'; then
+    ok "the ack from the bare name clears the send keyed by \"name [ref]\"; a retired lane's send goes with its entry; a stub entry rings no bell; a hold past the ceiling rings once as held-stale"
   else
     bad "mod send/ack keys" "$out"
   fi
@@ -1353,11 +1359,14 @@ assert old in s, "addressName body not found"
 s = s.replace(old, "return to", 1)
 old2 = "if (!isLive(entry)) { await deleteRecordKey($, root, key); continue }"
 assert old2 in s, "wakeFromRecord stub guard not found"
-open(p, 'w').write(s.replace(old2, "", 1))
+s = s.replace(old2, "", 1)
+old3 = "if (w && isLive(entry) && !w.stale_rung_at && now - (w.at ?? now) > HOLD_STALE_MS) {"
+assert old3 in s, "hold ceiling not found"
+open(p, 'w').write(s.replace(old3, "if (false) {", 1))
 EOS
   out="$(mod_drive "$TMP/mod-stuck")"
-  if says "$out" 'builder-ab-1-32 [1c2d95]:sent:' && says "$out" '"afterRetire":"builder-ab-1-32' && says "$out" '"stubBells":1'; then
-    ok "planted: a send keyed by the typed string stays \"sent\" through the ack and past the lane's retirement; a stub entry rings"
+  if says "$out" 'builder-ab-1-32 [1c2d95]:sent:' && says "$out" '"afterRetire":"builder-ab-1-32' && says "$out" '"stubBells":1' && says "$out" '"staleBells":0'; then
+    ok "planted: a send keyed by the typed string stays \"sent\" through the ack and past the lane's retirement; a stub entry rings; a hold never times out"
   else
     bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"
   fi

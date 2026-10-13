@@ -109,6 +109,10 @@ function overlay($: any, root: string, name: string): Promise<string> {
   return overlayFile($, `${root}/${OVERLAYS}/${name}.md`)
 }
 const ACK_GRACE_MS = 90_000
+// A held turn end (agents still running) that nobody has refreshed for this long is read as a
+// stuck pane: eight code-review finders that never returned held a Builder's bell for four
+// hours, and the owner noticed before the dispatcher did (measured downstream, 2026-10-13).
+const HOLD_STALE_MS = 20 * 60_000
 // Session names the dispatch record has held in this process; see refreshBoard.
 const onceNamed = new Set<string>()
 const TICKET = /^[A-Z][A-Z0-9]*-[0-9]+$/
@@ -579,7 +583,8 @@ async function refreshBoard($: any, root: string | null, sends: Map<string, numb
       rows.push({ key, role, state: 'sent', since: sentAt, note: isLate ? 'not confirmed received' : undefined })
     } else if (isMidTurn(entry)) {
       const w = entry.waiting_on
-      rows.push({ key, role, state: 'working', since: entry.last_brief_received_at, note: w ? `${w.n} agent(s) still running, turn end held` : undefined })
+      const stale = w && now - (w.at ?? now) > HOLD_STALE_MS
+      rows.push({ key, role, state: 'working', since: entry.last_brief_received_at, note: w ? `${w.n} agent(s) still running, turn end held${stale ? ` ${ago(now - w.at)} — stale, read that pane` : ''}` : undefined })
     } else if (entry.last_turn_end_at) {
       rows.push({ key, role, state: 'ended', since: entry.last_turn_end_at, note: [entry.last_turn_reason, qaNote].filter(Boolean).join(' · ') || undefined })
     } else {
@@ -620,7 +625,16 @@ async function refreshBoard($: any, root: string | null, sends: Map<string, numb
 // submits the same prompt from there, once. Measured latency bound: the 30 s poll.
 async function wakeFromRecord($: any, root: string, bell: (text: string) => void): Promise<void> {
   const rec = (await readRecord($, root)) ?? {}
+  const now = await $.clock.now()
   for (const [key, entry] of Object.entries(rec)) {
+    // A hold past the ceiling rings once, as its own reason. The pane that holds cannot ring
+    // for itself: nothing fires in it while its agents stay silent.
+    const w = entry?.waiting_on
+    if (w && isLive(entry) && !w.stale_rung_at && now - (w.at ?? now) > HOLD_STALE_MS) {
+      await patchRecord($, root, key, { waiting_on: { ...w, stale_rung_at: now } })
+      const what = Array.isArray(w.what) && w.what.length ? ` (${w.what.join('; ')})` : ''
+      bell(`${MARK} ${entry.role ?? 'agent'} ${key} has held its turn end for ${ago(now - w.at)} (reason=held-stale): ${w.n} agent(s) still running${what} and nothing from the pane since. A stuck pane and a quiet one look the same from here: read that pane, and steer it to stop waiting if its agents are gone.`)
+    }
     const pending = entry?.turn_end_pending
     if (!pending || pending.woken_at) continue
     // An entry with a pending turn end and no pane is a stub a retired pane wrote back after
@@ -1377,7 +1391,7 @@ export const register: Register = on => {
         <Text dimColor>{[b.version ? `astragentic ${b.version}` : '', b.branch ? `⎇ ${b.branch}` : ''].filter(Boolean).join(' · ')}</Text>
         {rows.length === 0 && <Text dimColor>No live dispatches.</Text>}
         {rows.map(r => (
-          <Text color={r.note === 'not confirmed received' || r.state === 'merged' ? 'red' : undefined}>
+          <Text color={r.note === 'not confirmed received' || r.state === 'merged' || (r.note ?? '').includes('— stale') ? 'red' : undefined}>
             {r.key.padEnd(14)} {r.role.padEnd(8)} {r.state.padEnd(10)} {ago(now - r.since).padStart(4)} {r.note ?? ''}
           </Text>
         ))}
@@ -1442,7 +1456,7 @@ export const register: Register = on => {
     const rows = await read($, board)
     const b = await read($, banner)
     const now = await $.clock.now()
-    const alarmOf = (r: BoardRow) => r.note === 'not confirmed received' || r.state === 'merged' || (r.note ?? '').startsWith('turn end read from record')
+    const alarmOf = (r: BoardRow) => r.note === 'not confirmed received' || r.state === 'merged' || (r.note ?? '').startsWith('turn end read from record') || (r.note ?? '').includes('— stale')
     const bgOf = (r: BoardRow) => alarmOf(r) ? 'error' : r.state === 'working' ? 'success' : r.state === 'sent' ? 'warning' : r.state === 'ended' ? 'subtle' : 'inactive'
     return (
       <Box flexDirection="row" flexWrap="wrap">

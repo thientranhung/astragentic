@@ -1,3 +1,21 @@
+# Astragentic 3.2.6
+
+**A held turn end has a ceiling.** 3.2.0 holds a pane's TURN-END while its own agents still
+run, and the hold had no end. nizzy-ecom measured it: the built-in code-review on TRA-1100
+launched eight finder agents that never returned, no process was rooted in the worktree, and
+from 14:05 to 18:05 the pane showed "8 agent(s) still running — TURN-END held" and made no
+commit. The dispatcher learned nothing; the owner noticed first; one "stop waiting" steer
+unstuck it within a minute. The pane cannot ring for itself, since nothing fires in it while its
+agents stay silent, so the dispatcher's 30 s record poll now reads the hold: past 20 minutes
+with no refresh it rings once, `reason=held-stale`, naming the agent count, the age and what
+was waited on, and the board row turns red with *stale, read that pane*. A pane that wakes and
+holds again refreshes the clock. Driver case, planted: with the ceiling removed, no bell.
+
+## Upgrade from 3.2.5
+
+`curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.2.6 --apply`;
+the dispatcher pane carries it after its next start.
+
 # Astragentic 3.2.5
 
 **A Compose stack every worktree shares is not released with one worktree.**
