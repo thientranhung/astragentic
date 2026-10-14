@@ -779,6 +779,16 @@ export const register: Register = on => {
     // until the next main turn completed.
     if ((e as any).agentId !== undefined) return next(e)
     isBusy = true
+    // A dispatched pane that starts a turn is working: whatever it held at its last turn end
+    // is over. The hold was left standing through the turns that followed, so the dispatcher's
+    // ceiling read a pane committing every few minutes as stuck, twice, naming review agents
+    // long finished (measured downstream, 2026-10-14).
+    if (me && me.role !== 'resident' && root) {
+      void (async () => {
+        const own = ((await readRecord($, root!)) ?? {})[me!.key]
+        if (own?.pane_id === me!.pane && own.waiting_on) await patchRecord($, root!, me!.key, { waiting_on: null })
+      })().catch(() => {})
+    }
     return next(e)
   })
 

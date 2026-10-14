@@ -1338,7 +1338,8 @@ else
 // Drives the dispatch mod under node: transpiles register.tsx, stubs the engine, and replays
 // a brief sent to a "name [ref]" address followed by its RECEIVED ack from the bare name.
 const fs = require('fs'), path = require('path'), Module = require('module')
-const [,, modDir, root, tsPath] = process.argv
+const [,, modDir, root, tsPath, mode] = process.argv
+const isPane = mode === 'pane'
 const ts = require(tsPath)
 const src = fs.readFileSync(path.join(modDir, 'hooks/register.tsx'), 'utf8')
 const js = ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React, jsxFactory: 'h', jsxFragmentFactory: 'Fragment' } }).outputText
@@ -1355,22 +1356,38 @@ m._compile(js, m.filename)
 const hooks = {}
 m.exports.register((name, fn) => { (hooks[name] ??= []).push(fn) })
 const log = []
+let liveAgents = []
 let everyFn = async () => {}
 const every = () => everyFn()
 const $ = {
-  env: { get: async k => k === 'ASTRAGENTIC_REPO' ? root : undefined },
+  env: { get: async k => k === 'ASTRAGENTIC_REPO' ? root : (isPane && k === 'HERDR_TAB_ID') ? 't5' : (isPane && k === 'HERDR_PANE_ID') ? 'p5' : undefined },
   clock: { now: async () => Date.now(), every: (_ms, fn) => { everyFn = fn } },
   command: { register: () => {}, run: async () => ({}) },
-  session: { id: 'disp', send: async () => ({ isDelivered: true }) },
+  session: { id: async () => 'disp', send: async () => ({ isDelivered: true }) },
   fs: { read: async p => fs.readFileSync(p, 'utf8'), write: async (p, t) => fs.writeFileSync(p, t), exists: async p => fs.existsSync(p) },
-  process: { run: async (argv, o = {}) => { const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8' }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
+  process: { run: async (argv, o = {}) => { if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? '{"result":{"tab":{"label":"ticket:AB-5"}}}' : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8' }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
   ui: { status: t => log.push(t), toast: () => {}, open: () => {}, resolve: () => {} },
   prompt: { submit: async () => {} },
-  agent: { list: async () => [] },
+  agent: { list: async () => liveAgents },
 }
 const fire = async (name, e, next) => { for (const fn of hooks[name] ?? []) { const r = await fn($, e, next ?? (x => x)); if (r !== undefined && name !== 'session.start') return r } }
 const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board', init: [] })).map(r => `${r.key}:${r.state}:${r.note ?? ''}`).join(' ')
 ;(async () => {
+  if (isPane) {
+    // the dispatched side: a turn end with a live agent is held; the next turn start ends the hold
+    await fire('session.start', { cwd: root }, async () => ({}))
+    const rec = () => JSON.parse(fs.readFileSync(path.join(root, '.astraler/state/dispatch-record.json'), 'utf8'))
+    const registered = rec()['AB-5']?.pane_id === 'p5'
+    liveAgents = [{ id: 'a1', status: 'running', description: 'Standards axis code review' }]
+    await fire('turn.complete', { reason: 'answer', answer: 'working', turnId: 't1' }, async () => ({}))
+    const paneHeld = rec()['AB-5']?.waiting_on?.n === 1
+    liveAgents = []
+    await fire('turn.start', { text: '', turnId: 't2' }, async () => ({}))
+    await new Promise(r => setTimeout(r, 300))
+    const paneCleared = rec()['AB-5']?.waiting_on === null
+    console.log(JSON.stringify({ registered, paneHeld, paneCleared, log }))
+    return
+  }
   await fire('session.start', {}, async () => ({}))
   await new Promise(r => setTimeout(r, 800))  // the newer-release lookup runs beside the start
   const latestChip = (await engine.read($, { id: 'astragentic-dispatch.banner', init: {} })).latest
@@ -1410,13 +1427,19 @@ DRVEOS
     ( cd "$TMP/mod-drive-repo" && git init -q && git -c user.name=t -c user.email=t@t commit -q --allow-empty -m init && git tag v0.0.2 )
     echo 0.0.1 > "$TMP/mod-drive-repo/.astraler/state/applied-version"
     echo '{"AB-1":{"role":"builder","pane_id":"p1","tab_id":"t1","session_name":"builder-ab-1-32","registered_at":1,"branch":"feat/ab-1","start_sha":"abc"}}' > "$TMP/mod-drive-repo/.astraler/state/dispatch-record.json"
-    node "$TMP/mod-drive.cjs" "$1" "$TMP/mod-drive-repo" "$TSC_PKG" 2>&1
+    node "$TMP/mod-drive.cjs" "$1" "$TMP/mod-drive-repo" "$TSC_PKG" "${2:-}" 2>&1
   }
   out="$(mod_drive "$MOD")"
   if says "$out" '"afterSend":"AB-1:sent:"' && says "$out" '"afterAck":"AB-1:registered:no brief yet"' && says "$out" '"afterRetire":""' && says "$out" '"stubBells":0,"stubLeft":0,"staleBells":1,"staleRow":true,"subagentHeld":false,"latestChip":"0.0.2"'; then
     ok "the ack from the bare name clears the send keyed by \"name [ref]\"; a retired lane's send goes with its entry; a stub entry rings no bell; a hold past the ceiling rings once as held-stale; a subagent's turn.start holds nothing; a newer tag at the remote reaches the band"
   else
     bad "mod send/ack keys" "$out"
+  fi
+  out="$(mod_drive "$MOD" pane)"
+  if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true'; then
+    ok "pane side: a turn end with a live agent is held, and the next turn start ends the hold"
+  else
+    bad "mod pane hold" "$out"
   fi
   rm -rf "$TMP/mod-stuck"; cp -R "$MOD" "$TMP/mod-stuck"
   python3 - "$TMP/mod-stuck/hooks/register.tsx" <<'EOS'
@@ -1433,11 +1456,20 @@ assert old3 in s, "hold ceiling not found"
 s = s.replace(old3, "if (false) {", 1)
 old4 = "if ((e as any).agentId !== undefined) return next(e)\n    isBusy = true"
 assert old4 in s, "turn.start agentId guard not found"
-open(p, 'w').write(s.replace(old4, "isBusy = true", 1))
+s = s.replace(old4, "isBusy = true", 1)
+old5 = "if (own?.pane_id === me!.pane && own.waiting_on) await patchRecord($, root!, me!.key, { waiting_on: null })"
+assert old5 in s, "turn.start hold clear not found"
+open(p, 'w').write(s.replace(old5, "", 1))
 EOS
   out="$(mod_drive "$TMP/mod-stuck")"
   if says "$out" 'builder-ab-1-32 [1c2d95]:sent:' && says "$out" '"afterRetire":"builder-ab-1-32' && says "$out" '"stubBells":1' && says "$out" '"staleBells":0' && says "$out" '"subagentHeld":true'; then
     ok "planted: a send keyed by the typed string stays \"sent\" through the ack and past the lane's retirement; a stub entry rings; a hold never times out; a subagent's turn.start holds the bell"
+  else
+    bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"
+  fi
+  out="$(mod_drive "$TMP/mod-stuck" pane)"
+  if says "$out" '"paneHeld":true,"paneCleared":false'; then
+    ok "planted: a pane that starts a turn leaves its hold standing"
   else
     bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"
   fi

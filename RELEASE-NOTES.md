@@ -1,3 +1,20 @@
+# Astragentic 3.3.1
+
+**A pane that starts a turn ends its hold.** 3.2.0 writes `waiting_on` when a turn ends with
+the pane's own agents still running, and 3.2.6 rings once when that hold passes 20 minutes.
+The hold was cleared only by the next turn end that sent a TURN-END, so a pane woken by its
+agents and working through a long turn still carried the old hold, naming agents long finished.
+nizzy-ecom measured it on 3.3.0: held-stale rang twice on a Builder committing every few
+minutes, the footer still reading "2 agent(s) still running". Now the pane's main-loop
+`turn.start` clears its hold; a turn that ends with agents live again writes a fresh one. The
+selftest driver gains a pane mode (the herdr label stubbed): a turn end with a live agent is
+held, the next turn start clears it; planted, the hold stands.
+
+## Upgrade from 3.3.0
+
+`.astraler/astragentic.sh update --apply` (or the get.sh one-liner); panes dispatched after the
+apply carry it.
+
 # Astragentic 3.3.0
 
 **The project answers its own upgrade question.** `install.sh --apply` now writes
