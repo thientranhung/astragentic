@@ -743,6 +743,11 @@ export const register: Register = on => {
   })
 
   on('turn.start', ($, e, next) => {
+    // Since Claude Code 2.1.299 this hook also hears subagents' and teammates' turns, told
+    // apart by `agentId` (absent on the main loop). Only the main loop's turn holds bells: a
+    // background subagent starting after the main turn ended would otherwise hold every bell
+    // until the next main turn completed.
+    if ((e as any).agentId !== undefined) return next(e)
     isBusy = true
     return next(e)
   })

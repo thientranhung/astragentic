@@ -1,3 +1,25 @@
+# Astragentic 3.2.7
+
+**A subagent's turn no longer holds the dispatcher's bells.** Claude Code 2.1.299 changed the
+`turn.start` mod hook to also hear subagents' and teammates' turns, told apart by `agentId`.
+The mod's `turn.start` set the dispatcher busy without looking, so a background subagent (a
+fan-out reviewer, an Explore agent) starting after the main turn had ended held every arriving
+TURN-END until the next main turn completed. Read from the 2.1.299 changelog against the mod,
+after an adopting project upgraded to 2.1.299 (2026-10-14); only the main loop's turn holds now.
+Driver case, planted: a subagent's `turn.start` followed by a TURN-END rings at once.
+
+Checked against the same changelog and not taken: `onFailure: "block"` on the command hooks
+(the wrapper exits 0 on a missing guard by design, so the switch only closes crash and timeout;
+`.claude/settings.json` is owner-tuned, so it is the owner's call per project); idle compaction
+(the `SessionStart(compact)` hook already re-arms the contract); path-scoped rules via Bash
+(the payload scopes none); the 32-skill cap, `mcp__` prefix rules and `UserPromptSubmit` (none
+in the payload); `effort` and `autoCompactWindow` on agents (available, not required).
+
+## Upgrade from 3.2.6
+
+`curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.2.7 --apply`;
+the dispatcher pane carries it after its next start.
+
 # Astragentic 3.2.6
 
 **A held turn end has a ceiling.** 3.2.0 holds a pane's TURN-END while its own agents still

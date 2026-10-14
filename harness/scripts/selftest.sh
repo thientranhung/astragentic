@@ -1335,7 +1335,14 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
   await every(); await every()
   const staleBells = bells.filter(b => b.includes('reason=held-stale')).length
   const staleRow = (await rows()).includes('— stale')
-  console.log(JSON.stringify({ afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, log }))
+  // a subagent's turn.start (Claude Code 2.1.299 fires it with agentId) must not hold bells
+  bells.length = 0
+  fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify({ 'AB-4': { role: 'builder', pane_id: 'p4', tab_id: 't4', session_name: 'builder-ab-4', last_brief_received_at: Date.now() - 60_000 } }))
+  await fire('turn.start', { text: '', turnId: 'sub-1', agentId: 'a-sub-1' }, async () => ({}))
+  const end = `<cross-session-message from="uds:/tmp/y.sock" from-name="builder-ab-4">\n[astragentic-dispatch] TURN-END key=AB-4 pane=p4 reason=answer\nDone</cross-session-message>`
+  await fire('session.receive', { text: end, origin: { kind: 'plugin' } }, async () => ({}))
+  const subagentHeld = bells.length === 0
+  console.log(JSON.stringify({ afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, subagentHeld, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
@@ -1345,8 +1352,8 @@ DRVEOS
     node "$TMP/mod-drive.cjs" "$1" "$TMP/mod-drive-repo" "$TSC_PKG" 2>&1
   }
   out="$(mod_drive "$MOD")"
-  if says "$out" '"afterSend":"AB-1:sent:"' && says "$out" '"afterAck":"AB-1:registered:no brief yet"' && says "$out" '"afterRetire":""' && says "$out" '"stubBells":0,"stubLeft":0,"staleBells":1,"staleRow":true'; then
-    ok "the ack from the bare name clears the send keyed by \"name [ref]\"; a retired lane's send goes with its entry; a stub entry rings no bell; a hold past the ceiling rings once as held-stale"
+  if says "$out" '"afterSend":"AB-1:sent:"' && says "$out" '"afterAck":"AB-1:registered:no brief yet"' && says "$out" '"afterRetire":""' && says "$out" '"stubBells":0,"stubLeft":0,"staleBells":1,"staleRow":true,"subagentHeld":false'; then
+    ok "the ack from the bare name clears the send keyed by \"name [ref]\"; a retired lane's send goes with its entry; a stub entry rings no bell; a hold past the ceiling rings once as held-stale; a subagent's turn.start holds nothing"
   else
     bad "mod send/ack keys" "$out"
   fi
@@ -1362,11 +1369,14 @@ assert old2 in s, "wakeFromRecord stub guard not found"
 s = s.replace(old2, "", 1)
 old3 = "if (w && isLive(entry) && !w.stale_rung_at && now - (w.at ?? now) > HOLD_STALE_MS) {"
 assert old3 in s, "hold ceiling not found"
-open(p, 'w').write(s.replace(old3, "if (false) {", 1))
+s = s.replace(old3, "if (false) {", 1)
+old4 = "if ((e as any).agentId !== undefined) return next(e)\n    isBusy = true"
+assert old4 in s, "turn.start agentId guard not found"
+open(p, 'w').write(s.replace(old4, "isBusy = true", 1))
 EOS
   out="$(mod_drive "$TMP/mod-stuck")"
-  if says "$out" 'builder-ab-1-32 [1c2d95]:sent:' && says "$out" '"afterRetire":"builder-ab-1-32' && says "$out" '"stubBells":1' && says "$out" '"staleBells":0'; then
-    ok "planted: a send keyed by the typed string stays \"sent\" through the ack and past the lane's retirement; a stub entry rings; a hold never times out"
+  if says "$out" 'builder-ab-1-32 [1c2d95]:sent:' && says "$out" '"afterRetire":"builder-ab-1-32' && says "$out" '"stubBells":1' && says "$out" '"staleBells":0' && says "$out" '"subagentHeld":true'; then
+    ok "planted: a send keyed by the typed string stays \"sent\" through the ack and past the lane's retirement; a stub entry rings; a hold never times out; a subagent's turn.start holds the bell"
   else
     bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"
   fi
