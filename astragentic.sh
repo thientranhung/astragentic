@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# astragentic.sh — the project's own view of its harness release. `install.sh --apply` puts a
+# copy at `<project>/.astraler/astragentic.sh`, so from inside the project:
+#
+#   .astraler/astragentic.sh update           installed vs latest, what changed between, the one-liner
+#   .astraler/astragentic.sh update --apply   pull the latest release and apply it (get.sh latest --apply)
+#   .astraler/astragentic.sh version          the installed version only
+#
+# `update` changes nothing: it reads `.astraler/state/applied-version`, asks the package remote
+# for its newest v-tag, prints the release notes of every release in between, and prints the
+# command that upgrades. Applying stays the owner's decision (the one-liner, or `--apply` here).
+#
+# Why this exists: get.sh (2.22.0) let a project pull its own release, but nothing in the
+# project could say which release it had, which was newest, or what the gap held — a question
+# the owner asked on 2026-10-14 and answered by hand each time.
+#
+# Environment (shared with get.sh):
+#   ASTRAGENTIC_REPO    git URL or local path of the package (default: the GitHub repo)
+#   ASTRAGENTIC_RAW     base URL for raw files of a tag (default: raw.githubusercontent.com/<repo>)
+#   ASTRAGENTIC_CACHE   where get.sh keeps releases (default: ~/.cache/astragentic)
+set -euo pipefail
+
+REPO="${ASTRAGENTIC_REPO:-https://github.com/thientranhung/astragentic.git}"
+RAW="${ASTRAGENTIC_RAW:-https://raw.githubusercontent.com/thientranhung/astragentic}"
+CACHE="${ASTRAGENTIC_CACHE:-$HOME/.cache/astragentic}"
+GET_URL="https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh"
+
+CMD="${1:-update}"
+APPLY=0
+for arg in "${@:2}"; do
+  case "$arg" in
+    --apply) APPLY=1 ;;
+    *) echo "astragentic.sh: unknown argument $arg" >&2; exit 2 ;;
+  esac
+done
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+APPLIED_FILE="$ROOT/.astraler/state/applied-version"
+installed="$(cat "$APPLIED_FILE" 2>/dev/null | tr -d '[:space:]' || true)"
+
+case "$CMD" in
+  version)
+    echo "${installed:-none}"; exit 0 ;;
+  update) ;;
+  --help|-h|help)
+    sed -n '2,20p' "$0"; exit 0 ;;
+  *)
+    echo "astragentic.sh: unknown command $CMD (update | update --apply | version)" >&2; exit 2 ;;
+esac
+
+# Numeric sort of dotted versions: `sort` alone reads 0.0.10 below 0.0.9.
+vsort() { sort -t. -k1,1n -k2,2n -k3,3n; }
+# vgt a b → a is newer than b
+vgt() { [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | vsort | tail -1)" = "$1" ]; }
+
+tags="$(git ls-remote --tags --refs "$REPO" 2>/dev/null \
+  | awk -F'refs/tags/v' '/refs\/tags\/v[0-9]/{print $2}' | vsort)" || true
+[ -n "$tags" ] || { echo "astragentic.sh: could not list release tags at $REPO (offline, or the remote refused)" >&2; exit 1; }
+latest="$(printf '%s\n' "$tags" | tail -1)"
+
+if [ -z "$installed" ]; then
+  echo "astragentic: not applied in $ROOT (no .astraler/state/applied-version) · latest release $latest"
+  echo
+  echo "To stage it, in the project root:"
+  echo "  curl -fsSL $GET_URL | bash -s -- $latest"
+  exit 0
+fi
+
+if ! vgt "$latest" "$installed"; then
+  echo "astragentic: installed $installed — this is the latest release."
+  exit 0
+fi
+
+between="$(printf '%s\n' "$tags" | while IFS= read -r t; do vgt "$t" "$installed" && echo "$t"; done)"
+n="$(printf '%s\n' "$between" | grep -c .)"
+echo "astragentic: installed $installed · latest $latest ($n release(s) behind: $(printf '%s\n' "$between" | paste -sd, - | sed 's/,/, /g'))"
+echo
+
+# The notes of the releases in between, from the latest tag's RELEASE-NOTES.md: a local
+# package path is read with git, a fetched release from get.sh's cache, anything else over HTTPS.
+notes=""
+if [ -d "$REPO" ]; then
+  notes="$(git -C "$REPO" show "v$latest:RELEASE-NOTES.md" 2>/dev/null || true)"
+elif [ -f "$CACHE/$latest/RELEASE-NOTES.md" ]; then
+  notes="$(cat "$CACHE/$latest/RELEASE-NOTES.md")"
+elif command -v curl >/dev/null 2>&1; then
+  notes="$(curl -fsSL "$RAW/v$latest/RELEASE-NOTES.md" 2>/dev/null || true)"
+fi
+if [ -n "$notes" ]; then
+  printf '%s\n' "$notes" | awk -v inst="$installed" '
+    /^# Astragentic [0-9]/ {
+      v = $3; keep = 0
+      n = split(v, a, "."); m = split(inst, b, ".")
+      for (i = 1; i <= 3; i++) { x = (i <= n) ? a[i] + 0 : 0; y = (i <= m) ? b[i] + 0 : 0
+        if (x > y) { keep = 1; break } if (x < y) { break } }
+    }
+    keep { print }'
+else
+  echo "(release notes not readable from here — read RELEASE-NOTES.md in the release once staged)"
+  echo
+fi
+
+echo "To upgrade, in the project root:"
+echo "  curl -fsSL $GET_URL | bash -s -- $latest --apply"
+echo "or:"
+echo "  .astraler/astragentic.sh update --apply"
+echo "Then read .astraler/releases/$latest/ADAPT-HARNESS.md for what the release asks of this"
+echo "project, and restart the dispatcher pane: the dispatch mod loads at a session's start."
+
+if [ "$APPLY" -eq 1 ]; then
+  echo
+  echo "astragentic: applying $latest"
+  cd "$ROOT"
+  if [ -d "$REPO" ] && [ -f "$REPO/get.sh" ]; then
+    ASTRAGENTIC_REPO="$REPO" exec bash "$REPO/get.sh" "$latest" --apply
+  fi
+  command -v curl >/dev/null 2>&1 || { echo "astragentic.sh: curl is required to fetch get.sh" >&2; exit 2; }
+  curl -fsSL "$GET_URL" | ASTRAGENTIC_REPO="$REPO" bash -s -- "$latest" --apply
+fi

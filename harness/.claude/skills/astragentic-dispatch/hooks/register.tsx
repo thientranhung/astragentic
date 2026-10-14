@@ -113,6 +113,29 @@ const ACK_GRACE_MS = 90_000
 // stuck pane: eight code-review finders that never returned held a Builder's bell for four
 // hours, and the owner noticed before the dispatcher did (measured downstream, 2026-10-13).
 const HOLD_STALE_MS = 20 * 60_000
+// True when dotted version `a` is newer than `b` (numeric per field; '' never is).
+function isNewer(a: string, b: string): boolean {
+  if (!a || !b) return false
+  const x = a.split('.').map(n => parseInt(n, 10) || 0), y = b.split('.').map(n => parseInt(n, 10) || 0)
+  for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (x[i] ?? 0) - (y[i] ?? 0); if (d !== 0) return d > 0 }
+  return false
+}
+
+// The newest v-tag at the package remote, or '' when unreachable. One `git ls-remote` at the
+// dispatcher's session start, so the band can say a newer release exists (3.3.0); the project's
+// `.astraler/astragentic.sh update` is the same question answered in full.
+async function latestRelease($: any): Promise<string> {
+  const repo = (await $.env.get('ASTRAGENTIC_REPO')) || 'https://github.com/thientranhung/astragentic.git'
+  const r = await run($, ['git', 'ls-remote', '--tags', '--refs', repo], 15_000)
+  if (r.code !== 0) return ''
+  let best = ''
+  for (const line of r.out.split('\n')) {
+    const v = line.match(/refs\/tags\/v(\d+(?:\.\d+)*)\s*$/)?.[1]
+    if (v && (!best || isNewer(v, best))) best = v
+  }
+  return best
+}
+
 // Session names the dispatch record has held in this process; see refreshBoard.
 const onceNamed = new Set<string>()
 const TICKET = /^[A-Z][A-Z0-9]*-[0-9]+$/
@@ -128,7 +151,7 @@ const board = atom({ plugin: 'astragentic-dispatch', key: 'board' } as const, []
 // token, whatever it measured it needed on screen). Measured downstream: the tracker table was
 // injected into context at session start and never shown, and two gate runs collided while
 // nobody could see who held the token.
-const banner = atom({ plugin: 'astragentic-dispatch', key: 'banner' } as const, { branch: '', extra: '', version: '' } as Banner)
+const banner = atom({ plugin: 'astragentic-dispatch', key: 'banner' } as const, { branch: '', extra: '', version: '', latest: '' } as Banner)
 // The Builder pane's own band: which FLOW steps have run, read from the same record the gates
 // read, so the person watching the pane sees the step the Builder is at without reading the
 // transcript (owner's ask, 2026-10-09).
@@ -616,7 +639,7 @@ async function refreshBoard($: any, root: string | null, sends: Map<string, numb
     // glance which one is behind (owner's ask, 2026-10-10).
     let version = ''
     try { version = (await $.fs.read(`${root}/.astraler/state/applied-version`)).trim() } catch {}
-    await update($, banner, () => ({ branch, extra, version }))
+    await update($, banner, b => ({ branch, extra, version, latest: b.latest ?? '' }))
   }
 }
 
@@ -709,6 +732,13 @@ export const register: Register = on => {
     root = await repoRoot($)
     me = await whoAmI($)
     if (root) { try { appliedVersion = (await $.fs.read(`${root}/.astraler/state/applied-version`)).trim() } catch {} }
+    if (!me && root && appliedVersion) {
+      void latestRelease($).then(async latest => {
+        if (!isNewer(latest, appliedVersion)) return
+        await update($, banner, b => ({ ...b, latest }))
+        $.ui.status(`astragentic-dispatch: release ${latest} exists (this project applied ${appliedVersion}) — .astraler/astragentic.sh update says what changed`)
+      }).catch(() => {})
+    }
     if (me && root) {
       // session.start fires again on every reload and resume. The start commit is kept from the
       // first registration: rewritten at a reload after the Builder committed, it equalled the
@@ -1467,6 +1497,7 @@ export const register: Register = on => {
       <Box flexDirection="row" flexWrap="wrap">
         {b.branch ? <Chip bg="claude" fg="inverseText" label={`⎇ ${b.branch}`} /> : null}
         {b.version ? <Chip dim label={`astragentic ${b.version}`} /> : null}
+        {b.latest ? <Chip bg="warning" fg="inverseText" label={`${b.latest} available · .astraler/astragentic.sh update`} /> : null}
         {rows.length === 0 ? <Chip dim label="no dispatches" /> : null}
         {rows.map(r => (
           <Chip bg={bgOf(r)} fg="inverseText" label={`${r.key} ${r.state} ${ago(now - r.since)}${r.note ? ` · ${r.note}` : ''}`} />

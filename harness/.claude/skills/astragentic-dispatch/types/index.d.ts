@@ -10,6 +10,8 @@ export type Banner = {
   branch: string
   extra: string
   version: string
+  /** newest release tag at the package remote when newer than `version`, else '' */
+  latest: string
 }
 
 export type Flow = {

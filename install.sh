@@ -297,6 +297,7 @@ cp "$HARNESS_ROOT/install.sh"         "$STAGING_DIR/install.sh"
 # docs from the repo itself rather than scaffolding them. Staged when a later version adds
 # them, so this line needs no revisit then.
 [ -d "$HARNESS_ROOT/templates" ] && cp -R "$HARNESS_ROOT/templates" "$STAGING_DIR/templates"
+[ -f "$HARNESS_ROOT/astragentic.sh" ] && cp "$HARNESS_ROOT/astragentic.sh" "$STAGING_DIR/astragentic.sh"
 find "$STAGING_DIR" -name '.DS_Store' -delete
 
 # THE SELF-CHECKS RUN HERE, at staging. Commit 54c85c2 kept them out of role contracts on
@@ -698,6 +699,13 @@ PY
       echo "        Resolve them, then re-run, or write $VERSION into $APPLIED_FILE by hand."
     else
       mkdir -p "$(dirname "$APPLIED_FILE")"; printf '%s\n' "$VERSION" > "$APPLIED_FILE"
+      # The project's own release view (3.3.0): `.astraler/astragentic.sh update` reads the
+      # stamp above, asks the remote for its newest tag and prints the gap and the one-liner.
+      # One home, beside the state it reads; refreshed with every apply.
+      if [ -f "$RELEASE_DIR/astragentic.sh" ]; then
+        cp "$RELEASE_DIR/astragentic.sh" "$STATE_ROOT/astragentic.sh" && chmod +x "$STATE_ROOT/astragentic.sh"
+        echo "  .astraler/astragentic.sh written — \`.astraler/astragentic.sh update\` says when a newer release exists."
+      fi
     fi
   fi
 

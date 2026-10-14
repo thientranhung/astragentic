@@ -1,3 +1,29 @@
+# Astragentic 3.3.0
+
+**The project answers its own upgrade question.** `install.sh --apply` now writes
+`.astraler/astragentic.sh` beside the stamp it reads. `.astraler/astragentic.sh update` prints
+the installed release, the newest tag at the package remote, the release notes of every release
+in between, and the one-liner that upgrades; `update --apply` runs it; `version` prints the
+stamp. It changes nothing on its own. Until now get.sh (2.22.0) let a project pull a release,
+but nothing in the project could say which it had or what the gap held: the owner answered that
+by hand for each project (asked 2026-10-14).
+
+**The dispatcher's band says when a newer release exists.** At the dispatcher's session start
+the mod asks the package remote for its newest tag, once, beside the start; a newer one shows
+as a chip naming the version and the command. Dispatched panes do not ask. `ASTRAGENTIC_REPO`
+points both the script and the mod at another remote or a local package path.
+
+Selftest: a local package with tags 0.0.9 and 0.0.10 (the pair plain `sort` misorders, planted)
+drives `update`, `update --apply` against the package's own get.sh, the up-to-date and the
+offline answers; `--apply` on a fresh target writes the script executable; the mod driver sees
+the newer tag reach the band.
+
+## Upgrade from 3.2.7
+
+`curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.3.0 --apply`;
+this apply writes `.astraler/astragentic.sh`, and the dispatcher pane carries the chip after its
+next start.
+
 # Astragentic 3.2.7
 
 **A subagent's turn no longer holds the dispatcher's bells.** Claude Code 2.1.299 changed the

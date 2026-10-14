@@ -299,7 +299,7 @@ if bash "$ROOT/install.sh" "$T1" >/dev/null 2>&1 && [ -d "$T1/.astraler/releases
   # Field splitting broke all four staging checks on a valid checkout.
   SP="$TMP/Astraler Repo"; mkdir -p "$SP"
   cp -R "$ROOT/harness" "$ROOT/install.sh" "$ROOT/VERSION" "$ROOT/README.md" \
-        "$ROOT/RELEASE-NOTES.md" "$ROOT/check-requirements.sh" "$ROOT/prompts" "$SP/" 2>/dev/null
+        "$ROOT/RELEASE-NOTES.md" "$ROOT/check-requirements.sh" "$ROOT/prompts" "$ROOT/astragentic.sh" "$SP/" 2>/dev/null
   T3="$TMP/spaced-target"; mkdir -p "$T3"; ( cd "$T3" && git init -q . ) >/dev/null 2>&1
   ( cd "$SP" && bash install.sh "$T3" ) >/dev/null 2>&1 && [ -d "$T3/.astraler/releases/$V" ] \
     && ok "stages from a path containing a space" \
@@ -335,6 +335,12 @@ if bash "$ROOT/install.sh" "$T1" >/dev/null 2>&1 && [ -d "$T1/.astraler/releases
     ok "--apply exits 0 and stamps applied-version on a fresh target"
   else
     bad "apply exit" "--apply failed or did not stamp $V on a fresh target"
+  fi
+  # 3.3.0: the project's release view lands beside the stamp it reads, executable.
+  if [ -x "$T1/.astraler/astragentic.sh" ] && [ "$(cd "$T1" && bash .astraler/astragentic.sh version)" = "$V" ]; then
+    ok "--apply writes .astraler/astragentic.sh, and \`version\` reads the stamp"
+  else
+    bad "astragentic.sh on apply" "not written, not executable, or version != $V"
   fi
 else
   bad "install.sh staging" "did not stage $V into a fresh target"
@@ -1231,6 +1237,58 @@ unset E_LOG
 # unwatched. Claude Code's own reader validates it the way the engine loads it, and a planted
 # defect proves the reader names one: a check only ever seen passing has not been tested.
 # ---------------------------------------------------------------------------------------------
+echo "astragentic.sh update — installed vs latest, the gap's notes, the one-liner (3.3.0)"
+# A local package with tags v0.0.9 and v0.0.10: the pair `sort` alone orders wrong, which is
+# the planted shape below. The target has applied 0.0.9.
+AX="$TMP/astra-update"; rm -rf "$AX"; mkdir -p "$AX/pkg" "$AX/proj/.astraler/state"
+( cd "$AX/pkg" && git init -q && git -c user.name=t -c user.email=t@t commit -q --allow-empty -m i
+  for v in 0.0.9 0.0.10; do
+    { printf '# Astragentic %s\n\n**Note for %s.**\n\n' "$v" "$v"; cat RELEASE-NOTES.md 2>/dev/null; } > RN.tmp; mv RN.tmp RELEASE-NOTES.md
+    echo "$v" > VERSION; printf '#!/bin/sh\necho "get.sh stub: $*" > "%s/get-args"\n' "$AX" > get.sh
+    git add -A; git -c user.name=t -c user.email=t@t commit -q -m "$v"; git tag "v$v"
+  done ) >/dev/null 2>&1
+( cd "$AX/proj" && git init -q ) >/dev/null 2>&1
+echo 0.0.9 > "$AX/proj/.astraler/state/applied-version"
+# The script lives at the package root, or at `.astraler/astragentic.sh` once applied.
+AU=""
+for cand in "$(dirname "$S")/../astragentic.sh" "$ROOT/astragentic.sh" "$ROOT/.astraler/astragentic.sh"; do
+  [ -f "$cand" ] && { AU="$cand"; break; }
+done
+if [ -z "$AU" ]; then
+  SKIPPED=$((SKIPPED+1)); echo "  skip astragentic.sh — not at the package root nor at .astraler/ in this layout"
+else
+out="$( (cd "$AX/proj" && ASTRAGENTIC_REPO="$AX/pkg" bash "$AU" update 2>&1); echo "rc=$?" )"
+if says "$out" "installed 0.0.9 · latest 0.0.10" && says "$out" "Note for 0.0.10." && ! says "$out" "Note for 0.0.9." \
+   && says "$out" "bash -s -- 0.0.10 --apply" && says "$out" "rc=0"; then
+  ok "update names installed and latest, prints only the gap's notes, and the one-liner pins latest"
+else
+  bad "astragentic.sh update" "$out"
+fi
+echo 0.0.10 > "$AX/proj/.astraler/state/applied-version"
+out="$( (cd "$AX/proj" && ASTRAGENTIC_REPO="$AX/pkg" bash "$AU" update 2>&1); echo "rc=$?" )"
+says "$out" "installed 0.0.10 — this is the latest release" && says "$out" "rc=0" \
+  && ok "update on the latest release says so and prints no one-liner" \
+  || bad "astragentic.sh current" "$out"
+echo 0.0.9 > "$AX/proj/.astraler/state/applied-version"; rm -f "$AX/get-args"
+out="$( (cd "$AX/proj" && ASTRAGENTIC_REPO="$AX/pkg" bash "$AU" update --apply 2>&1); echo "rc=$?" )"
+if [ -f "$AX/get-args" ] && says "$(cat "$AX/get-args")" "0.0.10 --apply"; then
+  ok "update --apply hands latest and --apply to the package's own get.sh"
+else
+  bad "astragentic.sh --apply" "$out / $(cat "$AX/get-args" 2>/dev/null)"
+fi
+out="$( (cd "$AX/proj" && ASTRAGENTIC_REPO="$AX/nowhere" bash "$AU" update 2>&1); echo "rc=$?" )"
+says "$out" "could not list release tags" && says "$out" "rc=1" \
+  && ok "an unreachable package remote is said, exit 1" \
+  || bad "astragentic.sh offline" "$out"
+# planted: plain `sort` reads 0.0.9 as newest and reports the target up to date
+sed 's/sort -t\. -k1,1n -k2,2n -k3,3n/sort/' "$AU" > "$AX/lexical.sh"
+out="$( (cd "$AX/proj" && ASTRAGENTIC_REPO="$AX/pkg" bash "$AX/lexical.sh" update 2>&1); echo "rc=$?" )"
+says "$out" "latest 0.0.10" \
+  && bad "astragentic.sh planted sort" "a lexical sort still found 0.0.10 — this case cannot fail" \
+  || ok "planted: a lexical version sort misses 0.0.10, and the case says so"
+fi
+
+# ---------------------------------------------------------------------------------------------
 echo "dispatch mod — the engine's reader loads it, and refuses a broken copy"
 MOD="$(dirname "$S")/.claude/skills/astragentic-dispatch"
 if [ ! -d "$MOD" ]; then
@@ -1300,7 +1358,7 @@ const log = []
 let everyFn = async () => {}
 const every = () => everyFn()
 const $ = {
-  env: { get: async () => undefined },
+  env: { get: async k => k === 'ASTRAGENTIC_REPO' ? root : undefined },
   clock: { now: async () => Date.now(), every: (_ms, fn) => { everyFn = fn } },
   command: { register: () => {}, run: async () => ({}) },
   session: { id: 'disp', send: async () => ({ isDelivered: true }) },
@@ -1314,6 +1372,8 @@ const fire = async (name, e, next) => { for (const fn of hooks[name] ?? []) { co
 const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board', init: [] })).map(r => `${r.key}:${r.state}:${r.note ?? ''}`).join(' ')
 ;(async () => {
   await fire('session.start', {}, async () => ({}))
+  await new Promise(r => setTimeout(r, 800))  // the newer-release lookup runs beside the start
+  const latestChip = (await engine.read($, { id: 'astragentic-dispatch.banner', init: {} })).latest
   await fire('session.send', { to: 'builder-ab-1-32 [1c2d95]', text: '/mattpocock-skills:verify AB-1', origin: { kind: 'model' } }, async () => ({ isDelivered: true }))
   const afterSend = await rows()
   const ack = `<cross-session-message from="uds:/tmp/x.sock" from-name="builder-ab-1-32">\n[astragentic-dispatch] RECEIVED key=AB-1 pane=p1\n</cross-session-message>`
@@ -1342,18 +1402,19 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
   const end = `<cross-session-message from="uds:/tmp/y.sock" from-name="builder-ab-4">\n[astragentic-dispatch] TURN-END key=AB-4 pane=p4 reason=answer\nDone</cross-session-message>`
   await fire('session.receive', { text: end, origin: { kind: 'plugin' } }, async () => ({}))
   const subagentHeld = bells.length === 0
-  console.log(JSON.stringify({ afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, subagentHeld, log }))
+  console.log(JSON.stringify({ afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, subagentHeld, latestChip, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
     rm -rf "$TMP/mod-drive-repo"; mkdir -p "$TMP/mod-drive-repo/.astraler/state"
-    ( cd "$TMP/mod-drive-repo" && git init -q && git -c user.name=t -c user.email=t@t commit -q --allow-empty -m init )
+    ( cd "$TMP/mod-drive-repo" && git init -q && git -c user.name=t -c user.email=t@t commit -q --allow-empty -m init && git tag v0.0.2 )
+    echo 0.0.1 > "$TMP/mod-drive-repo/.astraler/state/applied-version"
     echo '{"AB-1":{"role":"builder","pane_id":"p1","tab_id":"t1","session_name":"builder-ab-1-32","registered_at":1,"branch":"feat/ab-1","start_sha":"abc"}}' > "$TMP/mod-drive-repo/.astraler/state/dispatch-record.json"
     node "$TMP/mod-drive.cjs" "$1" "$TMP/mod-drive-repo" "$TSC_PKG" 2>&1
   }
   out="$(mod_drive "$MOD")"
-  if says "$out" '"afterSend":"AB-1:sent:"' && says "$out" '"afterAck":"AB-1:registered:no brief yet"' && says "$out" '"afterRetire":""' && says "$out" '"stubBells":0,"stubLeft":0,"staleBells":1,"staleRow":true,"subagentHeld":false'; then
-    ok "the ack from the bare name clears the send keyed by \"name [ref]\"; a retired lane's send goes with its entry; a stub entry rings no bell; a hold past the ceiling rings once as held-stale; a subagent's turn.start holds nothing"
+  if says "$out" '"afterSend":"AB-1:sent:"' && says "$out" '"afterAck":"AB-1:registered:no brief yet"' && says "$out" '"afterRetire":""' && says "$out" '"stubBells":0,"stubLeft":0,"staleBells":1,"staleRow":true,"subagentHeld":false,"latestChip":"0.0.2"'; then
+    ok "the ack from the bare name clears the send keyed by \"name [ref]\"; a retired lane's send goes with its entry; a stub entry rings no bell; a hold past the ceiling rings once as held-stale; a subagent's turn.start holds nothing; a newer tag at the remote reaches the band"
   else
     bad "mod send/ack keys" "$out"
   fi

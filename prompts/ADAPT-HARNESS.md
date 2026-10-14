@@ -23,7 +23,9 @@ owner rather than resolving it with an overwrite.
    Load a skill's body when you need its contract, rather than preloading all of them.
 3. Read `.astraler/state/applied-version` when present. A named `<previous>` makes this an
    upgrade: read that release's notes and use `.astraler/releases/<previous>/` as the
-   baseline for a three-way comparison. No applied version means a fresh install.
+   baseline for a three-way comparison. No applied version means a fresh install. After an
+   apply, `.astraler/astragentic.sh update` is the project's own answer to "which release is
+   installed, which is newest, what changed" — point the owner at it rather than at this file.
 4. **Read the live project before planning**: root instructions, existing agent
    configuration, dependency manifests, build and test commands, docs, git status, and any
    existing harness-derived files. Live project truth is evidence, not disposable output.
