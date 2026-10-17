@@ -199,15 +199,34 @@ fi
 # review` through the codex plugin). Claude is the only role runtime, so neither surface gates
 # the flow: absent, the arm cannot run and is recorded `NOT RUN — <reason>` for the OWNER to
 # accept. A same-vendor lens never completes it.
-if command -v codex >/dev/null 2>&1; then
+# 4.0.2: the owner can turn the arm off per scope in `.agents/orchestrator.md` § Cross-vendor
+# arm. With all three rows at `no`, neither Codex surface is asked for; the two lines below
+# say so instead of warning about a dependency the project has declined.
+ARM_ORCH=""
+[ -n "${TARGET:-}" ] && [ -f "$TARGET/.agents/orchestrator.md" ] && ARM_ORCH="$TARGET/.agents/orchestrator.md"
+[ -z "$ARM_ORCH" ] && [ -z "${TARGET:-}" ] && for CAND in ".agents/orchestrator.md" "harness/.agents/orchestrator.md"; do [ -f "$CAND" ] && { ARM_ORCH="$CAND"; break; }; done
+ARM_ALL_OFF=0
+if [ -n "$ARM_ORCH" ] && python3 - "$ARM_ORCH" <<'PY' 2>/dev/null
+import re, sys
+t = open(sys.argv[1]).read()
+m = re.search(r"^##\s*Cross-vendor arm\s*$([\s\S]*?)(?=^##\s|\Z)", t, re.M)
+rows = dict(re.findall(r"^\|\s*(ticket|spec|slice)\s*\|\s*(\w+)\s*\|", m.group(1), re.M)) if m else {}
+sys.exit(0 if rows and all(rows.get(s, "yes").lower() == "no" for s in ("ticket", "spec", "slice")) else 1)
+PY
+then ARM_ALL_OFF=1; fi
+if [ "$ARM_ALL_OFF" -eq 1 ]; then
+  ok "codex CLI and plugin: not required — every arm scope is 'no' in $ARM_ORCH"
+elif command -v codex >/dev/null 2>&1; then
   ok "codex CLI ($(command -v codex))"
 else
   warn "codex CLI not on PATH" \
-    "the cross-vendor arm needs it; install the OpenAI Codex CLI, e.g. brew install codex. Until then the arm is recorded 'NOT RUN — <reason>' for the OWNER to accept"
+    "the cross-vendor arm needs it; install the OpenAI Codex CLI, e.g. brew install codex, or set every scope to 'no' under Cross-vendor arm in .agents/orchestrator.md. Until then the arm is recorded 'NOT RUN — <reason>' for the OWNER to accept"
 fi
 
 # Codex plugin inside Claude Code (provides the companion runtime the arm invokes).
-if [ -f "$PLUGINS_JSON" ] && grep -q '"codex@' "$PLUGINS_JSON"; then
+if [ "$ARM_ALL_OFF" -eq 1 ]; then
+  :
+elif [ -f "$PLUGINS_JSON" ] && grep -q '"codex@' "$PLUGINS_JSON"; then
   ok "Codex plugin in Claude Code (codex@… in installed_plugins.json)"
 else
   warn "Codex plugin not installed in Claude Code" \

@@ -108,8 +108,7 @@ ticket, one Builder, one pane, one worktree; several run at once on the frontier
 **Per ticket** the Builder lane reviews and you verify by artifact at merge, browser evidence for a UI ticket included; **at slice close** you run the slice gate below. A design-level blocker goes to the owner via `to-questionnaire`. Everything else is your work order to whoever owns the artifact: the paused Shaper for a spec, the Builder for a ticket, a follow-up ticket for a closed slice. Reviewers advise and **you classify**; a recorded wontfix is legitimate.
 
 **The author gets ONE written reply before you classify.** The author knows why the diff is that shape. You decide between the two, and **only what neither closes reaches
-the owner** — routing a disputed finding straight past you spends the owner on a question two
-agents could have settled.
+the owner**.
 
 **One reply, not a round.** No second reply, no re-review, no re-firing the gate to win it.
 Record any classification a reply changes.
@@ -138,7 +137,8 @@ The arm reads against the project's standard; the fan-out attacks assumptions an
 
 ## The cross-vendor arm
 
-Invocation is `codex-arm`; the firer records the vendor.
+Invocation is `codex-arm`; the firer records the vendor. An `orchestrator.md` arm row at `no` skips that
+scope: no marker owed, handback says `Arm: off (orchestrator)`.
 
 | | When | Over what | Fired by |
 |---|---|---|---|

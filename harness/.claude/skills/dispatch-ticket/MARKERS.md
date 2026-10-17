@@ -9,7 +9,7 @@ The script is the arbiter, on every runtime:
 
 ```bash
 scripts/check-simplify-markers.sh <base> <head> --marker 'simplify(increment)'   # exit 0 = green, 1 = STOP
-scripts/check-simplify-markers.sh <base> <head> --marker 'arm(ticket)'
+scripts/check-simplify-markers.sh <base> <head> --marker 'arm(ticket)'   # omit when orchestrator.md arm row ticket = no
 ```
 
 `--marker` is repeatable and the kind is **data**, so a new marker kind costs a flag rather

@@ -105,15 +105,62 @@ guard allow 'grep -rn "git add -A" docs/'
 guard allow 'git status --short'
 guard deny  'echo "retire the pane (already closed)" && git add -A'  # quoted ( is data: judged
 
-echo "hook-git-guard — out of scope: silent by design, never denied (2.7.3)"
-guard allow 'echo "$(git add -A)"'          # substitution inside quotes
-guard allow 'echo "done (ok) $(true)" && git add -A'   # $( inside quotes still executes: unreadable
-guard allow 'if git add -A; then :; fi'     # reserved word
-guard allow 'FOO=bar git add -A'            # assignment prefix
-guard allow 'xargs git add -A'              # wrapper
+echo "hook-git-guard — a sweeping add is judged even on an unreadable line (4.0.2)"
+# Measured downstream: six `git add -A && git commit -m "$(cat <<EOF` lines passed as
+# no-opinion in two days while the bare form was refused seven times. The sweep is two words
+# at the head of the line; the heredoc that made the line unreadable is the commit message.
+guard deny  'git add -A && git commit -m "$(cat <<EOF
+feat: thing
+
+body
+EOF
+)"'
+guard deny  'echo "done (ok) $(true)" && git add -A'   # was allow before 4.0.2: unreadable tail, readable sweep
+guard deny  'if git add -A; then :; fi'
+guard deny  'FOO=bar git add -A'
+guard deny  'git add -A -- .'
+guard deny  'git add -A .'
+guard allow 'git add -A -- apps/server apps/dashboard'   # path-limited: ~100 of 163 downstream refusals were this shape
+guard allow 'git add --all src/'
+guard allow 'git add -A -- "apps/server"'            # a quoted pathspec is a path
+guard deny  'git add -A
+git commit -m "$(cat <<EOF
+msg
+EOF
+)"'                                        # two lines: the sweep on line 1, the heredoc on line 2
+guard allow 'git commit -m "$(cat <<EOF
+docs: say never run git add -A in this repo
+EOF
+)"'                                         # the words inside the heredoc body are data
+guard allow 'echo "$(git add -A)"'          # substitution inside quotes: data to this scan
 guard allow 'cat <<EOF
 git add -A
 EOF'                                        # heredoc body
+guard allow 'git add -A.txt'                # a file named -A.txt is a path, not the flag
+guard deny  'xargs git add -A'              # a wrapper still runs the sweep (was out of scope before 4.0.2)
+
+echo "hook-git-guard — the registered wrapper's unreadable-file fallback runs the same guard (4.0.2)"
+# Measured downstream: 27 whole-session blocks where python3 could not open the hook file
+# ([Errno 1] under ~/Documents: macOS TCC on Python.app, or a sandbox) while the shell could
+# stat it, and `onFailure: block` then refused every Bash call. The wrapper now runs the file
+# from a shell read; this proves that form reaches the same verdict.
+out="$(printf '%s' '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git add -A"}}' \
+  | HARNESS_HOOK_LOG="$TMP/hook.log" python3 -c "$(cat "$S/hook-git-guard.py")" 2>/dev/null)"
+says "$out" '"permissionDecision": "deny"' \
+  && ok "python3 -c \"\$(cat guard)\" denies git add -A like python3 guard does" \
+  || bad "wrapper fallback" "the shell-read form did not deny: $out"
+if python3 - "$ROOT/harness/.claude/settings.json" <<'PY' 2>/dev/null
+import json, sys
+d = json.load(open(sys.argv[1]))
+cmds = [h.get("command", "") for arr in d.get("hooks", {}).values() for m in arr for h in m.get("hooks", [])]
+py = [c for c in cmds if "python3" in c]
+sys.exit(0 if py and all('exec python3 -c "$(cat "$s")"' in c for c in py) else 1)
+PY
+then
+  ok "settings.json wrappers carry the found-but-unreadable fallback"
+else
+  bad "wrapper fallback registration" "settings.json has no shell-read fallback for the python hooks"
+fi
 
 # The distinction the shrink was FOR: unsupported structure must record no-opinion, not allow.
 if grep -q 'no-opinion' "$TMP/hook.log" 2>/dev/null; then
@@ -1163,7 +1210,7 @@ Module._load = function (req, ...rest) { return req === 'claude-code' ? engine :
 const m = new Module(path.join(modDir, 'hooks/register.cjs')); m.filename = m.id; m.paths = []
 m._compile(js, m.filename)
 const hooks = {}
-m.exports.register((name, fn) => { (hooks[name] ??= []).push(fn) })
+m.exports.register((name, a, b) => { const fn = typeof a === 'function' ? a : b; const sel = typeof a === 'function' ? null : a; (hooks[name] ??= []).push({ fn, sel }) })
 const log = []
 let liveAgents = []
 let everyFn = async () => {}
@@ -1179,7 +1226,15 @@ const $ = {
   prompt: { submit: async () => {} },
   agent: { list: async () => liveAgents },
 }
-const fire = async (name, e, next) => { for (const fn of hooks[name] ?? []) { const r = await fn($, e, next ?? (x => x)); if (r !== undefined && name !== 'session.start') return r } }
+const fire = async (name, e, next) => {
+  const list = (hooks[name] ?? []).filter(({ sel }) => !(sel && Object.entries(sel).some(([k, v]) => e?.[k] !== v)))
+  if (name === 'tool.call') {  // the engine chains tool.call hooks: each one's `next` is the one after it
+    let i = -1
+    const call = async ev => { i++; if (i >= list.length) return (next ?? (x => x))(ev); return list[i].fn($, ev, call) }
+    return call(e)
+  }
+  for (const { fn } of list) { const r = await fn($, e, next ?? (x => x)); if (r !== undefined && name !== 'session.start') return r }
+}
 const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board', init: [] })).map(r => `${r.key}:${r.state}:${r.note ?? ''}`).join(' ')
 ;(async () => {
   if (isPane) {
@@ -1194,7 +1249,10 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
     await fire('turn.start', { text: '', turnId: 't2' }, async () => ({}))
     await new Promise(r => setTimeout(r, 300))
     const paneCleared = rec()['AB-5']?.waiting_on === null
-    console.log(JSON.stringify({ registered, paneHeld, paneCleared, log }))
+    // the arm row: `ticket: no` in orchestrator.md reaches the Builder as a system-prompt section
+    const composed = await fire('prompt.compose', {}, async () => ({ sections: [] }))
+    const armOffSection = (composed?.sections ?? []).some(s => String(s.text).includes('ARM: off'))
+    console.log(JSON.stringify({ registered, paneHeld, paneCleared, armOffSection, log }))
     return
   }
   await fire('session.start', {}, async () => ({}))
@@ -1228,13 +1286,30 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
   const end = `<cross-session-message from="uds:/tmp/y.sock" from-name="builder-ab-4">\n[astragentic-dispatch] TURN-END key=AB-4 pane=p4 reason=answer\nDone</cross-session-message>`
   await fire('session.receive', { text: end, origin: { kind: 'plugin' } }, async () => ({}))
   const subagentHeld = bells.length === 0
-  console.log(JSON.stringify({ afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, subagentHeld, latestChip, log }))
+  // a merge of a Builder whose pane recorded skills but not simplify is refused before it runs;
+  // the same merge with the full record goes through; an entry with an empty record is not judged
+  const mergeOf = async (skills) => {
+    fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify({ 'AB-6': { role: 'builder', pane_id: 'p6', tab_id: 't6', session_id: 's6', branch: 'builder/AB-6', skills_run: skills } }))
+    let nextRan = false
+    const r = await fire('tool.call', { tool: 'Bash', command: 'git merge --no-ff builder/AB-6' }, async () => { nextRan = true; return {} })
+    return `${r?.deny ? 'deny' : 'pass'}:${nextRan ? 'ran' : 'held'}`
+  }
+  const full = { 'mattpocock-skills:implement': 1, 'mattpocock-skills:tdd': 1, 'mattpocock-skills:code-review': 1, 'code-review': 1, 'simplify': 1, 'codex-arm': 1 }
+  const mergeGap = await mergeOf({ ...full, simplify: undefined })
+  const mergeFull = await mergeOf(full)
+  const mergeEmpty = await mergeOf({})
+  // the dispatcher learns every off scope: it runs the marker check at merge
+  const composed = await fire('prompt.compose', {}, async () => ({ sections: [] }))
+  const armOffDispatcher = (composed?.sections ?? []).some(s => /ARM: off at ticket[\s\S]*arm\(ticket\)/.test(String(s.text)))
+  console.log(JSON.stringify({ afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, subagentHeld, latestChip, mergeGap, mergeFull, mergeEmpty, armOffDispatcher, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
     rm -rf "$TMP/mod-drive-repo"; mkdir -p "$TMP/mod-drive-repo/.astraler/state"
     ( cd "$TMP/mod-drive-repo" && git init -q && git -c user.name=t -c user.email=t@t commit -q --allow-empty -m init && git tag v0.0.2 )
     echo 0.0.1 > "$TMP/mod-drive-repo/.astraler/state/applied-version"
+    mkdir -p "$TMP/mod-drive-repo/.agents"
+    printf '## Active assignments\n\n| Role | Runtime | Model | Effort | Advisor |\n|---|---|---|---|---|\n| builder | claude | m | medium | opus |\n\n## Cross-vendor arm\n\n| Scope | Enabled |\n|---|---|\n| ticket | no |\n| spec | yes |\n| slice | yes |\n' > "$TMP/mod-drive-repo/.agents/orchestrator.md"
     echo '{"AB-1":{"role":"builder","pane_id":"p1","tab_id":"t1","session_name":"builder-ab-1-32","registered_at":1,"branch":"feat/ab-1","start_sha":"abc"}}' > "$TMP/mod-drive-repo/.astraler/state/dispatch-record.json"
     node "$TMP/mod-drive.cjs" "$1" "$TMP/mod-drive-repo" "$TSC_PKG" "${2:-}" 2>&1
   }
@@ -1244,9 +1319,15 @@ DRVEOS
   else
     bad "mod send/ack keys" "$out"
   fi
+  # 4.0.2 — the record refuses the merge. one downstream ticket (2026-10-16) shipped forged Pass: lines past the marker gate.
+  if says "$out" '"mergeGap":"deny:held","mergeFull":"pass:ran","mergeEmpty":"pass:ran","armOffDispatcher":true'; then
+    ok "merge gate: a recorded pane missing simplify is refused before the merge runs; a full record passes; an empty record is not judged; the dispatcher's prompt names the off arm scope and its marker"
+  else
+    bad "mod merge gate" "$out"
+  fi
   out="$(mod_drive "$MOD" pane)"
-  if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true'; then
-    ok "pane side: a turn end with a live agent is held, and the next turn start ends the hold"
+  if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"armOffSection":true'; then
+    ok "pane side: a turn end with a live agent is held, the next turn start ends the hold, and an arm row at no reaches the Builder's prompt"
   else
     bad "mod pane hold" "$out"
   fi
@@ -1268,17 +1349,23 @@ assert old4 in s, "turn.start agentId guard not found"
 s = s.replace(old4, "isBusy = true", 1)
 old5 = "if (own?.pane_id === me!.pane && own.waiting_on) await patchRecord($, root!, me!.key, { waiting_on: null })"
 assert old5 in s, "turn.start hold clear not found"
-open(p, 'w').write(s.replace(old5, "", 1))
+s = s.replace(old5, "", 1)
+old6 = "if (entry?.role !== 'builder' || !entry.session_id || Object.keys(skillsRun(entry)).length === 0) continue"
+assert old6 in s, "merge gate guard not found"
+s = s.replace(old6, "continue", 1)
+old7 = "if (m[2].toLowerCase() === 'no') off.add(m[1])"
+assert old7 in s, "arm row parser not found"
+open(p, 'w').write(s.replace(old7, "", 1))
 EOS
   out="$(mod_drive "$TMP/mod-stuck")"
-  if says "$out" 'builder-ab-1-32 [1c2d95]:sent:' && says "$out" '"afterRetire":"builder-ab-1-32' && says "$out" '"stubBells":1' && says "$out" '"staleBells":0' && says "$out" '"subagentHeld":true'; then
-    ok "planted: a send keyed by the typed string stays \"sent\" through the ack and past the lane's retirement; a stub entry rings; a hold never times out; a subagent's turn.start holds the bell"
+  if says "$out" 'builder-ab-1-32 [1c2d95]:sent:' && says "$out" '"afterRetire":"builder-ab-1-32' && says "$out" '"stubBells":1' && says "$out" '"staleBells":0' && says "$out" '"subagentHeld":true' && says "$out" '"mergeGap":"pass:ran"' && says "$out" '"armOffDispatcher":false'; then
+    ok "planted: a send keyed by the typed string stays \"sent\" through the ack and past the lane's retirement; a stub entry rings; a hold never times out; a subagent's turn.start holds the bell; a merge with a gapped record goes through"
   else
     bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"
   fi
   out="$(mod_drive "$TMP/mod-stuck" pane)"
-  if says "$out" '"paneHeld":true,"paneCleared":false'; then
-    ok "planted: a pane that starts a turn leaves its hold standing"
+  if says "$out" '"paneHeld":true,"paneCleared":false,"armOffSection":false'; then
+    ok "planted: a pane that starts a turn leaves its hold standing; an arm row nobody parses reaches no prompt"
   else
     bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"
   fi

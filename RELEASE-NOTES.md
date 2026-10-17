@@ -1,3 +1,74 @@
+# Astragentic 4.0.2
+
+**Three gates that were being walked through, closed — from the field numbers, not from a
+plan.** The over-build audit (`docs/audit/2026-10-17-overbuild.md`) and nizzy-ecom's field
+report (`…-field-nizzy.md`) agreed on where the harness was weakest: the guards with the most
+value were the ones with measured bypasses.
+
+**A sweeping add is judged even on a line the guard cannot otherwise read.** Six
+`git add -A && git commit -m "$(cat <<EOF …` lines went through as no-opinion in two days while
+the bare form was refused seven times; the heredoc is the commit message, the sweep is two
+words before it. The guard now blanks quoted spans and heredoc bodies and refuses a sweeping
+add wherever it stands. **And a sweep is now what sweeps**: `git add -A -- apps/server` is the
+Builder limiting itself, and about 100 of 163 downstream refusals were that shape, each followed
+by the same files staged by name. `.`, `./` and a bare `-A`/`--all` stay refused; a pathspec
+passes. Eighteen planted cases in the new section, both directions; the 4.0.1 guard fails ten of
+them (four sweeps allowed, three pathspecs refused, three wrappers and prefixes allowed).
+
+**The record refuses the merge.** A merge of a Builder whose pane recorded skill calls but not
+every flow step was NOTED after the merge, while the marker script read the `Pass:` line in the
+commit, which anyone can type; one downstream ticket (2026-10-16) shipped forged
+`Pass: Skill(simplify)` lines past the marker gate and Thomas caught them by reading the record
+by hand. The mod now refuses `git merge` / `gh pr merge` BEFORE it runs when a pane it registered
+has a recorded step missing, honouring the brief's `TDD: n/a` / `REVIEW: n/a` lines; a pane
+with an empty record (a restart, a stub, a junior pane) is not judged. The selftest driver now
+chains `tool.call` hooks the way the engine does, which is what let this gate be driven at all.
+
+**The shared hook log is appended, not rewritten.** `logRefusal` read the whole
+`/tmp/harness-hook-events.log` and wrote it back with one line added, so a failed or raced read
+would write the file back as that one line. nizzy-ecom's log starts on 2026-10-15 on a box
+booted 10-05; that loss is unattributed, and this was the only writer able to cause it (the
+hook scripts open the file for append). It is now a shell append too.
+
+**A hook python cannot open no longer blocks every Bash call.** nizzy-ecom counted 27
+whole-session blocks on four days: `[ -f "$s" ]` passed, then python3 reported
+`can't open file … [Errno 1] Operation not permitted` (macOS TCC on Python.app under
+~/Documents, or a sandbox), and the project's `onFailure: block` refused every command for the
+rest of the day. The three python hook wrappers in `.claude/settings.json` now test that
+python3 can read the file and, when it cannot, say so on stderr and run the script from a shell
+read (`python3 -c "$(cat "$s")"`); a selftest proves that form reaches the same verdict. The
+cause itself is not in the harness; the fail mode was.
+
+**Where the merge gate looks.** It matches the ticket id or the recorded branch as whole tokens
+anywhere in the merge command — nizzy's station merges a SHA with the id and branch in the `-m`
+text, so it fires there; a merge that names only a SHA and nothing in its message is not seen,
+and the post-merge note still names the gap.
+
+**The arm is a row the owner can turn off.** `orchestrator.md` gains `## Cross-vendor arm` with
+one row per scope (`ticket`, `spec`, `slice`, default `yes`). A row at `no` turns that scope's
+arm off for the project: the mod adds an `ARM: off` section to that role's system prompt and
+to the dispatcher's, naming the marker not to ask for at merge; the band drops the `arm` chip
+(not driven in the selftest); the handback says `Arm: off (orchestrator)`. A machine with no Codex sets all three and the doctor stops asking for the
+CLI and the plugin; an owner who wants faster Builders sets `ticket` only and keeps `slice`,
+the read every ten merges that sees across tickets (nizzy's field report ranks that read among
+the five things to keep at any price). The selftest driver plants `ticket: no` and reads the
+section on the pane's prompt; the planted mod without the parser reads none.
+
+Not changed here, by the owner's choice: the push rule stays with git's pre-push hook (the one
+unstamped push on record, 2026-09-30, predates that hook's install on 2026-10-05).
+
+## Upgrade from 4.0.1
+
+`.astraler/astragentic.sh update --apply`. Builders that stage with `git add -A -- <dir>` stop
+being refused; a merge whose Builder record lacks a step is now refused where it was noted.
+
+**Two files this release changes are owner-kept and do not arrive with `--apply`**; the receipt
+reports the shape change and you apply them by hand: (1) `.claude/settings.json` — the three
+python hook commands gain the found-but-unreadable fallback (copy the `PreToolUse`,
+`SessionStart` commands from the release's `harness/.claude/settings.json`); (2)
+`.agents/orchestrator.md` — add the `## Cross-vendor arm` table (three rows, `yes`) under
+`## Junior`, or leave it absent, which reads as `yes`.
+
 # Astragentic 4.0.1
 
 **Bytecode is not a citation.** 4.0.0's `INDEX.md` was regenerated on a tree where `py_compile`

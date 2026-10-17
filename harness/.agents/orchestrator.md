@@ -62,6 +62,20 @@ junior reads, `.agents/roles/junior-<runtime>.md`, so a runtime with no such fil
 misconfigured row, not a new option. Shipped: `grok` (Grok Build; Model e.g. `grok-4.7`, Effort
 `high`). Per project, per situation; blank it back to `none` to return the typing to the Builder.
 
+## Cross-vendor arm
+
+| Scope | Enabled |
+|---|---|
+| ticket | yes |
+| spec | yes |
+| slice | yes |
+
+`no` turns that scope's arm off for this project: the role skips the phase, commits no
+`arm(<scope>):` receipt, and writes `Arm: off (orchestrator)` in its handback; the merge does
+not ask for the marker. A machine without Codex sets all three; a Builder the owner wants
+faster sets `ticket` only and keeps `slice`, the one read every ten merges that sees across
+tickets. Absent row or table means `yes`.
+
 ## How the columns are read
 
 **Runtime** picks the launcher; `dispatch-ticket` owns the matrix. A row naming a runtime with

@@ -32,7 +32,7 @@ Claude Code only). They add to this contract, never override it.
 | Increment review | `mattpocock-skills:code-review <Base>` | both axes have run once over that range |
 | Bug review | built-in `code-review` (`builder-claude.md`) | its findings are folded |
 | Simplify | `simplify` (`builder-claude.md`) | a `simplify(increment):` commit exists whose body names the pass that ran |
-| Cross-vendor arm | `codex-arm` | an `arm(ticket):` receipt at your head |
+| Cross-vendor arm | `codex-arm`; off when `orchestrator.md` arm row `ticket` = `no` | `arm(ticket):` receipt at head, or `Arm: off (orchestrator)` |
 | Visual verification | `bmad-ux audit` for a UI ticket | every changed user-visible surface has browser evidence, and a UI ticket a read-only audit, or the skip is named |
 
 **Commit and push at every phase boundary**, not only at handback — the table above is the
@@ -123,10 +123,10 @@ from the arm skill.
 
 **Fold by class, not by instance, and say what you leave.** **After a fold, re-run simplify over
 `<marker>..HEAD` before the final run**: the fold sits on top of the marker and head is refused
-(four refusals, three Builders, one shift). An empty re-run is valid.
+(four refusals, three Builders). An empty re-run is valid.
 
-**A fork may be a SOURCE, never a GATE.** Every gate runs in this pane and you never wait on a
-fork (41 minutes and $19.20 parked on pings).
+**A fork may be a SOURCE, never a GATE.** Every gate runs in this pane; never wait on a fork
+(41 minutes and $19.20 parked on pings).
 
 The receipt is an **empty** commit at your head, so its parent is the tree the gate read.
 Its shape, its `Reviewed:`/`Unreviewed-delta:` rule and the rest of the marker mechanics:
@@ -142,11 +142,11 @@ past. One inverted ticket paid a full extra gate round.
 **Run every machine that can answer before you hand back** — typecheck, linters, tests, build.
 A surface staying green when it should not have is the more important half.
 
-**Never infer blast radius from a diff's paths or file extensions** — a generated manifest is
-neither JS nor TS, and a dashboard test reads its routes out of it.
+**Never infer blast radius from a diff's paths or extensions** — a generated manifest is neither
+JS nor TS, and a dashboard test reads its routes out of it.
 
-**Declare context exhaustion at 60%, not 95%.** The marker and the handback are the only
-artifacts that let Thomas merge, so that is what the remaining context is for.
+**Declare context exhaustion at 60%, not 95%.** The marker and the handback are what let Thomas
+merge, so that is what the remaining context is for.
 
 **Commit, push, then return to Thomas** — three actions in your last turn, not a description of
 an end state. Uncommitted work does not exist in git, and cleanup removes the worktree
@@ -174,5 +174,5 @@ commands and their output, the `simplify(increment):` marker, browser evidence f
 you changed (or the named skip), the `Junior:` line (`dispatch-junior`, or `Junior: none`), and
 anything you reported rather than changed.
 
-Thomas verifies the diff, dispatches QA before a PR, merge or release, and decides merge. Cleanup of
-your worktree, branch and pane is his.
+Thomas verifies the diff, dispatches QA before a PR, merge or release, and decides merge. Cleanup
+of worktree, branch and pane is his.

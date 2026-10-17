@@ -105,6 +105,35 @@ async function overlayFile($: any, path: string): Promise<string> {
   }
 }
 
+// THE ARM IS A ROW THE OWNER CAN TURN OFF (4.0.2). `orchestrator.md` § Cross-vendor arm carries
+// one row per scope (ticket, spec, slice); `no` turns that scope's arm off for the project — a
+// machine with no Codex, or a Builder the owner wants faster. The role that owns the scope reads
+// it here, as a system-prompt section (measured 2026-10-09: a prompt.compose section is read on
+// the first turn), its band drops the chip, and the handback says `Arm: off (orchestrator)`.
+// Absent table, absent row, anything but `no`: the arm is on, as it always was.
+const ARM_SCOPE_BY_ROLE: Record<string, string> = { builder: 'ticket', shaper: 'spec', thomas: 'slice' }
+// Read at most once every few seconds: ui.render asks on every render, the file changes when the
+// owner edits it, and a dispatch picks the change up at the next brief either way.
+const armCache = new Map<string, { at: number; off: Set<string> }>()
+async function armOff($: any, root: string): Promise<Set<string>> {
+  const now = Date.now()
+  const hit = armCache.get(root)
+  if (hit && now - hit.at < 5_000) return hit.off
+  const off = await armOffRead($, root)
+  armCache.set(root, { at: now, off })
+  return off
+}
+async function armOffRead($: any, root: string): Promise<Set<string>> {
+  const orch = await overlayFile($, `${root}/.agents/orchestrator.md`)
+  const sect = orch.match(/^##\s*Cross-vendor arm\s*$([\s\S]*?)(?=^##\s|(?![\s\S]))/m)
+  const off = new Set<string>()
+  if (!sect) return off
+  for (const m of sect[1].matchAll(/^\|\s*(ticket|spec|slice)\s*\|\s*(\w+)\s*\|/gm)) {
+    if (m[2].toLowerCase() === 'no') off.add(m[1])
+  }
+  return off
+}
+
 function overlay($: any, root: string, name: string): Promise<string> {
   return overlayFile($, `${root}/${OVERLAYS}/${name}.md`)
 }
@@ -207,10 +236,13 @@ async function logRefusal($: any, root: string, key: string, gate: string, detai
   const entry = ((await readRecord($, root)) ?? {})[key] ?? {}
   const prior = Array.isArray(entry.refusals) ? entry.refusals : []
   await patchRecord($, root, key, { refusals: [...prior, { at, gate, detail: detail.slice(0, 200) }] })
+  // APPEND, never read-then-write. The earlier form read the whole log and wrote it back with
+  // one line added; a read that failed (or raced another writer) wrote the file back as that
+  // one line, and the shared log lost its history. nizzy-ecom measured the file starting on
+  // 2026-10-15 on a box booted 10-05 (4.0.2). The shell's `>>` is the append the fs API lacks.
   try {
-    let prev = ''
-    try { prev = await $.fs.read('/tmp/harness-hook-events.log') } catch {}
-    await $.fs.write('/tmp/harness-hook-events.log', `${prev}${new Date(at).toISOString()} astragentic-dispatch REFUSED ${gate} key=${key} ${detail.slice(0, 200)}\n`)
+    const line = `${new Date(at).toISOString()} astragentic-dispatch REFUSED ${gate} key=${key} ${detail.slice(0, 200)}`
+    await $.process.run(['sh', '-c', 'printf "%s\\n" "$1" >> /tmp/harness-hook-events.log', '_', line], { timeoutMs: 5_000 })
   } catch {}
   await refreshFlow($, root, key)
 }
@@ -799,6 +831,16 @@ export const register: Register = on => {
     const res = await next(e)
     if (!root) return res
     let text = await overlay($, root, me?.role ?? 'thomas')
+    const off = await armOff($, root)
+    const scope = me ? ARM_SCOPE_BY_ROLE[me.role] : undefined
+    if (me && scope && off.has(scope)) {
+      text = `${text ? text + '\n\n' : ''}ARM: off — .agents/orchestrator.md § Cross-vendor arm has \`${scope}: no\`. Skip the arm phase at ${scope} scope: no codex-arm call, no \`arm(${scope}):\` receipt, and do not pass --marker 'arm(${scope})' to check-simplify-markers.sh. Write \`Arm: off (orchestrator)\` where the handback would cite the receipt.`
+    } else if (!me && off.size > 0) {
+      // The dispatcher runs the marker check at merge and fires the slice arm: it has to know
+      // every scope that is off, not only its own, or it STOPs a merge for a receipt never owed.
+      const scopes = ['ticket', 'spec', 'slice'].filter(s => off.has(s))
+      text = `${text ? text + '\n\n' : ''}ARM: off at ${scopes.join(', ')} — .agents/orchestrator.md § Cross-vendor arm. ${scopes.map(s => `Do not pass --marker 'arm(${s})' at merge and expect no arm(${s}): receipt; the handback says Arm: off (orchestrator)`).join('. ')}${off.has('slice') ? '. Fire no slice arm; the ten-merge count does not apply' : ''}.`
+    }
     if (me && me.role !== 'resident' && dispatcher) {
       // The one address a written reply may go to, in the pane's own words: the role name is
       // not an address, and another project's session may carry it.
@@ -1382,8 +1424,7 @@ export const register: Register = on => {
 
     // -- a merge: the tracker write-back is owed from this moment, so say so in the result -----
     const merge = new RegExp(AT_COMMAND + String.raw`(?:git\s+(?:-C\s+\S+\s+)?merge\b|gh\s+pr\s+merge\b)`).test(cmd)
-    const ran = await next(e)
-    if (!merge || ran.deny !== undefined || ran.isError) return ran
+    if (!merge) return next(e)
     const isPr = /\bgh\s+pr\s+merge\b/.test(e.command)
     // A PR merged on the remote never reaches the local base, so ancestry cannot see it.
     // Mark the entries the command names, by ticket id or by the PR's head branch.
@@ -1391,14 +1432,37 @@ export const register: Register = on => {
     const head = pr && !pr.startsWith('-')
       ? (await run($, ['gh', 'pr', 'view', pr, '--json', 'headRefName', '-q', '.headRefName'], 30_000)).out
       : ''
+    // Whole-token matches only: `feature/foo` must not claim `gh pr merge feature/foo-fix`
+    // (found by the 2.18.0 gate), and a ticket id must not match inside a longer one.
+    const words = e.command.split(/\s+/)
+    const named = Object.entries(rec).filter(([key, entry]) =>
+      words.includes(key) || (head && entry?.branch === head) ||
+      (typeof entry?.branch === 'string' && entry.branch.length > 0 && words.includes(entry.branch)))
+    // THE RECORD IS THE EVIDENCE, AND IT REFUSES THE MERGE (4.0.2). Until now a merge whose
+    // Builder pane recorded no run of a flow step got a NOTE after the fact, while the marker
+    // script read the `Pass:` line in the commit — a line anyone can type. Measured downstream
+    // (one downstream ticket, 2026-10-16): forged `Pass: Skill(simplify)` markers passed the marker gate and Thomas
+    // caught them by reading this record by hand. So the merge is refused BEFORE it runs when
+    // a pane the mod itself registered, and that recorded at least one skill, has a required
+    // step with no record and no n/a line on its brief. A pane without the mod (a junior pane)
+    // records nothing and keeps the marker script as its evidence; an entry with an empty
+    // record (a dispatcher restart, a stub) is not judged either — a gate that fires on its own
+    // missing data is noise, and the note below still names the gap.
+    for (const [key, entry] of named) {
+      if (entry?.role !== 'builder' || !entry.session_id || Object.keys(skillsRun(entry)).length === 0) continue
+      const gaps = flowGaps(entry).filter(label =>
+        !(label === 'tdd' && entry.tdd_na) && !(label === 'built-in code-review' && entry.review_na))
+      if (gaps.length > 0) {
+        await logRefusal($, root, key, 'merge-gate', `no record of: ${gaps.join(', ')}`)
+        return {
+          deny: `astragentic-dispatch: ${key} has no record of: ${gaps.join(', ')}. The Builder's pane records every Skill call; a marker or Pass: line claiming a step the record lacks is a step that did not run in that pane. Have the Builder run the missing step(s) and commit a fresh marker, or, for tdd / the built-in review only, put the n/a line with its reason on the brief. The record is .astraler/state/dispatch-record.json["${key}"].skills_run.`,
+        }
+      }
+    }
+    const ran = await next(e)
+    if (ran.deny !== undefined || ran.isError) return ran
     const notes: string[] = []
-    for (const [key, entry] of Object.entries(rec)) {
-      // Whole-token matches only: `feature/foo` must not claim `gh pr merge feature/foo-fix`
-      // (found by the 2.18.0 gate), and a ticket id must not match inside a longer one.
-      const words = e.command.split(/\s+/)
-      const isNamed = words.includes(key) || (head && entry?.branch === head) ||
-        (typeof entry?.branch === 'string' && entry.branch.length > 0 && words.includes(entry.branch))
-      if (!isNamed) continue
+    for (const [key, entry] of named) {
       if (isPr) await patchRecord($, root, key, { merged_at: await $.clock.now() })
       // Only a pane the mod itself registered (it has a session_id) is judged: a pane without
       // the mod (a junior pane) records nothing here and keeps the marker script as its evidence.
@@ -1457,7 +1521,10 @@ export const register: Register = on => {
     )
     if (me) {
       if (e.props.hasSurvey) return next(e)
-      const steps = FLOW_BY_ROLE[me.role]
+      const armScope = ARM_SCOPE_BY_ROLE[me.role]
+      const steps = FLOW_BY_ROLE[me.role] && armScope && (await armOff($, root)).has(armScope)
+        ? FLOW_BY_ROLE[me.role]!.filter(([name]) => name !== 'codex-arm')
+        : FLOW_BY_ROLE[me.role]
       const f = steps ? await read($, flow) : null
       if (!undelivered && !f && !appliedVersion) return next(e)
       const isMode = /auto mode|classifier|permission/i.test(undelivered)

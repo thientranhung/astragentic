@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "d=\"${CLAUDE_PROJECT_DIR:-$PWD}\"; s=\"$d/scripts/hook-git-guard.py\"; [ -f \"$s\" ] || s=\"$d/harness/scripts/hook-git-guard.py\"; if [ -f \"$s\" ]; then exec python3 \"$s\"; else cat >/dev/null; echo \"hook-git-guard: NOT FOUND under $d — the git guard is not running\" >&2; echo \"$(date -u +%FT%TZ) hook-git-guard MISSING under $d\" >> /tmp/harness-hook-events.log; fi"
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-$PWD}\"; s=\"$d/scripts/hook-git-guard.py\"; [ -f \"$s\" ] || s=\"$d/harness/scripts/hook-git-guard.py\"; if [ -f \"$s\" ]; then if python3 -c 'import sys; open(sys.argv[1], \"rb\").read(1)' \"$s\" 2>/dev/null; then exec python3 \"$s\"; else echo \"hook-git-guard: python3 cannot open $s ([Errno 1], macOS TCC or a sandbox); running it from a shell read\" >&2; exec python3 -c \"$(cat \"$s\")\"; fi; else cat >/dev/null; echo \"hook-git-guard: NOT FOUND under $d — the git guard is not running\" >&2; echo \"$(date -u +%FT%TZ) hook-git-guard MISSING under $d\" >> /tmp/harness-hook-events.log; fi"
           }
         ]
       }
@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "d=\"${CLAUDE_PROJECT_DIR:-$PWD}\"; s=\"$d/scripts/hook-contract-reload.py\"; [ -f \"$s\" ] || s=\"$d/harness/scripts/hook-contract-reload.py\"; if [ -f \"$s\" ]; then exec python3 \"$s\"; else cat >/dev/null; echo \"hook-contract-reload: NOT FOUND under $d — role contracts are not re-armed after compaction\" >&2; echo \"$(date -u +%FT%TZ) hook-contract-reload MISSING under $d\" >> /tmp/harness-hook-events.log; fi"
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-$PWD}\"; s=\"$d/scripts/hook-contract-reload.py\"; [ -f \"$s\" ] || s=\"$d/harness/scripts/hook-contract-reload.py\"; if [ -f \"$s\" ]; then if python3 -c 'import sys; open(sys.argv[1], \"rb\").read(1)' \"$s\" 2>/dev/null; then exec python3 \"$s\"; else echo \"hook-contract-reload: python3 cannot open $s ([Errno 1], macOS TCC or a sandbox); running it from a shell read\" >&2; exec python3 -c \"$(cat \"$s\")\"; fi; else cat >/dev/null; echo \"hook-contract-reload: NOT FOUND under $d — role contracts are not re-armed after compaction\" >&2; echo \"$(date -u +%FT%TZ) hook-contract-reload MISSING under $d\" >> /tmp/harness-hook-events.log; fi"
           }
         ]
       },
@@ -37,7 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "d=\"${CLAUDE_PROJECT_DIR:-$PWD}\"; s=\"$d/scripts/hook-tracker-status.py\"; [ -f \"$s\" ] || s=\"$d/harness/scripts/hook-tracker-status.py\"; if [ -f \"$s\" ]; then exec python3 \"$s\"; else cat >/dev/null; echo \"hook-tracker-status: NOT FOUND under $d — tracker counts are not injected at session start\" >&2; echo \"$(date -u +%FT%TZ) hook-tracker-status MISSING under $d\" >> /tmp/harness-hook-events.log; fi"
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-$PWD}\"; s=\"$d/scripts/hook-tracker-status.py\"; [ -f \"$s\" ] || s=\"$d/harness/scripts/hook-tracker-status.py\"; if [ -f \"$s\" ]; then if python3 -c 'import sys; open(sys.argv[1], \"rb\").read(1)' \"$s\" 2>/dev/null; then exec python3 \"$s\"; else echo \"hook-tracker-status: python3 cannot open $s ([Errno 1], macOS TCC or a sandbox); running it from a shell read\" >&2; exec python3 -c \"$(cat \"$s\")\"; fi; else cat >/dev/null; echo \"hook-tracker-status: NOT FOUND under $d — tracker counts are not injected at session start\" >&2; echo \"$(date -u +%FT%TZ) hook-tracker-status MISSING under $d\" >> /tmp/harness-hook-events.log; fi"
           }
         ]
       }

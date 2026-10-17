@@ -224,6 +224,56 @@ def readable(cmd):
 OUT_OF_SCOPE = []          # set by simple_commands, read by main for the log line
 
 
+# A SWEEPING ADD IS JUDGED EVEN ON A LINE THIS GUARD CANNOT OTHERWISE READ (4.0.2).
+# Measured on one downstream hook log (2026-10-15 -> 10-17): `git add -A && git commit -m "$(cat
+# <<EOF ...` went through six times as no-opinion(unreadable-construct), while the plain
+# `git add -A` was refused seven times. The heredoc carries the commit MESSAGE; the sweep sits
+# before it in plain sight. Declining the whole line because its tail is unreadable is the
+# honest answer for a rule that needs the parse (worktree paths, push refs) and the wrong one
+# for a rule that needs two words. So this pre-scan reads the line with quoted spans and
+# heredoc bodies blanked, and refuses `git add -A|--all|.` wherever it stands; everything else
+# still goes through `simple_commands` and keeps its no-opinion boundary.
+_HEREDOC_RE = re.compile(r"<<-?\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1[^\n]*\n(.*?)\n[ \t]*\2[ \t]*(?=\n|$)", re.S)
+# One LINE at a time: `\s` would run a capture across a newline, so a two-line `git add -A` /
+# `git commit …` (the shape Claude's Bash tool emits routinely) would read the second line as
+# the first one's pathspec and pass the sweep.
+_ADD_RE = re.compile(r"(?<![\w./-])git(?:[ \t]+-[cC][ \t]+\S+|[ \t]+--?\w[\w-]*(?:=\S+)?)*[ \t]+add((?:[ \t]+[^\s;|&()<>]+)*)")
+
+
+def is_sweeping_add(args):
+    """`args` are the words after `add`. A sweep is `.`/`./` anywhere in the pathspec, or
+    `-A`/`--all` with NO pathspec. `git add -A -- apps/server` stages every change under one
+    path and is the Builder limiting itself — measured downstream: about 100 of 163 refusals
+    were that shape, each followed by the same files staged by name (4.0.2)."""
+    flags, paths, seen_dd = [], [], False
+    for a in args:
+        if seen_dd:
+            paths.append(a)
+        elif a == "--":
+            seen_dd = True
+        elif a.startswith("-"):
+            flags.append(a)
+        else:
+            paths.append(a)
+    if any(p in (".", "./") for p in paths):
+        return True
+    return any(f in ("-A", "--all") for f in flags) and not paths
+
+
+def sweeping_add_anywhere(cmd):
+    """True when a sweeping `git add` stands outside quotes and outside heredoc bodies."""
+    text = _HEREDOC_RE.sub(lambda m: m.group(0).replace(m.group(3), " " * len(m.group(3))), cmd)
+    # A quoted pathspec (`-- "apps/server"`) is a path, not nothing: `_outside_quotes` blanks
+    # the span to spaces, which would read as no pathspec and refuse what the main rule allows.
+    # Stand a placeholder token where each quoted span was; `readable()` keeps its own view.
+    blanked = _outside_quotes(text)
+    text = "".join(("\x01" if (b == " " and c not in " \t\n") else b) for b, c in zip(blanked, text))
+    for m in _ADD_RE.finditer(text):
+        if is_sweeping_add(m.group(1).split()):
+            return True
+    return False
+
+
 def simple_commands(cmd):
     """Top-level simple commands, or [] when the line is outside this guard's scope."""
     OUT_OF_SCOPE.clear()
@@ -482,6 +532,13 @@ def main():
         except OSError:
             pass
 
+    if sweeping_add_anywhere(cmd):
+        deny("this line stages with `git add -A|--all` and no pathspec, or `git add .`, which "
+             "also sweeps in files other tickets own and anything untracked. Stage by path: "
+             "`git add <file>...` or `git add -A -- <dir>`. "
+             "(Judged before the readability gate: six sweeps went out unjudged inside "
+             "`git commit -m \"$(cat <<EOF` lines on one project in two days.)", cmd)
+
     cmds = simple_commands(cmd)
     if OUT_OF_SCOPE:
         # NOT the same as approving it. A reader of this log must be able to tell a line this
@@ -513,7 +570,7 @@ def main():
         # -- git add -A / git add . (AST-054) --------------------------------------------
         # A sweeping add once committed ~1000 unrelated files, permanently. Name the
         # alternative rather than only refusing.
-        if args[:1] == ["add"] and any(a in ("-A", "--all", ".", "./") for a in args[1:]):
+        if args[:1] == ["add"] and is_sweeping_add(args[1:]):
             deny("git add -A / git add . is refused here (AST-054: a sweeping add once "
                  "committed ~1000 unrelated files permanently). Stage the paths this change "
                  "actually touches, by name.", cmd)
