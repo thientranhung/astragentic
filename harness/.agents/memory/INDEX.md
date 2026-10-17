@@ -13,7 +13,7 @@ from this table — read the entry.
 
 | ID | Lesson | Status | Words | Cited by |
 |---|---|---|---|---|
-| `AST-001` | Gate wired to a fix tool, not a review tool | promoted | 17 | docs-staleness-audit.sh,ledger-rules.cpython-314.pyc,ledger-rules.py |
+| `AST-001` | Gate wired to a fix tool, not a review tool | promoted | 17 | docs-staleness-audit.sh,ledger-rules.py,selftest.sh |
 | `AST-002` | A prose link does not guarantee load | promoted | 20 |   |
 | `AST-003` | No lessons ledger existed | promoted | 12 |   |
 | `AST-004` | Process decisions routed to ADRs | promoted | 15 |   |
@@ -40,7 +40,7 @@ from this table — read the entry.
 | `AST-025` | Gate-able conventions parked in the always-on rule tier tax every loop | proposed | 157 |   |
 | `AST-026` | Named-persona harness: Thomas / Dan / Rin | promoted | 158 |   |
 | `AST-027` | TWO ROOT sessions shared the main checkout; one switched branches under the other | promoted | 176 | dispatch-ticket |
-| `AST-028` | Relative worktree path + unverified pane cwd → worktree born in the wrong place, hour-long mi… | promoted | 191 | dispatch-ticket,hook-git-guard.cpython-314.pyc,hook-git-guard.py,selftest.sh |
+| `AST-028` | Relative worktree path + unverified pane cwd → worktree born in the wrong place, hour-long mi… | promoted | 191 | dispatch-ticket,hook-git-guard.py,selftest.sh |
 | `AST-029` | Slice finished but Dan tabs survived; `/clear` blurred context and checkout lifecycle | promoted | 212 |   |
 | `AST-030` | Orchestrator row named a runtime with no dispatch path for the role; Rin went undispatchable | promoted | 217 |   |
 | `AST-031` | A prose instruction telling an agent to suppress its tool's own default is not a boundary | promoted | 229 | dispatch-ticket |
@@ -62,14 +62,14 @@ from this table — read the entry.
 | `AST-047` | "Local" is a deployment fact, not a data fact | promoted | 163 | check-reachability.py |
 | `AST-048` | A rule not present where it must be remembered does not exist | promoted | 276 |   |
 | `AST-049` | Checks 1–4 asked whether things were consistent, never whether a role could START | promoted | 169 |   |
-| `AST-050` | Qualify a plugin command always, not once it is known to collide | promoted | 217 | check-reachability.cpython-314.pyc,check-reachability.py,dispatch-ticket,docs-staleness-audit.sh,register.tsx |
-| `AST-051` | An address the caller cannot use produces a substitute, not an error | promoted | 319 | builder-claude.md,check-reachability.cpython-314.pyc,check-reachability.py,dispatch-ticket,docs-staleness-audit.sh,thomas-claude.md,untangle |
+| `AST-050` | Qualify a plugin command always, not once it is known to collide | promoted | 217 | check-reachability.py,dispatch-ticket,docs-staleness-audit.sh,register.tsx,selftest.sh |
+| `AST-051` | An address the caller cannot use produces a substitute, not an error | promoted | 319 | builder-claude.md,check-reachability.py,dispatch-ticket,docs-staleness-audit.sh,thomas-claude.md,untangle |
 | `AST-052` | The word-budget audit ran its loop zero times and reported all clean | promoted | 227 | docs-staleness-audit.sh |
 | `AST-053` | An axis read the run's verdict instead of its own, and went mute | promoted | 226 |   |
-| `AST-054` | `git add -A` committed two releases nobody ever applied | promoted | 146 | hook-git-guard.cpython-314.pyc,hook-git-guard.py |
+| `AST-054` | `git add -A` committed two releases nobody ever applied | promoted | 146 | hook-git-guard.py |
 | `AST-055` | A gate that reads the subject cannot see which pass wrote it | promoted | 326 | builder-claude.md,check-reachability.py,register.tsx,shaper.md,thomas-claude.md |
 | `AST-056` | A blocking edge expresses order, not exclusion | promoted | 329 | dispatch-ticket,thomas.md |
-| `AST-057` | A frontier that is only computed is invisible to the one person who cannot compute | promoted | 689 | check-reachability.py,dispatch-ticket-claude,hook-git-guard.cpython-314.pyc,hook-git-guard.py,pre-push-ticket-done.sh,reconcile-tracker,register.tsx,release-worktree-resources.sh,thomas.md,ticket-done.sh |
+| `AST-057` | A frontier that is only computed is invisible to the one person who cannot compute | promoted | 689 | check-reachability.py,dispatch-ticket-claude,hook-git-guard.py,pre-push-ticket-done.sh,reconcile-tracker,register.tsx,release-worktree-resources.sh,thomas.md,ticket-done.sh |
 | `AST-058` | The check after the step reported clean when the step was impossible | promoted | 271 |   |
 | `AST-059` | The repo kept one self-check and lost the other to a directory it may ignore | promoted | 193 |   |
 | `AST-060` | Check 3 printed green about the skills it had not opened | promoted | 170 |   |
@@ -80,8 +80,8 @@ from this table — read the entry.
 | `AST-065` | Two reviewers sharing one name, each in the other's contract | promoted | 189 |   |
 | `AST-066` | A review bound to the wrong checkout returns clean without reading anything | promoted | 255 |   |
 | `AST-068` | A lesson closed at instance level reopens at class level | promoted | 259 |   |
-| `AST-069` | An instruction with no moment attached measures zero | promoted | 272 | check-reachability.py,dispatch-ticket-claude,hook-contract-reload.cpython-314.pyc,hook-contract-reload.py,hook-git-guard.py,hook-tracker-status.cpython-314.pyc,hook-tracker-status.py,pre-push-ticket-done.sh,selftest.sh,thomas.md |
-| `AST-070` | A bounded exception nobody asked for is a contradiction carried on speculation | promoted | 275 | dispatch-ticket,ledger-rules.cpython-314.pyc,ledger-rules.py |
+| `AST-069` | An instruction with no moment attached measures zero | promoted | 272 | check-reachability.py,dispatch-ticket-claude,hook-contract-reload.py,hook-git-guard.py,hook-tracker-status.py,pre-push-ticket-done.sh,selftest.sh,thomas.md |
+| `AST-070` | A bounded exception nobody asked for is a contradiction carried on speculation | promoted | 275 | dispatch-ticket,ledger-rules.py |
 | `AST-071` | Every check asked whether a thing was NAMED, none asked whether anything READ it | promoted | 312 | check-reachability.py |
 | `AST-072` | Self-monitoring shipped without proof it cannot harm what it monitors | promoted | 345 | herdr-watchdog.sh |
 | `AST-073` | A global script is only shared if something keeps it updated | promoted | 200 |   |
@@ -103,17 +103,17 @@ from this table — read the entry.
 | `AST-089` | A fork-fallback inside `simplify` read as a substitute because only the `Pass:` line's wordin… | promoted | 366 | builder-claude.md,thomas-claude.md |
 | `AST-090` | The Pass: literal had a two-in-three miss rate among Builders who ran the pass correctly | promoted | 221 | builder-claude.md |
 | `AST-091` | install.sh overwrites PROJECT_NAME on re-staging without --project-name | promoted | 107 |   |
-| `AST-092` | Builder stops after writing code but before committing — pane reads done, cleanup deletes the… | promoted | 308 | CLEANUP.md,MARKERS.md,builder.md,hook-git-guard.cpython-314.pyc,hook-git-guard.py |
+| `AST-092` | Builder stops after writing code but before committing — pane reads done, cleanup deletes the… | promoted | 308 | CLEANUP.md,MARKERS.md,builder.md,hook-git-guard.py |
 | `AST-093` | A fix landing in .agents/skills/ but not .claude/skills/ is unreachable on the runtime that l… | promoted | 186 |   |
 | `AST-094` | Builder commits and pushes correctly but silently skips the simplify pass | promoted | 426 | CLEANUP.md,MARKERS.md,builder.md,check-simplify-markers.sh |
 | `AST-095` | The cross-vendor companion exits 0 on configuration failure and caches state that survives a… | promoted | 335 | codex-arm |
-| `AST-096` | rm -rf on a worktree directory leaves git's registration behind; the next add at that path re… | promoted | 297 | CLEANUP.md,codex-arm,dispatch-ticket,hook-git-guard.cpython-314.pyc,hook-git-guard.py,thomas.md |
-| `AST-097` | TERMINAL:done means the turn ended, not that the work finished | promoted | 831 | builder-claude.md,dispatch-ticket,dispatch-ticket-claude,hook-git-guard.cpython-314.pyc,hook-git-guard.py,register.tsx |
+| `AST-096` | rm -rf on a worktree directory leaves git's registration behind; the next add at that path re… | promoted | 297 | CLEANUP.md,codex-arm,dispatch-ticket,hook-git-guard.py,thomas.md |
+| `AST-097` | TERMINAL:done means the turn ended, not that the work finished | promoted | 831 | builder-claude.md,dispatch-ticket,dispatch-ticket-claude,hook-git-guard.py,register.tsx |
 | `AST-098` | Fork sub-agents return the coordinator's own narration instead of doing their assigned task | promoted | 385 | builder-claude.md |
 | `AST-099` | Simplify marker exists without skill provenance — the subject is self-applied, only the Pass:… | promoted | 685 | CLEANUP.md,check-simplify-markers.sh |
-| `AST-100` | Codex companion broker leaks one process per arm pass, accumulating silently | promoted | 201 | CLEANUP.md,codex-arm,hook-git-guard.cpython-314.pyc,hook-git-guard.py,register.tsx,release-worktree-resources.sh |
-| `AST-101` | Gate worktree removal leaks database containers, not just broker processes | promoted | 182 | CLEANUP.md,hook-git-guard.cpython-314.pyc,hook-git-guard.py,register.tsx,release-worktree-resources.sh |
-| `AST-102` | WorktreeRemove hook does not fire, but documentation declares manual cleanup redundant | promoted | 418 | hook-git-guard.cpython-314.pyc,hook-git-guard.py,register.tsx |
+| `AST-100` | Codex companion broker leaks one process per arm pass, accumulating silently | promoted | 201 | CLEANUP.md,codex-arm,hook-git-guard.py,register.tsx,release-worktree-resources.sh |
+| `AST-101` | Gate worktree removal leaks database containers, not just broker processes | promoted | 182 | CLEANUP.md,hook-git-guard.py,register.tsx,release-worktree-resources.sh |
+| `AST-102` | WorktreeRemove hook does not fire, but documentation declares manual cleanup redundant | promoted | 418 | hook-git-guard.py,register.tsx |
 | `AST-103` | Cross-vendor arm silently reviews a zero-commit range and returns clean | promoted | 207 | codex-arm |
 | `AST-104` | herdr agent start rejects uppercase in agent names, but dispatch convention generates them | promoted | 87 |   |
 | `AST-105` | Pipe after a command swallows exit code, turning a failed gate into exit 0 | promoted | 182 | WATCHING.md |
@@ -143,7 +143,7 @@ from this table — read the entry.
 | `AST-129` | The receipt was a producer with no reader, and it hid the one fact that had readers | promoted | 222 |   |
 | `AST-130` | A report-only fork forged a verification marker using a TRUE excuse | promoted | 427 | builder-claude.md,check-simplify-markers.sh,register.tsx |
 | `AST-131` | The queue drained and nothing asked whether a slot was free | promoted | 344 | thomas.md |
-| `AST-132` | Two owners for one path, and neither can see the other | promoted | 307 | check-payload-drift.sh,check-reachability.cpython-314.pyc,check-reachability.py,thomas.md |
+| `AST-132` | Two owners for one path, and neither can see the other | promoted | 307 | check-payload-drift.sh,check-reachability.py,thomas.md |
 | `AST-133` | `--grep` is not a subject matcher, and it failed in both directions on the same day | promoted | 401 | CLEANUP.md,thomas.md,ticket-done.sh |
 | `AST-134` | After the fold, "the gate read this tree" is structurally false and the protocol had no way t… | promoted | 238 | MARKERS.md,check-simplify-markers.sh |
 | `AST-135` | The verifier's queue was invisible to itself, and the fire point had to follow the artifact | promoted | 365 | thomas.md |

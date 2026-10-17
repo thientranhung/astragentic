@@ -150,6 +150,19 @@ if [ -f "$IDX" ]; then
       bad "ledger-index '$form'" "exit=$rc, file $([ "$before" = "$after" ] && echo unchanged || echo REWRITTEN)"
     fi
   done
+  # 4.0.1 — bytecode is not a citation. 4.0.0's INDEX.md was generated beside a `__pycache__/`
+  # and named `.pyc` files as citing files; the clean clone a project fetches regenerates without
+  # them, and the release's own check 5 refused it on every fetch (found by nizzy-ecom, 2026-10-17).
+  cp "$TMP/idx.clean" "$IDX"
+  mkdir -p "$COPY/scripts/__pycache__"
+  printf 'AST-001 AST-028 AST-050\n' > "$COPY/scripts/__pycache__/planted.cpython-314.pyc"
+  (cd "$COPY" && bash "$COPY/scripts/ledger-index.sh" >/dev/null 2>&1)
+  if grep -q 'cpython' "$IDX"; then
+    bad "ledger-index bytecode" "INDEX.md names a .pyc under __pycache__ as a citing file"
+  else
+    ok "ledger-index ignores __pycache__ bytecode when counting citations"
+  fi
+  rm -rf "$COPY/scripts/__pycache__"
 fi
 
 fi

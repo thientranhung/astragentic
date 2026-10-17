@@ -1,3 +1,23 @@
+# Astragentic 4.0.1
+
+**Bytecode is not a citation.** 4.0.0's `INDEX.md` was regenerated on a tree where `py_compile`
+had left `__pycache__/` under `scripts/`, so fifteen rows named `hook-git-guard.cpython-314.pyc`
+and its siblings as citing files. The clean clone every project fetches has no bytecode,
+regenerates the index without those names, and the release's own check 5 refused `update
+--apply` on every fetch while passing on the tree that built it. Found by nizzy-ecom's Thomas
+on the first upgrade attempt (2026-10-17), reported verbatim, not worked around.
+`ledger-index.sh` now ignores `__pycache__/`, `node_modules/` and `*.pyc` when counting
+citations; the index is regenerated on a clean tree; a selftest case plants a `.pyc` carrying
+ledger ids and asserts the index does not name it (the 4.0.0 script fails it).
+
+Also from that attempt: the 4.0.0 tag was pushed without the `v` prefix the updater reads;
+`v4.0.0` is the tag that exists now, and `v4.0.1` follows the same rule.
+
+## Upgrade from 3.3.1
+
+`.astraler/astragentic.sh update --apply` (or the get.sh one-liner); the 4.0.0 notes below
+describe what changes. Nothing in a project needs the 4.0.0 step first.
+
 # Astragentic 4.0.0
 
 **A role runs on Claude Code; another runtime enters as a junior under the Builder.** Since

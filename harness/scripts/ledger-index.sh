@@ -56,9 +56,15 @@ done
 ORCH="$ROOT/.agents/orchestrator.md"
 [[ -f "$ORCH" ]] && CITE_DIRS+=("$ORCH")
 
+# GENERATED FILES ARE NOT CITATIONS. 4.0.0 shipped an index listing `hook-git-guard.cpython-314.pyc`
+# as a citing file: the index was regenerated on a tree where `py_compile` had left `__pycache__/`
+# under scripts/, the clean clone every project fetches had none, and check 5 refused the release
+# on every clean fetch while passing on the tree that built it. Bytecode carries the id because
+# the source does; it is the same citation counted twice, from a file git never ships.
 cited_in() { # $1 = AST id -> comma-separated basenames, or empty
   [[ ${#CITE_DIRS[@]} -eq 0 ]] && return 0
-  grep -rlF -- "$1" "${CITE_DIRS[@]}" 2>/dev/null \
+  grep -rlF --exclude-dir=__pycache__ --exclude-dir=node_modules --exclude='*.pyc' \
+       -- "$1" "${CITE_DIRS[@]}" 2>/dev/null \
     | sed "s|.*/\([^/]*\)/SKILL.md|\1|; s|.*/||" | sort -u | paste -sd, - || true
 }
 
