@@ -46,7 +46,7 @@ inference.
 | What is in front of you | Reach for |
 |---|---|
 | A claimed ticket, and `orchestrator.md` says the agent in this role runs on Claude | `dispatch-ticket` + `dispatch-ticket-claude` |
-| The same, on Codex or OpenCode | `dispatch-ticket-codex` / `dispatch-ticket-opencode` |
+| A QA gate pane or a junior pane, which run no mod | the watcher protocol in `dispatch-ticket`, and `dispatch-junior` for the junior |
 | A Builder or Shaper, that is, a write role | Launch with `--dangerously-skip-permissions` |
 | Rin or QA, that is, a review role | Launch without it; Rin has no fallback row |
 | Monitor reported `blocked` | Read the pane, answer via `SendMessage`, arm a **new** Monitor |
@@ -124,5 +124,4 @@ Pulled from `harness/.agents/memory/recurring-failure-modes.md`. All are marked 
 `dispatch-ticket` claims the ticket and builds the worktree, tab and pane → `dispatch-ticket-claude`
 launches the runtime, delivers the brief and arms the watch → the Builder runs its own closed
 loop and hands back → the shared skill's `WATCHING.md` and `CLEANUP.md` own what happens on each
-verdict line. Its two counterparts are `dispatch-ticket-codex` and `dispatch-ticket-opencode`;
-all three are adapters under one protocol.
+verdict line.

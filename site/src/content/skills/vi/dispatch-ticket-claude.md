@@ -46,7 +46,7 @@ suy.
 | Tình huống trước mặt bạn | Gọi cái nào |
 |---|---|
 | Một ticket đã claim, và `orchestrator.md` ghi agent ở role này chạy trên Claude | `dispatch-ticket` + `dispatch-ticket-claude` |
-| Cũng vậy, nhưng trên Codex hoặc OpenCode | `dispatch-ticket-codex` / `dispatch-ticket-opencode` |
+| Pane QA gate hoặc pane junior, không chạy mod | giao thức watcher trong `dispatch-ticket`, và `dispatch-junior` cho junior |
 | Builder hoặc Shaper, tức role có ghi | Launch kèm `--dangerously-skip-permissions` |
 | Rin hoặc QA, tức role review | Launch không kèm; Rin không có dòng dự phòng nào |
 | Monitor báo `blocked` | Đọc pane, trả lời bằng `SendMessage`, arm một Monitor **mới** |
@@ -123,5 +123,4 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Tất cả đề
 `dispatch-ticket` claim ticket rồi dựng worktree, tab và pane → `dispatch-ticket-claude` khởi
 chạy runtime, giao brief và arm cái watch → Builder chạy vòng khép kín của nó rồi handback →
 `WATCHING.md` và `CLEANUP.md` của skill dùng chung quyết định chuyện gì xảy ra ở mỗi dòng phán
-quyết. Hai skill song song với nó là `dispatch-ticket-codex` và `dispatch-ticket-opencode`; cả ba
-đều là adapter dưới một giao thức.
+quyết.

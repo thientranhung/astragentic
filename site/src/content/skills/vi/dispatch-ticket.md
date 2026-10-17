@@ -3,7 +3,7 @@ title: dispatch-ticket
 oneLiner: "Giao một ticket đã sẵn sàng cho một Builder, trong worktree riêng của nó."
 group: main-flow
 order: 1
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/dispatch-ticket/SKILL.md
 rented: false
 diagram: ticket-lifecycle
@@ -20,7 +20,7 @@ có Builder làm thật". Chín bước, luôn theo đúng thứ tự đó:
 - **Resolve dòng orchestrator**: runtime, model, effort, và write-set.
 - **Claim ticket, rồi cắt branch và worktree**, theo đúng thứ tự đó.
 - **Mở tab kèm pane** trong Herdr, gate trên `foreground_cwd`.
-- **In ra bản dispatch đã resolve**, rồi launch bằng skill của runtime tương ứng.
+- **In ra bản dispatch đã resolve**, rồi launch bằng `dispatch-ticket-claude`.
 - **Giao brief**, dòng đầu là slash command của pha đó.
 - **Arm watcher ngay sau khi submit**: hai việc này là một, không phải hai.
 - **Rẽ nhánh theo exit status của watcher**, không bao giờ theo mỗi pane status.
@@ -42,7 +42,7 @@ và sự cô lập đó phủ mọi lệnh có ghi xuống disk, không riêng g
 | Tình huống trước mặt bạn | Gọi cái nào |
 |---|---|
 | Một ticket trên frontier, ô assignee còn trống | `dispatch-ticket` (claim trước, worktree sau) |
-| Chính cú dispatch, sau khi đã claim | `dispatch-ticket` cộng skill đi kèm theo runtime (`dispatch-ticket-claude`, `-codex`, `-opencode`) |
+| Chính cú dispatch, sau khi đã claim | `dispatch-ticket` cộng `dispatch-ticket-claude` |
 | Shaper, QA hay Rin cần pane chứ không chỉ Builder | Vẫn skill đó, vẫn cơ chế đó; chỉ khác tiền tố nhãn tab và pane |
 | Một pane đứng im hoặc kẹt giữa lượt | `WATCHING.md` (tài liệu đi kèm, không phải skill riêng) |
 | Builder đã handback, tới lúc gỡ worktree | `CLEANUP.md` (tài liệu đi kèm) |

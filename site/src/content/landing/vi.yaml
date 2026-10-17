@@ -8,11 +8,9 @@ hero:
 explain:
   runtimes:
     commands:
-      label: "Mở agent qua CLI trên ba runtime"
+      label: "Mở agent qua CLI"
       lines:
         - "claude   --dangerously-skip-permissions --agent builder --model <model> --effort <low|medium|high|xhigh|max>"
-        - "codex    -m <model> -c model_reasoning_effort=\"<effort>\" -c developer_instructions=\"$(cat .codex/profiles/builder.md)\""
-        - "opencode --agent builder -m <provider>/<model>   # không có flag effort"
 
   customize:
     eyebrow: "Tuỳ biến"
@@ -56,7 +54,7 @@ explain:
       - "Ticket là một issue trên tracker, cắt đủ nhỏ để một Builder hoàn thành trong một session. Nó mang một id ổn định, một trạng thái, một assignee, và các blocking edge tới việc phải xong trước."
       - "Thomas dispatch theo skill `dispatch-ticket`: claim trên tracker, tạo branch và worktree, mở pane herdr, launch agent theo role, gửi brief, đặt watcher. Chuỗi ticket → assignee → pane → worktree → branch → PR là một-một, nên nhiều Builder chạy song song mà không giẫm lên nhau."
       - "Giữa các session Claude Code, kênh chính là cross-session messaging có sẵn. Mỗi session có một tên; Thomas tra tên bằng ListAgents rồi gửi thẳng. Ở đầu nhận, thông điệp hiện thành dòng preview `› Message from @thomas: …`, mở rộng bằng ctrl+o, và câu trả lời đi ngược về đúng session đã gửi."
-      - "herdr là mặt phẳng nhìn thấy và là đường dự phòng: mỗi agent một pane có tên, watcher báo working, blocked, idle. Thomas đọc pane bằng `herdr agent read` khi một session im lặng, và điều Builder trên Codex hay OpenCode qua herdr CLI."
+      - "herdr là mặt phẳng nhìn thấy và là đường dự phòng: mỗi agent một pane có tên, watcher báo working, blocked, idle. Thomas đọc pane bằng `herdr agent read` khi một session im lặng, và nhắn cho pane junior qua herdr CLI."
     bullets:
       - "**Câu hỏi kỹ thuật**: Thomas trả lời thay bạn, từ contract, spec và tracker."
       - "**Quyết định thiết kế**: đi lên bạn qua `to-questionnaire`, dưới dạng câu hỏi trả lời được."
@@ -65,7 +63,7 @@ explain:
     eyebrow: "AI outsource team"
     headline: "Công việc của mỗi agent."
     paragraphs:
-      - "Mỗi thành viên trong team là một agent: một session **Claude Code**, **Codex** hoặc **OpenCode** mở từ CLI với một role cố định. Nó nhận việc, làm xong thì trả kết quả, và có thể nhân bản: nhiều Builder cùng thi công, nhiều QA cùng kiểm, như một team thật."
+      - "Mỗi thành viên trong team là một agent: một session **Claude Code** mở từ CLI với một role cố định. Nó nhận việc, làm xong thì trả kết quả, và có thể nhân bản: nhiều Builder cùng thi công, nhiều QA cùng kiểm, như một team thật."
       - "Mỗi role có một tên riêng: Thomas, Shaper, Builder, Rin, QA. Tên riêng giữ agent không trôi khỏi role của mình trong context dài, và là địa chỉ để gửi việc, đọc pane, gắn đúng skill."
     figureNote: "Thomas quản trị cả team: nhận yêu cầu từ bạn, gọi Shaper khi cần spec, dispatch ticket cho Builder, gọi Rin gate ở mỗi milestone và QA walk trước khi merge, rồi báo lại bạn. Mỗi mũi tên trên hình là một lượt trao đổi đi và về."
     models:
@@ -89,7 +87,7 @@ explain:
         title: "Builder"
         tag: "thi công"
         session: "Một session mỗi ticket, trong worktree riêng, là người viết duy nhất ở đó."
-        body: "Implement, code review hai trục, simplify, rồi lượt review chéo do Codex đọc lại. Commit ở mỗi ranh giới, không chỉ lúc handback."
+        body: "Implement, code review hai trục, simplify, rồi lượt review chéo do Codex đọc lại. Có thể giao phần gõ code cho một pane junior. Commit ở mỗi ranh giới, không chỉ lúc handback."
         href: "/vi/role/builder/"
       - id: rin
         title: "Rin"
@@ -171,7 +169,7 @@ shots:
       webm: /shots/dispatch.webm
       poster: /shots/dispatch.jpg
   herdr:
-    caption: "Workspace herdr của một dự án: mỗi agent một pane có tên và trạng thái, bạn bấm là đọc được, Thomas đọc và nhắn qua CLI, kể cả Builder chạy Codex."
+    caption: "Workspace herdr của một dự án: mỗi agent một pane có tên và trạng thái, bạn bấm là đọc được, Thomas đọc và nhắn qua CLI."
     video:
       mp4: /shots/herdr.mp4
       webm: /shots/herdr.webm
@@ -204,13 +202,13 @@ features:
     href: /vi/cau-truc/#coordination
   - id: roles
     title: "Team có tên, có role, có contract."
-    body: "Thomas đại diện, Shaper định hình, Builder thi công, Rin giữ gate, QA nghiệm thu. Mỗi role có contract và system context riêng, nên trách nhiệm rõ và không ai làm thay việc của ai. Claude Code, Codex và OpenCode đều hỗ trợ agent profile ở mức này."
+    body: "Thomas đại diện, Shaper định hình, Builder thi công, Rin giữ gate, QA nghiệm thu. Mỗi role có contract và system context riêng, nên trách nhiệm rõ và không ai làm thay việc của ai."
     diagram: five-roles
     crop: [shaper, builder]
     href: /vi/role/thomas/
   - id: runtime
-    title: "Một quy trình, nhiều runtime."
-    body: "Claude Code là nền bắt buộc; Codex và OpenCode thêm vào khi bạn cần AI của hãng thứ hai hay model khác. Role nào chạy trên runtime nào khai trong orchestrator.md; đổi runtime không đổi quy trình."
+    title: "Một runtime, một hãng thứ hai đọc lại."
+    body: "Mọi role chạy trên Claude Code. Codex thêm vào khi bạn cần hãng thứ hai đọc lại diff, và Builder có thể giao phần gõ code cho pane junior trên runtime khác. Model và effort của từng role khai trong orchestrator.md."
     diagram: structure
     crop: [runtime_claude, runtime_codex]
     href: /vi/tech-stack/#claude-code
@@ -270,7 +268,7 @@ adopt:
       href: "https://docs.anthropic.com/en/docs/claude-code"
     - name: "Codex CLI"
       tag: "optional"
-      role: "AI của hãng thứ hai (OpenAI) cho lượt review chéo, và là runtime dự phòng. Thiếu **Codex**, team chạy chế độ một provider."
+      role: "AI của hãng thứ hai (OpenAI) cho lượt review chéo. Thiếu **Codex**, team chạy chế độ một provider."
       href: "https://github.com/openai/codex"
     - name: "Git ≥ 2.5, có worktree"
       tag: "required"

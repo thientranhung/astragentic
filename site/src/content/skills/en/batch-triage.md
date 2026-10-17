@@ -3,7 +3,7 @@ title: batch-triage
 oneLiner: "Read an inherited backlog against the code in one pass, then create tickets with labels and blocking edges."
 group: entry
 order: 2
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/batch-triage/SKILL.md
 rented: false
 lang: en

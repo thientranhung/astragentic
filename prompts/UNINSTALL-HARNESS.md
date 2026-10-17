@@ -73,18 +73,17 @@ being resolved by picking the more convenient one.
 
 ## 4. Remove, in this order
 
-1. The payload files step 3 marked **identical**, under `.agents/`, `.claude/`, `.codex/`,
-   `.opencode/` and `scripts/`. Directories that end up empty go too; directories still holding
+1. The payload files step 3 marked **identical**, under `.agents/`, `.claude/`
+   and `scripts/`. An install adapted before the Codex/OpenCode role layer was retired may also
+   carry `.codex/`, `.opencode/`, `dispatch-ticket-codex`, `dispatch-ticket-opencode`,
+   `codex-claude-arm` and `builder|thomas-codex|opencode.md`; those go too, by the same
+   identical-only rule. Directories that end up empty go too; directories still holding
    project files stay.
 2. `.astraler/` **last** — step 3 reads it, so removing it earlier destroys your own oracle.
 
 Outside the repo, and nothing in the repo will remind anyone:
 
-- `${CODEX_HOME:-$HOME/.codex}/<role>.config.toml`, one per role a project adapted **before
-  2.12.0** provisioned. Nothing launches from them since, and a project adapted after never
-  wrote any — but they are generic role names in a namespace shared with every other project on
-  the machine, so read `.agents/orchestrator.md` for which roles this project used **before**
-  you delete it, and leave the ones another project put there.
+- Pre-2.12 installs only: `${CODEX_HOME:-$HOME/.codex}/<role>.config.toml` for the roles this project used; leave any another project put there.
 - the herdr workspace, if it exists only for this project. Ask — a workspace can outlive one
   project's use of it.
 
@@ -119,7 +118,6 @@ Verification is a command, not a belief:
 ```bash
 git status                                  # exactly the deletions you intended, nothing else
 grep -rn '\.astraler\|\.agents/roles' --exclude-dir=.git .   # no live pointer to what is gone
-ls ~/.codex/*.config.toml 2>/dev/null       # pre-2.12 profiles gone, or named as kept on purpose
 ```
 
 Write `UNINSTALL-RECEIPT.md` at the repo root, and keep it short — it exists so a later session

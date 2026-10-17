@@ -2,9 +2,10 @@
 
 Companion to `dispatch-ticket`. Read when a watch returns something unexpected.
 
-**On a Claude root the per-turn watcher is gone.** The `astragentic-dispatch` mod reports turn
-ends from inside the pane (`dispatch-ticket-claude`). The watcher sections below are for Codex
-and OpenCode panes. The pipe table and the workspace watchdog apply to every runtime, and the
+**For a pane the mod registered the per-turn watcher is gone.** The `astragentic-dispatch` mod
+reports turn ends from inside the pane (`dispatch-ticket-claude`). The watcher sections below
+are for a pane without the mod: a QA gate pane or a junior pane (`dispatch-junior`). The pipe
+table and the workspace watchdog apply to every pane, and the
 watchdog stays mandatory: it is the only thing that sees a pane whose process died. **A pane
 the mod recorded draws no pane alert at all** (3.2.0): its turn ends arrive as `TURN-END`, a
 turn end it is holding is on the board, and the mod refuses it a picker. Measured before: 26
@@ -67,8 +68,8 @@ script*.
 The script blocks on an event wait, re-polls in short slices, and speaks only once, on the
 transition; stretching an interval to stay quiet only makes the answer late.
 
-`NO_START` semantics, the exit contract and status-is-a-bell apply to Claude unchanged. Only
-"Stopping a watch" is Codex/OpenCode-specific.
+`NO_START` semantics, the exit contract and status-is-a-bell apply to every watched pane. Only
+"Stopping a watch" is specific to the watcher script.
 
 `<repo-root>/scripts/herdr-watch-terminal.sh` watches a NEWLY SUBMITTED turn: it waits to
 observe `working` first, so pointing it at an already-idle pane returns `NO_START` —
@@ -79,7 +80,7 @@ pane=<id>` — every line names its pane so concurrent watches stay distinguisha
 it by absolute path, alone on its own line, and branch on `$?`. The pipe table above applies
 here too.
 
-**Stopping a watch takes the process GROUP — Codex/OpenCode only.** On Claude runtime the
+**Stopping a watch takes the process GROUP — the watcher script only.** When the
 watch is a `Monitor`, and `TaskStop` cancels it; none of the PID work below applies. On macOS the watcher re-execs under
 `caffeinate`, so `caffeinate` is the visible PID and killing it orphans the wrapped shell,
 still polling. Signal the group, then confirm:
@@ -131,12 +132,12 @@ Two different ages is the duplicate signature; a parent and its child is not. Sw
 `rm` a stale lock: removing a lock whose holder is alive hands the next launcher a free `flock`.
 
 **Every alert fires once per episode** (3.2.0): when its condition is first seen, and again only
-after a poll on which it was not. The cooldown only spaces a condition that flaps. Codex and
-OpenCode panes only; a Claude pane's state is on the board.
+after a poll on which it was not. The cooldown only spaces a condition that flaps. Panes
+without the mod only; a mod pane's state is on the board.
 
 | Alert | What it means | Action |
 |---|---|---|
-| `BLOCKED` | Pane asking a question | Read, answer, **restart the watch** — Monitor on Claude, watcher script on Codex/OpenCode |
+| `BLOCKED` | Pane asking a question | Read, answer, **restart the watch** — Monitor on a mod pane, watcher script on a QA gate or junior pane |
 | `WATCHER_LOST` | Pane working, nobody watching | Re-arm the watch now |
 | `STUCK` | This pane worked, then sat idle across two polls, no watcher | Check whether its NEXT step started; handback or re-dispatch |
 | `NEVER_STARTED` | Dispatched, never observed working, no watcher | Read the pane: the brief or phase command never ran as a turn |
@@ -147,13 +148,12 @@ claims three fixes this contract rests on directly: *completed, interrupted turn
 idle* — an interrupted turn that never goes idle is a watcher that waits forever; *pending
 permissions, forms and failed executions remain blocked*, so `BLOCKED` keeps its meaning; and
 *live agent names survive temporary process-detection uncertainty*, which the whole
-`agent prompt` path depends on, since it addresses a pane by name. Per-runtime it also claims
-Codex stops reporting blocked on composer sparkles and stale confirmation text — the exact
-false-blocked the watcher reads — and that Claude Code's Unicode spinner is recognised.
+`agent prompt` path depends on, since it addresses a pane by name. It also claims
+that Claude Code's Unicode spinner is recognised.
 
 **Treat all of it as UNVERIFIED.** Every surrounding rule here was measured on 0.9.0, and a
 changelog is a claim, not a measurement. What to re-run first, in order: an interrupted turn
-reaching `idle`; a Codex pane mid-composer NOT reading `blocked`; an agent still reachable by
+reaching `idle`; an agent still reachable by
 name after a detection blip. Until someone does, the workarounds below stay.
 
 **Both pane alerts ask about ONE pane.** `STUCK` used to need NO pane working anywhere, so one

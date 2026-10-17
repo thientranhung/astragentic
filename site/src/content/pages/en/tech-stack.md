@@ -1,49 +1,35 @@
 ---
 title: "Tech stack"
-description: "Nine components in the stack, and why each one rather than something else. Each with the place it has already caused a failure."
+description: "Eight components in the stack, and why each one rather than something else. Each with the place it has already caused a failure."
 ---
 
 This list is deliberately short. Every component on it has to answer "what breaks if you take it
 out," and any component that only causes minor inconvenience when removed is already gone. The
-first three are runtimes, the middle three are mechanisms, and the last three are what I wrote
+first two are the two CLIs, the middle three are mechanisms, and the last three are what I wrote
 myself or picked to build this site.
 
 ## claude-code
 
-The root runtime. Agents in all five roles run here, and `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium` is the line that opens a
-session. If you install exactly one runtime, make it this one.
+The runtime. Agents in every role run here, and `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium` is the line that opens a
+session. If you install exactly one CLI, make it this one.
 
 It is required because two mechanisms only exist here:
 
 - **System prompt split from contract.** `.claude/agents/<role>.md` is the system prompt and
   survives compaction, while `.agents/roles/<role>.md` enters the session as a tool result and is
   the first thing compaction summarises away.
-- **Compaction itself.** Codex and OpenCode have no such mechanism, so `hook-contract-reload.py`
-  is registered on Claude Code only, and that is a deliberate decision rather than an oversight.
+- **Compaction itself.** `hook-contract-reload.py` is registered on Claude Code for the compaction event, and no other
+  runtime in the harness has one.
 
 ## codex
 
-An optional runtime, here for the cross-vendor arm. Without a second vendor that arm does not
-exist, and the arm has the highest measured defect yield in this system.
+The Codex CLI, here for the cross-vendor arm and for nothing else. No role runs on it. Without a
+second vendor that arm does not exist, and the arm has the highest measured defect yield in this
+system.
 
-Three directories carry the Codex half:
-
-- **`.codex/profiles/`.** The pane-launch templates per role.
-- **`.codex/agents/`.** Two read-only helper agents.
-- **`.codex/hooks.json`.** Registers the git guard.
-
-The limit is in the last one: Codex reviews project-local hook definitions by hash, so without a
-trust decision the guard sits there looking installed and gets skipped. The doctor checks
-registration; confirming trust means typing `/hooks` in the Codex CLI.
-
-## opencode
-
-The third runtime option for role dispatch, with adapters in `.opencode/agents/`. It exists so
-`.agents/orchestrator.md` is not pinned to a single vendor.
-
-The limit: an OpenCode Builder has no equivalent of `hook-git-guard.py`. That is one of the two
-reasons the cleanup-ordering rule has to live in `dispatch-ticket/CLEANUP.md` first and in a hook
-second. The other reason is that Claude and Codex can both run with hooks disabled.
+The Builder fires it from its own worktree through the Codex plugin (`codex-arm`), and Thomas
+fires it at spec and slice scope. If Codex is unavailable or out of quota the arm did not run, and
+the record says so.
 
 ## git-worktree
 
@@ -70,10 +56,10 @@ something narrated into something countable.
 
 **And it is the one channel that does not care which vendor you are on.** Two Claude Code
 sessions already have cross-session messaging, but that channel exists only inside one vendor.
-When Thomas runs on Claude, a Builder on Codex and a QA on OpenCode, three processes from three
+When a Builder opens a junior on another runtime beside it, two processes from two
 vendors share no protocol at all. herdr does: the pane is the address, `herdr pane run` is send,
-`herdr pane read` is receive. Thomas drives a Builder on Codex with the same commands it uses for
-a Builder on Claude — which is what keeps "one process, several runtimes" from being a slogan.
+`herdr pane read` is receive. The Builder drives a junior with the same commands it uses for
+any pane — which is what keeps "one process, several runtimes" from being a slogan.
 
 **One measured trap when reading a pane:** the read is truncated and says nothing about it. When
 you need a long output verbatim, do not trust the pane read — have the agent write a file and

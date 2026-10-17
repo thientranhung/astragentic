@@ -2400,7 +2400,7 @@ Fix: the arm setup block now exits non-zero when `git rev-list --count` is 0, an
 line of output states the range (commit count + file count) so a vacuous review is visible
 at a glance.
 
-Bound: codex-arm/SKILL.md, codex-claude-arm/SKILL.md (both `.agents/` and `.claude/`).
+Bound: codex-arm/SKILL.md (both `.agents/` and `.claude/`), codex-claude-arm/SKILL.md (gone).
 
 ### AST-104 — herdr agent start rejects uppercase in agent names, but dispatch convention generates them · promoted 2026-08-19
 
@@ -3506,7 +3506,7 @@ script that already reads `simplify(increment):`. No new file, no new script, no
 Residual, and it is the same one AST-130 names: the receipt is a commit written by the agent
 being verified. That is the trade the queue is worth, and it is stated rather than implied.
 
-Bound: `builder.md`, `thomas.md`, `rin.md` (gone), `codex-arm/SKILL.md`, `codex-claude-arm/SKILL.md`.
+Bound: `builder.md`, `thomas.md`, `rin.md` (gone), `codex-arm/SKILL.md`, `codex-claude-arm/SKILL.md` (gone).
 
 ### AST-136 — `--grep` is BASIC regex, and every marker kind in this system contains parentheses · promoted 2026-08-27
 
@@ -3622,7 +3622,7 @@ exist for every runtime with a hook surface. Both cases were watched to FAIL aga
 it stood before this entry — five roles red and one registration red — which is the only reason
 they are in the suite (AST-137).
 
-Bound: `harness/.codex/hooks.json`, `harness/.codex/profiles/*.md`,
+Bound: `harness/.codex/hooks.json` (gone), `harness/.codex/profiles/*.md` (gone),
 `harness/scripts/hook-contract-reload.py`, `harness/scripts/selftest.sh`.
 
 ### AST-139 — The fork guard AST-119 asked for cannot be built today, measured three ways · promoted 2026-09-14
@@ -3884,7 +3884,7 @@ into the skill, and the file carries instructions only — which is also why the
 exists so `codex --profile <role>` resolves"* had to be removed from all five rather than left
 as a stale comment: a pane launched with it reads it as current instruction (AST-146).
 
-Bound: `.agents/skills/dispatch-ticket-codex/SKILL.md`, `.codex/profiles/*.md`,
+Bound: `.agents/skills/dispatch-ticket-codex/SKILL.md` (gone), `.codex/profiles/*.md` (gone),
 `.agents/orchestrator.md`, `check-requirements.sh`, `scripts/check-reachability.py` (check 4).
 
 ### AST-146 — An unrecognised configuration key is accepted in silence, so "it launched" is not evidence · promoted 2026-09-20
@@ -3920,7 +3920,7 @@ say the bytes are right. A file still describing a retired mechanism passes it �
 `check-requirements.sh` WARNs on `--profile`, `CODEX_HOME` and `.config.toml` appearing inside a
 role's instruction file, which is the half a parser can never answer.
 
-Bound: `.agents/skills/dispatch-ticket-codex/SKILL.md`, `check-requirements.sh`,
+Bound: `.agents/skills/dispatch-ticket-codex/SKILL.md` (gone), `check-requirements.sh`,
 `scripts/selftest.sh`.
 
 ### AST-147 — A `Bound:` line with a star in it was invisible to the check whose whole job is `Bound:` lines · promoted 2026-09-20
@@ -4039,8 +4039,8 @@ the agent already up and unregistered, which is the exact state the step exists 
 lowercasing rule was already written for `agent start` in the shared protocol and had never been
 stated where `rename` is used.
 
-Bound: `.agents/skills/dispatch-ticket-codex/SKILL.md`,
-`.agents/skills/dispatch-ticket/SKILL.md`, `.claude/skills/dispatch-ticket-codex/SKILL.md`.
+Bound: `.agents/skills/dispatch-ticket-codex/SKILL.md` (gone),
+`.agents/skills/dispatch-ticket/SKILL.md`, `.claude/skills/dispatch-ticket-codex/SKILL.md` (gone).
 
 ### AST-151 — An empty cell read as "the default" was refused at bootstrap · promoted 2026-09-20
 

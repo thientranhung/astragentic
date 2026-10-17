@@ -487,7 +487,7 @@ print(f"__THOMAS__|{tpane}")
 
 # THOMAS_CRASHED — agent entry exists but its runtime process is gone. The
 # expected process name is read from orchestrator.md, not hard-coded, since
-# Thomas may be dispatched on claude, codex or opencode (AST-072).
+# the table row names it (AST-072); claude when the row is absent.
 if tstatus == "idle":
     try:
         orch_text = open(os.path.join(project_root, ".agents", "orchestrator.md")).read()
@@ -621,9 +621,11 @@ for d in dispatched:
     # TURN-END, a held turn end is on the record as `waiting_on`, and the mod refuses it a
     # picker. Nothing below can add to that, and every alert below fired on one anyway:
     # measured on nizzy-ecom, 26 STUCK alerts, fifteen minutes apart, for a Shaper that had
-    # finished and reported, through one night (2026-10-12). The watchdog keeps the Codex and
-    # OpenCode panes, which run the watcher script, and the one thing no mod reports: a
-    # dispatcher whose process died.
+    # finished and reported, through one night (2026-10-12). What the watchdog keeps is a
+    # dispatched pane without the mod (a QA gate pane) and the one thing no mod reports: a
+    # dispatcher whose process died. A junior pane (`junior:` label, `junior-` name) is not a
+    # dispatched pane here: is_dispatched() does not match it, the Builder that opened it runs
+    # the watcher on it, and Thomas gets no alert for it.
     if dpane in self_reporting:
         continue
 

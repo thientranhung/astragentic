@@ -3,7 +3,7 @@ title: linear-issue-tracker
 oneLiner: "Chạy Linear làm tracker của harness, và kiểm trần issue của gói đang dùng trước khi dựng pipeline."
 group: adapter
 order: 6
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/linear-issue-tracker/SKILL.md
 rented: false
 lang: vi

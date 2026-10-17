@@ -3,7 +3,7 @@ title: codex-arm
 oneLiner: "Run a Codex pass over a finished artifact so a different vendor reads the diff before it merges."
 group: gate
 order: 1
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/codex-arm/SKILL.md
 rented: false
 diagram: cross-vendor-arm
@@ -15,8 +15,7 @@ updated: 2026-09-04
 
 `codex-arm` is the invocation mechanics for the cross-vendor arm: the Codex review that Thomas,
 or at ticket scope the Builder itself, runs over a completed artifact before it can merge. It
-covers the runtime-specific command (`codex-companion.mjs` on a Claude root, plain `codex exec`
-directly on Codex or opencode), the argv and quoting traps, and where the verdict gets recorded.
+covers the command (`codex-companion.mjs`, the Codex plugin runtime), the argv and quoting traps, and where the verdict gets recorded.
 It does not decide *when* to run. That cadence, and the two-pass cap, belong to `thomas.md` and
 `builder.md`. This skill owns the how, not the when.
 <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
@@ -35,8 +34,7 @@ Skipping it would have shipped a production 500 on the only unstick path the pro
 
 | What is in front of you | Reach for |
 |---|---|
-| A ticket's diff is committed, root is Claude or the Builder is running its own ticket arm | `codex-arm` |
-| Root runtime is Codex, a Claude pass is needed instead | `codex-claude-arm` (mirror skill; the arm always calls the *other* vendor) |
+| A ticket's diff is committed, or the Builder is running its own ticket arm | `codex-arm` |
 | A spec is finished, about to be cut into tickets | `codex-arm` at `arm: spec`, run by Thomas from the base checkout |
 | A slice is closing | `codex-arm` at `arm: slice`, same as above |
 | Rin's own gate needs to run | Not this skill. Rin never runs the arm from inside its own review |
@@ -108,7 +106,7 @@ Pulled from `harness/.agents/memory/recurring-failure-modes.md`. All entries bel
   test-database container every live Builder was standing on. Fixed: scope release to this
   worktree alone, or release nothing.
 - **A read-only reviewer still moved another agent's HEAD.** A read-only reviewer with shell access still moved another agent's `HEAD` via
-  `git switch`. Fixed, and load-bearing for `codex-claude-arm`: `claude -p` is a full agent, so
+  `git switch`. Fixed: the reviewer is a full agent, so
   even the ticket-scope arm gets its own detached worktree.
 
 <!-- source: harness/.agents/memory/recurring-failure-modes.md -->
@@ -130,6 +128,5 @@ Pulled from `harness/.agents/memory/recurring-failure-modes.md`. All entries bel
 A Builder's closed loop runs `implement` → review → simplify → `codex-arm` (ticket scope) →
 `arm(ticket):` receipt → handback, and `/skills/dispatch-ticket`'s cleanup checks that receipt
 before removing the worktree. At spec and slice scope, Thomas runs it from the base checkout
-before releasing a paused `shaper` or closing a slice. `codex-claude-arm` mirrors it for a Codex
-root: same cadence, opposite vendor. Neither substitutes for `/skills/review-with-rin`, which is
+before releasing a paused `shaper` or closing a slice. It does not substitute for `/skills/review-with-rin`, which is
 the gate itself rather than the pass feeding it.

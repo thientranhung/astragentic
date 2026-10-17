@@ -3,10 +3,9 @@ title: "Hook"
 description: "Bốn hook, ba script. Một hook chặn lệnh git nguy hiểm, một hook nạp lại contract sau compact, một hook ghi log, và một hook tôi đo được là không còn được kích hoạt."
 ---
 
-Bốn hook đăng ký ở `harness/.claude/settings.json`, riêng git guard đăng ký thêm ở
-`harness/.codex/hooks.json`. Nguyên tắc chung của cả bốn là hook luôn đứng sau, contract luôn
+Bốn hook đăng ký ở `harness/.claude/settings.json`. Nguyên tắc chung của cả bốn là hook luôn đứng sau, contract luôn
 đứng trước. Luật nào quan trọng thì phải nằm trong contract, vì contract được đọc
-ở mọi runtime, còn hook thì có thể bị tắt, có thể chưa được trust, và có thể treo trên một
+ở mọi session, còn hook thì có thể bị tắt, có thể chưa được trust, và có thể treo trên một
 đường thi hành không ai đi qua.
 
 Trường hợp cuối không phải giả thuyết. Một trong bốn hook dưới đây không còn được kích hoạt, tôi đo được điều
@@ -14,7 +13,7 @@ Trường hợp cuối không phải giả thuyết. Một trong bốn hook dư�
 
 ## pre-tool-use
 
-Hook bắn trước mỗi lần một agent định chạy tool `Bash`, trên cả Claude Code lẫn Codex, và nó
+Hook bắn trước mỗi lần một agent định chạy tool `Bash`, trong Claude Code, và nó
 chạy `scripts/hook-git-guard.py`.
 
 Script đọc lệnh sắp chạy rồi làm đúng một trong hai việc: từ chối kèm câu lệnh chính xác cần
@@ -85,9 +84,8 @@ session, và không bao giờ đọc lại. Chỉ dẫn vẫn nằm đó, và tr
 
 Hai chi tiết là cố ý. Hook bắn ở `compact` chứ không ở `clear`, vì sau `/clear` agent đối diện
 một context rỗng và tự đọc contract, còn sau compaction nó đối diện một bản tóm tắt khẳng định
-việc đang chạy nên nó không đọc. Chính sự bất đối xứng đó là toàn bộ defect. Và hook chỉ có ở
-Claude Code, vì Codex với OpenCode không có compaction, nên ở đó không có khoảnh khắc nào để
-gắn vào.
+việc đang chạy nên nó không đọc. Chính sự bất đối xứng đó là toàn bộ defect. Và hook là sự kiện
+của riêng Claude Code, nên không nơi nào khác bắn nó.
 
 Mọi nhánh thoát của script hoặc in ra JSON hợp lệ hoặc không in gì, và không nhánh nào ném
 exception. Một traceback trên stderr sẽ bị runtime đọc là hook hỏng rồi tắt đi, và người vận

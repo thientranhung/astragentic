@@ -108,7 +108,7 @@ integration work.
 
 Classify candidate material before editing anything:
 
-- **Reusable harness runtime** — role contracts, skills, scripts, Codex config. Add or
+- **Reusable harness runtime** — role contracts, skills, scripts. Add or
   upgrade these.
 - **Project-owned truth** — `AGENTS.md`, `CLAUDE.md`, `docs/` content, domain docs, ops
   skills, environment and deployment instructions. These stay the project's; wire them to
@@ -175,12 +175,9 @@ Classify candidate material before editing anything:
     seven false alerts in one shift downstream. Any exit other than 0 or 1 reads as in flight.
     Absent, `STUCK` fires on pane state alone; a project with no long-running verification
     declines it in the receipt.
-- **Runtime-specific** — Claude Markdown/YAML agents and skills stay Claude-native. Codex role
-  instructions stay under `.codex/profiles/<role>.md`; project-local custom subagents stay under
-  `.codex/agents/`; project hooks stay in `.codex/hooks.json`. These are
-  three different surfaces and are not interchangeable. OpenCode adapters
-  (`.opencode/agents/*.md`) stay OpenCode-native. Translate mechanics by reading each
-  runtime's contract, rather than by analogy from another.
+- **Runtime-specific** — every role runs on Claude Code, so Claude Markdown/YAML agents and
+  skills stay Claude-native. The one other runtime is the optional junior under the Builder
+  (`.agents/roles/junior-<runtime>.md`, `dispatch-junior`), named in `orchestrator.md`.
   **`.claude/skills/astragentic-dispatch/` is a Claude Code mod, not a skill**: it has a
   `.claude-plugin/plugin.json` and no `SKILL.md`. It is reusable runtime, so it lands at exactly
   that path and is committed. A worktree loads the copy on its own branch, and a pane with no
@@ -201,9 +198,9 @@ Classify candidate material before editing anything:
   — its test rhythm, its merge gate, its brief lines — belong there, so that no payload file has
   to be edited in place and the drift manifest can read empty. An overlay adds to the contract
   and never contradicts it; where it would, the contract wins and the conflict goes upstream.
-  Codex and opencode sessions load no mod and read no overlay.
+  A junior pane loads no mod and reads no overlay.
 - **Scaffold — written once, never overwritten.** `.agents/orchestrator.md` carries the owner's
-  runtime and model choices, and `.codex/profiles/*.md` carry role instructions they may tune. Write them on
+  runtime and model choices. Write it on
   a FRESH install only. On an upgrade, leave the values alone and report any change in the
   table's shape for the owner to merge. A release that overwrites them silently reverts
   tuning the owner made deliberately, and the first sign is a dispatch failing on a model id
@@ -297,7 +294,7 @@ done
 
 Every `DIFFERS` line is decided and recorded in the receipt — taken, merged or preserved. The
 list is short in practice (one measured project: eight paths, all owner-tuned — its
-`orchestrator.md` and Codex profiles, exactly the AST-041 set nothing else watches). A path
+`orchestrator.md` and its role overlays, exactly the AST-041 set nothing else watches). A path
 that appears here and is copied over without a receipt line is the defect above.
 
 Integrate the smallest coherent result.
@@ -349,7 +346,7 @@ So add paths, and know which release you are keeping:
 
 ```bash
 CAND="$(cat .astraler/CANDIDATE)"
-git add .agents .claude .codex .opencode scripts .astraler/state .astraler/CANDIDATE .astraler/project
+git add .agents .claude scripts .astraler/state .astraler/CANDIDATE .astraler/project
 git add ".astraler/releases/$CAND" || true          # may be refused; the next line decides
 git diff --cached --name-only -- ".astraler/releases/$CAND" | wc -l
 ```
@@ -373,33 +370,26 @@ history, and the next run either applies it or the owner deletes the directory. 
 applied one left untracked is a different thing**: the notes and the prompt describing what
 this upgrade meant to do exist on one disk and nowhere else.
 
-**Codex role instructions** (`thomas`, `shaper`, `builder`, `qa`) are in-repo at
-`.codex/profiles/<role>.md` and are passed on the launch command line. Nothing is provisioned
-outside the repository: there is no `$CODEX_HOME` copy to make, no destination to compare
-against, and no owner confirmation to collect for a runtime the project simply has.
-
 **Upgrading to 3.0.0 or later: the fifth role is retired.** A row for it in `orchestrator.md`
 (Active assignments and Fallback providers), its adapter files under `.claude/agents/`,
-`.codex/profiles/`, `.opencode/agents/`, its tab-label convention and any `review-with-…` skill
+its tab-label convention and any `review-with-…` skill
 copy the project kept are deleted, not merged; its spec gate is the arm the Shaper fires and its
 slice gate is the arm plus the adversarial fan-out Thomas fires (`thomas.md` § Slice gate). Say
 so in the receipt.
 
 **Upgrading to 2.18.0 or later: the Active assignments table gains an `Advisor` column.** The
 file is scaffold, so add the column yourself, keeping every existing cell: header `Advisor`,
-then per row the release default (`fable` for an Opus row, `opus` for a Sonnet row, blank for
-Codex and opencode rows), and report the rows in the receipt for the owner to retune. Until
+then per row the release default (`fable` for an Opus row, `opus` for a Sonnet row), and report the rows in the receipt for the owner to retune. Until
 the column exists the dispatch mod refuses every brief and `check-requirements.sh` reports
 MISS; the cells themselves are never judged.
 
-**Upgrading a project adapted before 2.12.0.** It carries `.codex/profiles/<role>.config.toml`,
-and `install.sh` reports them under DELETED upstream — it does not remove them, because the
-owner's model and effort are in them. For each: copy those two values into that role's codex row
-in `.agents/orchestrator.md` if the row does not already carry them, move any instruction text
-the owner added into `<role>.md`, then delete the TOML and its copy under `$CODEX_HOME`. Nothing
-reads either one any more. `check-requirements.sh` WARNs while a leftover remains, and WARNs
-again if a `<role>.md` still mentions `--profile` or `CODEX_HOME` — that file is the pane's
-system prompt, so a sentence about a retired mechanism is read as an instruction (AST-145).
+**Upgrading to a release that retired the Codex and OpenCode role layer.** Every role now runs
+on Claude Code. Delete, do not merge: `.codex/profiles/`, `.codex/agents/`, `.codex/hooks.json`,
+`.opencode/`, the `-codex` and `-opencode` role supplements, the `dispatch-ticket-codex`,
+`dispatch-ticket-opencode` and `codex-claude-arm` skills, and any `<role>.config.toml` (with its
+copy under `$CODEX_HOME`) a pre-2.12.0 adaptation left behind. Set each `orchestrator.md` row's
+runtime to `claude`, keeping the owner's model and effort, and say so in the receipt. The Codex
+CLI stays: `codex-arm` still uses it.
 
 ## 5. Brownfield entry
 
@@ -446,7 +436,7 @@ live provider account before any such rule existed; the owner's ruling afterward
 production is touched only after the same journey passed locally AND with permission for that
 run, never carried from an earlier yes. Put it in `AGENTS.md` or `CLAUDE.md`, not only in
 `.claude/rules/`: that directory is loaded by Claude Code alone, so a rule there binds the
-Claude panes and no Codex or OpenCode one (AST-138).
+Claude panes and no junior pane (AST-138).
 
 **The standards pointer and the rendering path live in the entry doc**, for the same reason
 the ticket prefix does: a fact goes where its reader already is. The glossary and triage
@@ -457,7 +447,7 @@ counts go to the owner in your handback; they have no later reader and do not ne
 Run checks proportional to what changed:
 
 - `git diff` — confirm unrelated project work is untouched;
-- `bash -n` on shell scripts, and parse any Codex TOML. **`scripts/check-reachability.py` is
+- `bash -n` on shell scripts. **`scripts/check-reachability.py` is
   Python despite its extension** — `bash -n` on it exits 2 with `import: command not found`;
   run `python3 scripts/check-reachability.py .` instead;
 - **`./check-requirements.sh . --adapted` passes both axes.** The `--adapted` flag is what
@@ -528,8 +518,6 @@ Run checks proportional to what changed:
   measures word budgets and re-derives every number a document states about itself; the
   second regenerates the ledger index. Run all three or none — they catch different classes
   and a release that ran only the first shipped defects of the other two;
-- Codex profile templates compared with their machine-local destinations, each recorded
-  provisioned, drifted, missing or declined, and agreeing with their `orchestrator.md` rows;
 - referenced files exist, and project-owned entry docs carry no leftover placeholders;
 - `AGENTS.md`, `CLAUDE.md` and the project's docs still express this project's truth rather
   than package defaults.

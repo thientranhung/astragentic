@@ -1,13 +1,12 @@
 ---
 name: codex-arm
-description: Invocation mechanics for the cross-vendor arm — the Codex pass fired over a completed artifact. Covers the runtime invocation, argv and quoting gotchas, intent-loaded focus text, failover, and where the outcome is recorded. The BUILDER fires the ticket arm from its own worktree, the SHAPER fires the spec arm, and Thomas fires the slice arm from the base checkout. Cadence lives in thomas.md and builder.md.
+description: Invocation mechanics for the cross-vendor arm on a Claude root — the Codex pass fired over a completed artifact. Covers the runtime invocation, argv and quoting gotchas, intent-loaded focus text, failover, and where the outcome is recorded. The BUILDER fires the ticket arm from its own worktree, the SHAPER fires the spec arm, and Thomas fires the slice arm from the base checkout. Cadence lives in thomas.md and builder.md.
 ---
 
-# The cross-vendor arm
+# The cross-vendor arm on a Claude root
 
 **When it fires belongs to `thomas.md` and `builder.md`, not here** — three scopes, at most two
 passes **per gate invocation**. Do not restate the cadence in this file; this skill owns the HOW.
-`codex-claude-arm` is the mirror for a Codex root.
 
 **Who fires it depends on the scope**: the one who owns the artifact at that scope.
 
@@ -28,7 +27,13 @@ deadlock inside the code pass 1's fix had just added.
 
 ## Invocation
 
-The invocation mechanism depends on the root runtime of whoever fires it.
+Use the plugin runtime. Raw `codex exec review` is not a drop-in fallback: on codex-cli 0.155.1
+it **refuses a focus text beside a range** — `the argument '--base <BRANCH>' cannot be used with
+'[PROMPT]'`, and `-` counts as that positional — so an arm written that way exits 2 before any
+review starts and leaves no output file, which looks exactly like never having fired. Piping the
+focus without `-` is worse: accepted, discarded, and the run exits 0 having reviewed a generic
+prompt. The plugin path has no such conflict, taking the focus as a positional beside `--base`,
+and that is the concrete reason it is primary here.
 
 **Define the log before anything runs.** `$OUT` is the arm's output file, on both runtimes:
 
@@ -61,10 +66,6 @@ Plugin root: `~/.claude/plugins/cache/openai-codex/codex/<version>`. Plain `revi
 for a bell.** A completion notification never comes for a broker that died, and a stall caught
 in minutes costs minutes (one job sat dead for about 44 of 47 minutes).
 
-**The plugin path has no argument conflict, and that is why it is primary here** rather than a
-preference: `adversarial-review` takes the focus text as an ordinary positional BESIDE `--base`,
-which is exactly what `codex exec review` refuses (below).
-
 **A hang is a job now, not a verdict** (plugin >= 1.0.6; `codex-companion.mjs --help` lists what
 the installed copy has):
 
@@ -83,48 +84,15 @@ leaves partial `{"verdict":"approve"}` lines in the streaming log while the job 
 like a candid reviewer. No finished job and no header means no verdict. **Liveness is `status`
 ADVANCING, not RESPONDING**: take two observations and compare; the same last command twice, or
 a log mtime that has not moved, is a dead job, and `Elapsed:` counts up whether or not a process
-exists. Never reuse a gate-worktree path after a dead run (`-p2` to `-p3`). The findings have a declared shape in the plugin's
-`schemas/review-output.schema.json` — `verdict`, `summary`, `findings[]` of `severity / title /
-body / file / line_start / line_end / confidence / recommendation` — so fold by field rather than
-by parsing prose.
+exists. Never reuse a gate-worktree path after a dead run (`-p2` to `-p3`).
 
-**On a non-Claude root** (Codex or opencode) the plugin runtime is not there, and the obvious
-command **cannot run**. Measured on codex-cli 0.155.1:
+The findings have a declared shape in the plugin's `schemas/review-output.schema.json` —
+`verdict`, `summary`, `findings[]` of `severity / title / body / file / line_start / line_end /
+confidence / recommendation` — so fold by field rather than by parsing prose.
 
-```
-codex exec review --base main "<focus>"   → error: the argument '--base <BRANCH>' cannot be
-                                             used with '[PROMPT]'        (exit 2)
-codex exec review --commit <sha> "<focus>" → same refusal
-codex exec review --base main -            → same refusal; `-` IS the positional
-```
-
-**And the repair that suggests itself is worse than the break.** Piping the focus without `-`
-is accepted — and silently discarded: the run reviews the range under a generic
-`changes against '<base>'` prompt and **exits 0** with a full review. Measured by piping
-*"Respond with exactly PIPEWORKS"* and getting an ordinary review back, zero occurrences of the
-token. A gate that exits 2 is loud and produces no output file; a gate that exits 0 having never
-seen the intent is a gate that cannot fail (AST-032). **There is no form of `codex exec review`
-that carries both a range and a focus.**
-
-So on a non-Claude root the arm uses plain `codex exec`, where both the range and the intent are
-ordinary prompt text:
-
-```bash
-{ echo "arm range: $COMMIT_COUNT commits, $FILE_COUNT files changed ($BASE..HEAD)"
-  codex exec -m <codex-model> -o "${OUT%.md}-verdict.md" \
-    "Review the diff produced by: git diff $BASE..HEAD. Owner intent for this review: <intent>.
-     Report findings as blocking or non-blocking."
-} | tee "$OUT"
-```
-
-Measured the same way, with a token the prompt asked for in the final message: it comes back,
-exit 0, with real findings against the named range. `-o/--output-last-message` writes the FINAL
-MESSAGE to its own file, so the conclusion is an artifact instead of something the reader digs
-out of the event stream — keep the `tee`, because `Output:` in the marker still points at `$OUT`.
-
-The direct form has been observed to hang, and unlike the plugin path there is no job to poll or
-cancel: set a timeout and treat a hang as NOT RUN there. The plugin form wraps retry and
-completion-notification; the direct form has neither, so the dispatcher must watch for it.
+Where the plugin is genuinely unavailable, the working raw form is plain `codex exec` with the
+range named in the prompt, not `codex exec review`, in the same brace group piped to `tee "$OUT"`;
+`codex-arm` in `.agents/skills/` carries it and the measurements behind it.
 
 ### Bind it to the reviewed head, and fail closed
 

@@ -30,12 +30,11 @@ sessionTag: "resident"
 
 ## may
 
-- **Chạy arm spec/slice từ base checkout**, bằng `codex-arm` hoặc `codex-claude-arm`, và ghi lại
+- **Chạy arm spec/slice từ base checkout**, bằng `codex-arm`, và ghi lại
   vendor nào thật sự chạy.
 - **Phân loại finding của Rin và QA** thành work order của Thomas.
 - **Promote ticket của một spec sang claimable**, sau khi đã classify `arm: spec`.
-- **Steer Builder trực tiếp**: Claude qua cross-session messaging, gọi theo tên session, Codex và
-  OpenCode qua pane Herdr.
+- **Steer Builder trực tiếp** qua cross-session messaging, gọi theo tên session.
 - **Trả lời câu hỏi mở** từ codebase, một ADR đã có, `research`, `prototype` hoặc một second
   opinion, và ghi lại nguồn nào.
 - **Câu hỏi thuộc owner.** Đưa qua `to-questionnaire`.

@@ -3,7 +3,7 @@ title: jira-issue-tracker
 oneLiner: "Chạy Jira làm tracker của harness, với trạng thái là transition đánh số phải đọc trước mỗi lần ghi."
 group: adapter
 order: 5
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/jira-issue-tracker/SKILL.md
 rented: false
 lang: vi

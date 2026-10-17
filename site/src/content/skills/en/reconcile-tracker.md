@@ -3,7 +3,7 @@ title: reconcile-tracker
 oneLiner: "Measure the tracker against git and report the four drift classes between them."
 group: upkeep
 order: 1
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/reconcile-tracker/SKILL.md
 rented: false
 lang: en

@@ -59,9 +59,9 @@ At that point orchestration stops meaning "call several agents at once." Orchest
 
 ## Astragentic, in one sentence
 
-Astragentic is an operating framework for running multiple AI coding agents against one real codebase. It doesn't introduce a new model and doesn't replace Claude Code, Codex, or OpenCode — those are still where the actual thinking, reading, and editing happen. What it adds is structure: roles, boundaries, and a lifecycle a ticket moves through, built to answer how agents work in parallel without colliding, how the owner sees what's happening, how only the decisions that genuinely need a human reach one, and how you know a step really ran instead of trusting that an agent said so.
+Astragentic is an operating framework for running multiple AI coding agents against one real codebase. It doesn't introduce a new model and doesn't replace Claude Code — that is still where the actual thinking, reading, and editing happens. What it adds is structure: roles, boundaries, and a lifecycle a ticket moves through, built to answer how agents work in parallel without colliding, how the owner sees what's happening, how only the decisions that genuinely need a human reach one, and how you know a step really ran instead of trusting that an agent said so.
 
-The shape of it, top to bottom: the owner and the issue tracker, Thomas as the orchestration layer, then Shaper, Builder, Rin, and QA as the working roles, running on Claude Code, Codex, or OpenCode, backed by git worktrees, a terminal workspace, tests, and a browser for verification. The tracker holds what's supposed to happen; git holds what actually happened; commits, test output, and gate reports are the evidence something real occurred.
+The shape of it, top to bottom: the owner and the issue tracker, Thomas as the orchestration layer, then Shaper, Builder, Rin, and QA as the working roles, running on Claude Code, backed by git worktrees, a terminal workspace, tests, and a browser for verification. The tracker holds what's supposed to happen; git holds what actually happened; commits, test output, and gate reports are the evidence something real occurred.
 
 ## From a feature to a dependency graph
 

@@ -3,7 +3,7 @@ title: github-issue-tracker
 oneLiner: "Chạy GitHub Issues làm tracker của harness, với trạng thái ở label và board là bản sao phải ghi tay."
 group: adapter
 order: 4
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/github-issue-tracker/SKILL.md
 rented: false
 lang: vi

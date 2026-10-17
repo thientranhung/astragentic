@@ -33,12 +33,11 @@ sessionTag: "resident"
 
 ## may
 
-- **Fire arm spec/slice from the base checkout**, with `codex-arm` or `codex-claude-arm`, and
+- **Fire arm spec/slice from the base checkout**, with `codex-arm`, and
   record which vendor actually ran.
 - **Classify findings**, Rin's and QA's, into Thomas's own work orders.
 - **Promote tickets**, a spec's tickets to claimable, once it has classified `arm: spec`.
-- **Steer a Builder directly**: Claude over cross-session messaging, addressed by session name,
-  Codex and OpenCode through a Herdr pane.
+- **Steer a Builder directly** over cross-session messaging, addressed by session name.
 - **Answer an open question from the codebase**, a prior ADR, `research`, `prototype` or a second
   opinion, and record which one.
 - **Question that belongs to the owner.** Take it through `to-questionnaire`.

@@ -26,7 +26,7 @@ remove`. A refused brief names what is owed; do that, then send it again.
 Do not arm a Monitor, type into a Builder's pane, or write its tab and pane ids by hand. Each
 was a step that got skipped (a guessed tab id closed a working Builder), and the mod does it
 from inside the pane. Do not use the shared protocol's Herdr paste for Claude builders either;
-that part is Codex/OpenCode only. The workspace watchdog stays mandatory, because it is the
+that part is for a pane without the mod (a QA gate pane, a junior pane). The workspace watchdog stays mandatory, because it is the
 only thing that sees a pane whose process died.
 
 ## Simplify artifact verification

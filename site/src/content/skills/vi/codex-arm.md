@@ -3,7 +3,7 @@ title: codex-arm
 oneLiner: "Chạy một lượt Codex trên artifact đã xong, để một vendor khác đọc diff trước khi merge."
 group: gate
 order: 1
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/codex-arm/SKILL.md
 rented: false
 diagram: cross-vendor-arm
@@ -15,8 +15,7 @@ updated: 2026-09-04
 
 `codex-arm` là phần cơ chế gọi của cánh tay cross-vendor: lượt review bằng Codex mà Thomas, hoặc
 ở phạm vi ticket là chính Builder, chạy trên một artifact đã hoàn thành trước khi nó được merge.
-Nó bao gồm lệnh riêng theo runtime (`codex-companion.mjs` khi root là Claude, `codex exec` trần
-gọi thẳng trên Codex hay opencode), các bẫy về argv và quoting, và chỗ ghi lại phán quyết. Nó
+Nó bao gồm lệnh gọi (`codex-companion.mjs`, runtime plugin của Codex), các bẫy về argv và quoting, và chỗ ghi lại phán quyết. Nó
 không quyết định *khi nào* chạy. Nhịp đó, cùng với trần hai lượt, thuộc về `thomas.md` và
 `builder.md`. Skill này sở hữu phần cách làm, không phải phần thời điểm.
 <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
@@ -36,7 +35,6 @@ sản phẩm có.
 | Tình huống trước mặt bạn | Gọi cái nào |
 |---|---|
 | Diff của một ticket đã commit, root là Claude hoặc Builder đang tự chạy arm cho ticket của nó | `codex-arm` |
-| Runtime ở root là Codex, cần một lượt Claude thay vào | `codex-claude-arm` (skill đối xứng; cánh tay luôn gọi vendor *bên kia*) |
 | Một spec vừa xong, sắp cắt thành ticket | `codex-arm` ở `arm: spec`, do Thomas chạy từ base checkout |
 | Một slice đang khép lại | `codex-arm` ở `arm: slice`, tương tự như trên |
 | Cần chạy chính gate của Rin | Không phải skill này. Rin không tự chạy cánh tay từ bên trong lượt review của chính nó |
@@ -108,7 +106,7 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Mọi mục dư�
   test-database dùng chung mà mọi Builder đang chạy đều phụ thuộc vào đó. Đã sửa: giới hạn release
   trong đúng worktree này, hoặc không release gì cả.
 - **Reviewer chỉ đọc vẫn dời được HEAD người khác.** Một reviewer chỉ đọc nhưng có shell vẫn dịch được `HEAD` của agent khác bằng
-  `git switch`. Đã sửa, và điều này chịu lực cho `codex-claude-arm`: `claude -p` là một agent đầy
+  `git switch`. Đã sửa: reviewer là một agent đầy
   đủ, nên cả cánh tay ở phạm vi ticket cũng có detached worktree riêng.
 
 <!-- source: harness/.agents/memory/recurring-failure-modes.md -->
@@ -131,6 +129,5 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Mọi mục dư�
 Vòng khép kín của một Builder chạy `implement` → review → simplify → `codex-arm` (phạm vi ticket)
 → receipt `arm(ticket):` → handback, và bước cleanup của `/skills/dispatch-ticket` kiểm receipt
 đó trước khi gỡ worktree. Ở phạm vi spec và slice, Thomas chạy nó từ base checkout trước khi
-thả một `shaper` đang tạm dừng hoặc trước khi khép một slice. `codex-claude-arm` là bản đối xứng
-cho trường hợp root là Codex: cùng nhịp, ngược vendor. Không cái nào thay được
+thả một `shaper` đang tạm dừng hoặc trước khi khép một slice. Nó không thay được
 `/skills/review-with-rin`, vì đó mới là gate, còn đây là lượt chạy nuôi gate đó.

@@ -3,7 +3,7 @@ title: untangle
 oneLiner: "Cut boundaries into code that has none, one reviewable ticket at a time."
 group: brownfield
 order: 2
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/untangle/SKILL.md
 rented: false
 lang: en

@@ -1,18 +1,17 @@
 ---
 name: dispatch-ticket
-description: "Dispatch one claimed ticket as a visible Herdr pane — one Builder, one worktree, one branch, one pane. Use when launching a Builder, a Shaper or QA into a pane. Pair with dispatch-ticket-claude, dispatch-ticket-codex or dispatch-ticket-opencode for the launcher."
+description: "Dispatch one claimed ticket as a visible Herdr pane — one Builder, one worktree, one branch, one pane. Use when launching a Builder, a Shaper or QA into a pane. Pair with dispatch-ticket-claude for the launcher."
 ---
 
 # Dispatch a ticket — shared protocol
 
 Role contract: `.agents/roles/builder.md`. Runtime, model and effort per role:
 `.agents/orchestrator.md` (owner-editable; Thomas reads it at session start; edits take
-effect at the next dispatch). Runtime changes the executables. The roles, the worktree, the
-Herdr topology and the artifact contract stay identical across all three.
+effect at the next dispatch). Every role runs on Claude Code. The roles, the worktree, the
+Herdr topology and the artifact contract are fixed by this skill.
 
-**The runtime-specific launcher, pre-dispatch verification and measured runtime facts live in
-the companion skill**: `dispatch-ticket-claude`, `dispatch-ticket-codex` or
-`dispatch-ticket-opencode`. Read both this skill and the runtime-specific one.
+**The launcher, pre-dispatch verification and measured runtime facts live in the companion
+skill**: `dispatch-ticket-claude`. Read both this skill and that one.
 
 ## The sequence
 
@@ -55,8 +54,7 @@ turns an old pane into an empty pane, not an isolated ticket.
 
 ## Inputs and resolution
 
-- runtime/model/effort/advisor from `.agents/orchestrator.md` (the default source)
-- `runtime=claude|codex|opencode` — an explicit per-dispatch override, never written back
+- model/effort/advisor from `.agents/orchestrator.md` (the source; the runtime is Claude Code)
 - `visibility=herdr|headless` (default `herdr`)
 - workspace label, ticket ID, branch, base, worktree path, the ticket body, owner intent,
   acceptance criteria, validation commands, expected artifact
@@ -65,27 +63,22 @@ turns an old pane into an empty pane, not an isolated ticket.
   required of a QA dispatch: a field the dispatcher must fill before the pane launches cannot
   be skipped by being busy.
 
-**An override re-resolves the WHOLE row, not just the Runtime cell (AST-030).** The role uses
-the `orchestrator.md` row that already targets that runtime — runtime, model and effort
-together. Where no row targets the overridden runtime, stop and ask the owner.
-
-**Resolution order:** the active row → if that runtime is genuinely unavailable (CLI
-missing, auth failed, quota exhausted), the role's Fallback row, with the degradation
-REPORTED to the owner. Degradation is per-session and stays out of the file.
+**Resolution order:** the active row → if Claude Code is genuinely unavailable (CLI missing,
+auth failed, quota exhausted), the role's Fallback row, with the degradation REPORTED to the
+owner. Degradation is per-session and stays out of the file.
 
 **A row reading `<set-me>` is UNDECIDED, and undecided is a STOP at dispatch, not before.**
-The owner picks a runtime per project and per situation, so a table with a runtime left open
+The owner picks a model per project and per situation, so a table with a model left open
 is a normal resting state — the doctor says so and moves on. But resolving a role ONTO that
-runtime means using a model id nobody has chosen: stop, name the role and the row, and ask.
+row means using a model id nobody has chosen: stop, name the role and the row, and ask.
 Never substitute another role's model to keep the dispatch moving.
 
 **A missing row is an answer, not a gap to fill.** An absent fallback means that role has no
 fallback, so an unavailable active runtime is a STOP. Where `orchestrator.md` itself is
 missing or a row is ambiguous, Thomas asks the owner for the model and scaffolds the file
-before dispatching — inferring a runtime from installed binaries or from the task text
-produces a confident wrong answer.
+before dispatching — inferring a model from the task text produces a confident wrong answer.
 
-**Headless implementation is not supported, on any runtime.** Every Builder runs in a visible
+**Headless implementation is not supported.** Every Builder runs in a visible
 Herdr pane: a topology nobody can observe is trusted on the dispatcher's word, which is the
 thing panes exist to remove. A `visibility=headless` request is a STOP — say it is unsupported
 and dispatch normally, or take it to the owner (AST-070).
@@ -113,7 +106,8 @@ command that writes to disk — the arm already does, one detached worktree per 
 **On a Claude root the per-turn watcher is the mod's** (`dispatch-ticket-claude`): the pane
 reports its own turn end. This workspace watchdog is still yours on every runtime, because it
 covers the one thing a mod cannot report — a pane whose process died. It is silent about a
-Claude pane the mod recorded; its alerts are for Codex/OpenCode panes, once per episode.
+Claude pane the mod recorded; its alerts are for panes the mod did not record (a QA gate pane,
+a junior pane), once per episode.
 
 ```bash
 # Scoped to THIS workspace, and by the same identity test the watchdog uses on itself: a bare
@@ -144,8 +138,7 @@ watcher and the watchdog cover different halves; neither replaces the other.
 
 **On a Claude root the mod refuses the brief while any payload file is uncommitted**, and
 names the files; a brief line `Uncommitted-payload: <why>` lets a deliberate one through. It
-fails open on a git error, so the check below is still worth one run per session. On Codex and
-OpenCode the check below is the only one.
+fails open on a git error, so the check below is still worth one run per session.
 
 **A git worktree contains tracked content and nothing else.** A harness whose files are
 untracked — gitignored, or merely staged-but-uncommitted — is invisible inside every Builder
@@ -202,8 +195,8 @@ herdr workspace list
 leave `.git/worktrees/<name>/` registered; `add` then refuses — and a redirected `>/dev/null`
 throws away the one line that says so, leaving a dispatch that looks launched (AST-096). On a
 Claude root `scripts/hook-git-guard.py` runs the prune for you and refuses a relative path or a
-redirected add; it is a `PreToolUse` hook and does not exist on Codex or opencode, so the two
-rules above are the contract on every runtime.
+redirected add; it is a `PreToolUse` hook that reads a Claude tool name, so the two
+rules above are the contract for a pane that does not run it (a junior).
 
 Resolve the project workspace from `herdr workspace list` by matching the `workspace-label`
 field in `orchestrator.md`.
@@ -284,7 +277,7 @@ Print the resolved dispatch before launching:
 
 ```text
 role=builder
-runtime=<claude|codex|opencode from orchestrator.md (or explicit override)>
+runtime=claude
 topology=herdr
 executable=<exact launcher command from the runtime-specific dispatch skill>
 ticket=<ticket id>            worktree=<absolute path>
@@ -293,12 +286,10 @@ workspace_managed_by_root=<true|false inherited from the durable record>
 tab=<returned tab id>         pane=<returned pane id>
 ```
 
-Then launch using the command from the runtime-specific dispatch skill
-(`dispatch-ticket-claude`, `dispatch-ticket-codex` or `dispatch-ticket-opencode`). **Which herdr
+Then launch using the command from the dispatch skill (`dispatch-ticket-claude`). **Which herdr
 form that skill uses is its own answer, not this file's** — `herdr agent start` registers the
 name in the same call, and a launch it cannot encode goes through `herdr pane run` plus
-`herdr agent rename`. Codex is the second case: its identity arrives as multi-line
-`developer_instructions`, and `agent start` refuses any argument containing a newline with
+`herdr agent rename`; `agent start` refuses any argument containing a newline with
 `invalid_agent_argument` (measured on herdr 0.9.1).
 
 **Either way the pane ends up with a registered agent name.** A pane launched with `pane run`
@@ -338,12 +329,10 @@ Claude Code's built-in both answer to, so one of the two reviews never runs eith
 
 So the brief carries the flow as one line of qualified Skill names, in this order, and a step
 that cannot apply is named in the handback with its reason (`TDD: n/a — <why>`). Both reviews
-are required: Matt's checks standards and spec, the built-in hunts bugs. On Codex and OpenCode
-the two built-ins (steps 3 and 4) are SKIPPED the way `simplify` already is.
+are required: Matt's checks standards and spec, the built-in hunts bugs.
 
-**On a Claude root the mod records each Skill call the Builder makes and names the missing
-steps in the merge result** (`dispatch-ticket-claude`). On Codex and OpenCode the handback is
-the only record.
+**The mod records each Skill call the Builder makes and names the missing
+steps in the merge result** (`dispatch-ticket-claude`).
 
 ```text
 /mattpocock-skills:implement TICKET-123
@@ -396,11 +385,11 @@ change yourself and state the provenance on the marker.
 
 ### Submitting it
 
-**Who carries the brief depends on the root.** On a Claude root the mod carries it over
-`SendMessage` (`dispatch-ticket-claude`) for a Builder, Shaper or QA. The one exception is a QA
-gate pane: `GATE.md` delivers over `herdr agent prompt`, because a peer message to a
-session running under permissions is held for approval while the sender sees success. On
-**Codex and OpenCode** the brief goes over `herdr agent prompt`, below.
+**Who carries the brief depends on the pane.** The mod carries it over `SendMessage`
+(`dispatch-ticket-claude`) for a Builder, Shaper or QA. The exception is a pane without the mod:
+a QA gate pane, where `GATE.md` delivers over `herdr agent prompt` because a peer message to a
+session running under permissions is held for approval while the sender sees success, and a
+junior pane (`dispatch-junior`). Those take the brief over `herdr agent prompt`, below.
 
 ```bash
 herdr agent prompt <pane-id> "<brief>"
@@ -421,7 +410,7 @@ multi-line, so this is the default case.
 herdr agent prompt <agent-name> "<multi-line brief>"
 ```
 
-Measured downstream 2026-09-20 on both runtimes with five-line briefs carrying backticks, `$`
+Measured downstream 2026-09-20 with five-line briefs carrying backticks, `$`
 and quotes: the turn ran and answered, with no separate Enter. It addresses the pane **by
 name**, which is the other half of why the launch registers one — an unnamed pane cannot be
 prompted this way at all.
@@ -439,7 +428,7 @@ herdr pane send-keys <pane-id> esc esc      # clears it; ctrl-c and ctrl-u were 
 ```
 
 The measurement was on a Claude Code composer, whose input line starts `❯`; the fusion is
-herdr appending, so treat it as runtime-independent until a Codex pane is shown otherwise.
+herdr appending, so treat it as runtime-independent, a junior pane's composer included.
 
 **`ctx %` in the pane's visible statusline is the positive delivery receipt:**
 `herdr pane read <pane-id> --source visible | grep -oE 'ctx [0-9]+%'`. A brief that moved no
@@ -465,9 +454,10 @@ send Enter again — never a second `agent prompt` on top of it, which fuses the
 
 ### Start the watcher — mandatory, immediately after submit
 
-**On a Claude root this section does not apply.** The `astragentic-dispatch` mod reports every
-turn end from inside the pane, so there is nothing to arm and nothing to re-arm.
-`dispatch-ticket-claude` has what replaces it. What follows is the Codex and OpenCode protocol.
+**For a pane the mod registered this section does not apply.** The `astragentic-dispatch` mod
+reports every turn end from inside the pane, so there is nothing to arm and nothing to re-arm.
+`dispatch-ticket-claude` has what replaces it. What follows is the protocol for a pane without
+the mod: a QA gate pane and a junior pane (`dispatch-junior`).
 
 **Every dispatched pane gets a watcher, from the script below.**
 
@@ -480,7 +470,7 @@ skipped, because it comes right after a long absorbing task (AST-124).
 **Sending work and arming the watch are one action, not two adjacent ones.** If you have typed
 a message to a pane and not armed a watcher, the dispatch is not finished.
 
-**Codex and OpenCode run the watcher script directly** and branch on `$?`, as below. A bare `herdr agent wait` is not a
+**A pane without the mod runs the watcher script directly** and branches on `$?`, as below. A bare `herdr agent wait` is not a
 substitute; it goes deaf (AST-107).
 
 ```bash
@@ -495,7 +485,7 @@ a Builder already seen working with a `start_max_s` long enough to cover the sui
 while it is fast, so the first arm keeps `120`.
 
 Run this immediately after submitting the brief — the script's own start guard is the
-confirm-`working` step. For Codex/OpenCode it is the ONLY sanctioned monitor: it carries
+confirm-`working` step. For such a pane it is the ONLY sanctioned monitor: it carries
 caffeinate (the machine cannot sleep and kill the watch), a start guard, debounce, a
 3600-second cap, and wait slicing so a deaf `herdr agent wait` cannot stall it (AST-107).
 The script is the sanctioned monitor because hand-rolled loops, `herdr agent wait --until
@@ -537,14 +527,13 @@ verification.
 
 **`--wait` collapses submit, start-guard and settle into one call, and it is trustworthy
 ONLY on a pane whose turn you just opened.** Herdr does not track turns, and `--until idle`
-is satisfied by whatever the runtime's rules call idle — an unsent composer on Claude, and
-nothing at all on opencode: a signal incapable of failing (AST-032).
+is satisfied by whatever the runtime's rules call idle — an unsent composer on Claude,
+a signal incapable of failing (AST-032).
 
 **So for any pane you did not prompt in that same call** — watching another role's pane,
 resuming after a break, waiting on an artifact — the start guard stays MANDATORY.
-**Claude runtime**: the pane's own `TURN-END` (see `dispatch-ticket-claude`).
-**Codex/OpenCode**: use `<repo-root>/scripts/herdr-watch-terminal.sh`, which observes `working` for THIS turn before blessing anything, and `working` is rule-backed
-on all three runtimes.
+**A mod pane**: its own `TURN-END` (see `dispatch-ticket-claude`).
+**A QA gate or junior pane**: use `<repo-root>/scripts/herdr-watch-terminal.sh`, which observes `working` for THIS turn before blessing anything.
 
 On `agent_prompt_stalled` or a blocking modal, inspect first, resolve the modal, then use
 the low-level submission fallback (`send-text` + `send-keys` can drop input, so it is a last
@@ -565,8 +554,8 @@ is relied on.
 
 **`herdr integration install <runtime>` is a WRITE, not a status probe.** Run once downstream
 while surveying versions, it installed a `SessionStart` hook that made every new Codex session
-open on a blocking *"1 hook needs review"* modal — which would have stalled every Codex dispatch
-on that machine. Read versions with `herdr --version` and `--help`; anything named `install`,
+open on a blocking *"1 hook needs review"* modal — which would have stalled every dispatch to
+that runtime on that machine. Read versions with `herdr --version` and `--help`; anything named `install`,
 `setup` or `integration` changes machine state the whole workspace shares, and belongs to the
 owner, deliberately, not to a dispatcher checking what exists.
 
@@ -604,9 +593,9 @@ cwd, branch, worktree, process or lifecycle cleanup.
 
 ## 10. Write `.astraler/state/dispatch-record.json`
 
-**On a Claude root the pane writes its own entry at session start**, from herdr's environment,
+**The pane writes its own entry at session start**, from herdr's environment,
 and you read it back (`dispatch-ticket-claude`); an entry you write by hand is overwritten by
-the pane's. On Codex and OpenCode you write it, as below.
+the pane's. A pane without the mod (a QA gate pane) has no entry of its own, and you write it, as below.
 
 **The durable half of a dispatch.** `thomas.md` names this record beside the tracker and the
 frontier and nothing defined it: no path, no shape, no owner. Four rules read it and could
@@ -648,7 +637,7 @@ it names machine-local pane and tab ids, so it is not committed and a project th
 second block belongs to the `astragentic-dispatch` mod. The pane writes `tab_id`, `pane_id`
 and `session_id` at session start, from herdr's environment, and the turn fields as turns
 happen. **Cleanup closes the tab named by `tab_id`, never one looked up by label or
-remembered.** A guessed id closed a working Builder in production. On Codex and OpenCode,
+remembered.** A guessed id closed a working Builder in production. For a pane without the mod,
 Thomas writes `tab_id` and `pane_id` from the create output, and the turn fields stay absent.
 
 **Written at step 6 of the claim**, before the brief is submitted — a dispatch the record does

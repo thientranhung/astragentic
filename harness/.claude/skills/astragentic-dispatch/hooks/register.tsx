@@ -1400,8 +1400,8 @@ export const register: Register = on => {
         (typeof entry?.branch === 'string' && entry.branch.length > 0 && words.includes(entry.branch))
       if (!isNamed) continue
       if (isPr) await patchRecord($, root, key, { merged_at: await $.clock.now() })
-      // Only a pane the mod itself registered (it has a session_id) is judged: a Codex or
-      // OpenCode Builder records nothing here and keeps the marker script as its evidence.
+      // Only a pane the mod itself registered (it has a session_id) is judged: a pane without
+      // the mod (a junior pane) records nothing here and keeps the marker script as its evidence.
       if (entry?.role === 'builder' && entry.session_id) {
         const gaps = flowGaps(entry)
         if (gaps.length > 0) {

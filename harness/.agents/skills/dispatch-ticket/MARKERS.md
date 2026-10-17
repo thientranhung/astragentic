@@ -73,7 +73,7 @@ Vendor: <vendor>   Tests: RAN|NOT RUN <prose>   Pass: <n>
 Unreviewed-delta: <from>..<to> — <n> lines, <m> files: <what changed, why it is safe>
 ```
 
-**At ticket scope this record is the arm's receipt** — `codex-arm` and `codex-claude-arm` point
+**At ticket scope this record is the arm's receipt** — `codex-arm` points
 here rather than redefine it.
 
 **`Tests:` attests whether a GATE RUN stands behind this SHA, not whether the arm itself ran

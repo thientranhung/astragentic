@@ -3,7 +3,7 @@ title: linear-issue-tracker
 oneLiner: "Drive Linear as the harness tracker, and check the tier's issue ceiling before building a pipeline."
 group: adapter
 order: 6
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/linear-issue-tracker/SKILL.md
 rented: false
 lang: en

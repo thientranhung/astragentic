@@ -4,7 +4,7 @@ description: "Four layers: the runtime that runs the agent, the harness holding 
 ---
 
 Astragentic is not a runtime and it is not a method. It sits between the two: underneath it,
-Claude Code or Codex or OpenCode running a model; above it, your real repository; and the method
+Claude Code running a model; above it, your real repository; and the method
 comes from `mattpocock-skills`. What Astragentic writes itself is the coordination, and only
 that.
 
@@ -16,20 +16,20 @@ must never answer on your behalf.
 
 ## runtime
 
-Three runtimes, and which runtime the agent in each role runs on is a row in
+One runtime, and the model and effort each role runs at is a row in
 `.agents/orchestrator.md`, your own file, never overwritten by an upgrade. Claude Code is the
-root runtime: agents in all five roles run here. Codex and OpenCode are optional, and they are
-present for specific reasons rather than to make a list longer.
+runtime: agents in every role run here. A Builder may hand the typing to a junior pane on another
+runtime (Grok first), set per project in the same file; review, simplify and the handback stay the
+Builder's.
 
-Codex is there to be a witness. The cross-vendor arm needs a model from a different vendor to
-read the diff back, so with one runtime that arm does not exist. OpenCode is a third option for
-the Builder role when you want it.
+Codex is not a runtime for any role. It is there to be a witness: the cross-vendor arm needs a
+model from a different vendor to read the diff back, so without it that arm does not exist.
 
-**Trade-off.** Standing on three runtimes makes enforcement uneven. `hook-git-guard.py` is registered
-on Claude Code through `.claude/settings.json` and on Codex through `.codex/hooks.json`. An
-OpenCode Builder has no equivalent hook, and either Claude or Codex may be running with hooks
-disabled or untrusted. So the cleanup-ordering rule has to live in the contract first and in the
-hook second. The hook comes after, not a fence.
+**Trade-off.** One runtime keeps enforcement even for every role, but a junior pane on another
+runtime sits outside it. The dispatch mod and `hook-git-guard.py` read a Claude tool name, so a
+junior's boundaries are its own to keep, and the Builder checks the log. Claude itself may also be
+running with hooks disabled. So the cleanup-ordering rule has to live in the contract first and in
+the hook second. The hook comes after, not a fence.
 
 ## harness
 

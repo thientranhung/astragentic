@@ -50,16 +50,16 @@ fi
 # in one copy but not the other is invisible to the runtime that loads the other — measured
 # three times across two skills, each found in the field rather than at staging (AST-093).
 SKILL_SYNC_FAIL=0
-# ALLOWLIST ONE PAIR, AND ONLY WHILE IT ACTUALLY DIVERGES. `codex-arm` diverges on purpose:
-# the .claude copy drops the `codex exec review` fallback, which exists only for a non-Claude
-# root. A second pair was once allowlisted and diffed zero lines — a dead exemption that
-# masks any future drift in exactly the pair it names. An allowlist entry that no longer
-# describes a real difference is worse than no allowlist, so an unused one now fails here.
-# EXACT FILE PAIRS, not skill directories. Exempting a directory skipped every file under
-# it, so an auxiliary runtime file could sit missing or drifted in one tree indefinitely while
-# the two SKILL.md files stayed legitimately different — the exemption covering more than the
-# difference it was granted for.
-DIVERGENT_ALLOWLIST="codex-arm/SKILL.md"
+# ALLOWLIST A PAIR ONLY WHILE IT ACTUALLY DIVERGES. No pair diverges today: `codex-arm`, the
+# last one, is now byte-identical in both trees. A dead exemption masks any future drift in
+# exactly the pair it names, so an entry that no longer describes a real difference is worse
+# than no allowlist, and an unused one fails the validation loop below.
+# To add one: name EXACT FILE PAIRS as space-separated `<skill>/<file>` entries
+# (e.g. DIVERGENT_ALLOWLIST="my-skill/SKILL.md other-skill/WATCHING.md"), never a skill
+# directory. Exempting a directory skipped every file under it, so an auxiliary runtime file
+# could sit missing or drifted in one tree indefinitely while the SKILL.md files stayed
+# legitimately different — the exemption covering more than the difference it was granted for.
+DIVERGENT_ALLOWLIST=""
 # EVERY FILE, not just SKILL.md. WATCHING.md, CLEANUP.md and project-status-sync.sh are all
 # loaded at runtime and none of them was compared.
 for agents_file in "$PAYLOAD/.agents/skills"/*/*; do
@@ -241,16 +241,6 @@ cleanup() { [ ! -d "$STAGING_DIR" ] || rm -rf "$STAGING_DIR"; }
 trap cleanup EXIT
 
 cp -R "$PAYLOAD" "$STAGING_DIR/harness"
-# Ship only what the package considers itself. `.opencode/.gitignore` names node_modules,
-# package.json, package-lock.json and bun.lock as local residue — this package does not track
-# them, and `cp -R` shipped them anyway: 3,645 of 3,712 payload files and 61 MB PER RELEASE.
-# Measured on one adapted project: 2.3 GB under `.astraler/`. It stayed out of that project's
-# git only because its .gitignore happened to carry `node_modules/`; a project without that
-# line commits 61 MB per upgrade into a history ADAPT-HARNESS itself warns cannot be trimmed
-# without a rewrite. A packager shipping what its own ignore rules exclude is the defect.
-while IFS= read -r RESIDUE; do
-  [ -n "$RESIDUE" ] && rm -rf "$STAGING_DIR/harness/.opencode/$RESIDUE"
-done < "$PAYLOAD/.opencode/.gitignore"
 # The general form of the same rule: anything the PACKAGE's own git ignores inside the payload
 # is local residue, not payload. Measured on 2.20.2: the engine writes
 # `.claude-plugin/types/` beside the dispatch mod when a session loads it (with its own
@@ -373,10 +363,8 @@ printf '%s\n' "$PROJECT_NAME" > "$PROJECT_NAME_FILE"
 #
 # What it will NOT do, and why:
 #   - OWNER FILES are never overwritten. `.agents/orchestrator.md` carries the owner's runtime
-#     and model rows (AST-041); `.claude/settings.json` carries owner-tuned Claude hooks; and
-#     `.codex/profiles/` carries machine-profile templates. Written only when absent.
-#     `.codex/hooks.json` and `.codex/agents/` are payload: they contain no model choice and
-#     must receive safety fixes on upgrade.
+#     and model rows (AST-041), and `.claude/settings.json` carries owner-tuned Claude hooks.
+#     Written only when absent.
 #   - A payload path the PROJECT has diverged on is reported, never overwritten. A project can
 #     author a file at a path the payload only starts shipping later, and overwriting it is
 #     silent data loss (ADAPT-HARNESS §4).
@@ -390,10 +378,8 @@ if [ "$APPLY" -eq 1 ]; then
   fi
   echo
 
-  # Scaffold: written once, never overwritten. `.codex/profiles/` is named as scaffold by
-  # ADAPT-HARNESS alongside orchestrator.md and was surviving only because arbitration
-  # happened to land on kept/CONFLICT — incidental, not declared.
-  OWNER_PATHS=".agents/orchestrator.md .claude/settings.json .codex/profiles"
+  # Scaffold: written once, never overwritten.
+  OWNER_PATHS=".agents/orchestrator.md .claude/settings.json"
   # The arbiter for "did the project change this, or did the package?" is the release the
   # project last received. `state/applied-version` records it — but a project may predate
   # project adapted before that has a full harness and no marker. Fall back to the newest
@@ -431,7 +417,7 @@ if [ "$APPLY" -eq 1 ]; then
 
     # owner files: only when absent
     OWNED=0
-    # Exact match OR directory prefix: an entry naming a directory (.codex/profiles) has to
+    # Exact match OR directory prefix: an entry naming a directory has to
     # own every file under it, or the scaffold rule protects the name and not the contents.
     for o in $OWNER_PATHS; do
       case "$REL" in "$o"|"$o"/*) OWNED=1 ;; esac
@@ -639,12 +625,10 @@ PY
       [ -e "$RELEASE_DIR/harness/$OLDREL" ] && continue      # still shipped
       [ -e "$TARGET/$OLDREL" ] || continue                    # already gone from the project
       # OWNER PATHS ARE EXCLUDED BECAUSE A PROJECT KEEPS ITS OWN — but that reasoning holds
-      # only while the path still means something. 2.12.0 renamed every
-      # `.codex/profiles/<role>.config.toml` to `<role>.md`, and this exclusion is precisely
-      # the mechanism that would have carried the dead name into every adapted repo without a
-      # word: the file is owner-kept, so the loop above says nothing, and the fossil report
-      # skipped it by name. The orchestrator and settings.json stay excluded — neither has
-      # ever been renamed, and both are edited by hand every release.
+      # only while the path still means something. A retired owner-kept directory would carry
+      # its dead name into every adapted repo without a word, so only the two files that have
+      # never been renamed stay excluded: the orchestrator and settings.json, both edited by
+      # hand every release.
       case "$OLDREL" in .agents/orchestrator.md|.claude/settings.json) continue ;; esac
       GONE="$GONE  $OLDREL"$'\n'; N_GONE=$((N_GONE+1))
     done < <(for _d in $BASELINE_DIRS; do (cd "$_d" && find . -type f ! -name '.DS_Store' | sed 's|^\./||'); done | sort -u)
@@ -655,15 +639,6 @@ PY
     echo "still in the project. Usually a rename; check for the new name before removing."
     printf '%s' "$GONE"
     echo "  (not removed automatically: a project may have adopted one of these on purpose)"
-    case "$GONE" in
-      *.codex/profiles/*.config.toml*)
-        echo
-        echo "  READ THIS ONE BEFORE DELETING: a profile TOML carried YOUR model and effort."
-        echo "  Since $VERSION both live only in the codex row of .agents/orchestrator.md, and"
-        echo "  the role's instructions live in .codex/profiles/<role>.md. Move your values into"
-        echo "  the row first, then delete the TOML — and the copy under \$CODEX_HOME with it,"
-        echo "  which no launcher reads any more." ;;
-    esac
   fi
 
   echo
@@ -764,7 +739,7 @@ cat <<EOF
 
 No project files were changed. The agent-driven install/upgrade is ready.
 
-Give your root Claude Code or Codex agent this instruction:
+Give your root Claude Code agent this instruction:
 
   Read .astraler/releases/$VERSION/ADAPT-HARNESS.md completely and execute it.
 

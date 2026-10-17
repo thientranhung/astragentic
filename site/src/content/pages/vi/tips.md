@@ -472,7 +472,7 @@ Gọi nó là một dòng trong prompt:
 Ba tính chất:
 
 - **Nó là ngữ cảnh, không phải máy móc.** File nằm trong repo, nên bất kỳ agent nào mở repo cũng
-  đọc được — Claude Code, Codex, OpenCode, không cần adapter nào. Không có tiến trình phải sống,
+  đọc được — không cần adapter nào. Không có tiến trình phải sống,
   không có bản nâng cấp nào làm hỏng nó.
 - **Chi phí token là ràng buộc thiết kế.** Một framework nạp cả bộ vào context. Ở đây một capability
   là một file, nên bạn trả đúng phần bạn cần: một session bình thường là một role cộng một tới hai

@@ -14,8 +14,8 @@ yours.
 | wiring a project to a tracker, or moving between two | `.agents/tracker-contract.md` | the five things the pipeline needs of any tracker |
 | session start | `docs/agents/triage-labels.md` | label vocabulary |
 | session start | `reconcile-tracker` | tracker measured against git |
-| before each dispatch | `dispatch-ticket` + `dispatch-ticket-<builder-runtime>` | dispatch protocol |
-| before each merge | `.agents/roles/thomas-<builder-runtime>.md` | `Pass:` line validation |
+| before each dispatch | `dispatch-ticket` + `dispatch-ticket-claude` | dispatch protocol |
+| before each merge | `.agents/roles/thomas-claude.md` | `Pass:` line validation |
 | you need a rule | `.agents/memory/RULES.md` | every entry's rule, no narrative — a fifth the size |
 | you need a rule's EVIDENCE | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only; `INDEX.md` finds the id |
 
@@ -98,10 +98,10 @@ assignee is a live claim with a Builder behind it.
 **opens with `/mattpocock-skills:grill-with-docs`** — a brief that merely describes the work
 gets prose back. Give it the whole effort at once; it must not be compacted.
 
-**Dispatch** a claimed ticket through `dispatch-ticket` and `dispatch-ticket-<runtime>`: one
+**Dispatch** a claimed ticket through `dispatch-ticket` and `dispatch-ticket-claude`: one
 ticket, one Builder, one pane, one worktree; several run at once on the frontier.
 
-**Steer** the Builder directly — Claude via SendMessage, Codex/OpenCode via Herdr pane. A pane's status is a bell; the verdict comes from the diff and the tests.
+**Steer** the Builder directly via SendMessage. A pane's status is a bell; the verdict comes from the diff and the tests. A junior pane (`dispatch-junior`) is the Builder's: never brief it; its commits arrive in the handback, trailered `Implemented-by:`.
 
 ## Review
 
@@ -138,7 +138,7 @@ The arm reads against the project's standard; the fan-out attacks assumptions an
 
 ## The cross-vendor arm
 
-Invocation is `codex-arm` or `codex-claude-arm`; the firer records the vendor.
+Invocation is `codex-arm`; the firer records the vendor.
 
 | | When | Over what | Fired by |
 |---|---|---|---|
@@ -191,8 +191,7 @@ and what each alert asks of you: `dispatch-ticket/WATCHING.md`.
 **Silence is not health.** Pane alerts need two polls and a registered name, so count panes yourself at every merge, handback and report. **The watchdog lock is a hint, not a census: sweep by process** (`WATCHING.md`).
 
 **Release a worktree's resources before every removal** — processes, then the project's plug
-(`CLEANUP.md`). On a Claude root the mod runs `scripts/release-worktree-resources.sh` at
-`git worktree remove`; on every other runtime run it by hand.
+(`CLEANUP.md`). The mod runs `scripts/release-worktree-resources.sh` at `git worktree remove`.
 
 ## Answers carry a source
 

@@ -73,16 +73,11 @@ def note(line):
 
 
 def project_dir(payload):
-    """Where the contract lives, resolved without assuming one runtime.
-
-    `CLAUDE_PROJECT_DIR` is set by Claude Code and by nothing else. Codex sets its own, and
-    the repository root is what both mean, so ask git before falling back to the payload.
-    2.7.13 shipped a guard that only Claude could reach because its registration named a
-    Claude-only file; naming a Claude-only variable is the same defect one layer down."""
-    for var in ("CLAUDE_PROJECT_DIR", "CODEX_PROJECT_DIR"):
-        val = os.environ.get(var)
-        if val:
-            return val
+    """Where the contract lives. `CLAUDE_PROJECT_DIR` is set by Claude Code; with it unset (a
+    hook run by hand, a test), ask git before falling back to the payload."""
+    val = os.environ.get("CLAUDE_PROJECT_DIR")
+    if val:
+        return val
     try:
         out = subprocess.run(
             ["git", "rev-parse", "--show-toplevel"],

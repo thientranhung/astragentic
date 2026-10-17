@@ -8,11 +8,9 @@ hero:
 explain:
   runtimes:
     commands:
-      label: "Start an agent over the CLI on three runtimes"
+      label: "Start an agent over the CLI"
       lines:
         - "claude   --dangerously-skip-permissions --agent builder --model <model> --effort <low|medium|high|xhigh|max>"
-        - "codex    -m <model> -c model_reasoning_effort=\"<effort>\" -c developer_instructions=\"$(cat .codex/profiles/builder.md)\""
-        - "opencode --agent builder -m <provider>/<model>   # no effort flag"
 
   customize:
     eyebrow: "Customise"
@@ -56,7 +54,7 @@ explain:
       - "A ticket is an issue on the tracker, sliced small enough for one Builder to finish in one session. It carries a stable id, a status, an assignee, and blocking edges to the work that must land first."
       - "Thomas dispatches with the `dispatch-ticket` skill: claim on the tracker, create the branch and worktree, open a herdr pane, launch the agent for the role, send the brief, set a watcher. The chain ticket → assignee → pane → worktree → branch → PR is one to one, so many Builders run in parallel without stepping on each other."
       - "Between Claude Code sessions the main channel is built-in cross-session messaging. Every session has a name; Thomas looks it up with ListAgents and sends straight to it. On the receiving side the message appears as the preview line `› Message from @thomas: …`, expands with ctrl+o, and the reply travels back to the session that sent it."
-      - "herdr is the visible plane and the fallback: one named pane per agent, with a watcher reporting working, blocked, idle. Thomas reads a pane with `herdr agent read` when a session goes quiet, and drives Builders on Codex or OpenCode through the herdr CLI."
+      - "herdr is the visible plane and the fallback: one named pane per agent, with a watcher reporting working, blocked, idle. Thomas reads a pane with `herdr agent read` when a session goes quiet, and prompts a junior pane through the herdr CLI."
     bullets:
       - "**Technical questions**: Thomas answers them for you, from the contract, the spec and the tracker."
       - "**Design decisions**: these come up to you through `to-questionnaire`, as a question you can answer."
@@ -65,7 +63,7 @@ explain:
     eyebrow: "AI outsourcing team"
     headline: "What each agent does."
     paragraphs:
-      - "Every member of the team is an agent: a **Claude Code**, **Codex** or **OpenCode** session opened from the command line with a fixed role. It takes work, hands back the result when it is done, and can be cloned: several Builders building at once, several QAs checking at once, like a real team."
+      - "Every member of the team is an agent: a **Claude Code** session opened from the command line with a fixed role. It takes work, hands back the result when it is done, and can be cloned: several Builders building at once, several QAs checking at once, like a real team."
       - "Each role has a name of its own: Thomas, Shaper, Builder, Rin, QA. The name keeps the agent from drifting out of its role across a long context, and it is the address for sending work, reading a pane, and attaching the right skills."
     figureNote: "Thomas runs the whole team: takes your request, brings in the Shaper when a spec is needed, dispatches tickets to Builders, calls Rin’s gate at every milestone and QA’s walk before a merge, then reports back to you. Every arrow in the picture is one exchange there and back."
     models:
@@ -89,7 +87,7 @@ explain:
         title: "Builder"
         tag: "building"
         session: "One session per ticket, in its own worktree, the only writer there."
-        body: "Implements, reviews the code on two axes, simplifies, then takes the cross review pass where Codex re-reads the diff. It commits at every boundary, not only at handback."
+        body: "Implements, reviews the code on two axes, simplifies, then takes the cross review pass where Codex re-reads the diff. It may hand the typing to a junior pane. It commits at every boundary, not only at handback."
         href: "/roles/builder/"
       - id: rin
         title: "Rin"
@@ -171,7 +169,7 @@ shots:
       webm: /shots/dispatch-en.webm
       poster: /shots/dispatch-en.jpg
   herdr:
-    caption: "A herdr workspace for one project: every agent has a named pane with a detected state, you click to read any of them, and Thomas reads and prompts through the CLI, including a Builder running Codex."
+    caption: "A herdr workspace for one project: every agent has a named pane with a detected state, you click to read any of them, and Thomas reads and prompts through the CLI."
     video:
       mp4: /shots/herdr-en.mp4
       webm: /shots/herdr-en.webm
@@ -204,13 +202,13 @@ features:
     href: /structure/#coordination
   - id: roles
     title: "A team with names, roles and contracts."
-    body: "Thomas represents you, the Shaper shapes, the Builder builds, Rin holds the gate, QA accepts. Each role carries its own contract and system context, so responsibility is clear and nobody does someone else's job. Claude Code, Codex and OpenCode all support agent profiles at this level."
+    body: "Thomas represents you, the Shaper shapes, the Builder builds, Rin holds the gate, QA accepts. Each role carries its own contract and system context, so responsibility is clear and nobody does someone else's job."
     diagram: five-roles
     crop: [shaper, builder]
     href: /roles/thomas/
   - id: runtime
-    title: "One process, several runtimes."
-    body: "Claude Code is the required base; Codex and OpenCode come in when you want a second vendor or another model. Which role runs on which runtime is declared in orchestrator.md; changing the runtime does not change the process."
+    title: "One runtime, a second vendor to read it back."
+    body: "Every role runs on Claude Code. Codex comes in when you want a second vendor to re-read the diff, and a Builder may hand the typing to a junior pane on another runtime. Model and effort per role are declared in orchestrator.md."
     diagram: structure
     crop: [runtime_claude, runtime_codex]
     href: /tech-stack/#claude-code
@@ -270,7 +268,7 @@ adopt:
       href: "https://docs.anthropic.com/en/docs/claude-code"
     - name: "Codex CLI"
       tag: "optional"
-      role: "Second vendor for the cross review and a fallback runtime. Without **Codex** the team runs single-provider."
+      role: "Second vendor for the cross review. Without **Codex** the team runs single-provider."
       href: "https://github.com/openai/codex"
     - name: "Git ≥ 2.5 with worktree"
       tag: "required"

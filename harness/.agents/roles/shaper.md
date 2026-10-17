@@ -27,7 +27,7 @@ and one session is one agent.
 |---|---|---|
 | Align | `mattpocock-skills:grill-with-docs` | the question frontier is empty and every answer carries a source |
 | Spec | `mattpocock-skills:to-spec` | the spec states what is being built and how it will be known to work |
-| Arm | `codex-arm` (`arm: spec`; `codex-claude-arm` on a Codex root) | you fired the arm over the finalized spec, its findings are folded and the spec is committed |
+| Arm | `codex-arm` (`arm: spec`) | you fired the arm over the finalized spec, its findings are folded and the spec is committed |
 | Test design | `test-design` | `docs/qa/plan-<slug>.md` names every P0 journey, endpoint and job with a case |
 | Tickets | `mattpocock-skills:to-tickets` | every ticket is independently buildable and its blocking edges are set |
 

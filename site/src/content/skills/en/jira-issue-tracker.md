@@ -3,7 +3,7 @@ title: jira-issue-tracker
 oneLiner: "Drive Jira as the harness tracker, where a status is a numbered transition you read before every write."
 group: adapter
 order: 5
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/jira-issue-tracker/SKILL.md
 rented: false
 lang: en

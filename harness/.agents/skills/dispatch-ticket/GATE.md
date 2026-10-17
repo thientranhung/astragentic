@@ -50,7 +50,7 @@ herdr agent start "qa-<artifact-key, lowercased>" --pane <returned-root-pane-id>
   --kind <qa row: Runtime> -- <argv from the runtime-specific dispatch-ticket skill>
 ```
 
-**The argv comes from the runtime-specific dispatch skill** (`dispatch-ticket-claude`, `dispatch-ticket-codex` or `dispatch-ticket-opencode`), resolved from the `qa` row's Runtime column in `orchestrator.md`. No adapter for that runtime means STOP.
+**The argv comes from `dispatch-ticket-claude`.** The `qa` row's Runtime column in `orchestrator.md` must read `claude`; anything else means STOP.
 
 Every check in that block is fail-closed:
 
@@ -63,7 +63,7 @@ The pane form needs QA to write exactly one file outside every checkout, so a ru
 
 **Deliver the brief through the mod on a Claude root** — one `SendMessage` whose first line is
 the slash command, as `dispatch-ticket-claude` says; the pane answers `RECEIVED` and records the
-brief's `Mode:` line. `herdr agent prompt` is the form for a Codex or OpenCode pane, and the
+brief's `Mode:` line. `herdr agent prompt` is the form for a pane without the mod (a gate pane), and the
 fallback when the mode class holds the message; a brief delivered that way records no mode and the
 pane's band shows none:
 
@@ -98,7 +98,7 @@ rm -f "$GATE_FILE"                                            # only what THIS d
 
 **The destination is deliberately not tokenized, so it refuses to overwrite.** The gate history answers "why did we merge this SHA" months later, and a hex blob per filename would damage that. An existing destination means two gates converged on one artifact and SHA, which is the owner's call.
 
-**A missing or empty file is a failed gate: re-dispatch.** A fresh dispatch takes a fresh token. A verdict you cannot read in full is not a verdict, and there is no subagent to fall back to. On opencode `idle` is fabricated, so collecting the file is what ends the gate.
+**A missing or empty file is a failed gate: re-dispatch.** A fresh dispatch takes a fresh token. A verdict you cannot read in full is not a verdict, and there is no subagent to fall back to. A gate pane's `idle` is a bell, so collecting the file is what ends the gate.
 
 **Evidence goes to files. Panes and replies carry pointers and headlines.** A verdict held only in your context dies at the next compaction.
 

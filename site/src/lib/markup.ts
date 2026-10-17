@@ -5,7 +5,7 @@
 // Product and tool names the owner wants readable at a glance: bold, ink, no colour.
 // Longest first so "Claude Code" wins over "Claude". Applied outside code spans only.
 const BRANDS = [
-  'Claude Code', 'OpenCode', 'Codex', 'Claude', 'herdr', 'mattpocock-skills', 'Matt Pocock',
+  'Claude Code', 'Codex', 'Claude', 'herdr', 'mattpocock-skills', 'Matt Pocock',
   'Superpowers',
   'GitHub Issues', 'GitHub', 'Jira', 'Linear', 'SendMessage', 'ListAgents', 'Monitor', 'Astragentic', 'Astraler',
   // not a brand, but the owner wants the mechanism to stand out wherever it is named

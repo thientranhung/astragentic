@@ -4,7 +4,7 @@ description: "Bốn lớp: runtime chạy agent, harness chứa role và luật,
 ---
 
 Astragentic không phải một runtime, cũng không phải một method. Nó nằm giữa hai thứ đó:
-bên dưới là Claude Code, Codex hoặc OpenCode đang chạy model, bên trên là repo thật của bạn,
+bên dưới là Claude Code đang chạy model, bên trên là repo thật của bạn,
 còn phương pháp thì dùng `mattpocock-skills`. Phần Astragentic tự viết là phần điều phối, và chỉ
 phần đó.
 
@@ -15,20 +15,19 @@ và đó là phần Astragentic không bao giờ được trả lời thay bạn
 
 ## runtime
 
-Ba runtime, và agent ở role nào chạy trên runtime nào là một dòng trong `.agents/orchestrator.md`,
-file của bạn, upgrade không bao giờ đè lên. Claude Code là runtime gốc: agent của cả năm role đều
-chạy được ở đây. Codex và OpenCode là tuỳ chọn, và chúng có mặt vì lý do cụ thể chứ không phải để
-danh sách dài thêm.
+Một runtime, và model cùng effort của từng role là một dòng trong `.agents/orchestrator.md`,
+file của bạn, upgrade không bao giờ đè lên. Claude Code là runtime: agent của mọi role đều chạy ở
+đây. Builder có thể giao phần gõ code cho một pane junior trên runtime khác (Grok trước), đặt theo
+project trong cùng file đó; review, simplify và handback vẫn là việc của Builder.
 
-Codex có mặt để làm nhân chứng. Cross-vendor arm cần một model của vendor khác đọc lại diff, nên
-nếu chỉ có một runtime thì arm đó không tồn tại. OpenCode là lựa chọn thứ ba cho role Builder khi
-bạn cần.
+Codex không phải runtime của role nào. Nó có mặt để làm nhân chứng: cross-vendor arm cần một model
+của vendor khác đọc lại diff, nên thiếu nó thì arm đó không tồn tại.
 
-**Đánh đổi.** Dựa trên ba runtime khiến enforcement không đều nhau. `hook-git-guard.py` được đăng
-ký ở Claude Code qua `.claude/settings.json` và ở Codex qua `.codex/hooks.json`. Một Builder chạy
-OpenCode không có hook tương đương, và cả Claude lẫn Codex đều có thể chạy với hook tắt hoặc chưa
-được trust. Vì vậy luật thứ tự dọn dẹp phải nằm trong contract trước, trong hook sau. Hook đứng
-sau, không phải hàng rào.
+**Đánh đổi.** Một runtime giữ enforcement đồng đều cho mọi role, nhưng pane junior trên runtime
+khác nằm ngoài nó. Dispatch mod và `hook-git-guard.py` đọc tên tool của Claude, nên ranh giới của
+junior là việc của chính nó, và Builder kiểm bằng log. Bản thân Claude cũng có thể chạy với hook
+tắt. Vì vậy luật thứ tự dọn dẹp phải nằm trong contract trước, trong hook sau. Hook đứng sau,
+không phải hàng rào.
 
 ## harness
 

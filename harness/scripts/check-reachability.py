@@ -46,10 +46,6 @@ Eleven checks, in both directions:
                          entries narrate the past and that is correct; those three labels
                          claim the PRESENT, and a false one closes the question instead of
                          leaving it open. `(gone)` retires a citation explicitly.
- 11 RULE -> ITS RUNTIME  every always-on rule reaches the runtime each role is actually
-                         assigned to in orchestrator.md. `.claude/rules/` is read by Claude
-                         and by nothing else, so reassigning one role in a table can silence
-                         a tier (AST-138). Project layout only: no package ships that tier.
 
 Runs against this package (payload under harness/) or an adapted project (payload at the
 repo root). Exit 0 = every check passed, 1 = at least one finding.
@@ -121,17 +117,20 @@ def read(path):
         return ""
 
 # --- inventory --------------------------------------------------------------------------
-# Runtime supplements (builder-claude.md, thomas-codex.md, etc.) are role extensions, not
+# Runtime supplements (builder-claude.md, etc.) are role extensions, not
 # independent roles. They have no launcher, no dispatcher mention, and no phase table, so
 # they must not enter the checks that verify those things (checks 1, 2, 5). Include their
 # text in the reference-scanning checks (3, 4, 6, 7) through a separate dict.
 _all_role_files = {os.path.basename(p)[:-3]: read(p)
                    for p in sorted(glob.glob(os.path.join(ROLES_DIR, "*.md")))}
-RUNTIME_SUFFIXES = ("-claude", "-codex", "-opencode")
-roles = {n: t for n, t in _all_role_files.items()
-         if not any(n.endswith(s) for s in RUNTIME_SUFFIXES)}
-role_supplements = {n: t for n, t in _all_role_files.items()
-                    if any(n.endswith(s) for s in RUNTIME_SUFFIXES)}
+RUNTIME_SUFFIXES = ("-claude",)
+# A junior (junior.md, junior-<runtime>.md) is read by a pane the BUILDER opens beside itself
+# (dispatch-junior). Thomas never dispatches it, so it has no `--agent` launcher and no mention
+# in the dispatcher; check 5 verifies its own path to a pane instead.
+def _is_supplement(n):
+    return any(n.endswith(s) for s in RUNTIME_SUFFIXES) or n == "junior" or n.startswith("junior-")
+roles = {n: t for n, t in _all_role_files.items() if not _is_supplement(n)}
+role_supplements = {n: t for n, t in _all_role_files.items() if _is_supplement(n)}
 all_skills = {}
 for pattern in SKILL_GLOBS:
     for p in sorted(glob.glob(pattern)):
@@ -420,7 +419,7 @@ for src, text in sorted(sources.items()):
     # `tools` is in the list because a contract prescribed `tools/project-status-sync.sh`, a
     # directory this package does not have, and nothing saw it.
     for ref in sorted(set(re.findall(
-            r"`((?:\.agents|\.claude|\.opencode|\.codex|scripts|tools|docs)/[A-Za-z0-9_./-]+)`", text))):
+            r"`((?:\.agents|\.claude|scripts|tools|docs)/[A-Za-z0-9_./-]+)`", text))):
         if ref.endswith("/") or "<" in ref or ref.count("*"):
             continue
         # PROJECT-SIDE, by design: authored during adaptation, not shipped, so absence here is
@@ -455,65 +454,16 @@ for src, text in sorted(sources.items()):
              ".astraler/project/not-a-skill.txt (one token per line), which no release "
              "overwrites. Do NOT edit NOT_A_SKILL in this script: it is payload, so the next "
              "release overwrites your edit and you do it again (AST-132)")
-    # 4c. launcher argv. `claude --agent X` resolves from .claude/agents/, and
-    # `opencode --agent X` resolves from .opencode/agents/. Each runtime resolves from its
-    # own directory ONLY, so a claude launcher naming an agent that exists only under
-    # .opencode/ (or vice versa) will fail at dispatch with "agent not found".
-    for m_agent in re.finditer(r"(claude|opencode)\s+--agent\s+([a-z][a-z0-9-]*)", text):
-        runtime, agent = m_agent.group(1), m_agent.group(2)
-        if agent.startswith("<"):
-            continue
-        adapter_dir = ".claude" if runtime == "claude" else ".opencode"
-        if not os.path.exists(os.path.join(PAYLOAD, adapter_dir, "agents", f"{agent}.md")):
-            fail("4", f"{src} launches `{runtime} --agent {agent}`, "
-                      f"but {adapter_dir}/agents/{agent}.md does not exist in the payload",
-                 f"{runtime} resolves the agent definition from {adapter_dir}/agents/; "
-                 "an adapter in another runtime's directory does not help")
+    # 4c. launcher argv. `claude --agent X` resolves from .claude/agents/ in the cwd, so a
+    # launcher naming an agent that is not there fails at dispatch with "agent not found".
     for agent in sorted(set(re.findall(r"--agent ([a-z][a-z0-9-]*)", text))):
         if agent.startswith("<"):
             continue
-        if re.search(rf"(claude|opencode)\s+--agent\s+{re.escape(agent)}", text):
-            continue
-        has_claude = os.path.exists(os.path.join(PAYLOAD, ".claude", "agents", f"{agent}.md"))
-        has_opencode = os.path.exists(os.path.join(PAYLOAD, ".opencode", "agents", f"{agent}.md"))
-        if not has_claude and not has_opencode:
+        if not os.path.exists(os.path.join(PAYLOAD, ".claude", "agents", f"{agent}.md")):
             fail("4", f"{src} launches `--agent {agent}`, "
-                      f"but neither .claude/agents/{agent}.md nor "
-                      f".opencode/agents/{agent}.md exists in the payload",
-                 "claude and opencode resolve the agent definition from the cwd; "
-                 "this dispatch cannot start on either runtime")
-    # `--profile <role>` is an address that CANNOT resolve from a repository. `codex --help`:
-    # it layers `$CODEX_HOME/<name>.config.toml`, a machine-local path this payload cannot ship
-    # and no adaptation writes since 2.12.0. A launcher written this way starts a pane with the
-    # base user config and no role contract, and Codex reports nothing (AST-146).
-    for prof in sorted(set(re.findall(r"--profile ([a-z][a-z0-9-]*)", text))):
-        fail("4", f"{src} launches `--profile {prof}`, an address outside the repository",
-             "codex --profile layers $CODEX_HOME/<name>.config.toml only; pass the role file "
-             f'instead: -c developer_instructions="$(cat .codex/profiles/{prof}.md)"')
-    # The address that replaced it must resolve like any other payload path. Literal citations
-    # only; the launcher itself is written with a `<role>` placeholder, and a check keyed to
-    # that string can never fire — which is how the first version of this shipped, silent.
-    # The table-driven half below is the one that answers for the launcher.
-    for prof in sorted(set(re.findall(r"\.codex/profiles/([a-z][a-z0-9-]*)\.md", text))):
-        if not os.path.exists(os.path.join(PAYLOAD, ".codex", "profiles", f"{prof}.md")):
-            fail("4", f"{src} launches with .codex/profiles/{prof}.md, "
-                      "which is absent from the payload",
-                 "the launcher would pass an empty developer_instructions and Codex would "
-                 "accept it in silence")
-
-# 4c. Every role the orchestrator puts on Codex — actively or as a fallback — must have the
-# file its launcher cats. BOTH tables, because a fallback row is a launch path: it is the form
-# the launcher takes on the day the active runtime is down, which is the worst moment to find
-# out the role has no contract. The pane starts anyway: Codex accepts an empty
-# `developer_instructions` in silence, so this cannot be left to be noticed at runtime.
-_orch = read(os.path.join(PAYLOAD, ".agents", "orchestrator.md"))
-for _m in re.finditer(r"^\|\s*([a-z][a-z0-9-]*)\s*\|\s*codex\s*\|", _orch, re.M):
-    _role = _m.group(1)
-    if not os.path.exists(os.path.join(PAYLOAD, ".codex", "profiles", f"{_role}.md")):
-        fail("4", f"orchestrator.md puts {_role} on codex, but "
-                  f".codex/profiles/{_role}.md is absent from the payload",
-             "the launcher cats that file into developer_instructions; without it the pane "
-             "starts with no role contract and Codex reports nothing")
+                      f".claude/agents/{agent}.md does not exist in the payload",
+                 "claude resolves the agent definition from .claude/agents/ in the cwd; "
+                 "this dispatch cannot start")
 
 # --- 5. ROLE -> STARTABLE ---------------------------------------------------------------
 # Checks 1-4 verify that what exists is consistent. None of them asks the question that
@@ -523,6 +473,20 @@ for _m in re.finditer(r"^\|\s*([a-z][a-z0-9-]*)\s*\|\s*codex\s*\|", _orch, re.M)
 DISPATCHER = "thomas"      # the resident router is launched by the owner, not dispatched
 launcher_text = "\n".join(t for _, t in skills.values())
 dispatcher_text = roles.get(DISPATCHER, "")
+
+# Juniors: the Builder's contract must name the skill that opens the pane, and that skill must
+# name the file the pane reads. Either missing leaves a role file nothing ever loads.
+_builder_text = roles.get("builder", "")
+_dj = skills.get("dispatch-junior", ("", ""))[1]
+for jr in sorted(n for n in role_supplements if n == "junior" or n.startswith("junior-")):
+    if "dispatch-junior" not in _builder_text:
+        fail("5", f"role '{jr}' exists but contract 'builder' never names dispatch-junior",
+             "the Builder opens a junior pane; a contract that does not name the skill never opens one")
+    _named = ("roles/junior.md" in _dj) if jr == "junior" else \
+             (jr in _dj or re.search(r"junior-<runtime>", _dj) is not None)
+    if not _named:
+        fail("5", f"role '{jr}' is read by no pane: dispatch-junior does not name it",
+             "the skill's brief must tell the junior which supplement files to read")
 
 for role in sorted(roles):
     if role == DISPATCHER:
@@ -859,13 +823,10 @@ if script_files:
     # A shipped mod's hooks module runs scripts the way a hook does (ledger-rules.py from
     # register.tsx); it is an execution surface, and until 2.20.1 it was not read, so a script
     # called only from the mod scored as an orphan (found downstream on a pristine payload).
-    exec_paths = ([os.path.join(PAYLOAD, ".claude", "settings.json"),
-                   os.path.join(PAYLOAD, ".codex", "hooks.json")] +
+    exec_paths = ([os.path.join(PAYLOAD, ".claude", "settings.json")] +
                   glob.glob(os.path.join(PAYLOAD, ".claude", "skills", "*", "hooks", "*.ts")) +
                   glob.glob(os.path.join(PAYLOAD, ".claude", "skills", "*", "hooks", "*.tsx")) +
                   glob.glob(os.path.join(PAYLOAD, ".claude", "agents", "*")) +
-                  glob.glob(os.path.join(PAYLOAD, ".codex", "agents", "*")) +
-                  glob.glob(os.path.join(PAYLOAD, ".opencode", "agents", "*")) +
                   [os.path.join(pkg_root, "install.sh")])
     if LAYOUT == "project":
         # Where an adapted project is told to put enforcement, plus every VCS hook this
@@ -1049,56 +1010,6 @@ for _ledger in LEDGERS:
                  "gone — narrative about the past stays as it is, an assertion about now does "
                  f"not ({_rel} line {i + 1})")
 
-# --- 11. RUNTIME REASSIGNMENT -> RULES FOLLOW ---------------------------------------------
-# 2.9.0's rule: anything the payload ships for a role or a moment is declared for EVERY runtime
-# that can carry it. This check is that rule pointed at the one surface the package cannot see
-# from inside itself — the project's always-on tier.
-#
-# The trap it exists for, measured downstream on 2026-09-16: a project with six rules in
-# `.claude/rules/`, five of them named in no Codex profile and no OpenCode adapter, and all five
-# roles currently assigned to `claude` — so nothing was leaking and nothing was red. It is a
-# loaded trap rather than a live wound: the day the owner edits one runtime cell in
-# `orchestrator.md`, five always-on rules stop reaching the agent, silently, and the only
-# signal is behaviour nobody attributes to a config edit weeks earlier.
-#
-# Package layout ships no `.claude/rules/`, so this is a project-layout check by construction,
-# and it says so rather than passing quietly.
-rules_checked = 0
-if LAYOUT == "project":
-    ADAPTER_FOR = {
-        "codex": os.path.join(ROOT, ".codex", "profiles", "%s.md"),
-        "opencode": os.path.join(ROOT, ".opencode", "agents", "%s.md"),
-        "claude": os.path.join(ROOT, ".claude", "agents", "%s.md"),
-    }
-    orch = read(os.path.join(ROOT, ".agents", "orchestrator.md"))
-    # ONLY the Active assignments table. The file also carries a Fallback providers table, and
-    # a fallback is a per-session degradation the orchestrator says is "never written back into
-    # this file" — reading it as an assignment reports every role as running on a runtime it is
-    # not on. Found by this check's own fixture, which is the only reason it is not shipping
-    # that way.
-    sect = re.search(r"^##\s*Active assignments\s*$(.*?)(?=^##\s|\Z)", orch, re.M | re.S)
-    assigned = {}
-    if sect:
-        for m in re.finditer(r"^\|\s*([a-z][a-z0-9-]*)\s*\|\s*(claude|codex|opencode)\s*\|",
-                             sect.group(1), re.M):
-            assigned[m.group(1)] = m.group(2)
-    rule_files = sorted(glob.glob(os.path.join(ROOT, ".claude", "rules", "*.md")))
-    for rf in rule_files:
-        stem = os.path.basename(rf)[:-3]
-        for role, runtime in sorted(assigned.items()):
-            # Claude reads `.claude/rules/` itself; no adapter has to repeat it.
-            if runtime == "claude":
-                continue
-            adapter = ADAPTER_FOR[runtime] % role
-            rules_checked += 1
-            if stem not in read(adapter):
-                fail("11", f"role '{role}' runs on {runtime}, which never sees "
-                           f".claude/rules/{stem}.md",
-                     f"`.claude/rules/` is read by Claude and by nothing else. Carry the rule "
-                     f"into {os.path.relpath(adapter, ROOT)} in the same wording, or name this "
-                     f"role an exception with the reason — a surface that is silent is not an "
-                     f"exception, it is an omission wearing one (AST-138)")
-
 # --- report -----------------------------------------------------------------------------
 print(f"Reachability check — {LAYOUT} layout, payload at {os.path.normpath(PAYLOAD)}")
 print(f"  {len(roles)} contracts · {len(skills)} harness skills · "
@@ -1129,12 +1040,6 @@ if not findings:
               " so the payload-shipped set cannot be named and nothing was scored")
     print(f"  [OK] 10 every live `Bound:`/`Wired`/`Enforced by` in the ledger still resolves"
           f" ({ledger_asserts} assertion citation(s) read; `(gone)` marks a retired one)")
-    if LAYOUT == "project":
-        print(f"  [OK] 11 every always-on rule reaches the runtime each role is assigned to"
-              f" ({rules_checked} rule/role pair(s) off Claude)")
-    else:
-        print("  [--] 11 always-on rules vs assigned runtimes: this package ships no"
-              " .claude/rules/ tier; the check runs where that tier exists")
     if PLUGIN_UNREAD:
         print("  verifier(s) outside this payload and NOT read this run: "
               + ", ".join(sorted(set(PLUGIN_UNREAD)))

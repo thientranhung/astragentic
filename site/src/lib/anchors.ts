@@ -87,8 +87,8 @@ export const STACK: StackItem[] = [
     id: 'claude-code',
     name: 'Claude Code',
     line: {
-      vi: 'Runtime gốc. Mọi vai chạy được ở đây, và gate milestone không có đường lui nào khác.',
-      en: 'The root runtime. Every role can run here, and the milestone gate has no fallback.',
+      vi: 'Runtime. Mọi vai chạy ở đây, và gate milestone không có đường lui nào khác.',
+      en: 'The runtime. Every role runs here, and the milestone gate has no fallback.',
     },
     required: true,
   },
@@ -98,15 +98,6 @@ export const STACK: StackItem[] = [
     line: {
       vi: 'Cánh tay cross-vendor: một AI của hãng khác (Codex) đọc lại diff trước khi nó merge.',
       en: 'The cross-vendor arm: a different vendor re-reads the diff before it merges.',
-    },
-    required: false,
-  },
-  {
-    id: 'opencode',
-    name: 'OpenCode CLI',
-    line: {
-      vi: 'Runtime thứ ba để dispatch role, dùng khi bạn không muốn khoá vào một hãng.',
-      en: 'A third runtime for role dispatch, for when you would rather not be locked to one vendor.',
     },
     required: false,
   },
@@ -261,10 +252,10 @@ export const LAYERS: Layer[] = [
     id: 'runtime',
     title: { vi: 'Runtime', en: 'Runtime' },
     line: {
-      vi: 'Cái thực sự chạy agent. Astragentic không sở hữu lớp này, nó chỉ không được khoá vào một hãng.',
-      en: 'What actually runs an agent. Astragentic does not own this layer; it only refuses to be locked to one vendor.',
+      vi: 'Cái thực sự chạy agent. Astragentic không sở hữu lớp này; vai nào cũng chạy trên Claude Code, và Codex chỉ có mặt cho cánh tay cross-vendor.',
+      en: 'What actually runs an agent. Astragentic does not own this layer; every role runs on Claude Code, and Codex is there for the cross-vendor arm only.',
     },
-    parts: 'Claude Code · Codex · OpenCode',
+    parts: 'Claude Code · Codex',
   },
   {
     id: 'harness',

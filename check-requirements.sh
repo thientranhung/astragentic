@@ -61,11 +61,10 @@ echo
 echo "MACHINE (required):"
 
 HAVE_CLAUDE=0; command -v claude >/dev/null 2>&1 && HAVE_CLAUDE=1
-HAVE_CODEX=0;  command -v codex  >/dev/null 2>&1 && HAVE_CODEX=1
 
-# 1. Claude Code CLI. QA's gate runs as a Herdr pane on the root provider's runtime, and no
-# Codex or opencode adapter hosts the dispatch mod, so a missing Claude means the machine
-# cannot gate at all — a MISS rather than a warning. Codex remains the cross-vendor arm.
+# 1. Claude Code CLI. Claude is the only role runtime and the dispatch mod loads only there,
+# so a missing Claude means the machine cannot gate at all — a MISS rather than a warning.
+# Codex remains the cross-vendor arm (checked below, WARN when absent).
 if [ "$HAVE_CLAUDE" -eq 1 ]; then
   ok "claude CLI ($(command -v claude))"
   # The dispatch mod is what records, briefs and watches every Claude pane; there is no watcher
@@ -79,12 +78,9 @@ if [ "$HAVE_CLAUDE" -eq 1 ]; then
     miss "Claude Code ${CLAUDE_VER:-unknown} is below $CLAUDE_FLOOR — the dispatch mod will not load" \
       "update Claude Code (claude update). Without the mod a Claude pane is neither recorded nor watched"
   fi
-elif [ "$HAVE_CODEX" -eq 1 ]; then
-  miss "claude CLI not on PATH — the milestone gate cannot run" \
-    "install Claude Code: https://claude.com/claude-code. With no Claude the answer is STOP and ask the owner, and Codex stays the cross-vendor arm"
 else
-  miss "no runtime CLI on PATH (need claude or codex)" \
-    "install Claude Code (https://claude.com/claude-code) and/or the OpenAI Codex CLI"
+  miss "claude CLI not on PATH — the milestone gate cannot run" \
+    "install Claude Code: https://claude.com/claude-code. With no Claude the answer is STOP and ask the owner"
 fi
 
 # 2. The mattpocock-skills plugin — the method itself. Every spine step this package routes
@@ -199,55 +195,29 @@ else
   miss "herdr skill missing" "install the herdr skill into ~/.agents/skills/herdr"
 fi
 
-# 6–8. Codex surfaces — required for the cross-vendor arm, DEGRADABLE to single-provider
-# mode: with claude present and codex absent these report WARN and the harness runs
-# Claude-only. The milestone gate still runs (it is Claude-side); what is lost is the arm,
-# recorded `NOT RUN` for the owner to accept. A same-vendor lens never completes it.
-codex_gap() {
-  if [ "$HAVE_CLAUDE" -eq 1 ] && [ "$HAVE_CODEX" -eq 0 ]; then
-    warn "$1 — single-provider mode (Claude-only)" \
-      "the milestone gate is unaffected; the cross-vendor arm cannot run and is recorded 'NOT RUN — <reason>' for the OWNER to accept. $2"
-  else
-    miss "$1" "$2"
-  fi
-}
-
-if [ "$HAVE_CODEX" -eq 1 ]; then
+# 6–8. Codex surfaces — the cross-vendor arm (codex-arm: a Claude builder fires `codex exec
+# review` through the codex plugin). Claude is the only role runtime, so neither surface gates
+# the flow: absent, the arm cannot run and is recorded `NOT RUN — <reason>` for the OWNER to
+# accept. A same-vendor lens never completes it.
+if command -v codex >/dev/null 2>&1; then
   ok "codex CLI ($(command -v codex))"
 else
-  codex_gap "codex CLI not on PATH" \
-    "install the OpenAI Codex CLI to restore the cross-vendor arm, e.g. brew install codex"
+  warn "codex CLI not on PATH" \
+    "the cross-vendor arm needs it; install the OpenAI Codex CLI, e.g. brew install codex. Until then the arm is recorded 'NOT RUN — <reason>' for the OWNER to accept"
 fi
 
-# Codex plugin inside Claude Code (provides the companion runtime the arm invokes) — a
-# Claude-side surface, so it is moot in Codex-only mode.
-if [ "$HAVE_CLAUDE" -eq 0 ] && [ "$HAVE_CODEX" -eq 1 ]; then
-  warn "Codex plugin check skipped — single-provider mode (Codex-only)" \
-    "the plugin lives inside Claude Code; install Claude Code to restore the arm on a Claude root"
-elif [ -f "$PLUGINS_JSON" ] && grep -q '"codex@' "$PLUGINS_JSON"; then
+# Codex plugin inside Claude Code (provides the companion runtime the arm invokes).
+if [ -f "$PLUGINS_JSON" ] && grep -q '"codex@' "$PLUGINS_JSON"; then
   ok "Codex plugin in Claude Code (codex@… in installed_plugins.json)"
 else
-  codex_gap "Codex plugin not installed in Claude Code" \
-    "in an interactive claude session: /plugin → install 'codex' (marketplace: openai-codex)"
+  warn "Codex plugin not installed in Claude Code" \
+    "the cross-vendor arm needs it; in an interactive claude session: /plugin → install 'codex' (marketplace: openai-codex)"
 fi
 
-# Codex role instructions — an in-repo file per role, injected on the launch command line as
-# `developer_instructions`. Nothing is provisioned outside the repository, so there is no
-# destination to compare against and no drift to report: the file either exists, says the
-# right thing, and reaches the pane, or it does not.
-#
-# `.agents/orchestrator.md` is the single owner of role → runtime/model/effort, and since
-# 2.12.0 it is the ONLY home for model and effort — the launcher reads the row and passes
-# both as flags. That removes the failure this block used to police (a template agreeing with
-# a machine copy while both disagreed with the table) and leaves two new ones, which is what
-# it polices now: a row that names Codex without naming a model, and an instruction file that
-# still teaches the retired `--profile` mechanism.
+# `.agents/orchestrator.md` is the single owner of role → runtime/model/effort/advisor.
 # A named target owns the answer: its table is the one its dispatches read. Only with no
-# target does the package's own copy stand in.
-# A FALLBACK ACROSS THE TARGET BOUNDARY ANSWERS ABOUT THE WRONG TREE. The comment above has
-# said "only with no target does the package's own copy stand in" since this block was written,
-# and the loop below it did not do that: a target with no table of its own fell through to the
-# package's, and every row check that followed described a file the target does not have.
+# target does the package's own copy stand in. A fallback across the target boundary answers
+# about the wrong tree: a target with no table of its own must not borrow the package's.
 ORCH=""
 if [ -n "$TARGET" ]; then
   [ -f "$TARGET/.agents/orchestrator.md" ] && ORCH="$TARGET/.agents/orchestrator.md"
@@ -271,110 +241,6 @@ if [ -n "$ORCH" ]; then
   fi
 fi
 
-# Read a role's codex row from either table; prints "<model>|<effort>". Prints nothing only
-# when the role has NO codex row.
-#
-# IT MUST NOT ALSO JUDGE THE MODEL CELL. Until 2.12.0 this awk carried `&& $4 != ""`, so a row
-# reading `| builder | codex |  | medium |` produced no output and the loop below printed
-# `ok: no codex row — this role does not run on Codex`. One condition was answering two
-# questions — *is there a row* and *does the row name a model* — and the second answer was
-# delivered as the first. It was survivable while the profile TOML shipped `model = ""` and a
-# separate branch MISSed on it; with the row as the only home for the model, the same blank
-# cell is a role that cannot launch, reported as a role deliberately declining a runtime.
-orchestrator_codex_row() {
-  [ -n "$ORCH" ] || return 1
-  awk -F'|' -v role="$1" '
-    $0 ~ /^\|/ {
-      gsub(/^[ \t]+|[ \t]+$/, "", $2); gsub(/^[ \t]+|[ \t]+$/, "", $3)
-      gsub(/^[ \t]+|[ \t]+$/, "", $4); gsub(/^[ \t]+|[ \t]+$/, "", $5)
-      gsub(/`/, "", $4)
-      if ($2 == role && $3 == "codex") { print $4 "|" $5; exit }
-    }' "$ORCH"
-}
-
-# A role with NO codex row never runs on Codex, so it needs no instruction file and warning
-# about one is noise the owner cannot act on. Absence is how this table already says "not this
-# runtime", so read it the same way here.
-for ROLE in thomas shaper builder qa; do
-  ROW="$(orchestrator_codex_row "$ROLE" 2>/dev/null || true)"
-  if [ -n "$ORCH" ] && [ -z "$ROW" ]; then
-    ok "Codex ${ROLE}: no codex row — this role does not run on Codex"
-    continue
-  fi
-  ROW_MODEL=""; ROW_EFFORT=""
-  if [ -n "$ROW" ]; then ROW_MODEL="${ROW%%|*}"; ROW_EFFORT="${ROW##*|}"; fi
-
-  # Three places the file can live: an adapted project (.codex/), this package (harness/.codex/),
-  # or a target where the release is staged but not yet adapted.
-  PROFILE=""
-  if [ -n "$TARGET" ]; then
-    # Only the target's own tree, including a release staged there but not yet adapted. Reading
-    # the package's copy here reports the PACKAGE is fine while the target has no file at all.
-    for CAND in "$TARGET/.codex/profiles/${ROLE}.md" \
-                $(ls -d "$TARGET"/.astraler/releases/*/harness/.codex/profiles/${ROLE}.md 2>/dev/null | tail -1); do
-      [ -n "$CAND" ] && [ -f "$CAND" ] && { PROFILE="$CAND"; break; }
-    done
-  else
-    for CAND in ".codex/profiles/${ROLE}.md" \
-                "harness/.codex/profiles/${ROLE}.md" \
-                $(ls -d .astraler/releases/*/harness/.codex/profiles/${ROLE}.md 2>/dev/null | tail -1); do
-      [ -f "$CAND" ] && { PROFILE="$CAND"; break; }
-    done
-  fi
-
-  # A pre-2.12 project keeps its old TOML at the same path: the release adds `<role>.md` and
-  # cannot delete what it no longer ships, so both sit there and the stale one still reads as
-  # current. Name it; deleting a file under `.codex/profiles/` is the owner's call.
-  LEGACY=""
-  for CAND in "${TARGET:+$TARGET/.codex/profiles/${ROLE}.config.toml}" \
-              ".codex/profiles/${ROLE}.config.toml"; do
-    [ -n "$CAND" ] && [ -f "$CAND" ] && { LEGACY="$CAND"; break; }
-  done
-  [ -n "$LEGACY" ] && warn "Codex ${ROLE}: pre-2.12 profile TOML still present at $LEGACY" \
-    "the launcher no longer reads it, and ${CODEX_HOME:-$HOME/.codex}/${ROLE}.config.toml no longer launches anything. Delete both once ${PROFILE:-.codex/profiles/${ROLE}.md} carries the role's instructions"
-
-  if [ -z "$PROFILE" ]; then
-    miss "Codex ${ROLE} instruction file not found" \
-      "the launcher passes -c developer_instructions=\"\$(cat .codex/profiles/${ROLE}.md)\"; without that file the pane starts with no role contract and no error"
-  elif [ ! -s "$PROFILE" ]; then
-    miss "Codex ${ROLE} instruction file is empty ($PROFILE)" \
-      "an empty file launches a pane with no role identity. Codex accepts it in silence — exit 0, no warning"
-  elif grep -qE -- '--profile|CODEX_HOME|\.config\.toml' "$PROFILE"; then
-    # THIS FILE IS THE AGENT'S SYSTEM PROMPT. A sentence in it describing a mechanism the CLI
-    # stopped performing is not a stale comment — it is an instruction, read as current by
-    # whatever launches with it. Measured downstream: five role files kept "it exists so
-    # codex --profile <role> resolves" through the change that retired it, and the pane quoted
-    # the sentence back when asked.
-    warn "Codex ${ROLE} instructions still describe the retired --profile mechanism ($PROFILE)" \
-      "this file IS the pane's system prompt, so that sentence is read as instruction. Remove the --profile / CODEX_HOME / .config.toml reference"
-  else
-    ok "Codex ${ROLE} instructions present ($PROFILE)"
-  fi
-
-  # The model now has exactly one home, so this is the only place it can be wrong. `<set-me>`
-  # is the scaffold saying "the owner has not chosen yet" — a legitimate resting state, and a
-  # nag they learn to skip costs the warnings that matter. An EMPTY cell is different: the row
-  # claims the runtime and names nothing to launch, which is AST-040 wearing a blank instead of
-  # a plausible id.
-  if [ -z "$ROW" ]; then
-    :
-  elif [ "$ROW_MODEL" = "<set-me>" ]; then
-    [ -n "$TARGET" ] && ok "Codex ${ROLE}: undecided (<set-me>) — dispatch to codex will STOP until it is set"
-  elif [ -z "$ROW_MODEL" ]; then
-    miss "Codex ${ROLE} has a codex row with no model" \
-      "the row claims the runtime and names nothing to launch. Put the model in the ${ROLE} codex row in $ORCH, or delete the row to decline Codex for this role"
-  elif [ -z "$ROW_EFFORT" ]; then
-    # NOT a warning, and not "the account default" — that reading was wrong and was measured
-    # wrong. The launcher passes `-c model_reasoning_effort=""`, and Codex refuses it while
-    # loading config: `reasoning_effort must not be empty`. The pane never starts, and it fails
-    # AFTER dispatch has reported a launch. AST-040 one column over: an empty cell that looks
-    # like a default is refused at the same place an empty model is.
-    miss "Codex ${ROLE} row names a model and no effort" \
-      "the launcher passes -c model_reasoning_effort=\"\" and Codex refuses it at bootstrap with 'reasoning_effort must not be empty'. Put low|medium|high|xhigh|max in the ${ROLE} codex row in $ORCH"
-  else
-    ok "Codex ${ROLE} row: ${ROW_MODEL} / ${ROW_EFFORT}"
-  fi
-done
 # 9. Watcher script — project-local, since install already stages it and a global copy is
 # never touched by a release (measured: it drifted out of sync with the shipped version).
 WATCHER=""
@@ -387,11 +253,6 @@ if [ -n "$WATCHER" ]; then
 else
   warn "scripts/herdr-watch-terminal.sh missing" \
     "run install.sh; dispatch-ticket calls this file at <repo-root>/scripts/herdr-watch-terminal.sh"
-fi
-
-# opencode — optional third provider; it never gates the required flow.
-if command -v opencode >/dev/null 2>&1; then
-  ok "opencode CLI ($(command -v opencode)) — optional third provider"
 fi
 
 # ---------------------------------------------------------------------------
@@ -529,82 +390,6 @@ PYEOF
         miss ".claude/settings.json could not be parsed ($GUARD_REG)" \
           "the registration cannot be confirmed, so enforcement cannot be assumed" ;;
     esac
-
-    # Codex has a separate project-local hook surface. It deliberately points at the SAME
-    # guard script: the safety rule is runtime-neutral, while registration stays native to
-    # each runtime. Presence alone is not enough; parse the exact event/matcher/handler path.
-    CODEX_GUARD_REG=$(python3 - "$TARGET" <<'PYEOF'
-import json, sys, os
-path = os.path.join(sys.argv[1], ".codex", "hooks.json")
-try:
-    with open(path, encoding="utf-8") as fh:
-        cfg = json.load(fh)
-except FileNotFoundError:
-    print("absent"); raise SystemExit
-except Exception as exc:
-    print("unparseable: %s" % exc); raise SystemExit
-for e in ((cfg.get("hooks") or {}).get("PreToolUse") or []):
-    if "Bash" not in str(e.get("matcher", "")):
-        continue
-    for h in (e.get("hooks") or []):
-        if h.get("type") == "command" and "hook-git-guard.py" in (h.get("command") or ""):
-            print("ok"); raise SystemExit
-print("absent")
-PYEOF
-)
-    case "$CODEX_GUARD_REG" in
-      ok)
-        ok ".codex/hooks.json has a PreToolUse/Bash command hook naming hook-git-guard.py" ;;
-      absent)
-        miss ".codex/hooks.json has no PreToolUse/Bash hook naming hook-git-guard.py" \
-          "Codex does not read .claude/settings.json; install the project-local Codex hook adapter" ;;
-      *)
-        miss ".codex/hooks.json could not be parsed ($CODEX_GUARD_REG)" \
-          "Codex will skip an invalid project hook registration" ;;
-    esac
-
-    # Project custom agents are not launcher profiles. These two request read-only mode and
-    # forbid writes in their instructions; parent live permission overrides can still win,
-    # so they must never become an alternate path for a Builder or a QA gate.
-    CODEX_AGENTS_REG=$(python3 - "$TARGET" <<'PYEOF'
-import os, sys
-try:
-    import tomllib
-except Exception:
-    print("tomllib-unavailable"); raise SystemExit
-root = os.path.join(sys.argv[1], ".codex", "agents")
-expected = {
-    "astragentic-explorer.toml": "astragentic_explorer",
-    "astragentic-reviewer.toml": "astragentic_reviewer",
-}
-for filename, name in expected.items():
-    path = os.path.join(root, filename)
-    try:
-        with open(path, "rb") as fh:
-            cfg = tomllib.load(fh)
-    except FileNotFoundError:
-        print("missing:%s" % filename); raise SystemExit
-    except Exception as exc:
-        print("unparseable:%s:%s" % (filename, exc)); raise SystemExit
-    if cfg.get("name") != name or cfg.get("sandbox_mode") != "read-only" \
-            or not cfg.get("description") or not cfg.get("developer_instructions"):
-        print("invalid:%s" % filename); raise SystemExit
-print("ok")
-PYEOF
-)
-    case "$CODEX_AGENTS_REG" in
-      ok)
-        ok ".codex/agents has the two read-only-intent Astragentic helpers" ;;
-      tomllib-unavailable)
-        warn "cannot parse project Codex custom agents (python3 has no tomllib)" \
-          "use Python 3.11+ or ask Codex 0.150+ to load the project and inspect startup diagnostics" ;;
-      missing:*)
-        miss "project Codex custom agent is missing (${CODEX_AGENTS_REG#missing:})" \
-          "re-run the payload install; .codex/agents is payload, not owner scaffold" ;;
-      *)
-        miss "project Codex custom agents are invalid ($CODEX_AGENTS_REG)" \
-          "each helper needs name, description, developer_instructions and sandbox_mode = read-only" ;;
-    esac
   fi
 
   if git -C "$TARGET" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -718,7 +503,7 @@ PYEOF
       while IFS= read -r f; do
         case "$f" in
           # OWNER-OWNED: the project's, never written by an upgrade.
-          .agents/orchestrator.md|.claude/settings.json|.codex/profiles/*) continue ;;
+          .agents/orchestrator.md|.claude/settings.json) continue ;;
           # GENERATED PER PROJECT: INDEX.md and RULES.md are derived from the ledger, and an
           # adapted project's ledger carries its own citations — so these differ from the
           # release by construction and will differ forever. Flagging them would train the
@@ -764,7 +549,7 @@ PYEOF
       else
         UNTRACKED_PAYLOAD=0
         STALE_PAYLOAD=0
-        # PAYLOAD IS WHAT THE RELEASE SHIPS, not everything under .agents/.claude/.codex. A
+        # PAYLOAD IS WHAT THE RELEASE SHIPS, not everything under .agents/.claude. A
         # project keeps its own files in those directories — an owner's operating notes for
         # their Thomas tab lived at `.claude/loop-snippets.md` and this check counted it as
         # "harness payload untracked", a MISS about a file the harness does not own and never
@@ -793,7 +578,7 @@ PYEOF
             [ -n "$F" ] && [ -e "$TARGET/$_PREFIX$F" ] && PAYLOAD_PATHS+=("$_PREFIX$F")
           done < <(cd "$_RELSRC" && find . -type f ! -name '.DS_Store' | sed 's|^\./||' | sort)
         else
-          for D in .agents .claude .codex; do
+          for D in .agents .claude; do
             [ -d "$TARGET/$D" ] || continue
             while IFS= read -r -d '' F; do
               PAYLOAD_PATHS+=("${F#"$TARGET"/}")
@@ -840,8 +625,7 @@ check-requirements.sh'
           IFS=$'\n' PAYLOAD_PATHS=($(printf '%s\n' "${PAYLOAD_PATHS[@]}" | sort -u)); unset IFS
         fi
         for PATHNAME in "${PAYLOAD_PATHS[@]}"; do
-          # A deliberately gitignored file under .claude/ or .codex/ (settings.local.json,
-          # a machine-local codex config) is not payload going stale — it was never meant
+          # A deliberately gitignored file under .claude/ (settings.local.json) is not payload going stale — it was never meant
           # to be committed at all, so flagging it here is a MISS nothing can resolve.
           git -C "$TARGET" check-ignore -q -- "$PATHNAME" 2>/dev/null && continue
           # RESOLVE A SYMLINKED PARENT BEFORE BELIEVING "untracked". A project may DUAL-HOME a
@@ -890,10 +674,6 @@ fi
 if [ "$CHECK_OPTIONAL" -eq 1 ]; then
   echo
   echo "OPTIONAL (project-dependent):"
-  if ! command -v opencode >/dev/null 2>&1; then
-    warn "opencode CLI not on PATH" \
-      "optional third provider; needed only when orchestrator.md assigns roles to opencode"
-  fi
   if command -v agent-browser >/dev/null 2>&1; then
     ok "agent-browser CLI ($(command -v agent-browser))"
   else

@@ -3,7 +3,7 @@ title: untangle
 oneLiner: "Cắt ranh giới vào đống code vốn không có ranh giới nào, mỗi lần một ticket review được."
 group: brownfield
 order: 2
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/untangle/SKILL.md
 rented: false
 lang: vi

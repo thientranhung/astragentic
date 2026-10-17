@@ -191,8 +191,8 @@ bare, so the two reviews that share a word are told apart.
 - **A merge names the gaps** in its result: *"ABC-123 merged with no record of: tdd, built-in
   code-review"*. It is a note, not a refusal: a step the handback names `n/a` with its reason
   is legitimate, and the mod cannot read reasons. Any other gap is a step that did not run.
-- **Only a pane the mod registered is judged.** A Codex or OpenCode Builder has no
-  `session_id` in its entry and is not named; its evidence stays the marker script.
+- **Only a pane the mod registered is judged.** A junior pane has no
+  `session_id` in its entry and is not named; its evidence is the `Implemented-by:` trailers.
 - **A fork's call is recorded under the Builder**, the same attribution git gives its commits.
 
 ## The tracker: claimed before the brief, closed before the next one
@@ -269,7 +269,7 @@ stamp written, Builder reaped, tab closed, entry gone, with no step besides the 
   worker, a design or harness partner) is recorded, shown on the board and refused a close
   only when its tab is labelled `resident:<name>` before launch. Unlabelled, it is invisible to
   the mod and a `herdr tab close` on it goes through.
-- **Codex and OpenCode panes.** They run no Claude mod, so they keep the watcher script and its
+- **A QA gate pane or a junior pane.** They run no Claude mod, so they keep the watcher script and its
   protocol in `dispatch-ticket`.
 
 **Trust boundary.** A consumed message skips the receiver's `crossSessionInbound` hold. On the

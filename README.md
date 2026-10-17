@@ -4,8 +4,8 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-3.3.1-blue" alt="version"></a>
-  <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-4.0.0-blue" alt="version"></a>
+  <img src="https://img.shields.io/badge/runtime-Claude_Code-green" alt="runtime">
   <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-157_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache_2.0-blue" alt="license"></a>
@@ -42,15 +42,15 @@ prove what happened.
 # 1. In your project's root, stage the latest release (no project file is written)
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
-#    …or pin a version:  | bash -s -- 3.3.1
+#    …or pin a version:  | bash -s -- 4.0.0
 
 # 2. Verify your machine has what's needed
-bash .astraler/releases/3.3.1/check-requirements.sh
+bash .astraler/releases/4.0.0/check-requirements.sh
 #    Later, from inside the project: what is installed, what is newest, what changed, how to upgrade
 .astraler/astragentic.sh update
 
 # 3. Run the adaptive installer in Claude Code
-claude "Read .astraler/releases/3.3.1/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/4.0.0/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Start the router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable
@@ -107,6 +107,8 @@ token-unique path.
 | **Shaper** | one unbroken session | Grills requirements, writes specs, cuts tickets — while the whole picture is in context |
 | **Builder** | one per ticket | Implements in its own worktree — sole writer there |
 | **QA** | per walk | Exercises the running product — UI journeys, API contracts, real data |
+
+Every role runs on Claude Code. A Builder may hand the typing to a junior pane on another runtime (Grok first), set per project in `orchestrator.md`; review, simplify and the handback stay the Builder's.
 
 ### The workflow
 
@@ -289,7 +291,6 @@ telling the truth, not Thomas idling.
 | Component | What it adds |
 |---|---|
 | **Codex CLI** | Cross-vendor arm — a second AI reviews every ticket |
-| **OpenCode CLI** | Third runtime option for role dispatch |
 
 ---
 
@@ -305,7 +306,7 @@ the release shipped with.
 ```bash
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash                      # latest, stage only
-curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.3.1         # pin a version
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 4.0.0         # pin a version
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --plan  # show what --apply would write
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply # write the payload in
 ```
@@ -318,7 +319,7 @@ exists. Nothing is applied without that command.
 Staging copies the harness into `<project>/.astraler/releases/<version>/` and touches no
 project file; it is idempotent and immutable. `--apply` writes the payload in: new files land,
 unchanged files are skipped, your scaffold (`orchestrator.md`, `settings.json`'s own keys,
-`.codex/profiles/`) is kept, hook events and scripts the project has never had are merged
+`settings.json` hooks it already had) is kept, hook events and scripts the project has never had are merged
 into `settings.json` and named under `MERGED`, and anything both sides changed is listed under
 `CONFLICTS` for Phase 2 to decide. `ASTRAGENTIC_REPO` and `ASTRAGENTIC_CACHE` override the
 source and the cache.
@@ -328,7 +329,7 @@ From a checkout of this package the same two steps are `./install.sh <target-rep
 
 ### Phase 2 — Adapt
 
-Open Claude Code (or Codex) in the target repo:
+Open Claude Code in the target repo:
 
 ```
 Read .astraler/releases/<version>/ADAPT-HARNESS.md completely and execute it.
@@ -408,7 +409,7 @@ the releases page when you want to know.
 |---|---|
 | **Roles** | 4 — Thomas, Shaper, Builder, QA |
 | **Skills** | 16 in the harness, 4 of them brownfield-specific |
-| **Runtimes** | Claude Code, Codex, OpenCode |
+| **Runtime** | Claude Code |
 | **Review layers** | 3 per ticket (prior system: 5-14 rounds) |
 | **Failure modes** | 138 measured, append-only evidence base |
 | **Isolation** | 1 worktree per Builder, 1 branch per ticket |
@@ -420,7 +421,7 @@ the releases page when you want to know.
 ```
 harness/
   .agents/
-    roles/            four role contracts + runtime supplements
+    roles/            four role contracts + the optional junior
     orchestrator.md   role -> runtime/model/effort (your file)
     skills/           19 skills — dispatch, QA, test design, brownfield, arm, BMAD
     memory/
@@ -428,10 +429,6 @@ harness/
   .claude/
     agents/           Claude adapters (--agent <role>)
     skills/           Claude-discovered skills
-  .opencode/agents/   OpenCode adapters
-  .codex/profiles/    machine-local Codex pane-launch profile templates
-  .codex/agents/      project-local, read-only-intent Codex helper agents
-  .codex/hooks.json   project-local Codex safety hook registration
   scripts/                     see "When each script runs" below
 docs/adr/                      architectural decision records
 docs/bmad-distilled/           the BMAD role kit — roster + 44 capability files
@@ -474,7 +471,7 @@ something has already gone wrong.
 | Script | Moment | Owner |
 |---|---|---|
 | `herdr-watchdog.sh` | before any dispatch, and it stays running | Thomas — `dispatch-ticket` refuses to dispatch without it |
-| `herdr-watch-terminal.sh` | per turn on a Codex/OpenCode pane | called by the watchdog, not by hand |
+| `herdr-watch-terminal.sh` | per turn on a junior or QA-gate pane | called by the watchdog, not by hand |
 | `check-simplify-markers.sh` | Builder before handback, Thomas before merge | both, independently |
 | `ticket-git-facts.sh` | session start and after every merge | `reconcile-tracker` |
 | `check-payload-drift.sh` | pre-commit | the git hook, where a project has installed one |
@@ -516,4 +513,4 @@ there.**
 | **scaffold** | Owner's config, written once, never overwritten (`orchestrator.md`) |
 | **frontier** | The set of tickets currently claimable by agents |
 | **gate** | A verification checkpoint — QA's walk of the running product, or the slice gate at slice close |
-| **arm** | Cross-vendor review pass (Codex reviews Claude's work, or vice versa) |
+| **arm** | Cross-vendor review pass (Codex reviews Claude's work) |

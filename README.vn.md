@@ -4,8 +4,8 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-3.3.1-blue" alt="version"></a>
-  <img src="https://img.shields.io/badge/runtimes-Claude_Code_%7C_Codex_%7C_OpenCode-green" alt="runtimes">
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-4.0.0-blue" alt="version"></a>
+  <img src="https://img.shields.io/badge/runtime-Claude_Code-green" alt="runtime">
   <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-157_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/vi/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache_2.0-blue" alt="license"></a>
@@ -42,15 +42,15 @@ nhau, review xong trong một vòng, và artifact chứng minh được điều 
 # 1. Đứng ở gốc project, stage bản mới nhất (không ghi file nào của project)
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
-#    …hoặc ghim một bản:  | bash -s -- 3.3.1
+#    …hoặc ghim một bản:  | bash -s -- 4.0.0
 
 # 2. Kiểm máy đã đủ thứ cần chưa
-bash .astraler/releases/3.3.1/check-requirements.sh
+bash .astraler/releases/4.0.0/check-requirements.sh
 #    Về sau, ngay trong project: bản đang cài, bản mới nhất, có gì thay đổi, nâng cấp thế nào
 .astraler/astragentic.sh update
 
 # 3. Chạy bộ cài thích nghi trong Claude Code
-claude "Read .astraler/releases/3.3.1/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/4.0.0/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Mở router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable
@@ -109,6 +109,8 @@ nhất theo token.
 | **Shaper** | một session liền mạch | Grill yêu cầu, viết spec, cắt ticket — khi cả bức tranh còn trong context |
 | **Builder** | một session mỗi ticket | Thi công trong worktree riêng — là người ghi duy nhất ở đó |
 | **QA** | một lần mỗi walk | Dùng sản phẩm đang chạy — hành trình UI, hợp đồng API, dữ liệu thật |
+
+Mọi role chạy trên Claude Code. Builder có thể giao phần gõ code cho một pane junior trên runtime khác (Grok trước), đặt theo project trong `orchestrator.md`; review, simplify và handback vẫn là việc của Builder.
 
 ### Quy trình
 
@@ -281,7 +283,6 @@ không phải Thomas ngồi không.
 | Thành phần | Thêm được gì |
 |---|---|
 | **Codex CLI** | Arm chéo hãng — một AI thứ hai đọc lại mọi ticket |
-| **OpenCode CLI** | Runtime thứ ba để dispatch role |
 
 ---
 
@@ -296,7 +297,7 @@ và merge hook đều là của bản release ấy.
 ```bash
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash                      # bản mới nhất, chỉ stage
-curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 3.3.1         # ghim một bản
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 4.0.0         # ghim một bản
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --plan  # xem --apply sẽ ghi gì
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply # ghi payload vào
 ```
@@ -308,7 +309,7 @@ Band của dispatcher hiện một chip khi có bản mới. Không có gì đư
 Stage chép harness vào `<project>/.astraler/releases/<version>/`, không đụng file nào của
 project; idempotent và bất biến. `--apply` ghi payload vào: file mới được thêm, file không đổi
 bỏ qua, scaffold của bạn (`orchestrator.md`, các key riêng trong `settings.json`,
-`.codex/profiles/`) được giữ, hook event và hook script mà project chưa từng có được merge vào
+hook sẵn có trong `settings.json`) được giữ, hook event và hook script mà project chưa từng có được merge vào
 `settings.json` và liệt kê dưới `MERGED`, còn thứ cả hai bên cùng sửa nằm dưới `CONFLICTS` để
 Pha 2 quyết. `ASTRAGENTIC_REPO` và `ASTRAGENTIC_CACHE` đổi nguồn và chỗ cache.
 
@@ -317,7 +318,7 @@ Từ một checkout của package này, hai bước đó là `./install.sh <targ
 
 ### Pha 2 — Thích nghi
 
-Mở Claude Code (hoặc Codex) trong repo đích:
+Mở Claude Code trong repo đích:
 
 ```
 Read .astraler/releases/<version>/ADAPT-HARNESS.md completely and execute it.
@@ -396,7 +397,7 @@ xem `git ls-remote --tags https://github.com/thientranhung/astragentic.git` ho�
 |---|---|
 | **Role** | 4 — Thomas, Shaper, Builder, QA |
 | **Skill** | 16 trong harness, 4 trong số đó dành cho brownfield |
-| **Runtime** | Claude Code, Codex, OpenCode |
+| **Runtime** | Claude Code |
 | **Lớp review** | 3 mỗi ticket (hệ thống trước: 5–14 vòng) |
 | **Failure mode** | 138 đã đo, cơ sở bằng chứng chỉ thêm |
 | **Cô lập** | 1 worktree mỗi Builder, 1 branch mỗi ticket |
@@ -408,7 +409,7 @@ xem `git ls-remote --tags https://github.com/thientranhung/astragentic.git` ho�
 ```
 harness/
   .agents/
-    roles/            bốn contract role + phần bổ sung theo runtime
+    roles/            bốn contract role + junior tuỳ chọn
     orchestrator.md   role -> runtime/model/effort (file của bạn)
     skills/           19 skill — dispatch, QA, test design, brownfield, arm, BMAD
     memory/
@@ -416,10 +417,6 @@ harness/
   .claude/
     agents/           adapter Claude (--agent <role>)
     skills/           skill Claude tự tìm thấy
-  .opencode/agents/   adapter OpenCode
-  .codex/profiles/    template profile launch pane cho Codex, cục bộ theo máy
-  .codex/agents/      agent phụ trợ Codex, cục bộ theo project, chỉ đọc
-  .codex/hooks.json   đăng ký safety hook của Codex, cục bộ theo project
   scripts/                     xem "Script nào chạy lúc nào" bên dưới
 docs/adr/                      architectural decision record
 docs/bmad-distilled/           BMAD role kit — roster + 44 file capability
@@ -463,7 +460,7 @@ cho tới khi có chuyện đã xảy ra rồi.
 | Script | Thời điểm | Người sở hữu |
 |---|---|---|
 | `herdr-watchdog.sh` | trước mọi lần dispatch, và nó chạy suốt | Thomas — `dispatch-ticket` từ chối dispatch khi thiếu nó |
-| `herdr-watch-terminal.sh` | mỗi lượt, trên pane Codex/OpenCode | watchdog gọi, không gọi tay |
+| `herdr-watch-terminal.sh` | mỗi lượt, trên pane junior hoặc pane QA gate | watchdog gọi, không gọi tay |
 | `check-simplify-markers.sh` | Builder trước handback, Thomas trước merge | cả hai, độc lập nhau |
 | `ticket-git-facts.sh` | đầu session và sau mỗi lần merge | `reconcile-tracker` |
 | `check-payload-drift.sh` | pre-commit | git hook, ở project đã cài |
@@ -506,4 +503,4 @@ các ngày không ai cần thì không thuộc về chỗ đó.**
 | **scaffold** | Cấu hình của owner, viết một lần, không bao giờ bị ghi đè (`orchestrator.md`) |
 | **frontier** | Tập ticket mà agent đang có thể claim |
 | **gate** | Một chốt kiểm — QA walk sản phẩm đang chạy, hoặc gate slice khi đóng slice |
-| **arm** | Lượt review chéo hãng (Codex đọc lại việc của Claude, hoặc ngược lại) |
+| **arm** | Lượt review chéo hãng (Codex đọc lại việc của Claude) |

@@ -18,12 +18,6 @@
     "group": "main-flow"
   },
   {
-    "name": "codex-claude-arm",
-    "kind": "skill",
-    "oneLiner": "ARM ONLY — the Claude pass a Codex root fires over a completed artifact: the Builder fires it per ticket from its own worktree, Thomas fires it at spec and at slice close.",
-    "group": "main-flow"
-  },
-  {
     "name": "dispatch-qa-walk",
     "kind": "skill",
     "oneLiner": "Thomas-only recipe to dispatch QA's product walk — the gate that uses the running system instead of reading the diff.",
@@ -42,15 +36,9 @@
     "group": "main-flow"
   },
   {
-    "name": "dispatch-ticket-codex",
+    "name": "dispatch-junior",
     "kind": "skill",
-    "oneLiner": "Codex-specific launcher and verification for dispatch-ticket.",
-    "group": "main-flow"
-  },
-  {
-    "name": "dispatch-ticket-opencode",
-    "kind": "skill",
-    "oneLiner": "OpenCode-specific launcher and verification for dispatch-ticket.",
+    "oneLiner": "Builder-only recipe to hand a ticket's implementation to a junior pane on another runtime (Grok first) and take the tree back for review.",
     "group": "main-flow"
   },
   {

@@ -3,7 +3,7 @@ title: batch-triage
 oneLiner: "Đọc một backlog thừa kế đối chiếu với code trong một lượt, rồi tạo ticket kèm label và quan hệ blocking."
 group: entry
 order: 2
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/batch-triage/SKILL.md
 rented: false
 lang: vi

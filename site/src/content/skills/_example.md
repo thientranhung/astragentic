@@ -3,7 +3,7 @@ title: dispatch-ticket
 oneLiner: "Hand one ready ticket to one Builder in its own worktree."
 group: main-flow
 order: 1
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/dispatch-ticket/SKILL.md
 rented: false
 diagram: ticket-lifecycle

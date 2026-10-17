@@ -100,15 +100,11 @@ def bail(reason):
 
 
 def project_dir(payload):
-    """The repository root, resolved without assuming one runtime.
-
-    `CLAUDE_PROJECT_DIR` is set by Claude Code and by nothing else; Codex sets its own. Both
-    mean the repository root, so ask git before falling back to the payload. Naming a
-    Claude-only variable is 2.7.13's defect one layer down (AST-138)."""
-    for var in ("CLAUDE_PROJECT_DIR", "CODEX_PROJECT_DIR"):
-        val = os.environ.get(var)
-        if val:
-            return val
+    """The repository root. `CLAUDE_PROJECT_DIR` is set by Claude Code; with it unset (a hook
+    run by hand, a test), ask git before falling back to the payload."""
+    val = os.environ.get("CLAUDE_PROJECT_DIR")
+    if val:
+        return val
     try:
         out = subprocess.run(["git", "rev-parse", "--show-toplevel"],
                              capture_output=True, text=True, timeout=5)

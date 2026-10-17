@@ -3,7 +3,7 @@ title: legacy-testing
 oneLiner: "Pin what untested code does today, cut a seam into it, and only then let TDD start."
 group: brownfield
 order: 1
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/legacy-testing/SKILL.md
 rented: false
 lang: en

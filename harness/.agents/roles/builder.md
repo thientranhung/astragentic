@@ -12,7 +12,8 @@ at once.
 | When | Read | For |
 |---|---|---|
 | the ticket edits a `SKILL.md`, `AGENTS.md`, `CLAUDE.md` or a role contract | `writing-for-agents` | how a document that agents READ has to be written (`SPEC` requires it of every document produced) |
-| session start | `.agents/roles/builder-<runtime>.md` | simplify invocation, context management |
+| session start | `.agents/roles/builder-claude.md` | the two mod gates, simplify invocation, context management |
+| session start | `.agents/orchestrator.md` `## Junior`, then `dispatch-junior` if a runtime is named | whose the typing is |
 | build starts | the ticket, its spec, the owner intent in your brief | what to build |
 | no seam to test through | `legacy-testing` | characterise → seam → TDD, in that order |
 | blast radius keeps growing as you read | `untangle` | scoping a refactor that will not scope |
@@ -29,9 +30,9 @@ Claude Code only). They add to this contract, never override it.
 |---|---|---|
 | Build | `mattpocock-skills:implement` | `atdd` has run where the criteria are clear, `mattpocock-skills:tdd` has run at every seam and the build is green — **then YOU check the acceptance criteria**, one by one |
 | Increment review | `mattpocock-skills:code-review <Base>` | both axes have run once over that range |
-| Bug review | built-in `code-review` — see runtime supplement | its findings are folded |
-| Simplify | see runtime supplement | a `simplify(increment):` commit exists whose body names the pass that ran |
-| Cross-vendor arm | `codex-arm` / `codex-claude-arm` | an `arm(ticket):` receipt at your head |
+| Bug review | built-in `code-review` (`builder-claude.md`) | its findings are folded |
+| Simplify | `simplify` (`builder-claude.md`) | a `simplify(increment):` commit exists whose body names the pass that ran |
+| Cross-vendor arm | `codex-arm` | an `arm(ticket):` receipt at your head |
 | Visual verification | `bmad-ux audit` for a UI ticket | every changed user-visible surface has browser evidence, and a UI ticket a read-only audit, or the skip is named |
 
 **Commit and push at every phase boundary**, not only at handback — the table above is the
@@ -47,6 +48,13 @@ handback: `TDD: n/a — <why>`. `atdd` and `bmad-ux audit` are optional the same
 
 `implement` is **user-invoked**: drive it by name. The craft layer (`tdd`, `diagnosing-bugs`,
 `research`, `grilling`, `wizard`…) is model-invoked and needs no wiring.
+
+## With a junior
+
+When `orchestrator.md`'s Junior row names a runtime, Build splits: **the red tests are yours**
+(`atdd`, `tdd`, committed), **the green is the junior's** (`dispatch-junior`: a pane beside you,
+one brief, one wait, one read-back), and every later phase is yours over its commits. Never edit the worktree while the junior holds it. Two red briefs, or a crossed boundary in
+`junior.md`, return the typing to you; say so in the handback.
 
 ## Build
 
@@ -163,7 +171,8 @@ A STOP here has one answer, the fold re-run and a fresh marker; a committed log 
 
 Then return to Thomas: the branch, the final SHA, which acceptance criteria pass, the validation
 commands and their output, the `simplify(increment):` marker, browser evidence for any surface
-you changed (or the named skip), and anything you reported rather than changed.
+you changed (or the named skip), the `Junior:` line (`dispatch-junior`, or `Junior: none`), and
+anything you reported rather than changed.
 
 Thomas verifies the diff, dispatches QA before a PR, merge or release, and decides merge. Cleanup of
 your worktree, branch and pane is his.

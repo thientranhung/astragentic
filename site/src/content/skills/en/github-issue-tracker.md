@@ -3,7 +3,7 @@ title: github-issue-tracker
 oneLiner: "Drive GitHub Issues as the harness tracker, with status in labels and the board as a mirror you write."
 group: adapter
 order: 4
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/github-issue-tracker/SKILL.md
 rented: false
 lang: en

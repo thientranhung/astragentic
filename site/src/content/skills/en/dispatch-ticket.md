@@ -3,7 +3,7 @@ title: dispatch-ticket
 oneLiner: "Hand one ready ticket to one Builder in its own worktree."
 group: main-flow
 order: 1
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/dispatch-ticket/SKILL.md
 rented: false
 diagram: ticket-lifecycle
@@ -20,7 +20,7 @@ Builder is actually working on it." Nine steps, always in that order:
 - **Resolve the orchestrator row**: runtime, model, effort, and the write-set.
 - **Claim the ticket, then cut the branch and worktree**, in that order.
 - **Open a Herdr tab and pane**, gated on `foreground_cwd`.
-- **Print the resolved dispatch**, then launch through the runtime's own skill.
+- **Print the resolved dispatch**, then launch through `dispatch-ticket-claude`.
 - **Hand over the brief**, its first line the phase's slash command.
 - **Arm the watcher right after submitting**: those are one action, not two.
 - **Branch on the watcher's exit status**, never on pane status alone.
@@ -42,7 +42,7 @@ writes to disk, not only git. <!-- source: harness/.agents/skills/dispatch-ticke
 | What is in front of you | Reach for |
 |---|---|
 | A ticket on the frontier with an empty assignee | `dispatch-ticket` (claim, then worktree) |
-| The dispatch itself, once claimed | `dispatch-ticket` + the runtime-specific companion (`dispatch-ticket-claude`, `-codex`, `-opencode`) |
+| The dispatch itself, once claimed | `dispatch-ticket` + `dispatch-ticket-claude` |
 | A Shaper, QA or Rin needs a pane, not just a Builder | Same skill, same mechanics; only the tab and pane label prefix changes |
 | A pane went idle or blocked mid-turn | `WATCHING.md` (companion reference, not a separate skill) |
 | The Builder handed back and it is time to remove the worktree | `CLEANUP.md` (companion reference) |

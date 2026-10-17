@@ -155,7 +155,11 @@ role_budget() {
                            # when the check runs. 1850 -> 1970 the SAME day: not a fifth raise
                            # of remit, the margin-calibration pass above — 1850 had shipped at
                            # 1818, a 32-word margin no project's own required addition fits in.
-    builder) echo 1660 ;;
+    builder) echo 1760 ;;
+                           # RAISED 2026-10-17, reason in this commit: the Builder gained a
+                           # phase split — "With a junior" and its Load row — when the
+                           # Codex/OpenCode role runtimes retired and a junior pane took
+                           # their place under the Builder. 1659 ship + ~100 headroom.
                            # RAISED 2.7.0, reason in this commit: that release added real
                            # scope here — the tracker interlock told honestly, the
                            # ready-for-agent gate, reading QA's coverage gaps, the

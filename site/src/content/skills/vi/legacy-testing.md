@@ -3,7 +3,7 @@ title: legacy-testing
 oneLiner: "Ghim hành vi hiện tại của code chưa có test, cắt một seam vào nó, rồi mới cho TDD bắt đầu."
 group: brownfield
 order: 1
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/legacy-testing/SKILL.md
 rented: false
 lang: vi

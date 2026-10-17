@@ -1,49 +1,34 @@
 ---
 title: "Tech stack"
-description: "Chín thành phần của stack, và vì sao là thành phần đó chứ không phải thứ khác. Mỗi thành phần kèm chỗ nó đã gây lỗi."
+description: "Tám thành phần của stack, và vì sao là thành phần đó chứ không phải thứ khác. Mỗi thành phần kèm chỗ nó đã gây lỗi."
 ---
 
 Danh sách này ngắn có chủ đích. Mỗi thành phần ở đây phải trả lời được câu "bỏ nó ra thì cái gì
-gãy", và thành phần nào chỉ gây bất tiện nhỏ khi bỏ đi thì tôi đã bỏ. Ba thành phần đầu là
-runtime, ba thành phần giữa là cơ chế, ba thành phần cuối là thứ tôi tự viết hoặc tự chọn để
+gãy", và thành phần nào chỉ gây bất tiện nhỏ khi bỏ đi thì tôi đã bỏ. Hai thành phần đầu là
+hai CLI, ba thành phần giữa là cơ chế, ba thành phần cuối là thứ tôi tự viết hoặc tự chọn để
 dựng chính trang này.
 
 ## claude-code
 
-Runtime gốc. Agent của cả năm role đều chạy được ở đây, và `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium` là câu lệnh mở đầu một
-session. Nếu bạn chỉ cài đúng một runtime thì phải là runtime này.
+Runtime. Agent của mọi role đều chạy ở đây, và `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium` là câu lệnh mở đầu một
+session. Nếu bạn chỉ cài đúng một CLI thì phải là CLI này.
 
 Nó bắt buộc vì hai cơ chế sau chỉ tồn tại ở đây:
 
 - **System prompt tách khỏi contract.** `.claude/agents/<role>.md` là system prompt và sống sót
   qua compaction, còn `.agents/roles/<role>.md` vào session như một tool result và bị compaction
   tóm tắt đi trước tiên.
-- **Compaction.** Codex và OpenCode không có cơ chế đó, nên `hook-contract-reload.py` chỉ đăng ký
-  ở Claude Code, và đó là quyết định có chủ đích chứ không phải chỗ quên.
+- **Compaction.** `hook-contract-reload.py` đăng ký ở Claude Code cho sự kiện compaction, và không runtime
+  nào khác trong harness có sự kiện đó.
 
 ## codex
 
-Runtime tuỳ chọn, có mặt vì cross-vendor arm. Không có vendor thứ hai thì arm đó không tồn tại,
-và arm là cơ chế có sản lượng bắt lỗi cao nhất trong hệ này.
+Codex CLI, có mặt vì cross-vendor arm và không vì gì khác. Không role nào chạy trên nó. Không có
+vendor thứ hai thì arm đó không tồn tại, và arm là cơ chế có sản lượng bắt lỗi cao nhất trong hệ này.
 
-Ba thư mục mang phần Codex:
-
-- **`.codex/profiles/`.** Template khởi động pane cho từng role.
-- **`.codex/agents/`.** Hai helper agent chỉ đọc.
-- **`.codex/hooks.json`.** Đăng ký git guard.
-
-Giới hạn nằm ở thư mục cuối: Codex duyệt định nghĩa hook project-local theo hash, nên nếu chưa có
-quyết định trust thì guard vẫn nằm đó, vẫn trông như đã cài, và bị bỏ qua. Doctor kiểm phần đăng
-ký, còn xác nhận trust thì phải gõ `/hooks` trong Codex CLI.
-
-## opencode
-
-Runtime thứ ba cho dispatch role, adapter nằm ở `.opencode/agents/`. Nó có mặt để
-`.agents/orchestrator.md` không bị kẹt vào đúng một vendor.
-
-Giới hạn: một Builder chạy OpenCode không có hook tương đương `hook-git-guard.py`. Đó là một
-trong hai lý do luật thứ tự dọn dẹp phải nằm trong `dispatch-ticket/CLEANUP.md` trước, trong hook
-sau. Lý do còn lại là cả Claude lẫn Codex cũng có thể chạy với hook tắt.
+Builder chạy nó từ worktree của mình qua plugin Codex (`codex-arm`), còn Thomas chạy ở phạm vi
+spec và slice. Nếu Codex không dùng được hoặc hết quota thì arm chưa chạy, và biên nhận ghi đúng
+như vậy.
 
 ## git-worktree
 
@@ -68,10 +53,9 @@ và cho phép nhắc, chờ, đọc từng pane. Đây là thứ biến dispatch
 được.
 
 **Và nó là kênh duy nhất không phân biệt nền tảng.** Giữa hai session Claude Code đã có sẵn
-cross-session messaging, nhưng kênh đó chỉ tồn tại bên trong một hãng. Khi Thomas chạy Claude,
-một Builder chạy Codex và một QA chạy OpenCode, ba tiến trình của ba hãng không có giao thức
-chung nào để nói với nhau. herdr có: pane là địa chỉ, `herdr pane run` là gửi, `herdr pane read`
-là đọc. Thomas điều một Builder trên Codex bằng đúng những lệnh nó dùng cho Builder trên Claude —
+cross-session messaging, nhưng kênh đó chỉ tồn tại bên trong một hãng. Khi một Builder mở một junior trên runtime khác ngay cạnh mình, hai tiến trình của hai hãng
+không có giao thức chung nào để nói với nhau. herdr có: pane là địa chỉ, `herdr pane run` là gửi, `herdr pane read`
+là đọc. Builder điều một junior bằng đúng những lệnh nó dùng cho mọi pane —
 và đó là lý do "một quy trình, nhiều runtime" không dừng ở khẩu hiệu.
 
 **Một bẫy đã đo khi đọc pane:** phần đọc bị cắt bớt mà không báo gì. Khi cần nguyên văn một output

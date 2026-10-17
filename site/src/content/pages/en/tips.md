@@ -487,7 +487,7 @@ Calling it is one line in a prompt:
 Three properties:
 
 - **It is context, not machinery.** The files sit in the repo, so any agent that opens the repo can
-  read them — Claude Code, Codex, OpenCode, no adapter needed. Nothing has to stay running, and no
+  read them — no adapter needed. Nothing has to stay running, and no
   upgrade can break it.
 - **Token cost is the design constraint.** A framework loads the whole set into context. Here a
   capability is a file, so you pay for exactly the part you need: an ordinary session is one role

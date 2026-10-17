@@ -3,7 +3,7 @@ title: bootstrap-glossary
 oneLiner: "Gieo GLOSSARY.md từ chính các thuật ngữ code đang dùng, đánh dấu chưa duyệt cho tới khi được xác nhận."
 group: entry
 order: 1
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/bootstrap-glossary/SKILL.md
 rented: false
 lang: vi

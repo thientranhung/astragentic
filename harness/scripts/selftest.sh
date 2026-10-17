@@ -122,46 +122,7 @@ else
   bad "guard no-opinion logging" "expected a no-opinion entry in the fire log"
 fi
 
-# Codex registration is a separate runtime surface. Exercise the command AS REGISTERED from
-# an adapted-project layout; parsing hooks.json or running the script directly proves neither
-# that the registration resolves the installed path nor that stdin reaches the guard.
-if pkg_only "codex hooks, codex agents, argument conventions"; then
-echo "codex hooks — registered command reaches the shared guard"
-CT="$TMP/codex-hook-target"; mkdir -p "$CT/.codex" "$CT/scripts"
-cp "$ROOT/harness/.codex/hooks.json" "$CT/.codex/hooks.json"
-cp "$S/hook-git-guard.py" "$CT/scripts/hook-git-guard.py"
-HOOK_CMD="$(python3 - "$CT/.codex/hooks.json" <<'PY'
-import json, sys
-cfg = json.load(open(sys.argv[1], encoding="utf-8"))
-print(cfg["hooks"]["PreToolUse"][0]["hooks"][0]["command"])
-PY
-)"
-SMOKE='{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git add -A"}}'
-out="$(cd "$CT" && printf '%s' "$SMOKE" | HARNESS_HOOK_LOG="$TMP/codex-hook.log" bash -c "$HOOK_CMD" 2>/dev/null)"
-case "$out" in
-  *'"permissionDecision": "deny"'*) ok "Codex hooks.json invokes the guard from adapted layout" ;;
-  *) bad "Codex hook registration" "registered command did not deny git add -A: $out" ;;
-esac
-
-echo "codex custom agents — project TOML requests read-only mode and is parseable"
-if python3 - "$ROOT/harness/.codex/agents" <<'PY'
-import os, sys, tomllib
-expected = {
-    "astragentic-explorer.toml": "astragentic_explorer",
-    "astragentic-reviewer.toml": "astragentic_reviewer",
-}
-for filename, name in expected.items():
-    with open(os.path.join(sys.argv[1], filename), "rb") as fh:
-        cfg = tomllib.load(fh)
-    assert cfg["name"] == name
-    assert cfg["sandbox_mode"] == "read-only"
-    assert cfg["description"] and cfg["developer_instructions"]
-PY
-then
-  ok "project custom-agent TOML parses and requests read-only mode"
-else
-  bad "Codex custom-agent TOML" "missing, invalid, or not read-only"
-fi
+if pkg_only "argument conventions"; then
 
 # ---------------------------------------------------------------------------------------------
 # Argument conventions — 2.7.2's `--check` was positional, and the wrong position exited 0 AND
@@ -305,29 +266,23 @@ if bash "$ROOT/install.sh" "$T1" >/dev/null 2>&1 && [ -d "$T1/.astraler/releases
     && ok "stages from a path containing a space" \
     || bad "spaced path" "a repository path with a space refused a valid install"
 
-  # A RENAMED SCAFFOLD PATH. The fossil report has existed since 2.7.6 and excluded
-  # `.codex/profiles/*` by name, because a project keeps its own scaffold — right reasoning,
-  # and it stops holding the moment the path is RETIRED rather than tuned. 2.12.0 renamed all
-  # five profiles, and this exclusion is what would have carried the dead name into every
-  # adapted repo without a word (AST-143's shape, one directory over).
-  T4="$TMP/pre212"; rm -rf "$T4"
+  # A RETIRED PATH IS REPORTED, NOT SKIPPED. The runtime-profile directories were removed from
+  # the payload; a project that still carries one must be told by the "DELETED upstream"
+  # report, because nothing else sees a file the release no longer ships. The fixture is an
+  # earlier staged release that shipped the file, and a project that still has it.
+  T4="$TMP/retired"; rm -rf "$T4"
   mkdir -p "$T4/.codex/profiles" "$T4/.astraler/releases/0.0.1/harness/.codex/profiles" "$T4/.astraler/state"
   ( cd "$T4" && git init -q . ) >/dev/null 2>&1
-  FOSSIL="builder.config"".toml"
-  printf 'model = "x"\n' > "$T4/.codex/profiles/$FOSSIL"
-  cp "$T4/.codex/profiles/$FOSSIL" "$T4/.astraler/releases/0.0.1/harness/.codex/profiles/"
+  printf 'x\n' > "$T4/.codex/profiles/builder.md"
+  cp "$T4/.codex/profiles/builder.md" "$T4/.astraler/releases/0.0.1/harness/.codex/profiles/"
   printf '0.0.1\n' > "$T4/.astraler/state/applied-version"
-  # The guard install.sh reads, set deliberately: these two runs are about the fossil REPORT,
-  # and without it each one spawns a nested copy of this whole suite as its staging gate —
-  # minutes, for coverage the three cases above already provide.
+  # The guard install.sh reads, set deliberately: this run is about the REPORT, and without it
+  # it spawns a nested copy of this whole suite as its staging gate.
   ASTRALER_IN_SELFTEST=1 bash "$ROOT/install.sh" "$T4" >/dev/null 2>&1
   out="$(ASTRALER_IN_SELFTEST=1 bash "$ROOT/install.sh" "$T4" --apply 2>&1)"
-  says "$out" ".codex/profiles/$FOSSIL" \
-    && ok "a renamed profile is reported as a fossil rather than skipped as scaffold" \
-    || bad "profile rename fossil" "the dead name stays in the project and the receipt says clean"
-  says "$out" "READ THIS ONE BEFORE DELETING" \
-    && ok "the fossil report says where the owner's model and effort have to go first" \
-    || bad "profile rename advisory" "the owner is told to delete a file holding values nothing else has"
+  says "$out" "DELETED upstream" && says "$out" ".codex/profiles/builder.md" \
+    && ok "a path an earlier release shipped and this one does not is reported as deleted upstream" \
+    || bad "deleted-upstream report" "the retired file stays in the project and the receipt says clean"
   # --apply must EXIT 0 and stamp, not just print. 2.20.1 printed its whole summary and died
   # on the next line, before the stamp, and this suite passed it on the strings alone.
   if ASTRALER_IN_SELFTEST=1 bash "$ROOT/install.sh" "$T1" --apply >/dev/null 2>&1 \
@@ -701,52 +656,42 @@ else
 fi
 
 # ---------------------------------------------------------------------------------------------
-# A RULE REACHES EVERY RUNTIME, OR IT REACHES ONE (2.9.0).
+# A RULE IS REGISTERED, OR IT IS INERT (2.7.13, 2.9.0).
 #
-# 2.7.13 is titled "the guard shipped for three runtimes and was registered on one":
-# hook-git-guard.py lived in .claude/settings.json, which Codex does not read, so a Builder on
-# a Codex pane ran with the contract above it and nothing underneath. That release fixed the
-# registration for that one script. Nobody asked the next question, so in 2.9.0 the same shape
-# was found twice more: hook-contract-reload.py registered only for Claude, and the four rules
-# that outlive compaction present in the Claude and OpenCode adapters and in NONE of the five
-# Codex profiles. Both were watched to fail here before they were fixed.
+# 2.7.13 is titled "the guard shipped for three runtimes and was registered on one". Claude is
+# now the only role runtime, so what is left to pin is the half that still applies: every hook
+# script the payload ships is named by .claude/settings.json, and the rules that outlive
+# compaction are present in the Claude adapters. Both were watched to fail here before they
+# were fixed.
 # ---------------------------------------------------------------------------------------------
-echo "one rule, every runtime"
+echo "one rule, registered where it is loaded"
 
 # WHY THIS SECTION IS NO LONGER `pkg_only` (2.10.0). It was, and that was the same defect it
 # exists to catch, one floor down. The payload is where these four files are AUTHORED; the
-# adapted project is where they are actually LOADED, and it is the only place they can drift —
-# `.codex/profiles/` is a scaffold path `install.sh` keeps for the owner, so a project that
-# already had one received none of 2.9.0's headline fix and its suite stayed green about it.
-# The check that proves a rule reached every runtime must run where the runtimes are.
+# adapted project is where they are actually LOADED, and it is the only place they can drift.
+# The check that proves a rule reached the runtime must run where the runtime is.
 PAY="$ROOT/harness"; [ "$LAYOUT" = project ] && PAY="$ROOT"
 for role in thomas shaper builder qa; do
   cla="$PAY/.claude/agents/$role.md"
-  opc="$PAY/.opencode/agents/$role.md"
-  cdx="$PAY/.codex/profiles/$role.md"
   # A project may not run all four roles, and a surface that does not exist there is not a
   # drifted surface. Absent files are reported as scope, never as a failure.
   present=0; miss=""
-  for f in "$cla" "$opc" "$cdx"; do [ -f "$f" ] && present=$((present+1)); done
+  [ -f "$cla" ] && present=1
   if [ "$present" -eq 0 ]; then
-    SKIPPED=$((SKIPPED+1)); echo "  skip compaction rules: $role — no adapter on any runtime here"
+    SKIPPED=$((SKIPPED+1)); echo "  skip compaction rules: $role — no Claude adapter here"
     continue
   fi
   [ ! -f "$cla" ] || grep -qi 'survives compaction' "$cla" || miss="$miss claude"
-  [ ! -f "$opc" ] || grep -qi 'survives compaction' "$opc" || miss="$miss opencode"
-  [ ! -f "$cdx" ] || grep -qi 'survives compaction' "$cdx" || miss="$miss codex"
-  [ -z "$miss" ] && ok "compaction rules reach every runtime present: $role" \
+  [ -z "$miss" ] && ok "compaction rules present in the Claude adapter: $role" \
                  || bad "compaction rules missing for $role" "absent on:$miss"
 done
 
-# Every hook script the payload ships must be named by every runtime that HAS a hook surface.
-# OpenCode has none of the declarative kind, so it is out of scope here by measurement rather
-# than by assumption — its adapters are markdown and carry the rules instead.
+# Every hook script the payload ships must be named by the runtime's hook registration
+# (.claude/settings.json). A script that ships and is registered nowhere is inert.
 for hk in hook-git-guard.py hook-contract-reload.py hook-tracker-status.py; do
   inc=$(grep -c "$hk" "$PAY/.claude/settings.json" 2>/dev/null || echo 0)
-  inx=$(grep -c "$hk" "$PAY/.codex/hooks.json" 2>/dev/null || echo 0)
-  if [ "$inc" -gt 0 ] && [ "$inx" -gt 0 ]; then ok "registered for claude and codex: $hk"
-  else bad "$hk registered on one runtime" "claude=$inc codex=$inx — this is the 2.7.13 shape"; fi
+  if [ "$inc" -gt 0 ]; then ok "registered in .claude/settings.json: $hk"
+  else bad "$hk not registered" "shipped but named nowhere in .claude/settings.json — the hook is inert"; fi
 done
 
 # hook-contract-reload had no case at all until 2.9.0, which is its own finding: the hook that
@@ -815,12 +760,13 @@ chmod -x "$TS/.astraler/project/tracker-status.sh"
 tstat silent '{"source":"startup"}' "a non-executable plug fails open"
 
 # ---------------------------------------------------------------------------------------------
-# check-reachability checks 9, 10 and 11 (2.10.0) — the three the audit in AST-140/141 produced.
+# check-reachability checks 9 and 10 (2.10.0) — from the audit in AST-140/141. Check 11 (a rule
+# follows its role's runtime) retired in 4.0.0 with the second runtime it watched for.
 # Each is driven through a FIXTURE built to trip it, because a check that has only ever been run
 # against a clean tree has been watched to stay quiet and never watched to fire.
 # ---------------------------------------------------------------------------------------------
-if pkg_only "reachability 9/10/11 fixtures"; then
-echo "reachability — mention is not invocation, an assertion is about now, a rule follows its runtime"
+if pkg_only "reachability 9/10 fixtures"; then
+echo "reachability — mention is not invocation, an assertion is about now"
 
 RX="$TMP/rx"; rm -rf "$RX"; mkdir -p "$RX"
 cp -R "$ROOT/harness" "$RX/harness"; mkdir -p "$RX/prompts"
@@ -839,7 +785,6 @@ cp "$ROOT/README.md" "$ROOT/install.sh" "$ROOT/check-requirements.sh" "$RX/" 2>/
 # they would do if the tool were broken and printed nothing at all. Both halves were measured
 # here on 2026-09-16 before this comment existed.
 rx()  { python3 "$S/check-reachability.py" "$RX" 2>&1; }
-rxp() { python3 "$S/check-reachability.py" "$RP" 2>&1; }
 
 out="$(rx)"
 says "$out" "All reachability checks passed" \
@@ -912,29 +857,6 @@ says "$out" "All reachability checks passed" \
   && ok "check 10 stays quiet on the payload's own globbed bindings" \
   || bad "check 10 glob" "a live glob binding in the shipped ledger reads as rot"
 
-# 4 — `--profile <role>` is an address outside the repository. codex --help: it layers
-# $CODEX_HOME/<name>.config.toml, which no payload ships and no adaptation writes since 2.12.0.
-# A launcher written that way starts a pane with no role contract and Codex says nothing.
-python3 - "$RX" <<'EOS'
-import sys, os
-p = os.path.join(sys.argv[1], "harness", ".agents", "skills", "dispatch-ticket-codex", "SKILL.md")
-open(p, "a").write("\n```text\nbuilder → codex --profile builder\n```\n")
-EOS
-out="$(rx)"
-says "$out" "launches \`--profile builder\`, an address outside the repository" \
-  && ok "check 4 refuses the retired --profile launcher" \
-  || bad "check 4 --profile" "a launcher pointing outside the repo passed as a resolved address"
-cp "$ROOT/harness/.agents/skills/dispatch-ticket-codex/SKILL.md" \
-   "$RX/harness/.agents/skills/dispatch-ticket-codex/SKILL.md"
-
-# 4 — and the address that replaced it must resolve like any other payload path.
-mv "$RX/harness/.codex/profiles/builder.md" "$RX/harness/.codex/profiles/builder.md.away"
-out="$(rx)"
-says "$out" "orchestrator.md puts builder on codex, but .codex/profiles/builder.md is absent" \
-  && ok "check 4 catches a role the table puts on codex with no instruction file" \
-  || bad "check 4 role file" "a launcher would have passed an empty developer_instructions and nothing went red"
-mv "$RX/harness/.codex/profiles/builder.md.away" "$RX/harness/.codex/profiles/builder.md"
-
 # docs-staleness axis 4 must actually READ the shipped prompts. Three attempts at that scope
 # fix each passed `bash -n`, printed `(clean)`, and scanned zero files — an array that read as
 # unbound inside the process substitution, a guard that two byte-identical copies disagreed
@@ -986,133 +908,7 @@ says "$out" "names 'some-project-stage-server'" \
   && bad "check 4 project vocabulary" "the plug was declared and the token is still reported" \
   || ok "check 4 accepts .astraler/project/not-a-skill.txt"
 
-# 11 — the loaded trap: a rule in the Claude-only tier while a role is assigned to another
-# runtime. Needs project layout, because no package ships that tier.
-RP="$TMP/rxproj"; rm -rf "$RP"; mkdir -p "$RP/.claude/rules"
-cp -R "$ROOT/harness/." "$RP/"
-printf '# fixture rule\n' > "$RP/.claude/rules/fixture-invariant.md"
-python3 - "$RP" <<'EOS'
-import sys, os, re
-p = os.path.join(sys.argv[1], ".agents", "orchestrator.md")
-t = open(p).read()
-t = re.sub(r"^\|\s*builder\s*\|\s*claude\s*\|", "| builder | codex |", t, count=1, flags=re.M)
-open(p, "w").write(t)
-EOS
-out="$(rxp)"
-says "$out" "role 'builder' runs on codex, which never sees .claude/rules/fixture-invariant.md" \
-  && ok "check 11 fires when a role is moved off the runtime its rules live on" \
-  || bad "check 11" "reassigning a runtime silenced an always-on rule and nothing went red"
-printf 'fixture-invariant\n' >> "$RP/.codex/profiles/builder.md"
-out="$(rxp)"
-says "$out" "never sees .claude/rules/fixture-invariant.md" \
-  && bad "check 11 after carrying the rule" "the rule was carried into the profile and it still fires" \
-  || ok "check 11 goes quiet once the rule is carried into that runtime's adapter"
 fi
-# ---------------------------------------------------------------------------------------------
-# THE CODEX LAUNCHER: THE ROW, THE FILE, AND A MECHANISM THAT RETIRED UNDER IT (2.12.0).
-#
-# `codex --profile <role>` layers `$CODEX_HOME/<role>.config.toml` and nothing else — the CLI's
-# own help says so. Until 2.12.0 this package shipped in-repo templates for a machine-local file
-# the owner had to copy by hand into a namespace every project on the machine shares. The
-# replacement passes the role file on the command line, which makes the orchestrator row the
-# only home for model and effort and leaves three ways to be wrong, each fired here first.
-# ---------------------------------------------------------------------------------------------
-echo "codex launcher — a row that names no model, a file that is not there, a mechanism that retired"
-
-CR="$ROOT/check-requirements.sh"; [ -f "$CR" ] || CR="$S/check-requirements.sh"
-if [ -f "$CR" ] && { [ "$LAYOUT" = package ] || [ -d "$ROOT/.astraler/releases/$(cat "$ROOT/.astraler/CANDIDATE" 2>/dev/null)/harness/.agents" ]; }; then
-  CFIX="$TMP/cqfix"
-  # The fixture is the GENERIC scaffold, never the project's own tuned orchestrator. In package
-  # layout that is harness/; in an adapted project it is the staged release. `$ROOT/harness`
-  # alone does not exist downstream, so all six cases below failed in every adopted project
-  # (found on the first 2.15 adoption) while passing here.
-  CSRC="$ROOT/harness"
-  if [ "$LAYOUT" = project ]; then
-    CSRC="$ROOT/.astraler/releases/$(cat "$ROOT/.astraler/CANDIDATE" 2>/dev/null)/harness"
-  fi
-  cfresh() {
-    rm -rf "$CFIX"; mkdir -p "$CFIX"
-    cp -R "$CSRC/.agents" "$CFIX/.agents"
-    cp -R "$CSRC/.codex"  "$CFIX/.codex"
-  }
-  crow() { python3 - "$CFIX" "$1" <<'EOS'
-import sys, os, re
-p = os.path.join(sys.argv[1], ".agents", "orchestrator.md")
-t = open(p).read()
-t = re.sub(r"^\|\s*builder\s*\|\s*codex\s*\|.*\n", sys.argv[2], t, count=1, flags=re.M)
-open(p, "w").write(t)
-EOS
-  }
-  cq() { bash "$CR" "$CFIX" 2>&1; }
-
-  # A row that claims the runtime and names nothing to launch. Until 2.12.0 one awk condition
-  # answered two questions — is there a row, and does it name a model — and delivered the
-  # second answer as the first: a blank Model cell printed `no codex row … does not run on
-  # Codex`, which is what a DELIBERATE decline looks like. AST-040 wearing a blank.
-  cfresh; crow '| builder | codex |  | medium |
-'
-  out="$(cq)"
-  says "$out" "Codex builder has a codex row with no model" \
-    && ok "a codex row with a blank model is a finding, not a decline" \
-    || bad "codex row/model" "a role that cannot launch was reported as declining the runtime"
-
-  # And the decline itself must still read as one, or the fix above turns into noise on every
-  # project that deliberately runs a role on one runtime.
-  cfresh; crow ''
-  out="$(cq)"
-  says "$out" "Codex builder: no codex row — this role does not run on Codex" \
-    && ok "no codex row still reads as a deliberate decline" \
-    || bad "codex row absent" "declining a runtime now produces a finding"
-
-  # A TARGET missing its own file must not be answered by the package's copy. Same class as
-  # 2.11.0's staleness gate measuring the caller's cwd: the checker was handed a tree and
-  # reported on a different one.
-  cfresh; rm -f "$CFIX/.codex/profiles/builder.md"
-  out="$(cq)"
-  says "$out" "Codex builder instruction file not found" \
-    && ok "a target with no instruction file is not answered by the package's copy" \
-    || bad "codex file scope" "the checker fell back across the target boundary and reported OK"
-
-  # The file IS the pane's system prompt, so a sentence describing the retired mechanism is
-  # read as instruction. Measured downstream: five role files kept "it exists so codex
-  # --profile <role> resolves" through the change that retired it, and the pane quoted it back.
-  cfresh; printf 'it exists so codex --profile builder resolves\n' >> "$CFIX/.codex/profiles/builder.md"
-  out="$(cq)"
-  says "$out" "still describe the retired --profile mechanism" \
-    && ok "role instructions teaching a dead mechanism are reported" \
-    || bad "codex stale mechanism" "a pane would be told to use a flag that resolves nowhere"
-
-  # An upgrade adds `<role>.md` and cannot delete the `<role>.config.toml` it no longer ships.
-  # Both then sit in the same directory and the stale one still reads as current.
-  cfresh; printf 'model = ""\n' > "$CFIX/.codex/profiles/builder.config.toml"
-  out="$(cq)"
-  says "$out" "pre-2.12 profile TOML still present" \
-    && ok "a leftover profile TOML is named rather than left beside the live file" \
-    || bad "codex legacy leftover" "two files, one dead, and the upgrade said nothing"
-
-  # An empty Effort cell is refused where an empty model is. Measured: the launcher passes
-  # `-c model_reasoning_effort=""` and Codex refuses it while loading config —
-  # `reasoning_effort must not be empty` — so the pane never starts, after dispatch has already
-  # reported a launch. It was a WARN until 2026-09-20, on the wrong reading that an empty cell
-  # falls back to an account default (AST-151).
-  cfresh; crow '| builder | codex | gpt-5.6-luna |  |
-'
-  out="$(cq)"
-  says "$out" "[MISS] Codex builder row names a model and no effort" \
-    && ok "an empty effort cell is refused, not warned about" \
-    || bad "codex empty effort" "a row that cannot boot a pane passed as an advisory"
-
-  # The green case, because a gate only read when it is red teaches nothing about when it is right.
-  cfresh; crow '| builder | codex | gpt-5.6-luna | medium |
-'
-  out="$(cq)"
-  says "$out" "Codex builder row: gpt-5.6-luna / medium" \
-    && ok "a fully configured codex row reports the pair it will launch with" \
-    || bad "codex row green" "a correct row produced no confirmation"
-else
-  SKIPPED=$((SKIPPED+1)); echo "  skip codex launcher — check-requirements.sh not in this layout"
-fi
-
 # A path is never built from unvetted input: a role name with a separator must not escape.
 out="$(printf '%s' '{"hook_event_name":"SessionStart","source":"compact","agent_type":"../../etc/passwd"}' \
        | python3 "$S/hook-contract-reload.py" 2>/dev/null)"

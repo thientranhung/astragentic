@@ -3,7 +3,7 @@ title: reconcile-tracker
 oneLiner: "Đo tracker đối chiếu với git rồi báo ra bốn loại lệch giữa hai nguồn."
 group: upkeep
 order: 1
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/reconcile-tracker/SKILL.md
 rented: false
 lang: vi

@@ -7,7 +7,6 @@ description: Invocation mechanics for the cross-vendor arm on a Claude root — 
 
 **When it fires belongs to `thomas.md` and `builder.md`, not here** — three scopes, at most two
 passes **per gate invocation**. Do not restate the cadence in this file; this skill owns the HOW.
-`codex-claude-arm` is the mirror for a Codex root.
 
 **Who fires it depends on the scope**: the one who owns the artifact at that scope.
 

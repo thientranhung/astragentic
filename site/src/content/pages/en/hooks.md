@@ -3,10 +3,9 @@ title: "Hooks"
 description: "Four hooks, three scripts. One blocks dangerous git, one re-arms the contract after compaction, one writes a log, and one I measured as dormant."
 ---
 
-Four hooks are registered in `harness/.claude/settings.json`, and the git guard is registered
-again in `harness/.codex/hooks.json`. The principle behind all four is that the hook always
+Four hooks are registered in `harness/.claude/settings.json`. The principle behind all four is that the hook always
 comes after and the contract always comes first. A rule that matters has to live in the contract,
-because the contract is read on every runtime, while a hook can be disabled, can be untrusted,
+because the contract is read in every session, while a hook can be disabled, can be untrusted,
 and can be bolted to an execution path nobody walks through.
 
 That last case is not hypothetical. One of the four below is dormant, I measured it, and I am
@@ -14,7 +13,7 @@ leaving it here rather than quietly removing it.
 
 ## pre-tool-use
 
-It fires before an agent runs the `Bash` tool, on both Claude Code and Codex, and it runs
+It fires before an agent runs the `Bash` tool, in Claude Code, and it runs
 `scripts/hook-git-guard.py`.
 
 The script reads the command about to run and does exactly one of two things: deny, naming the
@@ -87,8 +86,7 @@ concludes it is mid-session, and never re-reads. The instruction is present and 
 Two details are deliberate. It fires on `compact` and not on `clear`, because after `/clear` an
 agent faces an empty context and reads its contract unprompted, while after compaction it faces
 a summary insisting work is underway and does not. That asymmetry is the entire defect. And it
-is Claude Code only, because Codex and OpenCode have no compaction, so there is no moment to
-attach to.
+is Claude Code's own event, so it fires nowhere else.
 
 Every exit path in the script is either valid JSON on stdout or nothing at all, and none of them
 raise. A traceback on stderr would be read by the runtime as a broken hook and disabled, and the

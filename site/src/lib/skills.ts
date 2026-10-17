@@ -83,8 +83,6 @@ export const GROUPS: Record<
  *  frontmatter carries `group:` always wins over this map. */
 const REGROUP: Record<string, GroupId> = {
   'dispatch-ticket-claude': 'adapter',
-  'dispatch-ticket-codex': 'adapter',
-  'dispatch-ticket-opencode': 'adapter',
   'github-issue-tracker': 'adapter',
   'jira-issue-tracker': 'adapter',
   'linear-issue-tracker': 'adapter',
@@ -105,10 +103,6 @@ const VERB: Record<string, Record<Lang, string>> = {
     vi: 'Chạy một lượt Codex đọc lại artifact trước khi nó merge.',
     en: 'Fire a Codex pass over a finished artifact before it merges.',
   },
-  'codex-claude-arm': {
-    vi: 'Chạy một lượt Claude đọc lại artifact khi runtime gốc là Codex.',
-    en: 'Fire the Claude pass when the root runtime is Codex.',
-  },
   'dispatch-ticket': {
     vi: 'Đẩy một ticket đã claim thành một pane nhìn thấy được.',
     en: 'Dispatch one claimed ticket as a visible pane.',
@@ -117,13 +111,9 @@ const VERB: Record<string, Record<Lang, string>> = {
     vi: 'Launch và xác nhận một Builder trên Claude Code.',
     en: 'Launch and verify a Builder on Claude Code.',
   },
-  'dispatch-ticket-codex': {
-    vi: 'Launch và xác nhận một Builder trên Codex.',
-    en: 'Launch and verify a Builder on Codex.',
-  },
-  'dispatch-ticket-opencode': {
-    vi: 'Launch và xác nhận một Builder trên OpenCode.',
-    en: 'Launch and verify a Builder on OpenCode.',
+  'dispatch-junior': {
+    vi: 'Giao phần gõ code của một ticket cho pane junior, rồi nhận lại cây để review.',
+    en: 'Hand a ticket\'s typing to a junior pane, then take the tree back for review.',
   },
   'dispatch-qa-walk': {
     vi: 'Đẩy QA đi một vòng trên sản phẩm đang chạy.',

@@ -21,7 +21,7 @@ const skills = defineCollection({
       .enum(['entry', 'main-flow', 'shaping', 'gate', 'brownfield', 'upkeep', 'adapter'])
       .optional(),
     order: z.number().default(50),
-    runtimes: z.array(z.enum(['claude', 'codex', 'opencode'])).default([]),
+    runtimes: z.array(z.enum(['claude'])).default([]),
     source: z.string().optional(),
     rented: z.boolean().default(false),
     diagram: z.string().optional(),

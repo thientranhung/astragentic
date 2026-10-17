@@ -1,3 +1,39 @@
+# Astragentic 4.0.0
+
+**A role runs on Claude Code; another runtime enters as a junior under the Builder.** Since
+2.x a role could be put on Codex or OpenCode by a row in `orchestrator.md`, with a supplement
+per role per runtime, a launcher skill per runtime, `.codex/profiles`, `.opencode/agents`, a
+fallback table and the checks that policed all of it. No role ever ran there in production
+(2026-10-05), and the mod, which is what enforces the contract, loads only on Claude. The
+owner retired the layer on 2026-10-17: `builder|thomas-codex|opencode.md`,
+`dispatch-ticket-codex|opencode`, `codex-claude-arm`, `harness/.codex/`, `harness/.opencode/`
+and the fallback-provider table are gone, with their checks in `check-requirements.sh`,
+`selftest.sh`, `check-reachability.py` and `install.sh`. `codex-arm` stays: the Codex CLI and
+plugin remain the cross-vendor arm's dependency, now reported as a WARN when absent.
+
+**What replaces it is a junior.** `orchestrator.md` gains a `## Junior` row for the Builder
+(`none` by default). Naming a runtime — `grok` ships — splits the Build phase: the Builder
+writes and commits the red tests, opens a pane beside itself (`dispatch-junior`), launches the
+junior with the row's model and effort, briefs it by name, waits on `herdr-watch-terminal.sh`,
+and reads the tree back; review, simplify, the arm, the markers and the handback stay the
+Builder's, over the junior's commits as over its own. The junior's contract is
+`.agents/roles/junior.md` plus `junior-<runtime>.md`; it commits with an `Implemented-by:`
+trailer and ends its turn on a `JUNIOR-DONE` line. Measured 2026-10-17 on Grok Build 1.0.60:
+three red tests to green in 1m1s, one trailered commit, the handback line present; a planted
+`git push` was refused by the contract and, driven at the runtime directly, by its deny rule.
+Reachability check 5 now requires `builder.md` to name `dispatch-junior` whenever a junior
+role exists, and was watched to fail on a contract that does not.
+
+**Budget.** `builder.md` rises to 1760 words for the junior section (reason in
+`docs-staleness-audit.sh`).
+
+## Upgrade from 3.3.1
+
+`.astraler/astragentic.sh update --apply`, then delete the retired files the receipt lists as
+DELETED upstream (`prompts/ADAPT-HARNESS.md`, *Upgrading to a release that retired the Codex
+and OpenCode role layer*). `orchestrator.md` is yours: the receipt reports the shape change; remove the fallback table
+and add the `## Junior` row by hand, at `none` until a project wants one.
+
 # Astragentic 3.3.1
 
 **A pane that starts a turn ends its hold.** 3.2.0 writes `waiting_on` when a turn ends with

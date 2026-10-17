@@ -3,7 +3,7 @@ title: bootstrap-glossary
 oneLiner: "Seed GLOSSARY.md from the terms the code already uses, marked unreviewed until confirmed."
 group: entry
 order: 1
-runtimes: [claude, codex, opencode]
+runtimes: [claude]
 source: harness/.agents/skills/bootstrap-glossary/SKILL.md
 rented: false
 lang: en
