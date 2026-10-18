@@ -70,3 +70,22 @@ arm(ticket) + slice gate.
 pathspec · agent-isolation guard trên fan-out read-only · STOP "marker không ở head" khi cây
 không đổi · commit-msg refusal về format trùng với record của mod. Cộng: gom claim-before-worktree
 về một nhà (14 bản), và sửa hook EPERM fail-closed.
+
+## 7. Thử nghiệm tắt arm ở scope ticket (nizzy, 2026-10-17 → 18, Thomas session mới)
+
+Owner bật `ticket | no` (cbdf0cd3e). 10 ticket merge với arm ticket tắt. Station bắt **0 lỗi
+code**; mọi gate đỏ đều do quy trình. Slice gate (ép bởi bộ đếm ở 13 merge) đọc 9 ticket: **7
+finding** — 5 liên ticket (chỉ slice thấy), **2 nhìn thấy trong một ticket** (test rỗng chỉ
+assert timestamp; đếm connection gồm cả inactive) là loại arm ticket thường bắt. Tức là tắt arm
+ticket đẩy ~2 lỗi/10 ticket xuống slice gate, không mất.
+
+Phát hiện kèm theo (không liên quan arm):
+
+| # | Việc | Loại |
+|---|---|---|
+| F0 | Rule file của project (`.claude/rules/marker-tail-order.md`, AGENTS.md) vẫn nói arm ticket bắt buộc sau khi 4.0.2 biến nó thành công tắc; apply không báo | restatement ở project; đề nghị `--adapted` grep rule project khi một rule thành switch |
+| F1 | Builder chạy `make db-down` tắt Postgres test dùng chung toàn máy (AST-115) vì brief dặn `make dev-down`; không có gì chặn | cần plug "lệnh pane dispatched không được chạy" do project khai, mod từ chối |
+| F4 | Push guard đòi `Ledger:` trên **mọi** merge trong range, kể cả merge sync origin/main của Builder → 2 lần từ chối, 10 phút/ticket sửa history | lỗi guard: chỉ đòi trên merge first-parent vào base |
+| OBS2 | Một TURN-END trễ trả lời lại brief cũ sau khi pane đã bị reap | chưa tái hiện; đường re-raise của mod |
+| OBS5 | Builder nhắn cho fork simplify của chính nó, mod readdress sang Thomas | readdress phải loại trừ agent con của pane |
+| OBS6/7 | TURN-END tới Thomas trong khi band pane báo "4 agent còn chạy": fork review thoát, 4 cháu chưa được đếm, turn /loop kết thúc với count 0 → chuông rò; review sub-agent im >20 phút ở cả hai Builder | đếm cả agent cháu; Builder có trần tự xử lý angle im lặng |
