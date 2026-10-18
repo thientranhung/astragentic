@@ -1272,7 +1272,7 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
     const refusedOther = await cmdOf('cd apps/server && make db-up')
     // the context ceiling: a turn that ends over it is compacted at the next tick, between turns
     let compacted = 0
-    $.session.usage = async () => ({ startedAt: 0, context: { tokens: 300_000, window: 1_000_000, percent: 30 } })
+    $.session.usage = async () => ({ startedAt: 0, context: { tokens: 350_000, window: 1_000_000, percent: 35 } })
     $.session.compact = async () => { compacted++; return {} }
     await fire('turn.complete', { reason: 'answer', answer: 'done', turnId: 't3' }, async () => ({}))
     await every()

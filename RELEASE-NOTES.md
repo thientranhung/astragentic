@@ -6,27 +6,27 @@ reads — 2.3B cache-read tokens over about 4,800 Builder calls against 2.4M out
 is calls × context, and context only grew: 91k at the first call, 400–550k median over a
 ticket, 1.78M at the top, because the engine's window is 1M and nothing compacted. Two fixes,
 one mechanism each. The Claude launcher in `dispatch-ticket-claude` now carries
-`--autocompact 200000` on every dispatched role, and the mod compacts a dispatched pane that
-ends a turn over 200k (`ASTRAGENTIC_CONTEXT_CEILING` moves it), with instructions that keep the
-brief, the phase, the head and the open findings and drop test output and re-readable files.
-Driven in the selftest: a turn ending at 300k is compacted at the next tick; the planted mod
-without the check compacts nothing.
-
-**Builder and QA ship without an advisor.** `--advisor` forwards the pane's whole transcript on
-every call: on a Builder at 400k of context that is the most expensive call in the ticket, at
-the advisor's rate. The package's `orchestrator.md` now leaves the Builder and QA Advisor cells
-blank; a project that wants it adds it to its own rows.
+`--autocompact 300000` on every dispatched role (and the same window as the pane's
+`CLAUDE_CODE_AUTO_COMPACT_WINDOW`), and the mod compacts a dispatched pane that ends a turn
+over 300k (`ASTRAGENTIC_CONTEXT_CEILING` moves it), with instructions that keep the brief, the
+phase, the head and the open findings and drop test output and re-readable files. 300k rather
+than 200k because ~90k of every call is standing load the compaction cannot touch and context
+grows ~1.2k per call: 200k would compact every ~90 calls, 300k every ~170. Driven in the
+selftest: a turn ending at 350k is compacted at the next tick; the planted mod without the
+check compacts nothing. Measure after ten tickets: median context per call (was 433k), station
+green on the first run, review folds per ticket.
 
 What this does not touch, named so nobody looks for it here: a project's own standing load
 (nizzy's AGENTS.md 51KB + rules 35KB + overlay 14KB make most of the 91k first call), Builders
 re-running the full gate the station runs again, and rework rounds — each a project or
-dispatcher matter, measured in the same report.
+dispatcher matter, measured in the same report. The Builder's advisor stays: it was called 0
+times in 14 tickets, so it costs nothing and is there when the engine uses it.
 
 ## Upgrade from 4.0.3
 
-`.astraler/astragentic.sh update --apply`. `orchestrator.md` is owner-kept: clear the Builder and
-QA Advisor cells yourself if you want the default. Panes dispatched after the apply get the
-ceiling; running ones do not.
+`.astraler/astragentic.sh update --apply`. Panes dispatched after the apply get the ceiling;
+running ones do not. A project can set `autoCompactWindow` in its own `settings.json` for every
+pane, including the dispatcher's.
 
 # Astragentic 4.0.3
 

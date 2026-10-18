@@ -280,19 +280,24 @@ launched with `--dangerously-skip-permissions` already extends to its dispatcher
 ## Launcher matrix — Claude rows
 
 ```text
-builder  → claude --dangerously-skip-permissions --agent builder --model <row: Model> --autocompact 200000 <--effort only when the row sets one> <--advisor only when the row sets one>
-shaper   → claude --dangerously-skip-permissions --agent shaper --model <row: Model> --autocompact 200000 <--effort only when the row sets one> <--advisor only when the row sets one>
-qa       → claude --agent qa --model <row: Model> --autocompact 200000 <--effort only when the row sets one> <--advisor only when the row sets one>
+builder  → claude --dangerously-skip-permissions --agent builder --model <row: Model> --autocompact 300000 <--effort only when the row sets one> <--advisor only when the row sets one>
+shaper   → claude --dangerously-skip-permissions --agent shaper --model <row: Model> --autocompact 300000 <--effort only when the row sets one> <--advisor only when the row sets one>
+qa       → claude --agent qa --model <row: Model> --autocompact 300000 <--effort only when the row sets one> <--advisor only when the row sets one>
 ```
 
 Model and effort come from the role's `orchestrator.md` row, never from memory.
 
-**`--autocompact 200000` is the context ceiling, and it is not optional.** The engine's window
+**`--autocompact 300000` is the context ceiling, and it is not optional.** The engine's window
 for these models is 1M, and a dispatched pane runs its whole flow in one context, so nothing
 trims: measured on one project over one night, Builders ran a median 400–550k tokens of context
 per call, 4,800 calls, 2.3B cache-read tokens against 2.4M of output. The flag makes the engine
-compact at 200k; the mod compacts a pane that ends a turn over the same ceiling
-(`ASTRAGENTIC_CONTEXT_CEILING` raises or lowers it) in case a launch forgot the flag.
+compact at 300k; the mod compacts a pane that ends a turn over the same ceiling
+(`ASTRAGENTIC_CONTEXT_CEILING` raises or lowers it) in case a launch forgot the flag. Why 300k
+and not lower: ~90k of every call is standing load the compaction cannot touch, and context
+grows ~1.2k per call, so 200k would compact every ~90 calls (eleven times in a thousand-call
+ticket); 300k every ~170. Pass the same window as the pane's environment too —
+`herdr pane split … --env CLAUDE_CODE_AUTO_COMPACT_WINDOW=300000` — the env var overrides a
+forgotten or mistyped flag.
 
 Add `--effort` only when the row sets it (`low|medium|high|xhigh|max`); blank means the
 runtime default. Add `--advisor <value>` only when the row's Advisor cell is set; the pairing
@@ -326,14 +331,14 @@ For **builder** and **shaper** (write roles):
 
 ```bash
 herdr agent start "<role>-<ticket-id>" --kind claude --pane <pane-id> --timeout 60000 \
-  -- --dangerously-skip-permissions --agent <role> --model <row: Model> --autocompact 200000 <--effort only when the row sets one> <--advisor only when the row sets one>
+  -- --dangerously-skip-permissions --agent <role> --model <row: Model> --autocompact 300000 <--effort only when the row sets one> <--advisor only when the row sets one>
 ```
 
 For **qa** (a review role — no `--dangerously-skip-permissions`):
 
 ```bash
 herdr agent start "<role>-<artifact-key>" --kind claude --pane <pane-id> --timeout 60000 \
-  -- --agent <role> --model <row: Model> --autocompact 200000 <--effort only when the row sets one> <--advisor only when the row sets one>
+  -- --agent <role> --model <row: Model> --autocompact 300000 <--effort only when the row sets one> <--advisor only when the row sets one>
 ```
 
 ## Measured runtime facts

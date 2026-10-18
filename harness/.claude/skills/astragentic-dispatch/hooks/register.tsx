@@ -710,9 +710,12 @@ let isBusy = false
 // and the engine's window is 1M, so nothing trimmed: measured on one project over one night,
 // 4,800 Builder calls at a median 400–550k tokens of context each, 2.3B cache-read tokens
 // against 2.4M of output — cost is calls × context, and context only grew. A turn that ends
-// over the ceiling is compacted before the next one, keeping what the next phase needs.
+// over the ceiling is compacted before the next one, keeping what the next phase needs. 300k,
+// not 200k: the standing load (project files, contracts, tool schemas) is ~90k and is never
+// compacted, context grows ~1.2k per call, so 200k leaves ~90 calls between compactions
+// (eleven per thousand-call ticket); 300k leaves ~170 (five). Tune with ASTRAGENTIC_CONTEXT_CEILING.
 let compactDue = false
-let contextCeiling = 200_000
+let contextCeiling = 300_000
 const COMPACT_INSTRUCTIONS = 'Keep, verbatim where short: the ticket id and its brief (acceptance criteria, validation commands, Base, write-set, Owned elsewhere), the phase you are in and which flow steps have run, the current branch and HEAD, open review findings not yet folded, and anything you owe the handback. Drop test output, file contents you can re-read, and finished tool results.'
 
 // Bells that arrived while the dispatcher's own turn was running (a gate pass, a picker
