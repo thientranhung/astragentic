@@ -1211,6 +1211,28 @@ export const register: Register = on => {
   // merge made the skip visible; it did not make it impossible. So the skip is refused at the
   // moment it becomes real — the first commit with content, and the arm — and the dispatcher's
   // exemption is read from the brief, never from the Builder's own handback.
+  // COMMANDS A DISPATCHED PANE MUST NEVER RUN — the project's list, refused here (4.0.3).
+  // `.astraler/project/refused-in-dispatched-panes`: one regex per line, `#` comments, tested
+  // against the whole command text of every Bash call a Builder, Shaper or QA pane makes. The
+  // owner's resident pane is not a dispatched pane and keeps every command. Measured downstream:
+  // a Builder ran `make db-down` after its tests and stopped the machine-wide shared test
+  // Postgres (AST-115 guarded the cleanup path, not an agent mid-ticket); the only defence was
+  // a sentence in a brief, which the Builder generalised the wrong way.
+  on('tool.call', { tool: 'Bash' }, async ($, e, next) => {
+    if (!me || !root || me.role === 'resident') return next(e)
+    const plug = `${root}/.astraler/project/refused-in-dispatched-panes`
+    const listed = (await overlayFile($, plug)).split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'))
+    for (const pat of listed) {
+      let re: RegExp
+      try { re = new RegExp(pat, 'm') } catch { continue }
+      if (re.test(e.command)) {
+        await logRefusal($, root, me.key, 'refused-command', `${pat} :: ${e.command.slice(0, 120)}`)
+        return { deny: `astragentic-dispatch: this command matches "${pat}" in .astraler/project/refused-in-dispatched-panes — a command the project refuses in a dispatched pane (it touches something shared beyond your worktree). Say in your handback what you wanted it for; the owner runs it from a resident pane if it is needed.` }
+      }
+    }
+    return next(e)
+  })
+
   on('tool.call', { tool: 'Bash' }, async ($, e, next) => {
     if (me?.role !== 'builder' || !root) return next(e)
     // Every simple command in the call, heredoc bodies included; a commit is a content commit

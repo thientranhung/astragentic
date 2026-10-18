@@ -1,3 +1,39 @@
+# Astragentic 4.0.3
+
+**Four findings from nizzy-ecom's arm-off trial, fixed the same day.** The trial itself (ten
+merges with the ticket arm off: the station caught no code defect, the slice gate found seven,
+two of them the shape a ticket arm catches) is the owner's figure; these are the harness
+defects it surfaced on the way.
+
+**A Builder's sync merge owes no `Ledger:` line.** The push guard judged every merge in the
+pushed range, so a Builder's merge of the base INTO its ticket branch — second-parent history,
+nothing closed, nothing learned — refused Thomas's push of the base after green gates; twice,
+ten minutes of history rewriting each. The guard now reads first-parent merges only; a planted
+sync merge without the line passes and the 4.0.2 guard refuses it.
+
+**A project can name the commands a dispatched pane must never run.**
+`.astraler/project/refused-in-dispatched-panes`, one regex per line: the mod refuses a matching
+Bash call in any Builder, Shaper or QA pane, says which line matched, and leaves the resident
+pane alone. The case: a Builder ran `make db-down` after its tests and stopped the machine-wide
+shared test Postgres; the only defence was a sentence in its brief, which it generalised from
+`make dev-down`. Driven in the selftest: the listed command is refused, its neighbour runs, a
+mod with the test removed refuses nothing.
+
+**A pane's reply to its own fork stays with the fork.** The readdress-to-dispatcher rule
+recognised a pane's own agents by id and teammate id only; a Builder wrote to one of its four
+simplify forks by name and the message went to Thomas. The rule now matches name and
+description too.
+
+Noted, not yet changed: a TURN-END delivered while the band reads held, when a review fork
+exits and its own sub-agents are not counted (reproduce first); a late re-delivered brief to a
+reaped pane (unreproduced); project rule files restating a rule a release turned into a switch
+(the restatement problem the next release is for).
+
+## Upgrade from 4.0.2
+
+`.astraler/astragentic.sh update --apply`. The refused-commands plug is opt-in: create
+`.astraler/project/refused-in-dispatched-panes` with one regex per line, e.g. `\bmake\s+db-down`.
+
 # Astragentic 4.0.2
 
 **Three gates that were being walked through, closed — from the field numbers, not from a

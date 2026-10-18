@@ -701,7 +701,11 @@ def main():
                 rc, up = run(["git", "rev-parse", "--verify", "--quiet",
                               "refs/remotes/%s/%s" % (remote, base)])
                 if rc == 0 and up:
-                    rc, out = run(["git", "log", "--merges", "--format=%s", "%s..%s" % (up, src)])
+                    # FIRST-PARENT ONLY (4.0.3). A Builder's sync merge of the base INTO its ticket branch is a
+                    # merge in this range too, and it owes nothing: no ticket closed, nothing learned. Measured
+                    # downstream: two pushes refused for a `Ledger:` line on such merges, ten minutes of
+                    # history rewriting each. What Thomas merges onto the base is the first-parent line.
+                    rc, out = run(["git", "log", "--merges", "--first-parent", "--format=%s", "%s..%s" % (up, src)])
                     missing = []
                     for subj in (out.splitlines() if rc == 0 else []):
                         # The FIRST ticket-shaped id in a merge subject is the ticket; later
@@ -735,7 +739,7 @@ def main():
                     # the whole check: prose is what a careful author produces when they mean
                     # to comply, and it is not machine-readable, so a checker that accepted it
                     # would pass on exactly the commits that skipped the step.
-                    rc, out = run(["git", "log", "--merges", "--format=%H%x1f%B%x1e",
+                    rc, out = run(["git", "log", "--merges", "--first-parent", "--format=%H%x1f%B%x1e",
                                    "%s..%s" % (up, src)])
                     bare = []
                     for rec in (out.split("\x1e") if rc == 0 else []):

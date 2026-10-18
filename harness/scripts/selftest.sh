@@ -675,6 +675,18 @@ ld_merge "Merge ABC-1: empty value
 
 Ledger:"
 guard_in "$LD" deny  "git push origin main"            # a bare key declares nothing
+( cd "$LD" && git reset -q --hard HEAD~1 ) >/dev/null 2>&1
+# 4.0.3 — a Builder's sync merge of the base into its branch is in the pushed range and owes no
+# Ledger line; only first-parent merges onto the base are judged. Measured downstream: two
+# pushes refused on such merges, ten minutes of history rewriting each.
+LDN=$((LDN+1))
+( cd "$LD" && git checkout -qb "builder/ABC-1-$LDN" && git commit -q --allow-empty -m "w1" \
+  && git checkout -q main && git commit -q --allow-empty -m "base moved" \
+  && git checkout -q "builder/ABC-1-$LDN" && git merge -q --no-ff main -m "sync main into ticket (no ledger line)" \
+  && git checkout -q main && git merge -q --no-ff "builder/ABC-1-$LDN" -m "Merge ABC-1: with sync below
+
+Ledger: none" ) >/dev/null 2>&1
+guard_in "$LD" allow "git push origin main"            # the sync merge is second-parent history
 
 # ---------------------------------------------------------------------------------------------
 # Residency by REAL cwd (2.8, adopted from a downstream project's ten-case proof). Real
@@ -1252,7 +1264,13 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
     // the arm row: `ticket: no` in orchestrator.md reaches the Builder as a system-prompt section
     const composed = await fire('prompt.compose', {}, async () => ({ sections: [] }))
     const armOffSection = (composed?.sections ?? []).some(s => String(s.text).includes('ARM: off'))
-    console.log(JSON.stringify({ registered, paneHeld, paneCleared, armOffSection, log }))
+    // the project's refused-in-dispatched-panes list: a listed command is refused in this pane
+    fs.mkdirSync(path.join(root, '.astraler/project'), { recursive: true })
+    fs.writeFileSync(path.join(root, '.astraler/project/refused-in-dispatched-panes'), '# shared test database\n\\bmake\\s+db-down\n')
+    const cmdOf = async (command) => { let ran = false; const r = await fire('tool.call', { tool: 'Bash', command }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` }
+    const refusedListed = await cmdOf('cd apps/server && make db-down')
+    const refusedOther = await cmdOf('cd apps/server && make db-up')
+    console.log(JSON.stringify({ registered, paneHeld, paneCleared, armOffSection, refusedListed, refusedOther, log }))
     return
   }
   await fire('session.start', {}, async () => ({}))
@@ -1326,8 +1344,8 @@ DRVEOS
     bad "mod merge gate" "$out"
   fi
   out="$(mod_drive "$MOD" pane)"
-  if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"armOffSection":true'; then
-    ok "pane side: a turn end with a live agent is held, the next turn start ends the hold, and an arm row at no reaches the Builder's prompt"
+  if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran"'; then
+    ok "pane side: a turn end with a live agent is held, the next turn start ends the hold, an arm row at no reaches the Builder's prompt, and a command on the project's refused list is refused"
   else
     bad "mod pane hold" "$out"
   fi
@@ -1355,7 +1373,10 @@ assert old6 in s, "merge gate guard not found"
 s = s.replace(old6, "continue", 1)
 old7 = "if (m[2].toLowerCase() === 'no') off.add(m[1])"
 assert old7 in s, "arm row parser not found"
-open(p, 'w').write(s.replace(old7, "", 1))
+s = s.replace(old7, "", 1)
+old8 = "      if (re.test(e.command)) {"
+assert old8 in s, "refused-list test not found"
+open(p, 'w').write(s.replace(old8, "      if (false) {", 1))
 EOS
   out="$(mod_drive "$TMP/mod-stuck")"
   if says "$out" 'builder-ab-1-32 [1c2d95]:sent:' && says "$out" '"afterRetire":"builder-ab-1-32' && says "$out" '"stubBells":1' && says "$out" '"staleBells":0' && says "$out" '"subagentHeld":true' && says "$out" '"mergeGap":"pass:ran"' && says "$out" '"armOffDispatcher":false'; then
@@ -1364,8 +1385,8 @@ EOS
     bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"
   fi
   out="$(mod_drive "$TMP/mod-stuck" pane)"
-  if says "$out" '"paneHeld":true,"paneCleared":false,"armOffSection":false'; then
-    ok "planted: a pane that starts a turn leaves its hold standing; an arm row nobody parses reaches no prompt"
+  if says "$out" '"paneHeld":true,"paneCleared":false,"armOffSection":false,"refusedListed":"pass:ran"'; then
+    ok "planted: a pane that starts a turn leaves its hold standing; an arm row nobody parses reaches no prompt; a refused list nobody tests refuses nothing"
   else
     bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"
   fi
