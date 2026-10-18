@@ -14,6 +14,11 @@ the 4.1.0 tag: relabelled. Planted: the receipt case now seeds a stale state fil
 the overwrite and that no root copy appears (the 4.1.0 script wrote exactly that root file); the wrapper case runs in both
 layouts (nizzy's selftest 127/1 → the one failure was this case).
 
+**Known, once:** the apply that brings a project from 4.1.0 to 4.1.1 still runs the installed
+4.1.0 script, so it appends one last `ADAPTATION-REPORT.md` at the repo root. Delete that file;
+the 4.1.1 script writes to `.astraler/state/` from the next apply on. Measured on nizzy-ecom
+(3bf0c080e): updated 2, conflicts 0, selftest 128/0.
+
 # Astragentic 4.1.0
 
 **The harness after its own audit: a fifth smaller, one home per rule, nothing shipped that
