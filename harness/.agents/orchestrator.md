@@ -46,8 +46,8 @@ closing one.
 |---|---|---|---|---|
 | thomas | claude | claude-opus-5 | medium | fable |
 | shaper | claude | claude-opus-5 | high | fable |
-| builder | claude | claude-sonnet-5 | medium | opus |
-| qa | claude | claude-sonnet-5 | low | opus |
+| builder | claude | claude-sonnet-5 | medium | |
+| qa | claude | claude-sonnet-5 | low | |
 
 ## Junior
 
@@ -91,7 +91,10 @@ and nothing can disagree with it.
 
 **Advisor** (Claude only): `--advisor <value>` when the cell is set, blank means none. It must
 rank at or above the main model: Opus rows take `fable` (usage credits; one `/model fable`
-consent per machine), Sonnet rows `opus`. Junior rows have no advisor.
+consent per machine), Sonnet rows `opus`. Junior rows have no advisor. **An advisor forwards the
+pane's whole transcript on every call**, so on a Builder at 400k tokens of context it is the most
+expensive call in the ticket, billed at the advisor's rate; the package ships Builder and QA
+without one, and the owner adds it per project when its reviews are worth that price.
 
 **Every role runs on Claude Code.** Another runtime enters only as a junior under the Builder,
 never as a role of its own.

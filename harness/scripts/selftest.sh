@@ -1231,7 +1231,7 @@ const $ = {
   env: { get: async k => k === 'ASTRAGENTIC_REPO' ? root : (isPane && k === 'HERDR_TAB_ID') ? 't5' : (isPane && k === 'HERDR_PANE_ID') ? 'p5' : undefined },
   clock: { now: async () => Date.now(), every: (_ms, fn) => { everyFn = fn } },
   command: { register: () => {}, run: async () => ({}) },
-  session: { id: async () => 'disp', send: async () => ({ isDelivered: true }) },
+  session: { id: async () => 'disp', send: async () => ({ isDelivered: true }), usage: async () => ({ startedAt: 0, context: { tokens: 1000, window: 1_000_000, percent: 0 } }), compact: async () => ({}) },
   fs: { read: async p => fs.readFileSync(p, 'utf8'), write: async (p, t) => fs.writeFileSync(p, t), exists: async p => fs.existsSync(p) },
   process: { run: async (argv, o = {}) => { if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? '{"result":{"tab":{"label":"ticket:AB-5"}}}' : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8' }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
   ui: { status: t => log.push(t), toast: () => {}, open: () => {}, resolve: () => {} },
@@ -1270,7 +1270,13 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
     const cmdOf = async (command) => { let ran = false; const r = await fire('tool.call', { tool: 'Bash', command }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` }
     const refusedListed = await cmdOf('cd apps/server && make db-down')
     const refusedOther = await cmdOf('cd apps/server && make db-up')
-    console.log(JSON.stringify({ registered, paneHeld, paneCleared, armOffSection, refusedListed, refusedOther, log }))
+    // the context ceiling: a turn that ends over it is compacted at the next tick, between turns
+    let compacted = 0
+    $.session.usage = async () => ({ startedAt: 0, context: { tokens: 300_000, window: 1_000_000, percent: 30 } })
+    $.session.compact = async () => { compacted++; return {} }
+    await fire('turn.complete', { reason: 'answer', answer: 'done', turnId: 't3' }, async () => ({}))
+    await every()
+    console.log(JSON.stringify({ registered, paneHeld, paneCleared, armOffSection, refusedListed, refusedOther, compacted, log }))
     return
   }
   await fire('session.start', {}, async () => ({}))
@@ -1344,8 +1350,8 @@ DRVEOS
     bad "mod merge gate" "$out"
   fi
   out="$(mod_drive "$MOD" pane)"
-  if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran"'; then
-    ok "pane side: a turn end with a live agent is held, the next turn start ends the hold, an arm row at no reaches the Builder's prompt, and a command on the project's refused list is refused"
+  if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","compacted":1'; then
+    ok "pane side: a turn end with a live agent is held, the next turn start ends the hold, an arm row at no reaches the Builder's prompt, a command on the project's refused list is refused, and a turn over the context ceiling is compacted"
   else
     bad "mod pane hold" "$out"
   fi
@@ -1376,7 +1382,10 @@ assert old7 in s, "arm row parser not found"
 s = s.replace(old7, "", 1)
 old8 = "      if (re.test(e.command)) {"
 assert old8 in s, "refused-list test not found"
-open(p, 'w').write(s.replace(old8, "      if (false) {", 1))
+s = s.replace(old8, "      if (false) {", 1)
+old9 = "if ((usage?.context?.tokens ?? 0) >= contextCeiling) compactDue = true"
+assert old9 in s, "context ceiling check not found"
+open(p, 'w').write(s.replace(old9, "", 1))
 EOS
   out="$(mod_drive "$TMP/mod-stuck")"
   if says "$out" 'builder-ab-1-32 [1c2d95]:sent:' && says "$out" '"afterRetire":"builder-ab-1-32' && says "$out" '"stubBells":1' && says "$out" '"staleBells":0' && says "$out" '"subagentHeld":true' && says "$out" '"mergeGap":"pass:ran"' && says "$out" '"armOffDispatcher":false'; then
@@ -1385,8 +1394,8 @@ EOS
     bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"
   fi
   out="$(mod_drive "$TMP/mod-stuck" pane)"
-  if says "$out" '"paneHeld":true,"paneCleared":false,"armOffSection":false,"refusedListed":"pass:ran"'; then
-    ok "planted: a pane that starts a turn leaves its hold standing; an arm row nobody parses reaches no prompt; a refused list nobody tests refuses nothing"
+  if says "$out" '"paneHeld":true,"paneCleared":false,"armOffSection":false,"refusedListed":"pass:ran","refusedOther":"pass:ran","compacted":0'; then
+    ok "planted: a pane that starts a turn leaves its hold standing; an arm row nobody parses reaches no prompt; a refused list nobody tests refuses nothing; a ceiling nobody reads compacts nothing"
   else
     bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"
   fi

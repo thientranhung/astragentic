@@ -706,6 +706,14 @@ async function wakeFromRecord($: any, root: string, bell: (text: string) => void
 // Whether this session's main turn is running (turn.start … turn.complete). Module-level so
 // the bell functions below are plain declarations, as the engine's reader requires.
 let isBusy = false
+// A CEILING ON A DISPATCHED PANE'S CONTEXT (4.0.4). Builders run the whole flow in one context
+// and the engine's window is 1M, so nothing trimmed: measured on one project over one night,
+// 4,800 Builder calls at a median 400–550k tokens of context each, 2.3B cache-read tokens
+// against 2.4M of output — cost is calls × context, and context only grew. A turn that ends
+// over the ceiling is compacted before the next one, keeping what the next phase needs.
+let compactDue = false
+let contextCeiling = 200_000
+const COMPACT_INSTRUCTIONS = 'Keep, verbatim where short: the ticket id and its brief (acceptance criteria, validation commands, Base, write-set, Owned elsewhere), the phase you are in and which flow steps have run, the current branch and HEAD, open review findings not yet folded, and anything you owe the handback. Drop test output, file contents you can re-read, and finished tool results.'
 
 // Bells that arrived while the dispatcher's own turn was running (a gate pass, a picker
 // waiting on the owner). Each would have become a turn of its own once the session went
@@ -792,6 +800,16 @@ export const register: Register = on => {
       // chip carries the role and key for as long as the pane lives (owner's ask, 2026-10-09).
       $.ui.toast(`astragentic-dispatch: ${me.role} ${me.key} recorded (tab ${me.tab}, pane ${me.pane})`)
       await refreshFlow($, root, me.key)
+      const envCeiling = Number(await $.env.get('ASTRAGENTIC_CONTEXT_CEILING'))
+      if (Number.isFinite(envCeiling) && envCeiling >= 50_000) contextCeiling = envCeiling
+      $.clock.every(15_000, async () => {
+        if (!compactDue || isBusy) return
+        try {
+          const r = await $.session.compact({ instructions: COMPACT_INSTRUCTIONS })
+          compactDue = false
+          $.ui.status(r?.skip ? `astragentic-dispatch: compaction skipped (${String(r.skip)})` : `astragentic-dispatch: context compacted at the ${Math.round(contextCeiling / 1000)}k ceiling`)
+        } catch {}
+      })
     } else if (root) {
       await $.command.register({ name: 'dispatch-board', description: 'Show live dispatches in a pane' })
       await refreshBoard($, root, sends)
@@ -968,6 +986,8 @@ export const register: Register = on => {
       flushBells($)
       return res
     }
+    const usage = await $.session.usage().catch(() => null)
+    if ((usage?.context?.tokens ?? 0) >= contextCeiling) compactDue = true
     // Every turn after the first brief is reported, so a Builder that backgrounds its work and
     // finishes it in a later turn (measured: the result came one turn after the "done") is
     // still heard. Turns that only read a cross-session delivery notice are skipped; reporting

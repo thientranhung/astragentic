@@ -1,3 +1,33 @@
+# Astragentic 4.0.4
+
+**A dispatched pane's context has a ceiling.** nizzy-ecom's Thomas summed one night's usage
+(2026-10-18, 01:00 → 09:00): about 95% was Builder sessions, and of that the cost was cache
+reads — 2.3B cache-read tokens over about 4,800 Builder calls against 2.4M output tokens. Cost
+is calls × context, and context only grew: 91k at the first call, 400–550k median over a
+ticket, 1.78M at the top, because the engine's window is 1M and nothing compacted. Two fixes,
+one mechanism each. The Claude launcher in `dispatch-ticket-claude` now carries
+`--autocompact 200000` on every dispatched role, and the mod compacts a dispatched pane that
+ends a turn over 200k (`ASTRAGENTIC_CONTEXT_CEILING` moves it), with instructions that keep the
+brief, the phase, the head and the open findings and drop test output and re-readable files.
+Driven in the selftest: a turn ending at 300k is compacted at the next tick; the planted mod
+without the check compacts nothing.
+
+**Builder and QA ship without an advisor.** `--advisor` forwards the pane's whole transcript on
+every call: on a Builder at 400k of context that is the most expensive call in the ticket, at
+the advisor's rate. The package's `orchestrator.md` now leaves the Builder and QA Advisor cells
+blank; a project that wants it adds it to its own rows.
+
+What this does not touch, named so nobody looks for it here: a project's own standing load
+(nizzy's AGENTS.md 51KB + rules 35KB + overlay 14KB make most of the 91k first call), Builders
+re-running the full gate the station runs again, and rework rounds — each a project or
+dispatcher matter, measured in the same report.
+
+## Upgrade from 4.0.3
+
+`.astraler/astragentic.sh update --apply`. `orchestrator.md` is owner-kept: clear the Builder and
+QA Advisor cells yourself if you want the default. Panes dispatched after the apply get the
+ceiling; running ones do not.
+
 # Astragentic 4.0.3
 
 **Four findings from nizzy-ecom's arm-off trial, fixed the same day.** The trial itself (ten
