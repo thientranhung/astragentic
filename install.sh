@@ -701,18 +701,20 @@ PY
   # lie is silent. A run with conflicts leaves the previous marker in place; re-run once the
   # conflicts are resolved, or stamp by hand having decided.
   if [ "$PLAN" -eq 0 ]; then
+    # The project's own release view (3.3.0): `.astraler/astragentic.sh update` reads the
+    # stamp, asks the remote for its newest tag and prints the gap and the one-liner. One home,
+    # beside the state it reads; refreshed with EVERY apply, conflicts or not — a project that
+    # stamped by hand after a conflict kept the previous script for a whole release (4.1.1).
+    if [ -f "$RELEASE_DIR/astragentic.sh" ]; then
+      mkdir -p "$STATE_ROOT"
+      cp "$RELEASE_DIR/astragentic.sh" "$STATE_ROOT/astragentic.sh" && chmod +x "$STATE_ROOT/astragentic.sh"
+      echo "  .astraler/astragentic.sh written — \`.astraler/astragentic.sh update\` says when a newer release exists."
+    fi
     if [ "$N_CONFLICT" -gt 0 ]; then
       echo "  NOTE: applied-version NOT stamped — $N_CONFLICT conflict(s) outstanding."
       echo "        Resolve them, then re-run, or write $VERSION into $APPLIED_FILE by hand."
     else
       mkdir -p "$(dirname "$APPLIED_FILE")"; printf '%s\n' "$VERSION" > "$APPLIED_FILE"
-      # The project's own release view (3.3.0): `.astraler/astragentic.sh update` reads the
-      # stamp above, asks the remote for its newest tag and prints the gap and the one-liner.
-      # One home, beside the state it reads; refreshed with every apply.
-      if [ -f "$RELEASE_DIR/astragentic.sh" ]; then
-        cp "$RELEASE_DIR/astragentic.sh" "$STATE_ROOT/astragentic.sh" && chmod +x "$STATE_ROOT/astragentic.sh"
-        echo "  .astraler/astragentic.sh written — \`.astraler/astragentic.sh update\` says when a newer release exists."
-      fi
     fi
   fi
 

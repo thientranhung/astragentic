@@ -111,10 +111,12 @@ if [ "$APPLY" -eq 1 ]; then
   echo
   echo "astragentic: applying $latest"
   cd "$ROOT"
-  # The receipt goes into ADAPTATION-REPORT.md by this script, not by an agent reading the ADAPT
-  # prompt: a field audit (2026-10-18) found a project with no receipt for three releases applied
-  # this way, so nobody could say when each landed or what it changed (4.1.0). Run the installer
-  # (not exec), keep its output, and append the summary and the deleted-upstream block on success.
+  # The receipt is written by this script, not by an agent reading the ADAPT prompt: a field
+  # audit (2026-10-18) found a project with no receipt for three releases applied this way
+  # (4.1.0). ONE home, `.astraler/state/ADAPTATION-REPORT.md`, OVERWRITTEN per apply — the
+  # previous receipt is in git history, and an appended one accreted to 3,000 unread lines
+  # (AST-129); ADAPT §7 has the agent add its exceptions under this header (4.1.1). Run the
+  # installer (not exec), keep its output, and write the summary and the deleted-upstream block.
   out="$(mktemp)"
   if [ -d "$REPO" ] && [ -f "$REPO/get.sh" ]; then
     ASTRAGENTIC_REPO="$REPO" bash "$REPO/get.sh" "$latest" --apply 2>&1 | tee "$out"; rc=${PIPESTATUS[0]}
@@ -123,8 +125,8 @@ if [ "$APPLY" -eq 1 ]; then
     curl -fsSL "$GET_URL" | ASTRAGENTIC_REPO="$REPO" bash -s -- "$latest" --apply 2>&1 | tee "$out"; rc=${PIPESTATUS[1]}
   fi
   if [ "$rc" -eq 0 ]; then
+    mkdir -p "$ROOT/.astraler/state"
     {
-      echo
       echo "## $latest applied $(date '+%F %T') via astragentic.sh update --apply (from $installed)"
       echo
       grep -E '^[[:space:]]*new [0-9]+ · updated' "$out" | head -1 | sed 's/^[[:space:]]*/- /'
@@ -132,8 +134,8 @@ if [ "$APPLY" -eq 1 ]; then
         echo "- DELETED upstream (still in the project; remove by hand):"
         awk '/DELETED upstream/{f=1; next} f && /^[[:space:]]*\(not removed/{exit} f && /^[[:space:]]+[^[:space:]]/{print "  - " $1}' "$out"
       fi
-    } >> "$ROOT/ADAPTATION-REPORT.md"
-    echo "astragentic: receipt appended to ADAPTATION-REPORT.md"
+    } > "$ROOT/.astraler/state/ADAPTATION-REPORT.md"
+    echo "astragentic: receipt written to .astraler/state/ADAPTATION-REPORT.md (add exceptions under it: ADAPT §7)"
   fi
   rm -f "$out"
   exit "$rc"

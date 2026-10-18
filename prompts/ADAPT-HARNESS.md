@@ -529,10 +529,12 @@ Only after validation succeeds:
 
 1. Create `.astraler/state/` when needed.
 2. Write `<candidate>` to `.astraler/state/applied-version`.
-3. **Overwrite** `.astraler/state/ADAPTATION-REPORT.md` — never append to the previous one.
-   The file is committed, so prior receipts live in git history; a receipt that appends
-   accretes forever and one measured project reached 3,000 lines nobody read (AST-129).
-   It records **exceptions only** — each `DIFFERS` path and its decision, every `PENDING`
+3. `.astraler/astragentic.sh update --apply` has already **overwritten**
+   `.astraler/state/ADAPTATION-REPORT.md` with this run's header (version, from, counts,
+   deleted-upstream paths); add your lines under that header, in the same file. Never carry
+   the previous receipt over: it lives in git history, and a receipt that appends accretes
+   forever — one measured project reached 3,000 lines nobody read (AST-129). If you applied
+   without the script, write the header yourself. It records **exceptions only** — each `DIFFERS` path and its decision, every `PENDING`
    and why, ownership conflicts, defects found in the candidate, and validation failures.
    And one line per project plug under `.astraler/project/` — `cleanup-worktree.sh`,
    `tracker-state.sh`, `ticket-done.sh`, `tracker-status.sh`, `not-a-skill.txt`,

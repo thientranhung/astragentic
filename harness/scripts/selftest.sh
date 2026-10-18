@@ -139,7 +139,7 @@ EOF'                                        # heredoc body
 guard allow 'git add -A.txt'                # a file named -A.txt is a path, not the flag
 guard deny  'xargs git add -A'              # a wrapper still runs the sweep (was out of scope before 4.0.2)
 
-echo "hook-git-guard — the paths a refusal suggests are shell-quoted, and a hostile name is a name (4.2.0)"
+echo "hook-git-guard — the paths a refusal suggests are shell-quoted, and a hostile name is a name (4.1.0)"
 # The 4.1.0 arm planted `$(printf INJECTED)` as a filename and the suggested command ran it.
 HG="$TMP/hostile"; rm -rf "$HG"; mkdir -p "$HG"
 ( cd "$HG" && git init -q && git config user.email t@t && git config user.name t && echo a > a.txt && git add a.txt && git commit -qm init \
@@ -163,7 +163,9 @@ out="$(printf '%s' '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_inp
 says "$out" '"permissionDecision": "deny"' \
   && ok "python3 -c \"\$(cat guard)\" denies git add -A like python3 guard does" \
   || bad "wrapper fallback" "the shell-read form did not deny: $out"
-if python3 - "$ROOT/harness/.claude/settings.json" <<'PY' 2>/dev/null
+# the settings file of the layout this runs in: a project has no harness/ (nizzy, 4.1.0 receipt)
+SJ="$ROOT/harness/.claude/settings.json"; [ "$LAYOUT" = project ] && SJ="$ROOT/.claude/settings.json"
+if python3 - "$SJ" <<'PY' 2>/dev/null
 import json, sys
 d = json.load(open(sys.argv[1]))
 cmds = [h.get("command", "") for arr in d.get("hooks", {}).values() for m in arr for h in m.get("hooks", [])]
@@ -1180,17 +1182,19 @@ says "$out" "installed 0.0.10 — this is the latest release" && says "$out" "rc
   && ok "update on the latest release says so and prints no one-liner" \
   || bad "astragentic.sh current" "$out"
 echo 0.0.9 > "$AX/proj/.astraler/state/applied-version"; rm -f "$AX/get-args"
+echo "stale receipt" > "$AX/proj/.astraler/state/ADAPTATION-REPORT.md"
 out="$( (cd "$AX/proj" && ASTRAGENTIC_REPO="$AX/pkg" bash "$AU" update --apply 2>&1); echo "rc=$?" )"
 if [ -f "$AX/get-args" ] && says "$(cat "$AX/get-args")" "0.0.10 --apply"; then
   ok "update --apply hands latest and --apply to the package's own get.sh"
 else
   bad "astragentic.sh --apply" "$out / $(cat "$AX/get-args" 2>/dev/null)"
 fi
-# 4.1.0 — the receipt lands in ADAPTATION-REPORT.md by the script's hand, not an agent's: a
-# project had none for three releases applied this way (field audit 2026-10-18).
-rpt="$(cat "$AX/proj/ADAPTATION-REPORT.md" 2>/dev/null)"
-if says "$rpt" "## 0.0.10 applied" && says "$rpt" "(from 0.0.9)" && says "$rpt" "- new 2 · updated 1" && says "$rpt" "  - .agents/roles/old-role.md"; then
-  ok "update --apply appends a receipt (version, from, counts, deleted-upstream paths) to ADAPTATION-REPORT.md"
+# 4.1.0 — the receipt lands by the script's hand, not an agent's: a project had none for three
+# releases applied this way (field audit 2026-10-18). 4.1.1 — one home, .astraler/state/, and
+# overwritten: 4.1.0 appended to a second file at the root while ADAPT §7 overwrote this one.
+rpt="$(cat "$AX/proj/.astraler/state/ADAPTATION-REPORT.md" 2>/dev/null)"
+if says "$rpt" "## 0.0.10 applied" && says "$rpt" "(from 0.0.9)" && says "$rpt" "- new 2 · updated 1" && says "$rpt" "  - .agents/roles/old-role.md" && ! says "$rpt" "stale receipt" && [ ! -f "$AX/proj/ADAPTATION-REPORT.md" ]; then
+  ok "update --apply overwrites .astraler/state/ADAPTATION-REPORT.md with the receipt (version, from, counts, deleted-upstream), no root copy"
 else
   bad "astragentic.sh receipt" "ADAPTATION-REPORT.md after --apply: ${rpt:-<absent>}"
 fi
@@ -1314,7 +1318,7 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
     // the arm row: `ticket: no` in orchestrator.md reaches the Builder as a system-prompt section
     const composed = await fire('prompt.compose', {}, async () => ({ sections: [] }))
     const armOffSection = (composed?.sections ?? []).some(s => String(s.text).includes('ARM: off'))
-    // 4.2.0 — the tdd gate asks git for a test file, not the record for a skill call
+    // 4.1.0 — the tdd gate asks git for a test file, not the record for a skill call
     const cmdOf = async (command) => { let ran = false; const r = await fire('tool.call', { tool: 'Bash', command }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` }
     const git = (...a) => require('child_process').spawnSync('git', a, { cwd: root, encoding: 'utf8' })
     fs.writeFileSync(path.join(root, 'app.js'), 'x'); git('add', 'app.js')
@@ -1567,7 +1571,7 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
   // a delivered Builder brief writes the role on the record at dispatch
   await sendBrief('/mattpocock-skills:implement AB-9\nQA: none — no surface')
   const roleWritten = JSON.parse(fs.readFileSync(recPath, 'utf8'))['AB-9']?.role === 'builder'
-  // 4.2.0 — builder-target is read by the mod: two live Builders against a row of 2 refuse a third brief
+  // 4.1.0 — builder-target is read by the mod: two live Builders against a row of 2 refuse a third brief
   fs.writeFileSync(orchPath, orchText.replace(/\| builder-target \| `\d+` \|/, '| builder-target | `2` |'))
   fs.writeFileSync(recPath, JSON.stringify({ 'AB-10': { role: 'builder', pane_id: 'p10' }, 'AB-11': { role: 'builder', pane_id: 'p11' } }))
   const briefOverTarget = await sendBrief('/mattpocock-skills:implement AB-12\nQA: none — no surface')

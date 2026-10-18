@@ -1,3 +1,19 @@
+# Astragentic 4.1.1
+
+**Four defects nizzy-ecom found folding 4.1.0, fixed the same evening.** Receipt 460b2150c,
+2026-10-18. (1) The selftest's wrapper-fallback case read `harness/.claude/settings.json`, a
+package-only path, so in an adapted project it could never pass: it now reads the settings file
+of the layout it runs in. (2) `install.sh` refreshed `.astraler/astragentic.sh` only on a
+conflict-free stamp, so a project that stamped by hand after one conflict kept the previous
+script for a whole release: the copy now happens on every apply. (3) Two receipt homes: the
+4.1.0 script appended to `ADAPTATION-REPORT.md` at the repo root while ADAPT §7 overwrote
+`.astraler/state/ADAPTATION-REPORT.md` and forbade appending (AST-129). One home now: the
+script overwrites the state file with this run's header and §7 has the agent add exceptions
+under it. (4) The builder-target cap and two selftest comments were labelled `(4.2.0)` inside
+the 4.1.0 tag: relabelled. Planted: the receipt case now seeds a stale state file, asserts
+the overwrite and that no root copy appears (the 4.1.0 script wrote exactly that root file); the wrapper case runs in both
+layouts (nizzy's selftest 127/1 → the one failure was this case).
+
 # Astragentic 4.1.0
 
 **The harness after its own audit: a fifth smaller, one home per rule, nothing shipped that

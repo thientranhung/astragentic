@@ -23,7 +23,7 @@ fails at the first cross-vendor call, looking like the provider being down.
 `workspace-label` is this project's herdr name, read before dispatch.
 
 `builder-target` is how many Builders may be live at once. The mod reads it at every brief
-(4.2.0): a Builder brief is refused while that many recorded Builders are live and unmerged.
+(4.1.0): a Builder brief is refused while that many recorded Builders are live and unmerged.
 **Absent, it defaults to 4**; the row tunes it, not enables it. Thomas tops the frontier up to it
 after every merge, handback and report.
 

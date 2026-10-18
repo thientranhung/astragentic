@@ -1329,7 +1329,7 @@ export const register: Register = on => {
       if (owed.length > 0) {
         return { isDelivered: false, reason: `${MARK} not sent. ${owedText(owed)} Then send this brief again.` }
       }
-      // BUILDER-TARGET IS READ HERE, NOT BY THOMAS (4.2.0). `orchestrator.md` has carried the row
+      // BUILDER-TARGET IS READ HERE, NOT BY THOMAS (4.1.0). `orchestrator.md` has carried the row
       // since 2.x and no code read it: the first adopter's Thomas counted lanes by hand at every
       // merge (field audit 2026-10-18, §4). A Builder brief is refused while as many Builders are
       // live as the row allows; a live Builder is a recorded entry with a pane that has not been
@@ -1479,7 +1479,7 @@ export const register: Register = on => {
     const contentCommits = commits.filter(a => !a.includes('--allow-empty'))
     if (contentCommits.length === 0) return next(e)
     if (entry.tdd_na) return next(e)
-    // THE GATE MEASURES A TEST, NOT A SKILL CALL (4.2.0). Until now it asked whether
+    // THE GATE MEASURES A TEST, NOT A SKILL CALL (4.1.0). Until now it asked whether
     // `mattpocock-skills:tdd` had been called; measured on the first adopter, 48 refusals, 48
     // skill calls right after, and a test file edited before the next commit in 2. So it now
     // asks git: is a test file staged for this commit, or already on this branch since the
