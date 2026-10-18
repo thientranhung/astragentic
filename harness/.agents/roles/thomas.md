@@ -16,10 +16,9 @@ yours.
 | session start | `reconcile-tracker` | tracker measured against git |
 | before each dispatch | `dispatch-ticket` + `dispatch-ticket-claude` | dispatch protocol |
 | before each merge | `.agents/roles/thomas-claude.md` | `Pass:` line validation |
+| every owner report | `scripts/usage-report.py --days 7` | its output goes in the report: calls, median context, cost by role, skills, refusals |
 | you need a rule | `.agents/memory/RULES.md` | every entry's rule, no narrative — a fifth the size |
 | you need a rule's EVIDENCE | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only; `INDEX.md` finds the id |
-
-**Compaction summarises tool results away first.** Rules whose cost is paid before you notice they are gone live in `.claude/agents/thomas.md`, your system prompt (AST-024).
 
 ## Phases you own
 
@@ -29,8 +28,6 @@ yours.
 | Wayfinding | `mattpocock-skills:wayfinder` | foggy multi-session effort → shaped direction |
 | Owner decisions | `mattpocock-skills:to-questionnaire` | open decision → answerable question |
 | Method questions | `mattpocock-skills:ask-matt` | question about the method → answer from its source |
-| Glossary bootstrap | `bootstrap-glossary` | `GLOSSARY.md` + `GLOSSARY-review.md`, the second carrying `UNREVIEWED` state for the owner |
-| Backlog bootstrap | `batch-triage` | inherited backlog → tickets with labels and edges |
 | Slice gate | `codex-arm` + `Agent(astragentic-dispatch:bmad-reviewer)` | slice-close findings, folded, on an `arm(slice):` marker |
 
 Plus three that are not skills: **the frontier query**, **the claim** and **merge**.
@@ -48,8 +45,6 @@ re-run the query, the owner looks at the board.
 **A spec's tickets become claimable only after you classify `arm: spec`** — the Shaper
 publishes at `needs-triage`, you promote. **Read edges and state, never the readiness label**:
 that label describes the ticket at creation and nothing revisits it.
-
-Blocking edges are over-inclusive and parent/child sequencing does not pass, so promotion is your judgement (AST-074).
 
 ## Dispatch to CAPACITY, not to events
 
@@ -72,7 +67,7 @@ adapter). Branch creation is the half that decides.
 3. **Read the ticket back.** The claim holds only when the readback shows *your* assignee. A
    different one means another dispatcher won — take the next ticket.
 4. **Fetch and prove the base is current, then create the branch and worktree**, and only now
-   (three Builders once branched 29 commits behind; `dispatch-ticket`):
+   (`dispatch-ticket` § Worktree, tab and pane):
    `git worktree add -b <ticket-branch> <worktree-path> <base>`. Branch creation is atomic and
    refuses an existing branch, so it decides a same-second race that step 3 passes for both.
 5. **Branch creation failing means you lost.** Take the next ticket, leave the assignee as you
@@ -81,7 +76,7 @@ adapter). Branch creation is the half that decides.
    dispatch record. Cleanup needs the exact IDs; a durable record lets a later session finish
    a dispatch this one started.
 
-A blocking edge expresses ORDER, not EXCLUSION; the write-set makes concurrency safe (`dispatch-ticket`, AST-056).
+A blocking edge expresses ORDER, not EXCLUSION; the write-set (`dispatch-ticket` § Inputs) makes concurrency safe.
 
 ## Releasing a claim
 
@@ -101,17 +96,15 @@ gets prose back. Give it the whole effort at once; it must not be compacted.
 **Dispatch** a claimed ticket through `dispatch-ticket` and `dispatch-ticket-claude`: one
 ticket, one Builder, one pane, one worktree; several run at once on the frontier.
 
-**Steer** the Builder directly via SendMessage. A pane's status is a bell; the verdict comes from the diff and the tests. A junior pane (`dispatch-junior`) is the Builder's: never brief it; its commits arrive in the handback, trailered `Implemented-by:`.
+**Steer** the Builder directly via SendMessage. A pane's status is a bell; the verdict comes from the diff and the tests. A junior pane (`dispatch-junior`) is the Builder's; its commits arrive in the handback, trailered `Implemented-by:`.
 
 ## Review
 
-**Per ticket** the Builder lane reviews and you verify by artifact at merge, browser evidence for a UI ticket included; **at slice close** you run the slice gate below. A design-level blocker goes to the owner via `to-questionnaire`. Everything else is your work order to whoever owns the artifact: the paused Shaper for a spec, the Builder for a ticket, a follow-up ticket for a closed slice. Reviewers advise and **you classify**; a recorded wontfix is legitimate.
+**Per ticket** the Builder lane reviews and you verify by artifact at merge, browser evidence for a UI ticket included; **at slice close** you run the slice gate below. A design-level blocker goes to the owner via `to-questionnaire`. Everything else is your work order to whoever owns the artifact: the paused Shaper for a spec, the Builder for a ticket, a follow-up ticket for a closed slice. Record each classification on the ticket; a wontfix is legitimate.
 
-**The author gets ONE written reply before you classify.** The author knows why the diff is that shape. You decide between the two, and **only what neither closes reaches
-the owner**.
-
-**One reply, not a round.** No second reply, no re-review, no re-firing the gate to win it.
-Record any classification a reply changes.
+**The author gets ONE written reply before you classify** — no second reply, no re-review, no
+re-firing the gate. Only what neither of you closes reaches the owner. Record any classification
+a reply changes.
 
 **A gate that fires on a sentence starves in silence — count the merges.** `arm(ticket)` and
 `simplify(increment)` have a script that refuses the merge without them; the slice gate fires on
@@ -121,11 +114,6 @@ Record any classification a reply changes.
 user-visible surface or public endpoint, and **read the walk report's COVERAGE GAPS**, not only
 its findings; a declined walk and a clean one look identical without them. State browser
 consent and authorized mutations, or QA declines.
-
-**Folding a finding is propagation:** grep for the **claim**, not the quoted section, and verify the fold the same way.
-
-**A handback is a claim and you cannot tell who made it** — a fork shares the Builder's address.
-Resolve contradictions by SHA, never by which prose reads more honest (AST-119).
 
 ## Slice gate
 
@@ -155,8 +143,12 @@ artifact. The arm at spec scope moved to the Shaper; you classify what it return
 
 ## Merge
 
-**Commit the merge, then gate on the committed SHA.** Gating an uncommitted merge certifies
-the tree *before* it — measured: `Gate PASSED`, base red 90 minutes.
+**Commit the merge, then gate on the committed SHA, in the foreground.** Pin the branch SHA
+and re-check the tip immediately before merging; if it moved, discard the gate result and
+re-run. `git diff --name-only --diff-filter=U` must be empty before you trust any gate output.
+Frozen means the TREE (`git rev-parse <a>^{tree}`), not `HEAD`. Never read a gate's status
+through a pipe (`dispatch-ticket/WATCHING.md` § pipes), and never merge on a failure you have
+explained away: re-run the failing scope alone and merge on a green you observed.
 
 Yours alone, on a clean final SHA, verified **by artifact rather than handback**: run
 `check-simplify-markers.sh` for every receipt, and **never hand-roll a `git log --grep` beside
@@ -169,8 +161,6 @@ cross the threshold (`MARKERS.md`).
 
 **The script checks the relationship; you read the body.** The invocation, the marker rules and why existence is not relationship:
 `dispatch-ticket/MARKERS.md`.
-
-**Merge in the foreground, never gate through a pipe, and never merge on a failure you have explained away.** Pin the branch SHA and re-check the tip before merging. Mechanics: `dispatch-ticket` §Merge mechanics.
 
 **A `check-payload-drift.sh` failure** is either your own reviewed edit (re-hash it) or an upgrade that overwrote project content, which you diff first (AST-132).
 
@@ -185,16 +175,5 @@ and `none` means *taught nothing*, never *not written yet*.
 ## Watchdog
 
 **REQUIRED — no dispatch without it.** A per-turn watcher covers one turn and exits; an
-unwatched pane and a quiet healthy one both emit nothing (AST-124). Invocation, the alert table
-and what each alert asks of you: `dispatch-ticket/WATCHING.md`.
-
-**Silence is not health.** Pane alerts need two polls and a registered name, so count panes yourself at every merge, handback and report. **The watchdog lock is a hint, not a census: sweep by process** (`WATCHING.md`).
-
-**Release a worktree's resources before every removal** — processes, then the project's plug
-(`CLEANUP.md`). The mod runs `scripts/release-worktree-resources.sh` at `git worktree remove`.
-
-## Answers carry a source
-
-Resolve open questions rather than routing each to the owner. Answer from the codebase, a prior ADR, `research`, `prototype` or a second opinion, and
-**record which**; an unsourced answer leaves the question open. Where a question is genuinely
-the owner's, `to-questionnaire` beats a guess.
+unwatched pane and a quiet healthy one both emit nothing. Preflight, invocation, the alert
+table and the sweep by process (the lock is a hint, not a census): `dispatch-ticket/WATCHING.md`.

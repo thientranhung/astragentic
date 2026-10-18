@@ -139,6 +139,20 @@ EOF'                                        # heredoc body
 guard allow 'git add -A.txt'                # a file named -A.txt is a path, not the flag
 guard deny  'xargs git add -A'              # a wrapper still runs the sweep (was out of scope before 4.0.2)
 
+echo "hook-git-guard — the paths a refusal suggests are shell-quoted, and a hostile name is a name (4.2.0)"
+# The 4.1.0 arm planted `$(printf INJECTED)` as a filename and the suggested command ran it.
+HG="$TMP/hostile"; rm -rf "$HG"; mkdir -p "$HG"
+( cd "$HG" && git init -q && git config user.email t@t && git config user.name t && echo a > a.txt && git add a.txt && git commit -qm init \
+  && echo b >> a.txt && touch '$(printf INJECTED)' && touch -- '-A' && mkdir -p 'd i r' && touch 'd i r/x y.txt' && touch ':(glob)*' ) >/dev/null 2>&1
+sugg="$(cd "$HG" && printf '%s' '{"hook_event_name":"PreToolUse","tool_name":"Bash","cwd":"'"$HG"'","tool_input":{"command":"git add -A"}}' \
+  | HARNESS_HOOK_LOG="$TMP/hook.log" python3 "$S/hook-git-guard.py" 2>/dev/null \
+  | python3 -c 'import sys,json;r=json.load(sys.stdin)["hookSpecificOutput"]["permissionDecisionReason"];i=r.find("git --literal-pathspecs add -- ");print(r[i:] if i>=0 else "")')"
+if [ -n "$sugg" ] && ( cd "$HG" && eval "$sugg" >/dev/null 2>&1 && [ "$(git diff --cached --name-only | wc -l | tr -d ' ')" = "5" ] && ! ls INJECTED >/dev/null 2>&1 ); then
+  ok "a refusal's suggested command stages the five changed files by name, including \$(…), -A, a space and :(glob)*"
+else
+  bad "guard suggested paths" "suggestion: '$sugg' — staged $(cd "$HG" && git diff --cached --name-only | wc -l | tr -d ' ') files"
+fi
+
 echo "hook-git-guard — the registered wrapper's unreadable-file fallback runs the same guard (4.0.2)"
 # Measured downstream: 27 whole-session blocks where python3 could not open the hook file
 # ([Errno 1] under ~/Documents: macOS TCC on Python.app, or a sandbox) while the shell could
@@ -350,6 +364,34 @@ if bash "$ROOT/install.sh" "$T1" >/dev/null 2>&1 && [ -d "$T1/.astraler/releases
     ok "--apply exits 0 and stamps applied-version on a fresh target"
   else
     bad "apply exit" "--apply failed or did not stamp $V on a fresh target"
+  fi
+  # 4.1.0 — a project that names its tracker gets that tracker skill only; one that names none
+  # gets all three. The RELEASE keeps all three (it is immutable and restaged byte-for-byte; the
+  # 4.1.0 arm showed a selection made at staging breaking the restage once the project wrote its
+  # tracker doc); the selection is made on the project's copy at --apply.
+  T6="$TMP/t6"; rm -rf "$T6"; mkdir -p "$T6/docs/agents"
+  ( cd "$T6" && git init -q && git -c user.name=t -c user.email=t@t commit -q --allow-empty -m init ) >/dev/null 2>&1
+  printf '# Issue tracker: GitHub Issues\n' > "$T6/docs/agents/issue-tracker.md"
+  ASTRALER_IN_SELFTEST=1 bash "$ROOT/install.sh" "$T6" --apply >/dev/null 2>&1
+  proj6="$(ls -d "$T6"/.agents/skills/*-issue-tracker 2>/dev/null | wc -l | tr -d ' ')"
+  rel6="$(ls -d "$T6"/.astraler/releases/*/harness/.agents/skills/*-issue-tracker 2>/dev/null | wc -l | tr -d ' ')"
+  if [ "$proj6" = "1" ] && [ -d "$T6/.agents/skills/github-issue-tracker" ] && [ -d "$T6/.claude/skills/github-issue-tracker" ] && [ "$rel6" = "3" ]; then
+    ok "a target naming GitHub gets github-issue-tracker only in both trees, while the staged release keeps all three"
+  else
+    bad "tracker selection" "project tracker skills=$proj6 (want 1, github), release tracker skills=$rel6 (want 3)"
+  fi
+  proj1="$(ls -d "$T1"/.agents/skills/*-issue-tracker 2>/dev/null | wc -l | tr -d ' ')"
+  [ "$proj1" = "3" ] && ok "a target with no issue-tracker.md gets all three tracker skills" \
+    || bad "tracker selection default" "expected 3 tracker skills on a fresh target, found $proj1"
+  # stage first, write the tracker doc, then --apply the SAME version: the restage must not refuse
+  T7="$TMP/t7"; rm -rf "$T7"; mkdir -p "$T7"
+  ( cd "$T7" && git init -q && git -c user.name=t -c user.email=t@t commit -q --allow-empty -m init ) >/dev/null 2>&1
+  ASTRALER_IN_SELFTEST=1 bash "$ROOT/install.sh" "$T7" >/dev/null 2>&1
+  mkdir -p "$T7/docs/agents"; printf '# Issue tracker: Linear\n' > "$T7/docs/agents/issue-tracker.md"
+  if ASTRALER_IN_SELFTEST=1 bash "$ROOT/install.sh" "$T7" --apply >/dev/null 2>&1 && [ -d "$T7/.agents/skills/linear-issue-tracker" ] && [ ! -d "$T7/.agents/skills/github-issue-tracker" ]; then
+    ok "staging before the tracker doc, then --apply after it, applies the same version with the named tracker only"
+  else
+    bad "tracker restage" "a tracker doc written between staging and --apply refused the apply or copied the wrong skills"
   fi
   # 3.3.0: the project's release view lands beside the stamp it reads, executable.
   if [ -x "$T1/.astraler/astragentic.sh" ] && [ "$(cd "$T1" && bash .astraler/astragentic.sh version)" = "$V" ]; then
@@ -1112,7 +1154,7 @@ AX="$TMP/astra-update"; rm -rf "$AX"; mkdir -p "$AX/pkg" "$AX/proj/.astraler/sta
 ( cd "$AX/pkg" && git init -q && git -c user.name=t -c user.email=t@t commit -q --allow-empty -m i
   for v in 0.0.9 0.0.10; do
     { printf '# Astragentic %s\n\n**Note for %s.**\n\n' "$v" "$v"; cat RELEASE-NOTES.md 2>/dev/null; } > RN.tmp; mv RN.tmp RELEASE-NOTES.md
-    echo "$v" > VERSION; printf '#!/bin/sh\necho "get.sh stub: $*" > "%s/get-args"\n' "$AX" > get.sh
+    echo "$v" > VERSION; printf '#!/bin/sh\necho "get.sh stub: $*" > "%s/get-args"\necho "  new 2 · updated 1 · unchanged 0 · kept 0 · owner-kept 1 · conflicts 0 · deleted-upstream 1"\necho "DELETED upstream — an earlier release shipped these, $v does not, and they are"\necho "  .agents/roles/old-role.md"\necho "  (not removed automatically: a project may have adopted one of these on purpose)"\n' "$AX" > get.sh
     git add -A; git -c user.name=t -c user.email=t@t commit -q -m "$v"; git tag "v$v"
   done ) >/dev/null 2>&1
 ( cd "$AX/proj" && git init -q ) >/dev/null 2>&1
@@ -1143,6 +1185,14 @@ if [ -f "$AX/get-args" ] && says "$(cat "$AX/get-args")" "0.0.10 --apply"; then
   ok "update --apply hands latest and --apply to the package's own get.sh"
 else
   bad "astragentic.sh --apply" "$out / $(cat "$AX/get-args" 2>/dev/null)"
+fi
+# 4.1.0 — the receipt lands in ADAPTATION-REPORT.md by the script's hand, not an agent's: a
+# project had none for three releases applied this way (field audit 2026-10-18).
+rpt="$(cat "$AX/proj/ADAPTATION-REPORT.md" 2>/dev/null)"
+if says "$rpt" "## 0.0.10 applied" && says "$rpt" "(from 0.0.9)" && says "$rpt" "- new 2 · updated 1" && says "$rpt" "  - .agents/roles/old-role.md"; then
+  ok "update --apply appends a receipt (version, from, counts, deleted-upstream paths) to ADAPTATION-REPORT.md"
+else
+  bad "astragentic.sh receipt" "ADAPTATION-REPORT.md after --apply: ${rpt:-<absent>}"
 fi
 out="$( (cd "$AX/proj" && ASTRAGENTIC_REPO="$AX/nowhere" bash "$AU" update 2>&1); echo "rc=$?" )"
 says "$out" "could not list release tags" && says "$out" "rc=1" \
@@ -1233,7 +1283,7 @@ const $ = {
   command: { register: () => {}, run: async () => ({}) },
   session: { id: async () => 'disp', send: async () => ({ isDelivered: true }), usage: async () => ({ startedAt: 0, context: { tokens: 1000, window: 1_000_000, percent: 0 } }), compact: async () => ({}) },
   fs: { read: async p => fs.readFileSync(p, 'utf8'), write: async (p, t) => fs.writeFileSync(p, t), exists: async p => fs.existsSync(p) },
-  process: { run: async (argv, o = {}) => { if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? '{"result":{"tab":{"label":"ticket:AB-5"}}}' : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8' }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
+  process: { run: async (argv, o = {}) => { if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? '{"result":{"tab":{"label":"ticket:AB-5"}}}' : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8', env: { ...process.env, ...(o.env ?? {}) } }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
   ui: { status: t => log.push(t), toast: () => {}, open: () => {}, resolve: () => {} },
   prompt: { submit: async () => {} },
   agent: { list: async () => liveAgents },
@@ -1264,10 +1314,178 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
     // the arm row: `ticket: no` in orchestrator.md reaches the Builder as a system-prompt section
     const composed = await fire('prompt.compose', {}, async () => ({ sections: [] }))
     const armOffSection = (composed?.sections ?? []).some(s => String(s.text).includes('ARM: off'))
+    // 4.2.0 — the tdd gate asks git for a test file, not the record for a skill call
+    const cmdOf = async (command) => { let ran = false; const r = await fire('tool.call', { tool: 'Bash', command }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` }
+    const git = (...a) => require('child_process').spawnSync('git', a, { cwd: root, encoding: 'utf8' })
+    fs.writeFileSync(path.join(root, 'app.js'), 'x'); git('add', 'app.js')
+    const commitNoTest = await cmdOf('git commit -m "feat: thing"')
+    fs.writeFileSync(path.join(root, 'app.test.js'), 'x'); git('add', 'app.test.js')
+    const commitWithTest = await cmdOf('git commit -m "feat: thing with its test"')
+    git('reset', '-q'); fs.unlinkSync(path.join(root, 'app.js')); fs.unlinkSync(path.join(root, 'app.test.js'))
+    // a DELETED test beside a production change is not a test (arm pass 2)
+    fs.writeFileSync(path.join(root, 'old.test.js'), 'x'); git('add', 'old.test.js'); git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'old test')
+    // the test predates the dispatch: move the record's start_sha to this head
+    { const r = rec(); r['AB-5'].start_sha = git('rev-parse', 'HEAD').stdout.trim(); fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    fs.writeFileSync(path.join(root, 'app.js'), 'y'); git('add', 'app.js'); git('rm', '-q', 'old.test.js')
+    const commitDeletedTest = await cmdOf('git commit -m "feat: thing, test deleted"')
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'app.js', 'old.test.js')
+    // a test committed AFTER dispatch, then staged for deletion beside the production change (arm pass 3)
+    { const r = rec(); r['AB-5'].start_sha = git('rev-parse', 'HEAD').stdout.trim(); fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    fs.writeFileSync(path.join(root, 'new.test.js'), 'x'); git('add', 'new.test.js'); git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'new test after dispatch')
+    fs.writeFileSync(path.join(root, 'app.js'), 'z'); git('add', 'app.js'); git('rm', '-q', 'new.test.js')
+    const commitLaterDeletedTest = await cmdOf('git commit -m "feat: thing, later test deleted"')
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'app.js')
+    // arm pass 4: the tree the call commits, not the index at the check
+    // (a) path-limited commit: the staged test is left out of the commit (the branch carries no
+    // test since this base — the previous case's new.test.js is before it)
+    { const r = rec(); r['AB-5'].start_sha = git('rev-parse', 'HEAD').stdout.trim(); fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    fs.writeFileSync(path.join(root, 'app.js'), 'p'); fs.writeFileSync(path.join(root, 'p.test.js'), 'x'); git('add', 'app.js', 'p.test.js')
+    const commitPathLimited = await cmdOf('git commit -m "feat" -- app.js')
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'app.js', 'p.test.js')
+    // (b) -a with a test committed after dispatch and deleted in the working tree, unstaged
+    { const r = rec(); r['AB-5'].start_sha = git('rev-parse', 'HEAD').stdout.trim(); fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    fs.writeFileSync(path.join(root, 'q.test.js'), 'x'); git('add', 'q.test.js'); git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'q test')
+    fs.writeFileSync(path.join(root, 'app.js'), 'q'); git('add', 'app.js'); fs.unlinkSync(path.join(root, 'q.test.js'))
+    const commitAllDeleted = await cmdOf('git commit -am "feat"')
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'app.js')
+    // (c) add + commit in one call, the test only in the working tree: the add stages it, so it passes
+    { const r = rec(); r['AB-5'].start_sha = git('rev-parse', 'HEAD').stdout.trim(); fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    fs.writeFileSync(path.join(root, 'app.js'), 'r'); fs.writeFileSync(path.join(root, 'r.test.js'), 'x')
+    const commitAddThenCommit = await cmdOf('git add app.js r.test.js && git commit -m "feat"')
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'app.js', 'r.test.js')
+    // (d) rm of the only test + commit in one call: refused
+    { const r = rec(); r['AB-5'].start_sha = git('rev-parse', 'HEAD').stdout.trim(); fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    fs.writeFileSync(path.join(root, 's.test.js'), 'x'); git('add', 's.test.js'); git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 's test')
+    fs.writeFileSync(path.join(root, 'app.js'), 's'); git('add', 'app.js')
+    const commitRmThenCommit = await cmdOf('git rm -q s.test.js && git commit -m "feat"')
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'app.js')
+    // arm pass 5: (e) a changed test in the index whose working copy is deleted, re-added in the call
+    { const r = rec(); r['AB-5'].start_sha = git('rev-parse', 'HEAD').stdout.trim(); fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    fs.writeFileSync(path.join(root, 'e.test.js'), 'x'); git('add', 'e.test.js'); git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'e test')
+    { const r = rec(); r['AB-5'].start_sha = git('rev-parse', 'HEAD').stdout.trim(); fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    fs.writeFileSync(path.join(root, 'e.test.js'), 'changed'); git('add', 'e.test.js'); fs.unlinkSync(path.join(root, 'e.test.js'))
+    fs.writeFileSync(path.join(root, 'app.js'), 'e')
+    const commitRestageDeleted = await cmdOf('git add e.test.js app.js && git commit -m fix')
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'app.js')
+    // (f) -mchange is a message, not -a: an unstaged tracked test change is not committed
+    { const r = rec(); r['AB-5'].start_sha = git('rev-parse', 'HEAD').stdout.trim(); fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    fs.writeFileSync(path.join(root, 'e.test.js'), 'unstaged change'); fs.writeFileSync(path.join(root, 'app.js'), 'f'); git('add', 'app.js')
+    const commitDashMAttached = await cmdOf('git commit -mchange')
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'app.js')
+    // (g) add -A scoped to a directory: an untracked test elsewhere does not count
+    fs.mkdirSync(path.join(root, 'src'), { recursive: true }); fs.mkdirSync(path.join(root, 'tests'), { recursive: true })
+    fs.writeFileSync(path.join(root, 'src/app.js'), 'g'); fs.writeFileSync(path.join(root, 'tests/unrelated.test.js'), 'x')
+    const commitScopedAddAll = await cmdOf('git add -A src && git commit -m fix')
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'src', 'tests')
+    // (h) a path-limited commit whose ./-prefixed path is a test restored to the base
+    fs.writeFileSync(path.join(root, 'h.test.js'), 'base'); git('add', 'h.test.js'); git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'h base')
+    { const r = rec(); r['AB-5'].start_sha = git('rev-parse', 'HEAD').stdout.trim(); fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    fs.writeFileSync(path.join(root, 'h.test.js'), 'changed'); git('add', 'h.test.js'); git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'h changed')
+    fs.writeFileSync(path.join(root, 'h.test.js'), 'base'); fs.writeFileSync(path.join(root, 'app.js'), 'h')
+    const commitPathRestored = await cmdOf('git commit -m fix -- ./h.test.js app.js')
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'app.js')
+    // arm pass 6: (i) a `git mv` before the commit is refused and NOT replayed: the file stays put
+    fs.writeFileSync(path.join(root, 'i.test.js'), 'x'); fs.writeFileSync(path.join(root, 'app.js'), 'i'); git('add', 'i.test.js', 'app.js')
+    const commitAfterMv = await cmdOf('git mv app.js app2.js && git commit -m fix')
+    const mvNotReplayed = fs.existsSync(path.join(root, 'app.js')) && !fs.existsSync(path.join(root, 'app2.js'))
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'app.js', 'app2.js', 'i.test.js')
+    // (j) two content commits in one call are refused
+    fs.writeFileSync(path.join(root, 'j.test.js'), 'x'); fs.writeFileSync(path.join(root, 'app.js'), 'j'); git('add', 'j.test.js', 'app.js')
+    const commitTwice = await cmdOf('git commit -m first && git rm -q j.test.js && git commit -m second')
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'app.js', 'j.test.js')
+    // (k) -C src with a path-limited commit: the src test is unchanged from base, the root test is not committed
+    { const r = rec(); r['AB-5'].start_sha = git('rev-parse', 'HEAD').stdout.trim(); fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    fs.mkdirSync(path.join(root, 'src'), { recursive: true })
+    fs.writeFileSync(path.join(root, 'src/app.test.js'), 'base'); git('add', 'src/app.test.js'); git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'src test base')
+    { const r = rec(); r['AB-5'].start_sha = git('rev-parse', 'HEAD').stdout.trim(); fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    fs.writeFileSync(path.join(root, 'app.test.js'), 'root changed'); fs.writeFileSync(path.join(root, 'src/app.js'), 'k'); git('add', 'app.test.js', 'src/app.js')
+    const commitDashCSrc = await cmdOf('git -C src commit -m fix -- app.js app.test.js')
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'app.test.js', 'src')
+    // (l) --amend --only with no paths: HEAD's tree, the staged test ignored
+    fs.writeFileSync(path.join(root, 'app.js'), 'l0'); git('add', 'app.js'); git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'l base')
+    { const r = rec(); r['AB-5'].start_sha = git('rev-parse', 'HEAD').stdout.trim(); fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    fs.writeFileSync(path.join(root, 'app.js'), 'l1'); git('add', 'app.js'); git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'l prod')
+    fs.writeFileSync(path.join(root, 'l.test.js'), 'x'); git('add', 'l.test.js')
+    const commitAmendOnly = await cmdOf('git commit --amend --only -m fix')
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'app.js', 'l.test.js')
+    // arm pass 7: (m) a working-tree `git rm` then `add -A` cannot be replayed: refused, file untouched
+    { const r = rec(); r['AB-5'].start_sha = git('rev-parse', 'HEAD').stdout.trim(); fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    fs.writeFileSync(path.join(root, 'm.test.js'), 'x'); git('add', 'm.test.js'); git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'm test')
+    fs.writeFileSync(path.join(root, 'app.js'), 'm')
+    const commitRmAddAll = await cmdOf('git rm m.test.js && git add -A && git commit -m fix')
+    const rmNotReplayed = fs.existsSync(path.join(root, 'm.test.js'))
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'app.js')
+    // (n) --pathspec-from-file names paths the gate cannot read: refused
+    fs.writeFileSync(path.join(root, 'app.js'), 'n'); fs.writeFileSync(path.join(root, 'n.test.js'), 'x'); git('add', 'app.js', 'n.test.js'); fs.writeFileSync(path.join(root, 'paths.txt'), 'app.js\n')
+    const commitPathspecFile = await cmdOf('git commit --pathspec-from-file=paths.txt -m fix')
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'app.js', 'n.test.js', 'paths.txt')
+    // (o) cd elsewhere, then repeated -C back into the worktree: judged, not bypassed
+    { const r = rec(); r['AB-5'].start_sha = git('rev-parse', 'HEAD').stdout.trim(); fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    fs.mkdirSync(path.join(root, 'src'), { recursive: true }); fs.writeFileSync(path.join(root, 'src/app.js'), 'o'); git('add', 'src/app.js')
+    const commitRepeatedC = await cmdOf(`cd /tmp && git -C ${root} -C src commit -m fix -- app.js`)
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'src')
+    // arm pass 8: (q) a path-limited commit does not commit an untracked test under the path
+    { const r = rec(); r['AB-5'].start_sha = git('rev-parse', 'HEAD').stdout.trim(); fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    fs.writeFileSync(path.join(root, 'app.js'), 'q0'); git('add', 'app.js'); git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'q base')
+    { const r = rec(); r['AB-5'].start_sha = git('rev-parse', 'HEAD').stdout.trim(); fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    fs.writeFileSync(path.join(root, 'app.js'), 'q1'); fs.writeFileSync(path.join(root, 'pending.test.js'), 'x')
+    const commitDotUntracked = await cmdOf('git commit -m fix -- .')
+    // (s) …but a STAGED-new test under the path is committed, so it counts
+    git('add', 'pending.test.js')
+    const commitDotStaged = await cmdOf('git commit -m fix -- .')
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'pending.test.js')
+    // (r) a staging step behind shell control flow is refused, not replayed
+    fs.writeFileSync(path.join(root, 'app.js'), 'r1'); git('add', 'app.js'); fs.writeFileSync(path.join(root, 'pending.test.js'), 'x')
+    const commitSkippedAdd = await cmdOf('false && git add pending.test.js; git commit -m fix')
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'pending.test.js')
+    // arm pass 9: (t) a negated --cached is refused and the working file survives
+    fs.writeFileSync(path.join(root, 'app.js'), 't1'); git('add', 'app.js'); git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 't base')
+    { const r = rec(); r['AB-5'].start_sha = git('rev-parse', 'HEAD').stdout.trim(); fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    fs.writeFileSync(path.join(root, 'app.js'), 't2 uncommitted')
+    const commitRmNoCached = await cmdOf('git rm --cached --no-cached -f app.js; git commit -m fix')
+    const fileSurvived = fs.existsSync(path.join(root, 'app.js')) && fs.readFileSync(path.join(root, 'app.js'), 'utf8') === 't2 uncommitted'
+    git('reset', '-q', '--hard')
+    // (u) a staging step behind || or inside another command's arguments is not a staging step
+    fs.writeFileSync(path.join(root, 'app.js'), 'u'); git('add', 'app.js'); fs.writeFileSync(path.join(root, 'pending.test.js'), 'x')
+    const commitOrAdd = await cmdOf('git status || git add pending.test.js; git commit -m fix')
+    const commitEchoAdd = await cmdOf('echo git add pending.test.js; git commit -m fix')
+    // (v) a removal of a path git does not know fails, so the add after && never runs
+    const commitRmAbsent = await cmdOf('git rm --cached absent.js && git add pending.test.js; git commit -m fix')
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'pending.test.js')
+    // arm pass 10: (w) a substitution inside the message runs before the commit: refused, test stays staged
+    fs.writeFileSync(path.join(root, 'app.js'), 'w'); fs.writeFileSync(path.join(root, 'pending.test.js'), 'x'); git('add', 'app.js', 'pending.test.js')
+    const commitSubstQuoted = await cmdOf('git commit -m "fix $(git reset -q HEAD -- pending.test.js)"')
+    const testStillStaged = git('diff', '--cached', '--name-only').stdout.includes('pending.test.js')
+    // (x) a global git option other than -C points at a tree the replay does not model: refused
+    const commitWorkTree = await cmdOf(`git --work-tree=${root}/src add -A && git commit -m fix`)
+    const commitConfigOpt = await cmdOf('git -c core.quotepath=off commit -a -m fix')
+    // arm pass 11: (y) apostrophes inside double quotes do not hide a substitution; a backtick
+    // in double quotes runs too; a single-quoted one is text and is NOT refused
+    const commitSubstApos = await cmdOf(`git commit -m "'$(git reset -q HEAD -- pending.test.js)'"`)
+    const commitBacktickDouble = await cmdOf('git commit -m "fix `git reset -q HEAD -- pending.test.js`"')
+    const commitSubstLiteral = await cmdOf("git commit -m 'see $(ref) and `x`'")
+    // (z) a separate-valued global option must not hide the commit from the reader
+    const commitConfigEnv = await cmdOf('git --config-env core.foo=PATH commit -a -m fix')
+    // arm pass 12: (aa) a staging step behind `#` never runs, so it is not a step; (ab) an
+    // abbreviated long option (`--pathspec-from`) is refused, a full one in a value form passes
+    git('reset', '-q', 'HEAD', '--', 'pending.test.js')
+    const commitCommentedAdd = await cmdOf('git status # ignored; git add pending.test.js\ngit commit -m fix')
+    git('add', 'pending.test.js'); fs.writeFileSync(path.join(root, 'paths.txt'), 'app.js\n')
+    const commitAbbrevOpt = await cmdOf('git commit --pathspec-from=paths.txt -m fix')
+    const commitMessageEq = await cmdOf('git commit --message=fix --no-verify')
+    // arm pass 13: (ac) a redirection before the commit restores the test on disk after the
+    // judgment reads it: refused
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'pending.test.js', 'paths.txt')
+    fs.writeFileSync(path.join(root, 'app.js'), 'ac0'); fs.writeFileSync(path.join(root, 'app.test.js'), 'ac0'); git('add', 'app.js', 'app.test.js'); git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'ac base')
+    { const r = rec(); r['AB-5'].start_sha = git('rev-parse', 'HEAD').stdout.trim(); fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    fs.writeFileSync(path.join(root, 'app.js'), 'ac1'); fs.writeFileSync(path.join(root, 'app.test.js'), 'ac1')
+    const commitRedirect = await cmdOf('git show HEAD:app.test.js > app.test.js; git commit -am fix')
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'app.test.js')
+    git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'pending.test.js', 'paths.txt')
+    const noScratchLeft = !fs.readdirSync(root).some(n => n.startsWith('.git-tdd-gate'))
     // the project's refused-in-dispatched-panes list: a listed command is refused in this pane
     fs.mkdirSync(path.join(root, '.astraler/project'), { recursive: true })
     fs.writeFileSync(path.join(root, '.astraler/project/refused-in-dispatched-panes'), '# shared test database\n\\bmake\\s+db-down\n')
-    const cmdOf = async (command) => { let ran = false; const r = await fire('tool.call', { tool: 'Bash', command }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` }
     const refusedListed = await cmdOf('cd apps/server && make db-down')
     const refusedOther = await cmdOf('cd apps/server && make db-up')
     // the context ceiling: a turn that ends over it is compacted at the next tick, between turns
@@ -1276,7 +1494,7 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
     $.session.compact = async () => { compacted++; return {} }
     await fire('turn.complete', { reason: 'answer', answer: 'done', turnId: 't3' }, async () => ({}))
     await every()
-    console.log(JSON.stringify({ registered, paneHeld, paneCleared, armOffSection, refusedListed, refusedOther, compacted, log }))
+    console.log(JSON.stringify({ registered, paneHeld, paneCleared, armOffSection, refusedListed, refusedOther, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, noScratchLeft, log }))
     return
   }
   await fire('session.start', {}, async () => ({}))
@@ -1325,7 +1543,42 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
   // the dispatcher learns every off scope: it runs the marker check at merge
   const composed = await fire('prompt.compose', {}, async () => ({ sections: [] }))
   const armOffDispatcher = (composed?.sections ?? []).some(s => /ARM: off at ticket[\s\S]*arm\(ticket\)/.test(String(s.text)))
-  console.log(JSON.stringify({ afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, subagentHeld, latestChip, mergeGap, mergeFull, mergeEmpty, armOffDispatcher, log }))
+  // 4.1.0 — four gates a 30-day field audit saw fire 0 times, each driven here with its defect planted
+  const sendBrief = async text => { const r = await fire('session.send', { to: 'builder-ab-9', text, origin: { kind: 'model' } }, async () => ({ isDelivered: true })); return r?.isDelivered === false ? `refused:${String(r.reason ?? '').slice(0, 60)}` : 'sent' }
+  const recPath = path.join(root, '.astraler/state/dispatch-record.json')
+  const orchPath = path.join(root, '.agents/orchestrator.md')
+  const orchText = fs.readFileSync(orchPath, 'utf8')
+  // (1) a brief with no QA line
+  const briefNoQa = await sendBrief('/mattpocock-skills:implement AB-9\nWorktree: x · Branch: y · Base: main')
+  // (2) an upgrade that stopped part-way
+  fs.writeFileSync(path.join(root, '.astraler/state/apply-incomplete'), '0.0.2')
+  const briefUpgrade = await sendBrief('/mattpocock-skills:implement AB-9\nQA: none — no surface')
+  fs.unlinkSync(path.join(root, '.astraler/state/apply-incomplete'))
+  // (3) an orchestrator whose Active assignments table has no Advisor column
+  fs.writeFileSync(orchPath, orchText.replace('| Role | Runtime | Model | Effort | Advisor |', '| Role | Runtime | Model | Effort |').replace('|---|---|---|---|---|', '|---|---|---|---|').replace('| builder | claude | m | medium | opus |', '| builder | claude | m | medium |'))
+  const briefAdvisor = await sendBrief('/mattpocock-skills:implement AB-9\nQA: none — no surface')
+  fs.writeFileSync(orchPath, orchText)
+  // (4) closing the pane of a Builder that is mid-turn
+  fs.writeFileSync(recPath, JSON.stringify({ 'AB-9': { role: 'builder', pane_id: 'p9', tab_id: 't9', session_id: 's9', last_brief_received_at: Date.now() } }))
+  let closeRan = false
+  const closeR = await fire('tool.call', { tool: 'Bash', command: 'herdr pane close p9' }, async () => { closeRan = true; return {} })
+  const closeRefusal = `${closeR?.deny ? 'deny' : 'pass'}:${closeRan ? 'ran' : 'held'}`
+  const roleAtDispatch = (() => { fs.writeFileSync(recPath, '{}'); return null })()
+  // a delivered Builder brief writes the role on the record at dispatch
+  await sendBrief('/mattpocock-skills:implement AB-9\nQA: none — no surface')
+  const roleWritten = JSON.parse(fs.readFileSync(recPath, 'utf8'))['AB-9']?.role === 'builder'
+  // 4.2.0 — builder-target is read by the mod: two live Builders against a row of 2 refuse a third brief
+  fs.writeFileSync(orchPath, orchText.replace(/\| builder-target \| `\d+` \|/, '| builder-target | `2` |'))
+  fs.writeFileSync(recPath, JSON.stringify({ 'AB-10': { role: 'builder', pane_id: 'p10' }, 'AB-11': { role: 'builder', pane_id: 'p11' } }))
+  const briefOverTarget = await sendBrief('/mattpocock-skills:implement AB-12\nQA: none — no surface')
+  fs.writeFileSync(recPath, JSON.stringify({ 'AB-10': { role: 'builder', pane_id: 'p10', worktree_removed_at: 1 }, 'AB-11': { role: 'builder', pane_id: 'p11' } }))
+  const briefUnderTarget = await sendBrief('/mattpocock-skills:implement AB-12\nQA: none — no surface')
+  // the destination registered itself first (the protocol): its own entry is not a competing lane
+  fs.writeFileSync(orchPath, orchText.replace(/\| builder-target \| `\d+` \|/, '| builder-target | `1` |'))
+  fs.writeFileSync(recPath, JSON.stringify({ 'AB-13': { role: 'builder', pane_id: 'p13' } }))
+  const briefToRegistered = await sendBrief('/mattpocock-skills:implement AB-13\nQA: none — no surface')
+  fs.writeFileSync(orchPath, orchText); fs.writeFileSync(recPath, '{}')
+  console.log(JSON.stringify({ afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, subagentHeld, latestChip, mergeGap, mergeFull, mergeEmpty, armOffDispatcher, briefNoQa, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
@@ -1333,7 +1586,7 @@ DRVEOS
     ( cd "$TMP/mod-drive-repo" && git init -q && git -c user.name=t -c user.email=t@t commit -q --allow-empty -m init && git tag v0.0.2 )
     echo 0.0.1 > "$TMP/mod-drive-repo/.astraler/state/applied-version"
     mkdir -p "$TMP/mod-drive-repo/.agents"
-    printf '## Active assignments\n\n| Role | Runtime | Model | Effort | Advisor |\n|---|---|---|---|---|\n| builder | claude | m | medium | opus |\n\n## Cross-vendor arm\n\n| Scope | Enabled |\n|---|---|\n| ticket | no |\n| spec | yes |\n| slice | yes |\n' > "$TMP/mod-drive-repo/.agents/orchestrator.md"
+    printf '| workspace-label | `x` |\n| builder-target | `4` |\n\n## Active assignments\n\n| Role | Runtime | Model | Effort | Advisor |\n|---|---|---|---|---|\n| builder | claude | m | medium | opus |\n\n## Cross-vendor arm\n\n| Scope | Enabled |\n|---|---|\n| ticket | no |\n| spec | yes |\n| slice | yes |\n' > "$TMP/mod-drive-repo/.agents/orchestrator.md"
     echo '{"AB-1":{"role":"builder","pane_id":"p1","tab_id":"t1","session_name":"builder-ab-1-32","registered_at":1,"branch":"feat/ab-1","start_sha":"abc"}}' > "$TMP/mod-drive-repo/.astraler/state/dispatch-record.json"
     node "$TMP/mod-drive.cjs" "$1" "$TMP/mod-drive-repo" "$TSC_PKG" "${2:-}" 2>&1
   }
@@ -1349,8 +1602,14 @@ DRVEOS
   else
     bad "mod merge gate" "$out"
   fi
+  # 4.1.0 — the four gates no field data had seen fire, each shown firing on its planted defect
+  if says "$out" '"briefNoQa":"refused:' && says "$out" 'no \"QA:' && says "$out" '"briefUpgrade":"refused:' && says "$out" '"briefAdvisor":"refused:' && says "$out" '"closeRefusal":"deny:held"' && says "$out" '"roleWritten":true' && says "$out" '"briefOverTarget":"refused:' && says "$out" '"briefUnderTarget":"sent"' && says "$out" '"briefToRegistered":"sent"'; then
+    ok "brief refused without a QA line, during a half-applied upgrade, without an Advisor column, and at builder-target; a mid-turn pane's close is refused; a delivered brief writes the role on the record"
+  else
+    bad "mod merge gate" "$out"
+  fi
   out="$(mod_drive "$MOD" pane)"
-  if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","compacted":1'; then
+  if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","compacted":1,"commitNoTest":"deny:held","commitWithTest":"pass:ran","commitDeletedTest":"deny:held","commitLaterDeletedTest":"deny:held","commitPathLimited":"deny:held","commitAllDeleted":"deny:held","commitAddThenCommit":"pass:ran","commitRmThenCommit":"deny:held","commitRestageDeleted":"deny:held","commitDashMAttached":"deny:held","commitScopedAddAll":"deny:held","commitPathRestored":"deny:held","commitAfterMv":"deny:held","mvNotReplayed":true,"commitTwice":"deny:held","commitDashCSrc":"deny:held","commitAmendOnly":"deny:held","commitRmAddAll":"deny:held","rmNotReplayed":true,"commitPathspecFile":"deny:held","commitRepeatedC":"deny:held","commitDotUntracked":"deny:held","commitDotStaged":"pass:ran","commitSkippedAdd":"deny:held","commitRmNoCached":"deny:held","fileSurvived":true,"commitOrAdd":"deny:held","commitEchoAdd":"deny:held","commitRmAbsent":"deny:held","commitSubstQuoted":"deny:held","testStillStaged":true,"commitWorkTree":"deny:held","commitConfigOpt":"deny:held","commitSubstApos":"deny:held","commitBacktickDouble":"deny:held","commitSubstLiteral":"pass:ran","commitConfigEnv":"deny:held","commitCommentedAdd":"deny:held","commitAbbrevOpt":"deny:held","commitMessageEq":"pass:ran","commitRedirect":"deny:held","noScratchLeft":true'; then
     ok "pane side: a turn end with a live agent is held, the next turn start ends the hold, an arm row at no reaches the Builder's prompt, a command on the project's refused list is refused, and a turn over the context ceiling is compacted"
   else
     bad "mod pane hold" "$out"

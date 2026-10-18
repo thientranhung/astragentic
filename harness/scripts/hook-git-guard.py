@@ -92,6 +92,44 @@ def log(kind, cmd):
         pass
 
 
+def changed_paths(limit=20):
+    """The paths `git status` reports changed or untracked, for a refusal that names what to
+    stage instead. Measured downstream (4.1.0): 71 of 167 sweeping-add refusals were followed by
+    the identical command, retyped; a refusal that lists the paths is one the next call can obey.
+
+    The list is SHELL TEXT the agent will run, so every name is shell-quoted and the command
+    carries `--`: a filename is not a flag and not code. The arm on 4.1.0 planted a file named
+    `$(printf INJECTED)` and the unquoted form ran it (4.2.0). NUL-delimited porcelain, so a
+    name with a newline or a quote survives the parse too."""
+    try:
+        r = subprocess.run(["git", "status", "--porcelain", "-z", "--untracked-files=all"],
+                           capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    if r.returncode != 0 or not r.stdout:
+        return ""
+    paths = []
+    fields = r.stdout.split("\0")
+    i = 0
+    while i < len(fields):
+        rec = fields[i]
+        i += 1
+        if len(rec) < 4:
+            continue
+        status, name = rec[:2], rec[3:]
+        if "R" in status or "C" in status:
+            # a rename carries the ORIGINAL name as the next NUL field; the new name is `name`
+            i += 1
+        paths.append(name)
+    if not paths:
+        return ""
+    quoted = " ".join(shlex.quote(p) for p in paths[:limit])
+    more = "" if len(paths) <= limit else " … (+%d more)" % (len(paths) - limit)
+    # `--literal-pathspecs`: a name is not a pathspec either. The arm's probe named a file
+    # `:(glob)*` and `git add -- ':(glob)*'` expanded it over the whole tree (pass 2).
+    return " Changed now: git --literal-pathspecs add -- %s%s" % (quoted, more)
+
+
 def deny(reason, cmd):
     log("DENY", cmd)
     print(json.dumps({"hookSpecificOutput": {
@@ -537,7 +575,7 @@ def main():
              "also sweeps in files other tickets own and anything untracked. Stage by path: "
              "`git add <file>...` or `git add -A -- <dir>`. "
              "(Judged before the readability gate: six sweeps went out unjudged inside "
-             "`git commit -m \"$(cat <<EOF` lines on one project in two days.)", cmd)
+             "`git commit -m \"$(cat <<EOF` lines on one project in two days.)" + changed_paths(), cmd)
 
     cmds = simple_commands(cmd)
     if OUT_OF_SCOPE:
@@ -573,7 +611,7 @@ def main():
         if args[:1] == ["add"] and is_sweeping_add(args[1:]):
             deny("git add -A / git add . is refused here (AST-054: a sweeping add once "
                  "committed ~1000 unrelated files permanently). Stage the paths this change "
-                 "actually touches, by name.", cmd)
+                 "actually touches, by name." + changed_paths(), cmd)
 
         # -- git worktree add (AST-028, AST-096) -----------------------------------------
         if args[:2] == ["worktree", "add"]:

@@ -120,12 +120,5 @@ nó là thứ để tra khi một luật trong contract khiến bạn thắc m�
 
 Bốn skill dưới đây có mặt vì repo thật hiếm khi sạch.
 
-- **`bootstrap-glossary`.** Rút từ vựng miền ra từ chính code; mỗi từ mang theo file nó được đọc ra
-  và bị đánh dấu chưa duyệt cho tới khi owner xác nhận. Nguyên tắc là trích, không bịa: một glossary
-  do agent tưởng tượng ra nhưng viết bằng giọng chắc chắn còn nguy hiểm hơn là không có glossary.
-- **`batch-triage`.** Xử lý một backlog thừa kế trong một lượt thay vì từng ticket một.
-- **`legacy-testing`.** Dựng seam cho đoạn code không có điểm bám nào để test.
-- **`untangle`.** Dành cho repo không còn module boundary nào để cải thiện, nơi một cú restructure
-  sạch sẽ tạo ra một diff không ai review nổi.
 
 **Đánh đổi.** Chung cho cả bốn: đây là việc phải làm xong trước khi ticket đầu tiên chạy được.

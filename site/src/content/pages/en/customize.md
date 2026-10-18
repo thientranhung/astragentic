@@ -125,13 +125,5 @@ what you consult when a rule in a contract makes you wonder *why is this here*.
 
 The four skills below exist because real repositories are rarely clean.
 
-- **`bootstrap-glossary`.** Pulls the domain vocabulary out of the code itself; every term carries
-  the file it was read from and is marked unconfirmed until the owner says otherwise. The rule is to
-  quote, not invent: a glossary an agent imagined but wrote confidently is more dangerous than no
-  glossary.
-- **`batch-triage`.** Works an inherited backlog in one pass rather than one ticket at a time.
-- **`legacy-testing`.** Cuts a seam into code that offers nothing to hold on to.
-- **`untangle`.** For a repository with no module boundaries left to improve, where one clean
-  restructure produces a diff nobody can review.
 
 **Trade-off.** Common to all four: this is work that has to finish before the first ticket can run.

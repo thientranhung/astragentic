@@ -80,6 +80,14 @@ being resolved by picking the more convenient one.
    identical-only rule. Directories that end up empty go too; directories still holding
    project files stay.
 2. `.astraler/` **last** — step 3 reads it, so removing it earlier destroys your own oracle.
+   That takes `.astraler/releases/<v>/adoption-skills/` with it: the two adoption-time skills
+   (`bootstrap-glossary`, `batch-triage`) live only there and were never copied into
+   `.agents/skills/`, so there is nothing of them to remove from the payload paths.
+
+**The ledger archive is not in the project.** `docs/ledger-archive/` exists only in the
+package's own source repository; an install carries the trimmed `recurring-failure-modes.md`,
+`INDEX.md` and `RULES.md` under `.agents/memory/` and nothing of the archive. Do not look for it,
+and do not report its absence as drift.
 
 Outside the repo, and nothing in the repo will remind anyone:
 
@@ -106,6 +114,8 @@ They arrive with the harness and are not the harness:
 - **`docs/agents/issue-tracker.md`, `triage-labels.md`, `domain.md`** — written by
   `setup-matt-pocock-skills`, describing the project's tracker and domain. They outlive this
   package and a project still uses them without it.
+- **`GLOSSARY.md` and any tickets `batch-triage` created** — adoption output the owner reviewed.
+  They belong to the project, not to the skill that produced them.
 - **The project's ledger** — its own measured history. Removing the tool that suggested the
   format is not a reason to lose the measurements.
 - **Every ticket, branch, worktree and commit** the harness helped produce. Obviously, and it is

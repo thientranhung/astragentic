@@ -1,122 +1,122 @@
 [
   {
-    "sha": "e5988b95d9fc135e3e034db27b66f0db4049597b",
-    "date": "2026-10-05",
-    "subject": "2.16.2 — the mod stops refusing text that only quotes a command",
+    "sha": "eaf30277918c25228ab3d0ba6b9d69b101ce7f8e",
+    "date": "2026-10-14",
+    "subject": "3.3.1 — a pane that starts a turn ends its hold; held-stale no longer rings on a working pane",
     "ledger": "Ledger: none."
   },
   {
-    "sha": "a2f7dcb72a3daab16b77fa3cac18034b7f05bb5e",
-    "date": "2026-10-05",
-    "subject": "2.16.1 — an unreadable worktree path is refused, not waved through",
+    "sha": "f0d93a7b940ea2015650dd4b170689646ba598af",
+    "date": "2026-10-14",
+    "subject": "3.3.0 — the project answers its own upgrade question: .astraler/astragentic.sh update, and a newer-release chip on the dispatcher's band",
     "ledger": "Ledger: none."
   },
   {
-    "sha": "84106ad6c2b7b1c0d56bd8449a651f58e38a0672",
-    "date": "2026-10-05",
-    "subject": "2.16.0 — the push gate moves into git's pre-push hook",
-    "ledger": "Ledger: none (AST-057, AST-157; the guard's docstring carries the 26%)."
-  },
-  {
-    "sha": "1f4921cbdff4dd50f18202eb6d6e107e81ecf439",
-    "date": "2026-10-05",
-    "subject": "2.15.10 — stamps survive a reboot; an unreadable record says so",
+    "sha": "33fd041cff8b787216c9ae27ba71a36c5dff538f",
+    "date": "2026-10-14",
+    "subject": "3.2.7 — a subagent's turn no longer holds the dispatcher's bells (Claude Code 2.1.299 turn.start)",
     "ledger": "Ledger: none."
   },
   {
-    "sha": "781164220bcd82a994436853481ddb97ba7516d2",
-    "date": "2026-10-05",
-    "subject": "2.15.9 — the watchdog stops crying WATCHER_LOST at self-reporting panes; a fast ack stops sticking",
-    "ledger": "Ledger: none (AST-124)."
-  },
-  {
-    "sha": "5f31000dc1af1214cf96122f05aaee0a909e7fc4",
-    "date": "2026-10-05",
-    "subject": "2.15.8 — the ticket-done pipe failure was deterministic, and now has a test that can fail",
-    "ledger": "Ledger: none (AST-158's check; the rule is in the notes)."
-  },
-  {
-    "sha": "8267622391b3199043eb8a64d1b22b1c40e60bc3",
-    "date": "2026-10-05",
-    "subject": "2.15.7 — resident panes are out of the close guard, said plainly; ticket-done stops racing pipefail",
-    "ledger": "Ledger: none (AST-158's check, repaired)."
-  },
-  {
-    "sha": "520342d9d68770e8d07945dc8318aba4d391f509",
-    "date": "2026-10-05",
-    "subject": "2.15.6 — the visibility proof checks every payload file, not one",
+    "sha": "7e8dadeb88542234fef28d6619d26286740a4d0c",
+    "date": "2026-10-13",
+    "subject": "3.2.6 — a held turn end has a ceiling: 20 minutes, then one held-stale bell and a red row",
     "ledger": "Ledger: none."
   },
   {
-    "sha": "fe35218253e0e6de8f88811082c748402b2bd8af",
-    "date": "2026-10-05",
-    "subject": "2.15.5 — a renamed payload file is seen, and the brief check says it is a lint",
+    "sha": "1ff35b01343bd0cfb80b7bd38ad3767da7b34b23",
+    "date": "2026-10-13",
+    "subject": "3.2.5 — a Compose stack every worktree shares is not released with one worktree",
     "ledger": "Ledger: none."
   },
   {
-    "sha": "aec8c7d16e780aa41eca157cf248abcda9084366",
-    "date": "2026-10-05",
-    "subject": "2.15.4 — uncommitted payload holds the brief, with a named way through",
-    "ledger": "Ledger: none (AST-036, AST-157)."
-  },
-  {
-    "sha": "ecc92f58151dc378d78804892c066841afbb9bb4",
-    "date": "2026-10-05",
-    "subject": "2.15.3 — the codex selftest stops failing in every adopted project",
+    "sha": "e78e7df1c67f764101b06d626e29cf7bcf7f09af",
+    "date": "2026-10-13",
+    "subject": "3.2.4 — a retired lane's late turn end rings no bell on either path",
     "ledger": "Ledger: none."
   },
   {
-    "sha": "057ae900c355db93fecb6d9e7d47655c3fd4c646",
-    "date": "2026-10-05",
-    "subject": "2.15.2 — a plug that cannot run stops muting the watchdog",
-    "ledger": "Ledger: none (an instance of AST-124)."
+    "sha": "21464ce9d0a2359e92f99bcff58679fe3459f789",
+    "date": "2026-10-13",
+    "subject": "3.2.3 — the dispatcher's \"not confirmed received\" chip clears on the ack; sends are keyed by the bare session name",
+    "ledger": "Ledger: none."
   },
   {
-    "sha": "56c0af5f6f67ecba5bdbe0b021f37c379cf72c65",
-    "date": "2026-10-05",
-    "subject": "2.15.1 — a half-applied harness upgrade holds every brief",
-    "ledger": "Ledger: none (an application of AST-157)."
+    "sha": "5dc968cde92dd37bd15fe649ce37d82c028b539f",
+    "date": "2026-10-12",
+    "subject": "3.2.2 — a dispatched pane's written reply goes to its dispatcher, whatever name the model typed",
+    "ledger": "Ledger: none."
   },
   {
-    "sha": "535f8b1c850406b32dcaba42f9bc58cb8d6ce82d",
-    "date": "2026-10-05",
-    "subject": "2.15.0 — the tracker is checked at the brief, and an empty branch stops counting as merged",
-    "ledger": "Ledger: AST-157, AST-158."
+    "sha": "2a4d1a899dd472cfae1cda463c6726c99d82237e",
+    "date": "2026-10-12",
+    "subject": "3.2.1 — an unreachable tracker stamps UNVERIFIED instead of blocking every push; a bell from a retired lane is dropped",
+    "ledger": "Ledger: none."
   },
   {
-    "sha": "0a3653edc262e628c09ec90b349fc2a3996b1412",
-    "date": "2026-10-05",
-    "subject": "2.14.0 — the pane does its own dispatch steps, so none of them can be skipped",
-    "ledger": "Ledger: AST-156."
+    "sha": "e2ac2f3ef036e7cec7b26ae552cf58ee2e177352",
+    "date": "2026-10-12",
+    "subject": "docs: the two prose lists of what the orchestrator row carries name advisor too",
+    "ledger": "Ledger: none."
   },
   {
-    "sha": "6e25bc33b72c7de342d4bd88aafdad85958c6689",
-    "date": "2026-10-05",
-    "subject": "fold the second project's findings — the teardown kept what it built",
-    "ledger": "Ledger: AST-155."
+    "sha": "340291ba7c2cf2b7fc5abdcfcfcf8094653ee3e4",
+    "date": "2026-10-12",
+    "subject": "README: the Thomas launch line carries --advisor fable, as the orchestrator row does",
+    "ledger": "Ledger: none."
   },
   {
-    "sha": "a831c03d3a39c491649baf8655f4d9cff5494809",
-    "date": "2026-09-20",
-    "subject": "fold the first project's findings — the 2.12.0 launcher could not launch",
-    "ledger": "Ledger: AST-149 (no form carried both), AST-150 (the launcher that cannot encode the identity), AST-151 (an empty cell refused at bootstrap). Still 2.12.0, unreleased."
+    "sha": "efe7d1410c9d0dadc9eeb4963c2517dbef21d953",
+    "date": "2026-10-12",
+    "subject": "3.2.0 — a turn that ends with agents still running is not a bell; the watchdog fires once and stays off recorded panes",
+    "ledger": "Ledger: none."
   },
   {
-    "sha": "a7ce4a8493e19b30c9df167c05a32d0d86a1ebda",
-    "date": "2026-09-20",
-    "subject": "2.12.0 — a role identity stops travelling through a namespace the project does not own",
-    "ledger": "Ledger: AST-145 the namespace, AST-146 silent key acceptance, AST-147 the invisible glob, AST-148 one condition two questions."
+    "sha": "8dc21835f42b212b081cb6da7f13496daf792dbc",
+    "date": "2026-10-10",
+    "subject": "3.1.1 — the .pyc is out of the release; an absent payload file can be excused",
+    "ledger": "Ledger: none."
   },
   {
-    "sha": "7e6db387d88503477326299c5279b217e3263d07",
-    "date": "2026-09-14",
-    "subject": "the Ledger line becomes a refusal; the fork guard turns out to be unbuildable",
-    "ledger": "Ledger: AST-139."
+    "sha": "8bc9470698d00485b7113e1cd5a5fcad768de5aa",
+    "date": "2026-10-10",
+    "subject": "3.1.0 — check-reachability is a .py, as it always was",
+    "ledger": "Ledger: none."
   },
   {
-    "sha": "e44f905af34d74f9dbe0161e78daf359c5e4a88f",
-    "date": "2026-09-14",
-    "subject": "a rule reaches every runtime, or it reaches one — the contract re-arm reaches all three",
-    "ledger": "Ledger: AST-138."
+    "sha": "9328d011ec4b234d4097a3301e3313a7d9120f7e",
+    "date": "2026-10-10",
+    "subject": "3.0.3 — the version chip is on every pane's band",
+    "ledger": "Ledger: none."
+  },
+  {
+    "sha": "1cb7fc62adbf1af0b740ae96b00c34bc87df0e8a",
+    "date": "2026-10-10",
+    "subject": "3.0.2 — the applied version is on the band and the board",
+    "ledger": "Ledger: none."
+  },
+  {
+    "sha": "89dc636e36116f1fa6a990dfd2d5caaee4336118",
+    "date": "2026-10-10",
+    "subject": "3.0.1 — no QA plan, no dispatch; the claim check reads implement's ticket only",
+    "ledger": "Ledger: none."
+  },
+  {
+    "sha": "dd0f49f72d4e1ca7c1479a5b2b913514b2825be8",
+    "date": "2026-10-10",
+    "subject": "3.0.0 — QA and testing enter every role's chain; Rin leaves it",
+    "ledger": "Ledger: none."
+  },
+  {
+    "sha": "7a823b2ba4eace40243620cbaab55a747f7faeff",
+    "date": "2026-10-10",
+    "subject": "2.22.2 — every dispatched pane shows its steps as chips",
+    "ledger": "Ledger: none."
+  },
+  {
+    "sha": "833067948c95cf1788f3a6ac6d2541d85302e8fa",
+    "date": "2026-10-10",
+    "subject": "2.22.1 — the READMEs describe install and upgrade as get.sh does them",
+    "ledger": "Ledger: none."
   }
 ]

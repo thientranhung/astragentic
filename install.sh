@@ -25,14 +25,16 @@ PAYLOAD="$HARNESS_ROOT/harness"
 if [ -f "$HARNESS_ROOT/prompts/ADAPT-HARNESS.md" ]; then
   ADAPT_PROMPT="$HARNESS_ROOT/prompts/ADAPT-HARNESS.md"
   UNINSTALL_PROMPT="$HARNESS_ROOT/prompts/UNINSTALL-HARNESS.md"
+  ADOPTION_SKILLS="$HARNESS_ROOT/prompts/adoption-skills"
 else
   ADAPT_PROMPT="$HARNESS_ROOT/ADAPT-HARNESS.md"
   UNINSTALL_PROMPT="$HARNESS_ROOT/UNINSTALL-HARNESS.md"
+  ADOPTION_SKILLS="$HARNESS_ROOT/adoption-skills"
 fi
 RELEASE_NOTES="$HARNESS_ROOT/RELEASE-NOTES.md"
 VERSION="$(cat "$HARNESS_ROOT/VERSION")"
 
-for REQUIRED in "$PAYLOAD" "$ADAPT_PROMPT" "$UNINSTALL_PROMPT" "$RELEASE_NOTES" \
+for REQUIRED in "$PAYLOAD" "$ADAPT_PROMPT" "$UNINSTALL_PROMPT" "$ADOPTION_SKILLS" "$RELEASE_NOTES" \
                 "$HARNESS_ROOT/README.md" "$HARNESS_ROOT/check-requirements.sh"; do
   [ -e "$REQUIRED" ] || { echo "ERROR: package is incomplete, missing $REQUIRED" >&2; exit 1; }
 done
@@ -253,6 +255,27 @@ if git -C "$HARNESS_ROOT" rev-parse --git-dir >/dev/null 2>&1; then
         [ -n "$REL" ] && [ "$REL" != "$IGN" ] && rm -rf "$STAGING_DIR/harness/$REL"
       done || true
 fi
+# TRACKER SKILLS: ship the one the project names. The package keeps all three adapters as
+# source, but a project runs one tracker, and the other two were loaded into every payload
+# for nothing (measured 2026-10-18: github Read 35 times in 30 days, jira and linear 0).
+# `docs/agents/issue-tracker.md` names the tracker (the contract in tracker-contract.md); it is
+# read for the capitalised words GitHub / Jira / Linear. Exactly one named -> the project gets
+# that one. None named or several named (a fresh target with no file, or a doc that compares
+# trackers) -> all three, and adoption picks later. THE STAGED RELEASE KEEPS ALL THREE: the
+# release directory is immutable and compared byte-for-byte on every restage, so a selection
+# made at staging time breaks the moment the project writes its tracker doc and restages the
+# same version (found by the 4.1.0 arm). The selection is made at --apply, below, on the copy.
+tracker_named() { # -> github|jira|linear, or empty when none or several are named
+  local doc="$TARGET/docs/agents/issue-tracker.md" named="" n=0 pair
+  [ -f "$doc" ] || { echo ""; return; }
+  for pair in GitHub:github Jira:jira Linear:linear; do
+    if grep -qw "${pair%%:*}" "$doc"; then named="${pair##*:}"; n=$((n+1)); fi
+  done
+  [ "$n" -eq 1 ] && echo "$named" || echo ""
+}
+# ADOPTION-TIME SKILLS ship beside ADAPT-HARNESS.md, not in the payload: adaptation reads them
+# once, no session loads them afterwards.
+[ -d "$ADOPTION_SKILLS" ] && cp -R "$ADOPTION_SKILLS" "$STAGING_DIR/adoption-skills"
 cp "$ADAPT_PROMPT"                    "$STAGING_DIR/ADAPT-HARNESS.md"
 # Staged beside its mirror, and for the same reason the release directory is immutable: removal
 # is classified against THIS release's bytes, so the prompt that does the classifying has to be
@@ -410,9 +433,18 @@ if [ "$APPLY" -eq 1 ]; then
 
   N_NEW=0; N_UPD=0; N_SAME=0; N_OWNER=0; N_CONFLICT=0; N_KEPT=0; NEW_PATHS=""
   CONFLICTS=""
+  TRACKER_ONLY="$(tracker_named)"; N_SKIP_TRACKER=0
+  if [ -n "$TRACKER_ONLY" ]; then echo "Tracker skill: ${TRACKER_ONLY}-issue-tracker only (docs/agents/issue-tracker.md names it); the other two stay in the release, not the project"
+  else echo "Tracker skill: all three (docs/agents/issue-tracker.md absent or names none or several)"; fi
 
   while IFS= read -r SRC; do
     REL="${SRC#$RELEASE_DIR/harness/}"
+    # One tracker skill per project (4.1.0): the two the project did not name are not copied.
+    case "$REL" in
+      .agents/skills/*-issue-tracker/*|.claude/skills/*-issue-tracker/*)
+        _tk="${REL#*/skills/}"; _tk="${_tk%%-issue-tracker/*}"
+        if [ -n "$TRACKER_ONLY" ] && [ "$_tk" != "$TRACKER_ONLY" ]; then N_SKIP_TRACKER=$((N_SKIP_TRACKER+1)); continue; fi ;;
+    esac
     DST="$TARGET/$REL"
 
     # owner files: only when absent

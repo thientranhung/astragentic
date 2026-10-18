@@ -4,9 +4,9 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-4.0.4-blue" alt="version"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-4.1.0-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtime-Claude_Code-green" alt="runtime">
-  <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-157_measured-red" alt="failure modes"></a>
+  <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-67_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache_2.0-blue" alt="license"></a>
 </p>
@@ -42,15 +42,15 @@ prove what happened.
 # 1. In your project's root, stage the latest release (no project file is written)
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
-#    …or pin a version:  | bash -s -- 4.0.4
+#    …or pin a version:  | bash -s -- 4.1.0
 
 # 2. Verify your machine has what's needed
-bash .astraler/releases/4.0.4/check-requirements.sh
+bash .astraler/releases/4.1.0/check-requirements.sh
 #    Later, from inside the project: what is installed, what is newest, what changed, how to upgrade
 .astraler/astragentic.sh update
 
 # 3. Run the adaptive installer in Claude Code
-claude "Read .astraler/releases/4.0.4/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/4.1.0/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Start the router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable
@@ -85,8 +85,7 @@ layers deep** — code-review, simplify pass, cross-vendor arm — then it's don
 ### Brownfield code gets ignored
 
 Most agent skills assume a clean starting point. They have no concept of legacy, untestable,
-or "standards that only exist in people's heads." **Astragentic ships four brownfield-specific
-skills** that extract knowledge from the codebase as-is — never inventing what isn't there.
+or "standards that only exist in people's heads." **Astragentic ships two adoption-time skills** that extract knowledge from the codebase as-is — never inventing what isn't there.
 
 ### Nobody knows what actually ran
 
@@ -165,7 +164,7 @@ Each Builder gets its own terminal pane and git worktree.
 flowchart LR
     subgraph PT["Per ticket — Builder lane"]
         direction LR
-        R0["tdd (+ atdd)"] --> R1["code-review\nStandards + Spec"] --> R2["built-in\ncode-review"] --> R3["simplify\nmarker commit"] --> R4["ticket arm\nCodex ↔ Claude"]
+        R0["tdd"] --> R1["code-review\nStandards + Spec"] --> R2["built-in\ncode-review"] --> R3["simplify\nmarker commit"] --> R4["ticket arm\nCodex ↔ Claude"]
     end
     PT --> QA["QA, by the ticket's surface\nwalk · probe · verify\nagainst docs/qa/plan"]
     QA --> M["merge"]
@@ -190,16 +189,16 @@ owner, not to another review round.
 
 ---
 
-## Brownfield skills
+## Adoption-time skills
 
-These close the gaps that upstream agent skills leave open:
+Two skills close the gaps that upstream agent skills leave open on an existing codebase. They run
+once, during adaptation, from `prompts/adoption-skills/` (`adoption-skills/` in a staged
+release). They are not in the payload, so no session loads them afterwards.
 
 | Skill | Purpose |
 |---|---|
 | `bootstrap-glossary` | Seeds a `GLOSSARY.md` from your code — every term cites its source file |
 | `batch-triage` | Converts an inherited backlog into tickets with labels and blocking edges |
-| `legacy-testing` | Generates characterisation tests + seam creation for untested code |
-| `untangle` | Refactoring path for code too tangled for standard architecture tools |
 
 The rule: **extract, never invent**. A standard the code does not follow, or a glossary
 term nobody confirmed, becomes confident-sounding lore that later agents treat as truth.
@@ -306,7 +305,7 @@ the release shipped with.
 ```bash
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash                      # latest, stage only
-curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 4.0.4         # pin a version
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 4.1.0         # pin a version
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --plan  # show what --apply would write
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply # write the payload in
 ```
@@ -408,7 +407,7 @@ the releases page when you want to know.
 | | |
 |---|---|
 | **Roles** | 4 — Thomas, Shaper, Builder, QA |
-| **Skills** | 16 in the harness, 4 of them brownfield-specific |
+| **Skills** | 12 in the harness, 2 more used once at adoption |
 | **Runtime** | Claude Code |
 | **Review layers** | 3 per ticket (prior system: 5-14 rounds) |
 | **Failure modes** | 138 measured, append-only evidence base |
@@ -423,7 +422,7 @@ harness/
   .agents/
     roles/            four role contracts + the optional junior
     orchestrator.md   role -> runtime/model/effort (your file)
-    skills/           19 skills — dispatch, QA, test design, brownfield, arm, BMAD
+    skills/           12 skills — dispatch, QA, test design, tracker (the one you name, or all three), arm, BMAD
     memory/
       recurring-failure-modes.md
   .claude/

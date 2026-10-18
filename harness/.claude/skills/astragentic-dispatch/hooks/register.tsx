@@ -196,7 +196,6 @@ const FLOW_BY_ROLE: Record<string, ReadonlyArray<Step>> = {
   builder: [
     ['mattpocock-skills:implement', 'implement'],
     ['mattpocock-skills:tdd', 'tdd'],
-    ['atdd', 'atdd', true],
     ['mattpocock-skills:code-review', 'review:matt'],
     ['code-review', 'review:built-in'],
     ['bmad-ux', 'ux', true],
@@ -273,6 +272,69 @@ function shellWords(segment: string): string[] {
   return out
 }
 
+// A `$(…)`, backtick or process substitution anywhere the shell would run it: inside double
+// quotes it still runs, inside single quotes it is text, and a backslash escapes the next
+// character. An apostrophe inside double quotes is a character, not a quote (arm pass 11).
+function hasSubstitution(command: string): boolean {
+  let q: string | null = null
+  for (let i = 0; i < command.length; i++) {
+    const ch = command[i] ?? ''
+    if (q === "'") { if (ch === "'") q = null; continue }
+    if (ch === '\\') { i++; continue }
+    if (q === '"') { if (ch === '"') { q = null; continue } }
+    else if (ch === '"' || ch === "'") { q = ch; continue }
+    if (ch === '`') return true
+    if ((ch === '$' || ch === '<' || ch === '>') && command[i + 1] === '(') return true
+  }
+  return false
+}
+
+// An unquoted `<` or `>` in a segment: a redirection writes or reads a file the replay does
+// not see (`git show HEAD:x.test.js > x.test.js` restores a test before the commit) (arm pass 13).
+function hasRedirection(segment: string): boolean {
+  let q: string | null = null
+  for (let i = 0; i < segment.length; i++) {
+    const ch = segment[i] ?? ''
+    if (q) { if (ch === q) q = null; continue }
+    if (ch === '\\') { i++; continue }
+    if (ch === '"' || ch === "'") { q = ch; continue }
+    if (ch === '<' || ch === '>') return true
+  }
+  return false
+}
+
+// The same split, with the operator that precedes each segment: `&&` and `;`/newline run the
+// next segment in a way a replay can follow (a failing step refuses the call); `||`, `|`, `&`,
+// a subshell or a backtick do not, and a staging step behind one is not judged (arm pass 9).
+function segmentsWithOps(command: string): Array<{ op: string; seg: string }> {
+  const out: Array<{ op: string; seg: string }> = []
+  let cur = ''
+  let q: string | null = null
+  let op = ''
+  for (let i = 0; i < command.length; i++) {
+    const ch = command[i] ?? ''
+    if (q) { cur += ch; if (ch === q) q = null; continue }
+    if (ch === '"' || ch === "'") { q = ch; cur += ch; continue }
+    // a `#` that starts a word is a comment to the end of the line: the shell never runs what
+    // follows it, so neither may the replay (arm pass 12)
+    if (ch === '#' && (i === 0 || /[\s;&|()]/.test(command[i - 1] ?? ''))) {
+      while (i + 1 < command.length && command[i + 1] !== '\n') i++
+      continue
+    }
+    if (ch === '\n' || ch === ';' || ch === '&' || ch === '|' || ch === '(' || ch === ')' || ch === '`') {
+      if (cur.trim()) out.push({ op, seg: cur.trim() })
+      cur = ''
+      let tok = ch
+      if ((ch === '&' || ch === '|') && command[i + 1] === ch) { tok = ch + ch; i++ }
+      op = tok === '\n' ? ';' : tok
+      continue
+    }
+    cur += ch
+  }
+  if (cur.trim()) out.push({ op, seg: cur.trim() })
+  return out
+}
+
 function simpleCommands(command: string): string[] {
   const parts: string[] = []
   let cur = ''
@@ -295,6 +357,111 @@ function simpleCommands(command: string): string[] {
 
 // A `git … commit` simple command, with `-c k=v`, `-C <dir>` and other leading options
 // skipped; returns the words after `commit` and the `-C` directory if one was given, or null.
+// THE TREE A CALL WILL COMMIT, computed BY GIT in a scratch index (4.1.0, arm passes 4–5).
+// `git commit -a` commits the working tree of tracked files; `git commit -- <paths>` commits
+// the working-tree versions of those paths on top of HEAD; a `git add`/`git rm` earlier in the
+// same call changes the index first; a pathspec is git's to resolve, a short-option cluster
+// (`-am x`, `-mchange`) is git's grammar. Five arm passes found a hole in every hand-written
+// model of these, so the gate no longer models them: it copies the index, replays the call's
+// index-changing steps and the commit's own staging mode against the copy with git, and diffs
+// that copy against the dispatch base. Nothing touches the real index or the working tree
+// (`git rm` is replayed as `git rm --cached`).
+type CommitShape = { all: boolean; include: boolean; only: boolean; amend: boolean; paths: string[]; dir: string | null; steps: Array<{ argv: string[]; dir: string | null }>; unsafe: string | null; commits: number }
+const COMMIT_SHORT_VALUE = new Set(['m', 'F', 'C', 'c', 't'])
+const COMMIT_LONG_VALUE = new Set(['--message', '--file', '--author', '--date', '--reuse-message', '--reedit-message', '--fixup', '--squash', '--trailer', '--cleanup', '--template'])
+// the long options a commit may carry and still be judged; git also accepts any unique
+// prefix (`--pathspec-from` for `--pathspec-from-file`, `--al` for `--all`), so an option
+// not spelled in full here is refused rather than ignored (arm pass 12)
+const COMMIT_LONG_FLAG = new Set(['--all', '--include', '--only', '--amend', '--no-verify', '--verify', '--no-edit', '--edit', '--quiet', '--verbose', '--signoff', '--no-signoff', '--allow-empty', '--allow-empty-message', '--no-status', '--status', '--reset-author', '--no-gpg-sign', '--gpg-sign', '--no-post-rewrite', '--long', '--short', '--branch', '--no-ahead-behind'])
+function commitShape(command: string, commitArgs: string[], worktree: string | null): CommitShape {
+  const shape: CommitShape = { all: false, include: false, only: false, amend: false, paths: [], dir: null, steps: [], unsafe: null, commits: 0 }
+  let dd = false
+  for (let i = 0; i < commitArgs.length; i++) {
+    const a = commitArgs[i] ?? ''
+    if (dd) { shape.paths.push(a); continue }
+    if (a === '--') { dd = true; continue }
+    if (a.startsWith('--')) {
+      const name = a.split('=')[0] ?? a
+      if (a === '--all') shape.all = true
+      else if (a.startsWith('--pathspec-from-file') || a.startsWith('--pathspec-file-nul')) shape.unsafe = 'commit --pathspec-from-file'
+      else if (a === '--include') shape.include = true
+      else if (a === '--only') shape.only = true
+      else if (a === '--amend') shape.amend = true
+      else if (COMMIT_LONG_VALUE.has(a)) i++
+      else if (COMMIT_LONG_VALUE.has(name) && a.includes('=')) { /* --message=… */ }
+      else if (!COMMIT_LONG_FLAG.has(name)) shape.unsafe = `commit ${name} (not an option this gate reads in full)`
+      continue
+    }
+    if (a.startsWith('-') && a.length > 1) {
+      // a cluster is read left to right; a value-taking letter eats the rest of the token or
+      // the next token, and nothing after it is a flag (`-mchange` is a message, not `-a`)
+      for (let k = 1; k < a.length; k++) {
+        const ch = a[k] ?? ''
+        if (COMMIT_SHORT_VALUE.has(ch)) { if (k === a.length - 1) i++; break }
+        if (ch === 'a') shape.all = true
+        else if (ch === 'i') shape.include = true
+        else if (ch === 'o') shape.only = true
+      }
+      continue
+    }
+    shape.paths.push(a)
+  }
+  // Each segment's effective directory: `cd` across segments and `-C` on the command, the way
+  // commitsInWorktree reads them. A `cd` this cannot resolve leaves the directory unknown, and
+  // unknown is unsafe here: a replay at the wrong directory judges the wrong files.
+  const join = (base: string, p: string) => p.startsWith('/') ? p : `${base}/${p}`.replace(/\/\.(?=\/|$)/g, '')
+  // A substitution runs BEFORE the commit it sits in, even inside double quotes:
+  // `git commit -m "fix $(git reset HEAD -- x.test.js)"` unstages the judged test after the
+  // judgment. Only single quotes keep one literal (arm pass 10).
+  if (hasSubstitution(command)) shape.unsafe = 'a command substitution'
+  let cwd: string | null = worktree
+  for (const { op, seg } of segmentsWithOps(command)) {
+    const w = shellWords(seg)
+    if (shape.commits === 0 && (op === '||' || op === '|' || op === '&' || op === '(' || op === ')' || op === '`')) { shape.unsafe = `a step behind \`${op}\``; continue }
+    if (shape.commits === 0 && hasRedirection(seg)) { shape.unsafe = 'a redirection before the commit'; continue }
+    if (w[0] === 'cd' || w[0] === 'pushd') {
+      const target = w[1] ?? ''
+      cwd = !target || target === '-' || /[$`~]/.test(target) ? null : cwd === null ? null : join(cwd, target)
+      continue
+    }
+    // `git` in the executable position only: `echo git add x` stages nothing (arm pass 9).
+    let j = (w[0] === 'git' || (w[0] ?? '').endsWith('/git')) ? 0 : -1
+    // Before the commit, only `cd` and the replayable git steps may stand: any other segment
+    // (`false && git add …`, `test -f x && git add x`, `|| true`) makes whether a staging step
+    // RAN depend on shell control flow the replay does not evaluate (arm pass 8).
+    if (j < 0) { if (shape.commits === 0) shape.unsafe = `a non-git step (\`${(w[0] ?? '').slice(0, 20)}\`)`; continue }
+    j++
+    let dir = cwd
+    while (j < w.length && (w[j] ?? '').startsWith('-')) {
+      if (w[j] === '-C') { const d = w[j + 1] ?? ''; dir = dir === null || /[$`~]/.test(d) ? null : join(dir, d); j += 2; continue }
+      // any other global option (`--work-tree`, `--git-dir`, `-c core.x=y`, `--namespace`)
+      // points git at a tree or index the replay does not model: refused (arm pass 10)
+      shape.unsafe = `git ${w[j]}`
+      break
+    }
+    const sub = w[j]
+    if (sub === 'commit') {
+      shape.commits++
+      if (shape.commits === 1) shape.dir = dir
+      continue
+    }
+    if (shape.commits > 0) continue
+    if (sub === 'add') shape.steps.push({ argv: [sub, ...w.slice(j + 1)], dir })
+    else if (sub === 'rm' && w.slice(j + 1).includes('--cached')) {
+      // the replay is BUILT, never copied: `--cached` plus `-r`/`-q`/`--` and paths. Any other
+      // flag (`-f`, `--no-cached`, `--ignore-unmatch`) is a removal the gate cannot promise
+      // stays in the index (arm pass 9).
+      const rest = w.slice(j + 1)
+      const flags = rest.filter(a => a.startsWith('-') && a !== '--')
+      if (flags.every(a => a === '--cached' || a === '-r' || a === '-q' || a === '--quiet')) shape.steps.push({ argv: ['rm', ...flags.filter(a => a !== '--cached'), '--', ...rest.filter(a => !a.startsWith('-'))], dir })
+      else shape.unsafe = `rm with ${flags.filter(a => a !== '--cached').join(' ')}`
+    }
+    else if (sub === 'status' || sub === 'diff' || sub === 'log' || sub === 'show' || sub === 'rev-parse' || sub === 'branch' || sub === 'ls-files') { /* read-only: stages nothing */ }
+    else shape.unsafe = sub ?? 'git'
+  }
+  return shape
+}
+
 function gitCommitArgs(segment: string): { args: string[]; dir: string | null } | null {
   const w = shellWords(segment)
   let i = w.findIndex(t => t === 'git' || t.endsWith('/git'))
@@ -303,9 +470,16 @@ function gitCommitArgs(segment: string): { args: string[]; dir: string | null } 
   let dir: string | null = null
   while (i < w.length) {
     const t = w[i] ?? ''
-    if (t === '-C') { dir = w[i + 1] ?? null; i += 2; continue }
-    if (t === '-c' || t === '--git-dir' || t === '--work-tree' || t === '--namespace') { i += 2; continue }
-    if (t.startsWith('-')) { i++; continue }
+    // every `-C` applies in turn, each relative to the one before (`git -C /repo -C src`):
+    // keeping only the last one resolved `src` against the shell's cwd (arm pass 7)
+    if (t === '-C') { const d = w[i + 1] ?? ''; dir = d.startsWith('/') || dir === null ? d : `${dir}/${d}`; i += 2; continue }
+    // any other global option: whether it takes a separate value (`--config-env k=V`) is git's
+    // business, not this reader's. If `commit` stands anywhere after it, this IS a commit and
+    // commitShape refuses the option; a mis-read that hid the commit was the hole (arm pass 11).
+    if (t.startsWith('-')) {
+      const k = w.indexOf('commit', i + 1)
+      return k < 0 ? null : { args: w.slice(k + 1), dir }
+    }
     break
   }
   return w[i] === 'commit' ? { args: w.slice(i + 1), dir } : null
@@ -447,9 +621,9 @@ async function deleteRecordKey($: any, root: string, key: string): Promise<void>
   await $.fs.write(`${root}/${RECORD}`, JSON.stringify(rec, null, 2) + '\n')
 }
 
-async function run($: any, argv: string[], timeoutMs = 10_000): Promise<{ code: number; out: string }> {
+async function run($: any, argv: string[], timeoutMs = 10_000, cwd?: string, env?: Record<string, string>): Promise<{ code: number; out: string }> {
   try {
-    const r = await $.process.run(argv, { timeoutMs })
+    const r = await $.process.run(argv, { timeoutMs, ...(cwd ? { cwd } : {}), ...(env ? { env } : {}) })
     return { code: r.exitCode, out: `${r.stdout}${r.stderr}`.trim() }
   } catch (err) {
     return { code: -1, out: String(err) }
@@ -716,7 +890,7 @@ let isBusy = false
 // (eleven per thousand-call ticket); 300k leaves ~170 (five). Tune with ASTRAGENTIC_CONTEXT_CEILING.
 let compactDue = false
 let contextCeiling = 300_000
-const COMPACT_INSTRUCTIONS = 'Keep, verbatim where short: the ticket id and its brief (acceptance criteria, validation commands, Base, write-set, Owned elsewhere), the phase you are in and which flow steps have run, the current branch and HEAD, open review findings not yet folded, and anything you owe the handback. Drop test output, file contents you can re-read, and finished tool results.'
+const COMPACT_INSTRUCTIONS = 'Keep, verbatim where short: the ticket id and its brief (acceptance criteria, validation commands, Base, write-set, Owned elsewhere), the phase you are in and which flow steps have run, the current branch and HEAD, open review findings not yet folded, the agent IDs of your subagents still running (after a compaction SendMessage reaches a subagent by ID, not by name — Claude Code 2.1.299), and anything you owe the handback. Drop test output, file contents you can re-read, and finished tool results.'
 
 // Bells that arrived while the dispatcher's own turn was running (a gate pass, a picker
 // waiting on the owner). Each would have become a turn of its own once the session went
@@ -971,8 +1145,17 @@ export const register: Register = on => {
       const { key } = me
       const at = root
       skillWrites = skillWrites.then(async () => {
-        const prior = ((await readRecord($, at)) ?? {})[key]?.skills_run ?? {}
-        if (!(e.skill in prior)) await patchRecord($, at, key, { skills_run: { ...prior, [e.skill]: await $.clock.now() } })
+        const entry = ((await readRecord($, at)) ?? {})[key] ?? {}
+        const prior = entry.skills_run ?? {}
+        if (!(e.skill in prior)) {
+          // Where the skill came from, beside when it ran (Claude Code 2.1.299 carries source,
+          // plugin and path on the event). A field audit counted a skill at 0 because the pane
+          // had read its SKILL.md instead of calling it; the source column tells those apart.
+          const ev: any = e
+          const from = [ev.source, ev.pluginName, ev.path].filter(Boolean).join(':')
+          const sources = { ...(entry.skills_source ?? {}), ...(from ? { [e.skill]: from } : {}) }
+          await patchRecord($, at, key, { skills_run: { ...prior, [e.skill]: await $.clock.now() }, skills_source: sources })
+        }
         await refreshFlow($, at, key)
       }).catch(() => {})
       await skillWrites
@@ -1146,6 +1329,26 @@ export const register: Register = on => {
       if (owed.length > 0) {
         return { isDelivered: false, reason: `${MARK} not sent. ${owedText(owed)} Then send this brief again.` }
       }
+      // BUILDER-TARGET IS READ HERE, NOT BY THOMAS (4.2.0). `orchestrator.md` has carried the row
+      // since 2.x and no code read it: the first adopter's Thomas counted lanes by hand at every
+      // merge (field audit 2026-10-18, §4). A Builder brief is refused while as many Builders are
+      // live as the row allows; a live Builder is a recorded entry with a pane that has not been
+      // merged or had its worktree removed. Absent row: 4, as thomas.md has always said.
+      if (/^\/mattpocock-skills:implement\b/.test(first)) {
+        const target = Number(orch.match(/^\|\s*builder-target\s*\|\s*`?(\d+)`?\s*\|/m)?.[1] ?? 4)
+        const rec0 = (await readRecord($, root)) ?? {}
+        // The destination pane registered itself before this brief (that is the protocol), so
+        // its own entry is not one of the lanes the brief competes with; nor is a retry to it.
+        // The arm's probe: target 1 refused the first Builder its first brief (4.1.0 pass 2).
+        const dest = first.split(/\s+/).slice(1).find(w => TICKET.test(w))
+        const live = Object.entries(rec0).filter(([k, en]) => k !== dest && en?.role === 'builder' && isLive(en) && !en.merged_at && !en.worktree_removed_at && !k.startsWith('qa:'))
+        if (live.length >= target) {
+          return {
+            isDelivered: false,
+            reason: `${MARK} not sent. ${live.length} Builder(s) are live (${live.map(([k]) => k).join(', ')}) and builder-target in .agents/orchestrator.md is ${target}. Merge or retire one, or raise the row, then send this brief again.`,
+          }
+        }
+      }
       // The claim check is a BUILDER brief's: the ticket is the argument of `implement`. A Shaper
       // brief whose first line merely names the tickets it plans for was refused on one of them
       // (measured downstream, 3.0.0's first day), so the role is read from the command, not the
@@ -1189,6 +1392,13 @@ export const register: Register = on => {
     const isBrief = !me && root && e.origin.kind === 'model' && e.agentId === undefined && first.startsWith('/')
     const brief = isBrief && root ? await overlay($, root, 'dispatch-brief') : ''
     const res = await next(brief ? { ...e, text: `${e.text.trimEnd()}\n\n${brief}` } : e)
+    // The role goes on the record at dispatch, not only when the pane registers itself: a field
+    // audit found 129 of 131 entries without one (stubs the dispatcher's own patches created
+    // before any pane wrote), so lanes could not be counted by role (4.1.0).
+    if (isBrief && root && res.isDelivered) {
+      const builderId = /^\/mattpocock-skills:implement\b/.test(first) ? first.split(/\s+/).slice(1).find(w => TICKET.test(w)) : undefined
+      if (builderId) await patchRecord($, root, builderId, { role: 'builder', dispatched_at: await $.clock.now() })
+    }
     if (me || !root || e.origin.kind !== 'model' || e.agentId !== undefined || !res.isDelivered) return res
     const rec = (await readRecord($, root)) ?? {}
     const to = addressName(e.to)
@@ -1268,11 +1478,85 @@ export const register: Register = on => {
       : simpleCommands(e.command).map(gitCommitArgs).filter((c): c is { args: string[]; dir: string | null } => c !== null).map(c => c.args)
     const contentCommits = commits.filter(a => !a.includes('--allow-empty'))
     if (contentCommits.length === 0) return next(e)
-    const ran = skillsRun(entry)
-    if ('mattpocock-skills:tdd' in ran || entry.tdd_na) return next(e)
-    await logRefusal($, root, me.key, 'tdd-gate', `content commit: ${contentCommits[0]?.join(' ') ?? ''}`)
+    if (entry.tdd_na) return next(e)
+    // THE GATE MEASURES A TEST, NOT A SKILL CALL (4.2.0). Until now it asked whether
+    // `mattpocock-skills:tdd` had been called; measured on the first adopter, 48 refusals, 48
+    // skill calls right after, and a test file edited before the next commit in 2. So it now
+    // asks git: is a test file staged for this commit, or already on this branch since the
+    // dispatch? The pattern is the project's (`.astraler/project/test-file-pattern`, one regex)
+    // or the default below; `TDD: n/a — <why>` on the brief still exempts the ticket.
+    const projPat = (await overlayFile($, `${root}/.astraler/project/test-file-pattern`)).split('\n')[0]?.trim()
+    let testRe: RegExp
+    try { testRe = new RegExp(projPat || String.raw`(^|/)(tests?|__tests__|spec)/|[._-](test|spec)s?\.[A-Za-z0-9]+$|_test\.go$`) } catch { testRe = /(^|\/)(tests?|__tests__|spec)\/|[._-](test|spec)s?\.[A-Za-z0-9]+$|_test\.go$/ }
+    const cwd = worktree ?? root
+    // ONE diff: the index (the tree this commit will make) against the dispatch base, added /
+    // copied / modified / renamed only. It answers "will the branch carry a test file the base
+    // did not" for the tree as it is about to be committed, so a test committed after dispatch
+    // and staged for deletion in this commit is not there (the arm's pass-3 probe: two lists
+    // joined let that through), and a deleted test is not a test (pass 2). No base recorded:
+    // the index against HEAD.
+    const base = typeof entry.start_sha === 'string' && entry.start_sha ? entry.start_sha : 'HEAD'
+    const shape = commitShape(e.command, contentCommits[0] ?? [], worktree)
+    // Boundaries this gate does not model, said plainly instead of guessed (arm pass 6): a call
+    // that moves, restores, resets or checks out BEFORE committing changes the working tree or
+    // HEAD, which a scratch index cannot replay without doing it for real; two content commits in
+    // one call would need the first to exist before the second is judged; a directory the call
+    // changes into that this hook cannot resolve. Each is one refusal with the split to make.
+    const refuse = async (why: string, how: string) => {
+      await logRefusal($, root, me.key, 'tdd-gate', `${why}: ${contentCommits[0]?.join(' ') ?? ''}`)
+      return { deny: `astragentic-dispatch: ${why}. ${how}` }
+    }
+    if (shape.unsafe) return refuse(`this call runs \`git ${shape.unsafe}\` before its commit, which changes the working tree or HEAD (or names paths the gate cannot read)`, 'Run that step as its own call, then commit in the next one, so each is judged as it stands; `git rm --cached` is the one removal the gate can replay.')
+    if (shape.commits > 1) return refuse('this call makes more than one content commit', 'One content commit per call: the gate judges the tree each commit makes, and the second does not exist yet.')
+    if (shape.dir === null || shape.steps.some(s => s.dir === null)) return refuse('this call changes into a directory the gate cannot resolve before committing', 'Use a literal path (no variable, `~` or `cd -`), or commit from the worktree root.')
+    const lines = (r: { out: string }) => r.out.split('\n').filter(Boolean)
+    const realIndex = (await run($, ['git', 'rev-parse', '--git-path', 'index'], 15_000, cwd)).out
+    // A private directory outside the working tree, one per call: a scratch index inside the
+    // worktree was a file a concurrent `git add -A` could stage (arm pass 7).
+    const tmpd = (await run($, ['mktemp', '-d', '-t', 'astragentic-tdd-gate'], 10_000)).out
+    if (!tmpd.startsWith('/')) return refuse('the gate could not allocate a scratch directory', 'Retry the commit; if this persists, the temp directory is unwritable.')
+    const scratch = `${tmpd}/index`
+    const g = (argv: string[], dir: string) => run($, ['git', ...argv], 30_000, dir, { GIT_INDEX_FILE: scratch })
+    const commitDir = shape.dir ?? cwd
+    let willCarry: string[] = []
+    try {
+      if (shape.only && shape.paths.length === 0) {
+        // `--only` with no paths (an amend form): HEAD's tree, the index ignored
+        await g(['read-tree', 'HEAD'], commitDir)
+      } else {
+        // the effective index: the real one, with the call's earlier steps replayed; a step that
+        // fails in replay fails for real too, and the gate says so rather than guess what follows
+        await $.process.run(['cp', realIndex.startsWith('/') ? realIndex : `${cwd}/${realIndex}`, scratch], { timeoutMs: 10_000 })
+        for (const step of shape.steps) {
+          const [sub, ...args] = step.argv
+          // no `--ignore-unmatch`: a removal of a path git does not know fails for real, and the
+          // step after `&&` never runs, so the replay must fail there too (arm pass 9)
+          const r = sub === 'rm'
+            ? await g(['rm', '--cached', ...args], step.dir ?? cwd)
+            : await g(['add', ...args], step.dir ?? cwd)
+          if (r.code !== 0) return refuse(`a staging step in this call fails (\`git ${step.argv.join(' ')}\`: ${r.out.split('\n')[0] ?? ''})`, 'Run the staging step on its own and read its error, then commit.')
+        }
+        if (shape.paths.length > 0 && !shape.include) {
+          // a path-limited commit: HEAD, plus the working-tree versions (deletions included) of
+          // exactly the files the effective index KNOWS under the paths — an untracked file under
+          // the path is not committed by git and must not be judged (arm pass 8)
+          const eligible = lines(await g(['ls-files', '--full-name', '--', ...shape.paths], commitDir))
+          await g(['read-tree', 'HEAD'], commitDir)
+          if (eligible.length > 0) await g(['add', '-A', '--', ...eligible], cwd)
+        } else {
+          if (shape.all) await g(['add', '-u'], commitDir)
+          if (shape.include && shape.paths.length > 0) await g(['add', '-A', '--', ...shape.paths], commitDir)
+        }
+      }
+      willCarry = lines(await g(['diff', '--cached', '--name-only', '--diff-filter=ACMR', base], cwd))
+    } finally {
+      await $.process.run(['rm', '-rf', tmpd], { timeoutMs: 10_000 }).catch(() => {})
+    }
+    const hasTest = willCarry.some(p => testRe.test(p))
+    if (hasTest) return next(e)
+    await logRefusal($, root, me.key, 'tdd-gate', `content commit with no test file staged or on the branch: ${contentCommits[0]?.join(' ') ?? ''}`)
     return {
-      deny: `astragentic-dispatch: no record of mattpocock-skills:tdd in this pane, and the brief declares no "TDD: n/a — <why>". A content commit before the red test is the defect this gate exists for. Call Skill(skill: "mattpocock-skills:tdd") first; if this ticket genuinely has no seam, ask the dispatcher to add the TDD: n/a line to the brief.`,
+      deny: `astragentic-dispatch: no test file is staged for this commit or committed on this branch since dispatch (pattern: ${testRe.source}), and the brief declares no "TDD: n/a — <why>". A content commit before the red test is the defect this gate exists for: write the failing test, stage it with the change, then commit. A project whose tests live elsewhere names its pattern in .astraler/project/test-file-pattern; a ticket with no seam gets the TDD: n/a line from the dispatcher.`,
     }
   })
 

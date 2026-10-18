@@ -31,7 +31,7 @@ sessionTag: "unbroken"
 - **Đọc thẳng code** khi việc shaping chạm code có sẵn.
 - **Tự trả lời ở Align** khi có nguồn ghi lại được.
 - **Skill khác khi đúng tình huống.** `domain-modeling`, `research`, `prototype`,
-  `improve-codebase-architecture`, `untangle`, `legacy-testing`.
+  `improve-codebase-architecture`.
 - **Skill invocation fail.** Coi đó là finding: báo nguyên văn lỗi cho Thomas rồi dừng.
 - **Trả effort về wayfinder** khi effort đó lớn hơn hoặc mờ hơn mức một session shape nổi.
 

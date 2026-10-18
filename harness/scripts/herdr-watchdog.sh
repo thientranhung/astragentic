@@ -271,7 +271,9 @@ fi
 
 trap 'exit 0' INT TERM
 
-log() { printf '[%s] %s\n' "$(date '+%H:%M:%S')" "$*" >> "$LOG"; }
+# Date and time, not time alone: a field audit (2026-10-18) could not place 87 alert lines on
+# a day because the stamp had none (4.1.0).
+log() { printf '[%s] %s\n' "$(date '+%F %T')" "$*" >> "$LOG"; }
 
 # A zombie still answers `kill -0` as alive — it is a dead process not yet
 # reaped, not a live one — so the state column is what actually says

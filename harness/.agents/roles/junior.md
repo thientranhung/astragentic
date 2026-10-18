@@ -15,7 +15,6 @@ Context clears between tickets.
 |---|---|---|
 | session start | `.agents/roles/junior-<runtime>.md` | what differs on your runtime |
 | a brief arrives | the brief, the files it names, the failing tests it names | what to make green |
-| no seam to test through | `legacy-testing` | characterise → seam → TDD, in that order |
 | you need a rule | `.agents/memory/RULES.md` | every entry's rule, no narrative |
 
 ## What a brief gives you

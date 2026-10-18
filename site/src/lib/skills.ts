@@ -91,14 +91,6 @@ const REGROUP: Record<string, GroupId> = {
 /** One verb line per skill, used until the writer's `skills/<lang>/<name>.md` lands.
  *  Each line is a compression of the catalog one-liner, not a new claim. */
 const VERB: Record<string, Record<Lang, string>> = {
-  'batch-triage': {
-    vi: 'Phân loại cả một backlog kế thừa trong một lượt.',
-    en: 'Triage an inherited backlog in one pass.',
-  },
-  'bootstrap-glossary': {
-    vi: 'Gieo GLOSSARY.md bằng chính từ vựng codebase đang dùng.',
-    en: 'Seed GLOSSARY.md with the terms the code already uses.',
-  },
   'codex-arm': {
     vi: 'Chạy một lượt Codex đọc lại artifact trước khi nó merge.',
     en: 'Fire a Codex pass over a finished artifact before it merges.',
@@ -134,14 +126,6 @@ const VERB: Record<string, Record<Lang, string>> = {
   'linear-issue-tracker': {
     vi: 'Vận hành tracker khi board là Linear.',
     en: 'Operate the tracker when the board is Linear.',
-  },
-  'legacy-testing': {
-    vi: 'Đưa code chưa có test vào lưới characterisation test.',
-    en: 'Get untested code under characterisation tests.',
-  },
-  untangle: {
-    vi: 'Gỡ code rối tới mức không refactor thẳng được.',
-    en: 'Untangle code too knotted for a straight refactor.',
   },
   'reconcile-tracker': {
     vi: 'Đối chiếu tracker với git để phát hiện trạng thái sai lệch.',
@@ -185,7 +169,7 @@ function locate(id: string): { lang: Lang; name: string } {
 const CATALOG = (catalog as { name: string; kind: string; oneLiner: string; group: string }[])
   .filter((row) => row.kind === 'skill');
 
-/** The 16 canonical skill names, in catalog order. */
+/** The canonical skill names, in catalog order. */
 export const SKILL_NAMES = CATALOG.map((row) => row.name);
 
 function groupOf(name: string, declared?: string): GroupId {

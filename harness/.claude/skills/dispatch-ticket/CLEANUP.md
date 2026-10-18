@@ -1,177 +1,92 @@
 # Cleanup reference
 
 Companion to `dispatch-ticket`. Read when the Builder has handed back, before removing a
-worktree, branch, tab or workspace.
+worktree, branch, tab or workspace. The stopping is yours, in the order below, on every
+runtime. On a Claude root `scripts/hook-git-guard.py` refuses a removal while a dirty tree, a
+live process or a bound broker remains; it releases nothing.
 
 ## The simplify pass
 
-**Each increment runs one simplify pass over its own diff, after the build is green.** The
-artifact is a `simplify(increment):` commit on the ticket branch — real cleanup, or an
-`--allow-empty` one reading `no findings on <base>..<head>` where the pass finds nothing. An
-empty pass is legitimate; an ABSENT marker and an empty one are otherwise indistinguishable
-in the tree, which is why the marker is the artifact.
-
-**The commit body carries a `Pass:` line naming what ran**, because the subject cannot
-distinguish the sanctioned pass from a substitute that produced the same string. The Builder
-contract owns the exact form.
-
-Behaviour-preserving only: dead code and orphans, duplication that appeared because two
-changes touched one seam, wrong-altitude fixes, comments that no longer describe the code.
-Anything that would change behaviour is a finding for Thomas rather than a change, and a
-cleanup that would touch a floor item's construction line is reported instead.
-
-Thomas verifies by artifact before the milestone gate — `scripts/check-simplify-markers.sh
-<base> <head>` — rather than by asking whether the pass ran, and reads the `Pass:` line rather
-than only the subject. **Not a hand-rolled `git log --grep`**: that searches the whole message
-and `^` anchors to any line in it, so every squash or merge commit quoting a marker subject in
-its body counts as carrying one — measured downstream at **193 matches over 23 real markers**
-(AST-133).
+Each increment runs one simplify pass over its own diff, after the build is green. The artifact
+is a `simplify(increment):` commit on the ticket branch, real or `--allow-empty` reading
+`no findings on <base>..<head>`. Its body carries the `Pass:` line (`builder-claude.md`). Behaviour
+changes are findings for Thomas, not changes. Thomas verifies by `scripts/check-simplify-markers.sh
+<base> <head>` and never by a hand-rolled `git log --grep`, which matches bodies. The marker
+rules, retraction with `Supersedes:` and the head check are in [`MARKERS.md`](MARKERS.md).
 
 ## Review and cleanup
 
-The Builder pushes and returns the artifact. Thomas reads the real diff and alone decides merge. A settled Herdr status does not authorize cleanup:
-capture the final transcript and verify the merge or an explicit owner-approved abandonment
-first. Herdr refuses to close the last tab in a workspace, so resolve the topology rather
-than calling `tab close` blindly:
+The Builder pushes and returns the artifact. Thomas reads the real diff and alone decides
+merge. A settled Herdr status does not authorize cleanup: capture the final transcript and
+verify the merge or an explicit owner-approved abandonment first. Herdr refuses to close the
+last tab in a workspace, so resolve the topology first:
 
 ```bash
 herdr tab list --workspace <returned-workspace-id>
 herdr pane list --workspace <returned-workspace-id>
 ```
 
-- Another tab remains → close the exact ticket tab: `herdr tab close <tab_id>`, with `tab_id`
-  read from this ticket's entry in `.astraler/state/dispatch-record.json`, never from memory or
-  a label lookup. On a Claude root the mod refuses the close while that pane is mid-turn; a
-  refusal there means the Builder is still working, not that the command is wrong. Where the
-  worktree was already removed, the release reaped the Builder and herdr has usually closed the
-  tab itself: not-found is the expected answer.
+- Another tab remains: `herdr tab close <tab_id>`, with `tab_id` read from this ticket's entry
+  in `.astraler/state/dispatch-record.json`. On a Claude root the mod refuses the close while
+  the pane is mid-turn, which means the Builder is still working. After the worktree removal
+  the release has reaped the Builder and herdr has usually closed the tab: not-found is expected.
 - The ticket tab is last AND the inherited `workspace_managed_by_root=true` AND no owner
-  resource or active ticket remains → close the exact workspace instead:
-  `herdr workspace close <returned-workspace-id>`.
-- The ticket tab is last and workspace ownership is false, missing or ambiguous → STOP.
-  Record the survivor and ask whether to close or retain it. A dummy shell created to hide
-  an orphan reports success while leaving the orphan.
+  resource or active ticket remains: `herdr workspace close <returned-workspace-id>`.
+- The ticket tab is last and ownership is false, missing or ambiguous: STOP, record the
+  survivor and ask whether to close or retain it.
 
 Re-list the workspace and confirm the pane is absent before removing the checkout.
 
-**Two checks before removing a worktree.** Both must pass — failing either is STOP.
+## Two checks before removing a worktree
 
-**Check 1: uncommitted work** (AST-092). A Builder that stops before committing leaves work
-that exists only on disk — `git worktree remove` deletes it silently.
+Both must pass; failing either is STOP.
 
-```bash
-cd <worktree-path>
-git status --short
-```
+**Check 1: uncommitted work.** `git status --short` inside `<worktree-path>`. Non-empty output
+is work that exists only on disk and that removal deletes silently. Report the file list and
+ticket id to the owner and wait: commit and continue, or discard explicitly.
 
-Non-empty output (staged, modified, or untracked files) — **STOP**. The worktree has work
-that was not committed. Report to the owner with the file list and ticket id, and wait for a
-decision: commit and continue, or discard explicitly.
-
-**Check 2: simplify markers AND provenance** (AST-094, AST-099). A Builder that commits and
-pushes correctly can still skip the simplify pass, or run a manual review and commit with
-the correct subject but without invoking the skill.
+**Check 2: markers and provenance.**
 
 ```bash
 <repo-root>/scripts/check-simplify-markers.sh <base> [head]
 ```
 
-Exit 0 is green. Exit 1 prints every reason, one `STOP:` line each. Zero markers is a STOP —
-send the Builder back to run simplify (AST-094).
+Exit 0 is green. Exit 1 prints one `STOP:` line per reason. Zero markers is a STOP: send the
+Builder back to run simplify. A superseded marker is green. The counts are a filter, not a
+verdict: read the bodies.
 
-**A marker may be superseded, and that is a GREEN state, not a shortfall.** A Builder
-retracting its own earlier false or premature `Pass:` line in the open is the check WORKING,
-and it reads as the check failing (AST-121). So a later marker may name the one it replaces:
+## Release, remove, verify
 
-```
-Supersedes: <sha of the marker this replaces>
-```
-
-**Five rules, and the attack each one closes** (AST-122):
-
-1. **At most one `Supersedes:` per marker.** Without it, one genuine pass launders an unbounded
-   number of fabricated markers by listing their SHAs.
-2. **A marker that supersedes must itself be well-formed.** Without it, rule 1 is evaded by
-   chaining fabricated markers, each superseding the last.
-3. **The named SHA must be a marker IN RANGE**, named by only one marker.
-4. **Every LIVE marker — one nothing supersedes — is well-formed.**
-5. **The newest live marker IS the head being merged.** Existence is not relationship: a marker
-   whose every field is true, with a later commit sitting on top of it, is a pass that did not
-   cover the code — and rules 1-4 all pass on it. Send the Builder back for a fresh marker; an
-   empty one is valid, so a re-mark after a fold costs one commit.
-
-**Residual, stated because it is not closed**: markers carry no increment identity — the
-subject is free prose. Nothing proves the superseding pass covers the SAME increment as the
-marker it retracts, so a Builder with two increments can still retract one using the other's
-real pass. **The counts are a filter, not a verdict — read the bodies.** A protocol that
-prices honesty above concealment gets concealment, which is why retraction is a cheap
-mechanism here rather than a documented exception (AST-121). The Builder carries its own
-self-check (`builder.md`), but the mechanism that causes the skip also displaces the
-self-check, so Thomas verifies independently.
-
-**Only when both checks pass** — `git status` empty AND `markers == wellformed + superseded`
-with every named SHA verified — is removal safe.
-
-**Release the worktree's resources BEFORE removing it.** Anything bound to the directory — a
-process by cwd, a resource by a name derived from the path — cannot be matched once the
-directory is gone, so a release ordered after the removal finds nothing and reports success
-(AST-100, AST-101). Scope everything to THIS worktree — a project-level teardown target once
-stopped the shared test container every live Builder was standing on (AST-115).
-
-**What a worktree allocates beyond git is the project's to know, not this file's.** Until
-2.7.15 this step hardwired one project's stack (a compose label) and a project on any other
-stack read it as "cleanup exists" and released nothing — measured in one night: 43 orphaned
-processes and 3,405 leftover databases. The project declares its own release step at
-`.astraler/project/cleanup-worktree.sh` (ADAPT-HARNESS.md §3 asks for it); the one call below
-reaps processes and then runs that plug, and says so when the plug is absent.
-
-**One thing it does check itself: a Compose stack rooted in the worktree.** Docker labels each
-container with the directory it ran from, so the script names those stacks before the plug and
-refuses the stamp while one still holds a container, a labelled volume or the image it built
-(AST-155). It deletes nothing. `down -v` leaves that image; `down -v --rmi local` does not.
-**Never answer a leak with `docker system prune`, `docker volume prune` or `docker builder
-prune`:** each is machine-wide, and the machine is shared with every other project on it.
+Release the worktree's resources BEFORE removing it: anything bound to the directory (a
+process by cwd, a resource named from the path) cannot be matched once it is gone. Scope
+everything to THIS worktree. What a worktree allocates beyond git is the project's: it
+declares its release step at `.astraler/project/cleanup-worktree.sh`, which the script runs
+after reaping processes and names as absent when missing. The script also refuses the stamp
+while a Compose stack rooted in the worktree still holds a container, a labelled volume or
+the image it built (`down -v` leaves that image; `down -v --rmi local` does not). It deletes
+nothing. Never answer a leak with `docker system prune`, `docker volume prune` or `docker
+builder prune`: each is machine-wide.
 
 ```bash
-# 1. processes first — one command, and it is a script rather than a snippet for a reason.
-#    MATCH THE PROCESS'S REAL cwd, NEVER ITS ARGV. A `ps | grep -- '--cwd <path>'` reported
-#    NOTHING while a live broker rooted in that worktree had run three hours: the flag is not
-#    always in argv, and a process that chdir'd leaves no trace there. Two further traps this
-#    script already closes and a hand-written line will not: a Go test binary runs with cwd in
-#    its OWN package directory several levels down, so the match must be a path PREFIX with a
-#    `/` boundary rather than an exact path; and `lsof` reports resolved paths, so on macOS a
-#    literal `/tmp/...` never matches `/private/tmp/...` and the reap silently finds nothing.
-scripts/release-worktree-resources.sh <worktree-path>
-#    It stamps the path on a clean run, and hook-git-guard.py REFUSES `git worktree remove`
-#    for any path without a stamp — on every runtime whose hooks load the guard. Skipping
-#    this step blocks step 2; it no longer leaks.
-
+# 1. processes first; matched by real cwd as a path prefix, never by argv
+scripts/release-worktree-resources.sh <worktree-path>   # stamps the path on a clean run;
+                                                        # hook-git-guard.py refuses removal without it
 # 2. then the worktree, then the branch
 git worktree remove <worktree-path>
 git branch -d <ticket-branch>
-
-# 3. prune, and verify — this is the post-condition, not a formality
+# 3. prune, and verify; this is the post-condition
 git worktree prune
 git worktree list; git branch --list '<ticket-branch>'   # both must be gone
 ```
 
-`git worktree prune` clears the registration that a removal leaves behind. It matters for the
-**next** `add`, not for this remove: a stale `.git/worktrees/<name>/` makes the next add refuse,
-silently whenever its output was redirected (AST-096). Never `rm -rf` a worktree — that removes
-the directory and leaves the registration.
+On a Claude root the mod runs the release itself at `git worktree remove`
+(`dispatch-ticket-claude` § Cleanup). Never `rm -rf` a worktree: it leaves the registration,
+and a stale `.git/worktrees/<name>/` makes the next `add` refuse.
 
-**`git branch -d` refuses after a squash merge**, because the branch's commits are not
-ancestors of the merge. That refusal is expected, not an anomaly: confirm the work is on the
-base with `git log <base> --oneline --grep '<ticket-id>'`, then `-D` and record the ticket id
-as the reason. `-D` without that confirmation is for an explicitly owner-approved abandonment
-only.
+`git branch -d` refuses after a squash merge. Confirm the work is on the base with
+`git log <base> --oneline --grep '<ticket-id>'`, then `-D` and record the ticket id as the
+reason. `-D` without that confirmation is for an owner-approved abandonment only.
 
-**On a Claude root `scripts/hook-git-guard.py` **refuses a removal while any of the above is
-still true** — a dirty tree, a live process, a bound broker. **It does not release anything.** A `PreToolUse` hook runs while permission is still being decided, so acting
-there would be a side effect of a command that may yet be refused. The stopping is yours, in
-the order above, on every runtime; the hook only declines to let you skip it, and only on a
-Claude root.
-
-Close only what this dispatch created. Cleanup is complete when the Herdr tab and the Git
-worktree and branch are all retired **and the verification in step 3 shows them gone**, or an
-exact retained-state reason is recorded for each survivor.
+Close only what this dispatch created. Cleanup is complete when the Herdr tab, the worktree
+and the branch are retired and step 3 shows them gone, or an exact retained-state reason is
+recorded for each survivor.

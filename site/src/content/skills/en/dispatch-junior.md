@@ -14,7 +14,7 @@ updated: 2026-10-17
 
 `dispatch-junior` is the Builder's recipe for handing the implementation of one ticket to a junior pane. The Builder commits the red tests, opens a pane beside itself in the same tab, launches the junior on the runtime its row names (Grok first), sends one brief, waits, and reads the tree back.
 
-Only the typing moves. `atdd` and `tdd`, both reviews, simplify, the arm, the markers, the handback and the push stay the Builder's, run over the junior's commits exactly as over its own.
+Only the typing moves. `tdd`, both reviews, simplify, the arm, the markers, the handback and the push stay the Builder's, run over the junior's commits exactly as over its own.
 
 <!-- source: harness/.agents/skills/dispatch-junior/SKILL.md -->
 

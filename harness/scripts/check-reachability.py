@@ -148,18 +148,24 @@ for pattern in SKILL_GLOBS:
 def harness_owned():
     if LAYOUT == "package":
         return set(all_skills)
-    applied = ""
+    # BOTH the applied release and the candidate, not the first one found (4.1.0). An upgrade
+    # whose conflicts block the stamp leaves applied-version at the old release while the new
+    # payload is already in the tree: read only the old manifest and every skill the new release
+    # added counts as project-owned, and check 5 reports the new role files as read by no pane —
+    # exactly when the operator is reconciling and needs the check right (measured downstream on
+    # the 4.0.1 apply). The union is correct on a clean tree too: a stamped release has no candidate.
+    versions = []
     for candidate in (os.path.join(ROOT, ".astraler", "state", "applied-version"),
                       os.path.join(ROOT, ".astraler", "CANDIDATE")):
         if os.path.isfile(candidate):
-            applied = read(candidate).strip()
-            if applied:
-                break
+            v = read(candidate).strip()
+            if v and v not in versions:
+                versions.append(v)
     owned = set()
-    for sub in (".claude", ".agents"):
-        owned |= {os.path.basename(os.path.dirname(q)) for q in glob.glob(os.path.join(
-            ROOT, ".astraler", "releases", applied or "*", "harness", sub, "skills",
-            "*", "SKILL.md"))}
+    for v in (versions or ["*"]):
+        for sub in (".claude", ".agents"):
+            owned |= {os.path.basename(os.path.dirname(q)) for q in glob.glob(os.path.join(
+                ROOT, ".astraler", "releases", v, "harness", sub, "skills", "*", "SKILL.md"))}
     return owned
 
 HARNESS_OWNED = harness_owned()
@@ -633,21 +639,9 @@ ARTIFACTS = [
                                                               "dispatch-qa-walk", ["thomas"]),
     ("qa verified-clean list",      r"qa-verified-clean\.md|verified-clean",
                                                               "qa",              ["dispatch-qa-walk"]),
-    # `untangle` wrote to "where this project keeps its architecture notes" — no path, no
-    # reader, invisible to check 8 precisely because it had no path (the AST-071 shape).
-    ("untangle boundaries",         r"docs/agents/boundaries\.md|boundaries this pass",
-                                                              "untangle",        ["shaper"]),
-    # The review state was invisible to every reader of GLOSSARY.md, including nine plugin
-    # skills that load it. It now has its own file, and a named reader: the owner, via Thomas.
-    ("glossary review state",       r"docs/agents/GLOSSARY-review\.md|UNREVIEWED",
-                                                              "bootstrap-glossary", ["thomas"]),
-    # A produced DOCUMENT is an artifact too, and this row is the one that survived the
-    # 1.6.1 cull: three sibling skills wrote files that no contract and no plugin skill was
-    # told to read, and every check here went green because each was NAMED. `GLOSSARY.md`
-    # differs by being read — by the plugin, not by us — so its verifier is a plugin skill
-    # and is checked against the installed copy when there is one.
-    ("GLOSSARY.md",                 r"GLOSSARY\.md",          "bootstrap-glossary",
-                                                              ["plugin:domain-modeling"]),
+    # `untangle`, `bootstrap-glossary` and their artifacts left the payload in 4.1.0 (0 calls in
+    # 30 days on the first adopter; the glossary skills now ship with the adoption prompt), so
+    # their rows left this registry with them.
     # The frontier write-back has no commit to grep — its artifact is tracker state, which
     # this script cannot see. So the registry binds the two halves that ARE readable: the
     # role that must do it at merge, and the audit that finds the merges where it did not

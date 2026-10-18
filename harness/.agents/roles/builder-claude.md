@@ -5,9 +5,13 @@ differs on the Claude Code runtime.
 
 ## Two gates the mod holds
 
-**No content commit before `mattpocock-skills:tdd` has run in this pane, and no arm before the
-built-in `code-review` has.** The mod refuses the `git commit` (empty marker commits pass) and
-the `codex-arm` call until its record shows the skill ran. The exemption is the dispatcher's,
+**No content commit without a test file, and no arm before the built-in `code-review` has
+run.** The mod refuses a content `git commit` (empty marker commits pass) unless a test file is
+staged with it or already committed on this branch since dispatch — measured: 48 refusals of the
+old "skill was called" form were followed by a test edit in 2 — and refuses the `codex-arm`
+call until its record shows the review ran. A project names its test-file pattern in
+`.astraler/project/test-file-pattern` (one regex); the default matches `*_test.*`, `*.test.*`,
+`*.spec.*` and `tests/`, `__tests__/`, `spec/` directories. The exemption is the dispatcher's,
 not yours: a brief line `TDD: n/a — <why>` or `REVIEW: n/a — <why>`. If a gate fires on a
 ticket that genuinely has no seam, ask Thomas for the line; do not work around the refusal.
 
@@ -21,10 +25,10 @@ simplify. This is Claude Code's built-in bug review — not `mattpocock-skills:c
 
 **Invoke `Skill(skill: "simplify")`** — model-invocable, no plugin prefix.
 `/simplify` <!-- addr-ok: wrong form, cited --> is the human's form, which you cannot type;
-`mattpocock-skills:simplify` does not exist and the call errors (AST-051).
+`mattpocock-skills:simplify` does not exist and the call errors.
 
-**A failed invocation IS the finding.** Report the exact error to Thomas and stop — a
-substitute leaves the same marker, so every check downstream reads as satisfied (AST-055).
+**A failed invocation IS the finding.** Report the exact error to Thomas and stop. A
+substitute leaves the same marker, and `Skills run:` on `TURN-END` is what shows it was never invoked.
 
 **Fan-out failure is not invocation failure.** Two measured variants: fork unavailable
 (`Fork is not available inside a forked worker`), and forks returning the coordinator's
@@ -40,33 +44,16 @@ Agent(subagent_type: "...", isolation: "worktree", prompt: "...")   # report-onl
 ```
 
 A fork spawned into your checkout can write to it, and the write lands under your name on
-your branch. Measured seven times, most recently a fork that committed the implementation
-itself and then wrote a `simplify(increment):` marker over it carrying a **sanctioned
-degraded `Pass:` line quoting the real runtime error string** — well-formed, unmalformed,
-indistinguishable from a correct marker by inspection, caught by no check. The Builder
-noticed a commit it had not made (AST-130). `isolation: "worktree"` puts the fork in its own
-checkout, so an out-of-scope commit lands somewhere nobody merges.
+your branch. `isolation: "worktree"` puts the fork in its own checkout, so an out-of-scope commit lands
+somewhere nobody merges.
 
-**And that is exactly why the commit comes first.** A worktree carries content **at HEAD**,
-so a fork reviewing uncommitted work sees an empty diff and returns clean — a vacuous pass
-that looks identical to a real one (AST-036). Isolating the fork without committing first
-swaps a forgery hole for a hole nobody can see at all. Commit, then fan out, every time.
+**That is why the commit comes first.** A worktree carries content at HEAD, so a fork
+reviewing uncommitted work sees an empty diff and returns a vacuous clean.
 
-**Your forks must never message anyone.** `isolation: "worktree"` closes the write path and
-does nothing to the talk path. A fork inherits your session context including Thomas's
-address; its `SendMessage` arrives on the same socket under your name, and **you cannot see
-it**. Report-only means report-only on the talk path as well as the write path. State this in
-the fan-out instruction; a fork reporting that it messaged someone is itself the finding —
-say so and stop (AST-119).
-
-**A marker whose parent carries implementation you did not narrate is the signal.** Forks
-share your git identity, so no script can attribute a commit; this one is yours to ask
-before you hand back (AST-130).
-
-**Judge a fork by its artifact, not its activity.** One burned 286k tokens over eight minutes
-"confirming a return shape" the Builder had already answered itself by reading the source. A
-question you can settle with a `grep` is not a fan-out; a fork still running is not a fork
-working.
+**The fan-out prompt says `report only, send no messages`.** A fork inherits your session
+context including Thomas's address, and its `SendMessage` arrives under your name where you
+cannot see it. A fork reporting that it messaged someone is itself the finding: say so to
+Thomas and stop.
 
 **Copy the `Pass:` line exactly** — Thomas verifies mechanically (AST-055, AST-090).
 
@@ -100,18 +87,6 @@ gate: where your own evidence contradicts a specific claim, say so and follow th
 
 ## Background work
 
-**Run gates in the foreground.** Background is for work someone else consumes; a turn that
-ends while waiting on a result YOU need becomes PARKED, and Thomas must rescue it (AST-097).
-
-**A backgrounded block's completion notice reports its LAST command.** `make test …; grep …`
-arrives as *"exit code 0"* on a red suite — measured twice in one day, both times at a merge
-gate. Take the status inside the block (`cmd > /tmp/out.log 2>&1; status=$?`) and read the log;
-never the notice's number. `dispatch-ticket/WATCHING.md` § pipes carries the full rule.
-
-**If `ScheduleWakeup` errors, do not park** — the notification will never arrive. Read the
-result directly, retry, or report to Thomas (AST-097).
-
-## Long tickets
-
-`/compact` and `/clear` are CLI commands, not skills. Write a durable checkpoint before
-`/compact`; `/clear` belongs between tickets, not inside one.
+Run gates in the foreground: a turn that ends while waiting on a result you need is PARKED.
+A backgrounded block's completion notice reports its LAST command, so take the status inside
+the block and read the log, never the notice's number (`dispatch-ticket/WATCHING.md` § pipes).

@@ -4,9 +4,9 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-4.0.4-blue" alt="version"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-4.1.0-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtime-Claude_Code-green" alt="runtime">
-  <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-157_measured-red" alt="failure modes"></a>
+  <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-67_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/vi/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache_2.0-blue" alt="license"></a>
 </p>
@@ -42,15 +42,15 @@ nhau, review xong trong một vòng, và artifact chứng minh được điều 
 # 1. Đứng ở gốc project, stage bản mới nhất (không ghi file nào của project)
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
-#    …hoặc ghim một bản:  | bash -s -- 4.0.4
+#    …hoặc ghim một bản:  | bash -s -- 4.1.0
 
 # 2. Kiểm máy đã đủ thứ cần chưa
-bash .astraler/releases/4.0.4/check-requirements.sh
+bash .astraler/releases/4.1.0/check-requirements.sh
 #    Về sau, ngay trong project: bản đang cài, bản mới nhất, có gì thay đổi, nâng cấp thế nào
 .astraler/astragentic.sh update
 
 # 3. Chạy bộ cài thích nghi trong Claude Code
-claude "Read .astraler/releases/4.0.4/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/4.1.0/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Mở router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable
@@ -87,7 +87,7 @@ sâu ba lớp** — code-review, lượt simplify, arm chéo hãng — rồi d�
 
 Phần lớn agent skill mặc định bạn bắt đầu từ một repo sạch. Chúng không có khái niệm về code
 cũ, về thứ không test được, hay về "tiêu chuẩn chỉ tồn tại trong đầu vài người".
-**Astragentic ship bốn skill riêng cho brownfield**, rút kiến thức ra từ chính codebase như
+**Astragentic ship hai skill dùng lúc adopt**, rút kiến thức ra từ chính codebase như
 nó đang có — không bịa ra thứ không tồn tại.
 
 ### Không ai biết thực tế đã chạy gì
@@ -167,7 +167,7 @@ Mỗi Builder có một pane terminal riêng và một git worktree riêng.
 flowchart LR
     subgraph PT["Mỗi ticket — làn Builder"]
         direction LR
-        R0["tdd (+ atdd)"] --> R1["code-review\nStandards + Spec"] --> R2["code-review\nbuilt-in"] --> R3["simplify\nmarker commit"] --> R4["arm ticket\nCodex ↔ Claude"]
+        R0["tdd"] --> R1["code-review\nStandards + Spec"] --> R2["code-review\nbuilt-in"] --> R3["simplify\nmarker commit"] --> R4["arm ticket\nCodex ↔ Claude"]
     end
     PT --> QA["QA theo bề mặt ticket\nwalk · probe · verify\nđối chiếu docs/qa/plan"]
     QA --> M["merge"]
@@ -192,16 +192,16 @@ không đi vào thêm một vòng review nữa.
 
 ---
 
-## Skill cho brownfield
+## Skill lúc adopt
 
-Bốn skill này lấp đúng những chỗ mà agent skill phổ thông bỏ ngỏ:
+Hai skill này lấp những chỗ mà agent skill phổ thông bỏ ngỏ trên một codebase có sẵn. Chúng chạy
+một lần, trong lúc adaptation, từ `prompts/adoption-skills/` (`adoption-skills/` trong release đã
+stage). Chúng không nằm trong payload, nên không session nào nạp chúng về sau.
 
 | Skill | Việc |
 |---|---|
 | `bootstrap-glossary` | Dựng `GLOSSARY.md` từ chính code — mỗi từ mang theo file nó được đọc ra |
 | `batch-triage` | Biến một backlog thừa kế thành ticket có nhãn và blocking edge |
-| `legacy-testing` | Sinh characterisation test và dựng seam cho code chưa có test |
-| `untangle` | Đường refactor cho code rối hơn mức công cụ kiến trúc thông thường xử lý được |
 
 Nguyên tắc: **trích, không bịa**. Một tiêu chuẩn mà code không hề tuân theo, hay một từ trong
 glossary không ai xác nhận, sẽ thành lore nghe rất chắc chắn mà các agent sau coi là sự thật.
@@ -297,7 +297,7 @@ và merge hook đều là của bản release ấy.
 ```bash
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash                      # bản mới nhất, chỉ stage
-curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 4.0.4         # ghim một bản
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 4.1.0         # ghim một bản
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --plan  # xem --apply sẽ ghi gì
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply # ghi payload vào
 ```
@@ -396,7 +396,7 @@ xem `git ls-remote --tags https://github.com/thientranhung/astragentic.git` ho�
 | | |
 |---|---|
 | **Role** | 4 — Thomas, Shaper, Builder, QA |
-| **Skill** | 16 trong harness, 4 trong số đó dành cho brownfield |
+| **Skill** | 12 trong harness, thêm 2 skill dùng một lần lúc adopt |
 | **Runtime** | Claude Code |
 | **Lớp review** | 3 mỗi ticket (hệ thống trước: 5–14 vòng) |
 | **Failure mode** | 138 đã đo, cơ sở bằng chứng chỉ thêm |
@@ -411,7 +411,7 @@ harness/
   .agents/
     roles/            bốn contract role + junior tuỳ chọn
     orchestrator.md   role -> runtime/model/effort (file của bạn)
-    skills/           19 skill — dispatch, QA, test design, brownfield, arm, BMAD
+    skills/           12 skill — dispatch, QA, test design, tracker (cái bạn gọi tên, hoặc cả ba), arm, BMAD
     memory/
       recurring-failure-modes.md
   .claude/

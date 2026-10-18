@@ -6,31 +6,21 @@ description: "Dispatch one claimed ticket as a visible Herdr pane — one Builde
 # Dispatch a ticket — shared protocol
 
 Role contract: `.agents/roles/builder.md`. Runtime, model and effort per role:
-`.agents/orchestrator.md` (owner-editable; Thomas reads it at session start; edits take
-effect at the next dispatch). Every role runs on Claude Code. The roles, the worktree, the
-Herdr topology and the artifact contract are fixed by this skill.
-
-**The launcher, pre-dispatch verification and measured runtime facts live in the companion
-skill**: `dispatch-ticket-claude`. Read both this skill and that one.
+`.agents/orchestrator.md`, read at session start; an edit takes effect at the next dispatch.
+Every role runs on Claude Code. **The launcher, the mod and pre-dispatch verification live in
+`dispatch-ticket-claude`**; read both skills.
 
 ## The sequence
 
-Every dispatch runs these in order. Each names where its detail lives.
-
-1. **Preflight, first dispatch of the session only** — watchdog running, payload committed.
-2. **Resolve the row** — runtime, model, effort from `orchestrator.md`; write-set collected.
-3. **Claim, then create branch and worktree** — the claim precedes the worktree (`thomas.md`).
-4. **Resolve or create the workspace**, then create the tab and pane, and gate on `foreground_cwd`.
-5. **Print the resolved dispatch**, then launch via the runtime-specific skill. On Claude, read
-   the record back: the pane writes its own tab and pane ids (`dispatch-ticket-claude`).
+1. **Preflight, first dispatch of the session** — watchdog running (`WATCHING.md` § watchdog),
+   payload committed (below).
+2. **Resolve the row** — runtime, model, effort from `orchestrator.md`; collect the write-set.
+3. **Claim, then create branch and worktree** — the claim protocol is `thomas.md`'s.
+4. **Resolve the workspace**, create the tab and pane, pass the cwd gate.
+5. **Print the resolved dispatch**, launch (`dispatch-ticket-claude`), read the record back.
 6. **Submit the brief** — first line is the phase's plugin-qualified slash command.
-7. **Arm the watcher immediately** — submitting and arming are one action, not two. On Claude
-   there is no watcher to arm: the pane reports its own turn end.
-8. **Branch on the watcher's exit status and payload**, never on pane status alone. On Claude,
-   branch on the `TURN-END` prompt, which is a bell exactly as the watcher's line was.
-9. **Verify by artifact**, then cleanup — [`CLEANUP.md`](CLEANUP.md).
-
-A step that reports nothing is a step nobody can tell was skipped.
+7. **Branch on the pane's turn end** — `TURN-END` for a mod pane, the watcher's exit for a gate or junior pane.
+8. **Verify by artifact**, then cleanup — [`CLEANUP.md`](CLEANUP.md).
 
 ## The binding identity
 
@@ -38,121 +28,35 @@ A step that reports nothing is a step nobody can tell was skipped.
 ticket → assignee (the claim) → pane → worktree → branch → PR
 ```
 
-Each of those is one-to-one, and the chain is what lets several Builders work the frontier
-at once. **The claim comes first**: a ticket is assigned on the tracker BEFORE its worktree
-exists, so two sessions picking from the same frontier see each other's claims. Upstream
-applies this to decision tickets; here it extends to build tickets, and it is the whole
-concurrency mechanism.
-
-**The Builder is the sole writer in its worktree.** Everyone else — Thomas, QA, a reviewer,
-another Builder — reads. The branch and worktree are the real isolation boundary; Herdr is
-the visible control surface over it.
-
-Parallel tickets get their own pane, session, worktree and branch. Sequential tickets may
-reuse an existing project/epic workspace and still take fresh tabs and sessions: `/clear`
-turns an old pane into an empty pane, not an isolated ticket.
+Each link is one-to-one. Parallel tickets get their own pane, session, worktree and branch;
+sequential tickets may reuse a workspace but take fresh tabs. The claim precedes the worktree
+(`thomas.md` § claim protocol); the sole-writer rule is the Builder's (`builder.md`).
 
 ## Inputs and resolution
 
-- model/effort/advisor from `.agents/orchestrator.md` (the source; the runtime is Claude Code)
-- `visibility=herdr|headless` (default `herdr`)
-- workspace label, ticket ID, branch, base, worktree path, the ticket body, owner intent,
+- model, effort, advisor: `.agents/orchestrator.md`
+- workspace label, ticket id, branch, base, worktree path, ticket body, owner intent,
   acceptance criteria, validation commands, expected artifact
 - **write-set** — the files this ticket will write, and the files each other live ticket
-  already owns. **Required whenever another dispatch is live**, the way browser consent is
-  required of a QA dispatch: a field the dispatcher must fill before the pane launches cannot
-  be skipped by being busy.
+  owns. Required whenever another dispatch is live. It travels as the brief's `Owned
+  elsewhere:` line and is stored as `write_set` in the dispatch record.
 
-**Resolution order:** the active row → if Claude Code is genuinely unavailable (CLI missing,
-auth failed, quota exhausted), the role's Fallback row, with the degradation REPORTED to the
-owner. Degradation is per-session and stays out of the file.
-
-**A row reading `<set-me>` is UNDECIDED, and undecided is a STOP at dispatch, not before.**
-The owner picks a model per project and per situation, so a table with a model left open
-is a normal resting state — the doctor says so and moves on. But resolving a role ONTO that
-row means using a model id nobody has chosen: stop, name the role and the row, and ask.
-Never substitute another role's model to keep the dispatch moving.
-
-**A missing row is an answer, not a gap to fill.** An absent fallback means that role has no
-fallback, so an unavailable active runtime is a STOP. Where `orchestrator.md` itself is
-missing or a row is ambiguous, Thomas asks the owner for the model and scaffolds the file
-before dispatching — inferring a model from the task text produces a confident wrong answer.
-
-**Headless implementation is not supported.** Every Builder runs in a visible
-Herdr pane: a topology nobody can observe is trusted on the dispatcher's word, which is the
-thing panes exist to remove. A `visibility=headless` request is a STOP — say it is unsupported
-and dispatch normally, or take it to the owner (AST-070).
+A row reading `<set-me>`, a missing row, or an ambiguous `orchestrator.md` is a STOP: name
+the role, ask the owner, scaffold the file. Never substitute another role's model.
 
 ## One checkout, one driver
 
-**At most ONE session treats the repository's main checkout as its workspace** — the resident
-router's. Every session you dispatch gets its own worktree, without exception, including
-read-only ones with a shell.
+At most ONE session treats the main checkout as its workspace: the resident router's. Every
+dispatched session gets its own worktree, read-only ones with a shell included. Isolation
+covers all disk activity: tests or builds in a worktree you do not own collide the same way.
+Before each commit, `git branch --show-current` must equal the branch you were dispatched onto.
 
-Two root sessions sharing a main checkout have silently lost commits to a concurrent
-`git switch` (AST-016, AST-027).
+## Payload committed before the first dispatch
 
-**Every session verifies `git branch --show-current` before each commit**, and stops if it is
-not the branch it was dispatched onto. That check costs nothing and is the only thing that
-catches a checkout moving underneath you, because the symptom appears later and somewhere
-else.
-
-**Isolation covers all disk activity, not only git** (AST-106): running tests or builds in a
-worktree you do not own causes the same collision class. Apply the one-driver rule to any
-command that writes to disk — the arm already does, one detached worktree per pass.
-
-## The watchdog must be RUNNING before the first dispatch
-
-**On a Claude root the per-turn watcher is the mod's** (`dispatch-ticket-claude`): the pane
-reports its own turn end. This workspace watchdog is still yours on every runtime, because it
-covers the one thing a mod cannot report — a pane whose process died. It is silent about a
-Claude pane the mod recorded; its alerts are for panes the mod did not record (a QA gate pane,
-a junior pane), once per episode.
-
-```bash
-# Scoped to THIS workspace, and by the same identity test the watchdog uses on itself: a bare
-# `pgrep -f herdr-watchdog.sh` matches `tail -f herdr-watchdog.sh` and matches another
-# project's watchdog, which satisfies this gate while nothing watches these panes.
-LOCK="/tmp/herdr-watchdog-<workspace-label>.lock"
-if [ -f "$LOCK" ] && kill -0 "$(cat "$LOCK")" 2>/dev/null; then
-  echo "watchdog: running for this workspace"
-else
-  echo "STOP: no watchdog for this workspace — start it before dispatching"; exit 1
-fi
-```
-
-**A dispatch with no watchdog is not permitted**, and the `exit 1` is the point: the previous
-form was an `echo`, while `thomas.md` described it as a refusal. A gate that prints and returns
-zero is advice wearing a gate's name. Start the watchdog if it is not up (`WATCHING.md` has the
-invocation), then dispatch.
-
-A gate rather than advice because **an unwatched pane and a quiet healthy pane produce
-identical evidence: nothing** (AST-124). With the watchdog up, a missed re-arm costs latency;
-without it, silence.
-
-**Coverage**: the watchdog's `STUCK` rule requires that NO pane is working, so an active Thomas
-suppresses it — a Builder that finishes while Thomas is busy still pings nothing. The per-turn
-watcher and the watchdog cover different halves; neither replaces the other.
-
-## The payload must be COMMITTED before the first dispatch
-
-**On a Claude root the mod refuses the brief while any payload file is uncommitted**, and
-names the files; a brief line `Uncommitted-payload: <why>` lets a deliberate one through. It
-fails open on a git error, so the check below is still worth one run per session.
-
-**A git worktree contains tracked content and nothing else.** A harness whose files are
-untracked — gitignored, or merely staged-but-uncommitted — is invisible inside every Builder
-worktree, including `.agents/roles/builder.md`. The Builder starts with no contract and no
-sign that anything is missing.
-
-Two conditions, both needed (AST-036):
-
-1. **Nothing in the payload is gitignored.** A repo with a broad `.agents/*` or `.claude/*`
-   ignore rule needs allow-list entries for the harness paths.
-2. **The payload is committed.** Allow-listing alone leaves the files untracked, so the
-   worktree is still empty. This is the step that is easy to believe is done.
-
-Confirm it the only way that answers the question, before the first dispatch of a session:
+A worktree holds tracked content only, so an untracked or gitignored harness is invisible to
+every Builder, `.agents/roles/builder.md` included. Two conditions: nothing in the payload is
+gitignored (allow-list the harness paths), and the payload is committed. Confirm once per
+session:
 
 ```bash
 git worktree add --detach /tmp/harness-check HEAD
@@ -160,179 +64,80 @@ test -f /tmp/harness-check/.agents/roles/builder.md || { echo "PAYLOAD NOT VISIB
 git worktree remove --force /tmp/harness-check
 ```
 
-A `PAYLOAD NOT VISIBLE` result is a STOP: dispatching into it produces a Builder that
-improvises, which is harder to notice than a Builder that fails.
+`PAYLOAD NOT VISIBLE` is a STOP. The mod also refuses the brief while a payload file is
+uncommitted (`dispatch-ticket-claude` § tracker), but fails open on a git error.
 
-## Worktree and named tab
+## Worktree, tab and pane
 
-`<worktree-path>` is the ABSOLUTE path
-`<repo-root>/.claude/worktrees/<branch-slug>` (branch `/` → `-`), inside the repo but
-gitignored (AST-028). A relative path once resolved through a stale shell cwd to an
-unexpected location, which is why the absolute form is fixed here.
-
-**Fetch and prove the base is current BEFORE the worktree exists:**
+`<worktree-path>` is ABSOLUTE: `<repo-root>/.claude/worktrees/<branch-slug>` (branch `/`
+becomes `-`), gitignored. Prove the base is current BEFORE the worktree exists:
 
 ```bash
 git fetch origin --prune
 [ "$(git rev-parse <base>)" = "$(git rev-parse origin/<base>)" ] \
   || { echo "STOP: local <base> is stale; update before dispatching"; exit 1; }
+git worktree prune
+git worktree add -b <ticket-branch> <worktree-path> <base>   # output visible, never redirected
+git worktree list
 ```
 
-A stale base is invisible at dispatch and expensive at merge: three Builders were branched off a
-base 29 commits behind, and the first sign was a rejected push an hour later, after a fully
-green merge gate that had to be thrown away. The tip re-check under *Merge mechanics* guards
-against the branch moving under you; this guards against the base having already moved. Where
-the project dispatches from the remote ref, create the worktree from `origin/<base>`.
+`scripts/hook-git-guard.py` runs the prune and refuses a relative path or a redirected `add`
+on a Claude root; a pane without the hook (a junior) follows the same two rules by hand.
+
+**Workspace.** Match `workspace-label` from `orchestrator.md` against `herdr workspace list`.
+One match: reuse it. Two or more, or a `<set-me>` label: STOP and ask the owner. None:
+`herdr workspace create --label "<label>" --cwd <repo-root> --no-focus`, then record
+`workspace_managed_by_root=true` at workspace level; cleanup has no other source for it. An
+existing workspace keeps the value in its prior record.
+
+**Tab and pane.** Always create a new tab; tabs you did not create are the owner's.
 
 ```bash
-git worktree prune                                           # FIRST — see below
-git worktree add -b <ticket-branch> <worktree-path> <base>   # ABSOLUTE, output visible
-git worktree list   # verify the new entry is exactly <worktree-path>
-herdr workspace list
+herdr tab create --workspace <workspace-id> --label "<tab>" --cwd <worktree-path> --no-focus
+herdr pane rename <returned-root-pane-id> "<pane>"
 ```
 
-**`prune` comes first, and the `add` runs with its output visible.** A previous removal can
-leave `.git/worktrees/<name>/` registered; `add` then refuses — and a redirected `>/dev/null`
-throws away the one line that says so, leaving a dispatch that looks launched (AST-096). On a
-Claude root `scripts/hook-git-guard.py` runs the prune for you and refuses a relative path or a
-redirected add; it is a `PreToolUse` hook that reads a Claude tool name, so the two
-rules above are the contract for a pane that does not run it (a junior).
+| Role | Tab | Pane |
+|---|---|---|
+| Builder | `ticket:<id>` | `builder:<id>` |
+| Shaper | `spec:<id>` | `spec:<id>` |
+| QA | `qa:<id>` | `qa:<id>` |
 
-Resolve the project workspace from `herdr workspace list` by matching the `workspace-label`
-field in `orchestrator.md`.
+A prefix outside the watchdog's `TITLE_PREFIXES` (`shaper:<id>`, for one) dispatches unmonitored,
+silently. The mod reads the tab label at session start, so label before launch.
 
-**A label of `<set-me>` or empty is a STOP, not a dispatch.** The owner has not named this
-project yet; ask rather than inventing or falling back to the folder name.
+**cwd gate.** `herdr pane get <pane-id>` must show `foreground_cwd` equal to `<worktree-path>`;
+a mismatch is a STOP (`herdr pane run <pane-id> "cd <worktree-path>"`, then re-verify).
 
-**Exactly one match → reuse it. Two or more matches → STOP and ask the owner** which is the
-real one — silently picking the first hides a workspace a prior session already left running.
-No match → create one rooted at the repo:
-
-```bash
-herdr workspace create --label "<workspace-label from orchestrator.md>" --cwd <repo-root> --no-focus
-```
-
-Immediately after create, `herdr workspace list` again and confirm exactly one workspace
-carries this label — a racing session can otherwise leave two. Record
-`workspace_managed_by_root=true` at workspace level right away: it is this dispatch's only
-durable statement that it owns the workspace, and cleanup has no other source for it. Where the
-label matched an existing workspace, read that workspace's own `workspace_managed_by_root` from
-its prior record; an existing `false` stands.
-
-The workspace is project-scoped and outlives any one ticket, while a ticket's worktree is
-removed at cleanup — so the workspace cwd stays at repo-root rather than binding to the
-first worktree.
-
-**The commands below show a Builder dispatch. Substitute the tab/pane prefix for the role
-actually being dispatched** — tab `ticket:<id>`/pane `builder:<id>` for a Builder, but tab
-AND pane both `spec:<id>` for a Shaper and `qa:<id>` for QA, per the table
-right after them. This same skill dispatches a Shaper too (`thomas.md`: "same mechanics as
-any dispatch"). An invented prefix — `shaper:<id>` — is one the watchdog's
-`TITLE_PREFIXES` does not recognize, so that pane dispatches unmonitored, silently.
-
-A new workspace already owns an initial tab and root pane. Read the create response, then
-`herdr tab list` / `herdr pane list`, and rename that initial tab and pane for the first
-ticket rather than creating a redundant shell:
-
-```bash
-herdr tab rename <returned-initial-tab-id> "ticket:<ticket-id>"
-herdr pane rename <returned-root-pane-id> "builder:<ticket-id>"
-herdr pane send-text <returned-root-pane-id> "cd <worktree-path>"
-herdr pane send-keys <returned-root-pane-id> Enter
-```
-
-Where the workspace already exists, **always create a new tab**. Tabs you did not create
-belong to the owner or another dispatch, and splitting into one renames it in the herdr UI.
-
-```bash
-herdr tab create --workspace <workspace-id> --label "ticket:<ticket-id>" \
-  --cwd <worktree-path> --no-focus
-herdr pane rename <returned-root-pane-id> "builder:<ticket-id>"
-```
-
-Both commands above carry a label, and **for a Builder the two DIFFER**: tab `ticket:<id>`,
-pane `builder:<id>`, exactly as written. `orchestrator.md` § Workspace identity is a **tab**
-table — it does not name pane labels. For a Shaper and QA the two coincide, and the
-substitution applies to BOTH commands, not the tab alone: a Shaper's pane is `spec:<id>`, never
-`shaper:<id>`. `builder:` and `ticket:` are both in the watchdog's `TITLE_PREFIXES`, so the
-Builder's two labels differing is safe; `shaper:` is not in it, which is the whole finding
-(AST-082).
-
-**Mandatory cwd gate before launch.** `--cwd` on create is not guaranteed to stick, and
-agent resolution depends on cwd — launched from `$HOME` it errors "agent not found" or runs
-an unintended default. Confirm the pane's `foreground_cwd` equals `<worktree-path>` via
-`herdr pane get <pane-id>`; a mismatch is a STOP (fix with
-`herdr pane run <pane-id> "cd <worktree-path>"`, then re-verify).
-
-**Agent names and pane labels are different strings.** `herdr agent start` AND `herdr agent
-rename` accept lowercase letters, digits, `-` and `_` — no `:`, no uppercase — while pane labels
-take `:`. The rule holding for `rename` is the one projects meet late: a repo with uppercase
-ticket ids fails at the rename, which is the END of dispatch, with the agent already up and
-unregistered — exactly the state the step exists to prevent. So the
-agent is `builder-<ticket-id-lowercased>` while the pane is `builder:<ticket-id>`.
-**Lowercase the ticket ID in the agent name** (`ABC-123` → `builder-abc-123`); passing
-uppercase or a pane label as an agent name fails the dispatch silently.
+**Agent names and pane labels differ.** Agent names take lowercase letters, digits, `-` and
+`_`, no `:` and no uppercase: pane `builder:ABC-123`, agent `builder-abc-123`. A bad name
+fails at the rename, the end of the dispatch.
 
 Print the resolved dispatch before launching:
 
 ```text
-role=builder
-runtime=claude
-topology=herdr
-executable=<exact launcher command from the runtime-specific dispatch skill>
-ticket=<ticket id>            worktree=<absolute path>
-branch=<ticket branch>        workspace=<returned workspace id>
-workspace_managed_by_root=<true|false inherited from the durable record>
-tab=<returned tab id>         pane=<returned pane id>
+role=builder   runtime=claude   topology=herdr
+executable=<exact launcher command from dispatch-ticket-claude>
+ticket=<id>    worktree=<absolute path>   branch=<ticket branch>
+workspace=<id> workspace_managed_by_root=<true|false>   tab=<id>   pane=<id>
 ```
 
-Then launch using the command from the dispatch skill (`dispatch-ticket-claude`). **Which herdr
-form that skill uses is its own answer, not this file's** — `herdr agent start` registers the
-name in the same call, and a launch it cannot encode goes through `herdr pane run` plus
-`herdr agent rename`; `agent start` refuses any argument containing a newline with
-`invalid_agent_argument` (measured on herdr 0.9.1).
+Launch with the command in `dispatch-ticket-claude`; the pane ends with a registered agent
+name, or the watchdog never counts it and nothing can address it. On a failed readiness,
+`herdr agent read`. Launch into the pane this dispatch created, never the owner's active tab.
 
-**Either way the pane ends up with a registered agent name.** A pane launched with `pane run`
-and never renamed is invisible to the workspace watchdog that counts dispatched agents
-(`WATCHING.md`), and cannot be prompted by name at all.
+## The brief
 
-Where a launch fails readiness, inspect with `herdr agent read`. Launch into the pane this
-dispatch created — the owner's active tab stays theirs, and a hidden subagent is not a
-substitute for a visible pane.
+**The first line is the phase's slash command, plugin-qualified**: `/mattpocock-skills:<name>`.
+The flow skills are `disable-model-invocation: true`, so only text arriving as a user turn
+reaches them; an agent told about `implement` in prose starts coding without the skill. Claude
+Code's own `/compact` and `/clear` keep bare names. A skill the model can call
+(`simplify`) is written `Skill(skill: "simplify")` in a brief, never `/simplify`. <!-- addr-ok: wrong form, cited -->
 
-## Brief, watch, and steer
-
-### The brief opens with the phase's slash command
-
-**The plugin's flow skills are `disable-model-invocation: true`** — `implement`, `triage`,
-`wayfinder`, `to-spec`, `to-tickets`, `grill-with-docs`, `setup-matt-pocock-skills`. A model
-cannot reach them at all, so an agent merely *told about* `implement` in prose reads the prose
-and starts coding without the skill.
-
-What reaches them is **text arriving as a user turn**. So the brief's first line is the slash
-command itself, **plugin-qualified** — `/mattpocock-skills:<name>` — with the rest of the brief
-below it. A bare `/implement` <!-- addr-ok: wrong form, cited --> resolves today only because
-nothing else claims that word yet (AST-050). Claude Code's own `/compact` and `/clear` keep
-their bare names: they are CLI commands, so a typed form is the only form.
-
-**Slash form for what only a human can type; Skill form for what the model can.** `simplify`
-carries no `disable-model-invocation`, so an agent invokes it as `Skill(skill: "simplify")`.
-Writing it as `/simplify` <!-- addr-ok: cited as the wrong form --> hands an agent an address
-it cannot use, and a Builder given an unusable address rolls its own pass instead (AST-051).
-
-### The brief carries the build flow as a `FLOW:` line
-
-**`implement` points at `tdd` and `code-review` but does not reach them.** Measured downstream
-on 44 Builder transcripts (2026-10-09): `implement` 44/44, `tdd` 0/44, Matt's `code-review`
-6/44. On plugin 1.3.1 the pointer is the bare word `code-review`, which Matt's skill and
-Claude Code's built-in both answer to, so one of the two reviews never runs either way.
-
-So the brief carries the flow as one line of qualified Skill names, in this order, and a step
-that cannot apply is named in the handback with its reason (`TDD: n/a — <why>`). Both reviews
-are required: Matt's checks standards and spec, the built-in hunts bugs.
-
-**The mod records each Skill call the Builder makes and names the missing
-steps in the merge result** (`dispatch-ticket-claude`).
+**The `FLOW:` line** names the build flow as qualified Skill calls, in order. `implement`
+points at `tdd` and `code-review` without reaching them. A step that cannot apply is exempted by
+a `TDD: n/a — <why>` or `REVIEW: n/a — <why>` brief line, read by the mod
+(`dispatch-ticket-claude` § refused steps).
 
 ```text
 /mattpocock-skills:implement TICKET-123
@@ -341,342 +146,101 @@ QA: walk — the ticket changes the orders screen
 QA plan: docs/qa/plan-<slug>.md
 
 FLOW: 1 Skill(mattpocock-skills:tdd) → 2 Skill(mattpocock-skills:code-review) → 3 Skill(code-review)
-  → 4 Skill(simplify) → 5 arm(ticket) — each a call; a skipped step is named with its reason.
+  → 4 Skill(simplify) → 5 arm(ticket)
 
 Worktree: … · Branch: … · Base: …
 Acceptance criteria: …
 Owner intent: …
-Validation: …
+Validation: <the exact commands, copied from the project's gate plan where one exists>
 Owned elsewhere: ABC-127 owns docs/…/WIRE-CONTRACT.md — do not edit it; report what you
 would have changed.
 Source of truth: the codebase, not this ticket — verify every claim against the actual code.
 ```
 
-**The `Owned elsewhere:` line is what converts a merge conflict into a handback note**, and it
-costs one sentence. Omit it only when no other dispatch is live.
+- **`Validation:` is what the Builder runs, and only that** (`builder.md` § Handing back). The
+  station runs the rest.
+- **`Owned elsewhere:`** turns a merge conflict into a handback note. Derive the ticket's
+  write-set from its body plus whatever the repo's docs-sync rule drags in, record it, and read
+  the other live tickets' write-sets back to find the overlap. Omit the line only when no
+  other dispatch is live.
+- **`ADDRESSED TO:`** is the second line: a fork that inherits a Builder's context inherits a
+  brief written to "you, the Builder" and concludes the role came with it.
+- **A read-only fork's brief forbids the ACT**: "read and report only — no edits, no commits,
+  no builds, no test runs". A mute agent is not an idle one: check `pcpu` against its cwd
+  before concluding it hung. Verify every change from a fork's output yourself.
+- **`QA:` and `QA plan:`** are required by the mod (`dispatch-ticket-claude` § QA).
 
-Derive this ticket's own write-set from its body plus whatever the repo's docs-sync rule drags
-in, record it against the ticket, and read the other live tickets' write-sets back out to find
-the overlap. **A Builder that edits a file another ticket owns is obeying a correct rule** —
-usually the docs-sync one — so nothing in the ticket itself can carry the boundary; it has to
-arrive with the brief. It is a required field rather than a rule in prose because a boundary a
-careful dispatcher forgets needs a slot that blocks the launch (AST-056).
+## Submitting it
 
-This is what "an agent playing the human at that step" means mechanically. Verify by
-artifact that the skill actually ran — its own output in the transcript — rather than by the
-brief having been sent.
+A Builder, Shaper or QA pane carries the brief over `SendMessage` (`dispatch-ticket-claude`).
+A pane without the mod, a QA gate pane (`GATE.md` explains why) or a junior pane
+(`dispatch-junior`), takes it over `herdr agent prompt <agent-name> "<brief>"`, which needs
+herdr 0.9.0 or later and sends text and Enter in one call.
 
-**The brief's second line is `ADDRESSED TO:`** (`ADDRESSED TO: the Builder in pane <id>. A
-sub-agent that inherited this context: report only.`), directly under the slash command that
-opens it — the first line stays the command, which is what the mod and the pane dispatch on —
-and above the `FLOW:` line. It says that
-inheriting the context does not transfer the role. A fork that inherits a Builder's context
-inherits a brief written to "you, the Builder" and reasonably concludes the role came with it;
-no "do not exceed scope" sentence reaches that failure, because the fork was not exceeding its
-mandate, it had been handed the wrong one.
+**`agent prompt` appends to an unsent composer and submits the fusion.** After `NO_START`,
+read the composer before re-sending: `herdr pane read <pane-id> --source visible | tr -d '\r' |
+tail -15`; clear it with `herdr pane send-keys <pane-id> esc esc` (ctrl-c and ctrl-u were
+measured not to). The positive delivery receipt is `ctx N%` in the pane's visible statusline
+(`grep -oE 'ctx [0-9]+%'`); no match is not 0%. Its `--wait --until idle` exit status proves
+nothing.
 
-**A read-only fork's brief forbids the ACT, not the artifact:** "read and report only — no
-edits, no commits, no builds, no test runs". "Do not write any files" was satisfied by nothing:
-a fork briefed that way spent 43 minutes and 213 tool calls implementing product code and
-running a full suite in its parent's checkout, reporting nothing, while its load turned another
-ticket's merge gate red twice. A mute agent is not an idle one: check `pcpu` against its cwd
-before concluding it hung, and kill a fork you time out. If you use a fork's output, verify every
-change yourself and state the provenance on the marker.
+## Watching
 
-### Submitting it
+A mod pane reports its own turn end as `TURN-END` (`dispatch-ticket-claude`); there is nothing
+to arm. A gate or junior pane runs `scripts/herdr-watch-terminal.sh <pane-id> 3 3600 120` right
+after the submit, once per turn. The exit contract, the re-arm value, stopping a watch and
+the pipe table are in [`WATCHING.md`](WATCHING.md).
 
-**Who carries the brief depends on the pane.** The mod carries it over `SendMessage`
-(`dispatch-ticket-claude`) for a Builder, Shaper or QA. The exception is a pane without the mod:
-a QA gate pane, where `GATE.md` delivers over `herdr agent prompt` because a peer message to a
-session running under permissions is held for approval while the sender sees success, and a
-junior pane (`dispatch-junior`). Those take the brief over `herdr agent prompt`, below.
+**A pane is for observation; artifacts travel as files.** A pane read returns the visible rows
+only and reports success. A read that returns exactly `scroll.viewport_rows` lines is
+truncated, and a removal is never decided from a truncated read. A Builder writes into the
+worktree it owns and replies with the path. A read-only agent (a QA gate) returns its report
+and the dispatcher persists it (`GATE.md` § 3).
 
-```bash
-herdr agent prompt <pane-id> "<brief>"
-```
+## `.astraler/state/dispatch-record.json`
 
-No `--wait --until working` here either: the watcher's start guard is the one place that
-question gets asked, on every runtime and every submit form.
-
-**A multi-line brief lands in the composer WITHOUT submitting** — the paste consumes the
-Enter, the transcript shows `[Pasted text #1 +N lines]` in an unsent composer, **and the pane
-reports `idle` while it sits there** (AST-032, AST-037). Every real dispatch brief is
-multi-line, so this is the default case.
-
-**`herdr agent prompt` sends the text and the Enter in one call, and it is the primary form**
-(herdr >= 0.9.0 — check `herdr --version` before relying on it):
-
-```bash
-herdr agent prompt <agent-name> "<multi-line brief>"
-```
-
-Measured downstream 2026-09-20 with five-line briefs carrying backticks, `$`
-and quotes: the turn ran and answered, with no separate Enter. It addresses the pane **by
-name**, which is the other half of why the launch registers one — an unnamed pane cannot be
-prompted this way at all.
-
-**`agent prompt` does not clear the composer — it appends, and submits the fusion.** Measured
-downstream on a throwaway pane: a brief left unsent by an earlier paste read `idle`, `ctx 0%`,
-`↑0 ↓0 tok`, identical to an empty pane; the next `agent prompt` glued its text onto the stale
-last line with no separator, submitted both as one turn, and returned success (AST-154). The
-deadlock above fails by doing nothing; this fails by RUNNING, with a field from a dead brief
-inside a live one. **So a re-delivery after `NO_START` reads the composer first:**
-
-```bash
-herdr pane read <pane-id> --source visible | tr -d '\r' | tail -15   # the input box: empty, or not
-herdr pane send-keys <pane-id> esc esc      # clears it; ctrl-c and ctrl-u were measured NOT to
-```
-
-The measurement was on a Claude Code composer, whose input line starts `❯`; the fusion is
-herdr appending, so treat it as runtime-independent, a junior pane's composer included.
-
-**`ctx %` in the pane's visible statusline is the positive delivery receipt:**
-`herdr pane read <pane-id> --source visible | grep -oE 'ctx [0-9]+%'`. A brief that moved no
-context did not arrive (measured 0% to 35% across a consumed prompt). `pane get` does not carry
-it, and no match must never be read as 0%.
-
-**Its `--wait --until idle` exit status is not proof of anything.** In the same run a prompt
-that demonstrably submitted and answered returned exit 1 from the wait: AST-107's alive-and-deaf
-waiter, one command over. Take the verdict from a fresh `herdr agent get` or from the watcher.
-
-**The paste form stays as the fallback** — below 0.9.0, and for a pane with no agent name yet:
-
-```bash
-herdr pane run <pane-id> "<multi-line brief>"
-herdr pane send-keys <pane-id> Enter        # the brief is pasted; THIS submits it
-```
-
-**Do not hand-roll the `working` confirmation — start the watcher and let it answer.** Its
-start guard asks the same question a separate `herdr agent wait --until working` would, and
-asking twice delays the watcher into missing `working` on a fast builder. On `NO_START`, read
-the pane: an unsent brief sitting in the composer is the likeliest cause, and the fix is to
-send Enter again — never a second `agent prompt` on top of it, which fuses the two.
-
-### Start the watcher — mandatory, immediately after submit
-
-**For a pane the mod registered this section does not apply.** The `astragentic-dispatch` mod
-reports every turn end from inside the pane, so there is nothing to arm and nothing to re-arm.
-`dispatch-ticket-claude` has what replaces it. What follows is the protocol for a pane without
-the mod: a QA gate pane and a junior pane (`dispatch-junior`).
-
-**Every dispatched pane gets a watcher, from the script below.**
-
-**And every NEW turn gets a NEW watcher — not just the first brief.** The watcher watches one
-submitted turn and exits when that turn reaches terminal, correctly. A fold sent after a gate,
-an answer to a blocked Builder, any further work on the same pane: each is a new turn, each
-needs a new watcher, and nothing re-arms one for you — the re-arm is the step that gets
-skipped, because it comes right after a long absorbing task (AST-124).
-
-**Sending work and arming the watch are one action, not two adjacent ones.** If you have typed
-a message to a pane and not armed a watcher, the dispatch is not finished.
-
-**A pane without the mod runs the watcher script directly** and branches on `$?`, as below. A bare `herdr agent wait` is not a
-substitute; it goes deaf (AST-107).
-
-```bash
-<repo-root>/scripts/herdr-watch-terminal.sh <pane-id> 3 3600 120
-```
-
-**`120` (`start_max_s`) is a first-arm value.** A Builder that backgrounds its suite ends its
-turn and waits between turns, so a watch re-armed in that gap with `120` reports `NO_START` on a
-healthy pane and exits, leaving it unwatched (two false `NO_START`s in five minutes). Re-arm over
-a Builder already seen working with a `start_max_s` long enough to cover the suite:
-`<repo-root>/scripts/herdr-watch-terminal.sh <pane-id> 3 3600 1800`. `NO_START` is only useful
-while it is fast, so the first arm keeps `120`.
-
-Run this immediately after submitting the brief — the script's own start guard is the
-confirm-`working` step. For such a pane it is the ONLY sanctioned monitor: it carries
-caffeinate (the machine cannot sleep and kill the watch), a start guard, debounce, a
-3600-second cap, and wait slicing so a deaf `herdr agent wait` cannot stall it (AST-107).
-The script is the sanctioned monitor because hand-rolled loops, `herdr agent wait --until
-idle`, and `sleep` + `herdr agent get` carry none of the five.
-
-Branch on `$?` **and the payload** when it returns:
-
-- `0` + `TERMINAL:done pane=<id>` → builder's turn ended, **not necessarily finished** — check for background processes before concluding (see below)
-- `0` + `TERMINAL:idle pane=<id>` → builder idle, check git log — may be finished or may have stopped early
-- `0` + `TERMINAL:blocked pane=<id>` → builder is asking a question, **read pane immediately and answer** — do NOT proceed to artifact verification, the builder is waiting for you
-- `1` + `TIMEOUT after <max>s pane=<id>` → builder exceeded cap, inspect pane
-- `2` + `NO_START pane=<id>` → builder never started working, re-read pane
-
-**Read the payload, not just the exit code** — exit 0 carries four meanings. On `blocked`,
-read the pane, answer the question, then restart the watcher; the builder is waiting on you.
-
-**`done` means the turn ended, not that the work finished** (AST-097). A builder that
-launches background work and parks waiting for a notification reads as `done` while its
-artifact is still being built. Before concluding finished, check TWO sources for active
-background work:
-
-1. **OS processes** — `pgrep` for test runners, build tools, or the builder's own monitors
-   whose argv contains the worktree path.
-2. **Runtime status line** — `herdr agent read <pane-id>` renders the pane's status bar,
-   which names shells and monitors the runtime itself tracks (ScheduleWakeup, Monitor).
-   These are invisible to `pgrep`.
-
-**Disagreement between the two sources is itself a signal — read the pane** (AST-097): a
-
-**Compare the row count to `scroll.viewport_rows` before you decide anything from a pane read.** A read returns only what is on screen and reports success, so a transcript that looks like a complete answer may be its last 60 lines. This decision ends in a worktree removal; a truncated read is not evidence for one.
-`pgrep`-quiet pane whose status line still names a monitor may be parked permanently on a
-notification that will never arrive.
-
-Processes or runtime tasks still running → PARKED, wait for exit, then re-check. All
-quiet on BOTH sources AND no new commits since the last instruction → read the pane before
-concluding — the turn may have crashed (529, OOM, context limit) with the error visible on
-screen (AST-097). All quiet AND new commits since the last instruction → proceed to artifact
-verification.
-
-**`--wait` collapses submit, start-guard and settle into one call, and it is trustworthy
-ONLY on a pane whose turn you just opened.** Herdr does not track turns, and `--until idle`
-is satisfied by whatever the runtime's rules call idle — an unsent composer on Claude,
-a signal incapable of failing (AST-032).
-
-**So for any pane you did not prompt in that same call** — watching another role's pane,
-resuming after a break, waiting on an artifact — the start guard stays MANDATORY.
-**A mod pane**: its own `TURN-END` (see `dispatch-ticket-claude`).
-**A QA gate or junior pane**: use `<repo-root>/scripts/herdr-watch-terminal.sh`, which observes `working` for THIS turn before blessing anything.
-
-On `agent_prompt_stalled` or a blocking modal, inspect first, resolve the modal, then use
-the low-level submission fallback (`send-text` + `send-keys` can drop input, so it is a last
-resort; for shell commands use `pane run`):
-
-```bash
-herdr agent read <pane-id> --source recent-unwrapped --lines 80
-herdr pane send-text <pane-id> "<brief>" && herdr pane send-keys <pane-id> Enter
-```
-
-Where a documented subcommand appears missing, check `herdr --version` against the 0.8.0
-floor before diagnosing the app. **`herdr agent prompt`'s one-call submission needs 0.9.0**;
-below that the paste-plus-Enter fallback is the only form. **0.9.1 additionally CLAIMS that
-large pastes no longer disconnect with output-queue errors** — a dispatch brief is a large
-paste, so that is the version to be on before blaming a dropped brief on the composer.
-`WATCHING.md` records what else 0.9.1 claims and what has to be re-measured before any of it
-is relied on.
-
-**`herdr integration install <runtime>` is a WRITE, not a status probe.** Run once downstream
-while surveying versions, it installed a `SessionStart` hook that made every new Codex session
-open on a blocking *"1 hook needs review"* modal — which would have stalled every dispatch to
-that runtime on that machine. Read versions with `herdr --version` and `--help`; anything named `install`,
-`setup` or `integration` changes machine state the whole workspace shares, and belongs to the
-owner, deliberately, not to a dispatcher checking what exists.
-
-**A pane is for OBSERVATION; artifacts travel as files.** A pane read returns only the
-visible ROW COUNT — no `--lines` value gets past it — and reports SUCCESS, so anything longer
-than the viewport comes back silently cut. **Truncation is detectable**: `tab create` and
-`agent get` expose `scroll.viewport_rows`, and a read returning exactly that many lines is
-the signal — compare the count rather than judging by eye.
-
-**Who writes the file follows the role.** An agent that may write (the Builder) writes into
-the worktree it owns and replies with the path. A READ-ONLY agent (a QA gate)
-returns its report and the DISPATCHER persists it (`GATE.md` §3) — which keeps an artifact out of a
-disposable gate worktree that cleanup is about to delete (AST-031, AST-032).
-
-**herdr fails loudly, so its EXIT STATUS is trustworthy — it is the status FIELD that
-lies.** Treat a non-zero herdr exit as a real failure worth reading, and keep the scepticism
-for the `agent_status` it returns on success.
-
-**Watcher operational reference** — the exit contract in full, `NO_START` semantics,
-stopping a watch by process group, and the pipe-swallows-exit-code table that applies to every
-command Thomas runs: [`WATCHING.md`](WATCHING.md). Read it when a watch returns something you
-did not expect, before diagnosing herdr.
-
-## Long tickets
-
-Keep one ticket in its assigned session. When the conversation grows long, write a durable
-checkpoint BEFORE `/compact`: branch and SHA, clean or intentional WIP state, completed
-acceptance criteria, exact validation results, blockers, next action — into the tracker or
-the handoff artifact. Then `/compact` and re-ground from that artifact plus `git log` and
-the current diff. Runtime auto-compaction carries the same re-grounding requirement.
-
-`/clear` starts a fresh chat and discards the working thread, so it belongs between tickets
-rather than inside one — and a new ticket takes a fresh pane and worktree anyway. It is not
-cwd, branch, worktree, process or lifecycle cleanup.
-
-## 10. Write `.astraler/state/dispatch-record.json`
-
-**The pane writes its own entry at session start**, from herdr's environment,
-and you read it back (`dispatch-ticket-claude`); an entry you write by hand is overwritten by
-the pane's. A pane without the mod (a QA gate pane) has no entry of its own, and you write it, as below.
-
-**The durable half of a dispatch.** `thomas.md` names this record beside the tracker and the
-frontier and nothing defined it: no path, no shape, no owner. Four rules read it and could
-not — the write-set overlap check above, cleanup's exact IDs, a later session finishing a
-dispatch this one started, and, on every tracker whose `assignee` cannot hold
-`builder/<ticket-id>`, the Builder identity itself.
-
-**Path:** `<repo-root>/.astraler/state/dispatch-record.json`. Operational state, not payload:
-it names machine-local pane and tab ids, so it is not committed and a project that gitignores
-`.astraler/` is correct to.
-
-**Shape** — one object per live ticket, keyed by ticket id:
+The durable half of a dispatch. Read by the write-set overlap check, cleanup's exact ids,
+a later session finishing a dispatch this one started, and the Builder `identity` on trackers
+whose `assignee` cannot hold `builder/<ticket-id>`. Path: `<repo-root>/.astraler/state/dispatch-record.json`,
+operational state, not committed.
 
 ```json
 {
   "ABC-129": {
-    "branch":    "builder/ABC-129",
-    "worktree":  "/abs/path/.claude/worktrees/builder-ABC-129",
+    "branch": "builder/ABC-129",
+    "worktree": "/abs/path/.claude/worktrees/builder-ABC-129",
     "workspace": "my-project",
-    "tab":       "ticket:ABC-129",
-    "pane":      "pane_01H…",
-    "runtime":   "claude",
-    "identity":  "builder/ABC-129",
+    "tab": "ticket:ABC-129",
+    "pane": "pane_01H…",
+    "runtime": "claude",
+    "identity": "builder/ABC-129",
     "write_set": ["src/posting/post.ts", "docs/agents/GLOSSARY.md"],
     "claimed_at": "2026-08-26T09:41:00Z",
 
-    "tab_id":     "w3:t5",
-    "pane_id":    "w3:p7",
+    "tab_id": "w3:t5",
+    "pane_id": "w3:p7",
     "session_id": "e05a49da-…",
     "session_name": "builder-abc-129",
     "last_brief_received_at": 1791134673168,
-    "last_turn_end_at":       1791134680111,
-    "last_turn_reason":       "answer"
+    "last_turn_end_at": 1791134680111,
+    "last_turn_reason": "answer"
   }
 }
 ```
 
-**Two writers, one entry.** Thomas writes the first block at the claim. On a Claude root the
-second block belongs to the `astragentic-dispatch` mod. The pane writes `tab_id`, `pane_id`
-and `session_id` at session start, from herdr's environment, and the turn fields as turns
-happen. **Cleanup closes the tab named by `tab_id`, never one looked up by label or
-remembered.** A guessed id closed a working Builder in production. For a pane without the mod,
-Thomas writes `tab_id` and `pane_id` from the create output, and the turn fields stay absent.
-
-**Written at step 6 of the claim**, before the brief is submitted — a dispatch the record does
-not know about is one no later session can finish or clean up.
-**Read** whenever another dispatch is live, to collect the other tickets' `write_set` values.
-**The entry is deleted during cleanup**, after the worktree and branch are gone and before the
-assignee is released.
-
-**`identity` is load-bearing where the tracker cannot hold it.** Linear's `assignee` resolves
-to a real workspace member, and GitHub's `--add-assignee @me` is one login for every
-dispatcher, so on both the readback interlock cannot tell whose claim it read. This field is
-where `builder/<ticket-id>` actually lives, and it is what a later session matches to decide
-whether a claim is its own.
-
-**A stale entry is an entry whose branch is gone.** That is the readable form of a stale claim,
-and it is checkable without the tracker: `git rev-parse --verify <branch>` failing while an
-entry survives means the dispatch ended and cleanup did not finish.
-
-## Merge mechanics
-
-The merge gate is the one place a false green merges bad code, so each rule below closes a
-measured way to certify a tree other than the one that lands.
-
-- **Never background a block holding both the merge and the gate**, and **never read a gate's
-  exit status through a pipe** (`tail`, `head`, `grep`): the status is the last command's, and a
-  red gate can print `0` (`WATCHING.md`, pipes).
-- **Resolve the branch to a SHA once, and re-check the tip immediately before merging to the
-  base.** If the tip moved, discard the gate result whole and re-run it. "The tested tree is the
-  merged tree" is the assertion; a diff you eyeballed is not that assertion.
-- **Merge in the foreground, and check `git diff --name-only --diff-filter=U` is empty before
-  trusting any gate output.** A gate over a conflicted tree is loud, detailed and about nothing.
-- **Frozen means the TREE, not `HEAD`.** Empty marker commits are safe to push mid-gate; a real
-  diff invalidates the run. Compare `git rev-parse <a>^{tree}` with `<b>^{tree}`.
-- **Never merge on a failure you have explained away.** "That was contention" is a hypothesis:
-  re-run the failing scope alone and merge on a green you observed.
+- **Thomas writes the first block at the claim**, before the brief is submitted. On a Claude
+  root the pane writes `tab_id`, `pane_id`, `session_id` and the turn fields itself.
+  For a pane without the mod, Thomas writes `tab_id` and `pane_id` from the create output.
+- **Cleanup closes the tab named by `tab_id`**, never one looked up by label or remembered.
+- **The entry is deleted during cleanup**, after the worktree and branch are gone and before
+  the assignee is released.
+- **`identity` is where `builder/<ticket-id>` lives** on Linear and GitHub, where the assignee
+  resolves to a real login, and it is what a later session matches to decide whether a claim
+  is its own.
+- **A stale entry is one whose branch is gone**: `git rev-parse --verify <branch>` fails while
+  the entry survives, so the dispatch ended and cleanup did not finish.
 
 ## Cleanup
 
-**Cleanup protocol** — the simplify-pass artifact contract, the two pre-removal checks
-(uncommitted work, simplify markers and provenance), the `Supersedes:` rules, and Herdr tab /
-workspace / worktree retirement: [`CLEANUP.md`](CLEANUP.md). Read it when the Builder has
-handed back, before removing anything.
+[`CLEANUP.md`](CLEANUP.md): the two checks before removal, release of the worktree's resources,
+tab and workspace retirement, and the post-condition.

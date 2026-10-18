@@ -1,32 +1,123 @@
-# Astragentic 4.0.4
+# Astragentic 4.1.0
 
-**A dispatched pane's context has a ceiling.** nizzy-ecom's Thomas summed one night's usage
-(2026-10-18, 01:00 → 09:00): about 95% was Builder sessions, and of that the cost was cache
-reads — 2.3B cache-read tokens over about 4,800 Builder calls against 2.4M output tokens. Cost
-is calls × context, and context only grew: 91k at the first call, 400–550k median over a
-ticket, 1.78M at the top, because the engine's window is 1M and nothing compacted. Two fixes,
-one mechanism each. The Claude launcher in `dispatch-ticket-claude` now carries
-`--autocompact 300000` on every dispatched role (and the same window as the pane's
-`CLAUDE_CODE_AUTO_COMPACT_WINDOW`), and the mod compacts a dispatched pane that ends a turn
-over 300k (`ASTRAGENTIC_CONTEXT_CEILING` moves it), with instructions that keep the brief, the
-phase, the head and the open findings and drop test output and re-readable files. 300k rather
-than 200k because ~90k of every call is standing load the compaction cannot touch and context
-grows ~1.2k per call: 200k would compact every ~90 calls, 300k every ~170. Driven in the
-selftest: a turn ending at 350k is compacted at the next tick; the planted mod without the
-check compacts nothing. Measure after ten tickets: median context per call (was 433k), station
-green on the first run, review folds per ticket.
+**The harness after its own audit: a fifth smaller, one home per rule, nothing shipped that
+nothing calls.** Two audits led here (`docs/audit/2026-10-17-overbuild.md`,
+`docs/audit/2026-10-18-nizzy-field-audit.md`): 30 days on the first adopter, 312 merges,
+138,600 model calls, every component counted. This release acts on the counts and nothing
+else; every change below names its number.
 
-What this does not touch, named so nobody looks for it here: a project's own standing load
-(nizzy's AGENTS.md 51KB + rules 35KB + overlay 14KB make most of the 91k first call), Builders
-re-running the full gate the station runs again, and rework rounds — each a project or
-dispatcher matter, measured in the same report. The Builder's advisor stays: it was called 0
-times in 14 tickets, so it costs nothing and is there when the engine uses it.
+**A dispatched pane's context has a ceiling (from 4.0.4, folded in here).** Builders ran a
+median 433k tokens of context per call on a 1M window that never compacted; 89% of a ticket's
+cost was reading that context back. The Claude launcher carries `--autocompact 300000` and the
+same window on the pane's environment; the mod compacts a dispatched pane that ends a turn over
+300k (`ASTRAGENTIC_CONTEXT_CEILING`), keeping the brief, the phase, the head, the open findings
+and the IDs of its live subagents (after a compaction, SendMessage reaches a subagent by ID). The
+Builder's advisor stays: 0 calls in 14 tickets, so it costs nothing.
+
+**One home per rule.** The same rule was stated in 10–35 places, four of the heaviest with no
+enforcer. Each now lives where its mechanism is documented, with a one-line pointer elsewhere.
+`dispatch-ticket` 6,127 → 1,778 words; `dispatch-ticket-claude` 4,098 → 2,824; `WATCHING.md`
+1,832 → 930; `CLEANUP.md` 1,698 → 740; `MARKERS.md` 1,212 → 726; builder.md 1,660 → 1,199;
+thomas.md 2,044 → 1,847; shaper 1,098 → 954; qa 1,897 → 1,790. Of 57 rules that pointed at
+nothing observable, each is now tied to a literal, a script or a record field, or is gone (the
+table is in the audit's working files). A Builder runs exactly the commands the brief's
+`Validation:` line names and nothing more; the station runs the rest (Builders ran the full gate
+and then the station ran it again, 20+ minutes holding the gate token).
+
+**The ledger leaves the payload.** 157 entries, 46k words, a fifth of everything shipped; 90
+had no operating file citing them. Those 90 are in `docs/ledger-archive/` in the source repo;
+67 remain (24.5k words), `RULES.md` 8.7k → 4.1k, `INDEX.md` 3.5k → 1.7k, and `(gone)` citations
+still apply.
+
+**Skills nothing called in 30 days.** `atdd` (required by builder.md "where criteria are clear":
+0 of 299 tickets), `legacy-testing` and `untangle` (pointed at by Load tables: 0 calls) are
+deleted with their rules; `tdd` stands alone. `batch-triage` and `bootstrap-glossary` are used
+once, at adoption: they ship under `adoption-skills/` in the release and ADAPT-HARNESS runs
+them, not in every session. The tracker skills: `install.sh` ships only the one
+`docs/agents/issue-tracker.md` names (jira and linear loaded in every session of a GitHub
+project for 30 days, 0 calls); a target naming none gets all three. 17 skills → 12.
+
+**Every gate has been watched to fire.** Five mod gates had never fired in the field; four are
+now driven in the selftest on their planted defect (a brief with no `QA:` line, a half-applied
+upgrade, an orchestrator with no Advisor column, closing a mid-turn pane) — the fifth, the
+merge gate, already was. `git add -A` refusals name the changed paths to stage instead (71 of
+167 refusals were followed by the identical command). The role is written on the record at
+dispatch (129 of 131 entries had none). `check-reachability.py` reads the applied AND the
+candidate release manifests (a conflict that blocked the stamp made every new skill read as
+project-owned). `skills_run` records where each skill came from (Claude Code 2.1.299).
+
+**The count is one command.** `scripts/usage-report.py [--days N] [--by role|ticket|skill|
+gate|subagent]` sums the transcripts the way the audit did: calls, median context, cost by role
+and ticket, skills, subagents, refusals the model saw. Thomas's owner report carries it. And
+`astragentic.sh update --apply` now appends the receipt (version, from, counts, deleted-upstream
+paths) to `ADAPTATION-REPORT.md` itself — a project had none for three releases. The watchdog's
+log carries the date.
+
+**Two gates the plan had queued for 4.2.0, done here because the owner asked.** The tdd gate
+measured a skill call: 48 refusals on the first adopter, 48 `tdd` calls right after, a test file
+edited before the next commit in 2. It now asks git — a test file staged with the commit or
+committed on the branch since dispatch (pattern from `.astraler/project/test-file-pattern`, or
+the default `_test.`/`.test.`/`.spec.`/`tests/`/`__tests__/`); `TDD: n/a` still exempts. And
+`builder-target` is read by the mod: a Builder brief is refused while that many recorded
+Builders are live and unmerged (no code read the row before; Thomas counted by hand at every
+merge). Both driven on planted fixtures.
+
+**The release arm read this release twice and found five defects; all fixed, all planted.**
+Pass 2, over the folded tree: the Builder cap counted the destination pane (the protocol has it
+register before its brief, so target 1 refused the first Builder its first brief) — its own entry
+is excluded now; the suggested `git add` was shell-safe but not pathspec-safe (a file named
+`:(glob)*` expanded over the tree) — `git --literal-pathspecs add --` now; and a deleted test
+file opened the tdd gate. Pass 3 showed the first fold short (a test committed after dispatch
+and staged for deletion still counted), and passes 4 and 5 found a hole in every hand-written model of what a call
+commits (`-a`, `-- <paths>`, `-mchange`, `add -A src`, a test re-added after its working copy
+was deleted). So the gate stopped modelling git: it copies the index to a scratch file, replays
+the call's `git add`/`rm` steps and the commit's own staging mode against that copy with git
+itself (`GIT_INDEX_FILE`; `rm` replayed as `rm --cached`), diffs the copy against the dispatch
+base for added/changed test files, and deletes the copy. What the replay cannot do without
+doing it for real is refused with the split to make (pass 6): a `git mv`/`restore`/`reset`/
+`checkout` before the commit, two content commits in one call, a `cd` the hook cannot resolve;
+`-C <dir>` and `cd` are followed for every step (every `-C` in turn), `--only`/`--amend` read
+HEAD's tree; a working-tree `git rm` and `--pathspec-from-file` are refused too, and the
+scratch index lives in a private temp directory (pass 7); only `cd`, `git add` and `git rm
+--cached` may stand before the commit, so a staging step behind shell control flow is refused
+rather than assumed, a replayed step that fails refuses the call, and a path-limited commit
+judges only the files git knows under the path (pass 8); a step behind `||`, `|`, `&` or a
+subshell refuses the call, `git` counts only in the executable position, and the `rm --cached`
+replay is built from the path list rather than copied, so no flag can turn it into a
+working-tree removal (pass 9); a `$(…)`, backtick or process substitution anywhere outside
+single quotes refuses the call, since it runs before the commit it sits in, and any git global
+option other than `-C` (`--work-tree`, `--git-dir`, `-c`) refuses, since it points git at a
+tree the replay does not model (pass 10); the substitution check tracks shell quoting, so an
+apostrophe inside double quotes hides nothing and a single-quoted `$(…)` is text, and a global
+option with a separate value (`--config-env k=V`) no longer hides the `commit` behind it
+(pass 11); a staging step behind a `#` comment is not a step, and a commit long option not
+spelled in full (`--pathspec-from`, `--al`: git accepts any unique prefix) is refused rather
+than ignored (pass 12); an unquoted redirection in any step before the commit refuses, since it
+writes a file the replay never sees (pass 13). Thirty-six real-git cases in the selftest driver.
+**The limit, stated plainly:** this gate reads one shell command and refuses what it cannot read.
+It catches a Builder that forgot the test; it does not stop a Builder that sets out to fool it,
+and pass 14 showed one more way (`git show --output=<file>` before the commit). The arm was
+stopped there by the owner's call: 14 passes, 32 findings, 31 folded, 0 disproved, and no
+measurement yet that any real Builder commit ever took one of these shapes. Pass 1: The
+`git add -A` refusal's suggested command inserted file names unquoted — a file named
+`$(printf INJECTED)` ran — so names are now shell-quoted from NUL-delimited porcelain, after
+`--`; the selftest stages four hostile names through the suggestion. And tracker selection at
+staging broke the immutable-release comparison the moment a project wrote its tracker doc and
+restaged the same version; the release now keeps all three and the selection is made on the
+project's copy at `--apply` (stage → write the doc → `--apply` is a selftest case).
+
+Watchdog: a field audit read four processes as four watchdogs; they are two (one per
+workspace, inception and nizzy) each with its lock-holder child. Working as designed; the log
+now carries the date so the next audit can tell.
+
+Numbers after: payload 233k → 187k words; harness/.agents/skills 34k → 22k; memory 58k → 30k.
 
 ## Upgrade from 4.0.3
 
-`.astraler/astragentic.sh update --apply`. Panes dispatched after the apply get the ceiling;
-running ones do not. A project can set `autoCompactWindow` in its own `settings.json` for every
-pane, including the dispatcher's.
+`.astraler/astragentic.sh update --apply`; the receipt names the retired skills under DELETED
+upstream — remove them from the project. Owner-kept files unchanged. Builders dispatched after
+the apply get the ceiling. A project whose `docs/agents/issue-tracker.md` names its tracker
+keeps one tracker skill; delete the other two from the project tree.
 
 # Astragentic 4.0.3
 

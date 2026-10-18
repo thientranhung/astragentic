@@ -111,9 +111,30 @@ if [ "$APPLY" -eq 1 ]; then
   echo
   echo "astragentic: applying $latest"
   cd "$ROOT"
+  # The receipt goes into ADAPTATION-REPORT.md by this script, not by an agent reading the ADAPT
+  # prompt: a field audit (2026-10-18) found a project with no receipt for three releases applied
+  # this way, so nobody could say when each landed or what it changed (4.1.0). Run the installer
+  # (not exec), keep its output, and append the summary and the deleted-upstream block on success.
+  out="$(mktemp)"
   if [ -d "$REPO" ] && [ -f "$REPO/get.sh" ]; then
-    ASTRAGENTIC_REPO="$REPO" exec bash "$REPO/get.sh" "$latest" --apply
+    ASTRAGENTIC_REPO="$REPO" bash "$REPO/get.sh" "$latest" --apply 2>&1 | tee "$out"; rc=${PIPESTATUS[0]}
+  else
+    command -v curl >/dev/null 2>&1 || { echo "astragentic.sh: curl is required to fetch get.sh" >&2; exit 2; }
+    curl -fsSL "$GET_URL" | ASTRAGENTIC_REPO="$REPO" bash -s -- "$latest" --apply 2>&1 | tee "$out"; rc=${PIPESTATUS[1]}
   fi
-  command -v curl >/dev/null 2>&1 || { echo "astragentic.sh: curl is required to fetch get.sh" >&2; exit 2; }
-  curl -fsSL "$GET_URL" | ASTRAGENTIC_REPO="$REPO" bash -s -- "$latest" --apply
+  if [ "$rc" -eq 0 ]; then
+    {
+      echo
+      echo "## $latest applied $(date '+%F %T') via astragentic.sh update --apply (from $installed)"
+      echo
+      grep -E '^[[:space:]]*new [0-9]+ · updated' "$out" | head -1 | sed 's/^[[:space:]]*/- /'
+      if grep -q 'DELETED upstream' "$out"; then
+        echo "- DELETED upstream (still in the project; remove by hand):"
+        awk '/DELETED upstream/{f=1; next} f && /^[[:space:]]*\(not removed/{exit} f && /^[[:space:]]+[^[:space:]]/{print "  - " $1}' "$out"
+      fi
+    } >> "$ROOT/ADAPTATION-REPORT.md"
+    echo "astragentic: receipt appended to ADAPTATION-REPORT.md"
+  fi
+  rm -f "$out"
+  exit "$rc"
 fi

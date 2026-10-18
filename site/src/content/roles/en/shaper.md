@@ -34,7 +34,7 @@ sessionTag: "unbroken"
 - **Read the code directly** when the shaping touches existing code.
 - **Answer an Align question itself** whenever it has a source it can record.
 - **Other skills when needed**: `domain-modeling`, `research`, `prototype`,
-  `improve-codebase-architecture`, `untangle` and `legacy-testing`.
+  `improve-codebase-architecture`.
 - **Failed skill invocation.** Treat it as the finding: report the exact error to Thomas and stop.
 - **Hand an effort back for `wayfinder`**, when that effort is larger or foggier than one session
   can shape.

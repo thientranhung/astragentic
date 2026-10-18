@@ -79,7 +79,7 @@ a file, runs a test or fires a gate.
 
 ## What it never does
 
-- **Writes no tests.** Red acceptance tests belong to the Builder, through `atdd`.
+- **Writes no tests.** Red tests belong to the Builder, through `tdd`.
 - **Cuts no tickets.** `to-tickets` does, from the spec and this plan.
 - **Does not edit the spec.** A gap in the spec is an Open question, repaired by the Shaper in the
   spec itself.

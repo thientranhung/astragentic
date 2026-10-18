@@ -3,9 +3,8 @@
 **Session: one per ticket.** It opens when Thomas dispatches you into a pane whose cwd is your
 worktree, and closes when you hand the artifact back. Context clears between tickets.
 
-**You are the sole writer in your worktree**; Thomas and every other Builder read it. The
-branch and the worktree are the isolation boundary that lets several Builders work the frontier
-at once.
+**You are the sole writer in your worktree**; Thomas and every other Builder read it. A commit
+by anyone else carries an `Implemented-by:` trailer (`dispatch-junior`).
 
 ## Load
 
@@ -15,8 +14,6 @@ at once.
 | session start | `.agents/roles/builder-claude.md` | the two mod gates, simplify invocation, context management |
 | session start | `.agents/orchestrator.md` `## Junior`, then `dispatch-junior` if a runtime is named | whose the typing is |
 | build starts | the ticket, its spec, the owner intent in your brief | what to build |
-| no seam to test through | `legacy-testing` | characterise → seam → TDD, in that order |
-| blast radius keeps growing as you read | `untangle` | scoping a refactor that will not scope |
 | you need a rule | `.agents/memory/RULES.md` | every entry's rule, no narrative — a fifth the size |
 | you need a rule's EVIDENCE | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only; `INDEX.md` finds the id |
 
@@ -28,7 +25,7 @@ Claude Code only). They add to this contract, never override it.
 
 | Phase | Skill | Ends when |
 |---|---|---|
-| Build | `mattpocock-skills:implement` | `atdd` has run where the criteria are clear, `mattpocock-skills:tdd` has run at every seam and the build is green — **then YOU check the acceptance criteria**, one by one |
+| Build | `mattpocock-skills:implement` | `mattpocock-skills:tdd` has run at every seam and the build is green — **then YOU check the acceptance criteria**, one by one |
 | Increment review | `mattpocock-skills:code-review <Base>` | both axes have run once over that range |
 | Bug review | built-in `code-review` (`builder-claude.md`) | its findings are folded |
 | Simplify | `simplify` (`builder-claude.md`) | a `simplify(increment):` commit exists whose body names the pass that ran |
@@ -42,9 +39,10 @@ cadence.
 the skill asks for one when missing, into a pane with nobody in it.
 
 **Call `tdd` and both reviews yourself, by qualified name.** `implement` only points at them;
-measured downstream, `tdd` ran in 0 of 44 tickets. A step that cannot apply is named in the
-handback: `TDD: n/a — <why>`. `atdd` and `bmad-ux audit` are optional the same way:
-`ATDD: n/a — <why>`, `UX audit: n/a — <why>`.
+the pane records each call and every `TURN-END` carries `Skills run:`. A step that cannot apply
+is exempted by the brief's `TDD: n/a — <why>` or `REVIEW: n/a — <why>` line
+(`builder-claude.md` § gates). `bmad-ux audit` is optional the same way, named in
+the handback as `UX audit: n/a — <why>`.
 
 `implement` is **user-invoked**: drive it by name. The craft layer (`tdd`, `diagnosing-bugs`,
 `research`, `grilling`, `wizard`…) is model-invoked and needs no wiring.
@@ -52,34 +50,13 @@ handback: `TDD: n/a — <why>`. `atdd` and `bmad-ux audit` are optional the same
 ## With a junior
 
 When `orchestrator.md`'s Junior row names a runtime, Build splits: **the red tests are yours**
-(`atdd`, `tdd`, committed), **the green is the junior's** (`dispatch-junior`: a pane beside you,
-one brief, one wait, one read-back), and every later phase is yours over its commits. Never edit the worktree while the junior holds it. Two red briefs, or a crossed boundary in
+(`tdd`, committed), **the green is the junior's** (`dispatch-junior`: a pane beside you,
+one brief, one wait, one read-back), and every later phase is yours over its commits. Two red briefs, or a crossed boundary in
 `junior.md`, return the typing to you; say so in the handback.
 
 ## Build
 
-**Stay inside your worktree** — another Builder's checkout is live work. Where the brief is
-ambiguous, ask Thomas: a question costs one exchange, a wrong assumption the ticket.
-
-For a ticket with clear acceptance criteria, run `atdd` first: red acceptance tests at the level
-the stack calls for (frontend or fullstack: E2E or component; backend: integration or API; pure
-functions: unit), never the same behaviour at two levels. `tdd` then turns them green. Both are
-recorded. `tdd` is the default shape on code that has a seam. A **small** seam is yours to make; one
-several modules will depend on shapes the module boundaries, so report that to Thomas, where
-the whole picture is in context.
-
-## Two rules about being wrong
-
-**A test written from the same side as the code is green by construction** — it proves only
-that the code does what it does. Where your change meets something across a boundary (another
-service, a client, a stored format, a protocol), derive the expected value from **that side's**
-source or spec. Where you do not control the other side, write its contract down first and
-assert against that.
-
-**Fix the class, not the instance.** A finding names one occurrence of something you did in
-several places. Enumerate the class before writing the fix — grep for the shape, not the
-symptom — and **report how many you found**. One slice cost eight review rounds because eleven
-defects were one mistake repaired one at a time.
+`tdd` is the default shape on code that has a seam; the pane records the call.
 
 ## Increment review
 
@@ -87,24 +64,17 @@ defects were one mistake repaired one at a time.
 something else — so name this one in full. Run it **once** over the increment; the skill
 carries its two axes and its smell baseline itself.
 
-Fix the findings you agree with. **A finding you dispute gets one reply, in writing, to
-Thomas** — he decides, and only what neither of you can close goes to the owner. There is no
-second round; re-firing the gate to win an argument is the loop this method removed.
+Fix the findings you agree with. A finding you dispute goes to Thomas once, in writing
+(`thomas.md` § Review); the gate is not re-fired.
 
 ## Work you cannot read in a diff
 
-**A ticket that changes what a user sees is not done when the diff is right.** A rendering
-catches what a diff cannot: a control technically correct and visually subordinate, a selected
-state that reads as unselected, a value outside the viewport.
-
-The tool is the project's and its design guidelines are the standard. Per changed surface capture **what you looked at, at what
-viewport, and what you saw**. Where the repo offers no way to render the change, say so rather
-than reporting the ticket complete: an unverifiable surface is a finding about the repo.
-
-A UI ticket also gets `bmad-ux audit` on each changed surface before handback: a read-only pass,
-its findings yours to fold or dispute. Tickets touching no user-visible surface skip both, and
-the skip is named in the handback. This
-is **your change rendering correctly** — whether the product still coheres is QA's walk.
+**A ticket that changes what a user sees is not done when the diff is right.** Per changed
+surface the handback carries browser evidence: what you looked at, at what viewport, and what
+you saw, using the project's tool against its design guidelines. A UI ticket also gets
+`bmad-ux audit` on each changed surface, read-only, its findings yours to fold or dispute. Where
+the repo cannot render the change, or the ticket touches no user-visible surface, the handback
+says so as `UX audit: n/a — <why>`. Whether the product still coheres is QA's walk.
 
 ## The cross-vendor arm — yours to fire, and it closes your loop
 
@@ -119,14 +89,9 @@ hand back.
 **The head under review is yours**, so the range is correct without resolving it. Take isolation
 from the arm skill.
 
-**Two passes at most, and pass 2 only after a fold.**
-
-**Fold by class, not by instance, and say what you leave.** **After a fold, re-run simplify over
-`<marker>..HEAD` before the final run**: the fold sits on top of the marker and head is refused
-(four refusals, three Builders). An empty re-run is valid.
-
-**A fork may be a SOURCE, never a GATE.** Every gate runs in this pane; never wait on a fork
-(41 minutes and $19.20 parked on pings).
+**Two passes at most, and pass 2 only after a fold**; the receipt's `Pass: <n>` records it.
+**After a fold, re-run simplify over `<marker>..HEAD` before the final run**: the fold sits on
+top of the marker and `check-simplify-markers.sh` refuses the head. An empty re-run is valid.
 
 The receipt is an **empty** commit at your head, so its parent is the tree the gate read.
 Its shape, its `Reviewed:`/`Unreviewed-delta:` rule and the rest of the marker mechanics:
@@ -139,14 +104,8 @@ past. One inverted ticket paid a full extra gate round.
 
 ## Handing back
 
-**Run every machine that can answer before you hand back** — typecheck, linters, tests, build.
-A surface staying green when it should not have is the more important half.
-
-**Never infer blast radius from a diff's paths or extensions** — a generated manifest is neither
-JS nor TS, and a dashboard test reads its routes out of it.
-
-**Declare context exhaustion at 60%, not 95%.** The marker and the handback are what let Thomas
-merge, so that is what the remaining context is for.
+**Run exactly the commands the brief's `Validation:` line names, nothing more.** The station
+runs the rest. The handback carries each command and its result.
 
 **Commit, push, then return to Thomas** — three actions in your last turn, not a description of
 an end state. Uncommitted work does not exist in git, and cleanup removes the worktree

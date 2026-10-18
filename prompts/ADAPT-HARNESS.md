@@ -393,18 +393,21 @@ CLI stays: `codex-arm` still uses it.
 
 ## 5. Brownfield entry
 
-On a repo with existing code, **two bootstrap skills** run once and each produces an artifact
-the **owner reviews before it counts**. Thomas owns both as phases; run them in this order,
-because the first feeds the second:
+On a repo with existing code, **two adoption-time skills** run once and each produces an
+artifact the **owner reviews before it counts**. They are not in the payload: they ship beside
+this file, in `adoption-skills/<name>/SKILL.md` of this release directory
+(`.astraler/releases/<version>/`, `prompts/adoption-skills/` in the package), so no session
+loads them after adoption. Read the file and follow it; do not copy it into `.agents/skills/`.
+Thomas owns both as phases; run them in this order, because the first feeds the second:
 
-1. **`bootstrap-glossary`** → `GLOSSARY.md`, seeded from the terms the code already uses, every
-   term citing the file it was read from and marked `UNREVIEWED` until the owner confirms it.
-   The plugin reads this file from thirteen places, which is why it is the one bootstrap
-   artifact that survived the 1.6.1 cull: everything else this package wrote had a producer
-   and no reader.
-2. **`batch-triage`** — only where the repo arrives with an existing backlog. Its closures
-   wait for the owner; its live tickets carry labels and blocking edges, which is what makes
-   Thomas's frontier query meaningful on day one.
+1. **`adoption-skills/bootstrap-glossary`** → `GLOSSARY.md`, seeded from the terms the code
+   already uses, every term citing the file it was read from and marked `UNREVIEWED` until the
+   owner confirms it. The plugin reads this file from thirteen places, which is why it is the
+   one bootstrap artifact that survived the 1.6.1 cull: everything else this package wrote had
+   a producer and no reader.
+2. **`adoption-skills/batch-triage`** — only where the repo arrives with an existing backlog.
+   Its closures wait for the owner; its live tickets carry labels and blocking edges, which is
+   what makes Thomas's frontier query meaningful on day one.
 
 **Coding standards are the project's own, and they belong in a skill the project invokes** —
 its implement playbook, or a sibling per language — not in a document. This package used to
@@ -414,11 +417,6 @@ documents how code should be written"*, with no path and no directory, so a file
 this package's own convention had no instruction pointing at it. **Where the repo has
 standards, make sure something the reviewer loads points at them** — that pointer is the
 mechanism, not the filename.
-
-Two further skills are **model-invoked** and need no wiring: `legacy-testing` when code has no
-seam for `tdd` to attach to, and `untangle` when a refactor is too tangled for
-`improve-codebase-architecture` to have anything to work with. Confirm they are staged;
-reaching them is the agents' business, not this run's.
 
 **Name the repo's rendering path, or record that it has none.** The Builder's contract
 requires browser evidence for work that changes a user-visible surface, and QA's walk checks

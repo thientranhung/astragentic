@@ -102,8 +102,6 @@ rm -f "$GATE_FILE"                                            # only what THIS d
 
 **Evidence goes to files. Panes and replies carry pointers and headlines.** A verdict held only in your context dies at the next compaction.
 
-**Read the artifact rather than the author's account of it.** A summary saying a finding was folded is not evidence the body changed: grep the body.
-
 ## 4. Cleanup
 
 Thomas's, after the report. Collect and verify `$GATE_FILE` first, then `herdr tab close <gate-tab-id>`, confirm the pane is gone, then `git worktree remove <gate-worktree>`, plain and never `--force`. A read-only reviewer writes nothing inside the tree, so the remove succeeds. A refusal is a signal: git refuses only on modified or untracked files, so inspect what was written before anything else. A gate that starts an app (`dispatch-qa-walk`) is the exception and has its own ordered cleanup.

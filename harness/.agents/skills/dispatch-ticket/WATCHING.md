@@ -1,126 +1,94 @@
 # Watcher operational reference
 
-Companion to `dispatch-ticket`. Read when a watch returns something unexpected.
+Companion to `dispatch-ticket`. The pipe table and the workspace watchdog apply to every pane.
+The per-turn watcher is for a pane without the mod: a QA gate pane or a junior pane
+(`dispatch-junior`). A mod pane reports its own turn end (`dispatch-ticket-claude`) and draws
+no pane alert at all.
 
-**For a pane the mod registered the per-turn watcher is gone.** The `astragentic-dispatch` mod
-reports turn ends from inside the pane (`dispatch-ticket-claude`). The watcher sections below
-are for a pane without the mod: a QA gate pane or a junior pane (`dispatch-junior`). The pipe
-table and the workspace watchdog apply to every pane, and the
-watchdog stays mandatory: it is the only thing that sees a pane whose process died. **A pane
-the mod recorded draws no pane alert at all** (3.2.0): its turn ends arrive as `TURN-END`, a
-turn end it is holding is on the board, and the mod refuses it a picker. Measured before: 26
-`STUCK` alerts through one night for a Shaper that had finished and reported.
+## Pipes swallow exit codes
 
-## Pipes swallow exit codes — all runtimes
-
-Any command piped through `tail`, `grep`, `head` or similar **loses the original exit code**
-and reports the last command's status instead — for ANY command Thomas runs, not only the
-watcher (AST-105).
+Any command piped through `tail`, `grep`, `head` or similar loses the original exit code and
+reports the last command's status, for any command Thomas runs.
 
 | shape | status |
 | :--- | :--- |
-| `cmd … \| tail -3` | **always lost** — the pipeline reports the last command |
-| `cmd … \|\| true` / `\|\| echo "failed"` | **lost exactly when the command FAILS**, since that is when the right side runs; both failure codes are non-zero, so a real failure becomes 0 |
+| `cmd … \| tail -3` | always lost |
+| `cmd … \|\| true` / `\|\| echo "failed"` | lost exactly when the command fails, so a real failure becomes 0 |
 | `echo "$(cmd …)"`, `export v=$(…)`, `local v=$(…)` | lost |
 | `v=$(cmd …)` (bare assignment) | preserved |
-| `cmd … && rhs` | preserved on FAILURE; a success is overwritten by `rhs` |
+| `cmd … && rhs` | preserved on failure; a success is overwritten by `rhs` |
 
-`||` is the one to watch for: it is the shape people reach for when they are being careful,
-and it converts precisely the failures you needed to hear about into silence (AST-032).
-
-**The rule reaches past pipes: any status you did not take from the command you care about is
-some other command's status, and the substitute defaults to success.** A backgrounded Bash
-block reports its LAST command, so `make itest-local …; grep …` arrives as a completion notice
-reading *"exit code 0"* while the suite was red. A flag the command does not have fails before
-your logic runs, so `git cherry-pick <sha> -q 2>&1 | tail -2; echo "RC=$?"` prints `tail`'s `0`
-for a cherry-pick that never happened — and the commit that followed carried a `Ledger:` line
-pointing at an entry the tree did not contain. Measured three times in one day on one project,
-twice at a merge gate, which is the one place a false green merges bad code. A rule illustrated
-on one command gets applied to one command: this one is about the channel, not the pipe.
-
-**Safe alternatives when you need both status and trimmed output:**
+The rule reaches past pipes: any status not taken from the command you care about is some
+other command's status, and the substitute defaults to success. A backgrounded Bash block
+reports its LAST command, so `make itest-local …; grep …` arrives as *"exit code 0"* on a red
+suite. Take the status inside the block:
 
 ```bash
 cmd … > /tmp/out.log 2>&1; status=$?; tail -25 /tmp/out.log; exit $status
 ```
 
-## Watcher script operational details (all runtimes)
+## The per-turn watcher
 
-**Claude runtime does NOT skip this section.** Every runtime runs this same script; Claude
-differs only in launch and stop — `Monitor` **launches** it and `TaskStop` cancels it, in place
-of a direct call and the process-group kill. **`Monitor` is the launcher, not a substitute for
-the script:**
+`<repo-root>/scripts/herdr-watch-terminal.sh <pane-id> 3 3600 120` watches a newly submitted
+turn: it waits to observe `working` first, so an already-idle pane returns `NO_START`. Run it
+by absolute path, alone on its line, immediately after the submit, once per turn. A fold sent
+after a gate or an answer to a blocked pane is a new turn and needs a new watcher. A hand-rolled
+status-poll loop or a bare `herdr agent wait` drops `TIMEOUT` and `NO_START`, and goes deaf.
 
-```
-Monitor({command: "<repo-root>/scripts/herdr-watch-terminal.sh <pane-id>", timeout_ms: <ms>})
-```
+Branch on `$?` and the payload:
 
-**Never hand-roll a status-poll loop** (`while true; do herdr pane get …; sleep …; done`) in its
-place. The loop drops `TIMEOUT` and drops `NO_START` — and `NO_START` is the only thing that
-separates *this pane never started* from *it ran and finished*, because a status poll reads
-`idle` for both. Never-started is the slash command that queued instead of firing and the
-Builder that worked half an hour without its skill, so hand-rolling removes the sensor for that
-exact failure and reports healthy while it is happening. Measured on three consecutive
-dispatches by one router reading "`Monitor` instead of a direct call" as *Monitor replaces the
-script*.
+- `0` + `TERMINAL:done pane=<id>` — the turn ended, not necessarily the work (below).
+- `0` + `TERMINAL:idle pane=<id>` — check git log; it may have stopped early.
+- `0` + `TERMINAL:blocked pane=<id>` — read the pane and answer now, then restart the watcher.
+- `1` + `TIMEOUT after <max>s pane=<id>` — exceeded the cap; inspect the pane.
+- `2` + `NO_START pane=<id>` — never started working; read the pane for an unsent composer.
 
-**Poll fast, emit rarely.** Noise comes from what a watcher emits, not from how often it asks.
-The script blocks on an event wait, re-polls in short slices, and speaks only once, on the
-transition; stretching an interval to stay quiet only makes the answer late.
+`120` is the first-arm `start_max_s`. Re-arming over a Builder already seen working, between
+turns of a background suite, needs one long enough to cover it:
+`… <pane-id> 3 3600 1800`.
 
-`NO_START` semantics, the exit contract and status-is-a-bell apply to every watched pane. Only
-"Stopping a watch" is specific to the watcher script.
+**`done` means the turn ended.** Before concluding finished, check two sources for background
+work: OS processes (`pgrep` for runners whose argv contains the worktree path) and the status
+line (`herdr agent read <pane-id>` names the shells and monitors the runtime tracks). A
+disagreement between them is a signal: read the pane. Work running means PARKED. All quiet
+and no new commits since your last instruction: read the pane, since the turn may have
+crashed. All quiet and new commits: verify by artifact (`check-simplify-markers.sh`).
 
-`<repo-root>/scripts/herdr-watch-terminal.sh` watches a NEWLY SUBMITTED turn: it waits to
-observe `working` first, so pointing it at an already-idle pane returns `NO_START` —
-truthful output rather than a fault. Point it at the pane whose turn you just opened. Any
-role may read or watch any pane, and concurrent watchers are fine. Its exit status IS the
-signal (`0`+`TERMINAL:<state> pane=<id>` / `1`+`TIMEOUT ... pane=<id>` / `2`+`NO_START
-pane=<id>` — every line names its pane so concurrent watches stay distinguishable), so call
-it by absolute path, alone on its own line, and branch on `$?`. The pipe table above applies
-here too.
-
-**Stopping a watch takes the process GROUP — the watcher script only.** When the
-watch is a `Monitor`, and `TaskStop` cancels it; none of the PID work below applies. On macOS the watcher re-execs under
-`caffeinate`, so `caffeinate` is the visible PID and killing it orphans the wrapped shell,
-still polling. Signal the group, then confirm:
+**Stopping a watch takes the process group.** On macOS the watcher re-execs under
+`caffeinate`, so killing the visible PID orphans the wrapped shell:
 
 ```bash
-pgid=$(ps -o pgid= -p <watch-pid> | tr -d ' ')   # read it first — see below
-kill -TERM -"$pgid"                              # leading '-' targets the GROUP
+pgid=$(ps -o pgid= -p <watch-pid> | tr -d ' ')
+kill -TERM -"$pgid"
 pgrep -g "$pgid" >/dev/null && echo SURVIVORS || echo clean
 ```
 
-Verify with `pgrep` rather than `ps | grep herdr-watch-terminal`: that grep matches its own
-command line, so it can never return empty — a check incapable of passing, the mirror of a
-signal incapable of failing (AST-032). (`grep '[h]erdr-watch-terminal'` works too; the
-brackets are what stop the pattern matching itself.) Read the PGID before signalling: a
-watch launched inline from your own shell may share that shell's group, so a watch you
-intend to group-kill belongs in its own.
+## The workspace watchdog
 
-Status is a bell. The verdict comes from branch movement, the diff, the tests, the final SHA
-and the reported artifact. **Observation is unrestricted — reading or watching any pane is
-always legal, and verify-by-artifact requires it. Only TASKING is restricted**, and Thomas
-tasks the Builder directly, since there is no intermediate role.
+Required before the first dispatch (`thomas.md` § Watchdog). Preflight, scoped to this
+workspace by the lock the watchdog holds:
 
-## The workspace watchdog — invocation and alerts
+```bash
+LOCK="/tmp/herdr-watchdog-<workspace-label>.lock"
+if [ -f "$LOCK" ] && kill -0 "$(cat "$LOCK")" 2>/dev/null; then
+  echo "watchdog: running for this workspace"
+else
+  echo "STOP: no watchdog for this workspace — start it before dispatching"; exit 1
+fi
+```
 
-Moved here from `thomas.md`: the contract carries the policy (it is required), this file carries
-the mechanics, because this is the one home for watching.
+Start and stop:
 
 ```bash
 nohup scripts/herdr-watchdog.sh 300 900 6 &   # interval, cooldown, max-alerts/hr
 scripts/herdr-watchdog.sh stop
 ```
 
-Reads `workspace-label` from `orchestrator.md`; `stop` verifies the PID at
-`/tmp/herdr-watchdog-<workspace-label>.lock`.
+It reads `workspace-label` from `orchestrator.md`; `stop` verifies the PID at the lock.
 
-**The lock is a hint, not a census: sweep by process.** `flock` refuses only while the lock it
-took is still the lock on disk, so a launch is not idempotent. Measured: two watchdogs on one
-workspace, alive 8h57m and 7d11h, with the lock naming only the younger. Derive the label from
-`orchestrator.md` rather than typing it (a guessed label reports DOWN while the watchdog is
-fine), sweep, and read each cwd before killing:
+**The lock is a hint, not a census: sweep by process.** A launch is not idempotent: two
+watchdogs ran on one workspace with the lock naming only the younger. Derive the label from
+`orchestrator.md`, sweep, and read each cwd before killing:
 
 ```bash
 ps -Ao pid,ppid,etime,args | awk '/[h]erdr-watchdog\.sh/ {p[$1]=1; l[$1]=$0; pp[$1]=$2}
@@ -128,54 +96,23 @@ ps -Ao pid,ppid,etime,args | awk '/[h]erdr-watchdog\.sh/ {p[$1]=1; l[$1]=$0; pp[
 lsof -a -p <pid> -d cwd -Fn | grep '^n'   # -a is load-bearing
 ```
 
-Two different ages is the duplicate signature; a parent and its child is not. Sweep first, then
-`rm` a stale lock: removing a lock whose holder is alive hands the next launcher a free `flock`.
+Two different ages is the duplicate signature; a parent and its child is not. `rm` a stale
+lock only after the sweep.
 
-**Every alert fires once per episode** (3.2.0): when its condition is first seen, and again only
-after a poll on which it was not. The cooldown only spaces a condition that flaps. Panes
-without the mod only; a mod pane's state is on the board.
+Every alert fires once per episode, for panes without the mod only. `STUCK` and
+`NEVER_STARTED` each ask about one pane and need two polls.
 
 | Alert | What it means | Action |
 |---|---|---|
-| `BLOCKED` | Pane asking a question | Read, answer, **restart the watch** — Monitor on a mod pane, watcher script on a QA gate or junior pane |
-| `WATCHER_LOST` | Pane working, nobody watching | Re-arm the watch now |
-| `STUCK` | This pane worked, then sat idle across two polls, no watcher | Check whether its NEXT step started; handback or re-dispatch |
-| `NEVER_STARTED` | Dispatched, never observed working, no watcher | Read the pane: the brief or phase command never ran as a turn |
+| `BLOCKED` | Pane asking a question | Read, answer, restart the watcher |
+| `WATCHER_LOST` | Pane working, nobody watching | Re-arm the watcher now |
+| `STUCK` | This pane worked, then sat idle across two polls | Check whether its next step started; handback or re-dispatch |
+| `NEVER_STARTED` | Dispatched, never observed working | Read the pane: the brief never ran as a turn |
 | `THOMAS_CRASHED` | The router's process is gone | Desktop notification substitutes |
 
-**herdr 0.9.1 changes what these states MEAN, and none of it is measured here.** Its changelog
-claims three fixes this contract rests on directly: *completed, interrupted turns return to
-idle* — an interrupted turn that never goes idle is a watcher that waits forever; *pending
-permissions, forms and failed executions remain blocked*, so `BLOCKED` keeps its meaning; and
-*live agent names survive temporary process-detection uncertainty*, which the whole
-`agent prompt` path depends on, since it addresses a pane by name. It also claims
-that Claude Code's Unicode spinner is recognised.
+A pane that ends its turn with a test run in the background reads `done`. The project answers
+with `.astraler/project/work-in-flight.sh`: exit 0 while something heavy runs, 1 when nothing
+does. Without the plug `STUCK` fires on pane state alone, so read the pane before acting.
 
-**Treat all of it as UNVERIFIED.** Every surrounding rule here was measured on 0.9.0, and a
-changelog is a claim, not a measurement. What to re-run first, in order: an interrupted turn
-reaching `idle`; an agent still reachable by
-name after a detection blip. Until someone does, the workarounds below stay.
-
-**Both pane alerts ask about ONE pane.** `STUCK` used to need NO pane working anywhere, so one
-busy sibling silenced it for every other pane; and a pane that never started fell between all
-three alerts at once — silent, idle, never worked (AST-152). Both need two polls, from
-per-pane memory in the watchdog's state dir, so neither can fire on its first sighting.
-
-**A pane that ends its turn with a test run in the background reads `done`.** Pane state cannot
-see that work, so `STUCK` would fire on it — seven false positives in one shift downstream. The
-project answers the question instead: `.astraler/project/work-in-flight.sh` exits 0 while
-something heavy runs and 1 when nothing does; any other answer reads as in flight. Without the
-plug `STUCK` fires on pane state alone, and the router reads the pane before acting on it.
-
-**What still falls between them, stated because silence here reads as health.** A pane launched
-through `herdr pane run` and never renamed carries no agent name and is never counted as
-dispatched, so it emits nothing at all (AST-084). That is why the launch registers a name, and
-why the router still counts panes itself.
-
-**`TERMINAL:done` means the turn ended, not that the work finished.** A command the agent
-started in the background keeps running after the pane goes `done` — measured downstream twice
-in one shift, `done` while the Builder's own gated suite ran, statusline reading `1 shell still
-running`, no receipt on the branch yet. A handback collected on `done` is collected before the
-gate answered. The verdict is the artifact: the markers, checked with
-`scripts/check-simplify-markers.sh`. `herdr pane read <id> --source visible` shows a running
-shell; `herdr pane get` does not.
+A pane launched with `herdr pane run` and never renamed carries no agent name, is never
+counted as dispatched and emits nothing; the launch registers a name for that reason.

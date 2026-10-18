@@ -2,8 +2,9 @@
 
 **Session: one unbroken context, start to finish.** It opens when Thomas hands you an effort
 and closes when `to-tickets` has produced the tickets. Everything between runs in that one
-window, **without `/compact` and without `/clear`** — the whole point of the session is that
-the whole picture stays in context. Three steps that must share one context are one session,
+window with no `/compact` or `/clear`; the launcher's `--autocompact` ceiling is the only
+compaction (`dispatch-ticket-claude` § Launcher). The whole point of the session is that the
+whole picture stays in context. Three steps that must share one context are one session,
 and one session is one agent.
 
 ## Load
@@ -15,9 +16,7 @@ and one session is one agent.
 | the effort introduces or sharpens domain terms | `domain-modeling` | |
 | an Align answer needs a source | `research`, `prototype` | |
 | the effort is a refactor and the code HAS module boundaries | `improve-codebase-architecture` |
-| the effort is a refactor too tangled to scope — no boundaries to improve | `untangle` |
 | a prior refactor already drew boundaries here | `docs/agents/boundaries.md` — what was drawn, and which seams were deliberately left |
-| a Builder hands back a seam too large to create inside one ticket | `legacy-testing` | |
 | you need a rule | `.agents/memory/RULES.md` | every entry's rule, no narrative — a fifth the size |
 | you need a rule's EVIDENCE | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only; `INDEX.md` finds the id |
 
@@ -36,9 +35,8 @@ They run in that order; each output is the next input. Align, Spec and Tickets a
 too. The rest of the craft layer is model-invoked and needs no wiring.
 
 **If a skill invocation fails, the failure IS the finding.** Report the exact error to Thomas
-and stop. Working from the skill's own file, or improvising the phase from the table above,
-produces something shaped like a spec that nothing downstream can tell from the real thing
-(AST-055, AST-112).
+and stop. The band's align · spec · tickets chips (`dispatch-ticket-claude`) show which
+phases were invoked.
 
 ## STOP after Spec
 
@@ -54,16 +52,11 @@ the findings.
 this same session, context intact. The arm reads the spec before `test-design` runs, so the plan is built on the reviewed spec.
 
 **A blocking finding is repaired in the SPEC, here, before any ticket is cut.** You repair and
-re-commit, and the mandatory second pass runs over the whole revised spec before Thomas
-releases you. Only the **owner** may accept cutting tickets on a blocking finding, and that
-acceptance is recorded.
+re-commit, and the second pass runs over the whole revised spec before Thomas releases you.
+Only the **owner** may accept cutting tickets on a blocking finding, recorded in the handback.
 
-The pause exists because a contract that closed "when `to-tickets` has produced the tickets"
-leaves **no moment where the spec exists and the tickets do not**, so the pass has nowhere to
-fire. Measured: it silently did not fire for two consecutive slices, the second a 44k spec with
-44 acceptance criteria and ten tickets.
-
-**No `/compact`, no `/clear` while you wait.** The pause is a handback, not a session boundary.
+The pause exists so the arm has a moment to fire: the spec exists and the tickets do not. It
+is a handback, not a session boundary.
 
 ## Test design: the plan is written before the tickets
 
@@ -81,8 +74,8 @@ judgement empties the frontier instantly, which looks like progress and is not.
 **Every answer carries a source**, one of: the codebase, a prior ADR, `research`, `prototype`,
 a second opinion, or the transcript of a `bmad-party` the owner ran on it. Record which. An
 answer with no source leaves the question **open**, and
-leaving it open is the correct outcome — Thomas takes it to the owner through
-`to-questionnaire`.
+leaving it open is the correct outcome. It goes in the first handback with its reason, and
+Thomas takes it to the owner through `to-questionnaire`.
 
 ## Spec and tickets
 
@@ -90,11 +83,6 @@ leaving it open is the correct outcome — Thomas takes it to the owner through
 with blocking edges — **load-bearing beyond this session**, because Thomas's frontier query
 reads them to decide what is ready. A ticket with its blockers wrong is a ticket that gets
 built too early.
-
-**Size each ticket to one session**, since that is what a Builder gets.
-
-For a wide refactor on existing code, `to-tickets` has an expand–contract path batched by blast
-radius — usually the right shape when a change touches many call sites.
 
 ## Handing off
 
@@ -106,6 +94,5 @@ radius — usually the right shape when a change touches many call sites.
    plan path, and **how each spec-stage finding was resolved in the tickets**, so a finding cannot
    be waved through by cutting tickets that ignore it.
 
-Where the effort turns out to be larger or foggier than one session can shape, say so and hand
-it back for `wayfinder` rather than compacting to make room — a compacted Align session has
-already lost the thing that made it worth running in one window.
+Where the effort is larger or foggier than one session can shape, say so in the handback so
+Thomas can route it to `wayfinder`.

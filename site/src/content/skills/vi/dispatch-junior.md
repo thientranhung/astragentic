@@ -14,7 +14,7 @@ updated: 2026-10-17
 
 `dispatch-junior` là recipe để Builder giao phần implement của một ticket cho một pane junior. Builder commit red test, mở một pane ngay cạnh mình trong cùng tab, launch junior trên runtime mà dòng Junior chỉ định (Grok trước), gửi một brief, chờ, rồi đọc lại cây.
 
-Chỉ phần gõ code được chuyển đi. `atdd` và `tdd`, cả hai lượt review, simplify, arm, marker, handback và push vẫn là việc của Builder, chạy trên commit của junior y như trên commit của chính nó.
+Chỉ phần gõ code được chuyển đi. `tdd`, cả hai lượt review, simplify, arm, marker, handback và push vẫn là việc của Builder, chạy trên commit của junior y như trên commit của chính nó.
 
 <!-- source: harness/.agents/skills/dispatch-junior/SKILL.md -->
 

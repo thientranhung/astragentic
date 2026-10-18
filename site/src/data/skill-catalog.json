@@ -1,17 +1,5 @@
 [
   {
-    "name": "batch-triage",
-    "kind": "skill",
-    "oneLiner": "Triage an inherited backlog in one pass — many existing issues at once, rather than one new item at a time.",
-    "group": "entry"
-  },
-  {
-    "name": "bootstrap-glossary",
-    "kind": "skill",
-    "oneLiner": "Seed GLOSSARY.md with the domain terms the code already uses, each term carrying the file it was read from and marked unreviewed until the owner confirms it.",
-    "group": "entry"
-  },
-  {
     "name": "codex-arm",
     "kind": "skill",
     "oneLiner": "Invocation mechanics for the cross-vendor arm — the Codex pass Thomas fires over a completed artifact.",
@@ -54,12 +42,6 @@
     "group": "upkeep"
   },
   {
-    "name": "legacy-testing",
-    "kind": "skill",
-    "oneLiner": "How to get existing untested code under test — characterisation tests that pin current behaviour, and creating a seam before TDD can attach.",
-    "group": "brownfield"
-  },
-  {
     "name": "linear-issue-tracker",
     "kind": "skill",
     "oneLiner": "Operating mechanics for a project whose tracker is Linear — native states and relations, the claim protocol where assignee cannot hold a Builder identity, wayfinding primitives, and the free-tier issue ceiling that stops a pipeline outright.",
@@ -76,12 +58,6 @@
     "kind": "skill",
     "oneLiner": "Thomas-only recipe to run Rin's milestone gate as an observable Herdr gate pane — brief, dispatch, collect the report, classify.",
     "group": "gate"
-  },
-  {
-    "name": "untangle",
-    "kind": "skill",
-    "oneLiner": "A refactor path for code too tangled for improve-codebase-architecture — where there are no module boundaries to improve, everything imports everything, and a clean restructure would be one enormous unreviewable change.",
-    "group": "brownfield"
   },
   {
     "name": "builder",
