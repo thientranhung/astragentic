@@ -41,15 +41,17 @@ not ask for**: an `upgrade` proposes a direction as a question with two or three
 the pick is the owner's.
 
 **Fanned out, when the session is mid-ticket.** A Builder or QA that wants the pass without
-spending its own context spawns the persona read-only:
+spending its own context calls `Skill(bmad-ux)` first, then spawns the persona read-only from
+within it:
 
 ```
 Agent(subagent_type: "astragentic-dispatch:bmad-sally", isolation: "worktree",
       prompt: "audit <surface>. Read and report only — no edits, no commits, no builds, no test runs. Report to me only.")
 ```
 
-The report comes back to the caller, and the caller decides. A fork's call is recorded under
-the Builder like any other (`skills_run`).
+The report comes back to the caller, and the caller decides. Only the `Skill(bmad-ux)` call is
+recorded in `skills_run` and lights the ux chip; an `Agent` spawn expands no skill, so a
+sally fork spawned directly leaves no record (measured downstream 2026-10-19, one Builder).
 
 ## What this pass is not
 
