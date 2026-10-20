@@ -908,6 +908,9 @@ function bell($: any, text: string): void {
 function flushBells($: any): void {
   if (heldBells.length === 0) return
   const texts = heldBells.splice(0)
+  // The status line stays until something replaces it: on nizzy (2026-10-20) "2 bell(s) held"
+  // sat under an idle dispatcher for hours after the flush had delivered them.
+  $.ui.status(undefined)
   const text = texts.length === 1 ? texts[0] : `${MARK} ${texts.length} turn ends arrived while you were busy; read them together.\n\n${texts.join('\n\n---\n\n')}`
   void $.prompt.submit({ text })
 }
@@ -1013,7 +1016,10 @@ export const register: Register = on => {
     if (me && me.role !== 'resident' && root) {
       void (async () => {
         const own = ((await readRecord($, root!)) ?? {})[me!.key]
-        if (own?.pane_id === me!.pane && own.waiting_on) await patchRecord($, root!, me!.key, { waiting_on: null })
+        if (own?.pane_id === me!.pane && own.waiting_on) {
+          await patchRecord($, root!, me!.key, { waiting_on: null })
+          $.ui.status(undefined)
+        }
       })().catch(() => {})
     }
     return next(e)

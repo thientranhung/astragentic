@@ -1314,7 +1314,7 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
     liveAgents = []
     await fire('turn.start', { text: '', turnId: 't2' }, async () => ({}))
     await new Promise(r => setTimeout(r, 300))
-    const paneCleared = rec()['AB-5']?.waiting_on === null
+    const paneCleared = rec()['AB-5']?.waiting_on === null && log[log.length - 1] === undefined
     // the arm row: `ticket: no` in orchestrator.md reaches the Builder as a system-prompt section
     const composed = await fire('prompt.compose', {}, async () => ({ sections: [] }))
     const armOffSection = (composed?.sections ?? []).some(s => String(s.text).includes('ARM: off'))
@@ -1532,6 +1532,14 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
   const end = `<cross-session-message from="uds:/tmp/y.sock" from-name="builder-ab-4">\n[astragentic-dispatch] TURN-END key=AB-4 pane=p4 reason=answer\nDone</cross-session-message>`
   await fire('session.receive', { text: end, origin: { kind: 'plugin' } }, async () => ({}))
   const subagentHeld = bells.length === 0
+  // a bell held during the dispatcher's own turn is flushed at turn.complete, and the "held"
+  // status line goes with it (measured on nizzy 2026-10-20: it outlived its flush by hours)
+  bells.length = 0
+  await fire('turn.start', { text: '', turnId: 'main-1' }, async () => ({}))
+  await fire('session.receive', { text: end, origin: { kind: 'plugin' } }, async () => ({}))
+  const heldShown = log.some(t => typeof t === 'string' && t.includes('held until this turn ends'))
+  await fire('turn.complete', { reason: 'answer', answer: 'ok', turnId: 'main-1' }, async () => ({}))
+  const heldCleared = heldShown && bells.length === 1 && log[log.length - 1] === undefined
   // a merge of a Builder whose pane recorded skills but not simplify is refused before it runs;
   // the same merge with the full record goes through; an entry with an empty record is not judged
   const mergeOf = async (skills) => {
@@ -1582,7 +1590,7 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
   fs.writeFileSync(recPath, JSON.stringify({ 'AB-13': { role: 'builder', pane_id: 'p13' } }))
   const briefToRegistered = await sendBrief('/mattpocock-skills:implement AB-13\nQA: none — no surface')
   fs.writeFileSync(orchPath, orchText); fs.writeFileSync(recPath, '{}')
-  console.log(JSON.stringify({ afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, subagentHeld, latestChip, mergeGap, mergeFull, mergeEmpty, armOffDispatcher, briefNoQa, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
+  console.log(JSON.stringify({ afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeEmpty, armOffDispatcher, briefNoQa, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
@@ -1595,8 +1603,8 @@ DRVEOS
     node "$TMP/mod-drive.cjs" "$1" "$TMP/mod-drive-repo" "$TSC_PKG" "${2:-}" 2>&1
   }
   out="$(mod_drive "$MOD")"
-  if says "$out" '"afterSend":"AB-1:sent:"' && says "$out" '"afterAck":"AB-1:registered:no brief yet"' && says "$out" '"afterRetire":""' && says "$out" '"stubBells":0,"stubLeft":0,"staleBells":1,"staleRow":true,"subagentHeld":false,"latestChip":"0.0.2"'; then
-    ok "the ack from the bare name clears the send keyed by \"name [ref]\"; a retired lane's send goes with its entry; a stub entry rings no bell; a hold past the ceiling rings once as held-stale; a subagent's turn.start holds nothing; a newer tag at the remote reaches the band"
+  if says "$out" '"afterSend":"AB-1:sent:"' && says "$out" '"afterAck":"AB-1:registered:no brief yet"' && says "$out" '"afterRetire":""' && says "$out" '"stubBells":0,"stubLeft":0,"staleBells":1,"staleRow":true,"subagentHeld":false,"heldCleared":true,"latestChip":"0.0.2"'; then
+    ok "the ack from the bare name clears the send keyed by \"name [ref]\"; a retired lane's send goes with its entry; a stub entry rings no bell; a hold past the ceiling rings once as held-stale; a subagent's turn.start holds nothing; a bell held in the dispatcher's turn clears its status line when flushed; a newer tag at the remote reaches the band"
   else
     bad "mod send/ack keys" "$out"
   fi
@@ -1634,7 +1642,7 @@ s = s.replace(old3, "if (false) {", 1)
 old4 = "if ((e as any).agentId !== undefined) return next(e)\n    isBusy = true"
 assert old4 in s, "turn.start agentId guard not found"
 s = s.replace(old4, "isBusy = true", 1)
-old5 = "if (own?.pane_id === me!.pane && own.waiting_on) await patchRecord($, root!, me!.key, { waiting_on: null })"
+old5 = "if (own?.pane_id === me!.pane && own.waiting_on) {\n          await patchRecord($, root!, me!.key, { waiting_on: null })\n          $.ui.status(undefined)\n        }"
 assert old5 in s, "turn.start hold clear not found"
 s = s.replace(old5, "", 1)
 old6 = "if (entry?.role !== 'builder' || !entry.session_id || Object.keys(skillsRun(entry)).length === 0) continue"
@@ -1648,11 +1656,14 @@ assert old8 in s, "refused-list test not found"
 s = s.replace(old8, "      if (false) {", 1)
 old9 = "if ((usage?.context?.tokens ?? 0) >= contextCeiling) compactDue = true"
 assert old9 in s, "context ceiling check not found"
-open(p, 'w').write(s.replace(old9, "", 1))
+s = s.replace(old9, "", 1)
+old10 = "  $.ui.status(undefined)\n  const text"
+assert old10 in s, "held-bell status clear not found"
+open(p, 'w').write(s.replace(old10, "  const text", 1))
 EOS
   out="$(mod_drive "$TMP/mod-stuck")"
-  if says "$out" 'builder-ab-1-32 [1c2d95]:sent:' && says "$out" '"afterRetire":"builder-ab-1-32' && says "$out" '"stubBells":1' && says "$out" '"staleBells":0' && says "$out" '"subagentHeld":true' && says "$out" '"mergeGap":"pass:ran"' && says "$out" '"armOffDispatcher":false'; then
-    ok "planted: a send keyed by the typed string stays \"sent\" through the ack and past the lane's retirement; a stub entry rings; a hold never times out; a subagent's turn.start holds the bell; a merge with a gapped record goes through"
+  if says "$out" 'builder-ab-1-32 [1c2d95]:sent:' && says "$out" '"afterRetire":"builder-ab-1-32' && says "$out" '"stubBells":1' && says "$out" '"staleBells":0' && says "$out" '"subagentHeld":true,"heldCleared":false' && says "$out" '"mergeGap":"pass:ran"' && says "$out" '"armOffDispatcher":false'; then
+    ok "planted: a send keyed by the typed string stays \"sent\" through the ack and past the lane's retirement; a stub entry rings; a hold never times out; a subagent's turn.start holds the bell; a flushed bell leaves its held status standing; a merge with a gapped record goes through"
   else
     bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"
   fi
