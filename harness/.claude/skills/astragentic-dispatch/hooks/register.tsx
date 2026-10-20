@@ -289,6 +289,28 @@ function hasSubstitution(command: string): boolean {
   return false
 }
 
+// `2>&1`, `>&2`, `1<&0`: a redirection that duplicates a descriptor opens no file, so it is
+// neither a step nor a write the replay misses. Dropped before the gate reads the call; it was
+// split at its `&` and refused every `git commit … 2>&1` (measured on nizzy 2026-10-20:
+// ten refusals and a stalled handback).
+function dropFdDups(command: string): string {
+  let out = ''
+  let q: string | null = null
+  for (let i = 0; i < command.length; i++) {
+    const ch = command[i] ?? ''
+    if (q) { out += ch; if (ch === q) q = null; continue }
+    if (ch === '"' || ch === "'") { q = ch; out += ch; continue }
+    if (ch === '\\') { out += ch + (command[i + 1] ?? ''); i++; continue }
+    if ((ch === '>' || ch === '<') && command[i + 1] === '&') {
+      const m = /^(\d+|-)(?=$|[\s;|&()])/.exec(command.slice(i + 2))
+      const fd = /(^|[\s;|&()])(\d*)$/.exec(out)
+      if (m && fd) { out = out.slice(0, out.length - (fd[2] ?? '').length); i += 1 + m[0].length; continue }
+    }
+    out += ch
+  }
+  return out
+}
+
 // An unquoted `<` or `>` in a segment: a redirection writes or reads a file the replay does
 // not see (`git show HEAD:x.test.js > x.test.js` restores a test before the commit) (arm pass 13).
 function hasRedirection(segment: string): boolean {
@@ -321,6 +343,7 @@ function segmentsWithOps(command: string): Array<{ op: string; seg: string }> {
       while (i + 1 < command.length && command[i + 1] !== '\n') i++
       continue
     }
+    if (ch === '&' && (command[i + 1] === '>' || command[i - 1] === '>' || command[i - 1] === '<')) { cur += ch; continue }
     if (ch === '\n' || ch === ';' || ch === '&' || ch === '|' || ch === '(' || ch === ')' || ch === '`') {
       if (cur.trim()) out.push({ op, seg: cur.trim() })
       cur = ''
@@ -343,6 +366,7 @@ function simpleCommands(command: string): string[] {
     const ch = command[i] ?? ''
     if (q) { cur += ch; if (ch === q) q = null; continue }
     if (ch === '"' || ch === "'") { q = ch; cur += ch; continue }
+    if (ch === '&' && (command[i + 1] === '>' || command[i - 1] === '>' || command[i - 1] === '<')) { cur += ch; continue }
     if (ch === '\n' || ch === ';' || ch === '&' || ch === '|' || ch === '(' || ch === ')' || ch === '`') {
       if (cur.trim()) parts.push(cur.trim())
       cur = ''
@@ -383,13 +407,13 @@ function commitShape(command: string, commitArgs: string[], worktree: string | n
     if (a.startsWith('--')) {
       const name = a.split('=')[0] ?? a
       if (a === '--all') shape.all = true
-      else if (a.startsWith('--pathspec-from-file') || a.startsWith('--pathspec-file-nul')) shape.unsafe = 'commit --pathspec-from-file'
+      else if (a.startsWith('--pathspec-from-file') || a.startsWith('--pathspec-file-nul')) shape.unsafe ??= '`git commit --pathspec-from-file`'
       else if (a === '--include') shape.include = true
       else if (a === '--only') shape.only = true
       else if (a === '--amend') shape.amend = true
       else if (COMMIT_LONG_VALUE.has(a)) i++
       else if (COMMIT_LONG_VALUE.has(name) && a.includes('=')) { /* --message=… */ }
-      else if (!COMMIT_LONG_FLAG.has(name)) shape.unsafe = `commit ${name} (not an option this gate reads in full)`
+      else if (!COMMIT_LONG_FLAG.has(name)) shape.unsafe ??= `\`git commit ${name}\` (not an option this gate reads in full)`
       continue
     }
     if (a.startsWith('-') && a.length > 1) {
@@ -413,12 +437,12 @@ function commitShape(command: string, commitArgs: string[], worktree: string | n
   // A substitution runs BEFORE the commit it sits in, even inside double quotes:
   // `git commit -m "fix $(git reset HEAD -- x.test.js)"` unstages the judged test after the
   // judgment. Only single quotes keep one literal (arm pass 10).
-  if (hasSubstitution(command)) shape.unsafe = 'a command substitution'
+  if (hasSubstitution(command)) shape.unsafe ??= 'a command substitution'
   let cwd: string | null = worktree
   for (const { op, seg } of segmentsWithOps(command)) {
     const w = shellWords(seg)
-    if (shape.commits === 0 && (op === '||' || op === '|' || op === '&' || op === '(' || op === ')' || op === '`')) { shape.unsafe = `a step behind \`${op}\``; continue }
-    if (shape.commits === 0 && hasRedirection(seg)) { shape.unsafe = 'a redirection before the commit'; continue }
+    if (shape.commits === 0 && (op === '||' || op === '|' || op === '&' || op === '(' || op === ')' || op === '`')) { shape.unsafe ??= `a step behind \`${op}\``; continue }
+    if (shape.commits === 0 && hasRedirection(seg)) { shape.unsafe ??= 'a redirection to or from a file'; continue }
     if (w[0] === 'cd' || w[0] === 'pushd') {
       const target = w[1] ?? ''
       cwd = !target || target === '-' || /[$`~]/.test(target) ? null : cwd === null ? null : join(cwd, target)
@@ -429,14 +453,14 @@ function commitShape(command: string, commitArgs: string[], worktree: string | n
     // Before the commit, only `cd` and the replayable git steps may stand: any other segment
     // (`false && git add …`, `test -f x && git add x`, `|| true`) makes whether a staging step
     // RAN depend on shell control flow the replay does not evaluate (arm pass 8).
-    if (j < 0) { if (shape.commits === 0) shape.unsafe = `a non-git step (\`${(w[0] ?? '').slice(0, 20)}\`)`; continue }
+    if (j < 0) { if (shape.commits === 0) shape.unsafe ??= `a non-git step (\`${(w[0] ?? '').slice(0, 20)}\`)`; continue }
     j++
     let dir = cwd
     while (j < w.length && (w[j] ?? '').startsWith('-')) {
       if (w[j] === '-C') { const d = w[j + 1] ?? ''; dir = dir === null || /[$`~]/.test(d) ? null : join(dir, d); j += 2; continue }
       // any other global option (`--work-tree`, `--git-dir`, `-c core.x=y`, `--namespace`)
       // points git at a tree or index the replay does not model: refused (arm pass 10)
-      shape.unsafe = `git ${w[j]}`
+      shape.unsafe ??= `\`git ${w[j]}\``
       break
     }
     const sub = w[j]
@@ -454,10 +478,10 @@ function commitShape(command: string, commitArgs: string[], worktree: string | n
       const rest = w.slice(j + 1)
       const flags = rest.filter(a => a.startsWith('-') && a !== '--')
       if (flags.every(a => a === '--cached' || a === '-r' || a === '-q' || a === '--quiet')) shape.steps.push({ argv: ['rm', ...flags.filter(a => a !== '--cached'), '--', ...rest.filter(a => !a.startsWith('-'))], dir })
-      else shape.unsafe = `rm with ${flags.filter(a => a !== '--cached').join(' ')}`
+      else shape.unsafe ??= `\`git rm\` with ${flags.filter(a => a !== '--cached').join(' ')}`
     }
     else if (sub === 'status' || sub === 'diff' || sub === 'log' || sub === 'show' || sub === 'rev-parse' || sub === 'branch' || sub === 'ls-files') { /* read-only: stages nothing */ }
-    else shape.unsafe = sub ?? 'git'
+    else shape.unsafe ??= `\`git ${sub ?? ''}\``
   }
   return shape
 }
@@ -1479,9 +1503,10 @@ export const register: Register = on => {
     // commit never exempts another in the same call.
     const entry = ((await readRecord($, root)) ?? {})[me.key] ?? {}
     const worktree = typeof entry.worktree === 'string' && entry.worktree ? entry.worktree : null
+    const command = dropFdDups(e.command)
     const commits = worktree
-      ? commitsInWorktree(e.command, worktree)
-      : simpleCommands(e.command).map(gitCommitArgs).filter((c): c is { args: string[]; dir: string | null } => c !== null).map(c => c.args)
+      ? commitsInWorktree(command, worktree)
+      : simpleCommands(command).map(gitCommitArgs).filter((c): c is { args: string[]; dir: string | null } => c !== null).map(c => c.args)
     const contentCommits = commits.filter(a => !a.includes('--allow-empty'))
     if (contentCommits.length === 0) return next(e)
     if (entry.tdd_na) return next(e)
@@ -1502,7 +1527,7 @@ export const register: Register = on => {
     // joined let that through), and a deleted test is not a test (pass 2). No base recorded:
     // the index against HEAD.
     const base = typeof entry.start_sha === 'string' && entry.start_sha ? entry.start_sha : 'HEAD'
-    const shape = commitShape(e.command, contentCommits[0] ?? [], worktree)
+    const shape = commitShape(command, contentCommits[0] ?? [], worktree)
     // Boundaries this gate does not model, said plainly instead of guessed (arm pass 6): a call
     // that moves, restores, resets or checks out BEFORE committing changes the working tree or
     // HEAD, which a scratch index cannot replay without doing it for real; two content commits in
@@ -1512,7 +1537,7 @@ export const register: Register = on => {
       await logRefusal($, root, me.key, 'tdd-gate', `${why}: ${contentCommits[0]?.join(' ') ?? ''}`)
       return { deny: `astragentic-dispatch: ${why}. ${how}` }
     }
-    if (shape.unsafe) return refuse(`this call runs \`git ${shape.unsafe}\` before its commit, which changes the working tree or HEAD (or names paths the gate cannot read)`, 'Run that step as its own call, then commit in the next one, so each is judged as it stands; `git rm --cached` is the one removal the gate can replay.')
+    if (shape.unsafe) return refuse(`this call runs ${shape.unsafe} before its commit, which changes the working tree or HEAD (or names paths the gate cannot read)`, 'Run that step as its own call, then commit in the next one, so each is judged as it stands; `git rm --cached` is the one removal the gate can replay.')
     if (shape.commits > 1) return refuse('this call makes more than one content commit', 'One content commit per call: the gate judges the tree each commit makes, and the second does not exist yet.')
     if (shape.dir === null || shape.steps.some(s => s.dir === null)) return refuse('this call changes into a directory the gate cannot resolve before committing', 'Use a literal path (no variable, `~` or `cd -`), or commit from the worktree root.')
     const lines = (r: { out: string }) => r.out.split('\n').filter(Boolean)
