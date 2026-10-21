@@ -1,3 +1,30 @@
+# Astragentic 4.1.2
+
+**Two shell shapes a Builder writes every day no longer trip the commit gate, and two status
+lines no longer outlive their hold.** All three defects came from nizzy-ecom on 2026-10-20 and
+2026-10-21.
+
+(1) **The commit gate split a call at every `&`**, so `git commit -m x 2>&1` read as a redirect
+plus a step behind `&`, and was refused as "runs `git a step behind `&``". One Builder took ten
+refusals and stalled at handback. Descriptor duplications (`2>&1`, `>&2`, `1<&0`) open no file
+and are now dropped before the gate reads the call. An `&` inside a redirection is not a
+separator. `&> file` is still refused, as "a redirection to or from a file". Every refusal names
+its first offender in its own words.
+
+(2) **Claude Code's own commit recipe, `-m "$(cat <<'EOF' … EOF)"`, was refused as a command
+substitution.** Both fresh Builders were refused on their first commit. Inside double quotes, a
+quoted heredoc fed to `cat` alone is now read as the message: it expands nothing and writes
+nothing. An unquoted tag, a second command inside, or the same form outside double quotes
+(word-split, so a body of `-a` becomes a flag) still refuses. That refusal now names
+`git commit -F <file>`.
+
+(3) **"n bell(s) held until this turn ends" stayed on the dispatcher's status line for hours**
+after the flush had delivered them. On a Builder pane, "agent(s) still running — TURN-END held"
+outlived its hold the same way. Both lines now clear when their hold ends.
+
+Planted: every case runs on the 4.1.1 mod and fails there (`2>&1` and the heredoc recipe read
+`deny:held`, the refusals name no fix, and the status lines stay). Selftest 155/0.
+
 # Astragentic 4.1.1
 
 **Four defects nizzy-ecom found folding 4.1.0, fixed the same evening.** Receipt 460b2150c,
