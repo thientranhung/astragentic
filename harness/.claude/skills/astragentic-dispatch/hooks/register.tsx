@@ -311,6 +311,44 @@ function dropFdDups(command: string): string {
   return out
 }
 
+// `-m "$(cat <<'EOF' … EOF)"` is Claude Code's own commit recipe. A QUOTED heredoc expands
+// nothing and `cat` alone writes nothing, so inside double quotes the substitution is the
+// message text: it is read as one literal word. Outside double quotes it is word-split (a body
+// of `-a` becomes a flag), so that, an unquoted tag or a second command still refuses. Measured on nizzy 2026-10-21: two fresh Builders refused on their first commit.
+function literalCatHeredocs(command: string): string {
+  let out = ''
+  let q: string | null = null
+  for (let i = 0; i < command.length; i++) {
+    const ch = command[i] ?? ''
+    if (q === "'") { out += ch; if (ch === "'") q = null; continue }
+    if (ch === '\\') { out += ch + (command[i + 1] ?? ''); i++; continue }
+    if (q === '"') { if (ch === '"') q = null }
+    else if (ch === '"' || ch === "'") { q = ch; out += ch; continue }
+    if (q === '"' && ch === '$' && command[i + 1] === '(') {
+      const head = /^\$\(\s*cat\s+<<(-?)\s*(['"])([A-Za-z_][A-Za-z0-9_]*)\2[ \t]*\n/.exec(command.slice(i))
+      if (head) {
+        const isTabbed = head[1] === '-'
+        let at = i + head[0].length
+        let end = -1
+        while (at <= command.length) {
+          const nl = command.indexOf('\n', at)
+          const line = command.slice(at, nl < 0 ? command.length : nl)
+          if ((isTabbed ? line.replace(/^\t+/, '') : line) === head[3]) {
+            const close = /^\s*\)/.exec(command.slice(nl < 0 ? command.length : nl))
+            if (close) end = (nl < 0 ? command.length : nl) + close[0].length
+            break
+          }
+          if (nl < 0) break
+          at = nl + 1
+        }
+        if (end > 0) { out += 'heredoc-message'; i = end - 1; continue }
+      }
+    }
+    out += ch
+  }
+  return out
+}
+
 // An unquoted `<` or `>` in a segment: a redirection writes or reads a file the replay does
 // not see (`git show HEAD:x.test.js > x.test.js` restores a test before the commit) (arm pass 13).
 function hasRedirection(segment: string): boolean {
@@ -1503,7 +1541,7 @@ export const register: Register = on => {
     // commit never exempts another in the same call.
     const entry = ((await readRecord($, root)) ?? {})[me.key] ?? {}
     const worktree = typeof entry.worktree === 'string' && entry.worktree ? entry.worktree : null
-    const command = dropFdDups(e.command)
+    const command = dropFdDups(literalCatHeredocs(e.command))
     const commits = worktree
       ? commitsInWorktree(command, worktree)
       : simpleCommands(command).map(gitCommitArgs).filter((c): c is { args: string[]; dir: string | null } => c !== null).map(c => c.args)
@@ -1537,6 +1575,7 @@ export const register: Register = on => {
       await logRefusal($, root, me.key, 'tdd-gate', `${why}: ${contentCommits[0]?.join(' ') ?? ''}`)
       return { deny: `astragentic-dispatch: ${why}. ${how}` }
     }
+    if (shape.unsafe === 'a command substitution') return refuse('this call runs a command substitution in or before its commit, which the gate cannot replay', "Put the message in a file and commit with `git commit -F <file>`, or pass it as `-m '…'`; `-m \"$(cat <<'EOF' … EOF)\"` with a quoted tag and `cat` alone is read as the message.")
     if (shape.unsafe) return refuse(`this call runs ${shape.unsafe} before its commit, which changes the working tree or HEAD (or names paths the gate cannot read)`, 'Run that step as its own call, then commit in the next one, so each is judged as it stands; `git rm --cached` is the one removal the gate can replay.')
     if (shape.commits > 1) return refuse('this call makes more than one content commit', 'One content commit per call: the gate judges the tree each commit makes, and the second does not exist yet.')
     if (shape.dir === null || shape.steps.some(s => s.dir === null)) return refuse('this call changes into a directory the gate cannot resolve before committing', 'Use a literal path (no variable, `~` or `cd -`), or commit from the worktree root.')
