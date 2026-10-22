@@ -1,3 +1,30 @@
+# Astragentic 4.3.2
+
+**A chip on the Builder's band turns green when the step completes, not when it is invoked.**
+The band read `✓` the moment a skill expanded, and painted the first step not yet invoked yellow
+as `▶`. There was no state for "in progress". A long multi-agent step (the built-in code-review
+fans out four review agents) therefore showed `✓` for its whole run while the step after it lit
+yellow, and the owner read the pane as hung on that step (one downstream ticket, 2026-10-22, on
+4.3.1: the record held the review's call at 17:45, no call for the step after it at 17:51, and
+the pane's status line said one agent was still running).
+
+Three states where there were two: `… <step> (n agents)` on the warning colour for the step
+invoked most recently, until a later step is invoked or the pane ends a turn with nothing live;
+`✓` once that has happened; `→ <step>` neutral for the next step, shown only when nothing is
+running. Pending stays `○`, exempted stays `n/a`. The record gains `skills_last` (every call,
+beside `skills_run`, which keeps the first call for the gates and the TURN-END line); the band is
+refreshed at a held turn end, a clean turn end and a turn start, not only at the next skill
+call. Two limits stated in the SKILL.md legend: the agent count is the pane's (the engine's
+agent list is session-wide, so no step owns an agent), and a skill with no agents and no end
+signal (tdd) completes at the first clean turn end after its call, as before. Planted: the pane
+driver renders the band with four agents live after a code-review call; on the old shape the
+chip reads `✓`. The driver now renders JSX (a factory that calls function components) so the
+band is a measured surface from here on.
+
+## Upgrade from 4.3.1
+
+One mod file, its types file and the dispatch-ticket-claude SKILL.md legend. Nothing else changes.
+
 # Astragentic 4.3.1
 
 **A Builder's message to its own fork reaches the fork.** The pane-side readdress rule (every
