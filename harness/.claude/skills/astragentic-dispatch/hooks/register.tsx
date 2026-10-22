@@ -97,6 +97,26 @@ const RECORD = '.astraler/state/dispatch-record.json'
 // existed: 64 payload files edited in place and re-applied after every upgrade.
 const OVERLAYS = '.astraler/project/overlays'
 
+// THE TEST-FILE PATTERN, ONE HOME (post-4.1.2). The commit gate (4.1.0) and the merge gate read the
+// same regex: `.astraler/project/test-file-pattern` (one line) or the default. Two copies
+// disagreed downstream (the project adds `-selftest\.sh$`) and a stale copy is a gate that lies.
+async function testFileRe($: any, root: string): Promise<RegExp> {
+  const projPat = (await overlayFile($, `${root}/.astraler/project/test-file-pattern`)).split('\n')[0]?.trim()
+  try { return new RegExp(projPat || String.raw`(^|/)(tests?|__tests__|spec)/|[._-](test|spec)s?\.[A-Za-z0-9]+$|_test\.go$`) } catch { return /(^|\/)(tests?|__tests__|spec)\/|[._-](test|spec)s?\.[A-Za-z0-9]+$|_test\.go$/ }
+}
+
+// Does the branch carry a test file the dispatch base did not? The question the commit gate
+// asks of the index, asked of a ref at merge. `null` when git cannot answer (no base recorded,
+// a ref that is not local): a gate that fires on its own missing data is noise.
+async function branchCarriesTest($: any, root: string, entry: Entry, ref: string): Promise<boolean | null> {
+  const base = typeof entry.start_sha === 'string' && entry.start_sha ? entry.start_sha : ''
+  if (!base || !ref) return null
+  const r = await run($, ['git', 'diff', '--name-only', '--diff-filter=ACMR', base, ref, '--'], 30_000, root)
+  if (r.code !== 0) return null
+  const re = await testFileRe($, root)
+  return r.out.split('\n').filter(Boolean).some(p => re.test(p))
+}
+
 async function overlayFile($: any, path: string): Promise<string> {
   try {
     return (await $.fs.read(path)).trim()
@@ -1554,9 +1574,7 @@ export const register: Register = on => {
     // asks git: is a test file staged for this commit, or already on this branch since the
     // dispatch? The pattern is the project's (`.astraler/project/test-file-pattern`, one regex)
     // or the default below; `TDD: n/a — <why>` on the brief still exempts the ticket.
-    const projPat = (await overlayFile($, `${root}/.astraler/project/test-file-pattern`)).split('\n')[0]?.trim()
-    let testRe: RegExp
-    try { testRe = new RegExp(projPat || String.raw`(^|/)(tests?|__tests__|spec)/|[._-](test|spec)s?\.[A-Za-z0-9]+$|_test\.go$`) } catch { testRe = /(^|\/)(tests?|__tests__|spec)\/|[._-](test|spec)s?\.[A-Za-z0-9]+$|_test\.go$/ }
+    const testRe = await testFileRe($, root)
     const cwd = worktree ?? root
     // ONE diff: the index (the tree this commit will make) against the dispatch base, added /
     // copied / modified / renamed only. It answers "will the branch carry a test file the base
@@ -1847,14 +1865,34 @@ export const register: Register = on => {
     // records nothing and keeps the marker script as its evidence; an entry with an empty
     // record (a dispatcher restart, a stub) is not judged either — a gate that fires on its own
     // missing data is noise, and the note below still names the gap.
+    // TDD IS A TEST FILE, AT MERGE AS AT COMMIT (post-4.1.2). 4.1.0 made the commit gate ask git for a
+    // test file and left this gate asking the record for `mattpocock-skills:tdd`; measured
+    // downstream (one ticket, 2026-10-22): 5 content commits each carrying test files passed the commit
+    // gate, then the merge was refused "no record of: tdd" after the whole build cycle. One
+    // question, asked twice: a test file on the branch since the dispatch base, or `TDD: n/a`.
+    const mergeGaps = async (entry: Entry, ref: string): Promise<string[]> => {
+      const out: string[] = []
+      for (const label of flowGaps(entry)) {
+        if (label === 'built-in code-review' && entry.review_na) continue
+        if (label === 'tdd') {
+          if (entry.tdd_na) continue
+          const carries = await branchCarriesTest($, root, entry, ref)
+          if (carries !== false) continue
+          out.push('tdd (no test file on the branch since dispatch)')
+          continue
+        }
+        out.push(label)
+      }
+      return out
+    }
+    const refOf = (entry: Entry): string => (typeof entry?.branch === 'string' && entry.branch) ? entry.branch : (head || '')
     for (const [key, entry] of named) {
       if (entry?.role !== 'builder' || !entry.session_id || Object.keys(skillsRun(entry)).length === 0) continue
-      const gaps = flowGaps(entry).filter(label =>
-        !(label === 'tdd' && entry.tdd_na) && !(label === 'built-in code-review' && entry.review_na))
+      const gaps = await mergeGaps(entry, refOf(entry))
       if (gaps.length > 0) {
         await logRefusal($, root, key, 'merge-gate', `no record of: ${gaps.join(', ')}`)
         return {
-          deny: `astragentic-dispatch: ${key} has no record of: ${gaps.join(', ')}. The Builder's pane records every Skill call; a marker or Pass: line claiming a step the record lacks is a step that did not run in that pane. Have the Builder run the missing step(s) and commit a fresh marker, or, for tdd / the built-in review only, put the n/a line with its reason on the brief. The record is .astraler/state/dispatch-record.json["${key}"].skills_run.`,
+          deny: `astragentic-dispatch: ${key} has no record of: ${gaps.join(', ')}. The Builder's pane records every Skill call; a marker or Pass: line claiming a step the record lacks is a step that did not run in that pane. Have the Builder run the missing step(s) and commit a fresh marker; for tdd, a test file on the branch since dispatch (pattern: .astraler/project/test-file-pattern) or the \`TDD: n/a — <why>\` line on the brief; for the built-in review, \`REVIEW: n/a — <why>\` on the brief. The record is .astraler/state/dispatch-record.json["${key}"].skills_run.`,
         }
       }
     }
@@ -1866,7 +1904,7 @@ export const register: Register = on => {
       // Only a pane the mod itself registered (it has a session_id) is judged: a pane without
       // the mod (a junior pane) records nothing here and keeps the marker script as its evidence.
       if (entry?.role === 'builder' && entry.session_id) {
-        const gaps = flowGaps(entry)
+        const gaps = await mergeGaps(entry, refOf(entry))
         if (gaps.length > 0) {
           notes.push(`${MARK} ${key} merged with no record of: ${gaps.join(', ')}. A step the handback names n/a with its reason is fine; any other is a step that did not run.`)
         }

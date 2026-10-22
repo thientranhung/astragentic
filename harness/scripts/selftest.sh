@@ -1559,16 +1559,32 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
   const heldCleared = heldShown && bells.length === 1 && log[log.length - 1] === undefined
   // a merge of a Builder whose pane recorded skills but not simplify is refused before it runs;
   // the same merge with the full record goes through; an entry with an empty record is not judged
-  const mergeOf = async (skills) => {
-    fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify({ 'AB-6': { role: 'builder', pane_id: 'p6', tab_id: 't6', session_id: 's6', branch: 'builder/AB-6', skills_run: skills } }))
+  const mergeOf = async (skills, extra = {}) => {
+    fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify({ 'AB-6': { role: 'builder', pane_id: 'p6', tab_id: 't6', session_id: 's6', branch: 'builder/AB-6', skills_run: skills, ...extra } }))
     let nextRan = false
     const r = await fire('tool.call', { tool: 'Bash', command: 'git merge --no-ff builder/AB-6' }, async () => { nextRan = true; return {} })
-    return `${r?.deny ? 'deny' : 'pass'}:${nextRan ? 'ran' : 'held'}`
+    return `${r?.deny ? 'deny' : 'pass'}:${nextRan ? 'ran' : 'held'}${r?.deny && /has no record of: [^.]*\btdd\b/.test(String(r.deny)) ? ':tdd' : ''}`
   }
   const full = { 'mattpocock-skills:implement': 1, 'mattpocock-skills:tdd': 1, 'mattpocock-skills:code-review': 1, 'code-review': 1, 'simplify': 1, 'codex-arm': 1 }
   const mergeGap = await mergeOf({ ...full, simplify: undefined })
   const mergeFull = await mergeOf(full)
   const mergeEmpty = await mergeOf({})
+  // post-4.1.2 — tdd at merge is the commit gate's question (one downstream ticket, 2026-10-22: five commits
+  // with test files passed the pane, the merge was refused "no record of: tdd"): a record with
+  // no tdd call and a branch carrying a test file since the dispatch base merges; the same
+  // record with no test file on the branch is refused and the refusal names tdd
+  const gitq = (...a) => require('child_process').spawnSync('git', a, { cwd: root, encoding: 'utf8' })
+  const baseSha = gitq('rev-parse', 'HEAD').stdout.trim()
+  gitq('checkout', '-q', '-b', 'builder/AB-6')
+  fs.writeFileSync(path.join(root, 'feat.js'), 'f'); fs.writeFileSync(path.join(root, 'feat.test.js'), 't')
+  gitq('add', 'feat.js', 'feat.test.js'); gitq('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'feat with test')
+  gitq('checkout', '-q', '-')
+  const mergeTddByBranch = await mergeOf({ ...full, 'mattpocock-skills:tdd': undefined }, { start_sha: baseSha })
+  gitq('branch', '-q', '-D', 'builder/AB-6'); gitq('checkout', '-q', '-b', 'builder/AB-6')
+  fs.writeFileSync(path.join(root, 'feat.js'), 'f2'); gitq('add', 'feat.js'); gitq('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'feat alone')
+  gitq('checkout', '-q', '-')
+  const mergeTddNoTest = await mergeOf({ ...full, 'mattpocock-skills:tdd': undefined }, { start_sha: baseSha })
+  gitq('branch', '-q', '-D', 'builder/AB-6'); gitq('clean', '-fdq', '--', 'feat.js', 'feat.test.js')
   // the dispatcher learns every off scope: it runs the marker check at merge
   const composed = await fire('prompt.compose', {}, async () => ({ sections: [] }))
   const armOffDispatcher = (composed?.sections ?? []).some(s => /ARM: off at ticket[\s\S]*arm\(ticket\)/.test(String(s.text)))
@@ -1607,7 +1623,7 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
   fs.writeFileSync(recPath, JSON.stringify({ 'AB-13': { role: 'builder', pane_id: 'p13' } }))
   const briefToRegistered = await sendBrief('/mattpocock-skills:implement AB-13\nQA: none — no surface')
   fs.writeFileSync(orchPath, orchText); fs.writeFileSync(recPath, '{}')
-  console.log(JSON.stringify({ afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeEmpty, armOffDispatcher, briefNoQa, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
+  console.log(JSON.stringify({ afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, briefNoQa, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
@@ -1626,8 +1642,8 @@ DRVEOS
     bad "mod send/ack keys" "$out"
   fi
   # 4.0.2 — the record refuses the merge. one downstream ticket (2026-10-16) shipped forged Pass: lines past the marker gate.
-  if says "$out" '"mergeGap":"deny:held","mergeFull":"pass:ran","mergeEmpty":"pass:ran","armOffDispatcher":true'; then
-    ok "merge gate: a recorded pane missing simplify is refused before the merge runs; a full record passes; an empty record is not judged; the dispatcher's prompt names the off arm scope and its marker"
+  if says "$out" '"mergeGap":"deny:held","mergeFull":"pass:ran","mergeEmpty":"pass:ran","mergeTddByBranch":"pass:ran","mergeTddNoTest":"deny:held:tdd","armOffDispatcher":true'; then
+    ok "merge gate: a recorded pane missing simplify is refused before the merge runs; a full record passes; an empty record is not judged; tdd is judged by a test file on the branch since dispatch, not by the skill call (one downstream ticket, 2026-10-22); the dispatcher's prompt names the off arm scope and its marker"
   else
     bad "mod merge gate" "$out"
   fi
@@ -1683,6 +1699,22 @@ EOS
     ok "planted: a send keyed by the typed string stays \"sent\" through the ack and past the lane's retirement; a stub entry rings; a hold never times out; a subagent's turn.start holds the bell; a flushed bell leaves its held status standing; a merge with a gapped record goes through"
   else
     bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"
+  fi
+  # post-4.1.2 — the merge gate's tdd question reverts to the record alone (the 4.1.2 shape): the branch
+  # that carries its test since dispatch, with no tdd call recorded, is refused at merge
+  rm -rf "$TMP/mod-stuck-tdd"; cp -R "$MOD" "$TMP/mod-stuck-tdd"
+  python3 - "$TMP/mod-stuck-tdd/hooks/register.tsx" <<'EOS'
+import sys
+p = sys.argv[1]; s = open(p).read()
+old = "const carries = await branchCarriesTest($, root, entry, ref)"
+assert old in s, "merge gate tdd-by-branch not found"
+open(p, 'w').write(s.replace(old, "const carries = false", 1))
+EOS
+  out="$(mod_drive "$TMP/mod-stuck-tdd")"
+  if says "$out" '"mergeTddByBranch":"deny:held:tdd"' && says "$out" '"mergeTddNoTest":"deny:held:tdd"'; then
+    ok "planted: a merge gate that asks the record for tdd refuses the branch that carries its test (one downstream ticket, 2026-10-22)"
+  else
+    bad "mod merge gate planted tdd" "the record-only gate did not refuse the tested branch: $out"
   fi
   out="$(mod_drive "$TMP/mod-stuck" pane)"
   if says "$out" '"paneHeld":true,"paneCleared":false,"armOffSection":false,"refusedListed":"pass:ran","refusedOther":"pass:ran","compacted":0'; then

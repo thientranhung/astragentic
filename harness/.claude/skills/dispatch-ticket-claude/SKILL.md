@@ -105,10 +105,13 @@ pre-push hook), not an overlay: prose can instruct, only a hook can stop.
 
 ## Two steps are refused, not noted
 
-The Builder's pane refuses the first content commit until `mattpocock-skills:tdd` is in its
-record, and the arm (`codex-arm`) until the built-in `code-review` is. **The exemption is
-the dispatcher's and travels in the brief**: a line `TDD: n/a — <why>` (docs-only, no seam) or
-`REVIEW: n/a — <why>`. The mod reads it from the brief it delivers, never from the Builder's
+The Builder's pane refuses the first content commit until a test file is staged with it or
+already on the branch since dispatch (pattern: `.astraler/project/test-file-pattern`, or the
+default `_test.`/`.test.`/`.spec.`/`tests/`/`__tests__/`), and the arm (`codex-arm`) until the
+built-in `code-review` is in its record. The merge gate asks the same two questions of the
+branch and the record, so a commit the pane let through is not refused at merge. **The
+exemption is the dispatcher's and travels in the brief**: a line `TDD: n/a — <why>` (docs-only,
+no seam) or `REVIEW: n/a — <why>`. The mod reads it from the brief it delivers, never from the Builder's
 handback. A brief delivered outside the mod carries no exemption the mod can see, so on a
 pane prompted by hand the gate holds until the brief is re-sent through SendMessage.
 
