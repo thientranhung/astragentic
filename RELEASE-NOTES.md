@@ -1,3 +1,18 @@
+# Astragentic 4.3.3
+
+**Two steps stamped in the same millisecond resolve to the later one.** 4.3.2 refused to apply on
+its first adopter: the selftest's pane case stamped `code-review` and `simplify` in one
+millisecond on a fast box, the strict `>` in the latest-step pick left the earlier step lit, and
+the installer stopped at 180/1 (reported downstream the same evening, 2026-10-22, with the fix
+tried: `>=`, 190/0). The tie now goes to the later step in flow order, the one called second.
+The selftest's clock is strictly increasing, so two events never share a millisecond there, and
+a tie case writes equal stamps by hand: the fixed mod reads `… simplify (1 agent)`, the planted
+`>` reads the earlier step. The band is also refreshed when a turn start clears a hold.
+
+## Upgrade from 4.3.2
+
+One mod file. Nothing else changes.
+
 # Astragentic 4.3.2
 
 **A chip on the Builder's band turns green when the step completes, not when it is invoked.**
