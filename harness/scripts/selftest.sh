@@ -153,6 +153,45 @@ else
   bad "guard suggested paths" "suggestion: '$sugg' — staged $(cd "$HG" && git diff --cached --name-only | wc -l | tr -d ' ') files"
 fi
 
+echo "hook-git-guard — a read-only role is refused the repository's write commands (4.2.0)"
+# The BA talks and cuts tickets; its contract says never commit/push/merge/dispatch. One
+# downstream project shipped that rule as prose on 2026-10-21 with nothing under it. The
+# guard reads the role from `agent_type` when the payload carries it, else from the marker
+# hook-tracker-status.py writes at SessionStart (SessionStart carries agent_type; measured).
+guard_role() { # <expected deny|allow> <extra payload json fields> <command> [guard script]
+  local want="$1" extra="$2" cmd="$3" script="${4:-$S/hook-git-guard.py}"; local out got
+  out="$(printf '%s' "$cmd" | python3 -c '
+import sys, json
+extra = json.loads(sys.argv[1])
+p = {"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":sys.stdin.read()}}
+p.update(extra); print(json.dumps(p))' "$extra" \
+    | ASTRAGENTIC_ROLE_MARKER_DIR="$TMP" HARNESS_HOOK_LOG="$TMP/hook.log" python3 "$script" 2>/dev/null)"
+  if says "$out" '"permissionDecision": "deny"'; then got=deny; else got=allow; fi
+  [ "$want" = "$got" ] && ok "guard($extra) $want: $cmd" || bad "guard role $cmd" "expected $want, got $got: $out"
+}
+guard_role deny  '{"agent_type":"ba"}' 'git commit -m "tidy"'
+guard_role deny  '{"agent_type":"ba"}' 'cd /x && git push origin main'
+guard_role deny  '{"agent_type":"ba"}' 'git commit -m "$(cat <<EOF
+msg
+EOF
+)"'                                                    # whole text, heredoc included
+guard_role deny  '{"agent_type":"ba"}' 'gh pr merge 12 --squash'
+guard_role deny  '{"agent_type":"ba"}' 'bash scripts/ticket-done.sh AB-1'
+guard_role deny  '{"agent_type":"ba"}' 'herdr agent start --cwd /x claude'
+guard_role allow '{"agent_type":"ba"}' 'git log --oneline -5'
+guard_role allow '{"agent_type":"ba"}' 'gh issue create --title "AB-9: x" --body-file /tmp/b.md'
+guard_role allow '{"agent_type":"builder"}' 'git commit -m "tidy"'    # the gate is the role's, not everyone's
+# the marker path: no agent_type on the call, the SessionStart hook wrote the role for this session
+printf '%s' '{"source":"startup","session_id":"sess-ba-1","agent_type":"ba"}' \
+  | ASTRAGENTIC_ROLE_MARKER_DIR="$TMP" CLAUDE_PROJECT_DIR="$TMP/stamps" python3 "$S/hook-tracker-status.py" >/dev/null 2>&1
+[ "$(cat "$TMP/astragentic-role-sess-ba-1" 2>/dev/null)" = "ba" ] && ok "hook-tracker-status writes the role marker from SessionStart's agent_type" \
+  || bad "role marker" "hook-tracker-status did not write $TMP/astragentic-role-sess-ba-1"
+guard_role deny  '{"session_id":"sess-ba-1"}' 'git merge builder/AB-1'
+guard_role allow '{"session_id":"sess-none"}' 'git merge builder/AB-1'   # no marker, no agent_type: not a BA pane
+# planted: a guard with the role gate removed lets the BA commit
+sed 's/if role in READ_ONLY_ROLES:/if False:/' "$S/hook-git-guard.py" > "$TMP/guard-no-role.py"
+guard_role allow '{"agent_type":"ba"}' 'git commit -m "tidy"' "$TMP/guard-no-role.py"
+
 echo "hook-git-guard — the registered wrapper's unreadable-file fallback runs the same guard (4.0.2)"
 # Measured downstream: 27 whole-session blocks where python3 could not open the hook file
 # ([Errno 1] under ~/Documents: macOS TCC on Python.app, or a sandbox) while the shell could
@@ -787,7 +826,7 @@ echo "one rule, registered where it is loaded"
 # adapted project is where they are actually LOADED, and it is the only place they can drift.
 # The check that proves a rule reached the runtime must run where the runtime is.
 PAY="$ROOT/harness"; [ "$LAYOUT" = project ] && PAY="$ROOT"
-for role in thomas shaper builder qa; do
+for role in thomas shaper builder qa ba; do
   cla="$PAY/.claude/agents/$role.md"
   # A project may not run all four roles, and a surface that does not exist there is not a
   # drifted surface. Absent files are reported as scope, never as a failure.

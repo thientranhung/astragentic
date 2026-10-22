@@ -1,3 +1,46 @@
+# Astragentic 4.2.0
+
+**A fifth role: the BA.** Owner-opened, read-only, it talks the problem through with the owner,
+names trade-offs and the in-flight work a decision invalidates, and cuts tickets. It never
+edits, commits, dispatches or merges, and a hook holds that line. The owner asked for it on
+2026-10-22 after writing one himself on his first adopter: that session turned one problem
+into an epic that cut into 13 tickets (n=1). The router's own conversation tools had seen
+0 Skill-tool calls in 30 days there; the owner's discussion was happening inside the router's
+pane, mixed with the frontier, the claim protocol and merges.
+
+**How it starts and what holds it.** `claude --agent ba` in a tab labelled `ba`; Thomas never
+dispatches it and its tickets enter the frontier like any other (`thomas.md` says so in one
+paragraph; `orchestrator.md` has the tab row). The read-only promise is enforced, not
+described: `hook-tracker-status.py` writes the pane's role at SessionStart (the payload carries
+`agent_type`, measured on Claude Code 2.1.306) and `hook-git-guard.py` refuses `git
+commit/push/merge/rebase/worktree/reset…`, `gh pr create/merge`, `ticket-done.sh` and `herdr
+agent start` in a `ba` pane, judged on the whole call text, heredocs included. The contract is
+`.agents/roles/ba.md` (592 words) with the adapter at `.claude/agents/ba.md`; the role is
+tracker-agnostic and reads the adapter `docs/agents/issue-tracker.md` names.
+`check-reachability.py` learns an owner-launched role: its launcher is the README line, not a
+dispatcher's mention. Selftest: 14 guard cases (deny by `agent_type`, deny by marker, allow
+for reads and for a Builder, the marker write) and a plant with the gate removed.
+
+**A "Quick Dev" role was proposed with it and is not added.** Measured on the same adopter,
+30 days: 80 ticket merges, 11 of them ≤200 code lines. Those small tickets cost a median
+$7 / 180 model calls / 0.5 h of pane time against $19.5 / 334 / 1.2 h overall, and their
+median wait from ticket creation to the first pane command was 5.5 h: the time is sequencing
+(builder-target, backlog order), not the loop. The brief already carries the per-ticket skip
+knobs (`TDD: n/a`, `REVIEW: n/a`, `QA: none`, the arm rows). A role that skips review would
+save part of 0.5 h on 11 tickets a month. Reopen with a measured request→dispatch latency.
+
+**Also:** `usage-report.py --by ticket` read every call as ticket `DEV-2` on a machine whose
+projects live under `/2.DEV/2.PRIVATE/` (the first key-shaped token of the cwd); it now reads
+the key after the lane prefix.
+
+## Upgrade from 4.1.3
+
+Two new files (`.agents/roles/ba.md`, `.claude/agents/ba.md`), two hook scripts, the
+reachability check, `thomas.md`, `orchestrator.md`, the READMEs. A project that already
+carries its own `.claude/agents/ba.md` (hashed in a drift manifest) will see the apply fail
+loud on that file: keep yours as project-owned, or drop it and take the payload's. Nothing
+else changes for a project that does not open a BA pane.
+
 # Astragentic 4.1.3
 
 **The merge gate asks the commit gate's question about tdd: a test file on the branch, not a

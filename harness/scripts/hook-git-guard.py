@@ -130,6 +130,32 @@ def changed_paths(limit=20):
     return " Changed now: git --literal-pathspecs add -- %s%s" % (quoted, more)
 
 
+READ_ONLY_ROLES = {"ba"}
+READ_ONLY_FORBIDDEN = re.compile(
+    r"\bgit\s+(?:-[^\s]+\s+)*(?:commit|push|merge|rebase|cherry-pick|revert|am|apply|stash|worktree|"
+    r"reset|checkout\s+-b|switch\s+-c|branch\s+-[dDm]|tag)\b"
+    r"|\bgh\s+pr\s+(?:create|merge|close|edit|ready)\b"
+    r"|\bticket-done\.sh\b"
+    r"|\bherdr\s+(?:agent\s+start|pane\s+run|command\s+run)\b")
+ROLE_MARKER_DIR = os.environ.get("ASTRAGENTIC_ROLE_MARKER_DIR", "/tmp")
+
+
+def pane_role(payload):
+    """The role of the pane this call comes from: `agent_type` when the payload carries it,
+    else the marker hook-tracker-status.py wrote at SessionStart for this session_id."""
+    role = payload.get("agent_type")
+    if isinstance(role, str) and role:
+        return role
+    sid = payload.get("session_id")
+    if not isinstance(sid, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", sid):
+        return None
+    try:
+        with open(os.path.join(ROLE_MARKER_DIR, "astragentic-role-%s" % sid), encoding="utf-8") as fh:
+            return fh.read().strip() or None
+    except OSError:
+        return None
+
+
 def deny(reason, cmd):
     log("DENY", cmd)
     print(json.dumps({"hookSpecificOutput": {
@@ -569,6 +595,20 @@ def main():
             os.chdir(cwd)
         except OSError:
             pass
+
+    # -- a read-only role (4.2.0) -----------------------------------------------------------
+    # The BA talks with the owner and cuts tickets; its contract says it never commits,
+    # pushes, merges, opens a worktree or dispatches. Prose can instruct, only a hook can stop
+    # (one downstream project wrote this role 2026-10-21 with the rule in prose and nothing
+    # under it). Judged on the WHOLE text, heredocs and subshells included: a read-only pane
+    # has no legitimate shape of these words, so the readability gate below does not apply.
+    role = pane_role(payload)
+    if role in READ_ONLY_ROLES:
+        hit = READ_ONLY_FORBIDDEN.search(cmd)
+        if hit:
+            deny("a %s pane is read-only on the repository: it never runs `%s`. Proposals become "
+                 "tickets; Thomas dispatches, merges and runs ticket-done.sh. If the owner wants "
+                 "this change, it goes on a ticket." % (role, hit.group(0).strip()), cmd)
 
     if sweeping_add_anywhere(cmd):
         deny("this line stages with `git add -A|--all` and no pathspec, or `git add .`, which "

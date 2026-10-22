@@ -17,7 +17,7 @@ from this table — read the entry.
 | `AST-011` | Gate was per-PR only, not per-step | promoted | 49 | ledger-rules.py |
 | `AST-012` | Two review rounds not stated as both-mandatory | promoted | 53 | ledger-rules.py |
 | `AST-016` | Agents sharing one checkout moved HEAD under each other | promoted | 39 | dispatch-junior |
-| `AST-024` | Role rule auto-loads into every session → role-bleed (Worker acted as Thomas) | promoted | 37 | builder.md,qa.md,shaper.md,thomas.md |
+| `AST-024` | Role rule auto-loads into every session → role-bleed (Worker acted as Thomas) | promoted | 37 | ba.md,builder.md,qa.md,shaper.md,thomas.md |
 | `AST-028` | Relative worktree path + unverified pane cwd → worktree born in the wrong place, hour-long mi… | promoted | 191 | hook-git-guard.py,selftest.sh |
 | `AST-032` | A signal that cannot fail is not evidence | promoted | 776 | docs-staleness-audit.sh,herdr-watch-terminal.sh,herdr-watchdog.sh |
 | `AST-036` | A git worktree carries TRACKED content only | promoted | 154 | register.tsx |

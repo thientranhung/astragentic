@@ -57,6 +57,7 @@ RUN IT BY HAND — this is the test:
 
 import json
 import os
+import re
 import subprocess
 import sys
 
@@ -97,6 +98,22 @@ def bail(reason):
         pass
     log(reason)
     sys.exit(0)
+
+
+ROLE_MARKER_DIR = os.environ.get("ASTRAGENTIC_ROLE_MARKER_DIR", "/tmp")
+
+
+def write_role_marker(payload):
+    sid = payload.get("session_id"); role = payload.get("agent_type")
+    if not isinstance(sid, str) or not isinstance(role, str):
+        return
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", sid) or not re.fullmatch(r"[a-z][a-z0-9-]{0,40}", role):
+        return
+    try:
+        with open(os.path.join(ROLE_MARKER_DIR, "astragentic-role-%s" % sid), "w", encoding="utf-8") as fh:
+            fh.write(role + "\n")
+    except OSError:
+        pass
 
 
 def project_dir(payload):
@@ -195,6 +212,11 @@ def main():
     if not isinstance(payload, dict):
         bail("stdin was JSON but not an object")
 
+    # THE ROLE MARKER (4.2.0). SessionStart carries `agent_type` (measured 2026-10-22 on Claude
+    # Code 2.1.306: `claude --agent ba` arrives as {"agent_type": "ba"}); PreToolUse may not.
+    # The git guard reads this file by session_id to know the role of the pane it is judging.
+    # Written before the source filter: a resumed session re-arms its marker too.
+    write_role_marker(payload)
     source = payload.get("source")
     # A payload that PARSED but names no source is injected for: a runtime that does not send
     # one is a runtime whose sessions would otherwise never see the counts, and the cost of

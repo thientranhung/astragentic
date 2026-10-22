@@ -477,6 +477,10 @@ for src, text in sorted(sources.items()):
 # written launcher, and a dispatcher whose contract names it. Missing either, it is correct,
 # valuable and unreachable.
 DISPATCHER = "thomas"      # the resident router is launched by the owner, not dispatched
+# Roles the OWNER starts (`claude --agent <role>`), never a dispatcher: the router, and the BA
+# (4.2.0). Their path to a pane is the README's launcher line, checked by 4c; check 5's
+# "a dispatcher names it" question does not apply to a pane no dispatcher opens.
+OWNER_LAUNCHED = {DISPATCHER, "ba"}
 launcher_text = "\n".join(t for _, t in skills.values())
 dispatcher_text = roles.get(DISPATCHER, "")
 
@@ -495,7 +499,10 @@ for jr in sorted(n for n in role_supplements if n == "junior" or n.startswith("j
              "the skill's brief must tell the junior which supplement files to read")
 
 for role in sorted(roles):
-    if role == DISPATCHER:
+    if role in OWNER_LAUNCHED:
+        if not re.search(rf"--agent\s+{re.escape(role)}\b", readme):
+            fail("5", f"role '{role}' is owner-launched but the README never shows `claude --agent {role}`",
+                 "an owner-launched role with no written launcher is a file nothing starts")
         continue
     has_launcher = bool(re.search(rf"--(agent|profile)\s+{re.escape(role)}\b", launcher_text))
     named_by_dispatcher = bool(re.search(rf"\b{re.escape(role)}\b", dispatcher_text, re.I))

@@ -20,6 +20,10 @@ yours.
 | you need a rule | `.agents/memory/RULES.md` | every entry's rule, no narrative — a fifth the size |
 | you need a rule's EVIDENCE | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only; `INDEX.md` finds the id |
 
+**The BA is not yours to dispatch.** The owner opens it (`claude --agent ba`, tab `ba`); it
+reads, discusses and cuts tickets, and its tickets reach you through the frontier like any other.
+When it names in-flight work a decision invalidates, that note is your hold-back list.
+
 ## Phases you own
 
 | Phase | Skill | Produces |
