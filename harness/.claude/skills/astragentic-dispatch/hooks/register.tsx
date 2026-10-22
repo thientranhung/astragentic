@@ -97,7 +97,7 @@ const RECORD = '.astraler/state/dispatch-record.json'
 // existed: 64 payload files edited in place and re-applied after every upgrade.
 const OVERLAYS = '.astraler/project/overlays'
 
-// THE TEST-FILE PATTERN, ONE HOME (post-4.1.2). The commit gate (4.1.0) and the merge gate read the
+// THE TEST-FILE PATTERN, ONE HOME (4.1.3). The commit gate (4.1.0) and the merge gate read the
 // same regex: `.astraler/project/test-file-pattern` (one line) or the default. Two copies
 // disagreed downstream (the project adds `-selftest\.sh$`) and a stale copy is a gate that lies.
 async function testFileRe($: any, root: string): Promise<RegExp> {
@@ -1865,7 +1865,7 @@ export const register: Register = on => {
     // records nothing and keeps the marker script as its evidence; an entry with an empty
     // record (a dispatcher restart, a stub) is not judged either — a gate that fires on its own
     // missing data is noise, and the note below still names the gap.
-    // TDD IS A TEST FILE, AT MERGE AS AT COMMIT (post-4.1.2). 4.1.0 made the commit gate ask git for a
+    // TDD IS A TEST FILE, AT MERGE AS AT COMMIT (4.1.3). 4.1.0 made the commit gate ask git for a
     // test file and left this gate asking the record for `mattpocock-skills:tdd`; measured
     // downstream (one ticket, 2026-10-22): 5 content commits each carrying test files passed the commit
     // gate, then the merge was refused "no record of: tdd" after the whole build cycle. One

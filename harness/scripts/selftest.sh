@@ -1569,7 +1569,7 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
   const mergeGap = await mergeOf({ ...full, simplify: undefined })
   const mergeFull = await mergeOf(full)
   const mergeEmpty = await mergeOf({})
-  // post-4.1.2 — tdd at merge is the commit gate's question (one downstream ticket, 2026-10-22: five commits
+  // 4.1.3 — tdd at merge is the commit gate's question (one downstream ticket, 2026-10-22: five commits
   // with test files passed the pane, the merge was refused "no record of: tdd"): a record with
   // no tdd call and a branch carrying a test file since the dispatch base merges; the same
   // record with no test file on the branch is refused and the refusal names tdd
@@ -1700,7 +1700,7 @@ EOS
   else
     bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"
   fi
-  # post-4.1.2 — the merge gate's tdd question reverts to the record alone (the 4.1.2 shape): the branch
+  # 4.1.3 — the merge gate's tdd question reverts to the record alone (the 4.1.2 shape): the branch
   # that carries its test since dispatch, with no tdd call recorded, is refused at merge
   rm -rf "$TMP/mod-stuck-tdd"; cp -R "$MOD" "$TMP/mod-stuck-tdd"
   python3 - "$TMP/mod-stuck-tdd/hooks/register.tsx" <<'EOS'

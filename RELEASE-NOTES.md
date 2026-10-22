@@ -1,3 +1,33 @@
+# Astragentic 4.1.3
+
+**The merge gate asks the commit gate's question about tdd: a test file on the branch, not a
+skill call.** One defect, from nizzy-ecom on 2026-10-22.
+
+4.1.0 made the Builder pane's commit gate ask git for a test file (staged with the commit, or on
+the branch since the dispatch base, pattern from `.astraler/project/test-file-pattern`) and
+left the merge gate reading the record for a `mattpocock-skills:tdd` call. The two gates had
+asked different questions since 2026-10-18 and nothing showed it: the merge gate had fired 0
+times in the field in 30 days. On the first ticket to write its tests without calling the
+skill, the Builder's first commit carried 5 test files and passed the pane gate, four more
+commits followed, and the merge was refused "no record of: tdd" after the whole build cycle.
+The pane read it as the commit gate staying silent; the commit gate was right.
+
+The merge gate (and the merge note) now ask the same question: a test file added or changed
+on the branch since `start_sha`, or `TDD: n/a — <why>` on the brief. The test-file pattern has
+one home both gates read (the project's copy adds `-selftest\.sh$`; two copies of the default
+had already drifted). A branch with no recorded base or no local ref is not judged for tdd. The
+refusal names the two remedies for tdd. `dispatch-ticket-claude` no longer says the pane
+"refuses until `mattpocock-skills:tdd` is in its record" (the 4.0 gate); it says what both
+gates measure.
+
+Planted: a copy whose merge gate reads only the record refuses the branch that carries its
+test; on 4.1.2 that shape reads `deny:held`. Selftest 156/0.
+
+## Upgrade from 4.1.2
+
+One mod file and one skill document. `get.sh | bash -s -- 4.1.3`, then `--apply`; no project
+file changes.
+
 # Astragentic 4.1.2
 
 **Two shell shapes a Builder writes every day no longer trip the commit gate, and two status
