@@ -105,7 +105,10 @@ function latestInvoked(entry: Entry): { name: string; at: number } | null {
     const keys = name === 'codex-arm' ? ['codex-arm', 'codex-claude-arm'] : [name]
     for (const k of keys) {
       const at = Number(last[k] ?? first[k] ?? 0)
-      if (at > 0 && (!best || at > best.at)) best = { name, at }
+      // `>=`: two steps stamped in the same millisecond (measured downstream, 2026-10-22: the
+      // 4.3.2 selftest on a fast box) resolve to the later one in flow order, which is the
+      // one called second. A strict `>` left the earlier step lit.
+      if (at > 0 && (!best || at >= best.at)) best = { name, at }
     }
   }
   return best
@@ -1126,6 +1129,7 @@ export const register: Register = on => {
         if (own?.pane_id === me!.pane && own.waiting_on) {
           await patchRecord($, root!, me!.key, { waiting_on: null })
           $.ui.status(undefined)
+          await refreshFlow($, root!, me!.key)
         }
       })().catch(() => {})
     }
