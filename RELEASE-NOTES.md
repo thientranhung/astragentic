@@ -1,3 +1,19 @@
+# Astragentic 4.3.1
+
+**A Builder's message to its own fork reaches the fork.** The pane-side readdress rule (every
+written reply goes to the dispatcher, whatever name the model typed) knew a pane's agents by
+id and teammate id only. A Skill fork is addressed by its name and a short ref
+("code-review [ce2df1]"), so a Builder asking its own code-review fork to report its findings
+had both messages readdressed to the dispatcher, and re-ran the review (one downstream ticket,
+2026-10-22, on 4.1.2). The name, the id, and the ref matched against the id now all read as
+the pane's own agent; a send to a role name ("thomas") is still readdressed. Planted: the
+pane driver sends to "code-review [ce2df1]" with that fork live; on the old test it arrives at
+the dispatcher. Selftest 190/0.
+
+## Upgrade from 4.3.0
+
+One mod file. Nothing else changes.
+
 # Astragentic 4.3.0
 
 **A sixth role: the Quick Builder.** The owner's pane for work the project's own tools already
