@@ -1345,8 +1345,18 @@ export const register: Register = on => {
     if (me && me.role !== 'resident' && dispatcher && e.origin.kind === 'model' && e.agentId === undefined
         && e.to !== dispatcher && addressName(e.to) !== dispatcherName) {
       const to = addressName(e.to)
+      // THE PANE'S OWN FORKS ARE ITS AGENTS (4.3.1). A Skill fork is addressed by its NAME and a
+      // short ref ("code-review [ce2df1]"); this test knew ids and teammate ids only, so a
+      // Builder's "report your findings" to its own code-review fork went to the dispatcher,
+      // twice, and the review round was lost (measured downstream 2026-10-22). The name, the id,
+      // and the ref against the id all say "mine".
+      const ref = (e.to.match(/\[([0-9a-f]{4,})\]\s*$/i)?.[1] ?? '').toLowerCase()
       const mine = await $.agent.list().catch(() => [])
-      const isAgent = (mine ?? []).some((a: any) => a.id === to || a.teammateId === to || a.teammateId?.split('@')[0] === to)
+      const isAgent = (mine ?? []).some((a: any) => {
+        const id = String(a.id ?? '')
+        return id === to || a.name === to || a.teammateId === to || a.teammateId?.split('@')[0] === to
+          || (ref !== '' && id.toLowerCase().includes(ref))
+      })
       if (!isAgent) {
         $.ui.status(`astragentic-dispatch: a reply to "${e.to}" readdressed to the dispatcher (${dispatcherName || dispatcher})`)
         return next({ ...e, to: dispatcher })

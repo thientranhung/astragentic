@@ -1601,7 +1601,16 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
     $.session.compact = async () => { compacted++; return {} }
     await fire('turn.complete', { reason: 'answer', answer: 'done', turnId: 't3' }, async () => ({}))
     await every()
-    console.log(JSON.stringify({ registered, paneHeld, paneCleared, armOffSection, refusedListed, refusedOther, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, log }))
+    // 4.3.1 — a send to the pane's OWN fork ("code-review [ce2df1]") is not readdressed to the
+    // dispatcher; a send to a role name still is (one downstream ticket, 2026-10-22)
+    await fire('session.receive', { text: '<cross-session-message from="uds:/tmp/d.sock" from-name="disp-07">\n/mattpocock-skills:implement AB-5\nQA: none — no surface\n</cross-session-message>', origin: { kind: 'plugin' } }, async () => ({}))
+    liveAgents = [{ id: 'a-7f3-ce2df1', name: 'code-review', status: 'running', description: 'Review the changes' }]
+    const sendTo = async (to) => { let seen = null; await fire('session.send', { to, text: 'Report your final findings summary now.', origin: { kind: 'model' } }, async ev => { seen = ev.to; return { isDelivered: true } }); return seen }
+    const sendToFork = await sendTo('code-review [ce2df1]')
+    const sendToForkById = await sendTo('a-7f3-ce2df1')
+    const sendToRole = await sendTo('thomas')
+    liveAgents = []
+    console.log(JSON.stringify({ registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, armOffSection, refusedListed, refusedOther, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, log }))
     return
   }
   await fire('session.start', {}, async () => ({}))
@@ -1740,7 +1749,7 @@ DRVEOS
     bad "mod merge gate" "$out"
   fi
   out="$(mod_drive "$MOD" pane)"
-  if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","compacted":1,"commitNoTest":"deny:held","commitWithTest":"pass:ran","commitDeletedTest":"deny:held","commitLaterDeletedTest":"deny:held","commitPathLimited":"deny:held","commitAllDeleted":"deny:held","commitAddThenCommit":"pass:ran","commitRmThenCommit":"deny:held","commitRestageDeleted":"deny:held","commitDashMAttached":"deny:held","commitScopedAddAll":"deny:held","commitPathRestored":"deny:held","commitAfterMv":"deny:held","mvNotReplayed":true,"commitTwice":"deny:held","commitDashCSrc":"deny:held","commitAmendOnly":"deny:held","commitRmAddAll":"deny:held","rmNotReplayed":true,"commitPathspecFile":"deny:held","commitRepeatedC":"deny:held","commitDotUntracked":"deny:held","commitDotStaged":"pass:ran","commitSkippedAdd":"deny:held","commitRmNoCached":"deny:held","fileSurvived":true,"commitOrAdd":"deny:held","commitEchoAdd":"deny:held","commitRmAbsent":"deny:held","commitSubstQuoted":"deny:held","testStillStaged":true,"commitWorkTree":"deny:held","commitConfigOpt":"deny:held","commitSubstApos":"deny:held","commitBacktickDouble":"deny:held","commitSubstLiteral":"pass:ran","commitConfigEnv":"deny:held","commitCommentedAdd":"deny:held","commitAbbrevOpt":"deny:held","commitMessageEq":"pass:ran","commitRedirect":"deny:held","commitFdDup":"pass:ran","ampNamed":true,"commitHeredocMsg":"pass:ran","commitHeredocOpen":"deny:held","commitHeredocExtra":"deny:held","commitHeredocBare":"deny:held","substFixNamed":true,"noScratchLeft":true'; then
+  if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"sendToFork":"code-review [ce2df1]","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","compacted":1,"commitNoTest":"deny:held","commitWithTest":"pass:ran","commitDeletedTest":"deny:held","commitLaterDeletedTest":"deny:held","commitPathLimited":"deny:held","commitAllDeleted":"deny:held","commitAddThenCommit":"pass:ran","commitRmThenCommit":"deny:held","commitRestageDeleted":"deny:held","commitDashMAttached":"deny:held","commitScopedAddAll":"deny:held","commitPathRestored":"deny:held","commitAfterMv":"deny:held","mvNotReplayed":true,"commitTwice":"deny:held","commitDashCSrc":"deny:held","commitAmendOnly":"deny:held","commitRmAddAll":"deny:held","rmNotReplayed":true,"commitPathspecFile":"deny:held","commitRepeatedC":"deny:held","commitDotUntracked":"deny:held","commitDotStaged":"pass:ran","commitSkippedAdd":"deny:held","commitRmNoCached":"deny:held","fileSurvived":true,"commitOrAdd":"deny:held","commitEchoAdd":"deny:held","commitRmAbsent":"deny:held","commitSubstQuoted":"deny:held","testStillStaged":true,"commitWorkTree":"deny:held","commitConfigOpt":"deny:held","commitSubstApos":"deny:held","commitBacktickDouble":"deny:held","commitSubstLiteral":"pass:ran","commitConfigEnv":"deny:held","commitCommentedAdd":"deny:held","commitAbbrevOpt":"deny:held","commitMessageEq":"pass:ran","commitRedirect":"deny:held","commitFdDup":"pass:ran","ampNamed":true,"commitHeredocMsg":"pass:ran","commitHeredocOpen":"deny:held","commitHeredocExtra":"deny:held","commitHeredocBare":"deny:held","substFixNamed":true,"noScratchLeft":true'; then
     ok "pane side: a turn end with a live agent is held, the next turn start ends the hold, an arm row at no reaches the Builder's prompt, a command on the project's refused list is refused, and a turn over the context ceiling is compacted"
   else
     bad "mod pane hold" "$out"
@@ -1767,6 +1776,12 @@ s = s.replace(old5, "", 1)
 old6 = "if (entry?.role !== 'builder' || !entry.session_id || Object.keys(skillsRun(entry)).length === 0) continue"
 assert old6 in s, "merge gate guard not found"
 s = s.replace(old6, "continue", 1)
+old6c = "return id === to || a.name === to || a.teammateId === to"
+assert old6c in s, "fork name match not found"
+s = s.replace(old6c, "return id === to || a.teammateId === to", 1)
+old6d = "|| (ref !== '' && id.toLowerCase().includes(ref))"
+assert old6d in s, "fork ref match not found"
+s = s.replace(old6d, "", 1)
 old7 = "if (m[2].toLowerCase() === 'no') off.add(m[1])"
 assert old7 in s, "arm row parser not found"
 s = s.replace(old7, "", 1)
@@ -1803,7 +1818,7 @@ EOS
     bad "mod merge gate planted tdd" "the record-only gate did not refuse the tested branch: $out"
   fi
   out="$(mod_drive "$TMP/mod-stuck" pane)"
-  if says "$out" '"paneHeld":true,"paneCleared":false,"armOffSection":false,"refusedListed":"pass:ran","refusedOther":"pass:ran","compacted":0'; then
+  if says "$out" '"paneHeld":true,"paneCleared":false,"sendToFork":"uds:/tmp/d.sock","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","armOffSection":false,"refusedListed":"pass:ran","refusedOther":"pass:ran","compacted":0'; then
     ok "planted: a pane that starts a turn leaves its hold standing; an arm row nobody parses reaches no prompt; a refused list nobody tests refuses nothing; a ceiling nobody reads compacts nothing"
   else
     bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"
