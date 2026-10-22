@@ -1369,9 +1369,10 @@ const log = []
 let liveAgents = []
 let tick = 0
 let everyFn = async () => {}
+let selfSock
 const every = () => everyFn()
 const $ = {
-  env: { get: async k => k === 'ASTRAGENTIC_REPO' ? root : (isPane && k === 'HERDR_TAB_ID') ? 't5' : (isPane && k === 'HERDR_PANE_ID') ? 'p5' : undefined },
+  env: { get: async k => k === 'CLAUDE_CODE_MESSAGING_SOCKET' ? selfSock : k === 'ASTRAGENTIC_REPO' ? root : (isPane && k === 'HERDR_TAB_ID') ? 't5' : (isPane && k === 'HERDR_PANE_ID') ? 'p5' : undefined },
   clock: { now: async () => { tick = Math.max(tick + 1, Date.now()); return tick }, every: (_ms, fn) => { everyFn = fn } },
   command: { register: () => {}, run: async () => ({}) },
   session: { id: async () => 'disp', send: async () => ({ isDelivered: true }), usage: async () => ({ startedAt: 0, context: { tokens: 1000, window: 1_000_000, percent: 0 } }), compact: async () => ({}) },
@@ -1687,6 +1688,16 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   await every(); await every()
   const staleBells = bells.filter(b => b.includes('reason=held-stale')).length
   const staleRow = (await rows()).includes('— stale')
+  // a bell for a lane another live session briefed is not this session's to ring (downstream
+  // 2026-10-23: a held-stale rang in the BA pane); its own lane and a lane whose
+  // dispatcher's socket is gone still ring here
+  const otherSock = path.join(root, 'other.sock'); fs.writeFileSync(otherSock, ''); selfSock = path.join(root, 'self.sock')
+  const held = d => ({ role: 'builder', pane_id: 'p3', tab_id: 't3', dispatcher: d, last_brief_received_at: Date.now() - 5 * 3600_000, waiting_on: { n: 1, at: Date.now() - 4 * 3600_000, what: ['x'] } })
+  bells.length = 0
+  fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify({ 'AB-6': held(`uds:${otherSock}`), 'AB-7': held(`uds:${selfSock}`), 'AB-8': held(`uds:${root}/gone.sock`) }))
+  await every()
+  const ownerBells = ['AB-6', 'AB-7', 'AB-8'].map(k => bells.filter(b => b.includes(` ${k} has held`)).length).join('')
+  selfSock = undefined
   // a subagent's turn.start (Claude Code 2.1.299 fires it with agentId) must not hold bells
   bells.length = 0
   fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify({ 'AB-4': { role: 'builder', pane_id: 'p4', tab_id: 't4', session_name: 'builder-ab-4', last_brief_received_at: Date.now() - 60_000 } }))
@@ -1768,7 +1779,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   fs.writeFileSync(recPath, JSON.stringify({ 'AB-13': { role: 'builder', pane_id: 'p13' } }))
   const briefToRegistered = await sendBrief('/mattpocock-skills:implement AB-13\nQA: none — no surface')
   fs.writeFileSync(orchPath, orchText); fs.writeFileSync(recPath, '{}')
-  console.log(JSON.stringify({ afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, briefNoQa, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
+  console.log(JSON.stringify({ afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, ownerBells, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, briefNoQa, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
@@ -1781,8 +1792,8 @@ DRVEOS
     node "$TMP/mod-drive.cjs" "$1" "$TMP/mod-drive-repo" "$TSC_PKG" "${2:-}" 2>&1
   }
   out="$(mod_drive "$MOD")"
-  if says "$out" '"afterSend":"AB-1:sent:"' && says "$out" '"afterAck":"AB-1:registered:no brief yet"' && says "$out" '"afterRetire":""' && says "$out" '"stubBells":0,"stubLeft":0,"staleBells":1,"staleRow":true,"subagentHeld":false,"heldCleared":true,"latestChip":"0.0.2"'; then
-    ok "the ack from the bare name clears the send keyed by \"name [ref]\"; a retired lane's send goes with its entry; a stub entry rings no bell; a hold past the ceiling rings once as held-stale; a subagent's turn.start holds nothing; a bell held in the dispatcher's turn clears its status line when flushed; a newer tag at the remote reaches the band"
+  if says "$out" '"afterSend":"AB-1:sent:"' && says "$out" '"afterAck":"AB-1:registered:no brief yet"' && says "$out" '"afterRetire":""' && says "$out" '"stubBells":0,"stubLeft":0,"staleBells":1,"staleRow":true,"ownerBells":"011","subagentHeld":false,"heldCleared":true,"latestChip":"0.0.2"'; then
+    ok "the ack from the bare name clears the send keyed by \"name [ref]\"; a retired lane's send goes with its entry; a stub entry rings no bell; a hold past the ceiling rings once as held-stale, only in the session that briefed the lane unless that session is gone; a subagent's turn.start holds nothing; a bell held in the dispatcher's turn clears its status line when flushed; a newer tag at the remote reaches the band"
   else
     bad "mod send/ack keys" "$out"
   fi

@@ -965,7 +965,17 @@ async function refreshBoard($: any, root: string | null, sends: Map<string, numb
 async function wakeFromRecord($: any, root: string, bell: (text: string) => void): Promise<void> {
   const rec = (await readRecord($, root)) ?? {}
   const now = await $.clock.now()
+  // EVERY session at the project root without a dispatched tab runs this poll, not only
+  // Thomas's: a BA or Quick pane does too, and the first poll to see a bell stamps it rung for
+  // all. Measured downstream 2026-10-23: a Builder's held-stale bell rang in the BA pane and
+  // never reached Thomas. An entry names the session that briefed it; only that session rings
+  // for it. A dispatcher whose socket is gone (a restart) no longer owns its entries, so any
+  // root session rings for them, as before.
+  const sock = await $.env.get('CLAUDE_CODE_MESSAGING_SOCKET')
+  const self = sock ? `uds:${sock}` : null
   for (const [key, entry] of Object.entries(rec)) {
+    const owner = typeof entry?.dispatcher === 'string' ? entry.dispatcher : null
+    if (self && owner && owner !== self && owner.startsWith('uds:') && await exists($, owner.slice(4))) continue
     // A hold past the ceiling rings once, as its own reason. The pane that holds cannot ring
     // for itself: nothing fires in it while its agents stay silent.
     const w = entry?.waiting_on
