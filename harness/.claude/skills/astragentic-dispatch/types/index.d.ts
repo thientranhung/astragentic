@@ -16,6 +16,10 @@ export type Banner = {
 
 export type Flow = {
   ran: string[]
+  /** the flow step invoked most recently, by its latest call; null before the first */
+  latest: { name: string; at: number } | null
+  /** when the pane last ended a turn with nothing live; 0 before the first */
+  lastTurnEndAt: number
   tddNa: boolean
   reviewNa: boolean
   refusals: number

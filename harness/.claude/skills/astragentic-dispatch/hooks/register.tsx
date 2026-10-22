@@ -87,6 +87,29 @@ function flowGaps(entry: Entry): string[] {
   const run = skillsRun(entry)
   return FLOW.filter(([name]) => !(name in run)).map(([, label]) => label)
 }
+
+// THE STEP IN PROGRESS (4.3.2). `skills_run` holds the FIRST call of each skill, which is what
+// the gates and the TURN-END line read. The band needs the LATEST call: the step a Builder is
+// at is the one it invoked most recently, and it stays there until the pane ends a turn with
+// nothing live or invokes the next step. Measured downstream (one ticket, 2026-10-22): the
+// built-in code-review went green at its invocation while its four review agents still ran,
+// the step after it lit yellow as "next", and the owner read the pane as hung on that step.
+// `skills_last` is written on every call; a record from before 4.3.2 falls back to the first.
+function latestInvoked(entry: Entry): { name: string; at: number } | null {
+  const steps = FLOW_BY_ROLE[String(entry?.role ?? '')] ?? []
+  const first = skillsRun(entry)
+  const lastRaw = entry?.skills_last
+  const last: Record<string, unknown> = lastRaw && typeof lastRaw === 'object' && !Array.isArray(lastRaw) ? lastRaw : {}
+  let best: { name: string; at: number } | null = null
+  for (const [name] of steps) {
+    const keys = name === 'codex-arm' ? ['codex-arm', 'codex-claude-arm'] : [name]
+    for (const k of keys) {
+      const at = Number(last[k] ?? first[k] ?? 0)
+      if (at > 0 && (!best || at > best.at)) best = { name, at }
+    }
+  }
+  return best
+}
 const PANE = 'dispatch-board'
 const RECORD = '.astraler/state/dispatch-record.json'
 
@@ -204,7 +227,7 @@ const banner = atom({ plugin: 'astragentic-dispatch', key: 'banner' } as const, 
 // The Builder pane's own band: which FLOW steps have run, read from the same record the gates
 // read, so the person watching the pane sees the step the Builder is at without reading the
 // transcript (owner's ask, 2026-10-09).
-const flow = atom({ plugin: 'astragentic-dispatch', key: 'flow' } as const, { ran: [], tddNa: false, reviewNa: false, refusals: 0, lastRefusal: null, qaMode: null } as Flow)
+const flow = atom({ plugin: 'astragentic-dispatch', key: 'flow' } as const, { ran: [], latest: null, lastTurnEndAt: 0, tddNa: false, reviewNa: false, refusals: 0, lastRefusal: null, qaMode: null } as Flow)
 
 // One step list per dispatched role, in the order the contract names the phases, each step
 // the skill name the engine reports at `skill.prompt`. Builder's is the gated flow with two
@@ -238,6 +261,8 @@ async function refreshFlow($: any, root: string, key: string): Promise<void> {
   const last = refusals.length ? refusals[refusals.length - 1] : null
   await update($, flow, () => ({
     ran: Object.keys(skillsRun(entry)),
+    latest: latestInvoked(entry),
+    lastTurnEndAt: Number(entry.last_turn_end_at ?? 0),
     tddNa: Boolean(entry.tdd_na),
     reviewNa: Boolean(entry.review_na),
     refusals: refusals.length,
@@ -1235,6 +1260,8 @@ export const register: Register = on => {
       skillWrites = skillWrites.then(async () => {
         const entry = ((await readRecord($, at)) ?? {})[key] ?? {}
         const prior = entry.skills_run ?? {}
+        const now = await $.clock.now()
+        const patch: Entry = { skills_last: { ...(entry.skills_last ?? {}), [e.skill]: now } }
         if (!(e.skill in prior)) {
           // Where the skill came from, beside when it ran (Claude Code 2.1.299 carries source,
           // plugin and path on the event). A field audit counted a skill at 0 because the pane
@@ -1242,8 +1269,9 @@ export const register: Register = on => {
           const ev: any = e
           const from = [ev.source, ev.pluginName, ev.path].filter(Boolean).join(':')
           const sources = { ...(entry.skills_source ?? {}), ...(from ? { [e.skill]: from } : {}) }
-          await patchRecord($, at, key, { skills_run: { ...prior, [e.skill]: await $.clock.now() }, skills_source: sources })
+          patch.skills_run = { ...prior, [e.skill]: now }; patch.skills_source = sources
         }
+        await patchRecord($, at, key, patch)
         await refreshFlow($, at, key)
       }).catch(() => {})
       await skillWrites
@@ -1277,7 +1305,10 @@ export const register: Register = on => {
     if (e.reason === 'answer' && me.role !== 'resident') {
       const live = await liveAgents($)
       if (live.length > 0) {
-        if (root) await patchRecord($, root, me.key, { waiting_on: { n: live.length, at: await $.clock.now(), what: live.slice(0, 3).map(a => a.description) } })
+        if (root) {
+          await patchRecord($, root, me.key, { waiting_on: { n: live.length, at: await $.clock.now(), what: live.slice(0, 3).map(a => a.description) } })
+          await refreshFlow($, root, me.key)
+        }
         $.ui.status(`astragentic-dispatch: ${live.length} agent(s) still running — TURN-END held until they finish`)
         return res
       }
@@ -1300,10 +1331,14 @@ export const register: Register = on => {
       if (root && me.role !== 'resident') {
         await patchRecord($, root, me.key, { last_turn_end_at: await $.clock.now(), last_turn_reason: e.reason,
           turn_end_pending: { at: await $.clock.now(), reason: 'no dispatcher address (brief did not arrive through the mod)', text: `${MARK} TURN-END key=${me.key} pane=${me.pane} reason=${e.reason}\n${e.answer.slice(-1500)}` } })
+        await refreshFlow($, root, me.key)
       }
       return res
     }
-    if (root) await patchRecord($, root, me.key, { last_turn_end_at: await $.clock.now(), last_turn_reason: e.reason, waiting_on: null })
+    if (root) {
+      await patchRecord($, root, me.key, { last_turn_end_at: await $.clock.now(), last_turn_reason: e.reason, waiting_on: null })
+      await refreshFlow($, root, me.key)
+    }
     // A QA pane's entry goes with its worktree at cleanup, so the fact that QA ended a turn is
     // also written onto the ticket's own entry (`qa:<key>` → `<key>`), where the owed check and
     // the board read it after the QA pane is gone (found by the 3.0.0 gate).
@@ -1956,9 +1991,13 @@ export const register: Register = on => {
   })
 
   // The bands, as pills. A terminal has no CSS; what it has is a Text with a background, so
-  // each fact is one chip: done is green, the step in progress is yellow, a step the brief
-  // exempted is grey, a pending one is dim. Red is reserved for what needs a person. The owner
-  // asked for this shape after watching the first measured dispatch (2026-10-09).
+  // each fact is one chip: a step that completed is green (✓), the step in progress is yellow
+  // (…, with the pane's live agent count), the next step is neutral (→), a step the brief
+  // exempted is grey (n/a), a pending one is dim (○). Red is reserved for what needs a person.
+  // The owner asked for this shape after watching the first measured dispatch (2026-10-09), and
+  // for the running/next split after reading a yellow "next" as "running" (2026-10-22). In
+  // progress = the step invoked most recently, while the pane has agents live or has not ended a
+  // turn since the call; the list is session-wide, so the count is the pane's, not the step's.
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     const { Box, Text } = $.ui.resolve(e)
     const Chip = ({ bg, fg, dim, label }: { bg?: string; fg?: string; dim?: boolean; label: string }) => (
@@ -1976,7 +2015,12 @@ export const register: Register = on => {
       if (!undelivered && !f && !appliedVersion) return next(e)
       const isMode = /auto mode|classifier|permission/i.test(undelivered)
       const hint = isMode ? ' This pane is not in bypass-permissions mode: press shift+tab until it is.' : ''
-      let isCurrentMarked = false
+      // Running is a matter of time, never of the agent list: a held turn end leaves
+      // `last_turn_end_at` where it was, so the step stays; an agent spawned after a clean turn
+      // end (a follow-up brief, no new step) must not re-light the step that finished before it.
+      const running = f?.latest && f.latest.at > f.lastTurnEndAt ? f.latest.name : null
+      const live = running ? await liveAgents($) : []
+      let isCurrentMarked = running !== null
       return (
         <Box flexDirection="column">
           {undelivered ? (
@@ -1993,10 +2037,11 @@ export const register: Register = on => {
               {(steps ?? []).map(([name, label, isOptional]) => {
                 const isRan = f.ran.includes(name) || (name === 'codex-arm' && f.ran.includes('codex-claude-arm'))
                 const isNa = (name === 'mattpocock-skills:tdd' && f.tddNa) || (name === 'code-review' && f.reviewNa)
+                if (name === running) return <Chip bg="warning" fg="inverseText" label={`… ${label}${live.length ? ` (${live.length} agent${live.length === 1 ? '' : 's'})` : ''}`} />
                 if (isRan) return <Chip bg="success" fg="inverseText" label={`✓ ${label}`} />
                 if (isNa) return <Chip bg="inactive" fg="inverseText" label={`n/a ${label}`} />
                 if (isOptional) return <Chip dim label={`· ${label}`} />
-                if (!isCurrentMarked) { isCurrentMarked = true; return <Chip bg="warning" fg="inverseText" label={`▶ ${label}`} /> }
+                if (!isCurrentMarked) { isCurrentMarked = true; return <Chip bg="subtle" label={`→ ${label}`} /> }
                 return <Chip dim label={`○ ${label}`} />
               })}
               {me.role === 'qa' && f.qaMode ? <Chip bg="claude" fg="inverseText" label={`mode ${f.qaMode}`} /> : null}

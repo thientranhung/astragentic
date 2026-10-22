@@ -1359,6 +1359,8 @@ const engine = {
 }
 const origLoad = Module._load
 Module._load = function (req, ...rest) { return req === 'claude-code' ? engine : origLoad.call(this, req, ...rest) }
+globalThis.h = (type, props, ...children) => typeof type === 'function' ? type({ ...(props ?? {}), children }) : ({ type, props: props ?? {}, children })
+globalThis.Fragment = 'Fragment'
 const m = new Module(path.join(modDir, 'hooks/register.cjs')); m.filename = m.id; m.paths = []
 m._compile(js, m.filename)
 const hooks = {}
@@ -1374,7 +1376,7 @@ const $ = {
   session: { id: async () => 'disp', send: async () => ({ isDelivered: true }), usage: async () => ({ startedAt: 0, context: { tokens: 1000, window: 1_000_000, percent: 0 } }), compact: async () => ({}) },
   fs: { read: async p => fs.readFileSync(p, 'utf8'), write: async (p, t) => fs.writeFileSync(p, t), exists: async p => fs.existsSync(p) },
   process: { run: async (argv, o = {}) => { if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? '{"result":{"tab":{"label":"ticket:AB-5"}}}' : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8', env: { ...process.env, ...(o.env ?? {}) } }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
-  ui: { status: t => log.push(t), toast: () => {}, open: () => {}, resolve: () => {} },
+  ui: { status: t => log.push(t), toast: () => {}, open: () => {}, resolve: () => ({ Box: 'Box', Text: 'Text' }) },
   prompt: { submit: async () => {} },
   agent: { list: async () => liveAgents },
 }
@@ -1388,6 +1390,9 @@ const fire = async (name, e, next) => {
   for (const { fn } of list) { const r = await fn($, e, next ?? (x => x)); if (r !== undefined && name !== 'session.start') return r }
 }
 const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board', init: [] })).map(r => `${r.key}:${r.state}:${r.note ?? ''}`).join(' ')
+// the band above the prompt, as the text of its chips in order
+const leaves = n => n == null || n === false ? [] : Array.isArray(n) ? n.flatMap(leaves) : typeof n === 'object' ? leaves(n.children) : [String(n)]
+const band = async () => leaves(await fire('ui.render', { component: 'AbovePrompt', props: {} }, async () => null)).join('').replace(/\s+/g, ' ').trim()
 ;(async () => {
   if (isPane) {
     // the dispatched side: a turn end with a live agent is held; the next turn start ends the hold
@@ -1610,7 +1615,35 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
     const sendToForkById = await sendTo('a-7f3-ce2df1')
     const sendToRole = await sendTo('thomas')
     liveAgents = []
-    console.log(JSON.stringify({ registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, armOffSection, refusedListed, refusedOther, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, log }))
+    // 4.3.2 — the band: the step invoked most recently is "…" (running, with the pane's live agent
+    // count) until a later step is invoked or a turn ends with nothing live; the step after it
+    // is "○", not a yellow "next"; before any step the first is "→" (one downstream ticket,
+    // 2026-10-22: a built-in code-review read ✓ while its four agents still ran, and the owner read
+    // the yellow step after it as the pane hanging there)
+    const bandNext = await band()
+    await fire('skill.prompt', { skill: 'code-review' }, async () => ({}))
+    liveAgents = [{ id: 'r1', status: 'running', description: 'review' }, { id: 'r2', status: 'running', description: 'review' }, { id: 'r3', status: 'pending', description: 'review' }, { id: 'r4', status: 'running', description: 'review' }]
+    await fire('turn.complete', { reason: 'answer', answer: 'reviewing', turnId: 't4' }, async () => ({}))
+    const bandHeld = await band()
+    liveAgents = []
+    await fire('turn.start', { text: '', turnId: 't5' }, async () => ({}))
+    await fire('skill.prompt', { skill: 'simplify' }, async () => ({}))
+    const bandSimplify = await band()
+    await fire('turn.complete', { reason: 'answer', answer: 'done', turnId: 't5' }, async () => ({}))
+    const bandDone = await band()
+    // an agent spawned after that clean turn end (a follow-up brief, no new step) re-lights nothing
+    liveAgents = [{ id: 'x1', status: 'running', description: 'explore' }]
+    const bandAfterAgent = await band()
+    liveAgents = []
+    const bandText = { bandNext, bandHeld, bandSimplify, bandDone, bandAfterAgent }
+    const bandRead = {
+      next: /→ implement ○ tdd/.test(bandNext) && !/…/.test(bandNext),
+      held: /… review:built-in \(4 agents\)/.test(bandHeld) && !/✓ review:built-in/.test(bandHeld) && !/→/.test(bandHeld),
+      simplify: /✓ review:built-in/.test(bandSimplify) && /… simplify/.test(bandSimplify) && !/→/.test(bandSimplify),
+      done: /✓ simplify/.test(bandDone) && !/…/.test(bandDone) && /→ implement/.test(bandDone),
+      afterAgent: /✓ simplify/.test(bandAfterAgent) && !/…/.test(bandAfterAgent),
+    }
+    console.log(JSON.stringify({ registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, bandText, log }))
     return
   }
   await fire('session.start', {}, async () => ({}))
@@ -1749,8 +1782,8 @@ DRVEOS
     bad "mod merge gate" "$out"
   fi
   out="$(mod_drive "$MOD" pane)"
-  if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"sendToFork":"code-review [ce2df1]","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","compacted":1,"commitNoTest":"deny:held","commitWithTest":"pass:ran","commitDeletedTest":"deny:held","commitLaterDeletedTest":"deny:held","commitPathLimited":"deny:held","commitAllDeleted":"deny:held","commitAddThenCommit":"pass:ran","commitRmThenCommit":"deny:held","commitRestageDeleted":"deny:held","commitDashMAttached":"deny:held","commitScopedAddAll":"deny:held","commitPathRestored":"deny:held","commitAfterMv":"deny:held","mvNotReplayed":true,"commitTwice":"deny:held","commitDashCSrc":"deny:held","commitAmendOnly":"deny:held","commitRmAddAll":"deny:held","rmNotReplayed":true,"commitPathspecFile":"deny:held","commitRepeatedC":"deny:held","commitDotUntracked":"deny:held","commitDotStaged":"pass:ran","commitSkippedAdd":"deny:held","commitRmNoCached":"deny:held","fileSurvived":true,"commitOrAdd":"deny:held","commitEchoAdd":"deny:held","commitRmAbsent":"deny:held","commitSubstQuoted":"deny:held","testStillStaged":true,"commitWorkTree":"deny:held","commitConfigOpt":"deny:held","commitSubstApos":"deny:held","commitBacktickDouble":"deny:held","commitSubstLiteral":"pass:ran","commitConfigEnv":"deny:held","commitCommentedAdd":"deny:held","commitAbbrevOpt":"deny:held","commitMessageEq":"pass:ran","commitRedirect":"deny:held","commitFdDup":"pass:ran","ampNamed":true,"commitHeredocMsg":"pass:ran","commitHeredocOpen":"deny:held","commitHeredocExtra":"deny:held","commitHeredocBare":"deny:held","substFixNamed":true,"noScratchLeft":true'; then
-    ok "pane side: a turn end with a live agent is held, the next turn start ends the hold, an arm row at no reaches the Builder's prompt, a command on the project's refused list is refused, and a turn over the context ceiling is compacted"
+  if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"sendToFork":"code-review [ce2df1]","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"next":true,"held":true,"simplify":true,"done":true,"afterAgent":true},"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","compacted":1,"commitNoTest":"deny:held","commitWithTest":"pass:ran","commitDeletedTest":"deny:held","commitLaterDeletedTest":"deny:held","commitPathLimited":"deny:held","commitAllDeleted":"deny:held","commitAddThenCommit":"pass:ran","commitRmThenCommit":"deny:held","commitRestageDeleted":"deny:held","commitDashMAttached":"deny:held","commitScopedAddAll":"deny:held","commitPathRestored":"deny:held","commitAfterMv":"deny:held","mvNotReplayed":true,"commitTwice":"deny:held","commitDashCSrc":"deny:held","commitAmendOnly":"deny:held","commitRmAddAll":"deny:held","rmNotReplayed":true,"commitPathspecFile":"deny:held","commitRepeatedC":"deny:held","commitDotUntracked":"deny:held","commitDotStaged":"pass:ran","commitSkippedAdd":"deny:held","commitRmNoCached":"deny:held","fileSurvived":true,"commitOrAdd":"deny:held","commitEchoAdd":"deny:held","commitRmAbsent":"deny:held","commitSubstQuoted":"deny:held","testStillStaged":true,"commitWorkTree":"deny:held","commitConfigOpt":"deny:held","commitSubstApos":"deny:held","commitBacktickDouble":"deny:held","commitSubstLiteral":"pass:ran","commitConfigEnv":"deny:held","commitCommentedAdd":"deny:held","commitAbbrevOpt":"deny:held","commitMessageEq":"pass:ran","commitRedirect":"deny:held","commitFdDup":"pass:ran","ampNamed":true,"commitHeredocMsg":"pass:ran","commitHeredocOpen":"deny:held","commitHeredocExtra":"deny:held","commitHeredocBare":"deny:held","substFixNamed":true,"noScratchLeft":true'; then
+    ok "pane side: a turn end with a live agent is held, the next turn start ends the hold, the band reads the latest step as … with the pane's agent count until a later step or a clean turn end and the step after it as ○, an arm row at no reaches the Builder's prompt, a command on the project's refused list is refused, and a turn over the context ceiling is compacted"
   else
     bad "mod pane hold" "$out"
   fi
@@ -1782,6 +1815,9 @@ s = s.replace(old6c, "return id === to || a.teammateId === to", 1)
 old6d = "|| (ref !== '' && id.toLowerCase().includes(ref))"
 assert old6d in s, "fork ref match not found"
 s = s.replace(old6d, "", 1)
+old6e = "if (name === running) return <Chip"
+assert old6e in s, "running chip not found"
+s = s.replace(old6e, "if (false) return <Chip", 1)
 old7 = "if (m[2].toLowerCase() === 'no') off.add(m[1])"
 assert old7 in s, "arm row parser not found"
 s = s.replace(old7, "", 1)
@@ -1818,8 +1854,8 @@ EOS
     bad "mod merge gate planted tdd" "the record-only gate did not refuse the tested branch: $out"
   fi
   out="$(mod_drive "$TMP/mod-stuck" pane)"
-  if says "$out" '"paneHeld":true,"paneCleared":false,"sendToFork":"uds:/tmp/d.sock","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","armOffSection":false,"refusedListed":"pass:ran","refusedOther":"pass:ran","compacted":0'; then
-    ok "planted: a pane that starts a turn leaves its hold standing; an arm row nobody parses reaches no prompt; a refused list nobody tests refuses nothing; a ceiling nobody reads compacts nothing"
+  if says "$out" '"paneHeld":true,"paneCleared":false,"sendToFork":"uds:/tmp/d.sock","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"next":true,"held":false,"simplify":false,"done":true,"afterAgent":true},"armOffSection":false,"refusedListed":"pass:ran","refusedOther":"pass:ran","compacted":0'; then
+    ok "planted: a step invoked reads ✓ while the pane's four agents still run; a pane that starts a turn leaves its hold standing; an arm row nobody parses reaches no prompt; a refused list nobody tests refuses nothing; a ceiling nobody reads compacts nothing"
   else
     bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"
   fi

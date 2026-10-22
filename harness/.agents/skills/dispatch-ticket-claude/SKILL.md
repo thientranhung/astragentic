@@ -22,7 +22,7 @@ and every Claude session in the project loads it with no flag and no setup.
 | Claim before the brief | a brief for a ticket the tracker reports unclaimed is not sent |
 | Tracker write-back after a merge | the merge result carries the note, the line turns red, and no brief is sent until `scripts/ticket-done.sh` has stamped it |
 | Release a worktree's resources | `release-worktree-resources.sh` runs at `git worktree remove`; the record entry goes with the worktree |
-| Show which step a pane is at | the band shows chips from the record the gates read. Builder: implement · tdd · review:matt · review:built-in · simplify · arm; Shaper: align · spec · tickets; QA: the role chip only |
+| Show which step a pane is at | the band shows chips from the record the gates read. Builder: implement · tdd · review:matt · review:built-in · simplify · arm; Shaper: align · spec · tickets; QA: the role chip only. `✓` the step completed; `…` the step invoked most recently, in progress until a later step is invoked or a turn ends with nothing live, with the pane's live agent count (session-wide, not the step's own); `→` the next step; `○` pending; `n/a` exempted by the brief |
 | Seed a new worktree | `.astraler/project/setup-worktree.sh <path>` runs after a successful `git worktree add`; a failure is named in the result and the worktree is not to be dispatched into |
 | Record which flow steps ran | every Skill call the Builder makes, as the engine expands it; `TURN-END` carries the list and a merge names the steps with no record |
 
