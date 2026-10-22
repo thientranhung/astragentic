@@ -1,3 +1,18 @@
+# Astragentic 4.3.5
+
+**A dispatch bell reaches the dispatcher that briefed the lane, not whichever root session
+polled first.** Every session at the project root without a dispatched tab label ran the
+record poll that rings held-stale and undelivered-turn-end bells, so a BA or Quick pane could
+take a bell meant for Thomas. Measured downstream on 2026-10-23: a Builder held its turn end
+for 30 minutes, the held-stale bell rang in the BA pane, Thomas never saw it, and the owner
+noticed the stall first. A bell for a lane now rings only in the session whose socket the lane's
+record names; if that session is gone (a dispatcher restart), any root session rings for it, as
+before. The selftest plants the check out and watches another session's lane ring.
+
+## Upgrade from 4.3.4
+
+One mod file. No plug or contract changes.
+
 # Astragentic 4.3.4
 
 **A project's refusal in a dispatched pane can say the project's reason.** In
