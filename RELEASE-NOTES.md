@@ -1,3 +1,20 @@
+# Astragentic 4.3.4
+
+**A project's refusal in a dispatched pane can say the project's reason.** In
+`.astraler/project/refused-in-dispatched-panes`, a `# reason: …` line directly above a pattern
+is now the text a Builder, Shaper or QA pane reads when that pattern refuses its command. Other
+comments are not reasons, so existing plug files read exactly as before; a pattern with no
+reason line keeps the default ("it touches something shared … the owner runs it"). Asked
+downstream on 2026-10-22: a project that wants the station alone to run its whole test suite
+could already refuse the command, but the refusal told the Builder the owner would run it. Now
+it can say `# reason: the station runs the whole suite; run only your touched packages`. The
+selftest plants a reader that drops the reason and watches the default reach that refusal.
+
+## Upgrade from 4.3.3
+
+One mod file and the dispatch-ticket-claude skill text. Existing plug files are unchanged in
+meaning.
+
 # Astragentic 4.3.3
 
 **Two steps stamped in the same millisecond resolve to the later one.** 4.3.2 refused to apply on
