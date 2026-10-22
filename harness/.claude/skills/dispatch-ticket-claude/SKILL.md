@@ -140,7 +140,10 @@ whose loop body has no sleep. The refusal carries the wait that works:
 `cmd & pid=$!; while kill -0 $pid 2>/dev/null; do sleep 10; done; wait $pid`.
 
 A project can add refusals: `.astraler/project/refused-in-dispatched-panes`, one regex per
-line, `#` comments. A dispatched pane's Bash command matching one is denied.
+line, `#` comments. A dispatched pane's Bash command matching one is denied. A `# reason: …` line
+directly above a pattern is the refusal's text (e.g. `# reason: the station runs the whole suite;
+run only your touched packages`); other comments are not, and a pattern with no reason line gets
+the default, which says the owner runs it.
 
 ## The flow is read from what ran
 

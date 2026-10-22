@@ -1598,9 +1598,17 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const noScratchLeft = !fs.readdirSync(root).some(n => n.startsWith('.git-tdd-gate'))
     // the project's refused-in-dispatched-panes list: a listed command is refused in this pane
     fs.mkdirSync(path.join(root, '.astraler/project'), { recursive: true })
-    fs.writeFileSync(path.join(root, '.astraler/project/refused-in-dispatched-panes'), '# shared test database\n\\bmake\\s+db-down\n')
+    fs.writeFileSync(path.join(root, '.astraler/project/refused-in-dispatched-panes'), '# shared test database\n\\bmake\\s+db-down\n\n# a plain comment is not a reason\n# reason: the station runs the whole suite; run only your touched packages\n\\bmake\\s+itest-local\\b\n\\bgo\\s+test\\s+\\./\\.\\.\\.\n')
     const refusedListed = await cmdOf('cd apps/server && make db-down')
     const refusedOther = await cmdOf('cd apps/server && make db-up')
+    // a `# reason:` line directly above a pattern is the refusal's text; db-down's plain comment is
+    // not, and a pattern with none keeps the default (one downstream ask, 2026-10-22: a listed whole-suite run was told "the owner runs it")
+    const denyOf = async (command) => String((await fire('tool.call', { tool: 'Bash', command }, async () => ({})))?.deny ?? '')
+    const whyItest = await denyOf('make itest-local')
+    const whyGo = await denyOf('go test ./...')
+    const whyDb = await denyOf('make db-down')
+    const refusedWhy = !whyDb.includes('shared test database') && whyItest.includes('the station runs the whole suite') && !whyItest.includes('the owner runs it')
+      && whyGo.includes('the owner runs it') && !whyGo.includes('the station runs')
     // the context ceiling: a turn that ends over it is compacted at the next tick, between turns
     let compacted = 0
     $.session.usage = async () => ({ startedAt: 0, context: { tokens: 350_000, window: 1_000_000, percent: 35 } })
@@ -1652,7 +1660,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
       afterAgent: /✓ simplify/.test(bandAfterAgent) && !/…/.test(bandAfterAgent),
       tie: /… simplify \(1 agent\)/.test(bandTie) && /✓ review:built-in/.test(bandTie),
     }
-    console.log(JSON.stringify({ registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, bandText, log }))
+    console.log(JSON.stringify({ registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, bandText, log }))
     return
   }
   await fire('session.start', {}, async () => ({}))
@@ -1791,7 +1799,7 @@ DRVEOS
     bad "mod merge gate" "$out"
   fi
   out="$(mod_drive "$MOD" pane)"
-  if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"sendToFork":"code-review [ce2df1]","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"next":true,"held":true,"simplify":true,"done":true,"afterAgent":true,"tie":true},"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","compacted":1,"commitNoTest":"deny:held","commitWithTest":"pass:ran","commitDeletedTest":"deny:held","commitLaterDeletedTest":"deny:held","commitPathLimited":"deny:held","commitAllDeleted":"deny:held","commitAddThenCommit":"pass:ran","commitRmThenCommit":"deny:held","commitRestageDeleted":"deny:held","commitDashMAttached":"deny:held","commitScopedAddAll":"deny:held","commitPathRestored":"deny:held","commitAfterMv":"deny:held","mvNotReplayed":true,"commitTwice":"deny:held","commitDashCSrc":"deny:held","commitAmendOnly":"deny:held","commitRmAddAll":"deny:held","rmNotReplayed":true,"commitPathspecFile":"deny:held","commitRepeatedC":"deny:held","commitDotUntracked":"deny:held","commitDotStaged":"pass:ran","commitSkippedAdd":"deny:held","commitRmNoCached":"deny:held","fileSurvived":true,"commitOrAdd":"deny:held","commitEchoAdd":"deny:held","commitRmAbsent":"deny:held","commitSubstQuoted":"deny:held","testStillStaged":true,"commitWorkTree":"deny:held","commitConfigOpt":"deny:held","commitSubstApos":"deny:held","commitBacktickDouble":"deny:held","commitSubstLiteral":"pass:ran","commitConfigEnv":"deny:held","commitCommentedAdd":"deny:held","commitAbbrevOpt":"deny:held","commitMessageEq":"pass:ran","commitRedirect":"deny:held","commitFdDup":"pass:ran","ampNamed":true,"commitHeredocMsg":"pass:ran","commitHeredocOpen":"deny:held","commitHeredocExtra":"deny:held","commitHeredocBare":"deny:held","substFixNamed":true,"noScratchLeft":true'; then
+  if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"sendToFork":"code-review [ce2df1]","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"next":true,"held":true,"simplify":true,"done":true,"afterAgent":true,"tie":true},"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","refusedWhy":true,"compacted":1,"commitNoTest":"deny:held","commitWithTest":"pass:ran","commitDeletedTest":"deny:held","commitLaterDeletedTest":"deny:held","commitPathLimited":"deny:held","commitAllDeleted":"deny:held","commitAddThenCommit":"pass:ran","commitRmThenCommit":"deny:held","commitRestageDeleted":"deny:held","commitDashMAttached":"deny:held","commitScopedAddAll":"deny:held","commitPathRestored":"deny:held","commitAfterMv":"deny:held","mvNotReplayed":true,"commitTwice":"deny:held","commitDashCSrc":"deny:held","commitAmendOnly":"deny:held","commitRmAddAll":"deny:held","rmNotReplayed":true,"commitPathspecFile":"deny:held","commitRepeatedC":"deny:held","commitDotUntracked":"deny:held","commitDotStaged":"pass:ran","commitSkippedAdd":"deny:held","commitRmNoCached":"deny:held","fileSurvived":true,"commitOrAdd":"deny:held","commitEchoAdd":"deny:held","commitRmAbsent":"deny:held","commitSubstQuoted":"deny:held","testStillStaged":true,"commitWorkTree":"deny:held","commitConfigOpt":"deny:held","commitSubstApos":"deny:held","commitBacktickDouble":"deny:held","commitSubstLiteral":"pass:ran","commitConfigEnv":"deny:held","commitCommentedAdd":"deny:held","commitAbbrevOpt":"deny:held","commitMessageEq":"pass:ran","commitRedirect":"deny:held","commitFdDup":"pass:ran","ampNamed":true,"commitHeredocMsg":"pass:ran","commitHeredocOpen":"deny:held","commitHeredocExtra":"deny:held","commitHeredocBare":"deny:held","substFixNamed":true,"noScratchLeft":true'; then
     ok "pane side: a turn end with a live agent is held, the next turn start ends the hold, the band reads the latest step as … with the pane's agent count until a later step or a clean turn end and the step after it as ○, an arm row at no reaches the Builder's prompt, a command on the project's refused list is refused, and a turn over the context ceiling is compacted"
   else
     bad "mod pane hold" "$out"
@@ -1865,8 +1873,24 @@ EOS
   else
     bad "mod merge gate planted tdd" "the record-only gate did not refuse the tested branch: $out"
   fi
+  # 4.3.4 — a refusal that ignores the pattern's own `# reason:` line says "the owner runs it" to a
+  # Builder whose whole-suite run the station owns
+  rm -rf "$TMP/mod-stuck-why"; cp -R "$MOD" "$TMP/mod-stuck-why"
+  python3 - "$TMP/mod-stuck-why/hooks/register.tsx" <<'EOS'
+import sys
+p = sys.argv[1]; s = open(p).read()
+old = "reason = line.match(/^#+\\s*reason:\\s*(.+)$/i)?.[1] ?? ''"
+assert old in s, "refusal reason read not found"
+open(p, 'w').write(s.replace(old, "reason = ''", 1))
+EOS
+  out="$(mod_drive "$TMP/mod-stuck-why" pane)"
+  if says "$out" '"refusedListed":"deny:held","refusedOther":"pass:ran","refusedWhy":false'; then
+    ok "planted: a refusal that drops the pattern's reason tells a Builder the owner runs the station's suite (one downstream ask, 2026-10-22)"
+  else
+    bad "mod refusal planted reason" "the reasonless refusal was not caught: $out"
+  fi
   out="$(mod_drive "$TMP/mod-stuck" pane)"
-  if says "$out" '"paneHeld":true,"paneCleared":false,"sendToFork":"uds:/tmp/d.sock","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"next":true,"held":false,"simplify":false,"done":true,"afterAgent":true,"tie":false},"armOffSection":false,"refusedListed":"pass:ran","refusedOther":"pass:ran","compacted":0'; then
+  if says "$out" '"paneHeld":true,"paneCleared":false,"sendToFork":"uds:/tmp/d.sock","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"next":true,"held":false,"simplify":false,"done":true,"afterAgent":true,"tie":false},"armOffSection":false,"refusedListed":"pass:ran","refusedOther":"pass:ran","refusedWhy":false,"compacted":0'; then
     ok "planted: a step invoked reads ✓ while the pane's four agents still run; a same-millisecond tie lights the earlier step; a pane that starts a turn leaves its hold standing; an arm row nobody parses reaches no prompt; a refused list nobody tests refuses nothing; a ceiling nobody reads compacts nothing"
   else
     bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"

@@ -1591,13 +1591,23 @@ export const register: Register = on => {
   on('tool.call', { tool: 'Bash' }, async ($, e, next) => {
     if (!me || !root || me.role === 'resident') return next(e)
     const plug = `${root}/.astraler/project/refused-in-dispatched-panes`
-    const listed = (await overlayFile($, plug)).split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'))
-    for (const pat of listed) {
+    // A `# reason:` line directly above a pattern is the refusal's text instead of the default (a
+    // marker, so a project's existing comments keep their meaning): a project that lists its
+    // whole-suite test command (the station runs it) is not refusing something shared, and "the
+    // owner runs it" sent the Builder the wrong way (one downstream ask, 2026-10-22).
+    let reason = ''
+    for (const line of (await overlayFile($, plug)).split('\n').map(l => l.trim())) {
+      if (!line) { reason = ''; continue }
+      if (line.startsWith('#')) { reason = line.match(/^#+\s*reason:\s*(.+)$/i)?.[1] ?? ''; continue }
+      const pat = line, why = reason
+      reason = ''
       let re: RegExp
       try { re = new RegExp(pat, 'm') } catch { continue }
       if (re.test(e.command)) {
         await logRefusal($, root, me.key, 'refused-command', `${pat} :: ${e.command.slice(0, 120)}`)
-        return { deny: `astragentic-dispatch: this command matches "${pat}" in .astraler/project/refused-in-dispatched-panes — a command the project refuses in a dispatched pane (it touches something shared beyond your worktree). Say in your handback what you wanted it for; the owner runs it from a resident pane if it is needed.` }
+        return { deny: why
+          ? `astragentic-dispatch: this command matches "${pat}" in .astraler/project/refused-in-dispatched-panes — ${why}`
+          : `astragentic-dispatch: this command matches "${pat}" in .astraler/project/refused-in-dispatched-panes — a command the project refuses in a dispatched pane (it touches something shared beyond your worktree). Say in your handback what you wanted it for; the owner runs it from a resident pane if it is needed.` }
       }
     }
     return next(e)
