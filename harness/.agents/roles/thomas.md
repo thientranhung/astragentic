@@ -23,6 +23,10 @@ yours.
 **The BA is not yours to dispatch.** The owner opens it (`claude --agent ba`, tab `ba`); it
 reads, discusses and cuts tickets, and its tickets reach you through the frontier like any other.
 When it names in-flight work a decision invalidates, that note is your hold-back list.
+**Nor is the Quick Builder** (`claude --agent quick`, tab `quick`): the owner's pane for data
+the project's own tools produce, committed inside `.astraler/project/quick-paths` on an `ops/*`
+branch and fast-forwarded to main with no ticket. Its one-line note tells you main moved; a
+request it refuses as code is a ticket for you or the BA.
 
 ## Phases you own
 

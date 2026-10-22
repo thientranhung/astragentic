@@ -192,6 +192,53 @@ guard_role allow '{"session_id":"sess-none"}' 'git merge builder/AB-1'   # no ma
 sed 's/if role in READ_ONLY_ROLES:/if False:/' "$S/hook-git-guard.py" > "$TMP/guard-no-role.py"
 guard_role allow '{"agent_type":"ba"}' 'git commit -m "tidy"' "$TMP/guard-no-role.py"
 
+echo "hook-git-guard — the quick pane commits data inside quick-paths and nothing else (4.3.0)"
+# Six catalog-data commits in 30 days downstream, each paid for as a full Builder ticket to run
+# a tool that existed. The quick pane may commit only the paths the project declares, in one
+# git shape the guard can read: index commit, ff-only merge of its own ops/* branch, push of it.
+QR="$TMP/quick-repo"; rm -rf "$QR"; mkdir -p "$QR/.astraler/project" "$QR/apps/server/catalog-data" "$QR/apps/server/internal"
+( cd "$QR" && git init -q && git -c user.name=t -c user.email=t@t commit -q --allow-empty -m init )
+printf '# data the owner curates\napps/server/catalog-data/**\n' > "$QR/.astraler/project/quick-paths"
+quick() { # <expected deny|allow> <command> [guard script]
+  local want="$1" cmd="$2" script="${3:-$S/hook-git-guard.py}"; local out got
+  out="$(printf '%s' "$cmd" | python3 -c '
+import sys, json
+print(json.dumps({"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":sys.stdin.read()},"agent_type":"quick","cwd":sys.argv[1]}))' "$QR" \
+    | ASTRAGENTIC_ROLE_MARKER_DIR="$TMP" HARNESS_HOOK_LOG="$TMP/hook.log" python3 "$script" 2>/dev/null)"
+  if says "$out" '"permissionDecision": "deny"'; then got=deny; else got=allow; fi
+  [ "$want" = "$got" ] && ok "quick $want: ${cmd:0:70}" || bad "quick $cmd" "expected $want, got $got: $out"
+}
+echo x > "$QR/apps/server/catalog-data/images.json"; ( cd "$QR" && git add apps/server/catalog-data/images.json )
+quick allow 'git commit -m "catalog: 12 new images"'
+echo y > "$QR/apps/server/internal/a.go"; ( cd "$QR" && git add apps/server/internal/a.go )
+quick deny  'git commit -m "catalog: and a little code"'             # one file outside: refused, named
+( cd "$QR" && git reset -q -- apps/server/internal/a.go )
+quick deny  'git commit -am "everything"'
+quick deny  'git commit -m x -- apps/server/catalog-data/images.json'  # a pathspec commit is not the index
+quick deny  'git commit -m "$(cat <<EOF
+x
+EOF
+)"'                                                                   # unreadable around git: refused, not skipped
+quick allow 'git merge --ff-only ops/images-1022'
+quick deny  'git merge ops/images-1022'
+quick deny  'git merge --ff-only builder/AB-1'
+quick allow 'git push origin main'
+quick allow 'git push -u origin ops/images-1022'
+quick deny  'git push origin feature/x'
+quick deny  'git push --force origin main'
+quick allow 'git worktree add -b ops/images-1022 /tmp/wt main'
+quick deny  'git worktree add -b feat/x /tmp/wt main'
+quick deny  'git rebase main'
+quick deny  'bash scripts/ticket-done.sh AB-1'
+quick allow 'go run ./cmd/curated-images-upload --dir /tmp/imgs && git status --short'
+rm "$QR/.astraler/project/quick-paths"
+quick deny  'git commit -m "no quick-paths declared"'
+# planted: a guard whose quick gate never runs lets the code file through
+sed 's/if role == QUICK_ROLE:/if False:/' "$S/hook-git-guard.py" > "$TMP/guard-no-quick.py"
+printf 'apps/server/catalog-data/**\n' > "$QR/.astraler/project/quick-paths"
+( cd "$QR" && git add apps/server/internal/a.go )
+quick allow 'git commit -m "catalog: and a little code"' "$TMP/guard-no-quick.py"
+
 echo "hook-git-guard — the registered wrapper's unreadable-file fallback runs the same guard (4.0.2)"
 # Measured downstream: 27 whole-session blocks where python3 could not open the hook file
 # ([Errno 1] under ~/Documents: macOS TCC on Python.app, or a sandbox) while the shell could
@@ -826,7 +873,7 @@ echo "one rule, registered where it is loaded"
 # adapted project is where they are actually LOADED, and it is the only place they can drift.
 # The check that proves a rule reached the runtime must run where the runtime is.
 PAY="$ROOT/harness"; [ "$LAYOUT" = project ] && PAY="$ROOT"
-for role in thomas shaper builder qa ba; do
+for role in thomas shaper builder qa ba quick; do
   cla="$PAY/.claude/agents/$role.md"
   # A project may not run all four roles, and a surface that does not exist there is not a
   # drifted surface. Absent files are reported as scope, never as a failure.

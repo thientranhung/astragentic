@@ -1,3 +1,38 @@
+# Astragentic 4.3.0
+
+**A sixth role: the Quick Builder.** The owner's pane for work the project's own tools already
+know how to do: new images for the catalog, a batch of catalog rows, a data push. It runs the
+tool, shows the before/after, commits the data the tool produced, fast-forwards main, tells
+Thomas in one line, and stops. No ticket, no loop. The owner asked for it on 2026-10-22 after
+the 4.2.0 notes read his "Quick Dev" as "small code fixes, faster" and declined it; the ask
+was never code. Measured on his first adopter, 30 days: six commits to the catalog data files,
+each paid for as a full Builder ticket (median $19.5, 334 model calls, 1.2 h of pane time) to
+run a tool that already existed (`curated-images-upload`, `curated-catalog-build`, `admin
+ingest-curated-catalog`).
+
+**What keeps it quick and what keeps it safe are the same thing: a write-set and one git
+shape.** The project declares the paths a quick pane may commit in
+`.astraler/project/quick-paths` (one glob per line, e.g. `apps/server/catalog-data/**`); with
+no file there it may commit nothing, and the refusal says so. In a `quick` pane
+`hook-git-guard.py` reads every git command: a commit is the index and nothing else (`-a`,
+`--include`, `--only`, a pathspec, `--allow-empty` are refused), and every staged path must
+match quick-paths, or the refusal names the files outside and says "this is a ticket"; a
+merge is exactly `git merge --ff-only ops/<slug>`; a push is `origin ops/<slug>` or `origin
+main`; branches and worktrees are `ops/*`; rebase, cherry-pick, reset --hard, force pushes,
+`--no-verify`, `gh pr merge`, `ticket-done.sh` and dispatch are refused outright; a heredoc or
+substitution around a git command is refused rather than skipped, because this guard cannot
+read it and a quick pane is judged on every git command. The pre-push gate sees no merge
+commit and no ticket id, so main takes the fast-forward. Contract: `.agents/roles/quick.md`
+(545 words), adapter `.claude/agents/quick.md`, launched by the owner like the BA
+(`claude --agent quick`, tab `quick`). Selftest: 19 shapes on a planted repository with a
+quick-paths file, and a copy with the gate removed lets the code file through.
+
+## Upgrade from 4.2.0
+
+Two new files, the git guard, the reachability check, `thomas.md`, `orchestrator.md`, the
+READMEs. Nothing changes for a project that does not open a quick pane; a project that wants
+one writes `.astraler/project/quick-paths` (no release overwrites it).
+
 # Astragentic 4.2.0
 
 **A fifth role: the BA.** Owner-opened, read-only, it talks the problem through with the owner,

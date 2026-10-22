@@ -37,6 +37,7 @@ after every merge, handback and report.
 | Shaper | `spec:<id>` | `spec:ABC-128` |
 | QA | `qa:<id>` | `qa:ABC-130` |
 | Owner (BA) | `ba` | `ba` |
+| Owner (Quick Builder) | `quick` | `quick` |
 | Owner (manual) | anything | `deploy` |
 
 **Owner tabs are not yours** — always create a fresh tab rather than splitting, renaming or
