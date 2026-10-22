@@ -44,8 +44,10 @@ def role_of(path, dir_name):
 
 
 def ticket_of(dir_name):
+    # The key after the lane prefix, not the first key-shaped token: a transcript directory
+    # encodes the whole cwd, and "/2.DEV/2.PRIVATE/" read as ticket DEV-2 for every call.
     import re
-    m = re.search(r"([A-Z][A-Z0-9]*-[0-9]+)", dir_name)
+    m = re.search(r"(?:builder|ticket|spec|shaper|qa|gate)-([A-Z][A-Z0-9]*-[0-9]+)", dir_name)
     return m.group(1) if m else "-"
 
 
