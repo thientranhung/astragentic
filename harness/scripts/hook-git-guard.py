@@ -139,14 +139,13 @@ READ_ONLY_FORBIDDEN = re.compile(
     r"|\bherdr\s+(?:agent\s+start|pane\s+run|command\s+run)\b")
 ROLE_MARKER_DIR = os.environ.get("ASTRAGENTIC_ROLE_MARKER_DIR", "/tmp")
 
-# THE QUICK BUILDER (4.3.0): an owner-opened pane that runs the project's own data tools and
-# commits what they produce, with no ticket and no loop. Measured downstream, 30 days: six
-# commits to the catalog data files, each paid for as a full Builder ticket (median $19.5,
-# 1.2 h of pane time) to run a tool that already existed. What keeps it quick AND safe is a
-# write-set the project declares (`.astraler/project/quick-paths`, one glob per line) and a
-# commit shape this guard can read: the index, judged path by path, nothing else.
+# THE QUICK BUILDER (4.3.0): an owner-opened pane for a small change on the owner's word, with
+# no ticket and no loop. Measured downstream, 30 days: six commits to the catalog data files,
+# each paid for as a full Builder ticket (median $19.5, 1.2 h of pane time) to run a tool that
+# already existed. 4.4.0 dropped the declared write-set (`quick-paths`) on the owner's ruling
+# (2026-10-24: too much ceremony; quick judges its input). What stays is the git shape: its own
+# ops/* branch, a fast-forward onto main, no force, no rewrite, no dispatch.
 QUICK_ROLE = "quick"
-QUICK_PATHS_FILE = ".astraler/project/quick-paths"
 QUICK_BRANCH = re.compile(r"^ops/[A-Za-z0-9._-]+$")
 QUICK_FORBIDDEN = re.compile(
     r"\bticket-done\.sh\b"
@@ -159,43 +158,11 @@ QUICK_FORBIDDEN = re.compile(
 QUICK_UNREADABLE = re.compile(r"\bgit\s+(?:-[^\s]+\s+)*(?:commit|merge|push|worktree|checkout|switch|branch|add|rm|mv)\b")
 
 
-def glob_to_re(glob):
-    glob = glob.strip()
-    out, i = "", 0
-    while i < len(glob):
-        c = glob[i]
-        if glob.startswith("**/", i):
-            out += "(?:.*/)?"; i += 3; continue
-        if glob.startswith("**", i):
-            out += ".*"; i += 2; continue
-        if c == "*":
-            out += "[^/]*"
-        elif c == "?":
-            out += "[^/]"
-        else:
-            out += re.escape(c)
-        i += 1
-    # a pattern ending in `/` names a directory: everything under it
-    if glob.endswith("/"):
-        out += ".*"
-    return re.compile("^" + out + "$")
-
-
-def quick_paths(root):
-    try:
-        with open(os.path.join(root, QUICK_PATHS_FILE), encoding="utf-8") as fh:
-            lines = [l.strip() for l in fh]
-    except OSError:
-        return None
-    pats = [l for l in lines if l and not l.startswith("#")]
-    return [glob_to_re(p) for p in pats] if pats else None
-
-
 def quick_gate(cmd):
     """Deny (and exit) when a quick pane's command leaves its lane; return when it is fine."""
     hit = QUICK_FORBIDDEN.search(cmd)
     if hit:
-        deny("a quick pane never runs `%s`: it commits data its tools produced on an ops/* "
+        deny("a quick pane never runs `%s`: it commits on an ops/* "
              "branch, fast-forwards main, pushes, and stops. History rewrites, force pushes, "
              "PR merges, dispatch and ticket-done.sh are Thomas's or a ticket's." % hit.group(0).strip(), cmd)
     cmds = simple_commands(cmd)
@@ -221,7 +188,7 @@ def quick_gate(cmd):
             refs = [a for a in rest if not a.startswith("-")]
             if "--ff-only" not in rest or len(refs) != 1 or not QUICK_BRANCH.match(refs[0]):
                 deny("a quick pane merges exactly `git merge --ff-only ops/<slug>`: one branch of its "
-                     "own, fast-forward, so main gains only the commits this guard already judged.", cmd)
+                     "own, fast-forward, so main never gains a merge commit or a branch the owner did not see.", cmd)
         elif sub == "push":
             words = [a for a in rest if not a.startswith("-")]
             remote = words[0] if words else "origin"
@@ -245,35 +212,6 @@ def quick_gate(cmd):
                 b = [rest[j + 1] for j, a in enumerate(rest) if a in ("-b", "-B") and j + 1 < len(rest)]
                 if not b or not QUICK_BRANCH.match(b[0]):
                     deny("a quick pane opens its worktree with `git worktree add -b ops/<slug> <path> main`.", cmd)
-        elif sub == "commit":
-            opts = [a for a in rest if a.startswith("-")]
-            if any(a in ("-a", "--all", "-i", "--include", "-o", "--only", "--allow-empty", "-p", "--patch") or a.startswith("-a") and a != "-am" and len(a) > 2 and a[1] != "-" for a in opts) \
-               or any(a.startswith("-a") for a in opts if a not in ("-am",) and not a.startswith("--")) or "-am" in opts:
-                deny("a quick pane commits the index and nothing else: stage with `git add <file>...`, "
-                     "then `git commit -m ...`. `-a`, `--include`, `--only`, pathspecs and empty commits "
-                     "are not judged, so they are refused.", cmd)
-            if "--" in rest or any(not a.startswith("-") and rest[k - 1] not in ("-m", "-F", "--message", "--file", "--author", "--date", "-c", "-C") for k, a in enumerate(rest) if k > 0) and False:
-                pass
-            paths = [a for k, a in enumerate(rest) if not a.startswith("-") and (k == 0 or rest[k - 1] not in ("-m", "-F", "--message", "--file", "--author", "--date", "--cleanup", "--trailer"))]
-            if paths:
-                deny("a quick pane commits the index, not a pathspec: `git add <file>` first, then `git commit -m`.", cmd)
-            cwd = gitdir or os.getcwd()
-            rc, root = run(["git", "rev-parse", "--show-toplevel"], cwd=cwd)
-            if rc != 0 or not root:
-                deny("the quick gate cannot find the repository this commit acts in (`%s`); commit from inside the worktree." % cwd, cmd)
-            pats = quick_paths(root)
-            if pats is None:
-                deny("this project declares no `%s`, so a quick pane has no path it may write. The owner adds one glob "
-                     "per line (`apps/server/catalog-data/**`); until then the change is a ticket." % QUICK_PATHS_FILE, cmd)
-            rc, staged = run(["git", "diff", "--cached", "--name-only"], cwd=cwd)
-            files = [f for f in staged.split("\n") if f]
-            if not files:
-                deny("nothing is staged: `git add <file>` the data your tool produced, then commit.", cmd)
-            outside = [f for f in files if not any(p.match(f) for p in pats)]
-            if outside:
-                deny("this commit carries %d file(s) outside the project's quick-paths: %s. A quick pane writes "
-                     "data its tools produce, never code; this change is a ticket (the BA cuts it). "
-                     "`git reset -- <file>` takes it out of the index." % (len(outside), ", ".join(outside[:6])), cmd)
 
 
 def pane_role(payload):
@@ -733,7 +671,7 @@ def main():
             pass
 
     # -- a read-only role (4.2.0) -----------------------------------------------------------
-    # The BA talks with the owner and cuts tickets; its contract says it never commits,
+    # The BA talks with the owner and hands off; its contract says it never commits,
     # pushes, merges, opens a worktree or dispatches. Prose can instruct, only a hook can stop
     # (one downstream project wrote this role 2026-10-21 with the rule in prose and nothing
     # under it). Judged on the WHOLE text, heredocs and subshells included: a read-only pane
@@ -744,9 +682,9 @@ def main():
     if role in READ_ONLY_ROLES:
         hit = READ_ONLY_FORBIDDEN.search(cmd)
         if hit:
-            deny("a %s pane is read-only on the repository: it never runs `%s`. Proposals become "
-                 "tickets; Thomas dispatches, merges and runs ticket-done.sh. If the owner wants "
-                 "this change, it goes on a ticket." % (role, hit.group(0).strip()), cmd)
+            deny("a %s pane is read-only on the repository: it never runs `%s`. A proposal goes in "
+                 "the handoff file, or on a ticket the owner said yes to; Thomas dispatches, "
+                 "merges and runs ticket-done.sh." % (role, hit.group(0).strip()), cmd)
 
     if sweeping_add_anywhere(cmd):
         deny("this line stages with `git add -A|--all` and no pathspec, or `git add .`, which "

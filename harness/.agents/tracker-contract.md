@@ -92,6 +92,16 @@ that ran one tracker's CLI would hardcode one vocabulary into payload and undo e
 An absent plug is an empty socket — one note, never a broken session — the same rule
 `ticket-done.sh` follows for `tracker-state.sh`.
 
+**One exception, the owner's (2026-10-24): Jira.** A Jira project had no shell route, so its
+plugs could only print `unreachable` and the claim check and the ticket-done tracker half were
+skipped on every ticket. `twg` reads Jira from a shell, so a project that declares `jira <KEY>`
+in `.astraler/project/tracker` is read by the package's `scripts/tracker.sh`, and only such a
+project ever runs `twg`. A plug still wins over the declaration. **And the tracker is read on
+events, never on a clock**: session start, a delivered Builder brief, a merge,
+`/tracker-refresh`. The band ticks every 30 s and a Jira count takes 5.4 s (measured); on the
+tick that is ≈2,880 calls a day per dispatcher, against ≈7 on events (66 merges in 30 days on
+the Jira project).
+
 **The general form, which is worth more than this one hook.** Raising a document's tier makes
 a duty shout; injecting the data deletes the duty. Where what is owed is *data*, prefer the
 second: it does not depend on anyone having read anything. Where what is owed is *judgement*,

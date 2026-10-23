@@ -133,6 +133,14 @@ Classify candidate material before editing anything:
     empty socket by `scripts/release-worktree-resources.sh`, and an empty socket on a project
     that does allocate is the gap that produced 43 orphaned processes and 3,405 leftover
     databases in one night downstream. Make it executable. Record the answer in the receipt.
+  - **`tracker`** (one line, not a script; 4.4.0) — *is this project's tracker one the package
+    reads itself?* `jira <PROJECT-KEY>` makes `scripts/tracker.sh` read Jira through `twg`
+    (the Teamwork Graph CLI, logged in once per machine) for every caller below, so a Jira
+    project writes neither `tracker-state.sh` nor `tracker-status.sh`, and should delete the
+    `unreachable -` plugs it wrote before 4.4.0: a plug wins over the declaration. Measured
+    2026-10-24: `twg jira workitem get` 1.5 s, a 22-ticket JQL count 5.4 s, both native, no
+    Rovo credit. `twg` absent or logged out reads as `unreachable`, exactly as before. Any other
+    tracker writes the two plugs below and no declaration.
   - **`tracker-state.sh <ticket-id>`** — *how is this project's tracker read from a shell?*
     Print one line, `<state> <assignee-or-dash>` (e.g. `closed -`), using whatever reaches
     the tracker here: `gh issue view --json state,assignees` on GitHub, a Jira or Linear CLI
@@ -140,7 +148,8 @@ Classify candidate material before editing anything:
     the write-back after a merge is on the agent's word alone, which is exactly the half that
     drifted downstream (two tickets merged, still open, still assigned — found only because
     the owner asked). Where nothing in the shell can reach the tracker, write one that prints
-    `unreachable -` and say so in the receipt. On a Claude root the dispatch mod asks the same
+    `unreachable -` and say so in the receipt. The state is ONE word: the consumers split on
+    whitespace, so a status name with a space (`To Do`) must be mapped, not printed. On a Claude root the dispatch mod asks the same
     plug before every brief and refuses one for a ticket reported with assignee `-`, or state
     `closed` or `unclaimed`. A project whose claim is a status or a label prints `unclaimed`
     until it is set. `unreachable` and a failing plug skip the check rather than refuse.
@@ -151,7 +160,10 @@ Classify candidate material before editing anything:
     now, in a few lines a person can read?* Print a small table or a short list: open, in
     progress, whatever this tracker calls waiting-on-the-owner. `scripts/hook-tracker-status.py`
     runs it at session start and injects the output, so the counts are in context before anyone
-    asks. Read-only: a session-start hook fires on every session with nobody watching, so it is
+    asks. On a Claude root the dispatch mod also puts its first table, as one line, on the
+    dispatcher's band, read at session start, after a delivered Builder brief, after a merge,
+    and on `/tracker-refresh`, never on the band's 30 s tick (owner's ruling, 2026-10-24). So
+    `status-line.sh`, which does run every 30 s, should not query the tracker at all. Read-only: a session-start hook fires on every session with nobody watching, so it is
     the wrong place to push a board mirror — if this project needs a sync, its contract tells a
     role to run it. Keep it under a page; the hook truncates and says so, and a count that was
     cut off is worse than none. This plug serves requirement 5 of `.agents/tracker-contract.md`

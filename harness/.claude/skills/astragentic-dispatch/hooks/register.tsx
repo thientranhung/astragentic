@@ -27,8 +27,8 @@
 //
 // THE TRACKER AND THE TEARDOWN, the two other steps that were remembered sometimes. A brief is
 // the one moment every dispatch passes through, so two checks sit on it. A ticket the project's
-// `.astraler/project/tracker-state.sh` reports unclaimed (assignee `-`, or state `closed` or
-// `unclaimed`) is not sent. Neither is any brief while a Builder ticket has reached the base with
+// `.astraler/project/tracker-state.sh` (or the declared reader) reports unclaimed (assignee `-`, or
+// state `closed`, `done` or `unclaimed`) is not sent. Neither is any brief while a Builder ticket has reached the base with
 // no ticket-done stamp: the base-push guard missed `gh pr merge` and merge-and-hold, which is
 // where the write-back was forgotten (AST-057, AST-074). The merge result itself carries the
 // note, so the reminder lands in the same turn as the merge. `git worktree remove` on a recorded,
@@ -753,8 +753,10 @@ async function realpath($: any, path: string): Promise<string> {
 // <assignee-or-dash>`, the same plug ticket-done.sh asks. null is an empty socket.
 async function trackerState($: any, root: string, id: string): Promise<{ state: string; assignee: string; line: string } | null> {
   const plug = `${root}/.astraler/project/tracker-state.sh`
-  if (!(await exists($, plug))) return null
-  const r = await run($, [plug, id], 30_000)
+  const reader = await trackerReader($, root)
+  const argv = (await exists($, plug)) ? [plug, id] : reader ? ['bash', reader, 'state', id] : null
+  if (!argv) return null
+  const r = await run($, argv, 30_000, root)
   const line = (r.out.split('\n')[0] ?? '').trim()
   const [state = '', assignee = ''] = line.split(/\s+/)
   // A plug that fails, prints nothing, or says the tracker is `unreachable` (ADAPT-HARNESS
@@ -762,6 +764,37 @@ async function trackerState($: any, root: string, id: string): Promise<{ state: 
   // answer must not refuse every brief: it is treated as the empty socket.
   if (r.code !== 0 || !state || /^unreachable$/i.test(state)) return null
   return { state, assignee, line }
+}
+
+// The package's tracker reader (4.4.0), for a project that declares its tracker in
+// `.astraler/project/tracker` (`jira <KEY>`) and writes no plug. null when nothing is declared.
+async function readerPath($: any, root: string): Promise<string | null> {
+  for (const p of [`${root}/scripts/tracker.sh`, `${root}/harness/scripts/tracker.sh`]) if (await exists($, p)) return p
+  return null
+}
+async function trackerReader($: any, root: string): Promise<string | null> {
+  return (await exists($, `${root}/.astraler/project/tracker`)) ? readerPath($, root) : null
+}
+
+// THE TRACKER IS READ ON EVENTS, NEVER ON THE CLOCK (owner's ruling, 2026-10-24). The band
+// refreshes every 30 s; a Jira count through `twg` takes 5.4 s (measured), longer than the band's
+// 5 s plug budget, and on the clock it would be ≈2,880 calls a day per dispatcher. So the counts
+// are a cached chip, read at dispatcher session start, after a delivered Builder brief, after a
+// merge, and on /tracker-refresh; one downstream project's 66 merges in 30 days put that near
+// seven calls a day. Never awaited by the event that triggers it: a slow tracker does not slow a
+// brief or a merge. A project with neither plug nor declaration gets no chip and no call.
+let trackerBusy = false
+async function refreshTracker($: any, root: string): Promise<void> {
+  if (trackerBusy) return
+  const plug = `${root}/.astraler/project/tracker-status.sh`
+  const reader = await readerPath($, root)
+  if (!reader || !((await exists($, plug)) || (await exists($, `${root}/.astraler/project/tracker`)))) return
+  trackerBusy = true
+  try {
+    const r = await run($, ['bash', reader, 'counts'], 30_000, root)
+    const line = r.code === 0 ? printable(r.out.split('\n')[0] ?? '').slice(0, 160) : 'tracker unreadable'
+    await update($, banner, b => ({ ...b, tracker: line }))
+  } catch {} finally { trackerBusy = false }
 }
 
 async function stampRoot($: any): Promise<string> {
@@ -955,7 +988,7 @@ async function refreshBoard($: any, root: string | null, sends: Map<string, numb
     // glance which one is behind (owner's ask, 2026-10-10).
     let version = ''
     try { version = (await $.fs.read(`${root}/.astraler/state/applied-version`)).trim() } catch {}
-    await update($, banner, b => ({ branch, extra, version, latest: b.latest ?? '' }))
+    await update($, banner, b => ({ ...b, branch, extra, version, latest: b.latest ?? '' }))
   }
 }
 
@@ -1112,7 +1145,9 @@ export const register: Register = on => {
       })
     } else if (root) {
       await $.command.register({ name: 'dispatch-board', description: 'Show live dispatches in a pane' })
+      await $.command.register({ name: 'tracker-refresh', description: 'Read the tracker counts on the band now' })
       await refreshBoard($, root, sends)
+      void refreshTracker($, root)
       const at = root
       $.clock.every(30_000, async () => {
         await refreshBoard($, at, sends)
@@ -1503,7 +1538,7 @@ export const register: Register = on => {
       const isBuilderBrief = /^\/mattpocock-skills:implement\b/.test(first)
       const id = isBuilderBrief ? first.split(/\s+/).slice(1).find(word => TICKET.test(word)) : undefined
       const ts = id ? await trackerState($, root, id) : null
-      if (id && ts && (ts.assignee === '-' || ts.assignee === '' || /^(closed|unclaimed)$/i.test(ts.state))) {
+      if (id && ts && (ts.assignee === '-' || ts.assignee === '' || /^(closed|done|unclaimed)$/i.test(ts.state))) {
         return {
           isDelivered: false,
           reason: `${MARK} not sent. The tracker says ${id} is "${ts.line}", so it is not claimed. ` +
@@ -1544,7 +1579,10 @@ export const register: Register = on => {
     // before any pane wrote), so lanes could not be counted by role (4.1.0).
     if (isBrief && root && res.isDelivered) {
       const builderId = /^\/mattpocock-skills:implement\b/.test(first) ? first.split(/\s+/).slice(1).find(w => TICKET.test(w)) : undefined
-      if (builderId) await patchRecord($, root, builderId, { role: 'builder', dispatched_at: await $.clock.now() })
+      if (builderId) {
+        await patchRecord($, root, builderId, { role: 'builder', dispatched_at: await $.clock.now() })
+        void refreshTracker($, root)
+      }
     }
     if (me || !root || e.origin.kind !== 'model' || e.agentId !== undefined || !res.isDelivered) return res
     const rec = (await readRecord($, root)) ?? {}
@@ -1967,6 +2005,7 @@ export const register: Register = on => {
     }
     const ran = await next(e)
     if (ran.deny !== undefined || ran.isError) return ran
+    void refreshTracker($, root)
     const notes: string[] = []
     for (const [key, entry] of named) {
       if (isPr) await patchRecord($, root, key, { merged_at: await $.clock.now() })
@@ -1988,6 +2027,13 @@ export const register: Register = on => {
     if (owed.length > 0) notes.push(`${MARK} ${owedText(owed)} The next brief will not be sent until this is done.`)
     if (notes.length === 0) return ran
     return { ...ran, context: [...(ran.context ?? []), ...notes] }
+  })
+
+  on('command.run', { command: 'tracker-refresh' }, async $ => {
+    if (!root) return { text: 'Not in a repository.' }
+    await refreshTracker($, root)
+    const b = await read($, banner)
+    return { text: b.tracker ? `Tracker: ${b.tracker}` : 'No tracker plug and no .astraler/project/tracker declaration: nothing to read.' }
   })
 
   on('command.run', { command: 'dispatch-board' }, async $ => {
@@ -2095,6 +2141,7 @@ export const register: Register = on => {
         {rows.map(r => (
           <Chip bg={bgOf(r)} fg="inverseText" label={`${r.key} ${r.state} ${ago(now - r.since)}${r.note ? ` · ${r.note}` : ''}`} />
         ))}
+        {b.tracker ? <Chip dim label={b.tracker} /> : null}
         {b.extra ? <Chip dim label={b.extra} /> : null}
       </Box>
     )

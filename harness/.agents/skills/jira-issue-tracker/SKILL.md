@@ -12,7 +12,29 @@ requires of *any* tracker is `.agents/tracker-contract.md`; this file is the HOW
 key, no transition-id table — the project's `docs/agents/issue-tracker.md` owns those, and they
 are per-project by nature. Substitute as you read.
 
-Reach it through the **Atlassian MCP tools**.
+Reach it through the **Atlassian MCP tools** in a session, and through **`twg`** from a shell.
+
+## The shell route: `twg` (4.4.0)
+
+The Teamwork Graph CLI reads Jira with the login it keeps per machine (`~/.config/twg`), so the
+plugs that used to print `unreachable -` can answer. Declare `jira <PROJECT-KEY>` in
+`.astraler/project/tracker` and `scripts/tracker.sh` does the reading for `ticket-done.sh`,
+the session-start counts and the dispatch mod; delete the old `unreachable` plugs, because a
+plug wins over the declaration. Measured 2026-10-24, on a live project:
+
+| command | time | cost |
+|---|---|---|
+| `twg jira workitem get <KEY-n> -o json --output-summary none` | 1.5 s | native, no credit |
+| `twg jira workitem query --jql '<jql>' --limit 500 -o json --output-summary none` | 5.4 s (22 tickets) | native, no credit |
+| anything `twg --help` marks `[Enriched]`, and `twg rovo …` | — | Rovo credits: ask the owner first |
+
+**The state is the status CATEGORY, never the name.** Names carry spaces (`To Do`), and every
+consumer splits `<state> <assignee>` on whitespace: `To Do <id>` reads as state `To`, assignee
+`Do`. `status.statusCategory.key` is one word, `new`, `indeterminate` or `done`, and `done` is
+what `ticket-done.sh` accepts. The assignee is the `accountId`, or `-`.
+
+**Never on a clock.** A 5.4 s count is longer than the band's 5 s plug budget; the mod reads it
+on events only, and `status-line.sh` must not call `twg`.
 
 ## Two coordinates a session cannot discover
 

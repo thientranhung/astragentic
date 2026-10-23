@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-4.3.5-blue" alt="version"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-4.4.0-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtime-Claude_Code-green" alt="runtime">
   <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-67_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/vi/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
@@ -42,15 +42,15 @@ nhau, review xong trong một vòng, và artifact chứng minh được điều 
 # 1. Đứng ở gốc project, stage bản mới nhất (không ghi file nào của project)
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
-#    …hoặc ghim một bản:  | bash -s -- 4.3.5
+#    …hoặc ghim một bản:  | bash -s -- 4.4.0
 
 # 2. Kiểm máy đã đủ thứ cần chưa
-bash .astraler/releases/4.3.5/check-requirements.sh
+bash .astraler/releases/4.4.0/check-requirements.sh
 #    Về sau, ngay trong project: bản đang cài, bản mới nhất, có gì thay đổi, nâng cấp thế nào
 .astraler/astragentic.sh update
 
 # 3. Chạy bộ cài thích nghi trong Claude Code
-claude "Read .astraler/releases/4.3.5/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/4.4.0/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Mở router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable
@@ -106,8 +106,8 @@ nhất theo token.
 | Role | Session | Làm gì |
 |---|---|---|
 | **Thomas** | thường trực | Điều phối, giữ frontier, dispatch ticket, chạy gate slice |
-| **BA** | chủ dự án tự mở, chỉ đọc (`claude --agent ba`) | Bàn vấn đề với chủ dự án, nêu trade-off và các ticket đang chạy bị quyết định đó làm đổi hướng, cắt ticket; không sửa code, không commit, không dispatch |
-| **Quick Builder** | chủ dự án tự mở (`claude --agent quick`) | Chạy tool dữ liệu sẵn có của project theo lời chủ dự án và commit kết quả, trong đúng các đường dẫn project khai báo, trên branch `ops/*` fast-forward vào main; không ticket, không loop; sửa code bị từ chối |
+| **BA** | chủ dự án tự mở, chỉ đọc (`claude --agent ba`) | Bàn vấn đề với chủ dự án, nêu trade-off và các ticket đang chạy bị quyết định đó làm đổi hướng, bàn giao bằng file markdown, chỉ cắt ticket khi chủ dự án đồng ý; không sửa code, không commit, không dispatch |
+| **Quick Builder** | chủ dự án tự mở (`claude --agent quick`) | Làm việc nhỏ theo lời chủ dự án (dữ liệu do tool sinh ra, plug của chính project, sửa nhỏ) trên branch `ops/*` fast-forward vào main; không ticket, không loop; thay đổi thuộc harness upstream và việc cần test hay review trả về chủ dự án |
 | **Shaper** | một session liền mạch | Grill yêu cầu, viết spec, cắt ticket — khi cả bức tranh còn trong context |
 | **Builder** | một session mỗi ticket | Thi công trong worktree riêng — là người ghi duy nhất ở đó |
 | **QA** | một lần mỗi walk | Dùng sản phẩm đang chạy — hành trình UI, hợp đồng API, dữ liệu thật |
@@ -299,7 +299,7 @@ và merge hook đều là của bản release ấy.
 ```bash
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash                      # bản mới nhất, chỉ stage
-curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 4.3.5         # ghim một bản
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 4.4.0         # ghim một bản
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --plan  # xem --apply sẽ ghi gì
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply # ghi payload vào
 ```

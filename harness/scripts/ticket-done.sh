@@ -79,8 +79,15 @@ fi
 
 # 2. tracker half — the project's plug
 TS="$ROOT/.astraler/project/tracker-state.sh"
-if [ -x "$TS" ]; then
-  line="$("$TS" "$ID" 2>/dev/null | head -1)"
+# 4.4.0: with no plug, a project that declares its tracker (`.astraler/project/tracker`, e.g.
+# `jira IN`) is read by the package's own reader, which prints the same line.
+READER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/tracker.sh"
+if [ ! -e "$TS" ] && [ -f "$ROOT/.astraler/project/tracker" ] && [ -f "$READER" ]; then
+  TS="$READER"
+fi
+if [ -x "$TS" ] || [ "$TS" = "$READER" ]; then
+  if [ "$TS" = "$READER" ]; then line="$(bash "$READER" state "$ID" 2>/dev/null | head -1)"
+  else line="$("$TS" "$ID" 2>/dev/null | head -1)"; fi
   state="${line%% *}"; assignee="${line#* }"; [ "$assignee" = "$line" ] && assignee="-"
   case "$state" in
     closed|done|Done|DONE|completed|Completed)

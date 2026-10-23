@@ -12,6 +12,8 @@ export type Banner = {
   version: string
   /** newest release tag at the package remote when newer than `version`, else '' */
   latest: string
+  /** open tickets per status, from `scripts/tracker.sh counts`, refreshed on events only; '' until read */
+  tracker?: string
 }
 
 export type Flow = {

@@ -154,7 +154,7 @@ else
 fi
 
 echo "hook-git-guard — a read-only role is refused the repository's write commands (4.2.0)"
-# The BA talks and cuts tickets; its contract says never commit/push/merge/dispatch. One
+# The BA talks and hands off; its contract says never commit/push/merge/dispatch. One
 # downstream project shipped that rule as prose on 2026-10-21 with nothing under it. The
 # guard reads the role from `agent_type` when the payload carries it, else from the marker
 # hook-tracker-status.py writes at SessionStart (SessionStart carries agent_type; measured).
@@ -192,13 +192,12 @@ guard_role allow '{"session_id":"sess-none"}' 'git merge builder/AB-1'   # no ma
 sed 's/if role in READ_ONLY_ROLES:/if False:/' "$S/hook-git-guard.py" > "$TMP/guard-no-role.py"
 guard_role allow '{"agent_type":"ba"}' 'git commit -m "tidy"' "$TMP/guard-no-role.py"
 
-echo "hook-git-guard — the quick pane commits data inside quick-paths and nothing else (4.3.0)"
+echo "hook-git-guard — the quick pane keeps one git shape, and no write-set (4.3.0, 4.4.0)"
 # Six catalog-data commits in 30 days downstream, each paid for as a full Builder ticket to run
-# a tool that existed. The quick pane may commit only the paths the project declares, in one
-# git shape the guard can read: index commit, ff-only merge of its own ops/* branch, push of it.
+# a tool that existed. 4.4.0 dropped the declared write-set (owner, 2026-10-24); what the guard
+# still holds is the shape: its own ops/* branch, ff-only onto main, a push of either, no rewrite.
 QR="$TMP/quick-repo"; rm -rf "$QR"; mkdir -p "$QR/.astraler/project" "$QR/apps/server/catalog-data" "$QR/apps/server/internal"
 ( cd "$QR" && git init -q && git -c user.name=t -c user.email=t@t commit -q --allow-empty -m init )
-printf '# data the owner curates\napps/server/catalog-data/**\n' > "$QR/.astraler/project/quick-paths"
 quick() { # <expected deny|allow> <command> [guard script]
   local want="$1" cmd="$2" script="${3:-$S/hook-git-guard.py}"; local out got
   out="$(printf '%s' "$cmd" | python3 -c '
@@ -208,13 +207,10 @@ print(json.dumps({"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input"
   if says "$out" '"permissionDecision": "deny"'; then got=deny; else got=allow; fi
   [ "$want" = "$got" ] && ok "quick $want: ${cmd:0:70}" || bad "quick $cmd" "expected $want, got $got: $out"
 }
-echo x > "$QR/apps/server/catalog-data/images.json"; ( cd "$QR" && git add apps/server/catalog-data/images.json )
-quick allow 'git commit -m "catalog: 12 new images"'
-echo y > "$QR/apps/server/internal/a.go"; ( cd "$QR" && git add apps/server/internal/a.go )
-quick deny  'git commit -m "catalog: and a little code"'             # one file outside: refused, named
-( cd "$QR" && git reset -q -- apps/server/internal/a.go )
-quick deny  'git commit -am "everything"'
-quick deny  'git commit -m x -- apps/server/catalog-data/images.json'  # a pathspec commit is not the index
+echo x > "$QR/apps/server/catalog-data/images.json"; echo y > "$QR/apps/server/internal/a.go"
+echo 'echo ok' > "$QR/.astraler/project/tracker-state.sh"
+( cd "$QR" && git add apps/server/catalog-data/images.json apps/server/internal/a.go .astraler/project/tracker-state.sh )
+quick allow 'git commit -m "catalog: 12 new images, a fix, a plug"'  # no write-set: data, code and plugs alike
 quick deny  'git commit -m "$(cat <<EOF
 x
 EOF
@@ -231,13 +227,10 @@ quick deny  'git worktree add -b feat/x /tmp/wt main'
 quick deny  'git rebase main'
 quick deny  'bash scripts/ticket-done.sh AB-1'
 quick allow 'go run ./cmd/curated-images-upload --dir /tmp/imgs && git status --short'
-rm "$QR/.astraler/project/quick-paths"
-quick deny  'git commit -m "no quick-paths declared"'
-# planted: a guard whose quick gate never runs lets the code file through
+# planted: a guard whose quick gate never runs lets the rebase through
 sed 's/if role == QUICK_ROLE:/if False:/' "$S/hook-git-guard.py" > "$TMP/guard-no-quick.py"
-printf 'apps/server/catalog-data/**\n' > "$QR/.astraler/project/quick-paths"
-( cd "$QR" && git add apps/server/internal/a.go )
-quick allow 'git commit -m "catalog: and a little code"' "$TMP/guard-no-quick.py"
+quick allow 'git rebase main' "$TMP/guard-no-quick.py"
+( cd "$QR" && git reset -q )
 
 echo "hook-git-guard — the registered wrapper's unreadable-file fallback runs the same guard (4.0.2)"
 # Measured downstream: 27 whole-session blocks where python3 could not open the hook file
@@ -1396,6 +1389,22 @@ const rows = async () => (await engine.read($, { id: 'astragentic-dispatch.board
 const leaves = n => n == null || n === false ? [] : Array.isArray(n) ? n.flatMap(leaves) : typeof n === 'object' ? leaves(n.children) : [String(n)]
 const band = async () => leaves(await fire('ui.render', { component: 'AbovePrompt', props: {} }, async () => null)).join('').replace(/\s+/g, ' ').trim()
 ;(async () => {
+  if (mode === 'tracker') {
+    // 4.4.0: the tracker is read on events, never on the band's 30 s tick
+    const calls = () => { try { return fs.readFileSync(path.join(root, 'tracker-calls'), 'utf8').length } catch { return 0 } }
+    const settle = () => new Promise(r => setTimeout(r, 400))
+    await fire('session.start', { cwd: root }, async () => ({})); await settle()
+    const atStart = calls()
+    for (let i = 0; i < 5; i++) await every()
+    await settle()
+    const afterTicks = calls()
+    await fire('tool.call', { tool: 'Bash', command: 'git merge --no-ff feat/x' }, async () => ({})); await settle()
+    const afterMerge = calls()
+    const cmd = await fire('command.run', { command: 'tracker-refresh' }, async () => ({}))
+    const afterCommand = calls()
+    console.log(JSON.stringify({ atStart, afterTicks, afterMerge, afterCommand, band: (await band()).includes('open 3'), said: String(cmd?.text ?? '') }))
+    return
+  }
   if (isPane) {
     // the dispatched side: a turn end with a live agent is held; the next turn start ends the hold
     await fire('session.start', { cwd: root }, async () => ({}))
@@ -1808,6 +1817,38 @@ DRVEOS
     ok "brief refused without a QA line, during a half-applied upgrade, without an Advisor column, and at builder-target; a mid-turn pane's close is refused; a delivered brief writes the role on the record"
   else
     bad "mod merge gate" "$out"
+  fi
+  # 4.4.0 — the tracker on events only. The band ticks every 30 s; a Jira count through twg took
+  # 5.4 s (measured 2026-10-24), and on the clock that is ≈2,880 calls a day per dispatcher.
+  tracker_drive() {  # $1 mod dir → prints {atStart, afterTicks, afterMerge, afterCommand, band}
+    rm -rf "$TMP/mod-drive-repo"; mkdir -p "$TMP/mod-drive-repo/.astraler/state" "$TMP/mod-drive-repo/.astraler/project" "$TMP/mod-drive-repo/scripts"
+    ( cd "$TMP/mod-drive-repo" && git init -q && git -c user.name=t -c user.email=t@t commit -q --allow-empty -m init )
+    echo '{}' > "$TMP/mod-drive-repo/.astraler/state/dispatch-record.json"
+    cp "$S/tracker.sh" "$TMP/mod-drive-repo/scripts/tracker.sh"
+    printf '#!/bin/sh\nprintf x >> "$(git rev-parse --show-toplevel)/tracker-calls"\nprintf "| open | todo |\\n|---|---|\\n| 3 | 2 |\\n"\n' > "$TMP/mod-drive-repo/.astraler/project/tracker-status.sh"
+    chmod +x "$TMP/mod-drive-repo/.astraler/project/tracker-status.sh"
+    node "$TMP/mod-drive.cjs" "$1" "$TMP/mod-drive-repo" "$TSC_PKG" tracker 2>&1
+  }
+  out="$(tracker_drive "$MOD")"
+  if says "$out" '"atStart":1,"afterTicks":1,"afterMerge":2,"afterCommand":3,"band":true'; then
+    ok "the tracker is read at dispatcher start, after a merge and on /tracker-refresh, never on the band's tick; the band shows the counts"
+  else
+    bad "mod tracker on events" "$out"
+  fi
+  rm -rf "$TMP/mod-ticktracker"; cp -R "$MOD" "$TMP/mod-ticktracker"
+  python3 - "$TMP/mod-ticktracker/hooks/register.tsx" <<'EOS'
+import sys
+p = sys.argv[1]; s = open(p).read()
+old = "await refreshBoard($, at, sends)\n        await wakeFromRecord"
+assert old in s, "band tick not found"
+s = s.replace(old, "await refreshBoard($, at, sends)\n        await refreshTracker($, at)\n        await wakeFromRecord", 1)
+open(p, "w").write(s)
+EOS
+  out="$(tracker_drive "$TMP/mod-ticktracker")"
+  if says "$out" '"afterTicks":1,'; then
+    bad "planted tick tracker" "a mod that reads the tracker on every tick still counted one call: $out"
+  else
+    ok "planted: a mod that reads the tracker on the tick is caught by the count"
   fi
   out="$(mod_drive "$MOD" pane)"
   if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"sendToFork":"code-review [ce2df1]","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"next":true,"held":true,"simplify":true,"done":true,"afterAgent":true,"tie":true},"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","refusedWhy":true,"compacted":1,"commitNoTest":"deny:held","commitWithTest":"pass:ran","commitDeletedTest":"deny:held","commitLaterDeletedTest":"deny:held","commitPathLimited":"deny:held","commitAllDeleted":"deny:held","commitAddThenCommit":"pass:ran","commitRmThenCommit":"deny:held","commitRestageDeleted":"deny:held","commitDashMAttached":"deny:held","commitScopedAddAll":"deny:held","commitPathRestored":"deny:held","commitAfterMv":"deny:held","mvNotReplayed":true,"commitTwice":"deny:held","commitDashCSrc":"deny:held","commitAmendOnly":"deny:held","commitRmAddAll":"deny:held","rmNotReplayed":true,"commitPathspecFile":"deny:held","commitRepeatedC":"deny:held","commitDotUntracked":"deny:held","commitDotStaged":"pass:ran","commitSkippedAdd":"deny:held","commitRmNoCached":"deny:held","fileSurvived":true,"commitOrAdd":"deny:held","commitEchoAdd":"deny:held","commitRmAbsent":"deny:held","commitSubstQuoted":"deny:held","testStillStaged":true,"commitWorkTree":"deny:held","commitConfigOpt":"deny:held","commitSubstApos":"deny:held","commitBacktickDouble":"deny:held","commitSubstLiteral":"pass:ran","commitConfigEnv":"deny:held","commitCommentedAdd":"deny:held","commitAbbrevOpt":"deny:held","commitMessageEq":"pass:ran","commitRedirect":"deny:held","commitFdDup":"pass:ran","ampNamed":true,"commitHeredocMsg":"pass:ran","commitHeredocOpen":"deny:held","commitHeredocExtra":"deny:held","commitHeredocBare":"deny:held","substFixNamed":true,"noScratchLeft":true'; then

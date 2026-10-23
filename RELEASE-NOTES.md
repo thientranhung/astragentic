@@ -1,3 +1,46 @@
+# Astragentic 4.4.0
+
+**The tracker is read on events, never on a clock, and a Jira project is read through `twg`.**
+The owner's ruling (2026-10-24): polling the tracker costs, so it stops. The dispatcher's band
+ticks every 30 s; a Jira count through `twg` took 5.4 s (measured), longer than the band's 5 s
+plug budget, so on the tick it would fail every time at ≈2,880 calls a day per dispatcher. The
+counts are now a cached chip on the band, read at dispatcher session start, after a delivered
+Builder brief, after a merge, and on `/tracker-refresh`: ≈7 calls a day on a project with 66
+merges in 30 days. Every read leaves a `tracker.sh` line in `/tmp/harness-hook-events.log`, so
+the rate is a count. One reader, `scripts/tracker.sh state|counts`, serves the mod's claim check,
+`ticket-done.sh` and the session-start counts. A project plug still wins; a project with no plug
+that declares `jira <KEY>` in `.astraler/project/tracker` is read through `twg` (1.5 s per
+ticket, native, no Rovo credit), and only such a project ever runs `twg`. A Jira status name has
+spaces (`To Do` split into state `To`, assignee `Do`), so the state printed is the status
+category, `new`, `indeterminate` or `done`; the mod's claim check now treats `done` like
+`closed`. The selftest counts tracker calls through five ticks, a merge and the command (1, 1,
+2, 3), and a planted mod that reads on the tick fails it.
+
+**The BA cuts a ticket only on the owner's yes for that ticket.** Measured downstream on
+2026-10-23: a BA took the owner's answer to a side question as leave to cut a ticket in a
+session he had opened to discuss. A discussion now ends with a solution and the question of who
+carries it; without a yes, the outcome goes in a handoff file,
+`~/.astraler/handoff/<project>/<YYYY-MM-DD>-<slug>.md`, outside the repository so it is no
+checkout's untracked noise and the owner can carry it anywhere. Editing an existing ticket
+waits on the same yes. The role, its compaction rules and the git guard's refusal say it.
+
+**The Quick Builder judges its input; `quick-paths` is gone.** The owner's ruling (2026-10-24):
+the declared write-set was ceremony. A quick pane now does the project's own small change (tool
+data, a plug, a small fix), asks the owner who carries a change to a path the staged release
+ships (`.astraler/releases/<CANDIDATE>/harness/<path>`, with no fixed route), and sends work that
+needs tests or review back to him for a ticket. The git guard keeps the shape: its own `ops/*`
+branch, `merge --ff-only` onto main, a push of either, no force, no rewrite, no dispatch.
+
+## Upgrade from 4.3.5
+
+- **A Jira project**: write `jira <PROJECT-KEY>` in `.astraler/project/tracker`, delete the
+  `tracker-state.sh` and `tracker-status.sh` plugs that print `unreachable` (a plug wins over the
+  declaration), and log `twg` in once on the machine. Without `twg` the reads say `unreachable`,
+  exactly as before.
+- **Any project whose `status-line.sh` queries the tracker**: the band now carries the counts on
+  its own chip, so that query can go; `status-line.sh` still runs every 30 s.
+- `.astraler/project/quick-paths` is no longer read; delete it or leave it.
+
 # Astragentic 4.3.5
 
 **A dispatch bell reaches the dispatcher that briefed the lane, not whichever root session

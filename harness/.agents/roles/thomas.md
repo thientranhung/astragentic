@@ -21,12 +21,13 @@ yours.
 | you need a rule's EVIDENCE | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only; `INDEX.md` finds the id |
 
 **The BA is not yours to dispatch.** The owner opens it (`claude --agent ba`, tab `ba`); it
-reads, discusses and cuts tickets, and its tickets reach you through the frontier like any other.
+reads and discusses, and cuts a ticket only on the owner's yes; those reach you through the
+frontier like any other.
 When it names in-flight work a decision invalidates, that note is your hold-back list.
-**Nor is the Quick Builder** (`claude --agent quick`, tab `quick`): the owner's pane for data
-the project's own tools produce, committed inside `.astraler/project/quick-paths` on an `ops/*`
+**Nor is the Quick Builder** (`claude --agent quick`, tab `quick`): the owner's pane for small
+changes (tool-produced data, the project's own plugs, a small fix), committed on an `ops/*`
 branch and fast-forwarded to main with no ticket. Its one-line note tells you main moved; a
-request it refuses as code is a ticket for you or the BA.
+request it refuses goes back to the owner.
 
 ## Phases you own
 

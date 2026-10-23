@@ -16,13 +16,16 @@ reporting them costs nothing and omitting them is visible. Raising a document's 
 duty shout; injecting the data deletes the duty. Prefer the second where the thing owed is
 data rather than judgement.
 
-WHY IT CALLS A PLUG AND QUERIES NOTHING ITSELF. This package ships three tracker adapters and
+WHY IT CALLS A PLUG (AND, SINCE 4.4.0, ONE DECLARED READER). This package ships three tracker adapters and
 the contract says a project's `docs/agents/issue-tracker.md` names which one, its coordinates
 and its status map. A hook that ran `gh issue list` would hardcode one tracker, one label
 vocabulary and one project's taxonomy into payload — the exact shape the tracker contract
 exists to prevent. So the query is a fourth project plug, `.astraler/project/tracker-status.sh`,
 beside `tracker-state.sh`, `ticket-done.sh` and `cleanup-worktree.sh`. The package owns the
-moment and the failure discipline; the project owns the question.
+moment and the failure discipline; the project owns the question. The one exception is the
+owner's (2026-10-24): a project with no plug that declares `jira <KEY>` in
+`.astraler/project/tracker` is counted by `scripts/tracker.sh`, through `twg`, because Jira had
+no shell route before `twg` and its plugs could only say `unreachable`. The plug still wins.
 
 AN ABSENT PLUG IS AN EMPTY SOCKET, NOT A FAULT. Same rule as `ticket-done.sh`: a project that
 has not written the plug gets one note, not a broken session. Silence would make a harness
@@ -62,7 +65,9 @@ import subprocess
 import sys
 
 PLUG_REL = os.path.join(".astraler", "project", "tracker-status.sh")
+DECLARED_REL = os.path.join(".astraler", "project", "tracker")
 PLUG_TIMEOUT_SECONDS = 15
+SOURCE = ["`%s`, this project's own plug" % PLUG_REL]
 MAX_CHARS = 4000
 EVENTS_LOG = "/tmp/harness-hook-events.log"
 
@@ -149,13 +154,21 @@ def emit(text):
 
 def run_plug(root):
     path = os.path.join(root, PLUG_REL)
+    argv = [path]
     if not os.path.isfile(path):
-        bail("no plug at %s (empty socket; ADAPT-HARNESS §3)" % PLUG_REL)
-    if not os.access(path, os.X_OK):
+        # 4.4.0: a project that declares its tracker (`.astraler/project/tracker`, e.g. `jira IN`)
+        # and writes no plug is counted by the package's reader, `scripts/tracker.sh counts`.
+        reader = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tracker.sh")
+        if not (os.path.isfile(os.path.join(root, DECLARED_REL)) and os.path.isfile(reader)):
+            bail("no plug at %s and no %s (empty socket; ADAPT-HARNESS §3)" % (PLUG_REL, DECLARED_REL))
+        argv = ["bash", reader, "counts"]
+        SOURCE[0] = "`scripts/tracker.sh counts` (the tracker this project declares in `%s`)" % DECLARED_REL
+    elif not os.access(path, os.X_OK):
         bail("%s is not executable" % PLUG_REL)
     try:
-        out = subprocess.run([path], capture_output=True, text=True,
-                             cwd=root, timeout=PLUG_TIMEOUT_SECONDS)
+        out = subprocess.run(argv, capture_output=True, text=True, cwd=root,
+                             timeout=PLUG_TIMEOUT_SECONDS,
+                             env=dict(os.environ, TRACKER_TIMEOUT_MS="12000"))
     except subprocess.TimeoutExpired:
         bail("%s timed out after %ss" % (PLUG_REL, PLUG_TIMEOUT_SECONDS))
     except OSError as exc:
@@ -189,10 +202,10 @@ def render(body):
             "`%s`." % (MAX_CHARS, PLUG_REL))
         lines.append("")
     lines.append(
-        "Produced by `%s`, this project's own plug. It is a READ: nothing was written to the "
+        "Produced by %s. It is a READ: nothing was written to the "
         "tracker, and any board mirror this project keeps is still whatever it was. The "
         "obligation these numbers exist for is requirement 5 of `.agents/tracker-contract.md` "
-        "— a surface the OWNER can read without running a query." % PLUG_REL)
+        "— a surface the OWNER can read without running a query." % SOURCE[0])
     return "\n".join(lines)
 
 
