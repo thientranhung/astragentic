@@ -67,3 +67,30 @@ cỡ **lên** (epic hay ticket), `dispatch-ticket` không cỡ **xuống**.
 Lưu ý phương pháp: mốc "trước/sau trần" là proxy (median ctx ≥ 260k); 25 ticket không tra
 được diff (`?`) nằm trong tổng nhưng không trong bucket cỡ; gán phase theo lệnh Skill gần
 nhất, nên con số phase là xấp xỉ.
+
+## 2026-10-26 — Tải nền 92k gồm gì, và một vòng Builder nạp lại dự án bao nhiêu lần
+
+Owner hỏi theo lý thuyết nạp context của Claude Code: mỗi call gửi lại toàn bộ system prompt
+và lịch sử; subagent mở session mới với system prompt riêng; mỗi `Read` nằm lại trong lịch sử
+cho tới khi compact. Đo bằng hai lệnh `claude -p --model haiku` (tổng $0.02):
+
+| Nơi đứng | Context call 1 | Nguồn |
+|---|---|---|
+| Thư mục trống (Claude Code + skill toàn máy + MCP + CLAUDE.md user) | 32.2k | `claude -p --output-format json`, usage |
+| Thư mục gốc nizzy | 91.9k | cùng lệnh |
+| **Phần của dự án nizzy** | **59.7k** mỗi call | hiệu hai dòng trên |
+
+File đếm được: AGENTS.md 51 KB, `.claude/rules/` 35 KB, MEMORY.md 27 KB, CLAUDE.md 5.6 KB
+= 119 KB; phần còn lại của 60k là listing 18 skill và agent của project, chưa tách.
+
+Một ticket nhỏ sau trần (median 290 call chính, ~120 call subagent) gửi lại 60k đó:
+
+| Lần nạp | Số | Nguồn |
+|---|---|---|
+| Mỗi call của Builder | 290 lần | era.py |
+| Mỗi subagent review/simplify mở ra (6 fan-out, context call 1 median 75.8k, trong đó 60k vẫn là file dự án) | 1,615 subagent / 164 ticket ≈ 10 mỗi ticket | loads.py |
+| Compaction rồi đọc lại | 271 lần / 164 ticket, median 2 | transcript `isCompactSummary` |
+| Đọc lại cùng file trong một ticket | median 18 `Read` lặp, 71 KB; một file JSX đọc 117 lần trong TRA-1199 | loads.py |
+| Tổng token gửi, 118 ticket sau trần | tải nền 6.11B (44%), lịch sử 7.87B (56%); riêng file dự án ≈ 4.2B ≈ 30% mọi token Builder gửi | loads.py |
+
+Skill file nạp khi gọi nhỏ (tdd 3.6 KB, code-review 6.7 KB, codex-arm 15 KB): không phải nguồn tốn.
