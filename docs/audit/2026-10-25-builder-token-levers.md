@@ -94,3 +94,30 @@ Một ticket nhỏ sau trần (median 290 call chính, ~120 call subagent) gửi
 | Tổng token gửi, 118 ticket sau trần | tải nền 6.11B (44%), lịch sử 7.87B (56%); riêng file dự án ≈ 4.2B ≈ 30% mọi token Builder gửi | loads.py |
 
 Skill file nạp khi gọi nhỏ (tdd 3.6 KB, code-review 6.7 KB, codex-arm 15 KB): không phải nguồn tốn.
+
+## 2026-10-26 — So với mattpocock `implement` và superpowers 7.0.0 `subagent-driven-development`
+
+Nguồn: file skill trên máy (`~/.claude/plugins/marketplaces/mattpocock/skills/engineering/`,
+`~/.claude/plugins/cache/claude-plugins-official/superpowers/7.0.0/skills/`). Trên máy này
+**không có session nào chạy hai luồng đó trong 60 ngày** (solo.py: 0 session), nên phần
+"ước" suy từ phase share của Builder, không phải số đo.
+
+| Mỗi đơn vị việc | mattpocock `implement` | superpowers SDD | Builder Astragentic |
+|---|---|---|---|
+| Phase | tdd → `code-review` → commit | implementer → reviewer → (re-review) → review cuối nhánh | implement → tdd → `code-review` → built-in code-review → simplify (lặp sau mỗi fold) → arm → bmad-ux → verify full → marker → handback |
+| Subagent / đơn vị | 2 (Standards, Spec) | 2–3 (implementer, reviewer gộp spec+quality, re-review) | đo: **10** (2 trục + 4 góc simplify × 1.3 lần + arm/ux) |
+| Reviewer đọc gì | diff + file chuẩn | **một file diff, cấm crawl repo**, không Read file đã có trong diff | mỗi trục/góc tự đọc; `fork` chép nguyên context cha |
+| Model subagent | kế thừa | **bắt buộc khai, việc máy móc dùng model rẻ** | kế thừa Sonnet |
+| Simplify | không | không | 5.1 marker / merge, 31% rỗng |
+| Arm vendor khác | không | không | có; arm-off 10 merge = 0 lỗi (2026-10-18) |
+| Verify full | tdd chạy full suite 1 lần cuối | implementer chạy full 1 lần trước commit | thêm một lần sau commit cuối (đuôi 19%) |
+| Tải nền 92k mỗi call | **giống nhau** (CLAUDE.md, AGENTS.md, rules nạp cho mọi session) | giống nhau | giống nhau |
+
+Ước phần Builder trả thêm so với mattpocock solo trên cùng ticket: mattpocock ≈ build + tdd (37%)
++ review-std (12%) + 2 subagent (~5%) ≈ **55%** chi phí hiện nay; Builder ≈ 1.8× (ước, chưa đo).
+Superpowers tự công bố 6.0.0 giảm ~50% token so với 5.x của chính nó nhờ gộp 2 reviewer thành 1
+và chuyển diff qua file; con số đó không so với harness này.
+
+Kết luận: tải nền là của project và như nhau ở cả ba; **thiết kế Builder nhân số lần nạp lên
+~3–5 lần mỗi ticket** (4 phase thêm, 8 subagent thêm, simplify lặp, verify lặp). Hai thiết kế kia
+rẻ hơn vì ít phase, một reviewer, diff qua file, và model rẻ cho việc máy móc.
