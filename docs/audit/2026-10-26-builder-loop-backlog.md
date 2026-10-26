@@ -23,6 +23,13 @@ thành release cho tới khi owner gật từng mục.
   `claude -p --model haiku --output-format json`. Owner 2026-10-26: "để cho nó lo". Chỉ gửi số,
   không gửi bước áp.
 
+## Thứ tự làm (owner 2026-10-26: đủ việc, bắt đầu)
+
+1. **4.5.0 — vòng Builder:** A + B + C (+ D giữ nguyên). Một release, mod + builder.md + FLOW + marker script + selftest cùng lúc.
+2. **E ngay:** gửi bảng tải nền cho nizzy và inception, không release.
+3. **4.6.0 — ticket quick/full:** M (nhãn → miễn trừ, Shaper/BA ghi nhãn, band/board hai hàng, quick-builder).
+4. Đo 30 merge sau 4.6.0: $ ticket nhỏ, tỉ lệ nhãn sai, p25 thật. Rồi mới xét F–L.
+
 ## Chưa quyết (owner đọc giải thích 2026-10-26, chưa chốt)
 
 - [ ] **F. `usage-report.py` in thêm dòng tải nền** (context call 1 theo role), mốc 91.9k nizzy /
@@ -37,31 +44,29 @@ thành release cho tới khi owner gật từng mục.
   tới khi đo được finding Standards dẫn tới commit.
 - [ ] **L. Thomas trả về sau handback: 29/164 ticket, 6% tiền Builder.** Kỳ vọng giảm sau A; đo lại.
 
-- [ ] **M. Hai lane: Builder và quick-builder, phân loại bằng probe, không bằng tiêu đề.** Lúc claim,
-  Thomas `git grep -c` / `git log --stat` vùng ticket nhắc → số file + có chạm `risky-paths` không;
-  ≤3 file, không rủi ro, không đổi hành vi (câu phán duy nhất, ghi lý do lên ticket) → nhãn
-  `quick`, dispatch pane quick-builder (nhận ticket, không gate, trước/sau, Thomas ff-merge).
-  Leo thang một chiều quick → Builder khi diff vượt ngưỡng. Ngưỡng = p25 cỡ merge của chính
-  project sau 30 merge. Số: nizzy 1/128 ticket là label thuần, "rename" TRA-1210 chạm 311 file;
-  `TDD: n/a` 11/346 → Thomas không tự phán nếu không có phép đo; ≤50 dòng vẫn $18 / 290 call.
-  Chạm: thomas.md, dispatch-ticket, quick.md, mod (chip/bell lane quick), tracker label. Owner
-  2026-10-26: bàn cùng "vận hành ticket và năng lực Shaper".
-  Bổ sung 2026-10-26 (owner): **ai phân loại** = vòng thẩm định sau BA. BA chạy probe và đánh
-  dấu từng dòng handoff `quick` / `ticket` / `epic` kèm số file; owner gật → ticket mang nhãn.
-  **Nhãn là bắt buộc lúc cắt ticket** (owner 2026-10-26): `to-tickets` của Shaper và ticket BA cắt
-  đều mang `quick`/`builder` + số file dự kiến (từ code đã đọc lúc Align, không đoán); ticket
-  không nhãn = cắt chưa xong, Thomas trả về nơi cắt. **Thomas điều phối theo nhãn** (owner 2026-10-26): `quick` →
-  pane quick-builder, Thomas nhìn diff + trước/sau rồi ff-merge; không nhãn → Builder. Thomas
-  chỉ probe khi ticket không nhãn hoặc quick-builder trả về vì vượt ngưỡng. Owner gọi
-  quick-builder tay chỉ là cửa phụ khi cần, không phải đường vận hành.
-  **`quick.md` viết lại thành quick-builder = junior dev** (owner 2026-10-26, bỏ ops/*, trước/sau,
-  ff-merge, chờ gật): nhận brief từ Thomas, worktree + nhánh ticket như Builder; sửa code, chạy test
-  có sẵn của phần chạm; tự review một lần bằng built-in `code-review` (inline, 0 spawn, 6%);
-  commit, push, handback như Builder; Thomas merge bằng đường hiện nay, merge gate không đòi
-  tdd/simplify/arm cho role này. Không tdd bắt buộc, không mattpocock 2 trục, không simplify,
-  không UX audit, không arm. Vượt ngưỡng → nói trong handback, Thomas chuyển lane Builder.
-  Tên: giữ `builder`,
-  `quick` → `quick-builder`; không dùng senior/junior (`junior-<runtime>` đã có nghĩa khác).
+- [ ] **M. Ticket `quick` / `full` — chốt 2026-10-26 (owner "rất hài lòng").**
+  - **Cách dựng: không lane mới.** Nhãn `quick` trên tracker → mod tự đặt miễn trừ cho pane Builder
+    (tdd, review:matt, simplify, ux); Thomas chỉ claim + dispatch như mọi ticket. Thêm hai cờ
+    `SIMPLIFY: n/a`, `UX: n/a` bên cạnh `TDD: n/a`, `REVIEW: n/a` đã có; merge gate tôn trọng.
+    Quick = Builder code, chạy test có sẵn, tự review built-in `code-review` inline, handback.
+  - **Lý luận phân loại, hỏi theo thứ tự, "có" đầu tiên = `full`:** (1) chạm `risky-paths` của
+    project (migration, route/API, auth, thanh toán, ghi dữ liệu)? (2) sai thì phải test mới biết
+    (logic, phép tính, trạng thái, dữ liệu) hay nhìn là thấy (chữ, label, vị trí, màu, config)?
+    (3) `git grep` chữ/component ticket nhắc → >3 file? (mốc đầu; sau 30 merge thay bằng p25 của
+    project). Ví dụ: TRA-1223 quick; TRA-1210 full (311 file); TRA-1218 full (logic lọc).
+  - **Ai quyết:** người cắt ticket (Shaper `to-tickets`, BA) ghi ba dòng bằng chứng lên ticket
+    (rủi ro / kiểm bằng / số file). Nhãn bắt buộc; không nhãn = trả về nơi cắt. Thomas không hỏi
+    lại. Quick vượt câu 3 khi làm → nói trong handback, Thomas chuyển `full`.
+  - **Band/board:** Thomas: hàng 1 trạng thái chung (`⎇ main · astragentic 4.4.0 ↑4.5.0 · tracker
+    12 claimable · 3 lane`), mỗi lane một hàng cột thẳng `TRA-1218  builder  working  12m`, lệnh
+    update rời band. Builder: hàng 1 `builder TRA-1218 · quick · astragentic 4.4.0`, hàng 2 chỉ các
+    bước; bước miễn trừ bỏ khỏi hàng, không in n/a. Loại đọc từ nhãn, cùng nguồn với miễn trừ.
+  - **Selftest:** trồng ticket `quick` → chip đổi, commit gate không đòi test, merge gate không
+    đòi simplify; ticket không nhãn → gate bắt như cũ. Fail trên bản cũ, pass trên bản mới.
+  - Tên: giữ `builder`; `quick` (role owner gõ tay) đổi `quick-builder`, là cửa phụ. Không
+    senior/junior. Model quick: Sonnet low, đo 10 ticket rồi mới thử Haiku.
+  - Tiền: sau A–C ticket nhỏ ≈ $10–12, quick ≈ $5 (ước); 15–32% ticket nizzy; ≈3–5%. Làm vì tổ
+    chức và tốc độ, sau A–C.
 
 ## Owner đã bỏ
 
