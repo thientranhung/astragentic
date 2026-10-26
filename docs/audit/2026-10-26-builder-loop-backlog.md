@@ -48,3 +48,16 @@ thành release cho tới khi owner gật từng mục.
 - QA: 2 session / 14 ngày, ~235 call, một skill mỗi session, không có luật chạy lại. 2.5% chi phí.
 - Shaper: 4 session, 116–493 call, Align → Spec → Arm → Test design → Tickets, mỗi skill một
   lần, không loop. 2% chi phí.
+
+## Chỗ phải đổi đồng bộ khi làm A–C (đếm 2026-10-26)
+
+| Nơi | Đang có | Đổi | Mục |
+|---|---|---|---|
+| `harness/.agents/roles/builder.md` | bảng phase; "After a fold, re-run simplify over marker..HEAD"; "the ONE full verification run" | thứ tự mới; bỏ hai câu | A, B, C |
+| `harness/.agents/skills/dispatch-ticket/SKILL.md` dòng `FLOW:` (và `-claude`) | tdd → matt → built-in → (ux) → simplify → arm | tdd → ux (UI) → matt → built-in → simplify → arm | B |
+| Mod `register.tsx` `FLOW_BY_ROLE.builder` (chip "→ bước kế") | implement, tdd, review:matt, review:built-in, ux, simplify, arm | implement, tdd, ux, review:matt, review:built-in, simplify, arm | B |
+| Mod arm gate (arm chỉ sau built-in code-review) | đúng với thứ tự mới | giữ | — |
+| Mod merge gate (record có tdd/test file, hai review, simplify; không xét thứ tự, không xét HEAD) | | giữ | — |
+| `harness/scripts/check-simplify-markers.sh` rule 5 "marker mới nhất COVERS head, không thì re-run" | bắt marker là HEAD | marker phủ commit nội dung cuối; fold sau marker được phép | A |
+| `harness/scripts/selftest.sh` | case cho thứ tự chip và rule 5 | sửa case theo | A, B |
+| `harness/.agents/roles/builder-claude.md` | "built-in code-review sau mattpocock, trước simplify" | vẫn đúng | — |
