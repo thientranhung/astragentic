@@ -1805,10 +1805,16 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     // a second content commit on the same brief is not asked again
     fs.writeFileSync(path.join(root, 'order.js'), 'y'); git('add', 'order.js')
     const tddOrderSecond = (await orderDeny('git commit -m "feat: order, second commit"')) === 'pass'
+    // 4.5.4: a plain steering message (no leading slash) after the first content commit does not
+    // re-arm the gate (one downstream ticket, 2026-10-26: a steer at 21:50 forced a second tdd + red)
+    await new Promise(r => setTimeout(r, 5))
+    await fire('session.receive', { text: '<cross-session-message from="uds:/tmp/d.sock" from-name="disp-07">\nPlease also cover the empty-list case before you hand back.\n</cross-session-message>', origin: { kind: 'plugin' } }, async () => ({}))
+    fs.writeFileSync(path.join(root, 'order.js'), 'z'); git('add', 'order.js')
+    const tddOrderSteer = (await orderDeny('git commit -m "feat: order, after a steer"')) === 'pass' && typeof rec()['AB-5']?.last_message_received_at === 'number' && rec()['AB-5'].last_message_received_at > rec()['AB-5'].last_brief_received_at
     const tddOrderLog = Array.isArray(rec()['AB-5']?.skills_log) && rec()['AB-5'].skills_log.some(x => x.skill === 'mattpocock-skills:tdd')
     git('reset', '-q'); try { fs.unlinkSync(path.join(root, 'order.js')); fs.unlinkSync(path.join(root, 'order.test.js')) } catch {}
     try { fs.unlinkSync(runLog) } catch {}
-    const tddOrder = { noCall: tddOrderNoCall, noRed: tddOrderNoRed, greenOnly: tddOrderGreenOnly, masked: tddOrderMasked, ok: tddOrderOk, second: tddOrderSecond, log: tddOrderLog }
+    const tddOrder = { noCall: tddOrderNoCall, noRed: tddOrderNoRed, greenOnly: tddOrderGreenOnly, masked: tddOrderMasked, ok: tddOrderOk, second: tddOrderSecond, steer: tddOrderSteer, log: tddOrderLog }
     const bandText = { bandNoFlow, bandUxOff, bandUxNa, bandNext, bandHeld, bandSimplify, bandDone, bandAfterAgent, bandTie }
     const bandRead = {
       noFlow: /→ implement ○ tdd ○ review:matt/.test(bandNoFlow) && !/ux/.test(bandNoFlow),
@@ -2002,7 +2008,7 @@ EOS
     ok "planted: a mod that reads the tracker on the tick is caught by the count"
   fi
   out="$(mod_drive "$MOD" pane)"
-  if says "$out" '"tddOrder":{"noCall":true,"noRed":true,"greenOnly":true,"masked":true,"ok":true,"second":true,"log":true}'; then
+  if says "$out" '"tddOrder":{"noCall":true,"noRed":true,"greenOnly":true,"masked":true,"ok":true,"second":true,"steer":true,"log":true}'; then
     ok "tdd order (4.5.2): the first content commit after a brief is refused until tdd is called after the brief and a test run went RED; a green run is not red; the second commit is not asked; the skill log keeps the call"
   else
     bad "tdd order (4.5.2)" "$(printf '%s' "$out" | grep -o '"tddOrder":{[^}]*}' | head -1)"
@@ -2060,7 +2066,10 @@ assert old10 in s, "held-bell status clear not found"
 s = s.replace(old10, "  const text", 1)
 old11 = "; patch.ux_owed = uxOwed"
 assert old11 in s, "ux_owed write not found"
-open(p, 'w').write(s.replace(old11, "", 1))
+s = s.replace(old11, "", 1)
+old12 = "last_message_received_at: now }"
+assert old12 in s, "message mark not found"
+open(p, 'w').write(s.replace(old12, "last_message_received_at: now, last_brief_received_at: now }", 1))
 EOS
   out="$(mod_drive "$TMP/mod-stuck")"
   if says "$out" 'builder-ab-1-32 [1c2d95]:sent:' && says "$out" '"afterRetire":"builder-ab-1-32' && says "$out" '"stubBells":1' && says "$out" '"staleBells":0' && says "$out" '"subagentHeld":true,"heldCleared":false' && says "$out" '"mergeGap":"pass:ran"' && says "$out" '"armOffDispatcher":false'; then
@@ -2101,8 +2110,8 @@ EOS
     bad "mod refusal planted reason" "the reasonless refusal was not caught: $out"
   fi
   out="$(mod_drive "$TMP/mod-stuck" pane)"
-  if says "$out" '"paneHeld":true,"paneCleared":false,"sendToFork":"uds:/tmp/d.sock","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"noFlow":true,"uxOff":false,"uxNa":false,"next":false,"held":false,"simplify":false,"done":true,"afterAgent":true,"tie":false},"armOffSection":false,"refusedListed":"pass:ran","refusedOther":"pass:ran","refusedWhy":false,"compacted":0'; then
-    ok "planted: a step invoked reads ✓ while the pane's four agents still run; a same-millisecond tie lights the earlier step; a brief nobody reads for ux leaves no ux chip; a pane that starts a turn leaves its hold standing; an arm row nobody parses reaches no prompt; a refused list nobody tests refuses nothing; a ceiling nobody reads compacts nothing"
+  if says "$out" '"second":true,"steer":false,' && says "$out" '"paneHeld":true,"paneCleared":false,"sendToFork":"uds:/tmp/d.sock","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"noFlow":true,"uxOff":false,"uxNa":false,"next":false,"held":false,"simplify":false,"done":true,"afterAgent":true,"tie":false},"armOffSection":false,"refusedListed":"pass:ran","refusedOther":"pass:ran","refusedWhy":false,"compacted":0'; then
+    ok "planted: a step invoked reads ✓ while the pane's four agents still run; a same-millisecond tie lights the earlier step; a brief nobody reads for ux leaves no ux chip; a steer that stamps the brief mark re-arms the tdd gate; a pane that starts a turn leaves its hold standing; an arm row nobody parses reaches no prompt; a refused list nobody tests refuses nothing; a ceiling nobody reads compacts nothing"
   else
     bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"
   fi

@@ -958,8 +958,12 @@ function isLive(entry: Entry): boolean {
   return typeof entry?.pane_id === 'string'
 }
 
+function lastReceivedAt(entry: Entry): number {
+  return Number(entry.last_message_received_at ?? entry.last_brief_received_at ?? 0)
+}
+
 function isMidTurn(entry: Entry): boolean {
-  const got = entry.last_brief_received_at ?? 0
+  const got = lastReceivedAt(entry)
   return got > 0 && got > (entry.last_turn_end_at ?? 0)
 }
 
@@ -1006,7 +1010,7 @@ async function refreshBoard($: any, root: string | null, sends: Map<string, numb
     } else if (isMidTurn(entry)) {
       const w = entry.waiting_on
       const stale = w && now - (w.at ?? now) > HOLD_STALE_MS
-      rows.push({ key, role, state: 'working', since: entry.last_brief_received_at, note: w ? `${w.n} agent(s) still running, turn end held${stale ? ` ${ago(now - w.at)} — stale, read that pane` : ''}` : undefined })
+      rows.push({ key, role, state: 'working', since: lastReceivedAt(entry), note: w ? `${w.n} agent(s) still running, turn end held${stale ? ` ${ago(now - w.at)} — stale, read that pane` : ''}` : undefined })
     } else if (entry.last_turn_end_at) {
       rows.push({ key, role, state: 'ended', since: entry.last_turn_end_at, note: [entry.last_turn_reason, qaNote].filter(Boolean).join(' · ') || undefined })
     } else {
@@ -1322,8 +1326,15 @@ export const register: Register = on => {
     const qaRequired = qaLine ? qaLine[1]?.toLowerCase() ?? null : undefined
     const qaMode = isBriefText ? unfenced.match(/^[ \t]*Mode[ \t]*:[ \t]*(walk|probe|verify)\b/im)?.[1]?.toLowerCase() ?? null : undefined
     if (root) {
-      const patch: Entry = { dispatcher: env.from, dispatcher_name: env.fromName, last_brief_received_at: now }
+      // A STEER IS NOT A BRIEF (4.5.4). `last_brief_received_at` was stamped on every inbound
+      // message, and the tdd-order gate reads it as "the brief": a plain steering message after
+      // the first content commit moved the mark past that commit, and the next commit was asked
+      // for a fresh tdd call and a fresh red run (one downstream ticket, 2026-10-26: TDD done at
+      // 19:39, steer at 21:50, a forced second tdd cycle at 21:56). The brief mark moves only on
+      // a brief; `last_message_received_at` is what the board's "working since" reads.
+      const patch: Entry = { dispatcher: env.from, dispatcher_name: env.fromName, last_message_received_at: now }
       if (isBriefText) {
+        patch.last_brief_received_at = now
         patch.tdd_na = tddNa; patch.review_na = reviewNa; patch.ux_owed = uxOwed
         if (me.role === 'builder') { patch.qa_required = qaRequired; patch.qa_plan = qaPlan; patch.first_content_commit_at = null }
         if (me.role === 'qa') patch.qa_mode = qaMode

@@ -96,6 +96,11 @@ thành release cho tới khi owner gật từng mục.
   contract viết "RED after it" gây hiểu là "sau tdd" → sửa chữ, giữ gate (chạy lại test chỉ để
   đứng sau lời gọi là đốt token, trong khi test-first đã có thật). Đếm "tdd gọi sau khi đã đỏ":
   1/2 ticket; nếu thành đa số thì đề xuất owner bỏ điều kiện (a) gọi tdd, chỉ giữ (b) lần đỏ.
+- [x] **N3. (4.5.4, 2026-10-26) Tin nhắn điều hướng ghi đè mốc brief, gate tdd-order bật lại.** inception
+  IN-153: tdd + đỏ + commit đầu 19:39 (qua gate đúng), Thomas gửi steer thường 21:50, commit kế 21:56
+  bị bắt tdd + đỏ lần nữa. Nguyên nhân: `last_brief_received_at` ghi ở mọi tin nhắn. Sửa: mốc brief
+  chỉ ghi khi brief (dòng đầu là slash), thêm `last_message_received_at` cho board. Chi phí lỗi:
+  1 vòng tdd ép / 1 steer sau commit đầu. Selftest trồng steer rồi commit phải qua.
 - [ ] **P. Gate commit chặn commit vào clone tạm khi đường dẫn là biến** (nizzy TRA-1260, 1 lần,
   2026-10-26): `git -C "$clone" … commit -qm "TRA-000: …"` nhắm vào clone tạm, không phải worktree,
   nhưng `$clone` không đọc được → gate coi là worktree (thiết kế có chủ ý: chặn `cd $X && git commit`

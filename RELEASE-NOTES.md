@@ -1,3 +1,34 @@
+# Astragentic 4.5.4
+
+**A steer is not a brief.** Field report from a second downstream project on its first ticket
+under 4.5.3 (2026-10-26, owner-relayed): TDD done right at 19:39 (tdd, red run, first content
+commit passed the gate); at 21:50 the dispatcher sent a plain steering message; at 21:56 the
+Builder's next commit was refused and it was made to call tdd again and produce a fresh red run.
+Cause, verified in the mod: `last_brief_received_at` was stamped on every inbound message, brief
+or steer, while the tdd-order gate reads that mark as "the brief" and asks for tdd + red after it
+of the first content commit since. 4.5.2 had closed the exemption half of this shape (a steer no
+longer clears `TDD: n/a`) and left the timestamp half. Now the brief mark moves only on a brief
+(first line a slash command); every message stamps `last_message_received_at`, which is what
+the board's "working since" and the mid-turn test read (an old record without it falls back to
+the brief mark). Cost of the defect: one forced tdd cycle per steer after the first commit, and a
+dispatcher that learns not to steer.
+
+Also on main since 4.5.3: the Builder contract now says the red run counts "after the brief, in
+either order with the tdd call" — downstream read "RED after it" as "after tdd" (TRA-1263:
+two reds before the call, commit 15 s after it, correctly passed).
+
+Selftest: planted brief → tdd → red → commit → steer (no slash) → commit must pass, and the
+record's message mark sits past its brief mark; the planted mod that stamps the brief mark on
+a steer is named (`steer:false`).
+
+Measured on 4.5.3 so far (two downstream tickets with a content commit): reds logged 5 and 1,
+refusals 1 and 2, false refusals 0 and 0, masked runs 9/29 and 10/19 (`| tail`).
+
+## Upgrade from 4.5.3
+
+- Nothing by hand. A Builder mid-ticket keeps its record; the first steer after the upgrade
+  stamps the new field and the gate stops re-arming from then on.
+
 # Astragentic 4.5.3
 
 Three field reports from the first ticket under 4.5.2 (one downstream project, 2026-10-26), all
