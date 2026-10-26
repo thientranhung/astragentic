@@ -67,6 +67,15 @@ thành release cho tới khi owner gật từng mục.
     senior/junior. Model quick: Sonnet low, đo 10 ticket rồi mới thử Haiku.
   - Tiền: sau A–C ticket nhỏ ≈ $10–12, quick ≈ $5 (ước); 15–32% ticket nizzy; ≈3–5%. Làm vì tổ
     chức và tốc độ, sau A–C.
+- [ ] **N. tdd được kiểm "có", không kiểm "trước" (nizzy báo 2026-10-26, TRA-1245).** Gate commit đòi test
+  file (4.1.3 ruling: tdd = test file, vì 48 refusal kiểu "skill đã gọi" chỉ dẫn tới 2 test edit);
+  gate merge chỉ hỏi `tdd` có trong `skills_run`. Đo nizzy 14 ngày, 161 ticket: **85 tdd trước commit
+  đầu, 61 commit trước tdd (38%), 15 không gọi tdd (9%)**. Nizzy xin: (1) commit nội dung đầu sau
+  mỗi brief đòi tdd ghi SAU `last_brief_received_at` hoặc `TDD: n/a`; (2) ghi Skill call thành list
+  có timestamp để merge kiểm thứ tự. Điểm cần owner quyết: 4.1.3 đã bỏ kiểm skill-call vì bị lách;
+  kiểm "trước" quay lại dạng đó. Thứ hai: "nhiều stage trong một pane" là cách nizzy dùng, harness
+  định nghĩa một ticket một session. Phụ: SendMessage tới `thomas` trần sang dispatcher project
+  khác (xem [[project-flat-session-namespace]]: 3.2.3 keyed bare name; cần đo lại). Chưa làm.
 
 ## Owner đã bỏ
 
