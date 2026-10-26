@@ -54,9 +54,13 @@ thành release cho tới khi owner gật từng mục.
   pane quick-builder, Thomas nhìn diff + trước/sau rồi ff-merge; không nhãn → Builder. Thomas
   chỉ probe khi ticket không nhãn hoặc quick-builder trả về vì vượt ngưỡng. Owner gọi
   quick-builder tay chỉ là cửa phụ khi cần, không phải đường vận hành.
-  **`quick.md` viết lại thành quick-builder = coder task nhỏ**: sửa code trong worktree, chạy
-  test có sẵn của file chạm (không bắt viết test), trước/sau, commit, ff-merge; không fan-out
-  review; trần 3 file / không đường rủi ro, vượt thì trả lane Builder. Tên: giữ `builder`,
+  **`quick.md` viết lại thành quick-builder = junior dev** (owner 2026-10-26, bỏ ops/*, trước/sau,
+  ff-merge, chờ gật): nhận brief từ Thomas, worktree + nhánh ticket như Builder; sửa code, chạy test
+  có sẵn của phần chạm; tự review một lần bằng built-in `code-review` (inline, 0 spawn, 6%);
+  commit, push, handback như Builder; Thomas merge bằng đường hiện nay, merge gate không đòi
+  tdd/simplify/arm cho role này. Không tdd bắt buộc, không mattpocock 2 trục, không simplify,
+  không UX audit, không arm. Vượt ngưỡng → nói trong handback, Thomas chuyển lane Builder.
+  Tên: giữ `builder`,
   `quick` → `quick-builder`; không dùng senior/junior (`junior-<runtime>` đã có nghĩa khác).
 
 ## Owner đã bỏ
