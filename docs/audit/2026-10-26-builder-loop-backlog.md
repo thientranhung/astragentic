@@ -90,6 +90,12 @@ thành release cho tới khi owner gật từng mục.
   commit đầu, đúng chỗ), 8 xanh, 10 `masked` (pipe `| tail`); 2 từ chối (1 "no tdd call", 1 "no RED")
   cùng một lần commit, sau đó Builder gọi tdd, chạy đỏ, commit — 0 từ chối nhầm. Hook đã ghi được đỏ.
   Masked 10/19 chỉ là thói quen `| tail`, không ảnh hưởng gate khi đã có 1 lần đỏ; đếm thêm.
+  → Ticket thứ hai, có commit nội dung (nizzy TRA-1263, 2026-10-26): 29 lần chạy = 5 đỏ (2 trước
+  commit đầu), 14 xanh, 9 masked, 1 background; 1 từ chối "chưa gọi tdd", Builder gọi tdd 7 s sau,
+  commit 15 s sau. Hai lần đỏ đứng TRƯỚC lời gọi tdd: gate đếm "đỏ kể từ brief" (đúng như mod viết),
+  contract viết "RED after it" gây hiểu là "sau tdd" → sửa chữ, giữ gate (chạy lại test chỉ để
+  đứng sau lời gọi là đốt token, trong khi test-first đã có thật). Đếm "tdd gọi sau khi đã đỏ":
+  1/2 ticket; nếu thành đa số thì đề xuất owner bỏ điều kiện (a) gọi tdd, chỉ giữ (b) lần đỏ.
 - [ ] **P. Gate commit chặn commit vào clone tạm khi đường dẫn là biến** (nizzy TRA-1260, 1 lần,
   2026-10-26): `git -C "$clone" … commit -qm "TRA-000: …"` nhắm vào clone tạm, không phải worktree,
   nhưng `$clone` không đọc được → gate coi là worktree (thiết kế có chủ ý: chặn `cd $X && git commit`

@@ -6,7 +6,8 @@ differs on the Claude Code runtime.
 ## Three gates the mod holds
 
 **No content commit without a test file; the first content commit after a brief also needs
-`mattpocock-skills:tdd` called after the brief and a test run that went RED after it; and no
+`mattpocock-skills:tdd` called after the brief and a test run that went RED after the brief
+(either order between the two: the red run is the substance, the call loads the method); and no
 arm before the built-in `code-review` has run.** The red run is read from the PostToolUse
 hook's log (`/tmp/harness-test-runs/<toplevel>.log`, written on PostToolUse and on
 PostToolUseFailure — a failing call reaches only the second (4.5.3); every `go test` / `pytest` / `vitest` /
