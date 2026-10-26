@@ -137,3 +137,21 @@ rẻ hơn vì ít phase, một reviewer, diff qua file, và model rẻ cho việ
 Kết luận: số 4 là của Claude Code; số vòng là của harness. Simplify đúng chỗ là **một lần, sau
 commit nội dung cuối của ticket**; fold nhỏ sau marker không đòi vòng mới (merge gate đã review
 toàn bộ diff).
+
+## 2026-10-26 — Lỗ hổng dư thừa trong vòng Builder
+
+| # | Dư thừa | Số | Nguồn |
+|---|---|---|---|
+| 1 | Simplify chạy lại sau mỗi commit hậu marker | 57/244 session 2–5 vòng, ≈$335 / 14 ngày | transcript |
+| 2 | **Làm gọn code được soi ba lần**: mattpocock `code-review` trục Standards mang bộ smell Fowler (duplicated code, speculative generality…); built-in `code-review` ở medium chạy 8 góc inline trong đó **3 cleanup + 1 altitude + 1 conventions**; simplify 4 góc (reuse, simplification, efficiency, altitude). Chỉ simplify là sửa, hai cái kia báo cáo | review-std 12% + review-bug 6% + simplify 10% + subagent | binary 2.1.310, SKILL.md mattpocock, phase share |
+| 3 | Verify full sau commit cuối, rồi station chạy lại gate ở merge | đuôi 19% (gồm handback+push, chưa tách); gate station median 6.7 phút | tail.py, merge-queue memo |
+| 4 | Thomas trả về sau handback → Builder chạy lại phần cuối vòng (fold, simplify mới, verify, handback) | 29/164 ticket, $452 / $7,106 (6%) | transcript |
+| 5 | Guard isolation từ chối spawn rồi Builder gõ lại | 467 lần / 14 ngày, ~$0.04 mỗi lần | transcript |
+| 6 | UI: Builder chụp bằng chứng + bmad-ux audit + QA walk cùng bề mặt | omnilogin 8–14%, ux 5–7%; QA walk chỉ 2 lần / 14 ngày nên trùng ít | usage-report |
+| 7 | Built-in code-review không mở subagent ở medium (8 góc inline) | 177 lần gọi, 0 spawn | transcript |
+
+Thứ tự sửa, không thêm cơ chế: (1) simplify một lần ở cuối, trước handback, bỏ câu chạy lại sau
+fold, script marker không bắt marker là HEAD; (3) Builder chỉ chạy `Validation:`; (2) giữ
+built-in code-review cho bug, giữ simplify cho làm gọn, trục Standards của mattpocock là lớp
+trùng nhưng đi chung một skill với trục Spec nên để nguyên cho tới khi đo được finding của nó
+dẫn tới commit.
