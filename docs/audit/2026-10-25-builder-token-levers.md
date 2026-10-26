@@ -121,3 +121,19 @@ và chuyển diff qua file; con số đó không so với harness này.
 Kết luận: tải nền là của project và như nhau ở cả ba; **thiết kế Builder nhân số lần nạp lên
 ~3–5 lần mỗi ticket** (4 phase thêm, 8 subagent thêm, simplify lặp, verify lặp). Hai thiết kế kia
 rẻ hơn vì ít phase, một reviewer, diff qua file, và model rẻ cho việc máy móc.
+
+## 2026-10-26 — Vì sao simplify gọi nhiều subagent
+
+| Phát hiện | Số | Nguồn |
+|---|---|---|
+| Skill built-in `simplify` (Claude Code 2.1.310) mở đúng **4** agent, một vòng; có nhánh inline khi không có tool Agent | prompt trong binary | `strings claude` |
+| Session chỉ một vòng 4 | 187 / 244 | transcript nizzy, spawn thành công chia 4 |
+| Session 2–5 vòng | 57 (42 hai vòng, 9 ba, 5 bốn, 1 năm) ≈ 316 spawn thêm ≈ $335 / 14 ngày ($1.06 mỗi subagent) | cùng nguồn |
+| Lý do vòng thêm | **luật của mình, không phải skill**: `builder.md` "sau fold, chạy lại simplify trên marker..HEAD" + `check-simplify-markers.sh` từ chối head không phải marker → mọi commit sau marker (fold trả về của Thomas, rebase, regenerate file, sửa sau handback) đòi một vòng 4 agent mới. TRA-1204: vòng 2 sau sửa hậu handback; TRA-1227: vòng mới sau rebase gate-retry | transcript TRA-1204, TRA-1227 |
+| Guard isolation của mod từ chối spawn `general-purpose` không có `isolation:` | **467 lần / 14 ngày**, 29 / 191 lần gọi simplify dính; Builder gọi lại với `isolation: worktree` → spawn đếm gấp đôi trong log, session không gấp đôi; mỗi lần từ chối tốn một turn (~$0.04) | transcript, refusal text |
+| Xu hướng | spawn `general-purpose/worktree` 28 → 220 mỗi tuần (9-w4 → 10-w3); Explore (không worktree) giảm tỉ trọng | transcript theo tuần |
+| Worktree isolation có kéo dev stack không | không: harness không có hook WorktreeCreate; `setup-worktree.sh` của nizzy chỉ chạy khi dispatch ticket | `harness/.claude/settings.json` |
+
+Kết luận: số 4 là của Claude Code; số vòng là của harness. Simplify đúng chỗ là **một lần, sau
+commit nội dung cuối của ticket**; fold nhỏ sau marker không đòi vòng mới (merge gate đã review
+toàn bộ diff).
