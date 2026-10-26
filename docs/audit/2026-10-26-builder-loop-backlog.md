@@ -48,7 +48,9 @@ thành release cho tới khi owner gật từng mục.
   2026-10-26: bàn cùng "vận hành ticket và năng lực Shaper".
   Bổ sung 2026-10-26 (owner): **ai phân loại** = vòng thẩm định sau BA. BA chạy probe và đánh
   dấu từng dòng handoff `quick` / `ticket` / `epic` kèm số file; owner gật → ticket mang nhãn.
-  Shaper gắn nhãn khi `to-tickets`. **Thomas điều phối theo nhãn** (owner 2026-10-26): `quick` →
+  **Nhãn là bắt buộc lúc cắt ticket** (owner 2026-10-26): `to-tickets` của Shaper và ticket BA cắt
+  đều mang `quick`/`builder` + số file dự kiến (từ code đã đọc lúc Align, không đoán); ticket
+  không nhãn = cắt chưa xong, Thomas trả về nơi cắt. **Thomas điều phối theo nhãn** (owner 2026-10-26): `quick` →
   pane quick-builder, Thomas nhìn diff + trước/sau rồi ff-merge; không nhãn → Builder. Thomas
   chỉ probe khi ticket không nhãn hoặc quick-builder trả về vì vượt ngưỡng. Owner gọi
   quick-builder tay chỉ là cửa phụ khi cần, không phải đường vận hành.
