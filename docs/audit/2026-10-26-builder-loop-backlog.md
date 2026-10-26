@@ -46,6 +46,13 @@ thành release cho tới khi owner gật từng mục.
   `TDD: n/a` 11/346 → Thomas không tự phán nếu không có phép đo; ≤50 dòng vẫn $18 / 290 call.
   Chạm: thomas.md, dispatch-ticket, quick.md, mod (chip/bell lane quick), tracker label. Owner
   2026-10-26: bàn cùng "vận hành ticket và năng lực Shaper".
+  Bổ sung 2026-10-26 (owner): **ai phân loại** = vòng thẩm định sau BA. BA chạy probe và đánh
+  dấu từng dòng handoff `quick` / `ticket` / `epic` kèm số file; owner gật → ticket mang nhãn.
+  Shaper gắn nhãn khi `to-tickets`. Thomas probe lại lúc claim, lệch thì đổi nhãn + lý do.
+  **`quick.md` viết lại thành quick-builder = coder task nhỏ**: sửa code trong worktree, chạy
+  test có sẵn của file chạm (không bắt viết test), trước/sau, commit, ff-merge; không fan-out
+  review; trần 3 file / không đường rủi ro, vượt thì trả lane Builder. Tên: giữ `builder`,
+  `quick` → `quick-builder`; không dùng senior/junior (`junior-<runtime>` đã có nghĩa khác).
 
 ## Owner đã bỏ
 
