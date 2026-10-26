@@ -76,6 +76,10 @@ thành release cho tới khi owner gật từng mục.
   kiểm "trước" quay lại dạng đó. Thứ hai: "nhiều stage trong một pane" là cách nizzy dùng, harness
   định nghĩa một ticket một session (nizzy đếm 2026-10-26: 2 ticket chạy nhiều stage trong một pane, TRA-1243 và TRA-1245; mọi ticket khác một stage). Phụ: SendMessage tới `thomas` trần sang dispatcher project
   khác (xem [[project-flat-session-namespace]]: 3.2.3 keyed bare name; cần đo lại). Owner 2026-10-26 (qua Thomas nizzy, xác nhận ở pane này: "MOD phải đảm bảo"): làm cả (a) tdd sau brief trước commit đầu, (b) test đỏ ghi bởi hook PostToolUse, và `skills_log` có giờ. Ship 4.5.2.
+- [ ] **O. Chip "có bản mới" chỉ hỏi remote một lần lúc Thomas khởi động** (2026-10-26: nizzy áp 4.5.1
+  rồi không thấy 4.5.2 vì session chưa mở lại). Sửa: hỏi lại sau mỗi merge và khi `/tracker-refresh`,
+  không theo đồng hồ; ≈66 `git ls-remote` / tháng trên nizzy. Owner: để nizzy tự kiểm bằng
+  `.astraler/astragentic.sh update`; gộp vào bản kế.
 
 ## Owner đã bỏ
 
