@@ -1,3 +1,16 @@
+# Astragentic 4.5.1
+
+**The fold allowance is simplify's only; a fold on top of an `arm(ticket)` receipt still STOPs.**
+4.5.0 put the allowance in rule 5 without a kind test, so a ≤100-line fold after an arm
+receipt printed a NOTE instead of a STOP — code the other vendor never read, and rule 6 judges
+only the receipt's own `Reviewed:`. Planted: a 1-line fold on an `arm(ticket)` receipt exited 0
+on 4.5.0 and exits 1 now; the selftest keeps the case. No live effect on a project with the
+ticket arm off. `dispatch-ticket-claude` now lists the six-step `FLOW:` line, `bmad-ux` included.
+
+## Upgrade from 4.5.0
+
+One script, one skill text. Nothing else.
+
 # Astragentic 4.5.0
 
 **Simplify runs once, last, and a fold on top of its marker no longer owes the pass again.**

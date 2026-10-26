@@ -147,8 +147,8 @@ the default, which says the owner runs it.
 
 ## The flow is read from what ran
 
-The brief's `FLOW:` line names four Skill calls: `mattpocock-skills:tdd`,
-`mattpocock-skills:code-review`, the built-in `code-review`, `simplify`. The Builder's pane
+The brief's `FLOW:` line names the Skill calls in order: `mattpocock-skills:tdd`, `bmad-ux`
+(UI ticket), `mattpocock-skills:code-review`, the built-in `code-review`, `simplify`. The Builder's pane
 records each at the moment the engine expands it, under `skills_run` in its record entry. A
 plugin skill is recorded qualified, a built-in bare, so the two reviews that share a word are
 told apart.

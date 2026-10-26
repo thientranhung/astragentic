@@ -936,7 +936,11 @@ for kind in kinds:
                 content_changed.append(p)
                 if parts[0] != "-":   # binary rows carry "-", counted as a file, not as lines
                     delta += int(parts[0]) + int(parts[1])
-            if content_changed and delta <= FOLD_ALLOWANCE:
+            # The allowance is simplify's (the one `economy` kind): a fold after an arm receipt
+            # is code the other vendor never read, and rule 6 only judges the receipt's own
+            # `Reviewed:` — so for every other kind the STOP below stands at any size (4.5.1;
+            # planted: a 1-line fold on an arm(ticket) receipt exited 0 on 4.5.0).
+            if content_changed and spec["economy"] and delta <= FOLD_ALLOWANCE:
                 notes.append(f"NOTE: [{kind}] {delta} non-test line(s) in {len(content_changed)} "
                              f"file(s) sit on top of marker {live[0][:9]} — within the fold "
                              f"allowance of {FOLD_ALLOWANCE}; the pass is not owed again.")

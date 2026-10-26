@@ -419,6 +419,26 @@ case "$rc:$(printf '%s' "$out" | tail -n 1)" in
                    || bad "big fold STOP text" "$out" ;;
   *) bad "big fold" "exit $rc: $(printf '%s' "$out" | tail -n 1)" ;;
 esac
+# 4.5.1 — the allowance is simplify's only: a fold on top of an arm(ticket) receipt still STOPs
+# (planted: exit 0 on 4.5.0).
+RA="$TMP/armfold"; mkdir -p "$RA"
+( cd "$RA" && git init -q . && git config user.email t@t && git config user.name t \
+  && printf 'a\n' > a.js && git add a.js && git commit -q -m init ) >/dev/null 2>&1
+BA="$( cd "$RA" && git rev-parse HEAD )"
+( cd "$RA" && printf 'b\n' >> a.js && git add -A && git commit -q -m 'T-1: work' ) >/dev/null 2>&1
+PA="$( cd "$RA" && git rev-parse HEAD )"
+( cd "$RA" && git commit -q --allow-empty -m "arm(ticket): T-1 pass 1
+
+Range: $BA..$PA
+Reviewed: $PA
+Vendor: codex
+Pass: 1
+Tests: RAN" && printf 'c\n' >> a.js && git add -A && git commit -q -m 'T-1: fold after receipt' ) >/dev/null 2>&1
+out="$( cd "$RA" && bash "$S/check-simplify-markers.sh" "$BA" HEAD --marker 'arm(ticket)' 2>&1 )"; rc=$?
+case "$rc:$(printf '%s' "$out" | tail -n 1)" in
+  1:"NOT GREEN") ok "a 1-line fold on top of an arm(ticket) receipt still STOPs — the allowance is simplify's only (4.5.1)" ;;
+  *) bad "arm fold" "exit $rc: $(printf '%s' "$out" | tail -n 1)" ;;
+esac
 
 # ---------------------------------------------------------------------------------------------
 # install.sh — the release must stage from a package root AND from inside a staged release
