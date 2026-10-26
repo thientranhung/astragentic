@@ -86,6 +86,10 @@ thành release cho tới khi owner gật từng mục.
   kiện; lệnh test bị `; echo` / `| tail` che mã thoát ghi `masked`; chạy nền ghi `background`; lời
   từ chối nêu lần chạy cuối đã ghi. Đo sau khi nizzy áp: số dòng status ≠ 0 trong
   `/tmp/harness-test-runs/*.log` tuần đầu (kỳ vọng > 0), số từ chối "no RED" / tuần.
+  → Đo ticket đầu trên 4.5.3 (nizzy TRA-1245 S4b, 2026-10-26): 19 lần chạy test = 1 đỏ (trước
+  commit đầu, đúng chỗ), 8 xanh, 10 `masked` (pipe `| tail`); 2 từ chối (1 "no tdd call", 1 "no RED")
+  cùng một lần commit, sau đó Builder gọi tdd, chạy đỏ, commit — 0 từ chối nhầm. Hook đã ghi được đỏ.
+  Masked 10/19 chỉ là thói quen `| tail`, không ảnh hưởng gate khi đã có 1 lần đỏ; đếm thêm.
 - [ ] **P. Gate commit chặn commit vào clone tạm khi đường dẫn là biến** (nizzy TRA-1260, 1 lần,
   2026-10-26): `git -C "$clone" … commit -qm "TRA-000: …"` nhắm vào clone tạm, không phải worktree,
   nhưng `$clone` không đọc được → gate coi là worktree (thiết kế có chủ ý: chặn `cd $X && git commit`
