@@ -23,7 +23,7 @@ thành release cho tới khi owner gật từng mục.
   `claude -p --model haiku --output-format json`. Owner 2026-10-26: "để cho nó lo". Chỉ gửi số,
   không gửi bước áp.
 
-## Chưa quyết
+## Chưa quyết (owner đọc giải thích 2026-10-26, chưa chốt)
 
 - [ ] **F. `usage-report.py` in thêm dòng tải nền** (context call 1 theo role), mốc 91.9k nizzy /
   53.5k inception. Chỉ hiển thị, không từ chối.
@@ -39,8 +39,9 @@ thành release cho tới khi owner gật từng mục.
 
 ## Owner đã bỏ
 
-- [-] **J. Tier ticket theo diff + `risky-paths` của project.** Owner 2026-10-25: "giữ vậy làm việc".
-- [-] **Thử nghiệm 10 merge tắt review.** Owner 2026-10-26: không chạy thử, tốn token.
+- [-] **J. Tier ticket theo diff + `risky-paths` của project.** Owner 2026-10-26: cỡ ticket không phải
+  vấn đề; vấn đề là vận hành ticket và năng lực Shaper, bàn sau.
+- [-] **Thử nghiệm 10 merge tắt review.** Owner 2026-10-26: bỏ hẳn.
 
 ## Đã xem, không có việc
 
