@@ -86,6 +86,11 @@ thành release cho tới khi owner gật từng mục.
   kiện; lệnh test bị `; echo` / `| tail` che mã thoát ghi `masked`; chạy nền ghi `background`; lời
   từ chối nêu lần chạy cuối đã ghi. Đo sau khi nizzy áp: số dòng status ≠ 0 trong
   `/tmp/harness-test-runs/*.log` tuần đầu (kỳ vọng > 0), số từ chối "no RED" / tuần.
+- [ ] **P. Gate commit chặn commit vào clone tạm khi đường dẫn là biến** (nizzy TRA-1260, 1 lần,
+  2026-10-26): `git -C "$clone" … commit -qm "TRA-000: …"` nhắm vào clone tạm, không phải worktree,
+  nhưng `$clone` không đọc được → gate coi là worktree (thiết kế có chủ ý: chặn `cd $X && git commit`
+  lách gate) và từ chối vì có command substitution. Không phải lỗi; n=1. Việc nếu lặp lại: lời từ
+  chối nói rõ "đường dẫn là biến nên bị coi là worktree, dùng đường dẫn chữ". Đếm thêm trước khi làm.
 - [ ] **O. Chip "có bản mới" chỉ hỏi remote một lần lúc Thomas khởi động** (2026-10-26: nizzy áp 4.5.1
   rồi không thấy 4.5.2 vì session chưa mở lại). Sửa: hỏi lại sau mỗi merge và khi `/tracker-refresh`,
   không theo đồng hồ; ≈66 `git ls-remote` / tháng trên nizzy. Owner: để nizzy tự kiểm bằng
