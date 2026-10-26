@@ -48,8 +48,8 @@ the skill asks for one when missing, into a pane with nobody in it.
 **Call `tdd` and both reviews yourself, by qualified name.** `implement` only points at them;
 the pane records each call and every `TURN-END` carries `Skills run:`. A step that cannot apply
 is exempted by the brief's `TDD: n/a — <why>` or `REVIEW: n/a — <why>` line
-(`builder-claude.md` § gates). `bmad-ux audit` is optional the same way, named in
-the handback as `UX audit: n/a — <why>`.
+(`builder-claude.md` § gates). `bmad-ux audit` is owed when the brief's `FLOW:` names it,
+exempted by `UX: n/a — <why>`, and named in the handback as `UX audit: n/a — <why>`.
 
 `implement` is **user-invoked**: drive it by name. The craft layer (`tdd`, `diagnosing-bugs`,
 `research`, `grilling`, `wizard`…) is model-invoked and needs no wiring.

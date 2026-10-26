@@ -137,7 +137,9 @@ Code's own `/compact` and `/clear` keep bare names. A skill the model can call
 **The `FLOW:` line** names the build flow as qualified Skill calls, in order. `implement`
 points at `tdd` and `code-review` without reaching them. A step that cannot apply is exempted by
 a `TDD: n/a — <why>` or `REVIEW: n/a — <why>` brief line, read by the mod
-(`dispatch-ticket-claude` § refused steps).
+(`dispatch-ticket-claude` § refused steps). **The ux step is owed only when this line names
+`bmad-ux`** (a UI ticket); leave it out on a ticket with no surface, or write `UX: n/a — <why>`,
+and the Builder's band shows `n/a ux` instead of a step that looks pending (4.5.3).
 
 ```text
 /mattpocock-skills:implement TICKET-123

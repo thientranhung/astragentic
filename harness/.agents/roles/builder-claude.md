@@ -8,16 +8,26 @@ differs on the Claude Code runtime.
 **No content commit without a test file; the first content commit after a brief also needs
 `mattpocock-skills:tdd` called after the brief and a test run that went RED after it; and no
 arm before the built-in `code-review` has run.** The red run is read from the PostToolUse
-hook's log (`/tmp/harness-test-runs/<toplevel>.log`, every `go test` / `pytest` / `vitest` /
+hook's log (`/tmp/harness-test-runs/<toplevel>.log`, written on PostToolUse and on
+PostToolUseFailure — a failing call reaches only the second (4.5.3); every `go test` / `pytest` / `vitest` /
 `jest` / `npm test` / `cargo test` …, or the project's `.astraler/project/test-command-pattern`),
 so run the failing test in the foreground before the first commit — measured downstream, 61 of
-161 tickets wrote the code first and 15 never called tdd (2026-10-26). The mod refuses a content `git commit` (empty marker commits pass) unless a test file is
+161 tickets wrote the code first and 15 never called tdd (2026-10-26). **Run it alone**: a test
+followed by `;`, `|` or a newline (`…; echo EXIT=$?`, `… | tail`) reports the other command's
+exit code, is logged `masked`, and counts as neither red nor green (4.5.3, measured: one real
+RED logged 0 from a trailing grep, two refusals, five turns); `&&` and redirections are fine.
+A project's `.astraler/project/test-command-pattern` names the INVOKER, not only the script
+(`(^|[\s;&|(])(bash|sh)\s+\S*-selftest\.sh`, not `-selftest\.sh`), or a `grep … x-selftest.sh` is
+logged as a run and its no-match exit 1 passes as red. Run the test in the foreground: a
+background launch is logged `background`, which is no code at all. The mod refuses a content `git commit` (empty marker commits pass) unless a test file is
 staged with it or already committed on this branch since dispatch — measured: 48 refusals of the
 old "skill was called" form were followed by a test edit in 2 — and refuses the `codex-arm`
 call until its record shows the review ran. A project names its test-file pattern in
 `.astraler/project/test-file-pattern` (one regex); the default matches `*_test.*`, `*.test.*`,
 `*.spec.*` and `tests/`, `__tests__/`, `spec/` directories. The exemption is the dispatcher's,
-not yours: a brief line `TDD: n/a — <why>` or `REVIEW: n/a — <why>`. If a gate fires on a
+not yours: a brief line `TDD: n/a — <why>` or `REVIEW: n/a — <why>`; the ux step is owed when
+the brief's `FLOW:` names `bmad-ux`, exempted by `UX: n/a — <why>`, and the band says which
+(`○ ux` owed, `n/a ux` not; no chip before a brief). If a gate fires on a
 ticket that genuinely has no seam, ask Thomas for the line; do not work around the refusal.
 
 ## Bug review — Claude Code invocation

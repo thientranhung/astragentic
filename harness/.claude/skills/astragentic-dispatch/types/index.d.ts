@@ -24,6 +24,7 @@ export type Flow = {
   lastTurnEndAt: number
   tddNa: boolean
   reviewNa: boolean
+  uxOwed: boolean | null   // 4.5.3: what the brief said (FLOW names bmad-ux, or `UX: n/a`); null before a brief or with no FLOW line
   refusals: number
   lastRefusal: { gate: string; at: number } | null
   qaMode: string | null

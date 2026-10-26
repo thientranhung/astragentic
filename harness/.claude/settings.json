@@ -63,6 +63,17 @@
           }
         ]
       }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-$PWD}\"; s=\"$d/scripts/hook-test-run.py\"; [ -f \"$s\" ] || s=\"$d/harness/scripts/hook-test-run.py\"; if [ -f \"$s\" ]; then if python3 -c 'import sys; open(sys.argv[1], \"rb\").read(1)' \"$s\" 2>/dev/null; then exec python3 \"$s\"; else exec python3 -c \"$(cat \"$s\")\"; fi; else cat >/dev/null; fi"
+          }
+        ]
+      }
     ]
   }
 }

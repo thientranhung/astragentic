@@ -48,6 +48,8 @@ thành release cho tới khi owner gật từng mục.
   - **Cách dựng: không lane mới.** Nhãn `quick` trên tracker → mod tự đặt miễn trừ cho pane Builder
     (tdd, review:matt, simplify, ux); Thomas chỉ claim + dispatch như mọi ticket. Thêm hai cờ
     `SIMPLIFY: n/a`, `UX: n/a` bên cạnh `TDD: n/a`, `REVIEW: n/a` đã có; merge gate tôn trọng.
+    (`UX: n/a` đã ship sớm ở 4.5.3, 2026-10-26: nizzy báo chip `· ux` mờ trên ticket không UI
+    nhìn như đang chờ; mod đọc dòng `FLOW:` của brief — có `bmad-ux` thì `○ ux`, không thì `n/a ux`.)
     Quick = Builder code, chạy test có sẵn, tự review built-in `code-review` inline, handback.
   - **Lý luận phân loại, hỏi theo thứ tự, "có" đầu tiên = `full`:** (1) chạm `risky-paths` của
     project (migration, route/API, auth, thanh toán, ghi dữ liệu)? (2) sai thì phải test mới biết
@@ -76,6 +78,14 @@ thành release cho tới khi owner gật từng mục.
   kiểm "trước" quay lại dạng đó. Thứ hai: "nhiều stage trong một pane" là cách nizzy dùng, harness
   định nghĩa một ticket một session (nizzy đếm 2026-10-26: 2 ticket chạy nhiều stage trong một pane, TRA-1243 và TRA-1245; mọi ticket khác một stage). Phụ: SendMessage tới `thomas` trần sang dispatcher project
   khác (xem [[project-flat-session-namespace]]: 3.2.3 keyed bare name; cần đo lại). Owner 2026-10-26 (qua Thomas nizzy, xác nhận ở pane này: "MOD phải đảm bảo"): làm cả (a) tdd sau brief trước commit đầu, (b) test đỏ ghi bởi hook PostToolUse, và `skills_log` có giờ. Ship 4.5.2.
+- [x] **N2. (4.5.3, 2026-10-26) Hook ghi test đỏ chưa bao giờ ghi được lần đỏ nào.** nizzy dò trên
+  TRA-1260 (ticket đầu dưới 4.5.2): `go test ./does-not-exist/...` exit 1 → không có dòng log;
+  Claude Code chỉ bắn `PostToolUse` khi tool thành công, lệnh thoát ≠ 0 đi vào `PostToolUseFailure`
+  (payload `error` = "Exit code N"). 4.5.2 chỉ đăng ký sự kiện đầu → mọi Builder trung thực bị từ
+  chối ở commit đầu (4 lần từ chối / 1 ticket; nizzy phải `TDD: n/a`). 4.5.3: hook chạy ở cả hai sự
+  kiện; lệnh test bị `; echo` / `| tail` che mã thoát ghi `masked`; chạy nền ghi `background`; lời
+  từ chối nêu lần chạy cuối đã ghi. Đo sau khi nizzy áp: số dòng status ≠ 0 trong
+  `/tmp/harness-test-runs/*.log` tuần đầu (kỳ vọng > 0), số từ chối "no RED" / tuần.
 - [ ] **O. Chip "có bản mới" chỉ hỏi remote một lần lúc Thomas khởi động** (2026-10-26: nizzy áp 4.5.1
   rồi không thấy 4.5.2 vì session chưa mở lại). Sửa: hỏi lại sau mỗi merge và khi `/tracker-refresh`,
   không theo đồng hồ; ≈66 `git ls-remote` / tháng trên nizzy. Owner: để nizzy tự kiểm bằng

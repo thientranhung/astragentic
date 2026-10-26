@@ -1,3 +1,58 @@
+# Astragentic 4.5.3
+
+Three field reports from the first ticket under 4.5.2 (one downstream project, 2026-10-26), all
+owner-raised; the first is a blocker.
+
+**No red run was ever logged.** Claude Code's `PostToolUse` fires only when the tool succeeds;
+a Bash call that exits non-zero goes to `PostToolUseFailure`, whose payload carries `error`
+(first line `Exit code N`) instead of `tool_response`. 4.5.2 registered the recorder on the
+first event only, so a failing test left no line, and every honest Builder was refused at its
+first content commit for "no RED run" (downstream probed: `go test ./does-not-exist/...` exit 1
+→ nothing logged; their workaround was `TDD: n/a` on a re-sent brief). `scripts/hook-test-run.py`
+now runs on both events (the same `settings.json` entry twice) and reads `error` for the code,
+else 1. A background launch (`run_in_background`, `backgroundTaskId`) has no code yet: logged
+`background`, never 0, and the pane is told to run the test in the foreground. Verified against
+the Claude Code binary (2.1.310): the failure payload is
+`{hook_event_name, tool_name, tool_input, tool_use_id, error, is_interrupt, duration_ms}` and
+the Bash error text starts `Exit code ${code}`.
+
+**A masked exit code is not a status.** The Builder ran
+`bash tools/selftest.sh > log 2>&1; echo "EXIT=$?"; grep -n FAIL log`; the selftest went red, the
+tool reported the trailing grep's 0, and the gate read green (2 refusals, ~5 turns re-running).
+When the matched test command is followed by `;`, `|`, `||` or a newline, the line is logged
+`masked` and the hook answers with `additionalContext`: run the test alone. `&&`, redirections,
+a `|` inside quotes (`-run 'TestA|TestB'`) and a trailing newline keep the code. The mod counts
+`masked` and `background` as neither red nor green, and the refusal names what it saw:
+`2 run(s) logged since the brief, last: exit masked — npm test > log …`.
+
+A project's `.astraler/project/test-command-pattern` names the invoker, not only the script
+(`(^|[\s;&|(])(bash|sh)\s+\S*-selftest\.sh`): downstream's `-selftest\.sh` matched a
+`grep … x-selftest.sh`, whose no-match exit 1 would have passed as red. Fixed on their side; the
+Builder contract now says so.
+
+**The ux chip is owed or it is not.** The band's dim `· ux` (optional) has the weight of `○`
+pending; on a gate-tooling ticket with no UI the owner read it as the Builder waiting on UX. The
+brief already says: its `FLOW:` line names `bmad-ux` on a UI ticket and omits it otherwise. The
+mod reads that line at brief delivery (`ux_owed` in the record): owed → `○ ux`, a step like any
+other; not owed, or `UX: n/a — <why>` → a grey `n/a ux`; no FLOW line → no chip. The `·` state is
+gone.
+
+Selftest: 196 cases. Planted: a failure-event payload logs 1, `killed` logs 1, a background
+launch logs `background`, settings registers both events with one command; masked `;` and `|`,
+kept `&&`, quoted `|` and trailing newline; the mod refuses a masked run and names it; four briefs
+for the ux chip and a mod that never reads the line. The band's same-millisecond tie case now
+takes its time from the driver's clock.
+
+## Upgrade from 4.5.2
+
+- `.claude/settings.json` gains a `PostToolUseFailure(Bash)` entry identical to the
+  `PostToolUse` one; `--apply` merges a new event into the project's file and says
+  `MERGED into your file: events: PostToolUseFailure`. A project that copies hooks by hand
+  copies both.
+- A station-side tdd-order check kept as a workaround for 4.5.2 can go once the first red run
+  shows in `/tmp/harness-test-runs/<toplevel>.log`.
+- A brief whose `FLOW:` line omits `bmad-ux` shows `n/a ux` from the next dispatch.
+
 # Astragentic 4.5.2
 
 **TDD is an order, not only a file.** Downstream report (nizzy TRA-1245, 2026-10-26): the first

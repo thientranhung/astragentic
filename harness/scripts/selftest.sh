@@ -412,6 +412,43 @@ else
   bad "hook-test-run log" "$(cat "$RTLOG" 2>/dev/null || echo 'no log')"
 fi
 rm -f "$RTLOG"
+# 4.5.3 — a test followed by `;`, `|` or a newline reports the other command's code: logged
+# `masked`, and the hook tells the pane (one downstream ticket, 2026-10-26: a real RED read 0
+# from the trailing grep, two refusals, five turns re-running). `&&` and redirections keep it.
+rm -f "$RT/.astraler/project/test-command-pattern"
+MASKED_OUT="$(printf '{"tool_input":{"command":"go test ./... > log 2>&1; echo EXIT=$?; grep -n FAIL log"},"tool_response":{"status":0},"cwd":"%s"}' "$RT" | python3 "$S/hook-test-run.py")"
+PIPED_OUT="$(printf '{"tool_input":{"command":"pnpm test | tail -5"},"tool_response":{"status":0},"cwd":"%s"}' "$RT" | python3 "$S/hook-test-run.py")"
+KEPT_OUT="$(printf '{"tool_input":{"command":"cd apps && go test ./... > log 2>&1"},"tool_response":{"status":2},"cwd":"%s"}' "$RT" | python3 "$S/hook-test-run.py")"
+printf '{"tool_input":{"command":"go test ./... -run '"'"'TestA|TestB'"'"'"},"tool_response":{"status":2},"cwd":"%s"}' "$RT" | python3 "$S/hook-test-run.py"
+printf '{"tool_input":{"command":"pnpm test\\n"},"tool_response":{"status":1},"cwd":"%s"}' "$RT" | python3 "$S/hook-test-run.py"
+if [ "$(cut -f2 "$RTLOG" 2>/dev/null | tr '\n' ',')" = "masked,masked,2,2,1," ] \
+   && says "$MASKED_OUT" '"additionalContext"' && says "$MASKED_OUT" 'run the test command alone' && says "$PIPED_OUT" 'masked' && [ -z "$KEPT_OUT" ]; then
+  ok "a test followed by ; or | is logged masked and the pane is told; && , redirections, a quoted | and a trailing newline keep the code (4.5.3)"
+else
+  bad "hook-test-run masked" "log: $(cat "$RTLOG" 2>/dev/null || echo 'no log') | masked: $MASKED_OUT | kept: $KEPT_OUT"
+fi
+rm -f "$RTLOG"
+# 4.5.3 — PostToolUse fires only on success: a failing Bash call goes to PostToolUseFailure,
+# whose payload carries `error` ("Exit code N"), and 4.5.2 registered only the first, so no red
+# run was ever logged (one downstream project, 2026-10-26: every honest Builder refused at its
+# first content commit). A background launch has no code yet: `background`, never 0.
+FAIL_OUT="$(printf '{"hook_event_name":"PostToolUseFailure","tool_name":"Bash","tool_input":{"command":"go test ./does-not-exist/..."},"error":"Exit code 1\\nno Go files","cwd":"%s"}' "$RT" | python3 "$S/hook-test-run.py")"
+printf '{"hook_event_name":"PostToolUseFailure","tool_name":"Bash","tool_input":{"command":"pytest -x"},"error":"killed","cwd":"%s"}' "$RT" | python3 "$S/hook-test-run.py"
+BG_OUT="$(printf '{"hook_event_name":"PostToolUse","tool_input":{"command":"go test ./...","run_in_background":true},"tool_response":{"stdout":"","code":0,"backgroundTaskId":"b1"},"cwd":"%s"}' "$RT" | python3 "$S/hook-test-run.py")"
+if [ "$(cut -f2 "$RTLOG" 2>/dev/null | tr '\n' ',')" = "1,1,background," ] && [ -z "$FAIL_OUT" ] && says "$BG_OUT" 'logged as `background`' \
+   && python3 - "$SJ" <<'PY' 2>/dev/null
+import json, sys
+d = json.load(open(sys.argv[1]))["hooks"]
+f = [h["command"] for m in d.get("PostToolUseFailure", []) if m.get("matcher") == "Bash" for h in m["hooks"]]
+p = [h["command"] for m in d.get("PostToolUse", []) if m.get("matcher") == "Bash" for h in m["hooks"]]
+sys.exit(0 if f and f == p and "hook-test-run.py" in f[0] else 1)
+PY
+then
+  ok "a failing Bash call is logged from PostToolUseFailure (Exit code N, else 1), a background launch as background, and settings.json registers the recorder on both events (4.5.3)"
+else
+  bad "hook-test-run failure event" "log: $(cat "$RTLOG" 2>/dev/null || echo 'no log') | fail: $FAIL_OUT | bg: $BG_OUT | settings: $(python3 -c 'import json,sys;print(list(json.load(open(sys.argv[1]))["hooks"]))' "$SJ")"
+fi
+rm -f "$RTLOG"
 
 echo "marker gate — fold allowance (4.5.0)"
 R5="$TMP/fold"; mkdir -p "$R5"
@@ -1712,6 +1749,16 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     // is "○", not a yellow "next"; before any step the first is "→" (one downstream ticket,
     // 2026-10-22: a built-in code-review read ✓ while its four agents still ran, and the owner read
     // the yellow step after it as the pane hanging there)
+    // 4.5.3 — ux is owed or it is not: no FLOW line → no ux chip; FLOW without bmad-ux → `n/a ux`;
+    // `UX: n/a` → `n/a ux` even when FLOW names it; FLOW with bmad-ux → a required `○ ux` (one
+    // downstream ticket, 2026-10-26: the dim `· ux` read as waiting on a ticket with no UI)
+    const bandNoFlow = await band()
+    const brief = (lines) => fire('session.receive', { text: `<cross-session-message from="uds:/tmp/d.sock" from-name="disp-07">\n/mattpocock-skills:implement AB-5\nQA: none — no surface\n${lines}\n</cross-session-message>`, origin: { kind: 'plugin' } }, async () => ({}))
+    await brief('FLOW: 1 Skill(mattpocock-skills:tdd) → 2 Skill(mattpocock-skills:code-review)\n  → 3 Skill(code-review) → 4 Skill(simplify) → 5 arm(ticket)')
+    const bandUxOff = await band()
+    await brief('UX: n/a — gate tooling, no surface\nFLOW: 1 Skill(mattpocock-skills:tdd) → 2 Skill(bmad-ux) → 3 Skill(code-review)')
+    const bandUxNa = await band()
+    await brief('FLOW: 1 Skill(mattpocock-skills:tdd) → 2 Skill(bmad-ux) [UI ticket] → 3 Skill(mattpocock-skills:code-review)\n  → 4 Skill(code-review) → 5 Skill(simplify) → 6 arm(ticket)')
     const bandNext = await band()
     await fire('skill.prompt', { skill: 'code-review' }, async () => ({}))
     liveAgents = [{ id: 'r1', status: 'running', description: 'review' }, { id: 'r2', status: 'running', description: 'review' }, { id: 'r3', status: 'pending', description: 'review' }, { id: 'r4', status: 'running', description: 'review' }]
@@ -1729,7 +1776,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     liveAgents = []
     // two steps stamped in the same millisecond (4.3.2 downstream, 2026-10-22): the later step in
     // flow order is the one running
-    { const r = rec(); const t = Date.now() + 10; r['AB-5'].skills_last = { ...(r['AB-5'].skills_last ?? {}), 'code-review': t, simplify: t }; fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    { const r = rec(); const t = Math.max(tick, Date.now()) + 10; r['AB-5'].skills_last = { ...(r['AB-5'].skills_last ?? {}), 'code-review': t, simplify: t }; fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
     liveAgents = [{ id: 'x2', status: 'running', description: 'simplify angle' }]
     await fire('turn.complete', { reason: 'answer', answer: 'simplifying', turnId: 't6' }, async () => ({}))
     const bandTie = await band()
@@ -1749,6 +1796,10 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     fs.mkdirSync('/tmp/harness-test-runs', { recursive: true })
     fs.writeFileSync(runLog, `${Date.now()}\t0\tnpm test\n`)
     const tddOrderGreenOnly = /no test run has gone RED since/.test(await orderDeny('git commit -m "feat: order, green run only"'))
+    // 4.5.3: a masked run is neither red nor green, and the refusal names the last logged run
+    fs.appendFileSync(runLog, `${Date.now()}\tmasked\tnpm test > log 2>&1; grep FAIL log\n`)
+    const tddOrderMaskedDeny = await orderDeny('git commit -m "feat: order, masked run"')
+    const tddOrderMasked = /no test run has gone RED since/.test(tddOrderMaskedDeny) && /2 run\(s\) logged since the brief, last: exit masked — npm test > log/.test(tddOrderMaskedDeny)
     fs.appendFileSync(runLog, `${Date.now()}\t1\tnpm test\n`)
     const tddOrderOk = (await orderDeny('git commit -m "feat: order, red run recorded"')) === 'pass' && typeof rec()['AB-5']?.first_content_commit_at === 'number'
     // a second content commit on the same brief is not asked again
@@ -1757,10 +1808,13 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const tddOrderLog = Array.isArray(rec()['AB-5']?.skills_log) && rec()['AB-5'].skills_log.some(x => x.skill === 'mattpocock-skills:tdd')
     git('reset', '-q'); try { fs.unlinkSync(path.join(root, 'order.js')); fs.unlinkSync(path.join(root, 'order.test.js')) } catch {}
     try { fs.unlinkSync(runLog) } catch {}
-    const tddOrder = { noCall: tddOrderNoCall, noRed: tddOrderNoRed, greenOnly: tddOrderGreenOnly, ok: tddOrderOk, second: tddOrderSecond, log: tddOrderLog }
-    const bandText = { bandNext, bandHeld, bandSimplify, bandDone, bandAfterAgent, bandTie }
+    const tddOrder = { noCall: tddOrderNoCall, noRed: tddOrderNoRed, greenOnly: tddOrderGreenOnly, masked: tddOrderMasked, ok: tddOrderOk, second: tddOrderSecond, log: tddOrderLog }
+    const bandText = { bandNoFlow, bandUxOff, bandUxNa, bandNext, bandHeld, bandSimplify, bandDone, bandAfterAgent, bandTie }
     const bandRead = {
-      next: /→ implement ○ tdd · ux ○ review:matt/.test(bandNext) && !/…/.test(bandNext),
+      noFlow: /→ implement ○ tdd ○ review:matt/.test(bandNoFlow) && !/ux/.test(bandNoFlow),
+      uxOff: /○ tdd n\/a ux ○ review:matt/.test(bandUxOff),
+      uxNa: /○ tdd n\/a ux ○ review:matt/.test(bandUxNa),
+      next: /→ implement ○ tdd ○ ux ○ review:matt/.test(bandNext) && !/…/.test(bandNext) && !/· ux/.test(bandNext),
       held: /… review:built-in \(4 agents\)/.test(bandHeld) && !/✓ review:built-in/.test(bandHeld) && !/→/.test(bandHeld),
       simplify: /✓ review:built-in/.test(bandSimplify) && /… simplify/.test(bandSimplify) && !/→/.test(bandSimplify),
       done: /✓ simplify/.test(bandDone) && !/…/.test(bandDone) && /→ implement/.test(bandDone),
@@ -1948,12 +2002,12 @@ EOS
     ok "planted: a mod that reads the tracker on the tick is caught by the count"
   fi
   out="$(mod_drive "$MOD" pane)"
-  if says "$out" '"tddOrder":{"noCall":true,"noRed":true,"greenOnly":true,"ok":true,"second":true,"log":true}'; then
+  if says "$out" '"tddOrder":{"noCall":true,"noRed":true,"greenOnly":true,"masked":true,"ok":true,"second":true,"log":true}'; then
     ok "tdd order (4.5.2): the first content commit after a brief is refused until tdd is called after the brief and a test run went RED; a green run is not red; the second commit is not asked; the skill log keeps the call"
   else
     bad "tdd order (4.5.2)" "$(printf '%s' "$out" | grep -o '"tddOrder":{[^}]*}' | head -1)"
   fi
-  if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"sendToFork":"code-review [ce2df1]","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"next":true,"held":true,"simplify":true,"done":true,"afterAgent":true,"tie":true},"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","refusedWhy":true,"compacted":1,"commitNoTest":"deny:held","commitWithTest":"pass:ran","commitDeletedTest":"deny:held","commitLaterDeletedTest":"deny:held","commitPathLimited":"deny:held","commitAllDeleted":"deny:held","commitAddThenCommit":"pass:ran","commitRmThenCommit":"deny:held","commitRestageDeleted":"deny:held","commitDashMAttached":"deny:held","commitScopedAddAll":"deny:held","commitPathRestored":"deny:held","commitAfterMv":"deny:held","mvNotReplayed":true,"commitTwice":"deny:held","commitDashCSrc":"deny:held","commitAmendOnly":"deny:held","commitRmAddAll":"deny:held","rmNotReplayed":true,"commitPathspecFile":"deny:held","commitRepeatedC":"deny:held","commitDotUntracked":"deny:held","commitDotStaged":"pass:ran","commitSkippedAdd":"deny:held","commitRmNoCached":"deny:held","fileSurvived":true,"commitOrAdd":"deny:held","commitEchoAdd":"deny:held","commitRmAbsent":"deny:held","commitSubstQuoted":"deny:held","testStillStaged":true,"commitWorkTree":"deny:held","commitConfigOpt":"deny:held","commitSubstApos":"deny:held","commitBacktickDouble":"deny:held","commitSubstLiteral":"pass:ran","commitConfigEnv":"deny:held","commitCommentedAdd":"deny:held","commitAbbrevOpt":"deny:held","commitMessageEq":"pass:ran","commitRedirect":"deny:held","commitFdDup":"pass:ran","ampNamed":true,"commitHeredocMsg":"pass:ran","commitHeredocOpen":"deny:held","commitHeredocExtra":"deny:held","commitHeredocBare":"deny:held","substFixNamed":true,"noScratchLeft":true'; then
+  if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"sendToFork":"code-review [ce2df1]","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"noFlow":true,"uxOff":true,"uxNa":true,"next":true,"held":true,"simplify":true,"done":true,"afterAgent":true,"tie":true},"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","refusedWhy":true,"compacted":1,"commitNoTest":"deny:held","commitWithTest":"pass:ran","commitDeletedTest":"deny:held","commitLaterDeletedTest":"deny:held","commitPathLimited":"deny:held","commitAllDeleted":"deny:held","commitAddThenCommit":"pass:ran","commitRmThenCommit":"deny:held","commitRestageDeleted":"deny:held","commitDashMAttached":"deny:held","commitScopedAddAll":"deny:held","commitPathRestored":"deny:held","commitAfterMv":"deny:held","mvNotReplayed":true,"commitTwice":"deny:held","commitDashCSrc":"deny:held","commitAmendOnly":"deny:held","commitRmAddAll":"deny:held","rmNotReplayed":true,"commitPathspecFile":"deny:held","commitRepeatedC":"deny:held","commitDotUntracked":"deny:held","commitDotStaged":"pass:ran","commitSkippedAdd":"deny:held","commitRmNoCached":"deny:held","fileSurvived":true,"commitOrAdd":"deny:held","commitEchoAdd":"deny:held","commitRmAbsent":"deny:held","commitSubstQuoted":"deny:held","testStillStaged":true,"commitWorkTree":"deny:held","commitConfigOpt":"deny:held","commitSubstApos":"deny:held","commitBacktickDouble":"deny:held","commitSubstLiteral":"pass:ran","commitConfigEnv":"deny:held","commitCommentedAdd":"deny:held","commitAbbrevOpt":"deny:held","commitMessageEq":"pass:ran","commitRedirect":"deny:held","commitFdDup":"pass:ran","ampNamed":true,"commitHeredocMsg":"pass:ran","commitHeredocOpen":"deny:held","commitHeredocExtra":"deny:held","commitHeredocBare":"deny:held","substFixNamed":true,"noScratchLeft":true'; then
     ok "pane side: a turn end with a live agent is held, the next turn start ends the hold, the band reads the latest step as … with the pane's agent count until a later step or a clean turn end and the step after it as ○, an arm row at no reaches the Builder's prompt, a command on the project's refused list is refused, and a turn over the context ceiling is compacted"
   else
     bad "mod pane hold" "$out"
@@ -2003,7 +2057,10 @@ assert old9 in s, "context ceiling check not found"
 s = s.replace(old9, "", 1)
 old10 = "  $.ui.status(undefined)\n  const text"
 assert old10 in s, "held-bell status clear not found"
-open(p, 'w').write(s.replace(old10, "  const text", 1))
+s = s.replace(old10, "  const text", 1)
+old11 = "; patch.ux_owed = uxOwed"
+assert old11 in s, "ux_owed write not found"
+open(p, 'w').write(s.replace(old11, "", 1))
 EOS
   out="$(mod_drive "$TMP/mod-stuck")"
   if says "$out" 'builder-ab-1-32 [1c2d95]:sent:' && says "$out" '"afterRetire":"builder-ab-1-32' && says "$out" '"stubBells":1' && says "$out" '"staleBells":0' && says "$out" '"subagentHeld":true,"heldCleared":false' && says "$out" '"mergeGap":"pass:ran"' && says "$out" '"armOffDispatcher":false'; then
@@ -2044,8 +2101,8 @@ EOS
     bad "mod refusal planted reason" "the reasonless refusal was not caught: $out"
   fi
   out="$(mod_drive "$TMP/mod-stuck" pane)"
-  if says "$out" '"paneHeld":true,"paneCleared":false,"sendToFork":"uds:/tmp/d.sock","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"next":true,"held":false,"simplify":false,"done":true,"afterAgent":true,"tie":false},"armOffSection":false,"refusedListed":"pass:ran","refusedOther":"pass:ran","refusedWhy":false,"compacted":0'; then
-    ok "planted: a step invoked reads ✓ while the pane's four agents still run; a same-millisecond tie lights the earlier step; a pane that starts a turn leaves its hold standing; an arm row nobody parses reaches no prompt; a refused list nobody tests refuses nothing; a ceiling nobody reads compacts nothing"
+  if says "$out" '"paneHeld":true,"paneCleared":false,"sendToFork":"uds:/tmp/d.sock","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"noFlow":true,"uxOff":false,"uxNa":false,"next":false,"held":false,"simplify":false,"done":true,"afterAgent":true,"tie":false},"armOffSection":false,"refusedListed":"pass:ran","refusedOther":"pass:ran","refusedWhy":false,"compacted":0'; then
+    ok "planted: a step invoked reads ✓ while the pane's four agents still run; a same-millisecond tie lights the earlier step; a brief nobody reads for ux leaves no ux chip; a pane that starts a turn leaves its hold standing; an arm row nobody parses reaches no prompt; a refused list nobody tests refuses nothing; a ceiling nobody reads compacts nothing"
   else
     bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"
   fi

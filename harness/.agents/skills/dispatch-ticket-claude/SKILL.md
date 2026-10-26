@@ -22,7 +22,7 @@ and every Claude session in the project loads it with no flag and no setup.
 | Claim before the brief | a brief for a ticket the tracker reports unclaimed is not sent |
 | Tracker write-back after a merge | the merge result carries the note, the line turns red, and no brief is sent until `scripts/ticket-done.sh` has stamped it |
 | Release a worktree's resources | `release-worktree-resources.sh` runs at `git worktree remove`; the record entry goes with the worktree |
-| Show which step a pane is at | the band shows chips from the record the gates read. Builder: implement · tdd · ux · review:matt · review:built-in · simplify · arm; Shaper: align · spec · tickets; QA: the role chip only. `✓` the step completed; `…` the step invoked most recently, in progress until a later step is invoked or a turn ends with nothing live, with the pane's live agent count (session-wide, not the step's own); `→` the next step; `○` pending; `n/a` exempted by the brief |
+| Show which step a pane is at | the band shows chips from the record the gates read. Builder: implement · tdd · ux · review:matt · review:built-in · simplify · arm; Shaper: align · spec · tickets; QA: the role chip only. `✓` the step completed; `…` the step invoked most recently, in progress until a later step is invoked or a turn ends with nothing live, with the pane's live agent count (session-wide, not the step's own); `→` the next step; `○` pending; `n/a` exempted by the brief (`TDD: n/a`, `REVIEW: n/a`, `UX: n/a`, or a `FLOW:` line without `bmad-ux`); the ux chip appears only once a brief has said whether it is owed (4.5.3) |
 | Seed a new worktree | `.astraler/project/setup-worktree.sh <path>` runs after a successful `git worktree add`; a failure is named in the result and the worktree is not to be dispatched into |
 | Record which flow steps ran | every Skill call the Builder makes, as the engine expands it; `TURN-END` carries the list and a merge names the steps with no record |
 
@@ -114,7 +114,7 @@ record's `skills_log` with its time, so the merge gate reads the order too); and
 arm (`codex-arm`) until the built-in `code-review` is in its record. The merge gate asks the same two questions of the
 branch and the record, so a commit the pane let through is not refused at merge. **The
 exemption is the dispatcher's and travels in the brief**: a line `TDD: n/a — <why>` (docs-only,
-no seam) or `REVIEW: n/a — <why>`. The mod reads it from the brief it delivers, never from the Builder's
+no seam), `REVIEW: n/a — <why>`, or `UX: n/a — <why>` (also implied by a `FLOW:` line that omits `bmad-ux`). The mod reads it from the brief it delivers, never from the Builder's
 handback. A brief delivered outside the mod carries no exemption the mod can see, so on a
 pane prompted by hand the gate holds until the brief is re-sent through SendMessage.
 

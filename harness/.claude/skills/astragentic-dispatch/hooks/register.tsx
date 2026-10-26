@@ -103,18 +103,33 @@ function tddCalledAfter(entry: Entry, since: number): number | null {
 function testRunLogPath(dir: string): string {
   return `/tmp/harness-test-runs/${dir.replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '')}.log`
 }
-async function redRunAfter($: any, dir: string, since: number): Promise<number | null> {
+type TestRun = { at: number; status: string; cmd: string }
+async function testRunsAfter($: any, dir: string, since: number): Promise<TestRun[]> {
   // The hook names the file by the REAL path of the git toplevel (macOS: /var is /private/var);
   // the record may hold the path as typed, so both spellings are read.
   let real = dir
   try { const r = await $.process.run(['realpath', dir], { timeoutMs: 5_000 }); if (r.exitCode === 0 && r.stdout.trim()) real = r.stdout.trim() } catch {}
   const text = [await overlayFile($, testRunLogPath(real)), real === dir ? '' : await overlayFile($, testRunLogPath(dir))].join('\n')
+  const out: TestRun[] = []
   for (const line of text.split('\n')) {
-    const [ms, status] = line.split('\t')
-    const at = Number(ms), st = Number(status)
-    if (Number.isFinite(at) && Number.isFinite(st) && at > since && st !== 0) return at
+    const [ms, status, ...rest] = line.split('\t')
+    const at = Number(ms)
+    if (Number.isFinite(at) && at > since && status !== undefined) out.push({ at, status: status.trim(), cmd: rest.join('\t') })
   }
+  return out.sort((a, b) => a.at - b.at)
+}
+// A red run has its OWN non-zero exit code; `masked` (4.5.3: the test was followed by `;`, `|`
+// or a newline, so the tool reported another command's code) is neither red nor green.
+async function redRunAfter($: any, dir: string, since: number): Promise<number | null> {
+  for (const r of await testRunsAfter($, dir, since)) { const st = Number(r.status); if (Number.isFinite(st) && st !== 0) return r.at }
   return null
+}
+
+async function lastRunLine($: any, dir: string, since: number): Promise<string> {
+  const runs = await testRunsAfter($, dir, since)
+  const last = runs[runs.length - 1]
+  if (!last) return 'no test run logged since the brief'
+  return `${runs.length} run(s) logged since the brief, last: exit ${last.status} — ${last.cmd.slice(0, 120)}`
 }
 
 function flowGaps(entry: Entry): string[] {
@@ -264,11 +279,11 @@ const banner = atom({ plugin: 'astragentic-dispatch', key: 'banner' } as const, 
 // The Builder pane's own band: which FLOW steps have run, read from the same record the gates
 // read, so the person watching the pane sees the step the Builder is at without reading the
 // transcript (owner's ask, 2026-10-09).
-const flow = atom({ plugin: 'astragentic-dispatch', key: 'flow' } as const, { ran: [], latest: null, lastTurnEndAt: 0, tddNa: false, reviewNa: false, refusals: 0, lastRefusal: null, qaMode: null } as Flow)
+const flow = atom({ plugin: 'astragentic-dispatch', key: 'flow' } as const, { ran: [], latest: null, lastTurnEndAt: 0, tddNa: false, reviewNa: false, uxOwed: null, refusals: 0, lastRefusal: null, qaMode: null } as Flow)
 
 // One step list per dispatched role, in the order the contract names the phases, each step
 // the skill name the engine reports at `skill.prompt`. Builder's is the gated flow with two
-// optional steps; Shaper's is its five phases. QA runs its plan in the product and calls no
+// optional step (ux: owed when the brief's FLOW names bmad-ux, 4.5.3); Shaper's is its five phases. QA runs its plan in the product and calls no
 // skill, so its band carries the role chip and the mode chip. The owner's ask (2026-10-10): see
 // on every dispatched pane which step it is at, so a dropped step shows as a gap in the order.
 type Step = readonly [string, string, boolean?]   // skill name, chip label, optional
@@ -302,6 +317,7 @@ async function refreshFlow($: any, root: string, key: string): Promise<void> {
     lastTurnEndAt: Number(entry.last_turn_end_at ?? 0),
     tddNa: Boolean(entry.tdd_na),
     reviewNa: Boolean(entry.review_na),
+    uxOwed: typeof entry.ux_owed === 'boolean' ? entry.ux_owed : null,
     refusals: refusals.length,
     lastRefusal: last && typeof last === 'object' ? { gate: String(last.gate ?? ''), at: Number(last.at ?? 0) } : null,
     qaMode: typeof entry.qa_mode === 'string' ? entry.qa_mode : null,
@@ -1290,6 +1306,14 @@ export const register: Register = on => {
     const unfenced = env.inner.replace(/```[\s\S]*?```/g, '')
     const tddNa = isBriefText ? unfenced.match(/^[ \t]*TDD[ \t]*:[ \t]*n\/a\b[^\n]*/im)?.[0]?.trim() ?? null : undefined
     const reviewNa = isBriefText ? unfenced.match(/^[ \t]*REVIEW[ \t]*:[ \t]*n\/a\b[^\n]*/im)?.[0]?.trim() ?? null : undefined
+    // UX IS OWED OR IT IS NOT (4.5.3). The ux step was "optional" and its chip dim `· ux`, which
+    // reads as waiting (one downstream ticket, 2026-10-26: the owner asked why the Builder skipped
+    // UX on a ticket with no UI). The brief's FLOW line already says: it names `bmad-ux` on a UI
+    // ticket and omits it otherwise; `UX: n/a — <why>` says no out loud. Owed → a required chip;
+    // not owed → a grey `n/a ux`; a brief with no FLOW line says nothing and the chip is dropped.
+    const flowLine = isBriefText ? unfenced.match(/^[ \t]*FLOW[ \t]*:[^\n]*(?:\n[ \t]+[^\n]*)*/im)?.[0] ?? null : null
+    const uxNa = isBriefText ? /^[ \t]*UX[ \t]*:[ \t]*n\/a\b/im.test(unfenced) : false
+    const uxOwed = isBriefText ? (uxNa ? false : flowLine === null ? null : /\bbmad-ux\b/.test(flowLine)) : undefined
     // `QA: walk|probe|verify|none — <why>` on a Builder's brief is the dispatcher's declaration of
     // what the station owes this ticket before merge; `Mode: walk|probe|verify` on a QA brief is
     // which of the three the pane runs. Both are read here, from the delivered brief only.
@@ -1300,7 +1324,7 @@ export const register: Register = on => {
     if (root) {
       const patch: Entry = { dispatcher: env.from, dispatcher_name: env.fromName, last_brief_received_at: now }
       if (isBriefText) {
-        patch.tdd_na = tddNa; patch.review_na = reviewNa
+        patch.tdd_na = tddNa; patch.review_na = reviewNa; patch.ux_owed = uxOwed
         if (me.role === 'builder') { patch.qa_required = qaRequired; patch.qa_plan = qaPlan; patch.first_content_commit_at = null }
         if (me.role === 'qa') patch.qa_mode = qaMode
       }
@@ -1806,7 +1830,7 @@ export const register: Register = on => {
         if (redAt === null) {
           await logRefusal($, root, me.key, 'tdd-order', `first content commit with no RED test run since the brief: ${contentCommits[0]?.join(' ') ?? ''}`)
           return {
-            deny: `astragentic-dispatch: this is the first content commit since the brief and no test run has gone RED since it (log: ${testRunLogPath(cwd)}; written by the PostToolUse hook for go test / pytest / vitest / jest / npm test / cargo test …, or the project's .astraler/project/test-command-pattern). Run the failing test in the foreground, then commit; or ask the dispatcher for "TDD: n/a — <why>".`,
+            deny: `astragentic-dispatch: this is the first content commit since the brief and no test run has gone RED since it (${await lastRunLine($, cwd, brief)}; log: ${testRunLogPath(cwd)}, written by the PostToolUse hook for go test / pytest / vitest / jest / npm test / cargo test …, or the project's .astraler/project/test-command-pattern). Run the failing test ALONE in the foreground — a test followed by \`;\`, \`|\` or a newline reports the other command's exit code and is logged masked — then commit; or ask the dispatcher for "TDD: n/a — <why>".`,
           }
         }
         await patchRecord($, root, me.key, { first_content_commit_at: await $.clock.now(), tdd_called_at: tddAt, red_run_at: redAt })
@@ -2176,11 +2200,12 @@ export const register: Register = on => {
                 : null}
               {(steps ?? []).map(([name, label, isOptional]) => {
                 const isRan = f.ran.includes(name) || (name === 'codex-arm' && f.ran.includes('codex-claude-arm'))
-                const isNa = (name === 'mattpocock-skills:tdd' && f.tddNa) || (name === 'code-review' && f.reviewNa)
+                // an optional step is shown only once the brief has said whether it is owed (4.5.3)
+                if (isOptional && !isRan && f.uxOwed === null) return null
+                const isNa = (name === 'mattpocock-skills:tdd' && f.tddNa) || (name === 'code-review' && f.reviewNa) || (isOptional && f.uxOwed === false)
                 if (name === running) return <Chip bg="warning" fg="inverseText" label={`… ${label}${live.length ? ` (${live.length} agent${live.length === 1 ? '' : 's'})` : ''}`} />
                 if (isRan) return <Chip bg="success" fg="inverseText" label={`✓ ${label}`} />
                 if (isNa) return <Chip bg="inactive" fg="inverseText" label={`n/a ${label}`} />
-                if (isOptional) return <Chip dim label={`· ${label}`} />
                 if (!isCurrentMarked) { isCurrentMarked = true; return <Chip bg="subtle" label={`→ ${label}`} /> }
                 return <Chip dim label={`○ ${label}`} />
               })}
