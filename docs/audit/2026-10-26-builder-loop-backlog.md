@@ -37,6 +37,16 @@ thành release cho tới khi owner gật từng mục.
   tới khi đo được finding Standards dẫn tới commit.
 - [ ] **L. Thomas trả về sau handback: 29/164 ticket, 6% tiền Builder.** Kỳ vọng giảm sau A; đo lại.
 
+- [ ] **M. Hai lane: Builder và quick-builder, phân loại bằng probe, không bằng tiêu đề.** Lúc claim,
+  Thomas `git grep -c` / `git log --stat` vùng ticket nhắc → số file + có chạm `risky-paths` không;
+  ≤3 file, không rủi ro, không đổi hành vi (câu phán duy nhất, ghi lý do lên ticket) → nhãn
+  `quick`, dispatch pane quick-builder (nhận ticket, không gate, trước/sau, Thomas ff-merge).
+  Leo thang một chiều quick → Builder khi diff vượt ngưỡng. Ngưỡng = p25 cỡ merge của chính
+  project sau 30 merge. Số: nizzy 1/128 ticket là label thuần, "rename" TRA-1210 chạm 311 file;
+  `TDD: n/a` 11/346 → Thomas không tự phán nếu không có phép đo; ≤50 dòng vẫn $18 / 290 call.
+  Chạm: thomas.md, dispatch-ticket, quick.md, mod (chip/bell lane quick), tracker label. Owner
+  2026-10-26: bàn cùng "vận hành ticket và năng lực Shaper".
+
 ## Owner đã bỏ
 
 - [-] **J. Tier ticket theo diff + `risky-paths` của project.** Owner 2026-10-26: cỡ ticket không phải
