@@ -74,7 +74,7 @@ thành release cho tới khi owner gật từng mục.
   mỗi brief đòi tdd ghi SAU `last_brief_received_at` hoặc `TDD: n/a`; (2) ghi Skill call thành list
   có timestamp để merge kiểm thứ tự. Điểm cần owner quyết: 4.1.3 đã bỏ kiểm skill-call vì bị lách;
   kiểm "trước" quay lại dạng đó. Thứ hai: "nhiều stage trong một pane" là cách nizzy dùng, harness
-  định nghĩa một ticket một session. Phụ: SendMessage tới `thomas` trần sang dispatcher project
+  định nghĩa một ticket một session (nizzy đếm 2026-10-26: 2 ticket chạy nhiều stage trong một pane, TRA-1243 và TRA-1245; mọi ticket khác một stage). Phụ: SendMessage tới `thomas` trần sang dispatcher project
   khác (xem [[project-flat-session-namespace]]: 3.2.3 keyed bare name; cần đo lại). Chưa làm.
 
 ## Owner đã bỏ
