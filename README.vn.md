@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-4.4.0-blue" alt="version"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-4.5.0-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtime-Claude_Code-green" alt="runtime">
   <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-67_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/vi/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
@@ -42,15 +42,15 @@ nhau, review xong trong một vòng, và artifact chứng minh được điều 
 # 1. Đứng ở gốc project, stage bản mới nhất (không ghi file nào của project)
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
-#    …hoặc ghim một bản:  | bash -s -- 4.4.0
+#    …hoặc ghim một bản:  | bash -s -- 4.5.0
 
 # 2. Kiểm máy đã đủ thứ cần chưa
-bash .astraler/releases/4.4.0/check-requirements.sh
+bash .astraler/releases/4.5.0/check-requirements.sh
 #    Về sau, ngay trong project: bản đang cài, bản mới nhất, có gì thay đổi, nâng cấp thế nào
 .astraler/astragentic.sh update
 
 # 3. Chạy bộ cài thích nghi trong Claude Code
-claude "Read .astraler/releases/4.4.0/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/4.5.0/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Mở router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable
@@ -169,7 +169,7 @@ Mỗi Builder có một pane terminal riêng và một git worktree riêng.
 flowchart LR
     subgraph PT["Mỗi ticket — làn Builder"]
         direction LR
-        R0["tdd"] --> R1["code-review\nStandards + Spec"] --> R2["code-review\nbuilt-in"] --> R3["simplify\nmarker commit"] --> R4["arm ticket\nCodex ↔ Claude"]
+        R0["tdd"] --> RU["ux audit\nticket UI"] --> R1["code-review\nStandards + Spec"] --> R2["code-review\nbuilt-in"] --> R3["simplify\nmột lần, cuối"] --> R4["arm ticket\nCodex ↔ Claude"]
     end
     PT --> QA["QA theo bề mặt ticket\nwalk · probe · verify\nđối chiếu docs/qa/plan"]
     QA --> M["merge"]
@@ -299,7 +299,7 @@ và merge hook đều là của bản release ấy.
 ```bash
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash                      # bản mới nhất, chỉ stage
-curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 4.4.0         # ghim một bản
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 4.5.0         # ghim một bản
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --plan  # xem --apply sẽ ghi gì
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply # ghi payload vào
 ```

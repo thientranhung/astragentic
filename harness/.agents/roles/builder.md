@@ -26,11 +26,18 @@ Claude Code only). They add to this contract, never override it.
 | Phase | Skill | Ends when |
 |---|---|---|
 | Build | `mattpocock-skills:implement` | `mattpocock-skills:tdd` has run at every seam and the build is green — **then YOU check the acceptance criteria**, one by one |
+| Visual verification | `bmad-ux audit` for a UI ticket | every changed user-visible surface has browser evidence, and a UI ticket a read-only audit, or the skip is named; its findings are folded |
 | Increment review | `mattpocock-skills:code-review <Base>` | both axes have run once over that range |
 | Bug review | built-in `code-review` (`builder-claude.md`) | its findings are folded |
-| Simplify | `simplify` (`builder-claude.md`) | a `simplify(increment):` commit exists whose body names the pass that ran |
+| Simplify | `simplify` (`builder-claude.md`) — **once, after the last content commit** | a `simplify(increment):` commit exists whose body names the pass that ran |
 | Cross-vendor arm | `codex-arm`; off when `orchestrator.md` arm row `ticket` = `no` | `arm(ticket):` receipt at head, or `Arm: off (orchestrator)` |
-| Visual verification | `bmad-ux audit` for a UI ticket | every changed user-visible surface has browser evidence, and a UI ticket a read-only audit, or the skip is named |
+
+**The order is the table's.** Visual verification changes code, so it runs before the reviews
+read the diff; the reviews find and report, so they run before simplify, which cleans and
+applies; simplify runs last over the finished code, once. Claude Code designs its `code-review`
+and `simplify` as one pair, each run once on a finished diff. Measured downstream (244 Builder
+sessions): 57 ran the four-agent simplify pass two to five times, for a rebase, a regenerated
+file or a one-line fold, ≈$335 in 14 days.
 
 **Commit and push at every phase boundary**, not only at handback — the table above is the
 cadence.
@@ -78,20 +85,19 @@ says so as `UX audit: n/a — <why>`. Whether the product still coheres is QA's 
 
 ## The cross-vendor arm — yours to fire, and it closes your loop
 
-**One closed loop, one handback:** `implement` → `tdd` → `mattpocock-skills:code-review` →
-built-in `code-review` → simplify → **arm pass 1** →
-[fold → **pass 2**] → **the ONE full verification run** → `arm(ticket):` receipt → handback.
-
-**The full run goes after the last commit that changes the tree** — any earlier and a review,
-simplify or fold commit stales it: a second run, or a `Tests:` citation at a SHA you did not
-hand back.
+**One closed loop, one handback:** `implement` → `tdd` → [`bmad-ux audit`] →
+`mattpocock-skills:code-review` → built-in `code-review` → simplify → **arm pass 1** →
+[fold → **pass 2**] → `arm(ticket):` receipt → handback. The arm reads the simplified tree.
 
 **The head under review is yours**, so the range is correct without resolving it. Take isolation
 from the arm skill.
 
 **Two passes at most, and pass 2 only after a fold**; the receipt's `Pass: <n>` records it.
-**After a fold, re-run simplify over `<marker>..HEAD` before the final run**: the fold sits on
-top of the marker and `check-simplify-markers.sh` refuses the head. An empty re-run is valid.
+**A fold after the simplify marker does not owe the pass again** while its non-test content
+stays within `check-simplify-markers.sh`'s fold allowance (100 lines, cumulative over
+`<marker>..HEAD`); the script prints the delta as a NOTE. Over the allowance it STOPs, and the
+answer is one more simplify pass and a fresh marker. A file the project regenerates after a
+rebase belongs in `.astraler/project/marker-evidence-paths.txt`, not in a re-run.
 
 The receipt is an **empty** commit at your head, so its parent is the tree the gate read.
 Its shape, its `Reviewed:`/`Unreviewed-delta:` rule and the rest of the marker mechanics:
@@ -126,7 +132,7 @@ scripts/check-simplify-markers.sh <base> HEAD --marker 'simplify(increment)'
 scripts/check-simplify-markers.sh <base> HEAD --marker 'arm(ticket)'
 ```
 
-A STOP here has one answer, the fold re-run and a fresh marker; a committed log above the marker is declared in `marker-evidence-paths.txt`, never argued past.
+A STOP here has one answer, one more simplify pass and a fresh marker; a committed log above the marker is declared in `marker-evidence-paths.txt`, never argued past.
 
 Then return to Thomas: the branch, the final SHA, which acceptance criteria pass, the validation
 commands and their output, the `simplify(increment):` marker, browser evidence for any surface

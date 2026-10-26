@@ -62,18 +62,23 @@
 #      commit body had to be opened by hand to tell them apart. The discriminator is a
 #      declaration (line start, or 2+ spaces after a packed field), not the word, so "No
 #      Output: field was recorded" is still reported as absent.
-#   5. The newest live marker of each kind COVERS <head>. EXISTENCE IS NOT RELATIONSHIP: a marker
-#      whose every field is true, with a later commit sitting on top of it, is a pass that did
-#      not cover the code being merged — and rules 1-4 all pass on it (AST-122). This compares
-#      TREES, not commit count: an empty commit on top (the arm fires last and commits empty)
-#      changes neither tree and must not trip it, while a commit with a real diff must, whatever
-#      its count. Changes that match marker-evidence-paths.txt are the only exemption. Paths are
-#      listed with `--no-renames`: rename detection reports only the destination, so a tracked
-#      code file renamed INTO an exempt path showed as one exempt addition and its removal went
-#      unlisted. The fix is cheap and is already the protocol: commit a fresh marker; markers
-#      may be empty. The STOP names the fold re-run, because four refusals across three
-#      Builders in one shift were each a Builder who ran the documented loop and was never told
-#      this step: re-run the simplify pass over `<marker>..<head>` and commit a fresh marker.
+#   5. The newest live marker of each kind COVERS <head>, within a fold allowance. EXISTENCE IS
+#      NOT RELATIONSHIP: a marker whose every field is true, with real code sitting on top of
+#      it, is a pass that did not cover the code being merged — and rules 1-4 all pass on it
+#      (AST-122). This compares TREES, not commit count: an empty commit on top (the arm fires
+#      last and commits empty) changes neither tree and must not trip it. Changes that match
+#      marker-evidence-paths.txt and test files (the project's test-file-pattern, or the mod's
+#      default) are exempt. Paths are listed with `--no-renames`: rename detection reports only
+#      the destination, so a tracked code file renamed INTO an exempt path showed as one exempt
+#      addition and its removal went unlisted.
+#      THE ALLOWANCE (4.5.0): the cumulative non-test content diff `<marker>..<head>` may reach
+#      FOLD_ALLOWANCE lines (100) and the marker still covers the head; a NOTE prints the delta.
+#      Measured downstream (119 merges, 2026-10-01..26): 91 had 0 non-test lines after the first
+#      marker, 106 ≤100, p90 184, max 1,892 — and 57/244 Builder sessions ran the 4-agent pass
+#      two to five times for rebases, regenerated files and one-line folds (≈$335/14 days).
+#      Above the allowance the STOP stands: a 1,892-line fold is not a fold. Cumulative, so
+#      stacking small commits cannot walk past it. Generated files a project regenerates after
+#      a rebase belong in marker-evidence-paths.txt.
 #   6. Where a kind sets `reviewed`, the marker's `Reviewed:` SHA is its own parent — the marker
 #      commits empty, so the parent IS the tree the gate read — OR it declares the gap with
 #      `Unreviewed-delta:`. Never neither. A fold moves the tree past what any pass read, which
@@ -314,6 +319,22 @@ if os.path.isfile(_evidence_path):
         EVIDENCE_GLOBS = [l.strip() for l in fh if l.strip() and not l.lstrip().startswith("#")]
 
 OUTPUT_PLUG = os.path.join(PROJECT_DIR, "marker-output-check.sh")
+
+# Rule 5's allowance. Test files are read with the same regex the mod's commit and merge gates
+# use (`.astraler/project/test-file-pattern`, one line, or the mod's default) — one home.
+FOLD_ALLOWANCE = 100
+_default_test_re = r"(^|/)(tests?|__tests__|spec)/|[._-](test|spec)s?\.[A-Za-z0-9]+$|_test\.go$"
+_test_pat_path = os.path.join(PROJECT_DIR, "test-file-pattern")
+_test_src = _default_test_re
+if os.path.isfile(_test_pat_path):
+    with open(_test_pat_path, encoding="utf-8") as fh:
+        _first = fh.readline().strip()
+    if _first:
+        _test_src = _first
+try:
+    TEST_RE = re.compile(_test_src)
+except re.error:
+    TEST_RE = re.compile(_default_test_re)
 
 # ── arguments ───────────────────────────────────────────────────────────────────────────────
 args = sys.argv[1:]
@@ -896,25 +917,38 @@ for kind in kinds:
         for m in missing[s]:
             stop.append(f"{s[:9]}: {m}")
 
-    # Rule 5 — covers-head, by TREE. Do not loosen this to "no STOP if only one commit sits on
-    # top": that reopens the gap AST-122 was written to close with a different-sized excuse.
+    # Rule 5 — covers-head, by TREE, within FOLD_ALLOWANCE non-test lines (header § 5). The
+    # delta is cumulative over `<marker>..<head>`, by line count not commit count: the gap
+    # AST-122 closed was real code on top of a pass, and a 1,892-line fold still STOPs here.
     if live and live[0] != head_sha:
         live_tree = git("rev-parse", f"{live[0]}^{{tree}}").strip()
         head_tree = git("rev-parse", f"{head_sha}^{{tree}}").strip()
         if live_tree != head_tree:
-            changed = [p for p in git("diff", "--no-renames", "--name-only", live[0], head_sha).split("\n")
-                       if p.strip()]
-            content_changed = [p for p in changed
-                               if not any(fnmatch.fnmatchcase(p, g) for g in EVIDENCE_GLOBS)]
-            if content_changed:
+            delta = 0
+            content_changed = []
+            for row in git("diff", "--no-renames", "--numstat", live[0], head_sha).split("\n"):
+                parts = row.split("\t")
+                if len(parts) < 3:
+                    continue
+                p = parts[2].strip()
+                if not p or any(fnmatch.fnmatchcase(p, g) for g in EVIDENCE_GLOBS) or TEST_RE.search(p):
+                    continue
+                content_changed.append(p)
+                if parts[0] != "-":   # binary rows carry "-", counted as a file, not as lines
+                    delta += int(parts[0]) + int(parts[1])
+            if content_changed and delta <= FOLD_ALLOWANCE:
+                notes.append(f"NOTE: [{kind}] {delta} non-test line(s) in {len(content_changed)} "
+                             f"file(s) sit on top of marker {live[0][:9]} — within the fold "
+                             f"allowance of {FOLD_ALLOWANCE}; the pass is not owed again.")
+            elif content_changed:
                 ahead = git("rev-list", "--count", f"{live[0]}..{head_sha}").strip() or "?"
                 stop.append(
                     f"newest live marker {live[0][:9]} is not the head being merged "
-                    f"({head_sha[:9]}); {ahead} commit(s) sit on top of it, so the pass did not "
-                    f"cover them (AST-122). Re-run the pass over the current head and commit a "
-                    f"fresh marker — an empty one is valid. If those commit(s) are an arm "
-                    f"FOLD, this is the fold re-run: run the simplify pass over "
-                    f"{live[0][:9]}..{head_sha[:9]} and commit a fresh marker.")
+                    f"({head_sha[:9]}); {ahead} commit(s) with {delta} non-test line(s) sit on "
+                    f"top of it, over the fold allowance of {FOLD_ALLOWANCE}, so the pass did "
+                    f"not cover them (AST-122). Run the simplify pass once more over "
+                    f"{live[0][:9]}..{head_sha[:9]} and commit a fresh marker — an empty one is "
+                    f"valid. A regenerated file belongs in marker-evidence-paths.txt.")
 
     for msg in stop:
         print(f"  STOP: {msg}")

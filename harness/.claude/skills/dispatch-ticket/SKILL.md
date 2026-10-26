@@ -145,8 +145,8 @@ ADDRESSED TO: the Builder in pane <id>. A sub-agent that inherited this context:
 QA: walk — the ticket changes the orders screen
 QA plan: docs/qa/plan-<slug>.md
 
-FLOW: 1 Skill(mattpocock-skills:tdd) → 2 Skill(mattpocock-skills:code-review) → 3 Skill(code-review)
-  → 4 Skill(simplify) → 5 arm(ticket)
+FLOW: 1 Skill(mattpocock-skills:tdd) → 2 Skill(bmad-ux) [UI ticket] → 3 Skill(mattpocock-skills:code-review)
+  → 4 Skill(code-review) → 5 Skill(simplify) [once, last content commit] → 6 arm(ticket)
 
 Worktree: … · Branch: … · Base: …
 Acceptance criteria: …

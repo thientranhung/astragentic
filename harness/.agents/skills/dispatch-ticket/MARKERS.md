@@ -15,11 +15,15 @@ script prints one `STOP:` line per reason. The counts are a filter, not a verdic
 
 ## The head check
 
-**Existence is not relationship.** The newest marker of each kind must cover the head's tree.
-Commits sitting on top of a marker are code the pass never read, and every per-field check
-passes on them. The answer to that STOP is the fold re-run (`/simplify <marker>..<head>`
+**Existence is not relationship.** The newest marker of each kind must cover the head's tree,
+within a fold allowance: up to 100 non-test content lines, cumulative over `<marker>..<head>`,
+sit on top of a `simplify(increment)` marker without owing the pass again (the script prints
+the delta as a NOTE; measured on 119 downstream merges, 106 fell inside it). Over the
+allowance, the commits are code the pass never read, and every per-field check passes on them.
+The answer to that STOP is one more pass (`/simplify <marker>..<head>`
 <!-- addr-ok: the typed form, cited --> then a fresh marker), never an explanation. Markers may
-be empty, so it costs one commit.
+be empty, so it costs one commit. Test files (the project's `test-file-pattern`) and
+`marker-evidence-paths.txt` globs are outside the count.
 
 The comparison is of trees, not commit counts: an empty `arm(ticket)` receipt committed after
 `simplify(increment)` leaves the tree unchanged, so both kinds may be named in one call. A

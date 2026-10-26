@@ -242,9 +242,9 @@ const FLOW_BY_ROLE: Record<string, ReadonlyArray<Step>> = {
   builder: [
     ['mattpocock-skills:implement', 'implement'],
     ['mattpocock-skills:tdd', 'tdd'],
+    ['bmad-ux', 'ux', true],
     ['mattpocock-skills:code-review', 'review:matt'],
     ['code-review', 'review:built-in'],
-    ['bmad-ux', 'ux', true],
     ['simplify', 'simplify'],
     ['codex-arm', 'arm'],
   ],
@@ -1295,7 +1295,7 @@ export const register: Register = on => {
   })
 
   // A Builder's skill calls are recorded as the engine expands them, so the flow the brief
-  // names (tdd → both reviews → simplify) is read from what ran, not from what the handback
+  // names (tdd → ux → both reviews → simplify) is read from what ran, not from what the handback
   // says ran. Measured downstream before this existed: implement 44/44, tdd 0/44. A fork's
   // call is recorded under the Builder too, which is the same attribution git gives it.
   // Writes are chained: two skills expanding in one turn (a fork's beside the Builder's) would

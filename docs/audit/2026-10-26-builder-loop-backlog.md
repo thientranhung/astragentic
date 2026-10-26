@@ -6,14 +6,14 @@ thành release cho tới khi owner gật từng mục.
 
 ## Owner đã gật
 
-- [ ] **A. Simplify một lần, ở cuối, trước handback.** Bỏ câu "sau fold chạy lại simplify trên
+- [x] **A. Simplify một lần, ở cuối, trước handback.** (4.5.0, 2026-10-26) Bỏ câu "sau fold chạy lại simplify trên
   marker..HEAD" trong `builder.md`; `check-simplify-markers.sh` không bắt marker là HEAD, chấp
   nhận fold sau marker. Số: 57/244 session 2–5 vòng, ≈$335 / 14 ngày. Owner 2026-10-26.
-- [ ] **B. Thứ tự phase mới:** code + tdd → UX audit + bằng chứng (ticket UI) → `mattpocock-skills:code-review`
+- [x] **B. Thứ tự phase mới:** (4.5.0) code + tdd → UX audit + bằng chứng (ticket UI) → `mattpocock-skills:code-review`
   → built-in `code-review` → simplify → `Validation:` → commit, push, handback. Arm Codex
   (nếu project bật) sau simplify, đọc cây cuối; fold từ arm không đòi simplify lại. Owner
   2026-10-26: "UX trước cả hai review, simplify sau cùng".
-- [ ] **C. Builder chỉ chạy dòng `Validation:` của brief.** Bỏ "the ONE full verification run"
+- [x] **C. Builder chỉ chạy dòng `Validation:` của brief.** (4.5.0) Bỏ "the ONE full verification run"
   trong `builder.md`; station chạy gate ở merge (median 6.7 phút). Số: đuôi sau Skill cuối 19%
   (gồm handback + push, chưa tách).
 - [ ] **D. Arm Codex: giữ như project đặt.** nizzy tắt cấp ticket (arm = 1% sau trần), giữ cấp

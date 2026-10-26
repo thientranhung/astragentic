@@ -388,6 +388,39 @@ esac
                       || bad "advisory line width" "${#out} chars with a resolved SHA"
 
 # ---------------------------------------------------------------------------------------------
+# check-simplify-markers — rule 5's fold allowance (4.5.0). A fold of up to 100 non-test lines
+# on top of a simplify marker is GREEN with a NOTE; over it, STOP. Test files are outside the
+# count. Planted 2026-10-26 against 4.4.0: the small fold exited 1 (57/244 downstream sessions
+# re-ran the four-agent pass for folds of this size).
+# ---------------------------------------------------------------------------------------------
+echo "marker gate — fold allowance (4.5.0)"
+R5="$TMP/fold"; mkdir -p "$R5"
+( cd "$R5" && git init -q . && git config user.email t@t && git config user.name t \
+  && printf 'a\n' > a.js && git add a.js && git commit -q -m init ) >/dev/null 2>&1
+B5="$( cd "$R5" && git rev-parse HEAD )"
+( cd "$R5" && printf 'b\n' >> a.js && printf 'x\n' > a.test.js && git add -A && git commit -q -m 'T-1: work' \
+  && git commit -q --allow-empty -m 'simplify(increment): T-1 clean
+
+Pass: Skill(skill: "simplify")' \
+  && printf 'c\nd\ne\n' >> a.js && for i in $(seq 200); do echo "t$i" >> a.test.js; done \
+  && git add -A && git commit -q -m 'T-1: fold' ) >/dev/null 2>&1
+out="$( cd "$R5" && bash "$S/check-simplify-markers.sh" "$B5" HEAD --marker 'simplify(increment)' 2>&1 )"; rc=$?
+case "$rc:$(printf '%s' "$out" | tail -n 1)" in
+  0:GREEN) printf '%s' "$out" | grep -q 'within the fold allowance' \
+             && ok "a 3-line fold (plus 200 test lines) on top of the marker is GREEN with a NOTE" \
+             || bad "fold allowance note" "GREEN without the NOTE: $out" ;;
+  *) bad "fold allowance" "exit $rc on a 3-line fold: $(printf '%s' "$out" | grep STOP | head -1)" ;;
+esac
+( cd "$R5" && for i in $(seq 150); do echo "line $i" >> a.js; done && git add -A && git commit -q -m 'T-1: big fold' ) >/dev/null 2>&1
+out="$( cd "$R5" && bash "$S/check-simplify-markers.sh" "$B5" HEAD --marker 'simplify(increment)' 2>&1 )"; rc=$?
+case "$rc:$(printf '%s' "$out" | tail -n 1)" in
+  1:"NOT GREEN") printf '%s' "$out" | grep -q 'over the fold allowance' \
+                   && ok "a 153-line fold on top of the marker STOPs and names the allowance" \
+                   || bad "big fold STOP text" "$out" ;;
+  *) bad "big fold" "exit $rc: $(printf '%s' "$out" | tail -n 1)" ;;
+esac
+
+# ---------------------------------------------------------------------------------------------
 # install.sh — the release must stage from a package root AND from inside a staged release
 # (2.7.2), and from a path containing a space (2.7.1).
 # ---------------------------------------------------------------------------------------------
@@ -1663,7 +1696,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     liveAgents = []
     const bandText = { bandNext, bandHeld, bandSimplify, bandDone, bandAfterAgent, bandTie }
     const bandRead = {
-      next: /→ implement ○ tdd/.test(bandNext) && !/…/.test(bandNext),
+      next: /→ implement ○ tdd · ux ○ review:matt/.test(bandNext) && !/…/.test(bandNext),
       held: /… review:built-in \(4 agents\)/.test(bandHeld) && !/✓ review:built-in/.test(bandHeld) && !/→/.test(bandHeld),
       simplify: /✓ review:built-in/.test(bandSimplify) && /… simplify/.test(bandSimplify) && !/→/.test(bandSimplify),
       done: /✓ simplify/.test(bandDone) && !/…/.test(bandDone) && /→ implement/.test(bandDone),

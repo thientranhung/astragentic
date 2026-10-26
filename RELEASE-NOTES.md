@@ -1,3 +1,42 @@
+# Astragentic 4.5.0
+
+**Simplify runs once, last, and a fold on top of its marker no longer owes the pass again.**
+Measured downstream (nizzy, 244 Builder sessions to 2026-10-26): Claude Code's `simplify`
+opens exactly four agents per call, and 187 sessions called it once — but 57 called it two to
+five times, because `builder.md` said "after a fold, re-run simplify over `<marker>..HEAD`" and
+`check-simplify-markers.sh` refused any head that was not the marker. The re-runs were for a
+rebase, a regenerated file or a one-line fold: of 119 merges, 91 had zero non-test lines after
+the first marker and 106 had at most 100; ≈316 extra agent sessions, ≈$335 in 14 days. Rule 5
+now carries a fold allowance: up to **100 non-test content lines, cumulative over
+`<marker>..<head>`**, is GREEN with a NOTE naming the delta; over it, the STOP stands (p90 was
+184 lines, max 1,892 — a 1,892-line fold is not a fold). Test files are read with the project's
+`test-file-pattern` (or the mod's default), the same regex the commit and merge gates use;
+`marker-evidence-paths.txt` globs stay exempt. The selftest plants a 3-line fold (GREEN with
+NOTE; exit 1 on 4.4.0) and a 153-line fold (STOP naming the allowance).
+
+**The Builder's phases run in the order Claude Code designed its two skills for.** Visual
+verification (`bmad-ux audit`, UI tickets) changes code, so it moves before the reviews;
+`mattpocock-skills:code-review` and the built-in `code-review` find and report; `simplify`
+cleans and applies, once, over the finished code; the arm reads the simplified tree. The
+brief's `FLOW:` line, the band's step chips (`FLOW_BY_ROLE`) and the READMEs carry the same
+order; the selftest asserts the `ux` chip sits between `tdd` and `review:matt`.
+
+**The Builder runs the brief's `Validation:` commands and nothing more.** The "ONE full
+verification run" after the last commit is gone from `builder.md`: § Handing back already said
+the station runs the rest, and the station's merge gate runs the suite again (median 6.7 min).
+The cost after the last Skill call (verification, handback, push) was 19% of Builder spend.
+
+Gates unchanged: the commit gate (test file), the arm gate (built-in review first), the merge
+gate (record). Arm scope stays as the project's `orchestrator.md` sets it.
+
+## Upgrade from 4.4.0
+
+- One script, three contracts/skills, one mod file, the READMEs. No new plug.
+- A project that regenerates files after a rebase (a manifest, an enumeration) lists them in
+  `.astraler/project/marker-evidence-paths.txt`; they are outside the fold count either way
+  only if listed.
+- A Builder already mid-ticket keeps its brief's old `FLOW:` order; nothing refuses it.
+
 # Astragentic 4.4.0
 
 **The tracker is read on events, never on a clock, and a Jira project is read through `twg`.**
