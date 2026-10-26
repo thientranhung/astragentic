@@ -3,10 +3,15 @@
 **Read `.agents/roles/builder.md` (the base contract) first.** This file carries only what
 differs on the Claude Code runtime.
 
-## Two gates the mod holds
+## Three gates the mod holds
 
-**No content commit without a test file, and no arm before the built-in `code-review` has
-run.** The mod refuses a content `git commit` (empty marker commits pass) unless a test file is
+**No content commit without a test file; the first content commit after a brief also needs
+`mattpocock-skills:tdd` called after the brief and a test run that went RED after it; and no
+arm before the built-in `code-review` has run.** The red run is read from the PostToolUse
+hook's log (`/tmp/harness-test-runs/<toplevel>.log`, every `go test` / `pytest` / `vitest` /
+`jest` / `npm test` / `cargo test` …, or the project's `.astraler/project/test-command-pattern`),
+so run the failing test in the foreground before the first commit — measured downstream, 61 of
+161 tickets wrote the code first and 15 never called tdd (2026-10-26). The mod refuses a content `git commit` (empty marker commits pass) unless a test file is
 staged with it or already committed on this branch since dispatch — measured: 48 refusals of the
 old "skill was called" form were followed by a test edit in 2 — and refuses the `codex-arm`
 call until its record shows the review ran. A project names its test-file pattern in

@@ -1,3 +1,41 @@
+# Astragentic 4.5.2
+
+**TDD is an order, not only a file.** Downstream report (nizzy TRA-1245, 2026-10-26): the first
+content commit landed at 12:19 with a test file beside the code, so the commit gate passed;
+`mattpocock-skills:tdd` was called at 12:25, after the dispatcher steered; the merge gate saw
+`tdd` in the record and passed. Measured over 161 nizzy tickets: tdd before the first commit
+85, commit before tdd 61 (38%), tdd never called 15 (9%). The owner's ruling: the first content
+commit after each brief needs (a) `mattpocock-skills:tdd` recorded after the brief and (b) a
+test run that went RED after it — a skill call is a line in a record, a red run is what TDD is.
+`TDD: n/a — <why>` on the brief still exempts; later commits on the same brief are not asked
+again; a pane with no brief delivered through the mod has nothing to measure.
+
+The red run comes from a new PostToolUse hook, `scripts/hook-test-run.py`: every Bash command
+that looks like a test run (`go test`, `pytest`, `vitest`, `jest`, `npm|pnpm|yarn|bun test`,
+`cargo test`, `make test`, … or the project's `.astraler/project/test-command-pattern`) appends
+`<ms>\t<status>\t<command>` to `/tmp/harness-test-runs/<git toplevel>.log`; the mod reads the
+Bash tool's `status` field, or parses `Exit code N` from older shapes. The mod cannot see a
+tool's result itself (its events are pre-call), which is why a hook writes and the mod reads.
+
+Every Skill call is now kept in the record as `skills_log` (`{skill, at}`, last 400), beside
+`skills_run` (first) and `skills_last` (latest), so the merge gate also names
+`tdd (called after the first content commit, or not since the brief)` as a gap.
+
+Selftest plants the TRA-1245 shape: a commit with the test file beside the code is refused
+until tdd is called after the brief; refused again until a run goes RED (a green run is not
+red); passes; the second commit is not asked; the hook records 2 / 1 / 0 and skips `ls`.
+
+## Upgrade from 4.5.1
+
+- `.claude/settings.json` gains a PostToolUse(Bash) hook; a project that copies hooks by hand
+  adds it. A project whose test runner is not in the default list writes one regex line in
+  `.astraler/project/test-command-pattern`.
+- Builders mid-ticket on a brief delivered before the upgrade: their first content commit is
+  already past (`first_content_commit_at` unset but the brief predates the record field), so
+  the gate asks on the next brief, not retroactively. If it does refuse, run the failing test
+  once in the foreground and commit again.
+- nizzy's `tools/check-tdd-order.sh` is the project half of this and can retire once applied.
+
 # Astragentic 4.5.1
 
 **The fold allowance is simplify's only; a fold on top of an `arm(ticket)` receipt still STOPs.**

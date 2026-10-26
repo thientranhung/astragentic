@@ -393,6 +393,26 @@ esac
 # count. Planted 2026-10-26 against 4.4.0: the small fold exited 1 (57/244 downstream sessions
 # re-ran the four-agent pass for folds of this size).
 # ---------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------
+# hook-test-run.py — PostToolUse(Bash) records a test command's exit status, one file per git
+# toplevel; a non-test command is not recorded; the project's test-command-pattern widens it.
+# ---------------------------------------------------------------------------------------------
+echo "hook-test-run — a test run's status is recorded, a non-test command is not (4.5.2)"
+RT="$TMP/testrun"; mkdir -p "$RT/.astraler/project"; ( cd "$RT" && git init -q . ) >/dev/null 2>&1
+RTLOG="/tmp/harness-test-runs/$(printf '%s' "$(cd "$RT" && pwd -P)" | sed -E 's/[^A-Za-z0-9]+/_/g; s/^_+//; s/_+$//').log"; rm -f "$RTLOG"
+printf '{"tool_input":{"command":"go test ./internal/..."},"tool_response":{"stdout":"FAIL","status":2},"cwd":"%s"}' "$RT" | python3 "$S/hook-test-run.py"
+printf '{"tool_input":{"command":"ls -la"},"tool_response":{"status":0},"cwd":"%s"}' "$RT" | python3 "$S/hook-test-run.py"
+printf '{"tool_input":{"command":"pnpm test"},"tool_response":{"stdout":"Exit code 1\\nfailed","stderr":""},"cwd":"%s"}' "$RT" | python3 "$S/hook-test-run.py"
+printf 'make check\n' > "$RT/.astraler/project/test-command-pattern"
+printf '{"tool_input":{"command":"make check"},"tool_response":{"status":0},"cwd":"%s"}' "$RT" | python3 "$S/hook-test-run.py"
+if [ -f "$RTLOG" ] && [ "$(wc -l < "$RTLOG" | tr -d ' ')" = "3" ] \
+   && [ "$(cut -f2 "$RTLOG" | tr '\n' ',')" = "2,1,0," ]; then
+  ok "three runs recorded with status 2 (field), 1 (parsed from 'Exit code 1'), 0 (project pattern); ls not recorded"
+else
+  bad "hook-test-run log" "$(cat "$RTLOG" 2>/dev/null || echo 'no log')"
+fi
+rm -f "$RTLOG"
+
 echo "marker gate — fold allowance (4.5.0)"
 R5="$TMP/fold"; mkdir -p "$R5"
 ( cd "$R5" && git init -q . && git config user.email t@t && git config user.name t \
@@ -1714,6 +1734,30 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     await fire('turn.complete', { reason: 'answer', answer: 'simplifying', turnId: 't6' }, async () => ({}))
     const bandTie = await band()
     liveAgents = []
+    // (the tdd-order block runs after the band reads: its tdd call would otherwise light a chip the band cases expect unlit)
+    // 4.5.2 — the FIRST content commit after a brief needs tdd called after the brief AND a RED
+    // test run after it, besides the test file (one downstream ticket: test file beside the code passed,
+    // tdd called six minutes after the commit). Planted against 4.5.1: all three commits passed.
+    const runLog = path.join('/tmp/harness-test-runs', fs.realpathSync(String(rec()['AB-5']?.worktree ?? root)).replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '') + '.log')
+    try { fs.unlinkSync(runLog) } catch {}
+    fs.writeFileSync(path.join(root, 'order.js'), 'x'); fs.writeFileSync(path.join(root, 'order.test.js'), 'x'); git('add', 'order.js', 'order.test.js')
+    const orderDeny = async (command) => { const r = await fire('tool.call', { tool: 'Bash', command }, async () => ({})); return r?.deny ? String(r.deny) : 'pass' }
+    const tddOrderNoCall = /mattpocock-skills:tdd\) has not been called since/.test(await orderDeny('git commit -m "feat: order, test beside it"'))
+    await new Promise(r => setTimeout(r, 5))
+    await fire('skill.prompt', { skill: 'mattpocock-skills:tdd' }, async () => ({}))
+    const tddOrderNoRed = /no test run has gone RED since/.test(await orderDeny('git commit -m "feat: order, tdd called"'))
+    fs.mkdirSync('/tmp/harness-test-runs', { recursive: true })
+    fs.writeFileSync(runLog, `${Date.now()}\t0\tnpm test\n`)
+    const tddOrderGreenOnly = /no test run has gone RED since/.test(await orderDeny('git commit -m "feat: order, green run only"'))
+    fs.appendFileSync(runLog, `${Date.now()}\t1\tnpm test\n`)
+    const tddOrderOk = (await orderDeny('git commit -m "feat: order, red run recorded"')) === 'pass' && typeof rec()['AB-5']?.first_content_commit_at === 'number'
+    // a second content commit on the same brief is not asked again
+    fs.writeFileSync(path.join(root, 'order.js'), 'y'); git('add', 'order.js')
+    const tddOrderSecond = (await orderDeny('git commit -m "feat: order, second commit"')) === 'pass'
+    const tddOrderLog = Array.isArray(rec()['AB-5']?.skills_log) && rec()['AB-5'].skills_log.some(x => x.skill === 'mattpocock-skills:tdd')
+    git('reset', '-q'); try { fs.unlinkSync(path.join(root, 'order.js')); fs.unlinkSync(path.join(root, 'order.test.js')) } catch {}
+    try { fs.unlinkSync(runLog) } catch {}
+    const tddOrder = { noCall: tddOrderNoCall, noRed: tddOrderNoRed, greenOnly: tddOrderGreenOnly, ok: tddOrderOk, second: tddOrderSecond, log: tddOrderLog }
     const bandText = { bandNext, bandHeld, bandSimplify, bandDone, bandAfterAgent, bandTie }
     const bandRead = {
       next: /→ implement ○ tdd · ux ○ review:matt/.test(bandNext) && !/…/.test(bandNext),
@@ -1723,7 +1767,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
       afterAgent: /✓ simplify/.test(bandAfterAgent) && !/…/.test(bandAfterAgent),
       tie: /… simplify \(1 agent\)/.test(bandTie) && /✓ review:built-in/.test(bandTie),
     }
-    console.log(JSON.stringify({ registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, bandText, log }))
+    console.log(JSON.stringify({ tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, bandText, log }))
     return
   }
   await fire('session.start', {}, async () => ({}))
@@ -1904,6 +1948,11 @@ EOS
     ok "planted: a mod that reads the tracker on the tick is caught by the count"
   fi
   out="$(mod_drive "$MOD" pane)"
+  if says "$out" '"tddOrder":{"noCall":true,"noRed":true,"greenOnly":true,"ok":true,"second":true,"log":true}'; then
+    ok "tdd order (4.5.2): the first content commit after a brief is refused until tdd is called after the brief and a test run went RED; a green run is not red; the second commit is not asked; the skill log keeps the call"
+  else
+    bad "tdd order (4.5.2)" "$(printf '%s' "$out" | grep -o '"tddOrder":{[^}]*}' | head -1)"
+  fi
   if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"sendToFork":"code-review [ce2df1]","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"next":true,"held":true,"simplify":true,"done":true,"afterAgent":true,"tie":true},"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","refusedWhy":true,"compacted":1,"commitNoTest":"deny:held","commitWithTest":"pass:ran","commitDeletedTest":"deny:held","commitLaterDeletedTest":"deny:held","commitPathLimited":"deny:held","commitAllDeleted":"deny:held","commitAddThenCommit":"pass:ran","commitRmThenCommit":"deny:held","commitRestageDeleted":"deny:held","commitDashMAttached":"deny:held","commitScopedAddAll":"deny:held","commitPathRestored":"deny:held","commitAfterMv":"deny:held","mvNotReplayed":true,"commitTwice":"deny:held","commitDashCSrc":"deny:held","commitAmendOnly":"deny:held","commitRmAddAll":"deny:held","rmNotReplayed":true,"commitPathspecFile":"deny:held","commitRepeatedC":"deny:held","commitDotUntracked":"deny:held","commitDotStaged":"pass:ran","commitSkippedAdd":"deny:held","commitRmNoCached":"deny:held","fileSurvived":true,"commitOrAdd":"deny:held","commitEchoAdd":"deny:held","commitRmAbsent":"deny:held","commitSubstQuoted":"deny:held","testStillStaged":true,"commitWorkTree":"deny:held","commitConfigOpt":"deny:held","commitSubstApos":"deny:held","commitBacktickDouble":"deny:held","commitSubstLiteral":"pass:ran","commitConfigEnv":"deny:held","commitCommentedAdd":"deny:held","commitAbbrevOpt":"deny:held","commitMessageEq":"pass:ran","commitRedirect":"deny:held","commitFdDup":"pass:ran","ampNamed":true,"commitHeredocMsg":"pass:ran","commitHeredocOpen":"deny:held","commitHeredocExtra":"deny:held","commitHeredocBare":"deny:held","substFixNamed":true,"noScratchLeft":true'; then
     ok "pane side: a turn end with a live agent is held, the next turn start ends the hold, the band reads the latest step as … with the pane's agent count until a later step or a clean turn end and the step after it as ○, an arm row at no reaches the Builder's prompt, a command on the project's refused list is refused, and a turn over the context ceiling is compacted"
   else

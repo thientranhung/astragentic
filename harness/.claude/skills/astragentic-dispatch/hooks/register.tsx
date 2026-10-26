@@ -83,6 +83,40 @@ function qaOwed(rec: Record<string, Entry>, key: string): string | null {
   return qaEnd > 0 && qaEnd >= builderEnd ? null : mode
 }
 
+// EVERY SKILL CALL, IN ORDER (4.5.2). `skills_run` keeps the first call and `skills_last` the
+// latest; neither can say whether tdd ran before or after the first content commit, which is
+// the question the owner's ruling of 2026-10-26 asks (61 of 161 downstream tickets committed
+// code first, 15 never called tdd). `skills_log` is the list, capped at the last 400 calls.
+function skillsLog(entry: Entry): Array<{ skill: string; at: number }> {
+  const log = entry?.skills_log
+  return Array.isArray(log) ? log.filter(x => x && typeof x.skill === 'string' && typeof x.at === 'number') : []
+}
+function tddCalledAfter(entry: Entry, since: number): number | null {
+  const hits = skillsLog(entry).filter(x => x.skill === 'mattpocock-skills:tdd' && x.at > since).map(x => x.at)
+  if (hits.length > 0) return Math.min(...hits)
+  const last = entry?.skills_last?.['mattpocock-skills:tdd']
+  return typeof last === 'number' && last > since ? last : null
+}
+// The test-run log `scripts/hook-test-run.py` (PostToolUse) writes: `<ms>\t<status>\t<cmd>` per
+// test command, one file per git toplevel under /tmp/harness-test-runs/. A RED run is a
+// non-zero status after `since`.
+function testRunLogPath(dir: string): string {
+  return `/tmp/harness-test-runs/${dir.replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '')}.log`
+}
+async function redRunAfter($: any, dir: string, since: number): Promise<number | null> {
+  // The hook names the file by the REAL path of the git toplevel (macOS: /var is /private/var);
+  // the record may hold the path as typed, so both spellings are read.
+  let real = dir
+  try { const r = await $.process.run(['realpath', dir], { timeoutMs: 5_000 }); if (r.exitCode === 0 && r.stdout.trim()) real = r.stdout.trim() } catch {}
+  const text = [await overlayFile($, testRunLogPath(real)), real === dir ? '' : await overlayFile($, testRunLogPath(dir))].join('\n')
+  for (const line of text.split('\n')) {
+    const [ms, status] = line.split('\t')
+    const at = Number(ms), st = Number(status)
+    if (Number.isFinite(at) && Number.isFinite(st) && at > since && st !== 0) return at
+  }
+  return null
+}
+
 function flowGaps(entry: Entry): string[] {
   const run = skillsRun(entry)
   return FLOW.filter(([name]) => !(name in run)).map(([, label]) => label)
@@ -1267,7 +1301,7 @@ export const register: Register = on => {
       const patch: Entry = { dispatcher: env.from, dispatcher_name: env.fromName, last_brief_received_at: now }
       if (isBriefText) {
         patch.tdd_na = tddNa; patch.review_na = reviewNa
-        if (me.role === 'builder') { patch.qa_required = qaRequired; patch.qa_plan = qaPlan }
+        if (me.role === 'builder') { patch.qa_required = qaRequired; patch.qa_plan = qaPlan; patch.first_content_commit_at = null }
         if (me.role === 'qa') patch.qa_mode = qaMode
       }
       await patchRecord($, root, me.key, patch)
@@ -1311,6 +1345,7 @@ export const register: Register = on => {
         const prior = entry.skills_run ?? {}
         const now = await $.clock.now()
         const patch: Entry = { skills_last: { ...(entry.skills_last ?? {}), [e.skill]: now } }
+        patch.skills_log = [...skillsLog(entry), { skill: e.skill, at: now }].slice(-400)
         if (!(e.skill in prior)) {
           // Where the skill came from, beside when it ran (Claude Code 2.1.299 carries source,
           // plugin and path on the event). A field audit counted a skill at 0 because the pane
@@ -1748,7 +1783,36 @@ export const register: Register = on => {
       await $.process.run(['rm', '-rf', tmpd], { timeoutMs: 10_000 }).catch(() => {})
     }
     const hasTest = willCarry.some(p => testRe.test(p))
-    if (hasTest) return next(e)
+    if (hasTest) {
+      // TDD IS ALSO AN ORDER (4.5.2, owner's ruling 2026-10-26). A test file beside the code
+      // passed this gate while `mattpocock-skills:tdd` was called after the commit (one
+      // downstream ticket: commit 12:19, tdd 12:25 after the dispatcher steered; 61 of 161 tickets).
+      // The FIRST content commit after a brief needs two things recorded after that brief:
+      // the tdd call, and a test run that went RED (hook-test-run.py's log) — a skill call is a
+      // line in a record, a red run is what TDD is. Later commits on the same brief are not
+      // asked again; `TDD: n/a` exempted the whole gate above; a pane with no brief delivered
+      // through the mod (prompted by hand) has no "after the brief" to measure.
+      const brief = typeof entry.last_brief_received_at === 'number' ? entry.last_brief_received_at : 0
+      const seen = typeof entry.first_content_commit_at === 'number' ? entry.first_content_commit_at : 0
+      if (brief > 0 && !(seen > brief)) {
+        const tddAt = tddCalledAfter(entry, brief)
+        if (tddAt === null) {
+          await logRefusal($, root, me.key, 'tdd-order', `first content commit with no tdd call since the brief: ${contentCommits[0]?.join(' ') ?? ''}`)
+          return {
+            deny: `astragentic-dispatch: this is the first content commit since the brief and Skill(mattpocock-skills:tdd) has not been called since it (the test file is staged, the red test is not: 61 of 161 downstream tickets wrote the code first). Call tdd — a failing test first, then the code — and commit again; or ask the dispatcher for "TDD: n/a — <why>" on the brief.`,
+          }
+        }
+        const redAt = await redRunAfter($, cwd, brief)
+        if (redAt === null) {
+          await logRefusal($, root, me.key, 'tdd-order', `first content commit with no RED test run since the brief: ${contentCommits[0]?.join(' ') ?? ''}`)
+          return {
+            deny: `astragentic-dispatch: this is the first content commit since the brief and no test run has gone RED since it (log: ${testRunLogPath(cwd)}; written by the PostToolUse hook for go test / pytest / vitest / jest / npm test / cargo test …, or the project's .astraler/project/test-command-pattern). Run the failing test in the foreground, then commit; or ask the dispatcher for "TDD: n/a — <why>".`,
+          }
+        }
+        await patchRecord($, root, me.key, { first_content_commit_at: await $.clock.now(), tdd_called_at: tddAt, red_run_at: redAt })
+      }
+      return next(e)
+    }
     await logRefusal($, root, me.key, 'tdd-gate', `content commit with no test file staged or on the branch: ${contentCommits[0]?.join(' ') ?? ''}`)
     return {
       deny: `astragentic-dispatch: no test file is staged for this commit or committed on this branch since dispatch (pattern: ${testRe.source}), and the brief declares no "TDD: n/a — <why>". A content commit before the red test is the defect this gate exists for: write the failing test, stage it with the change, then commit. A project whose tests live elsewhere names its pattern in .astraler/project/test-file-pattern; a ticket with no seam gets the TDD: n/a line from the dispatcher.`,
@@ -1984,8 +2048,14 @@ export const register: Register = on => {
         if (label === 'tdd') {
           if (entry.tdd_na) continue
           const carries = await branchCarriesTest($, root, entry, ref)
-          if (carries !== false) continue
-          out.push('tdd (no test file on the branch since dispatch)')
+          if (carries === false) { out.push('tdd (no test file on the branch since dispatch)'); continue }
+          // 4.5.2: the record says whether tdd ran before the first content commit of the last brief
+          const brief = typeof entry.last_brief_received_at === 'number' ? entry.last_brief_received_at : 0
+          const first = typeof entry.first_content_commit_at === 'number' ? entry.first_content_commit_at : 0
+          if (brief > 0 && first > brief) {
+            const tddAt = tddCalledAfter(entry, brief)
+            if (tddAt === null || tddAt > first) out.push('tdd (called after the first content commit, or not since the brief)')
+          }
           continue
         }
         out.push(label)
