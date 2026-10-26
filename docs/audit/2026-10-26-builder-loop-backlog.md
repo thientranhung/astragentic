@@ -119,6 +119,13 @@ thành release cho tới khi owner gật từng mục.
 
 ## Đã xem, không có việc
 
+- **Builder inception IN-153 chờ ~30 phút một "tầng tổng hợp" của built-in code-review không hề được spawn**
+  (2026-10-26, n=1, chưa xác minh). Bằng chứng inception gửi: mod KHÔNG giữ lượt (4 chuông TURN-END
+  cách nhau 10–15 phút, mỗi lần Builder tự hẹn wakeup "still waiting"), thư mục subagent chỉ có 5
+  finder đã xong, không có agent tổng hợp nào. Đọc: Builder tự tin có tầng sau và tự chờ — hành vi
+  model / skill built-in, không phải harness. Không làm gì; nếu lặp lại ở ticket khác thì đếm thời
+  gian chờ và xem lại cách contract nói về code-review "4 góc".
+
 - QA: 2 session / 14 ngày, ~235 call, một skill mỗi session, không có luật chạy lại. 2.5% chi phí.
 - Shaper: 4 session, 116–493 call, Align → Spec → Arm → Test design → Tickets, mỗi skill một
   lần, không loop. 2% chi phí.
