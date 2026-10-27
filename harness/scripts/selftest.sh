@@ -202,7 +202,7 @@ quick() { # <expected deny|allow> <command> [guard script]
   local want="$1" cmd="$2" script="${3:-$S/hook-git-guard.py}"; local out got
   out="$(printf '%s' "$cmd" | python3 -c '
 import sys, json
-print(json.dumps({"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":sys.stdin.read()},"agent_type":"quick","cwd":sys.argv[1]}))' "$QR" \
+print(json.dumps({"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":sys.stdin.read()},"agent_type":"quick-builder","cwd":sys.argv[1]}))' "$QR" \
     | ASTRAGENTIC_ROLE_MARKER_DIR="$TMP" HARNESS_HOOK_LOG="$TMP/hook.log" python3 "$script" 2>/dev/null)"
   if says "$out" '"permissionDecision": "deny"'; then got=deny; else got=allow; fi
   [ "$want" = "$got" ] && ok "quick $want: ${cmd:0:70}" || bad "quick $cmd" "expected $want, got $got: $out"
@@ -225,10 +225,13 @@ quick deny  'git push --force origin main'
 quick allow 'git worktree add -b ops/images-1022 /tmp/wt main'
 quick deny  'git worktree add -b feat/x /tmp/wt main'
 quick deny  'git rebase main'
+# 4.6.0 renamed the agent quick-builder; a pane still launched under the old name is gated the same
+out="$(printf '%s' 'git rebase main' | python3 -c "import json,sys; print(json.dumps({'hook_event_name':'PreToolUse','tool_name':'Bash','tool_input':{'command':sys.stdin.read()},'agent_type':'quick','cwd':sys.argv[1]}))" "$QR" | ASTRAGENTIC_ROLE_MARKER_DIR="$TMP" HARNESS_HOOK_LOG="$TMP/hook.log" python3 "$S/hook-git-guard.py" 2>/dev/null)"
+says "$out" '"permissionDecision": "deny"' && ok "quick deny under the pre-4.6.0 agent name: git rebase main" || bad "quick old name" "a pane launched as 'quick' was not gated: $out"
 quick deny  'bash scripts/ticket-done.sh AB-1'
 quick allow 'go run ./cmd/curated-images-upload --dir /tmp/imgs && git status --short'
 # planted: a guard whose quick gate never runs lets the rebase through
-sed 's/if role == QUICK_ROLE:/if False:/' "$S/hook-git-guard.py" > "$TMP/guard-no-quick.py"
+sed 's/if role in QUICK_ROLES:/if False:/' "$S/hook-git-guard.py" > "$TMP/guard-no-quick.py"
 quick allow 'git rebase main' "$TMP/guard-no-quick.py"
 ( cd "$QR" && git reset -q )
 
@@ -976,7 +979,7 @@ echo "one rule, registered where it is loaded"
 # adapted project is where they are actually LOADED, and it is the only place they can drift.
 # The check that proves a rule reached the runtime must run where the runtime is.
 PAY="$ROOT/harness"; [ "$LAYOUT" = project ] && PAY="$ROOT"
-for role in thomas shaper builder qa ba quick; do
+for role in thomas shaper builder qa ba quick-builder; do
   cla="$PAY/.claude/agents/$role.md"
   # A project may not run all four roles, and a surface that does not exist there is not a
   # drifted surface. Absent files are reported as scope, never as a failure.
@@ -1815,6 +1818,25 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     git('reset', '-q'); try { fs.unlinkSync(path.join(root, 'order.js')); fs.unlinkSync(path.join(root, 'order.test.js')) } catch {}
     try { fs.unlinkSync(runLog) } catch {}
     const tddOrder = { noCall: tddOrderNoCall, noRed: tddOrderNoRed, greenOnly: tddOrderGreenOnly, masked: tddOrderMasked, ok: tddOrderOk, second: tddOrderSecond, steer: tddOrderSteer, log: tddOrderLog }
+    // 4.6.0 — a quick ticket: `kind` on the record (the dispatcher wrote it from the tracker's
+    // label), the band's first row says so and drops the exempt steps, a content commit with no
+    // test file passes, and the prompt carries the KIND section; `SIMPLIFY: n/a` on a full brief
+    // greys the simplify chip
+    const recPath5 = path.join(root, '.astraler/state/dispatch-record.json')
+    { const r = rec(); r['AB-5'].kind = 'quick'; fs.writeFileSync(recPath5, JSON.stringify(r)) }
+    await brief('FLOW: 1 Skill(code-review)')
+    const bandQuickText = (await band()).replace(/⛔ \S+ refused/, '')   // the last refusal's chip names its gate
+    const bandQuick = /builder AB-5 quick/.test(bandQuickText) && !/tdd/.test(bandQuickText) && !/simplify/.test(bandQuickText) && !/ux/.test(bandQuickText) && /review:built-in/.test(bandQuickText)
+    fs.writeFileSync(path.join(root, 'q.js'), 'q'); git('add', 'q.js')
+    const commitQuick = await cmdOf('git commit -m "quick: no test file"')
+    const composedQuick = await fire('prompt.compose', {}, async () => ({ sections: [] }))
+    const kindSection = (composedQuick?.sections ?? []).some(s => /KIND: quick/.test(String(s.text)))
+    git('reset', '-q'); try { fs.unlinkSync(path.join(root, 'q.js')) } catch {}
+    { const r = rec(); r['AB-5'].kind = null; fs.writeFileSync(recPath5, JSON.stringify(r)) }
+    await brief('SIMPLIFY: n/a — docs only\nFLOW: 1 Skill(mattpocock-skills:tdd) → 2 Skill(code-review)')
+    await band()
+    const bandSimplifyNa = Boolean(rec()['AB-5']?.simplify_na) && (await engine.read($, { id: 'astragentic-dispatch.flow', init: {} })).simplifyNa === true
+    const quick = { band: bandQuick, commit: commitQuick, section: kindSection, simplifyNa: bandSimplifyNa }
     const bandText = { bandNoFlow, bandUxOff, bandUxNa, bandNext, bandHeld, bandSimplify, bandDone, bandAfterAgent, bandTie }
     const bandRead = {
       noFlow: /→ implement ○ tdd ○ review:matt/.test(bandNoFlow) && !/ux/.test(bandNoFlow),
@@ -1827,7 +1849,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
       afterAgent: /✓ simplify/.test(bandAfterAgent) && !/…/.test(bandAfterAgent),
       tie: /… simplify \(1 agent\)/.test(bandTie) && /✓ review:built-in/.test(bandTie),
     }
-    console.log(JSON.stringify({ tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, bandText, log }))
+    console.log(JSON.stringify({ quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, bandText, log }))
     return
   }
   await fire('session.start', {}, async () => ({}))
@@ -1945,7 +1967,55 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   fs.writeFileSync(recPath, JSON.stringify({ 'AB-13': { role: 'builder', pane_id: 'p13' } }))
   const briefToRegistered = await sendBrief('/mattpocock-skills:implement AB-13\nQA: none — no surface')
   fs.writeFileSync(orchPath, orchText); fs.writeFileSync(recPath, '{}')
-  console.log(JSON.stringify({ afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, ownerBells, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, briefNoQa, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
+  // 4.6.0 — the ticket's kind is the tracker's label, read at the send and written on the record
+  // before the brief goes. The project's plug enforces (no label → not sent); the package reader
+  // (a jira declaration, twg) only informs (sent, kind null when it cannot answer).
+  fs.mkdirSync(path.join(root, '.astraler/project'), { recursive: true })
+  const labelsPlug = path.join(root, '.astraler/project/tracker-labels.sh')
+  const kindOf = key => JSON.parse(fs.readFileSync(recPath, 'utf8'))[key]?.kind ?? null
+  const plugSays = t => { fs.writeFileSync(labelsPlug, `#!/bin/sh\necho "${t}"\n`); fs.chmodSync(labelsPlug, 0o755) }
+  fs.writeFileSync(recPath, JSON.stringify({ 'AB-14': { role: 'builder', pane_id: 'p14' } }))
+  plugSays('bug QUICK')
+  const briefQuick = await sendBrief('/mattpocock-skills:implement AB-14\nQA: none — no surface')
+  const kindQuick = kindOf('AB-14')
+  plugSays('bug')
+  const briefUnlabelled = await sendBrief('/mattpocock-skills:implement AB-14\nQA: none — no surface')
+  const kindAfterUnlabelled = kindOf('AB-14')
+  plugSays('full')
+  const briefFull = await sendBrief('/mattpocock-skills:implement AB-14\nQA: none — no surface')
+  const kindFull = kindOf('AB-14')
+  fs.unlinkSync(labelsPlug)
+  // the package reader: `.astraler/project/tracker` says jira, scripts/tracker.sh is the payload's,
+  // and twg on PATH is a stub that fails — informs only: the brief goes, the kind is null
+  fs.mkdirSync(path.join(root, 'scripts'), { recursive: true }); fs.mkdirSync(path.join(root, 'bin'), { recursive: true })
+  fs.copyFileSync(path.join(process.env.SELFTEST_SCRIPTS, 'tracker.sh'), path.join(root, 'scripts/tracker.sh'))
+  fs.writeFileSync(path.join(root, 'bin/twg'), '#!/bin/sh\nexit 7\n'); fs.chmodSync(path.join(root, 'bin/twg'), 0o755)
+  fs.writeFileSync(path.join(root, '.astraler/project/tracker'), 'jira AB\n')
+  const savedPath = process.env.PATH; process.env.PATH = `${path.join(root, 'bin')}:${savedPath}`
+  fs.writeFileSync(recPath, JSON.stringify({ 'AB-14': { role: 'builder', pane_id: 'p14', kind: 'quick' } }))
+  const briefJira = await sendBrief('/mattpocock-skills:implement AB-14\nQA: none — no surface')
+  const kindJira = kindOf('AB-14')
+  process.env.PATH = savedPath; fs.unlinkSync(path.join(root, '.astraler/project/tracker'))
+  // the merge gate: a quick record with the built-in review alone passes, without it is refused,
+  // and the same record with no kind is refused; `SIMPLIFY: n/a` exempts simplify alone; the
+  // merge of a quick lane carries the no-marker note
+  const mergeQuick = await mergeOf({ 'mattpocock-skills:implement': 1, 'code-review': 1 }, { kind: 'quick' })
+  const mergeQuickNoReview = await mergeOf({ 'mattpocock-skills:implement': 1 }, { kind: 'quick' })
+  const mergeUnkinded = await mergeOf({ 'mattpocock-skills:implement': 1, 'code-review': 1 })
+  const mergeSimplifyNa = await mergeOf({ ...full, simplify: undefined }, { simplify_na: 'SIMPLIFY: n/a — docs only' })
+  fs.writeFileSync(recPath, JSON.stringify({ 'AB-6': { role: 'builder', pane_id: 'p6', tab_id: 't6', session_id: 's6', branch: 'builder/AB-6', skills_run: { 'mattpocock-skills:implement': 1, 'code-review': 1 }, kind: 'quick' } }))
+  const mergeQuickRan = await fire('tool.call', { tool: 'Bash', command: 'git merge --no-ff builder/AB-6' }, async () => ({}))
+  const mergeQuickNote = (mergeQuickRan?.context ?? []).some(t => /AB-6 is a quick ticket/.test(String(t)))
+  // the dispatcher's prompt lists the live quick lanes; the band is a header row plus one row per lane
+  fs.writeFileSync(recPath, JSON.stringify({ 'AB-15': { role: 'builder', pane_id: 'p15', kind: 'quick' } }))
+  const composedQuick = await fire('prompt.compose', {}, async () => ({ sections: [] }))
+  const quickLanes = (composedQuick?.sections ?? []).some(s => /QUICK LANES: AB-15/.test(String(s.text)))
+  await fire('prompt.submit', { text: 'hello', origin: { kind: 'composer' } }, async () => ({}))
+  const bandDisp = await band()
+  const bandRows = /\d+ lanes?/.test(bandDisp) && /AB-15\s+builder\s+registered/.test(bandDisp) && /↑0\.0\.2/.test(bandDisp) && !/available/.test(bandDisp)
+  fs.writeFileSync(recPath, '{}')
+  const kind = { briefQuick, kindQuick, briefUnlabelled: briefUnlabelled.slice(0, 7), kindAfterUnlabelled, briefFull, kindFull, briefJira, kindJira, mergeQuick, mergeQuickNoReview, mergeUnkinded, mergeSimplifyNa, mergeQuickNote, quickLanes, bandRows }
+  console.log(JSON.stringify({ kind, afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, ownerBells, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, briefNoQa, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
@@ -1955,7 +2025,7 @@ DRVEOS
     mkdir -p "$TMP/mod-drive-repo/.agents"
     printf '| workspace-label | `x` |\n| builder-target | `4` |\n\n## Active assignments\n\n| Role | Runtime | Model | Effort | Advisor |\n|---|---|---|---|---|\n| builder | claude | m | medium | opus |\n\n## Cross-vendor arm\n\n| Scope | Enabled |\n|---|---|\n| ticket | no |\n| spec | yes |\n| slice | yes |\n' > "$TMP/mod-drive-repo/.agents/orchestrator.md"
     echo '{"AB-1":{"role":"builder","pane_id":"p1","tab_id":"t1","session_name":"builder-ab-1-32","registered_at":1,"branch":"feat/ab-1","start_sha":"abc"}}' > "$TMP/mod-drive-repo/.astraler/state/dispatch-record.json"
-    node "$TMP/mod-drive.cjs" "$1" "$TMP/mod-drive-repo" "$TSC_PKG" "${2:-}" 2>&1
+    SELFTEST_SCRIPTS="$S" node "$TMP/mod-drive.cjs" "$1" "$TMP/mod-drive-repo" "$TSC_PKG" "${2:-}" 2>&1
   }
   out="$(mod_drive "$MOD")"
   if says "$out" '"afterSend":"AB-1:sent:"' && says "$out" '"afterAck":"AB-1:registered:no brief yet"' && says "$out" '"afterRetire":""' && says "$out" '"stubBells":0,"stubLeft":0,"staleBells":1,"staleRow":true,"ownerBells":"011","subagentHeld":false,"heldCleared":true,"latestChip":"0.0.2"'; then
@@ -1974,6 +2044,13 @@ DRVEOS
     ok "brief refused without a QA line, during a half-applied upgrade, without an Advisor column, and at builder-target; a mid-turn pane's close is refused; a delivered brief writes the role on the record"
   else
     bad "mod merge gate" "$out"
+  fi
+  # 4.6.0 — the ticket's kind is the tracker's label (one project measured 15–32% quick-shaped
+  # tickets, each paid as a full loop, 2026-10-25); the plug enforces, the package reader informs
+  if says "$out" '"kind":{"briefQuick":"sent","kindQuick":"quick","briefUnlabelled":"refused","kindAfterUnlabelled":"quick","briefFull":"sent","kindFull":"full","briefJira":"sent","kindJira":null,"mergeQuick":"pass:ran","mergeQuickNoReview":"deny:held","mergeUnkinded":"deny:held","mergeSimplifyNa":"pass:ran","mergeQuickNote":true,"quickLanes":true,"bandRows":true}'; then
+    ok "kind (4.6.0): a quick label sets kind before the brief goes; an unlabelled ticket is refused where the plug exists and keeps the last kind; the jira reader informs only; a quick record merges on the built-in review alone and not without it; an unkinded record is refused; SIMPLIFY: n/a exempts simplify; the merge note and the dispatcher's prompt name the quick lane; the band is a header and one row per lane"
+  else
+    bad "kind (4.6.0)" "$(printf '%s' "$out" | grep -o '"kind":{[^}]*}' | head -1)"
   fi
   # 4.4.0 — the tracker on events only. The band ticks every 30 s; a Jira count through twg took
   # 5.4 s (measured 2026-10-24), and on the clock that is ≈2,880 calls a day per dispatcher.
@@ -2008,6 +2085,11 @@ EOS
     ok "planted: a mod that reads the tracker on the tick is caught by the count"
   fi
   out="$(mod_drive "$MOD" pane)"
+  if says "$out" '"quick":{"band":true,"commit":"pass:ran","section":true,"simplifyNa":true}'; then
+    ok "quick ticket in the pane (4.6.0): the band's first row says quick and the steps row keeps only implement and the built-in review; a content commit with no test file passes; the prompt carries KIND: quick; SIMPLIFY: n/a greys the simplify chip"
+  else
+    bad "quick ticket in the pane (4.6.0)" "$(printf '%s' "$out" | grep -o '"quick":{[^}]*}' | head -1)"
+  fi
   if says "$out" '"tddOrder":{"noCall":true,"noRed":true,"greenOnly":true,"masked":true,"ok":true,"second":true,"steer":true,"log":true}'; then
     ok "tdd order (4.5.2): the first content commit after a brief is refused until tdd is called after the brief and a test run went RED; a green run is not red; the second commit is not asked; the skill log keeps the call"
   else
@@ -2092,6 +2174,34 @@ EOS
     ok "planted: a merge gate that asks the record for tdd refuses the branch that carries its test (one downstream ticket, 2026-10-22)"
   else
     bad "mod merge gate planted tdd" "the record-only gate did not refuse the tested branch: $out"
+  fi
+  # 4.6.0 — the kind nobody writes or reads: a send that never puts the label on the record, a
+  # commit gate and a merge gate that never look at it
+  rm -rf "$TMP/mod-stuck-kind"; cp -R "$MOD" "$TMP/mod-stuck-kind"
+  python3 - "$TMP/mod-stuck-kind/hooks/register.tsx" <<'EOS'
+import sys
+p = sys.argv[1]; s = open(p).read()
+old13 = "if (entry.tdd_na || entry.kind === 'quick') return next(e)"
+assert old13 in s, "commit gate kind exemption not found"
+s = s.replace(old13, "if (entry.tdd_na) return next(e)", 1)
+old14 = "const quick = entry.kind === 'quick'"
+assert old14 in s, "merge gate kind read not found"
+s = s.replace(old14, "const quick = false", 1)
+old15 = "await patchRecord($, root, id, { kind })"
+assert old15 in s, "kind write at the send not found"
+open(p, 'w').write(s.replace(old15, "", 1))
+EOS
+  out="$(mod_drive "$TMP/mod-stuck-kind")"
+  if says "$out" '"kindQuick":null' && says "$out" '"mergeQuick":"deny:held"'; then
+    ok "planted: a send that never writes the kind leaves it null; a merge gate that ignores it refuses the quick record"
+  else
+    bad "mod planted kind (dispatcher)" "$(printf '%s' "$out" | grep -o '"kind":{[^}]*}' | head -1)"
+  fi
+  out="$(mod_drive "$TMP/mod-stuck-kind" pane)"
+  if says "$out" '"quick":{"band":true,"commit":"deny:held",'; then
+    ok "planted: a commit gate that ignores the kind refuses the quick ticket's test-less commit"
+  else
+    bad "mod planted kind (pane)" "$(printf '%s' "$out" | grep -o '"quick":{[^}]*}' | head -1)"
   fi
   # 4.3.4 — a refusal that ignores the pattern's own `# reason:` line says "the owner runs it" to a
   # Builder whose whole-suite run the station owns

@@ -29,7 +29,7 @@ first session turned one problem into an epic that cut into 13 tickets).
 - **Name the blast radius on every recommendation**: the `in-progress` and `backlog` tickets it
   invalidates or reshapes, so Thomas knows what to hold.
 - **End a discussion with a solution and a vehicle question, never with a ticket.** The
-  vehicle is the owner's call: a ticket for Thomas, a quick pane, another agent, or the
+  vehicle is the owner's call: a ticket for Thomas (labelled `quick` or `full`, § Handing off), a quick-builder pane, another agent, or the
   handoff file alone. An answer to a side question is not a yes; neither is agreement on the
   direction (measured downstream 2026-10-23: IN-174 was cut from an answer to a side question
   in a session the owner opened to discuss).
@@ -61,6 +61,9 @@ first session turned one problem into an epic that cut into 13 tickets).
 
 The handoff file is the default handoff; a ticket is one only when the owner said yes to it.
 An approved epic goes to the Shaper through Thomas's frontier like any other ticket, labelled
-`epic`; an approved Builder-sized ticket enters the frontier directly. Your report to the owner
+`epic`; an approved Builder-sized ticket enters the frontier directly, **labelled `quick` or
+`full` with the three evidence lines** (`shaper.md` § Spec and tickets: risky paths · how a
+defect is seen · files reached; the first "yes" is `full`). A ticket with neither label is not
+dispatched and comes back to you. Your report to the owner
 ends with the handoff file's path, or the tracker table (counts per status) and the numbers of
 the tickets he approved.

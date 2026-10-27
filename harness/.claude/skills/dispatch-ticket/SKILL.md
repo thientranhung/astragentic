@@ -113,10 +113,13 @@ a mismatch is a STOP (`herdr pane run <pane-id> "cd <worktree-path>"`, then re-v
 `_`, no `:` and no uppercase: pane `builder:ABC-123`, agent `builder-abc-123`. A bad name
 fails at the rename, the end of the dispatch.
 
-Print the resolved dispatch before launching:
+Print the resolved dispatch before launching. **`kind=` is read, not decided**: the project's
+`.astraler/project/tracker-labels.sh <id>`, else `scripts/tracker.sh labels <id>`; `quick`
+picks the `builder-quick` launcher row (`dispatch-ticket-claude` § Launcher matrix), anything
+else the `builder` row. The mod reads the same label again at the send and sets the gates.
 
 ```text
-role=builder   runtime=claude   topology=herdr
+role=builder   runtime=claude   topology=herdr   kind=<quick|full|->
 executable=<exact launcher command from dispatch-ticket-claude>
 ticket=<id>    worktree=<absolute path>   branch=<ticket branch>
 workspace=<id> workspace_managed_by_root=<true|false>   tab=<id>   pane=<id>
@@ -136,8 +139,21 @@ Code's own `/compact` and `/clear` keep bare names. A skill the model can call
 
 **The `FLOW:` line** names the build flow as qualified Skill calls, in order. `implement`
 points at `tdd` and `code-review` without reaching them. A step that cannot apply is exempted by
-a `TDD: n/a — <why>` or `REVIEW: n/a — <why>` brief line, read by the mod
-(`dispatch-ticket-claude` § refused steps). **The ux step is owed only when this line names
+a `TDD: n/a — <why>`, `REVIEW: n/a — <why>` or `SIMPLIFY: n/a — <why>` brief line, read by the mod
+(`dispatch-ticket-claude` § refused steps).
+
+**The kind — `quick` or `full` — is the ticket's label, never a brief line** (4.6.0). The mod
+reads it at the send (`.astraler/project/tracker-labels.sh <id>`, else `scripts/tracker.sh
+labels <id>`), writes `kind` on the record before the brief goes, and the pane's gates, band and
+prompt follow it. A quick ticket's brief is this same brief with the shorter flow and no
+markers owed; its `QA:` line is still required:
+
+```text
+FLOW: 1 Skill(code-review)   [quick: the project's existing tests, the built-in review, handback]
+```
+
+Where the project's labels plug exists, a ticket with neither label is not sent: it goes back
+to whoever cut it (`thomas.md` § Quick or full). You never classify it at dispatch. **The ux step is owed only when this line names
 `bmad-ux`** (a UI ticket); leave it out on a ticket with no surface, or write `UX: n/a — <why>`,
 and the Builder's band shows `n/a ux` instead of a step that looks pending (4.5.3).
 
@@ -225,10 +241,20 @@ operational state, not committed.
     "session_name": "builder-abc-129",
     "last_brief_received_at": 1791134673168,
     "last_turn_end_at": 1791134680111,
-    "last_turn_reason": "answer"
+    "last_turn_reason": "answer",
+    "kind": "quick",
+    "tdd_na": null,
+    "review_na": null,
+    "simplify_na": null,
+    "ux_owed": false
   }
 }
 ```
+
+- **`kind` is written by the dispatcher's mod at the send**, from the tracker's label
+  (`quick` | `full` | `null` when no reader answered); the exemption lines (`tdd_na`,
+  `review_na`, `simplify_na`, `ux_owed`) by the pane's mod from the delivered brief. The
+  gates and the band read these, never the handback.
 
 - **Thomas writes the first block at the claim**, before the brief is submitted. On a Claude
   root the pane writes `tab_id`, `pane_id`, `session_id` and the turn fields itself.

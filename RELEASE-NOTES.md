@@ -1,3 +1,90 @@
+# Astragentic 4.6.0
+
+**A ticket is `quick` or `full`, and the label decides what the Builder's pane owes.** Backlog
+item M, the owner's call of 2026-10-26 ("rất hài lòng"), shipped as it was written: no new lane,
+no new role. Measured on the first adopter before this existed: 15–32% of its tickets were
+quick-shaped (copy, a label, a config value, data a tool produces) and each paid the full loop
+(median $19.5, 334 model calls); six catalog-data commits in 30 days each ran tdd, both reviews,
+simplify and the arm to run a tool that already existed.
+
+**The label is the source, read where every dispatch passes.** At a Builder brief the
+dispatcher's mod asks the tracker for the ticket's labels — the project's own
+`.astraler/project/tracker-labels.sh <id>` first, else `scripts/tracker.sh labels <id>` (Jira
+through twg; the field is the top-level `labels` array, measured on one ticket 2026-10-27) —
+and writes `kind` on the record before the brief goes. Two readers, two strengths, the split
+`tracker-state` already has: the project's plug ENFORCES (a ticket with neither label is not
+sent and goes back to whoever cut it); the package reader INFORMS (sets what it finds, says
+nothing otherwise), because one downstream project reads Jira for display and never enforces it
+(owner ruling 2026-10-24). No reader: `kind` null, the loop as it was.
+
+**What a quick ticket owes:** the code, the project's existing tests green, the built-in
+`code-review` with its findings folded, commit, push, handback. **Not owed, and the gates are
+set so:** tdd (the test-file and tdd-order commit gates pass), Matt's code-review, simplify and
+ux (the merge gate skips them), the arm, the `simplify(increment)` and `arm(ticket)` markers.
+The built-in review stays owed at the arm gate and at merge. A new brief line `SIMPLIFY: n/a —
+<why>` exempts simplify alone on a full ticket, beside `TDD: n/a`, `REVIEW: n/a`, `UX: n/a`.
+
+**Who labels:** whoever cuts the ticket — the Shaper at `to-tickets`, the BA at the owner's
+yes — with three evidence lines on the ticket: risky paths touched, how a defect would be seen,
+files the ticket's words reach (`git grep` > 3 files is the first ceiling; after 30 measured
+merges it becomes the project's own p25). The first "yes" is `full`. Thomas never classifies
+and never asks again: no label goes back to the cutter. A handback that says the work outgrew
+the label is a relabel to `full` and a fresh brief, never a steer.
+
+**What the pane and the station see.** The Builder's band is two rows: `builder TRA-1218 ·
+quick · astragentic 4.6.0`, then the steps, with a quick ticket's exempt steps gone from the
+row (a full ticket keeps its grey `n/a` chips as 4.5.3 shipped them). A `KIND: quick` section
+reaches the Builder's prompt from the record the gates read. The dispatcher's band is a header
+row (branch, `astragentic 4.5.4 ↑4.6.0` when a newer release exists, tracker counts, lane
+count) and one straight-column row per lane, the layout the /dispatch-board pane had; the
+update one-liner left the band. The dispatcher's prompt lists the live quick lanes, and the
+merge of one carries a note that no marker was owed, so `check-simplify-markers.sh` is not run
+for a receipt that never existed.
+
+**Names.** The owner's side-door pane `quick` is now `quick-builder` (`claude --agent
+quick-builder`, tab `quick-builder`): the bare word is the ticket kind. The git guard still
+recognises a pane launched under the old name. A `builder-quick` row in `orchestrator.md`'s
+Active assignments launches a quick ticket (shipped default `claude-sonnet-5`, effort `low`, no
+advisor); without the row the `builder` row is used. Measure ten quick tickets before trying
+Haiku.
+
+Selftest (planted against 4.5.4): a plug saying `quick` sets the kind before the brief goes; an
+unlabelled ticket is refused where the plug exists and keeps the last kind; a Jira declaration
+with a failing twg sends with kind null; a quick record merges on the built-in review alone and
+not without it; the same record with no kind is refused; `SIMPLIFY: n/a` exempts simplify; the
+merge note and the dispatcher's prompt name the quick lane; the band is a header and a row per
+lane; in the pane, the band's first row says `quick` with tdd, ux, Matt's review and simplify
+gone from the steps row, a content commit with no test file passes, the prompt carries `KIND:
+quick`; a pane launched as `quick` is still gated. Three planted mods are named: a send that
+never writes the kind, a commit gate that ignores it, a merge gate that ignores it.
+
+**To measure after 30 merges on a project with the plug** (backlog step 4, before F–L are
+considered): the cost of a quick ticket, the rate of wrong labels (a quick handback that
+outgrew its label, or a full ticket that touched three files and nothing risky), and the
+project's real p25 of files per ticket.
+
+## Upgrade from 4.5.4
+
+- **Quick tickets need a labels reader.** A project that wants them writes
+  `.astraler/project/tracker-labels.sh <id>` printing the ticket's labels on stdout
+  (whitespace-separated; case does not matter). That plug is the enforcing one: once it exists,
+  a ticket with neither `quick` nor `full` is not dispatched. A Jira project with
+  `.astraler/project/tracker` declared and no plug gets the informing reader through twg.
+  A project with neither sees no change.
+- **`builder-quick` row.** `orchestrator.md` is the project's scaffold, so the release cannot
+  write the row; without it quick tickets launch from the `builder` row.
+- **`claude --agent quick` is `claude --agent quick-builder`.** The upgrade reports
+  `.claude/agents/quick.md` and `.agents/roles/quick.md` as deleted upstream; the old agent
+  file still works and is still gated, so the rename can wait for the owner's next launch.
+- **A Builder brief now reads the tracker twice** (claim, then labels), both on the event, so
+  `grep -c 'tracker.sh' /tmp/harness-hook-events.log` rises by two per brief instead of one.
+  Measured 2026-10-27 on a Jira project through twg: 2.05 s for a real ticket, 0.98 s for a
+  missing one, awaited inside the send; a project plug is as fast as its own tracker call.
+- **The resolved-dispatch block gains `kind=`**, read from the same label before the launch so
+  the `builder-quick` row can be picked (`dispatch-ticket` § Worktree, tab and pane); reading
+  is not classifying. `CLEANUP.md`'s zero-markers STOP and the merge note now also exempt a
+  brief carrying `SIMPLIFY: n/a`.
+
 # Astragentic 4.5.4
 
 **A steer is not a brief.** Field report from a second downstream project on its first ticket

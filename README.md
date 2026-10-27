@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-4.5.4-blue" alt="version"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-4.6.0-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtime-Claude_Code-green" alt="runtime">
   <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-67_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
@@ -42,15 +42,15 @@ prove what happened.
 # 1. In your project's root, stage the latest release (no project file is written)
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
-#    …or pin a version:  | bash -s -- 4.5.4
+#    …or pin a version:  | bash -s -- 4.6.0
 
 # 2. Verify your machine has what's needed
-bash .astraler/releases/4.5.4/check-requirements.sh
+bash .astraler/releases/4.6.0/check-requirements.sh
 #    Later, from inside the project: what is installed, what is newest, what changed, how to upgrade
 .astraler/astragentic.sh update
 
 # 3. Run the adaptive installer in Claude Code
-claude "Read .astraler/releases/4.5.4/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/4.6.0/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Start the router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable
@@ -104,7 +104,7 @@ token-unique path.
 |---|---|---|
 | **Thomas** | resident | Routes work, manages the frontier, dispatches tickets, fires the slice gate |
 | **BA** | owner-opened, read-only (`claude --agent ba`) | Discusses a problem with the owner, names trade-offs and the in-flight work a decision invalidates, hands off in a markdown file or a ticket the owner approved; never edits, commits or dispatches |
-| **Quick Builder** | owner-opened (`claude --agent quick`) | Does a small task on the owner's word (tool-produced data, the project's own plugs, a small fix) on an `ops/*` branch fast-forwarded to main; no ticket, no loop; upstream harness changes and work that needs tests or review go back to the owner |
+| **Quick Builder** | owner-opened (`claude --agent quick-builder`) | Does a small task on the owner's word (tool-produced data, the project's own plugs, a small fix) on an `ops/*` branch fast-forwarded to main; no ticket, no loop; upstream harness changes and work that needs tests or review go back to the owner |
 | **Shaper** | one unbroken session | Grills requirements, writes specs, cuts tickets — while the whole picture is in context |
 | **Builder** | one per ticket | Implements in its own worktree — sole writer there |
 | **QA** | per walk | Exercises the running product — UI journeys, API contracts, real data |
@@ -307,7 +307,7 @@ the release shipped with.
 ```bash
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash                      # latest, stage only
-curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 4.5.4         # pin a version
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 4.6.0         # pin a version
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --plan  # show what --apply would write
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply # write the payload in
 ```

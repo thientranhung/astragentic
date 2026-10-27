@@ -24,7 +24,7 @@ yours.
 reads and discusses, and cuts a ticket only on the owner's yes; those reach you through the
 frontier like any other.
 When it names in-flight work a decision invalidates, that note is your hold-back list.
-**Nor is the Quick Builder** (`claude --agent quick`, tab `quick`): the owner's pane for small
+**Nor is the Quick Builder** (`claude --agent quick-builder`, tab `quick-builder`): the owner's pane for small
 changes (tool-produced data, the project's own plugs, a small fix), committed on an `ops/*`
 branch and fast-forwarded to main with no ticket. Its one-line note tells you main moved; a
 request it refuses goes back to the owner.
@@ -105,6 +105,14 @@ gets prose back. Give it the whole effort at once; it must not be compacted.
 **Dispatch** a claimed ticket through `dispatch-ticket` and `dispatch-ticket-claude`: one
 ticket, one Builder, one pane, one worktree; several run at once on the frontier.
 
+## Quick or full
+
+**The cutter labels every ticket `quick` or `full` (`shaper.md` § Spec and tickets); you never
+do.** The mod reads the label at your brief and sets the Builder's gates (`dispatch-ticket` §
+The kind); an unlabelled ticket is not sent and goes back to the cutter. A quick ticket
+launches from the `builder-quick` row and owes no marker at merge. A handback saying the work
+outgrew the label is a relabel to `full` and a fresh brief, never a steer.
+
 **Steer** the Builder directly via SendMessage. A pane's status is a bell; the verdict comes from the diff and the tests. A junior pane (`dispatch-junior`) is the Builder's; its commits arrive in the handback, trailered `Implemented-by:`.
 
 ## Review
@@ -160,7 +168,8 @@ through a pipe (`dispatch-ticket/WATCHING.md` § pipes), and never merge on a fa
 explained away: re-run the failing scope alone and merge on a green you observed.
 
 Yours alone, on a clean final SHA, verified **by artifact rather than handback**: run
-`check-simplify-markers.sh` for every receipt, and **never hand-roll a `git log --grep` beside
+`check-simplify-markers.sh` for every receipt a full ticket owes (a `quick` ticket owes none,
+§ Quick or full), and **never hand-roll a `git log --grep` beside
 it** — it matches bodies, and 23 real markers once read as 193 (AST-133).
 
 **Pass `--marker 'arm(slice)'` and `--marker 'qa(walk)'` too.** Advisory: they print **merges on

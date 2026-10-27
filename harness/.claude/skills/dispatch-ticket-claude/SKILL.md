@@ -114,7 +114,11 @@ record's `skills_log` with its time, so the merge gate reads the order too); and
 arm (`codex-arm`) until the built-in `code-review` is in its record. The merge gate asks the same two questions of the
 branch and the record, so a commit the pane let through is not refused at merge. **The
 exemption is the dispatcher's and travels in the brief**: a line `TDD: n/a — <why>` (docs-only,
-no seam), `REVIEW: n/a — <why>`, or `UX: n/a — <why>` (also implied by a `FLOW:` line that omits `bmad-ux`). The mod reads it from the brief it delivers, never from the Builder's
+no seam), `REVIEW: n/a — <why>`, `SIMPLIFY: n/a — <why>` (4.6.0, the merge gate's simplify
+question), or `UX: n/a — <why>` (also implied by a `FLOW:` line that omits `bmad-ux`). **A
+ticket labelled `quick` on the tracker is exempt as a whole** from tdd, Matt's review, simplify
+and ux, by the record's `kind` the mod wrote at the send (`dispatch-ticket` § The kind); the
+built-in review stays owed at the arm and at merge. The mod reads it from the brief it delivers, never from the Builder's
 handback. A brief delivered outside the mod carries no exemption the mod can see, so on a
 pane prompted by hand the gate holds until the brief is re-sent through SendMessage.
 
@@ -228,7 +232,10 @@ shaper   → claude --dangerously-skip-permissions --agent shaper --model <row: 
 qa       → claude --agent qa --model <row: Model> --autocompact 300000 <--effort only when the row sets one> <--advisor only when the row sets one>
 ```
 
-Model and effort come from the role's `orchestrator.md` row, never from memory. **QA runs
+Model and effort come from the role's `orchestrator.md` row, never from memory. **A ticket
+labelled `quick` launches from the `builder-quick` row** when Active assignments has one
+(shipped default: `claude-sonnet-5`, effort `low`, no advisor; measure ten quick tickets before
+trying Haiku), else from the `builder` row. **QA runs
 without `--dangerously-skip-permissions`**: a gate runs under permissions.
 
 **`--autocompact 300000` is the context ceiling, and it is not optional.** The engine's window

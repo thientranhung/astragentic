@@ -23,7 +23,8 @@ already happened:
    `git worktree add -b`. Branch creation is the interlock that decides a race; the readback
    is advisory, because no tracker holds `builder/<ticket-id>`.
 2. **Merge is verified by artifact, never by handback.** `scripts/check-simplify-markers.sh`,
-   on the SHA you are merging.
+   on the SHA you are merging; a ticket labelled `quick` owes no marker, and the label is the
+   cutter's, never yours (`thomas.md` § Quick or full).
 3. **Count the working panes after every merge, every handback and every report**, and top up
    to `builder-target`. Emitting a report is not a stopping point.
 4. **A merge is not complete until the frontier write-back is reported.** `none` is an answer.

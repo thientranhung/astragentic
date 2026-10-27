@@ -145,7 +145,9 @@ ROLE_MARKER_DIR = os.environ.get("ASTRAGENTIC_ROLE_MARKER_DIR", "/tmp")
 # already existed. 4.4.0 dropped the declared write-set (`quick-paths`) on the owner's ruling
 # (2026-10-24: too much ceremony; quick judges its input). What stays is the git shape: its own
 # ops/* branch, a fast-forward onto main, no force, no rewrite, no dispatch.
-QUICK_ROLE = "quick"
+# 4.6.0 renamed the agent `quick-builder` (the ticket kind `quick` took the bare word); the old
+# name stays recognised, because an upgrade reports a dropped adapter and does not delete it.
+QUICK_ROLES = {"quick", "quick-builder"}
 QUICK_BRANCH = re.compile(r"^ops/[A-Za-z0-9._-]+$")
 QUICK_FORBIDDEN = re.compile(
     r"\bticket-done\.sh\b"
@@ -677,7 +679,7 @@ def main():
     # under it). Judged on the WHOLE text, heredocs and subshells included: a read-only pane
     # has no legitimate shape of these words, so the readability gate below does not apply.
     role = pane_role(payload)
-    if role == QUICK_ROLE:
+    if role in QUICK_ROLES:
         quick_gate(cmd)
     if role in READ_ONLY_ROLES:
         hit = READ_ONLY_FORBIDDEN.search(cmd)

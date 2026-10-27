@@ -25,6 +25,9 @@ export type Flow = {
   tddNa: boolean
   reviewNa: boolean
   uxOwed: boolean | null   // 4.5.3: what the brief said (FLOW names bmad-ux, or `UX: n/a`); null before a brief or with no FLOW line
+  simplifyNa: boolean      // 4.6.0: `SIMPLIFY: n/a` on the brief
+  /** 4.6.0: the tracker's label, written on the record by the dispatcher before the brief; null when no reader answered */
+  kind: 'quick' | 'full' | null
   refusals: number
   lastRefusal: { gate: string; at: number } | null
   qaMode: string | null

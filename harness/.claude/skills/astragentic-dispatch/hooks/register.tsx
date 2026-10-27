@@ -279,7 +279,7 @@ const banner = atom({ plugin: 'astragentic-dispatch', key: 'banner' } as const, 
 // The Builder pane's own band: which FLOW steps have run, read from the same record the gates
 // read, so the person watching the pane sees the step the Builder is at without reading the
 // transcript (owner's ask, 2026-10-09).
-const flow = atom({ plugin: 'astragentic-dispatch', key: 'flow' } as const, { ran: [], latest: null, lastTurnEndAt: 0, tddNa: false, reviewNa: false, uxOwed: null, refusals: 0, lastRefusal: null, qaMode: null } as Flow)
+const flow = atom({ plugin: 'astragentic-dispatch', key: 'flow' } as const, { ran: [], latest: null, lastTurnEndAt: 0, tddNa: false, reviewNa: false, simplifyNa: false, uxOwed: null, kind: null, refusals: 0, lastRefusal: null, qaMode: null } as Flow)
 
 // One step list per dispatched role, in the order the contract names the phases, each step
 // the skill name the engine reports at `skill.prompt`. Builder's is the gated flow with two
@@ -317,6 +317,8 @@ async function refreshFlow($: any, root: string, key: string): Promise<void> {
     lastTurnEndAt: Number(entry.last_turn_end_at ?? 0),
     tddNa: Boolean(entry.tdd_na),
     reviewNa: Boolean(entry.review_na),
+    simplifyNa: Boolean(entry.simplify_na),
+    kind: entry.kind === 'quick' || entry.kind === 'full' ? entry.kind : null,
     uxOwed: typeof entry.ux_owed === 'boolean' ? entry.ux_owed : null,
     refusals: refusals.length,
     lastRefusal: last && typeof last === 'object' ? { gate: String(last.gate ?? ''), at: Number(last.at ?? 0) } : null,
@@ -816,6 +818,34 @@ async function trackerState($: any, root: string, id: string): Promise<{ state: 
   return { state, assignee, line }
 }
 
+// THE TICKET'S KIND, FROM ITS LABELS (4.6.0). A `quick` label on the tracker exempts the Builder
+// pane from tdd, Matt's code-review, simplify and ux (owed: the code, the project's own tests,
+// the built-in code-review, the handback); `full` is the loop as it was. Two readers, two
+// strengths, the split tracker-state already has: the project's own
+// `.astraler/project/tracker-labels.sh <id>` (labels on stdout, whitespace-separated) is the
+// opt-in that ENFORCES — a ticket with neither label is not sent; the package reader
+// (`scripts/tracker.sh labels`, Jira through twg) only INFORMS — it sets the kind when a label is
+// there and says nothing otherwise, because one downstream project reads Jira for display and
+// never enforces it (owner ruling 2026-10-24). null when nothing can answer. Measured on the
+// backlog this came from: 15–32% of one project's tickets were quick-shaped, each paid as a
+// full loop (2026-10-25).
+async function trackerLabels($: any, root: string, id: string): Promise<{ labels: string[]; enforcing: boolean } | null> {
+  const plug = `${root}/.astraler/project/tracker-labels.sh`
+  const hasPlug = await exists($, plug)
+  const reader = hasPlug ? null : await trackerReader($, root)
+  const argv = hasPlug ? [plug, id] : reader ? ['bash', reader, 'labels', id] : null
+  if (!argv) return null
+  let out = '', code = -1
+  try { const r = await $.process.run(argv, { timeoutMs: 30_000, cwd: root }); out = String(r.stdout ?? ''); code = r.exitCode } catch { return null }
+  if (code !== 0) return null
+  const labels = out.split(/\s+/).map(l => l.trim().toLowerCase()).filter(Boolean)
+  if (labels.includes('unreachable')) return null
+  return { labels, enforcing: hasPlug }
+}
+function kindOf(labels: string[]): 'quick' | 'full' | null {
+  return labels.includes('quick') ? 'quick' : labels.includes('full') ? 'full' : null
+}
+
 // The package's tracker reader (4.4.0), for a project that declares its tracker in
 // `.astraler/project/tracker` (`jira <KEY>`) and writes no plug. null when nothing is declared.
 async function readerPath($: any, root: string): Promise<string | null> {
@@ -1252,6 +1282,21 @@ export const register: Register = on => {
       const scopes = ['ticket', 'spec', 'slice'].filter(s => off.has(s))
       text = `${text ? text + '\n\n' : ''}ARM: off at ${scopes.join(', ')} — .agents/orchestrator.md § Cross-vendor arm. ${scopes.map(s => `Do not pass --marker 'arm(${s})' at merge and expect no arm(${s}): receipt; the handback says Arm: off (orchestrator)`).join('. ')}${off.has('slice') ? '. Fire no slice arm; the ten-merge count does not apply' : ''}.`
     }
+    // A QUICK TICKET'S SHAPE REACHES THE PANE AS A SECTION (4.6.0), from the record the gates
+    // read, so the Builder and its band agree on what is owed; the dispatcher's copy lists the
+    // live quick lanes so its merge does not STOP on a marker never owed.
+    if (root) {
+      const rec = (await readRecord($, root)) ?? {}
+      if (me?.role === 'builder' && rec[me.key]?.kind === 'quick') {
+        text = `${text ? text + '\n\n' : ''}KIND: quick — the tracker labels this ticket quick (builder.md § A quick ticket). Owed: the code, the project's existing tests run green, the built-in code-review (Skill(skill: "code-review"), findings folded), commit, push, handback. Not owed, and the pane's gates are set so: tdd, mattpocock-skills:code-review, bmad-ux, simplify, the arm; write no simplify(increment) or arm(ticket) marker. If the work reaches past the label (a risky path, logic only a test would catch, more files than the project's ceiling), say so in the handback and stop: Thomas relabels it full.`
+      } else if (!me) {
+        const live = Object.entries(rec).filter(([, en]) => en?.role === 'builder' && isLive(en) && !en.worktree_removed_at)
+        const quick = live.filter(([, en]) => en.kind === 'quick').map(([k]) => k)
+        const noSimplify = live.filter(([, en]) => en.kind !== 'quick' && en.simplify_na).map(([k]) => k)
+        if (quick.length > 0) text = `${text ? text + '\n\n' : ''}QUICK LANES: ${quick.join(', ')} — labelled quick on the tracker. At their merge pass no --marker 'simplify(increment)' and no --marker 'arm(ticket)' to check-simplify-markers.sh; the record's built-in code-review is the gate. A handback that says the work outgrew the label: relabel full and re-brief.`
+        if (noSimplify.length > 0) text = `${text ? text + '\n\n' : ''}SIMPLIFY: n/a LANES: ${noSimplify.join(', ')} — their briefs exempt simplify; at their merge pass no --marker 'simplify(increment)'.`
+      }
+    }
     if (me && me.role !== 'resident' && dispatcher) {
       // The one address a written reply may go to, in the pane's own words: the role name is
       // not an address, and another project's session may carry it.
@@ -1310,6 +1355,8 @@ export const register: Register = on => {
     const unfenced = env.inner.replace(/```[\s\S]*?```/g, '')
     const tddNa = isBriefText ? unfenced.match(/^[ \t]*TDD[ \t]*:[ \t]*n\/a\b[^\n]*/im)?.[0]?.trim() ?? null : undefined
     const reviewNa = isBriefText ? unfenced.match(/^[ \t]*REVIEW[ \t]*:[ \t]*n\/a\b[^\n]*/im)?.[0]?.trim() ?? null : undefined
+    // `SIMPLIFY: n/a — <why>` (4.6.0): the one-pass simplify is not owed; the merge gate reads it.
+    const simplifyNa = isBriefText ? unfenced.match(/^[ \t]*SIMPLIFY[ \t]*:[ \t]*n\/a\b[^\n]*/im)?.[0]?.trim() ?? null : undefined
     // UX IS OWED OR IT IS NOT (4.5.3). The ux step was "optional" and its chip dim `· ux`, which
     // reads as waiting (one downstream ticket, 2026-10-26: the owner asked why the Builder skipped
     // UX on a ticket with no UI). The brief's FLOW line already says: it names `bmad-ux` on a UI
@@ -1335,7 +1382,7 @@ export const register: Register = on => {
       const patch: Entry = { dispatcher: env.from, dispatcher_name: env.fromName, last_message_received_at: now }
       if (isBriefText) {
         patch.last_brief_received_at = now
-        patch.tdd_na = tddNa; patch.review_na = reviewNa; patch.ux_owed = uxOwed
+        patch.tdd_na = tddNa; patch.review_na = reviewNa; patch.ux_owed = uxOwed; patch.simplify_na = simplifyNa
         if (me.role === 'builder') { patch.qa_required = qaRequired; patch.qa_plan = qaPlan; patch.first_content_commit_at = null }
         if (me.role === 'qa') patch.qa_mode = qaMode
       }
@@ -1616,6 +1663,24 @@ export const register: Register = on => {
             `docs/agents/issue-tracker.md), then send this brief again.`,
         }
       }
+      // THE KIND IS READ HERE AND WRITTEN ON THE RECORD BEFORE THE BRIEF GOES (4.6.0). The
+      // pane's gates and band read `kind` from its own entry, and that entry exists already (the
+      // pane registered itself first, that is the protocol), so a patch before the send is
+      // never a write the pane's own registration overwrites. The enforcing reader (the
+      // project's plug) sends an unlabelled ticket back to whoever cut it; the informing one
+      // (the package's, Jira through twg) only sets what it finds.
+      if (id) {
+        const tl = await trackerLabels($, root, id)
+        const kind = tl ? kindOf(tl.labels) : null
+        if (tl?.enforcing && kind === null) {
+          return {
+            isDelivered: false,
+            reason: `${MARK} not sent. ${id} carries neither the \`quick\` nor the \`full\` label (.astraler/project/tracker-labels.sh says: ${tl.labels.join(' ') || 'no labels'}). ` +
+              `The label is written by whoever cut the ticket (Shaper at to-tickets, or the BA) with its three evidence lines — risky paths touched, how a defect would be seen, files the ticket's words reach — and a ticket without it goes back there (thomas.md § Quick or full). Never classify it here.`,
+          }
+        }
+        await patchRecord($, root, id, { kind })
+      }
     }
     // NO QA PLAN, NO DISPATCH — the owner's rule (2026-10-10), replacing the payload's earlier
     // default where QA inferred a plan and capped its verdict at CONCERNS. A Builder brief
@@ -1744,7 +1809,9 @@ export const register: Register = on => {
       : simpleCommands(command).map(gitCommitArgs).filter((c): c is { args: string[]; dir: string | null } => c !== null).map(c => c.args)
     const contentCommits = commits.filter(a => !a.includes('--allow-empty'))
     if (contentCommits.length === 0) return next(e)
-    if (entry.tdd_na) return next(e)
+    // A QUICK TICKET OWES NO TEST (4.6.0): its kind came from the tracker's label, written on the
+    // record by the dispatcher before the brief went (see trackerLabels).
+    if (entry.tdd_na || entry.kind === 'quick') return next(e)
     // THE GATE MEASURES A TEST, NOT A SKILL CALL (4.1.0). Until now it asked whether
     // `mattpocock-skills:tdd` had been called; measured on the first adopter, 48 refusals, 48
     // skill calls right after, and a test file edited before the next commit in 2. So it now
@@ -2078,10 +2145,15 @@ export const register: Register = on => {
     // question, asked twice: a test file on the branch since the dispatch base, or `TDD: n/a`.
     const mergeGaps = async (entry: Entry, ref: string): Promise<string[]> => {
       const out: string[] = []
+      // A QUICK TICKET (4.6.0, the tracker's label) owes the built-in code-review and nothing
+      // else here; `SIMPLIFY: n/a` on the brief exempts simplify alone.
+      const quick = entry.kind === 'quick'
       for (const label of flowGaps(entry)) {
         if (label === 'built-in code-review' && entry.review_na) continue
+        if (label === 'simplify' && (quick || entry.simplify_na)) continue
+        if (label === "Matt's code-review" && quick) continue
         if (label === 'tdd') {
-          if (entry.tdd_na) continue
+          if (entry.tdd_na || quick) continue
           const carries = await branchCarriesTest($, root, entry, ref)
           if (carries === false) { out.push('tdd (no test file on the branch since dispatch)'); continue }
           // 4.5.2: the record says whether tdd ran before the first content commit of the last brief
@@ -2124,6 +2196,11 @@ export const register: Register = on => {
         const owedQa = qaOwed(rec, key)
         if (owedQa) {
           notes.push(`${MARK} ${key} merged owing a QA ${owedQa} (declared on its brief) with no QA turn after the Builder's last. Dispatch it on the merged head (dispatch-qa-walk) or record why not.`)
+        }
+        if (entry.kind === 'quick') {
+          notes.push(`${MARK} ${key} is a quick ticket (tracker label): no simplify(increment) marker and no arm(ticket) receipt were owed, so do not pass those --marker flags to check-simplify-markers.sh for it.`)
+        } else if (entry.simplify_na) {
+          notes.push(`${MARK} ${key} carried "${String(entry.simplify_na).slice(0, 80)}" on its brief: no simplify(increment) marker was owed, so do not pass --marker 'simplify(increment)' to check-simplify-markers.sh for it.`)
         }
       }
     }
@@ -2196,6 +2273,12 @@ export const register: Register = on => {
       const running = f?.latest && f.latest.at > f.lastTurnEndAt ? f.latest.name : null
       const live = running ? await liveAgents($) : []
       let isCurrentMarked = running !== null
+      // TWO ROWS (4.6.0): who and what kind on the first, the steps on the second. A quick
+      // ticket's exempt steps leave the row — what is shown is what is owed; a full ticket keeps
+      // its grey n/a chips as 4.5.3 shipped them.
+      const kind = f?.kind ?? null
+      const quickDrop = new Set(['mattpocock-skills:tdd', 'bmad-ux', 'mattpocock-skills:code-review', 'simplify', 'codex-arm'])
+      const shown = kind === 'quick' ? (steps ?? []).filter(([name]) => !quickDrop.has(name)) : (steps ?? [])
       return (
         <Box flexDirection="column">
           {undelivered ? (
@@ -2204,24 +2287,31 @@ export const register: Register = on => {
             </Text>
           ) : null}
           {f ? (
-            <Box flexDirection="row" flexWrap="wrap">
-              <Chip bg="claude" fg="inverseText" label={`${me.role} ${me.key}`} />
-              {f.lastRefusal && (await $.clock.now()) - f.lastRefusal.at < 120_000
-                ? <Chip bg="error" fg="inverseText" label={`⛔ ${f.lastRefusal.gate} refused`} />
-                : null}
-              {(steps ?? []).map(([name, label, isOptional]) => {
-                const isRan = f.ran.includes(name) || (name === 'codex-arm' && f.ran.includes('codex-claude-arm'))
-                // an optional step is shown only once the brief has said whether it is owed (4.5.3)
-                if (isOptional && !isRan && f.uxOwed === null) return null
-                const isNa = (name === 'mattpocock-skills:tdd' && f.tddNa) || (name === 'code-review' && f.reviewNa) || (isOptional && f.uxOwed === false)
-                if (name === running) return <Chip bg="warning" fg="inverseText" label={`… ${label}${live.length ? ` (${live.length} agent${live.length === 1 ? '' : 's'})` : ''}`} />
-                if (isRan) return <Chip bg="success" fg="inverseText" label={`✓ ${label}`} />
-                if (isNa) return <Chip bg="inactive" fg="inverseText" label={`n/a ${label}`} />
-                if (!isCurrentMarked) { isCurrentMarked = true; return <Chip bg="subtle" label={`→ ${label}`} /> }
-                return <Chip dim label={`○ ${label}`} />
-              })}
-              {me.role === 'qa' && f.qaMode ? <Chip bg="claude" fg="inverseText" label={`mode ${f.qaMode}`} /> : null}
-              {appliedVersion ? <Chip dim label={`astragentic ${appliedVersion}`} /> : null}
+            <Box flexDirection="column">
+              <Box flexDirection="row" flexWrap="wrap">
+                <Chip bg="claude" fg="inverseText" label={`${me.role} ${me.key}`} />
+                {kind ? <Chip bg={kind === 'quick' ? 'warning' : 'subtle'} fg={kind === 'quick' ? 'inverseText' : undefined} label={kind} /> : null}
+                {f.lastRefusal && (await $.clock.now()) - f.lastRefusal.at < 120_000
+                  ? <Chip bg="error" fg="inverseText" label={`⛔ ${f.lastRefusal.gate} refused`} />
+                  : null}
+                {me.role === 'qa' && f.qaMode ? <Chip bg="claude" fg="inverseText" label={`mode ${f.qaMode}`} /> : null}
+                {appliedVersion ? <Chip dim label={`astragentic ${appliedVersion}`} /> : null}
+              </Box>
+              {shown.length > 0 ? (
+                <Box flexDirection="row" flexWrap="wrap">
+                  {shown.map(([name, label, isOptional]) => {
+                    const isRan = f.ran.includes(name) || (name === 'codex-arm' && f.ran.includes('codex-claude-arm'))
+                    // an optional step is shown only once the brief has said whether it is owed (4.5.3)
+                    if (isOptional && !isRan && f.uxOwed === null) return null
+                    const isNa = (name === 'mattpocock-skills:tdd' && f.tddNa) || (name === 'code-review' && f.reviewNa) || (name === 'simplify' && f.simplifyNa) || (isOptional && f.uxOwed === false)
+                    if (name === running) return <Chip bg="warning" fg="inverseText" label={`… ${label}${live.length ? ` (${live.length} agent${live.length === 1 ? '' : 's'})` : ''}`} />
+                    if (isRan) return <Chip bg="success" fg="inverseText" label={`✓ ${label}`} />
+                    if (isNa) return <Chip bg="inactive" fg="inverseText" label={`n/a ${label}`} />
+                    if (!isCurrentMarked) { isCurrentMarked = true; return <Chip bg="subtle" label={`→ ${label}`} /> }
+                    return <Chip dim label={`○ ${label}`} />
+                  })}
+                </Box>
+              ) : null}
             </Box>
           ) : (appliedVersion ? (
             <Box flexDirection="row">
@@ -2237,18 +2327,27 @@ export const register: Register = on => {
     const b = await read($, banner)
     const now = await $.clock.now()
     const alarmOf = (r: BoardRow) => r.note === 'not confirmed received' || r.state === 'merged' || (r.note ?? '').startsWith('turn end read from record') || (r.note ?? '').includes('— stale')
-    const bgOf = (r: BoardRow) => alarmOf(r) ? 'error' : r.state === 'working' ? 'success' : r.state === 'sent' ? 'warning' : r.state === 'ended' ? 'subtle' : 'inactive'
+    const colorOf = (r: BoardRow) => alarmOf(r) ? 'error' : r.state === 'working' ? 'success' : r.state === 'sent' ? 'warning' : undefined
+    // THE DISPATCHER'S BAND IS A HEADER AND ONE ROW PER LANE (4.6.0, the owner's ask of
+    // 2026-10-26): the first row is the checkout's state (branch, version with `↑` when a newer
+    // release exists, tracker counts, lane count); each lane below in straight columns, the same
+    // layout the /dispatch-board pane has. The update one-liner left the band: `.astraler/astragentic.sh update` is the answer the `↑` chip points at.
     return (
-      <Box flexDirection="row" flexWrap="wrap">
-        {b.branch ? <Chip bg="claude" fg="inverseText" label={`⎇ ${b.branch}`} /> : null}
-        {b.version ? <Chip dim label={`astragentic ${b.version}`} /> : null}
-        {b.latest ? <Chip bg="warning" fg="inverseText" label={`${b.latest} available · .astraler/astragentic.sh update`} /> : null}
-        {rows.length === 0 ? <Chip dim label="no dispatches" /> : null}
+      <Box flexDirection="column">
+        <Box flexDirection="row" flexWrap="wrap">
+          {b.branch ? <Chip bg="claude" fg="inverseText" label={`⎇ ${b.branch}`} /> : null}
+          {b.version ? (b.latest
+            ? <Chip bg="warning" fg="inverseText" label={`astragentic ${b.version} ↑${b.latest}`} />
+            : <Chip dim label={`astragentic ${b.version}`} />) : null}
+          {b.tracker ? <Chip dim label={b.tracker} /> : null}
+          <Chip dim label={rows.length === 0 ? 'no dispatches' : `${rows.length} lane${rows.length === 1 ? '' : 's'}`} />
+          {b.extra ? <Chip dim label={b.extra} /> : null}
+        </Box>
         {rows.map(r => (
-          <Chip bg={bgOf(r)} fg="inverseText" label={`${r.key} ${r.state} ${ago(now - r.since)}${r.note ? ` · ${r.note}` : ''}`} />
+          <Text color={colorOf(r)} dimColor={colorOf(r) === undefined}>
+            {`${r.key.padEnd(14)} ${r.role.padEnd(8)} ${r.state.padEnd(10)} ${ago(now - r.since).padStart(4)}${r.note ? `  ${r.note}` : ''}`}
+          </Text>
         ))}
-        {b.tracker ? <Chip dim label={b.tracker} /> : null}
-        {b.extra ? <Chip dim label={b.extra} /> : null}
       </Box>
     )
   })

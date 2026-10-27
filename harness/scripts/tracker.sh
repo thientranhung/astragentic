@@ -3,6 +3,7 @@
 #
 #   tracker.sh state <ticket-id>   one line: `<state> <assignee-or-dash>`
 #   tracker.sh counts              one line: open tickets per status
+#   tracker.sh labels <ticket-id>  one line: the ticket's labels, lowercase, space-separated (4.6.0)
 #
 # WHY IT EXISTS. The band refreshed every 30 s and ran `status-line.sh` each time; a project that
 # put its tracker counts there queried the tracker on the clock (one downstream plug: `gh issue
@@ -24,7 +25,14 @@
 #
 # Nothing declared and no plug: exit 3, the empty socket; every caller already handles that.
 # `twg` absent, logged out, slow or refusing: `state` prints `unreachable -` (ticket-done stamps
-# UNVERIFIED, the mod skips its claim check), `counts` prints nothing and exits 1.
+# UNVERIFIED, the mod skips its claim check), `counts` prints nothing and exits 1, `labels` prints
+# `unreachable` (the mod sets no kind).
+#
+# LABELS (4.6.0): the dispatch mod asks for them at a Builder brief to read the ticket's kind
+# (`quick` or `full`). The project plug `.astraler/project/tracker-labels.sh <id>` wins and is the
+# ENFORCING reader (no label → the brief is not sent); this script's Jira path only informs. The
+# Jira field is the top-level `labels` array of `twg jira workitem get -o json` (measured
+# 2026-10-27 on one ticket: `['digest', 'discovery', 'jev']`).
 #
 # THE STATE TOKEN is one word, because both consumers split the line on whitespace: Jira's
 # status NAMES carry spaces (`To Do` read as state `To`, assignee `Do`), so `state` prints the
@@ -36,9 +44,9 @@ set -uo pipefail
 
 OP="${1:-}"; ID="${2:-}"
 case "$OP" in
-  state) [ -n "$ID" ] || { echo "usage: tracker.sh state <ticket-id>" >&2; exit 2; } ;;
+  state|labels) [ -n "$ID" ] || { echo "usage: tracker.sh $OP <ticket-id>" >&2; exit 2; } ;;
   counts) ;;
-  *) echo "usage: tracker.sh state <ticket-id> | tracker.sh counts" >&2; exit 2 ;;
+  *) echo "usage: tracker.sh state <ticket-id> | tracker.sh labels <ticket-id> | tracker.sh counts" >&2; exit 2 ;;
 esac
 
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"; ROOT="${ROOT:-${CLAUDE_PROJECT_DIR:-$PWD}}"
@@ -52,6 +60,11 @@ if [ "$OP" = state ] && [ -x "$P/tracker-state.sh" ]; then
   out="$("$P/tracker-state.sh" "$ID")"; rc=$?
   log "state $ID via=plug rc=$rc"
   printf '%s\n' "$out"; exit "$rc"
+fi
+if [ "$OP" = labels ] && [ -x "$P/tracker-labels.sh" ]; then
+  out="$("$P/tracker-labels.sh" "$ID")"; rc=$?
+  log "labels $ID via=plug rc=$rc"
+  printf '%s\n' "$out" | tr '\n' ' ' | tr '[:upper:]' '[:lower:]'; echo; exit "$rc"
 fi
 if [ "$OP" = counts ] && [ -x "$P/tracker-status.sh" ]; then
   out="$("$P/tracker-status.sh" 2>/dev/null)"; rc=$?
@@ -83,7 +96,24 @@ esac
 
 if ! command -v twg >/dev/null 2>&1; then
   log "$OP $ID kind=jira rc=no-twg"
-  [ "$OP" = state ] && { echo "unreachable -"; exit 0; } || exit 1
+  case "$OP" in state) echo "unreachable -"; exit 0 ;; labels) echo unreachable; exit 0 ;; *) exit 1 ;; esac
+fi
+
+if [ "$OP" = labels ]; then
+  json="$(twg jira workitem get "$ID" -o json --output-summary none --timeout-ms "$TIMEOUT_MS" 2>/dev/null)"; rc=$?
+  log "labels $ID kind=jira rc=$rc"
+  line=""
+  [ "$rc" -eq 0 ] && line="$(printf '%s' "$json" | python3 -c '
+import json, sys
+try:
+    d = json.load(sys.stdin)["data"]
+    d = d[0] if isinstance(d, list) else d
+    labels = d.get("labels") or (d.get("fields") or {}).get("labels") or []
+    print(" ".join(str(l).strip().lower() for l in labels if str(l).strip()) if isinstance(labels, list) else "")
+except Exception:
+    print("unreachable")' 2>/dev/null)"
+  [ "$rc" -eq 0 ] && echo "$line" || echo unreachable
+  exit 0
 fi
 
 if [ "$OP" = state ]; then

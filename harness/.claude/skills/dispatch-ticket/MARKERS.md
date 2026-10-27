@@ -9,6 +9,11 @@ scripts/check-simplify-markers.sh <base> <head> --marker 'simplify(increment)'  
 scripts/check-simplify-markers.sh <base> <head> --marker 'arm(ticket)'   # omit when orchestrator.md arm row ticket = no
 ```
 
+A ticket labelled `quick` on the tracker owes neither marker (4.6.0), and a full ticket whose
+brief carries `SIMPLIFY: n/a — <why>` owes no `simplify(increment)`: the Builder's record is the
+gate, the dispatcher's prompt lists the live lanes of both shapes, and the merge's own note
+names them. Pass no `--marker` for what is not owed; `arm(slice)` and `qa(walk)` are unchanged.
+
 `--marker` is repeatable and the kind is data, so a new kind costs a flag, not a script. The
 script prints one `STOP:` line per reason. The counts are a filter, not a verdict:
 `markers == wellformed + superseded` says the shape is right, so read the bodies.

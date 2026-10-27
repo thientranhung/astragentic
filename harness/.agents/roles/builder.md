@@ -42,13 +42,29 @@ file or a one-line fold, ≈$335 in 14 days.
 **Commit and push at every phase boundary**, not only at handback — the table above is the
 cadence.
 
+## A quick ticket
+
+**The tracker's `quick` label makes a smaller loop, and the pane's gates are set to it.** The
+label is read at dispatch and written on the record (`dispatch-ticket` § The kind); the brief is
+the same `implement` brief, the band's first row says `quick`, and a `KIND: quick` section
+arrives in your prompt. Owed: the code, the project's existing tests run green, the built-in
+`code-review` with its findings folded, commit, push, handback. Not owed: `tdd`, `bmad-ux`,
+`mattpocock-skills:code-review`, simplify, the arm — write no `simplify(increment)` or
+`arm(ticket)` marker and cite none. Measured on the first adopter before this existed: 15–32%
+of its tickets were this shape, each paid as the full loop (median $19.5).
+
+**The label is a claim about the work, and the work can disprove it.** When the change reaches
+a risky path (migration, route or API, auth, payment, a data write), logic only a test would
+catch, or more files than the ticket's words named, stop and say so in the handback. Thomas
+relabels it `full` and re-briefs; a quick ticket never grows into a full one inside the pane.
+
 **Pass `mattpocock-skills:code-review` the `Base:` your brief carries** — "the increment" is not a git ref, and
 the skill asks for one when missing, into a pane with nobody in it.
 
 **Call `tdd` and both reviews yourself, by qualified name.** `implement` only points at them;
 the pane records each call and every `TURN-END` carries `Skills run:`. A step that cannot apply
-is exempted by the brief's `TDD: n/a — <why>` or `REVIEW: n/a — <why>` line
-(`builder-claude.md` § gates). `bmad-ux audit` is owed when the brief's `FLOW:` names it,
+is exempted by the brief's `TDD: n/a — <why>`, `REVIEW: n/a — <why>` or `SIMPLIFY: n/a — <why>`
+line (`builder-claude.md` § gates), or by the ticket's `quick` label (§ A quick ticket). `bmad-ux audit` is owed when the brief's `FLOW:` names it,
 exempted by `UX: n/a — <why>`, and named in the handback as `UX audit: n/a — <why>`.
 
 `implement` is **user-invoked**: drive it by name. The craft layer (`tdd`, `diagnosing-bugs`,

@@ -37,7 +37,7 @@ after every merge, handback and report.
 | Shaper | `spec:<id>` | `spec:ABC-128` |
 | QA | `qa:<id>` | `qa:ABC-130` |
 | Owner (BA) | `ba` | `ba` |
-| Owner (Quick Builder) | `quick` | `quick` |
+| Owner (Quick Builder) | `quick-builder` | `quick-builder` |
 | Owner (manual) | anything | `deploy` |
 
 **Owner tabs are not yours** — always create a fresh tab rather than splitting, renaming or
@@ -50,6 +50,7 @@ closing one.
 | thomas | claude | claude-opus-5 | medium | fable |
 | shaper | claude | claude-opus-5 | high | fable |
 | builder | claude | claude-sonnet-5 | medium | opus |
+| builder-quick | claude | claude-sonnet-5 | low | |
 | qa | claude | claude-sonnet-5 | low | opus |
 
 ## Junior

@@ -279,6 +279,9 @@ NOT_A_SKILL = {
     # sat here until 2.7.15, because tracker-contract.md named them — the payload names no
     # project, so both the citation and this allowance are gone.)
     "builder-target",
+    # 4.6.0: the owner's side-door AGENT (`claude --agent quick-builder`, a role, not a skill), the
+    # orchestrator row a quick ticket launches from, and the model id that row carries.
+    "quick-builder", "builder-quick", "claude-sonnet-5",
     # Triage labels. Skill-shaped, and the vocabulary lives in docs/agents/triage-labels.md.
     "needs-triage", "ready-for-agent",
 
@@ -480,7 +483,7 @@ DISPATCHER = "thomas"      # the resident router is launched by the owner, not d
 # Roles the OWNER starts (`claude --agent <role>`), never a dispatcher: the router, and the BA
 # (4.2.0). Their path to a pane is the README's launcher line, checked by 4c; check 5's
 # "a dispatcher names it" question does not apply to a pane no dispatcher opens.
-OWNER_LAUNCHED = {DISPATCHER, "ba", "quick"}
+OWNER_LAUNCHED = {DISPATCHER, "ba", "quick-builder"}
 launcher_text = "\n".join(t for _, t in skills.values())
 dispatcher_text = roles.get(DISPATCHER, "")
 

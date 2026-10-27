@@ -30,6 +30,10 @@ not yours: a brief line `TDD: n/a — <why>` or `REVIEW: n/a — <why>`; the ux 
 the brief's `FLOW:` names `bmad-ux`, exempted by `UX: n/a — <why>`, and the band says which
 (`○ ux` owed, `n/a ux` not; no chip before a brief). If a gate fires on a
 ticket that genuinely has no seam, ask Thomas for the line; do not work around the refusal.
+**A quick ticket** (the tracker's `quick` label, `builder.md` § A quick ticket) is exempt from
+the test-file and tdd-order gates and, at merge, from tdd, Matt's review and simplify; the arm
+gate still asks for the built-in review, and the merge gate still asks the record for it.
+`SIMPLIFY: n/a — <why>` on a full ticket's brief exempts simplify alone (4.6.0).
 
 ## Bug review — Claude Code invocation
 

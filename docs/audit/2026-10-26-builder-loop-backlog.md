@@ -44,7 +44,7 @@ thành release cho tới khi owner gật từng mục.
   tới khi đo được finding Standards dẫn tới commit.
 - [ ] **L. Thomas trả về sau handback: 29/164 ticket, 6% tiền Builder.** Kỳ vọng giảm sau A; đo lại.
 
-- [ ] **M. Ticket `quick` / `full` — chốt 2026-10-26 (owner "rất hài lòng").**
+- [x] **M. Ticket `quick` / `full` — chốt 2026-10-26 (owner "rất hài lòng").** (4.6.0, 2026-10-27: nhãn đọc ở lúc gửi brief qua `tracker-labels.sh` plug (bắt buộc) hoặc `tracker.sh labels` (Jira, chỉ báo); `kind` lên record; miễn tdd/review Matt/simplify/ux, giữ built-in review; `SIMPLIFY: n/a`; band hai hàng; `quick` → `quick-builder`; hàng `builder-quick`. Chưa đo: 30 merge sau khi một project viết plug.)
   - **Cách dựng: không lane mới.** Nhãn `quick` trên tracker → mod tự đặt miễn trừ cho pane Builder
     (tdd, review:matt, simplify, ux); Thomas chỉ claim + dispatch như mọi ticket. Thêm hai cờ
     `SIMPLIFY: n/a`, `UX: n/a` bên cạnh `TDD: n/a`, `REVIEW: n/a` đã có; merge gate tôn trọng.

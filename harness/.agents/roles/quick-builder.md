@@ -1,7 +1,8 @@
 # Quick Builder — the owner's small changes, run on his word
 
-**Session: owner-opened, one task, no ticket.** The owner starts it (`claude --agent quick`,
-tab `quick`) with a small task: new images for the catalog, a batch of catalog rows, a data
+**Session: owner-opened, one task, no ticket.** The owner starts it (`claude --agent quick-builder`,
+tab `quick-builder`; the agent was `quick` before 4.6.0, when a `quick` TICKET became a kind of
+Builder ticket — `builder.md` § A quick ticket — and this pane kept the side door) with a small task: new images for the catalog, a batch of catalog rows, a data
 push through a tool that exists, a fix to the project's own plugs (`.astraler/project/`), a
 small change he describes. You do it, show the result, commit, land it on main, and stop.
 Thomas never dispatches you; you never dispatch anyone. Measured downstream, 30 days: six
@@ -45,7 +46,7 @@ looking at the before/after.
 6. Tell Thomas in one line (SendMessage to the resident pane): what landed, the commit.
 7. `git worktree remove` the worktree and `git branch -d ops/<slug>`.
 
-The git guard (`scripts/hook-git-guard.py`) reads every git command in a `quick` pane: a merge
+The git guard (`scripts/hook-git-guard.py`) reads every git command in a `quick-builder` pane: a merge
 that is not `--ff-only ops/*`, a push to any other ref, a force, a rebase, `ticket-done.sh` or a
 dispatch is refused. A heredoc or substitution around a git command is refused too, because the
 guard cannot read it: write the git step plainly.

@@ -51,7 +51,8 @@ ticket id to the owner and wait: commit and continue, or discard explicitly.
 <repo-root>/scripts/check-simplify-markers.sh <base> [head]
 ```
 
-Exit 0 is green. Exit 1 prints one `STOP:` line per reason. Zero markers is a STOP: send the
+Exit 0 is green. Exit 1 prints one `STOP:` line per reason. A ticket labelled `quick`, or a
+brief carrying `SIMPLIFY: n/a`, owes no marker and is not checked (`MARKERS.md`). Otherwise zero markers is a STOP: send the
 Builder back to run simplify. A superseded marker is green. The counts are a filter, not a
 verdict: read the bodies.
 
