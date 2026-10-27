@@ -78,8 +78,11 @@ without the mod (a QA gate pane, a junior pane).
   `refusals`, written to `/tmp/harness-hook-events.log`, and shown red on the Builder's band for
   two minutes. "Did the gate fire" is answered from the record.
 - **A TURN-END the pane could not send still arrives from the record within 30 s**, marked
-  *read from the record*. Do not toggle a dispatched pane's permission mode: the launcher's
-  `--dangerously-skip-permissions` keeps the message path open.
+  *read from the record*. For a **QA pane this is every turn end, by contract**: it runs under
+  permissions, so its direct send gets no classifier verdict and the record is its path (measured
+  2026-10-27: 6 of 6). For a Builder or Shaper it means the pane left bypass mode. Do not toggle a
+  dispatched pane's permission mode either way: the launcher's `--dangerously-skip-permissions`
+  keeps the message path open where it is meant to be open.
 - **No `RECEIVED` within 90 s** turns the line red and your next prompt names the pane. Read
   it: the sender's `{"success": true}` is true even for a held message.
 - **`/dispatch-board`** opens a pane listing every live dispatch with its state and age.

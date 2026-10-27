@@ -1,3 +1,54 @@
+# Astragentic 4.6.1
+
+**A dispatched pane waits by ending its turn; the mod now refuses `ScheduleWakeup` there.**
+Field report from the first adopter on 4.6.0 (2026-10-27): 3 of 4 Builder panes backgrounded a
+job (an audit fork, the built-in review, the arm) and called `ScheduleWakeup` to wait for it. The
+call refuses outside `/loop` (`prompt` is required when `stop` is not true), the wait never
+comes, and one pane armed a 30-minute heartbeat that kept waking it after its handback. The
+contract said "run gates in the foreground" and never said how to wait, so the model reached
+for the one tool whose name says wait. Verified in the engine: `$.agent.list` returns only
+agents and in-process teammates, never shell tasks — so the TURN-END hold covers a fork or
+sub-agent and not a backgrounded shell job. The rule is now written with that split
+(`builder-claude.md` § Background work): a fork holds your TURN-END and its completion
+re-invokes you; a shell job does not, so it runs in the foreground. The mod refuses
+`ScheduleWakeup` in every dispatched pane except `stop: true`, with the rule in the refusal.
+No harness role runs `/loop`.
+
+**A QA pane's TURN-END goes by the record, and the band says so instead of advising bypass.**
+Same report: 6 of 6 QA turn ends (two tickets) failed their direct send — "auto mode classifier
+gave no verdict for SendMessage" — because QA launches without `--dangerously-skip-permissions`
+by contract. The record delivered every one. The pane's band still read, in red, "press
+shift+tab until it is [bypass]", which would strip the permission layer the QA contract
+requires. There is no classifier-free send in the mod's hands: the verdict is the pane's own
+permission mode acting on the plugin's send. So on a QA pane the band now says, dimmed, that
+the record is the path; the dispatcher's board note for a QA lane says the same instead of
+"check that pane mode"; the Builder/Shaper hint stays, since there a lost verdict means the pane
+left bypass. `dispatch-ticket-claude` tells the dispatcher to expect *read from the record* on
+every QA turn end.
+
+**Status row and toasts no longer name the mod twice.** The host prefixes `$.ui.status` and
+`$.ui.toast` text with the plugin's registry name (one status line per plugin; verified in the
+2.1.311 binary), and the mod prefixed it again: `⚠ astragentic-dispatch: astragentic-dispatch:
+…` on every Builder statusline. 11 strings dropped the prefix. The readdress notice also said
+"a reply to …" when the Builder was sending its own first message to a peer Builder; it now says
+the message went to the dispatcher instead, and why.
+
+Selftest: a QA pane mode (tab `qa:…`, send with no verdict) asserts the record line, no bypass
+hint, not red, and the `ScheduleWakeup` refusal; the Builder pane asserts the refusal, `stop`
+passing, and the bypass hint kept; the planted mod that passes every `ScheduleWakeup` and keeps
+the QA hint is named.
+
+| số đo | nguồn |
+|---|---|
+| 3 of 4 Builder panes called ScheduleWakeup; 1 heartbeat after handback | nizzy report, TRA-1268/1269/1270 |
+| 6 of 6 QA turn ends undelivered, 6 of 6 read from the record | nizzy report, qa:TRA-1269, qa:TRA-1270 |
+| `$.agent.list` = local_agent + in_process_teammate only | CC 2.1.311 binary strings |
+| 11 doubled-prefix strings | grep register.tsx |
+
+## Upgrade from 4.6.0
+
+- Nothing by hand. A QA pane mid-walk shows the new band line at its next turn end.
+
 # Astragentic 4.6.0
 
 **A ticket is `quick` or `full`, and the label decides what the Builder's pane owes.** Backlog

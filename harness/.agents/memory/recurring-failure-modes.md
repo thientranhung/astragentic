@@ -996,6 +996,9 @@ wait for the notification to arrive." The scheduling call failed; the notificati
 come; the builder is committed to waiting forever. Pane status line: "1 shell, 1 monitor
 still running" — while `pgrep` by worktree path returned 0. The two background-process
 sources DISAGREED: the runtime tracked a task invisible to the OS.
+Since 4.6.1 the mod refuses `ScheduleWakeup` in a dispatched pane (except `stop: true`) and
+`builder-claude.md` § Background work says how to wait: a fork holds TURN-END, a shell job
+does not (3 of 4 Builder panes reached for the tool on 2026-10-27).
 
 The background-process check as originally written (`pgrep` alone) answered WRONG at exactly
 this case — it said "nothing running, this is STUCK or CRASHED," while the truth was

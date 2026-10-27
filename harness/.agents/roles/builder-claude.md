@@ -110,3 +110,13 @@ gate: where your own evidence contradicts a specific claim, say so and follow th
 Run gates in the foreground: a turn that ends while waiting on a result you need is PARKED.
 A backgrounded block's completion notice reports its LAST command, so take the status inside
 the block and read the log, never the notice's number (`dispatch-ticket/WATCHING.md` § pipes).
+
+**How to wait is to end the turn.** A fork or sub-agent you launched (a review fork, an audit
+agent, an `Agent(...)` call) keeps your TURN-END held: the mod sends it only when no agent of
+yours is running, and the agent's completion re-invokes you. A backgrounded shell job is not an
+agent — the hold does not see it, so a turn that ends on one reports TURN-END with the work
+still running; that is the PARKED case above, and the cure is the foreground. Never
+`ScheduleWakeup`: it is `/loop`'s tool, it refuses without a `prompt`, and a heartbeat it arms
+keeps waking an idle pane after your handback. The mod refuses it in a dispatched pane
+(measured 2026-10-27: 3 of 4 Builder panes reached for it, one rang for 30 minutes after
+handing back).

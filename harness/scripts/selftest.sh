@@ -1453,7 +1453,7 @@ else
 // a brief sent to a "name [ref]" address followed by its RECEIVED ack from the bare name.
 const fs = require('fs'), path = require('path'), Module = require('module')
 const [,, modDir, root, tsPath, mode] = process.argv
-const isPane = mode === 'pane'
+const isPane = mode === 'pane' || mode === 'qapane'
 const ts = require(tsPath)
 const src = fs.readFileSync(path.join(modDir, 'hooks/register.tsx'), 'utf8')
 const js = ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React, jsxFactory: 'h', jsxFragmentFactory: 'Fragment' } }).outputText
@@ -1483,7 +1483,7 @@ const $ = {
   command: { register: () => {}, run: async () => ({}) },
   session: { id: async () => 'disp', send: async () => ({ isDelivered: true }), usage: async () => ({ startedAt: 0, context: { tokens: 1000, window: 1_000_000, percent: 0 } }), compact: async () => ({}) },
   fs: { read: async p => fs.readFileSync(p, 'utf8'), write: async (p, t) => fs.writeFileSync(p, t), exists: async p => fs.existsSync(p) },
-  process: { run: async (argv, o = {}) => { if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? '{"result":{"tab":{"label":"ticket:AB-5"}}}' : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8', env: { ...process.env, ...(o.env ?? {}) } }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
+  process: { run: async (argv, o = {}) => { if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? (mode === 'qapane' ? '{"result":{"tab":{"label":"qa:AB-5"}}}' : '{"result":{"tab":{"label":"ticket:AB-5"}}}') : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8', env: { ...process.env, ...(o.env ?? {}) } }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
   ui: { status: t => log.push(t), toast: () => {}, open: () => {}, resolve: () => ({ Box: 'Box', Text: 'Text' }) },
   prompt: { submit: async () => {} },
   agent: { list: async () => liveAgents },
@@ -1516,6 +1516,19 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const cmd = await fire('command.run', { command: 'tracker-refresh' }, async () => ({}))
     const afterCommand = calls()
     console.log(JSON.stringify({ atStart, afterTicks, afterMerge, afterCommand, band: (await band()).includes('open 3'), said: String(cmd?.text ?? '') }))
+    return
+  }
+  if (mode === 'qapane') {
+    // 4.6.1 — a QA pane runs under permissions, so its direct TURN-END send gets no classifier
+    // verdict every turn; the band must say the record carries it and never advise bypass
+    await fire('session.start', { cwd: root }, async () => ({}))
+    // the dispatcher's brief gives the pane its address; without it the turn end has nowhere to go
+    await fire('session.receive', { text: `<cross-session-message from="uds:/tmp/d.sock" from-name="disp-07">\n/walk AB-5\nMODE: walk\n</cross-session-message>`, origin: { kind: 'plugin' } }, async () => ({}))
+    $.session.send = async () => ({ isDelivered: false, reason: 'The server-side auto mode classifier gave no verdict for SendMessage' })
+    await fire('turn.complete', { reason: 'answer', answer: 'walked', turnId: 'q1' }, async () => ({}))
+    const qaBand = await band()
+    const wakeupQa = await (async () => { let ran = false; const r = await fire('tool.call', { tool: 'ScheduleWakeup', delaySeconds: 300 }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` })()
+    console.log(JSON.stringify({ qaRecordPath: /by the record/.test(qaBand), qaNoBypassHint: !/shift\+tab/.test(qaBand), qaNotRed: !/not delivered to the dispatcher/.test(qaBand), wakeupQa, qaBand }))
     return
   }
   if (isPane) {
@@ -1838,6 +1851,17 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const bandSimplifyNa = Boolean(rec()['AB-5']?.simplify_na) && (await engine.read($, { id: 'astragentic-dispatch.flow', init: {} })).simplifyNa === true
     const quick = { band: bandQuick, commit: commitQuick, section: kindSection, simplifyNa: bandSimplifyNa }
     const bandText = { bandNoFlow, bandUxOff, bandUxNa, bandNext, bandHeld, bandSimplify, bandDone, bandAfterAgent, bandTie }
+    // 4.6.1 — a dispatched pane waits by ending its turn: ScheduleWakeup is refused (3 of 4
+    // Builder panes reached for it downstream, 2026-10-27); `stop: true` passes so an armed
+    // heartbeat can be turned off
+    const toolOf = async (ev) => { let ran = false; const r = await fire('tool.call', ev, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` }
+    const wakeup = await toolOf({ tool: 'ScheduleWakeup', delaySeconds: 300, prompt: 'x', noop: true, reason: 'wait' })
+    const wakeupStop = await toolOf({ tool: 'ScheduleWakeup', stop: true })
+    // a Builder pane is launched with bypass; a send with no classifier verdict there means the
+    // pane left that mode, and the band says so
+    $.session.send = async () => ({ isDelivered: false, reason: 'The server-side auto mode classifier gave no verdict for SendMessage' })
+    await fire('turn.complete', { reason: 'answer', answer: 'done', turnId: 'tz' }, async () => ({}))
+    const bypassHint = /shift\+tab/.test(await band())
     const bandRead = {
       noFlow: /→ implement ○ tdd ○ review:matt/.test(bandNoFlow) && !/ux/.test(bandNoFlow),
       uxOff: /○ tdd n\/a ux ○ review:matt/.test(bandUxOff),
@@ -1849,7 +1873,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
       afterAgent: /✓ simplify/.test(bandAfterAgent) && !/…/.test(bandAfterAgent),
       tie: /… simplify \(1 agent\)/.test(bandTie) && /✓ review:built-in/.test(bandTie),
     }
-    console.log(JSON.stringify({ quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, bandText, log }))
+    console.log(JSON.stringify({ quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, wakeup, wakeupStop, bypassHint, bandText, log }))
     return
   }
   await fire('session.start', {}, async () => ({}))
@@ -2095,10 +2119,16 @@ EOS
   else
     bad "tdd order (4.5.2)" "$(printf '%s' "$out" | grep -o '"tddOrder":{[^}]*}' | head -1)"
   fi
-  if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"sendToFork":"code-review [ce2df1]","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"noFlow":true,"uxOff":true,"uxNa":true,"next":true,"held":true,"simplify":true,"done":true,"afterAgent":true,"tie":true},"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","refusedWhy":true,"compacted":1,"commitNoTest":"deny:held","commitWithTest":"pass:ran","commitDeletedTest":"deny:held","commitLaterDeletedTest":"deny:held","commitPathLimited":"deny:held","commitAllDeleted":"deny:held","commitAddThenCommit":"pass:ran","commitRmThenCommit":"deny:held","commitRestageDeleted":"deny:held","commitDashMAttached":"deny:held","commitScopedAddAll":"deny:held","commitPathRestored":"deny:held","commitAfterMv":"deny:held","mvNotReplayed":true,"commitTwice":"deny:held","commitDashCSrc":"deny:held","commitAmendOnly":"deny:held","commitRmAddAll":"deny:held","rmNotReplayed":true,"commitPathspecFile":"deny:held","commitRepeatedC":"deny:held","commitDotUntracked":"deny:held","commitDotStaged":"pass:ran","commitSkippedAdd":"deny:held","commitRmNoCached":"deny:held","fileSurvived":true,"commitOrAdd":"deny:held","commitEchoAdd":"deny:held","commitRmAbsent":"deny:held","commitSubstQuoted":"deny:held","testStillStaged":true,"commitWorkTree":"deny:held","commitConfigOpt":"deny:held","commitSubstApos":"deny:held","commitBacktickDouble":"deny:held","commitSubstLiteral":"pass:ran","commitConfigEnv":"deny:held","commitCommentedAdd":"deny:held","commitAbbrevOpt":"deny:held","commitMessageEq":"pass:ran","commitRedirect":"deny:held","commitFdDup":"pass:ran","ampNamed":true,"commitHeredocMsg":"pass:ran","commitHeredocOpen":"deny:held","commitHeredocExtra":"deny:held","commitHeredocBare":"deny:held","substFixNamed":true,"noScratchLeft":true'; then
-    ok "pane side: a turn end with a live agent is held, the next turn start ends the hold, the band reads the latest step as … with the pane's agent count until a later step or a clean turn end and the step after it as ○, an arm row at no reaches the Builder's prompt, a command on the project's refused list is refused, and a turn over the context ceiling is compacted"
+  if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"sendToFork":"code-review [ce2df1]","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"noFlow":true,"uxOff":true,"uxNa":true,"next":true,"held":true,"simplify":true,"done":true,"afterAgent":true,"tie":true},"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","refusedWhy":true,"compacted":1,"commitNoTest":"deny:held","commitWithTest":"pass:ran","commitDeletedTest":"deny:held","commitLaterDeletedTest":"deny:held","commitPathLimited":"deny:held","commitAllDeleted":"deny:held","commitAddThenCommit":"pass:ran","commitRmThenCommit":"deny:held","commitRestageDeleted":"deny:held","commitDashMAttached":"deny:held","commitScopedAddAll":"deny:held","commitPathRestored":"deny:held","commitAfterMv":"deny:held","mvNotReplayed":true,"commitTwice":"deny:held","commitDashCSrc":"deny:held","commitAmendOnly":"deny:held","commitRmAddAll":"deny:held","rmNotReplayed":true,"commitPathspecFile":"deny:held","commitRepeatedC":"deny:held","commitDotUntracked":"deny:held","commitDotStaged":"pass:ran","commitSkippedAdd":"deny:held","commitRmNoCached":"deny:held","fileSurvived":true,"commitOrAdd":"deny:held","commitEchoAdd":"deny:held","commitRmAbsent":"deny:held","commitSubstQuoted":"deny:held","testStillStaged":true,"commitWorkTree":"deny:held","commitConfigOpt":"deny:held","commitSubstApos":"deny:held","commitBacktickDouble":"deny:held","commitSubstLiteral":"pass:ran","commitConfigEnv":"deny:held","commitCommentedAdd":"deny:held","commitAbbrevOpt":"deny:held","commitMessageEq":"pass:ran","commitRedirect":"deny:held","commitFdDup":"pass:ran","ampNamed":true,"commitHeredocMsg":"pass:ran","commitHeredocOpen":"deny:held","commitHeredocExtra":"deny:held","commitHeredocBare":"deny:held","substFixNamed":true,"noScratchLeft":true,"wakeup":"deny:held","wakeupStop":"pass:ran","bypassHint":true'; then
+    ok "pane side: a turn end with a live agent is held, the next turn start ends the hold, the band reads the latest step as … with the pane's agent count until a later step or a clean turn end and the step after it as ○, an arm row at no reaches the Builder's prompt, a command on the project's refused list is refused, a turn over the context ceiling is compacted, ScheduleWakeup is refused except stop, and a bypass-launched pane whose send lost its verdict is told to return to bypass"
   else
     bad "mod pane hold" "$out"
+  fi
+  out="$(mod_drive "$MOD" qapane)"
+  if says "$out" '"qaRecordPath":true,"qaNoBypassHint":true,"qaNotRed":true,"wakeupQa":"deny:held"'; then
+    ok "qa pane (4.6.1): a QA pane runs under permissions, so its TURN-END goes by the record every turn — the band says so, never advises bypass, is not red; ScheduleWakeup is refused there too"
+  else
+    bad "qa pane record path" "$out"
   fi
   rm -rf "$TMP/mod-stuck"; cp -R "$MOD" "$TMP/mod-stuck"
   python3 - "$TMP/mod-stuck/hooks/register.tsx" <<'EOS'
@@ -2131,6 +2161,12 @@ s = s.replace(old6d, "", 1)
 old6f = "if (at > 0 && (!best || at >= best.at)) best = { name, at }"
 assert old6f in s, "tie-break not found"
 s = s.replace(old6f, "if (at > 0 && (!best || at > best.at)) best = { name, at }", 1)
+old7 = "if (!me || me.role === 'resident') return next(e)\n    const ev: any = e"
+assert old7 in s, "ScheduleWakeup guard not found"
+s = s.replace(old7, "return next(e)\n    const ev: any = e", 1)
+old8 = "const isQa = me.role === 'qa'"
+assert old8 in s, "qa band guard not found"
+s = s.replace(old8, "const isQa = false", 1)
 old6e = "if (name === running) return <Chip"
 assert old6e in s, "running chip not found"
 s = s.replace(old6e, "if (false) return <Chip", 1)
@@ -2220,8 +2256,8 @@ EOS
     bad "mod refusal planted reason" "the reasonless refusal was not caught: $out"
   fi
   out="$(mod_drive "$TMP/mod-stuck" pane)"
-  if says "$out" '"second":true,"steer":false,' && says "$out" '"paneHeld":true,"paneCleared":false,"sendToFork":"uds:/tmp/d.sock","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"noFlow":true,"uxOff":false,"uxNa":false,"next":false,"held":false,"simplify":false,"done":true,"afterAgent":true,"tie":false},"armOffSection":false,"refusedListed":"pass:ran","refusedOther":"pass:ran","refusedWhy":false,"compacted":0'; then
-    ok "planted: a step invoked reads ✓ while the pane's four agents still run; a same-millisecond tie lights the earlier step; a brief nobody reads for ux leaves no ux chip; a steer that stamps the brief mark re-arms the tdd gate; a pane that starts a turn leaves its hold standing; an arm row nobody parses reaches no prompt; a refused list nobody tests refuses nothing; a ceiling nobody reads compacts nothing"
+  if says "$out" '"second":true,"steer":false,' && says "$out" '"paneHeld":true,"paneCleared":false,"sendToFork":"uds:/tmp/d.sock","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"noFlow":true,"uxOff":false,"uxNa":false,"next":false,"held":false,"simplify":false,"done":true,"afterAgent":true,"tie":false},"armOffSection":false,"refusedListed":"pass:ran","refusedOther":"pass:ran","refusedWhy":false,"compacted":0' && says "$out" '"wakeup":"pass:ran"' && { qaout="$(mod_drive "$TMP/mod-stuck" qapane)"; says "$qaout" '"qaNoBypassHint":false,"qaNotRed":false'; }; then
+    ok "planted: a step invoked reads ✓ while the pane's four agents still run; a ScheduleWakeup hook that passes everything is caught; a QA band that still advises bypass is caught; a same-millisecond tie lights the earlier step; a brief nobody reads for ux leaves no ux chip; a steer that stamps the brief mark re-arms the tdd gate; a pane that starts a turn leaves its hold standing; an arm row nobody parses reaches no prompt; a refused list nobody tests refuses nothing; a ceiling nobody reads compacts nothing"
   else
     bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"
   fi

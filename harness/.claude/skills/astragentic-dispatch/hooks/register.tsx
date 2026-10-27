@@ -1027,7 +1027,7 @@ async function refreshBoard($: any, root: string | null, sends: Map<string, numb
       continue
     }
     if (entry.turn_end_pending) {
-      rows.push({ key, role, state: 'ended', since: entry.turn_end_pending.at ?? now, note: 'turn end read from record: its message was blocked, check that pane mode' })
+      rows.push({ key, role, state: 'ended', since: entry.turn_end_pending.at ?? now, note: role === 'qa' ? 'turn end read from record (a QA pane runs under permissions; the record is its path)' : 'turn end read from record: its message was blocked, check that pane mode' })
       continue
     }
     const owedQa = role === 'builder' ? qaOwed(rec, key) : null
@@ -1759,6 +1759,21 @@ export const register: Register = on => {
     }
   })
 
+  // A dispatched pane waits by ending its turn, never by scheduling one. Measured downstream
+  // (2026-10-27): 3 of 4 Builder panes backgrounded a job (an audit fork, the built-in review,
+  // the arm) and called ScheduleWakeup to wait for it — the call refused (`prompt` is required
+  // outside /loop), the wait never came, and one pane kept a 30-minute heartbeat ringing after
+  // its handback. No harness role runs /loop. `stop: true` passes so an armed heartbeat can be
+  // turned off.
+  on('tool.call', { tool: 'ScheduleWakeup' }, async ($, e, next) => {
+    if (!me || me.role === 'resident') return next(e)
+    const ev: any = e
+    if (ev.stop === true || ev.input?.stop === true) return next(e)
+    return {
+      deny: `astragentic-dispatch: a dispatched pane (${me.role} ${me.key}) does not schedule its own wakeups. To wait on a fork or sub-agent, end the turn: your TURN-END is held while any agent of yours runs, and the agent's completion re-invokes you. A backgrounded shell job is not an agent and does not hold the turn — run gates in the foreground. Nothing here is a /loop.`,
+    }
+  })
+
   // THE TWO GATES. Measured on the first two real dispatches after the FLOW line shipped: one
   // Builder skipped tdd, the other skipped the built-in review, and neither named n/a. A note at
   // merge made the skip visible; it did not make it impossible. So the skip is refused at the
@@ -2265,8 +2280,14 @@ export const register: Register = on => {
         : FLOW_BY_ROLE[me.role]
       const f = steps ? await read($, flow) : null
       if (!undelivered && !f && !appliedVersion) return next(e)
+      // A QA pane runs under permissions by contract (launcher matrix: no
+      // --dangerously-skip-permissions), so its direct TURN-END send gets no classifier verdict
+      // on every turn (measured downstream 2026-10-27: 6 of 6 QA turn ends) and the record is
+      // its delivery path, not a fault. The bypass hint is for a pane that was launched with
+      // bypass and toggled out of it.
       const isMode = /auto mode|classifier|permission/i.test(undelivered)
-      const hint = isMode ? ' This pane is not in bypass-permissions mode: press shift+tab until it is.' : ''
+      const isQa = me.role === 'qa'
+      const hint = isMode && !isQa ? ' This pane is not in bypass-permissions mode: press shift+tab until it is.' : ''
       // Running is a matter of time, never of the agent list: a held turn end leaves
       // `last_turn_end_at` where it was, so the step stays; an agent spawned after a clean turn
       // end (a follow-up brief, no new step) must not re-light the step that finished before it.
@@ -2281,7 +2302,11 @@ export const register: Register = on => {
       const shown = kind === 'quick' ? (steps ?? []).filter(([name]) => !quickDrop.has(name)) : (steps ?? [])
       return (
         <Box flexDirection="column">
-          {undelivered ? (
+          {undelivered && isQa && isMode ? (
+            <Text dimColor>
+              TURN-END goes to the dispatcher by the record: a QA pane runs under permissions, and its direct send has no classifier verdict ({undelivered}).
+            </Text>
+          ) : undelivered ? (
             <Text color="error" bold>
               TURN-END not delivered to the dispatcher ({undelivered}).{hint} The record carries it meanwhile.
             </Text>

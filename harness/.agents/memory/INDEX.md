@@ -45,7 +45,7 @@ from this table — read the entry.
 | `AST-094` | Builder commits and pushes correctly but silently skips the simplify pass | promoted | 426 | builder.md,check-simplify-markers.sh |
 | `AST-095` | The cross-vendor companion exits 0 on configuration failure and caches state that survives a… | promoted | 335 | codex-arm |
 | `AST-096` | rm -rf on a worktree directory leaves git's registration behind; the next add at that path re… | promoted | 297 | codex-arm,hook-git-guard.py,thomas.md |
-| `AST-097` | TERMINAL:done means the turn ended, not that the work finished | promoted | 831 | hook-git-guard.py,register.tsx |
+| `AST-097` | TERMINAL:done means the turn ended, not that the work finished | promoted | 873 | hook-git-guard.py,register.tsx |
 | `AST-098` | Fork sub-agents return the coordinator's own narration instead of doing their assigned task | promoted | 385 | builder-claude.md |
 | `AST-099` | Simplify marker exists without skill provenance — the subject is self-applied, only the Pass:… | promoted | 685 | check-simplify-markers.sh |
 | `AST-100` | Codex companion broker leaks one process per arm pass, accumulating silently | promoted | 201 | codex-arm,hook-git-guard.py,register.tsx,release-worktree-resources.sh |
