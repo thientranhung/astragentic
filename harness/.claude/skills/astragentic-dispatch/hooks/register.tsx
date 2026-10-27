@@ -768,7 +768,7 @@ async function readRecord($: any, root: string): Promise<Record<string, Entry> |
 async function patchRecord($: any, root: string, key: string, patch: Entry): Promise<boolean> {
   const rec = await readRecord($, root)
   if (rec === null) {
-    $.ui.status(`astragentic-dispatch: ${RECORD} is not valid JSON; not written`)
+    $.ui.status(`${RECORD} is not valid JSON; not written`)
     return false
   }
   rec[key] = { ...(rec[key] ?? {}), ...patch }
@@ -1137,7 +1137,7 @@ const heldBells: string[] = []
 function bell($: any, text: string): void {
   if (isBusy) {
     heldBells.push(text)
-    $.ui.status(`astragentic-dispatch: ${heldBells.length} bell(s) held until this turn ends`)
+    $.ui.status(`${heldBells.length} bell(s) held until this turn ends`)
     return
   }
   void $.prompt.submit({ text })
@@ -1193,7 +1193,7 @@ export const register: Register = on => {
       void latestRelease($).then(async latest => {
         if (!isNewer(latest, appliedVersion)) return
         await update($, banner, b => ({ ...b, latest }))
-        $.ui.status(`astragentic-dispatch: release ${latest} exists (this project applied ${appliedVersion}) — .astraler/astragentic.sh update says what changed`)
+        $.ui.status(`release ${latest} exists (this project applied ${appliedVersion}) — .astraler/astragentic.sh update says what changed`)
       }).catch(() => {})
     }
     if (me && root) {
@@ -1215,7 +1215,7 @@ export const register: Register = on => {
       })
       // A toast, not the status line: the registration is a one-time fact, and the band's first
       // chip carries the role and key for as long as the pane lives (owner's ask, 2026-10-09).
-      $.ui.toast(`astragentic-dispatch: ${me.role} ${me.key} recorded (tab ${me.tab}, pane ${me.pane})`)
+      $.ui.toast(`${me.role} ${me.key} recorded (tab ${me.tab}, pane ${me.pane})`)
       await refreshFlow($, root, me.key)
       const envCeiling = Number(await $.env.get('ASTRAGENTIC_CONTEXT_CEILING'))
       if (Number.isFinite(envCeiling) && envCeiling >= 50_000) contextCeiling = envCeiling
@@ -1224,7 +1224,7 @@ export const register: Register = on => {
         try {
           const r = await $.session.compact({ instructions: COMPACT_INSTRUCTIONS })
           compactDue = false
-          $.ui.status(r?.skip ? `astragentic-dispatch: compaction skipped (${String(r.skip)})` : `astragentic-dispatch: context compacted at the ${Math.round(contextCeiling / 1000)}k ceiling`)
+          $.ui.status(r?.skip ? `compaction skipped (${String(r.skip)})` : `context compacted at the ${Math.round(contextCeiling / 1000)}k ceiling`)
         } catch {}
       })
     } else if (root) {
@@ -1324,7 +1324,7 @@ export const register: Register = on => {
         // downstream: a recap bell after merge and tab close, 2026-10-12). A RECEIVED from an
         // unknown pane still passes through, so a mis-keyed brief is seen.
         if (mark.kind === 'TURN-END') {
-          $.ui.status(`astragentic-dispatch: a turn end from ${mark.key} (pane ${mark.pane}) arrived after its lane was retired — dropped`)
+          $.ui.status(`a turn end from ${mark.key} (pane ${mark.pane}) arrived after its lane was retired — dropped`)
           return { consumed: `astragentic-dispatch: ${mark.key} turn end from a retired lane` }
         }
         return next(e)
@@ -1475,7 +1475,7 @@ export const register: Register = on => {
           await patchRecord($, root, me.key, { waiting_on: { n: live.length, at: await $.clock.now(), what: live.slice(0, 3).map(a => a.description) } })
           await refreshFlow($, root, me.key)
         }
-        $.ui.status(`astragentic-dispatch: ${live.length} agent(s) still running — TURN-END held until they finish`)
+        $.ui.status(`${live.length} agent(s) still running — TURN-END held until they finish`)
         return res
       }
     }
@@ -1485,7 +1485,7 @@ export const register: Register = on => {
     if (root && me.role !== 'resident') {
       const own = ((await readRecord($, root)) ?? {})[me.key]
       if (own?.pane_id !== me.pane) {
-        $.ui.status(`astragentic-dispatch: ${me.key} is no longer in the record (lane retired) — turn end not reported`)
+        $.ui.status(`${me.key} is no longer in the record (lane retired) — turn end not reported`)
         return res
       }
     }
@@ -1528,7 +1528,7 @@ export const register: Register = on => {
       // dispatcher learned of the finished turn from the owner, ten minutes late. The record
       // is a second path the dispatcher already reads every 30 s, so the turn end goes there
       // too and the dispatcher's own mod wakes it from the file.
-      $.ui.status(`astragentic-dispatch: TURN-END not delivered — ${sent.reason}; recorded for the dispatcher to pick up`)
+      $.ui.status(`TURN-END not delivered — ${sent.reason}; recorded for the dispatcher to pick up`)
       if (root) await patchRecord($, root, me.key, { turn_end_pending: { at: await $.clock.now(), reason: String(sent.reason ?? ''), text } })
     }
     return res
@@ -1559,7 +1559,7 @@ export const register: Register = on => {
           || (ref !== '' && id.toLowerCase().includes(ref))
       })
       if (!isAgent) {
-        $.ui.status(`astragentic-dispatch: a reply to "${e.to}" readdressed to the dispatcher (${dispatcherName || dispatcher})`)
+        $.ui.status(`message to "${e.to}" went to the dispatcher (${dispatcherName || dispatcher}) instead — a pane's sends reach its dispatcher and its own agents only`)
         return next({ ...e, to: dispatcher })
       }
     }

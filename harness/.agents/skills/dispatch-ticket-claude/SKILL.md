@@ -16,7 +16,7 @@ and every Claude session in the project loads it with no flag and no setup.
 | Deliver the slash command | **one SendMessage**; the pane runs the first line as a real command |
 | Confirm delivery | the pane answers `RECEIVED` |
 | Watch the turn | the pane reports `TURN-END` when a turn ends with none of its agents still running, and wakes you with a prompt |
-| Route a reply to you | the pane's overlay names your session; a SendMessage from it to any name no agent of its own carries is readdressed to you |
+| Route a pane's sends to you | the pane's overlay names your session; a SendMessage from it to any name no agent of its own carries (a peer Builder, a session in another project) goes to you instead, and the pane's status line says so |
 | Announce a newer release | at your session start the mod asks the package remote for its newest tag once and shows a chip on your band; `.astraler/astragentic.sh update` prints the gap and the one-liner. Applying stays the owner's call |
 | Protect a working pane | `herdr tab\|pane\|workspace close` on a mid-turn pane is refused |
 | Claim before the brief | a brief for a ticket the tracker reports unclaimed is not sent |
