@@ -149,9 +149,14 @@ prompt follow it. A quick ticket's brief is this same brief with the shorter flo
 markers owed; its `QA:` line is still required:
 
 ```text
-FLOW: 1 Skill(code-review)   [quick: the project's existing tests, the built-in review, handback]
+FLOW: 1 Skill(skill: "code-review")   [quick: the project's existing tests, the BUILT-IN review by its bare name, handback]
 ```
 
+**The review a quick ticket owes is the built-in `code-review`, called by its bare name
+(`Skill(skill: "code-review")`), and the merge gate reads that key off the record.** Write it in
+that form: `implement` points the Builder at `mattpocock-skills:code-review`, so a bare
+`Skill(code-review)` beside it resolves to the plugin skill — measured downstream, two quick
+Builders in a row ran Matt's review and skipped the one owed (2026-10-28).
 Where the project's labels plug exists, a ticket with neither label is not sent: it goes back
 to whoever cut it (`thomas.md` § Quick or full). You never classify it at dispatch. **The ux step is owed only when this line names
 `bmad-ux`** (a UI ticket); leave it out on a ticket with no surface, or write `UX: n/a — <why>`,
@@ -164,7 +169,7 @@ QA: walk — the ticket changes the orders screen
 QA plan: docs/qa/plan-<slug>.md
 
 FLOW: 1 Skill(mattpocock-skills:tdd) → 2 Skill(bmad-ux) [UI ticket] → 3 Skill(mattpocock-skills:code-review)
-  → 4 Skill(code-review) → 5 Skill(simplify) [once, last content commit] → 6 arm(ticket)
+  → 4 Skill(skill: "code-review") [built-in] → 5 Skill(simplify) [once, last content commit] → 6 arm(ticket)
 
 Worktree: … · Branch: … · Base: …
 Acceptance criteria: …

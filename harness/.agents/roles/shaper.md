@@ -101,7 +101,8 @@ not reclassify: a ticket with no label comes back to you.
    with the reason it did, and stop for Thomas to classify.
 2. **At Tickets**, once Thomas releases you — hand back the ticket IDs, the blocking graph, the
    plan path, and **how each spec-stage finding was resolved in the tickets**, so a finding cannot
-   be waved through by cutting tickets that ignore it.
+   be waved through by cutting tickets that ignore it. His release opens with
+   `/mattpocock-skills:to-tickets <spec-id>`; you cannot invoke it from prose.
 
 Where the effort is larger or foggier than one session can shape, say so in the handback so
 Thomas can route it to `wayfinder`.

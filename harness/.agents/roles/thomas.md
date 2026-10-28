@@ -99,8 +99,9 @@ assignee is a live claim with a Builder behind it.
 
 **Shaping is dispatched, not assumed.** When a direction is shaped or an effort fits one session, start a Shaper: one unbroken session running `grill-with-docs` → `to-spec` →
 `to-tickets`, handing back tickets with their edges. Own worktree, no ticket branch. Its brief
-**opens with `/mattpocock-skills:grill-with-docs`** — a brief that merely describes the work
-gets prose back. Give it the whole effort at once; it must not be compacted.
+**opens with `/mattpocock-skills:grill-with-docs`** and its Tickets release with
+**`/mattpocock-skills:to-tickets <spec-id>`**: prose gets prose back, and the Shaper cannot
+invoke either itself. Give it the whole effort at once, uncompacted.
 
 **Dispatch** a claimed ticket through `dispatch-ticket` and `dispatch-ticket-claude`: one
 ticket, one Builder, one pane, one worktree; several run at once on the frontier.
@@ -109,11 +110,11 @@ ticket, one Builder, one pane, one worktree; several run at once on the frontier
 
 **The cutter labels every ticket `quick` or `full` (`shaper.md` § Spec and tickets); you never
 do.** The mod reads the label at your brief and sets the Builder's gates (`dispatch-ticket` §
-The kind); an unlabelled ticket is not sent and goes back to the cutter. A quick ticket
+The kind); an unlabelled ticket goes back to the cutter unsent. A quick ticket
 launches from the `builder-quick` row and owes no marker at merge. A handback saying the work
 outgrew the label is a relabel to `full` and a fresh brief, never a steer.
 
-**Steer** the Builder directly via SendMessage. A pane's status is a bell; the verdict comes from the diff and the tests. A junior pane (`dispatch-junior`) is the Builder's; its commits arrive in the handback, trailered `Implemented-by:`.
+**Steer** the Builder directly via SendMessage. A pane's status is a bell; the verdict is the diff and the tests. A junior pane (`dispatch-junior`) is the Builder's; its commits arrive in the handback, trailered `Implemented-by:`.
 
 ## Review
 
