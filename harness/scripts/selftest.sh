@@ -843,6 +843,53 @@ mkdir -p "$PR/stamps/harness-ticket-done"; : > "$PR/stamps/harness-ticket-done/A
 ( cd "$PR/work" && HARNESS_STAMP_ROOT="$PR/stamps" git push -q origin main ) >/dev/null 2>&1 \
   && ok "pre-push admits the same push once the ticket is stamped" \
   || bad "pre-push stamped" "refused a push whose ticket carries its stamp"
+# 5.0.6 — THE SAME THREE EXEMPTIONS, THROUGH THE HOOK. 5.0.4 put them in the guard only and
+# planted its four cases on the guard only, so 179/0 passed while `git push` still refused a
+# Shaper's merge (inception, 2026-10-29, ADAPTATION-REPORT.md at 66476b55). Each case is a real
+# push through pre-push-ticket-done.sh: exit code, not output text.
+pp_merge() { # <branch> <subject-and-body> — a fresh branch per call, merged onto main
+  ( cd "$PR/work" && git checkout -qb "$1" && git commit -q --allow-empty -m "w" \
+    && git checkout -q main && git merge -q --no-ff "$1" -m "$2" ) >/dev/null 2>&1
+}
+pp_push() { ( cd "$PR/work" && HARNESS_STAMP_ROOT="$PR/stamps" git push -q origin main ) >/dev/null 2>&1; }
+pp_undo() { # rewind main AND the remote: after an admitted push the remote is ahead, and the next
+            # push would be refused by git as non-fast-forward, which reads as a hook refusal
+  ( cd "$PR/work" && git reset -q --hard HEAD~1 && git push -q --no-verify -f origin main ) >/dev/null 2>&1; }
+pp_merge shaper/ABC-77 "merge: shaper ABC-77 — QA plan section
+Ledger: none"
+pp_push && ok "pre-push admits a Shaper's merge by its subject, no stamp" \
+        || bad "pre-push shaper subject" "refused a shaper/ merge that closes no ticket"
+pp_undo
+mkdir -p "$PR/work/.astraler/state"; printf '{"ABC-78":{"role":"shaper","pane_id":"p1"}}' > "$PR/work/.astraler/state/dispatch-record.json"
+pp_merge builder/ABC-78a "Merge ABC-78: spec and plan landed
+Ledger: none"
+pp_push && ok "pre-push admits a merge whose dispatch record says role=shaper" \
+        || bad "pre-push record shaper" "refused a merge the record marks as a Shaper's"
+pp_undo
+printf '{"ABC-78":{"role":"builder","pane_id":"p1"}}' > "$PR/work/.astraler/state/dispatch-record.json"
+pp_merge builder/ABC-78b "Merge ABC-78: spec and plan landed
+Ledger: none"
+if pp_push; then bad "pre-push record builder" "pushed the same unstamped merge once the record says builder"
+else ok "pre-push still refuses the same merge when the record says role=builder"; fi
+pp_undo
+rm -f "$PR/work/.astraler/state/dispatch-record.json"
+pp_merge builder/ABC-79 "Merge ABC-79: records only
+
+Ticket-done: n/a — lands no ticket's work
+Ledger: none"
+pp_push && ok "pre-push admits a merge carrying a Ticket-done: n/a trailer" \
+        || bad "pre-push n/a trailer" "refused a merge that declares it lands no ticket's work"
+pp_undo
+# first-parent parity (guard since 4.0.3): a merge INSIDE the builder branch naming another
+# ticket is not a merge onto the base and owes no stamp
+( cd "$PR/work" && git checkout -qb builder/ABC-80 && git commit -q --allow-empty -m "ABC-80: a" \
+  && git checkout -qb builder/ABC-81 main && git commit -q --allow-empty -m "ABC-81: b" \
+  && git checkout -q builder/ABC-80 && git merge -q --no-ff builder/ABC-81 -m "Merge branch 'builder/ABC-81' into builder/ABC-80" \
+  && git checkout -q main && git merge -q --no-ff builder/ABC-80 -m "Merge ABC-80: a" ) >/dev/null 2>&1
+: > "$PR/stamps/harness-ticket-done/ABC-80"
+pp_push && ok "pre-push reads first-parent merges only: a sync merge inside the branch owes no stamp" \
+        || bad "pre-push first-parent" "refused a push for ABC-81, a merge inside the builder branch, not onto main"
+pp_undo
 
 # THE SAME EMPTY BRANCH, ON A HISTORY LONGER THAN A PIPE BUFFER. The check above lived as
 # `git rev-list --first-parent | grep -qx` under pipefail: grep -q exits at the first line, and

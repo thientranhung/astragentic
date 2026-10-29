@@ -1,3 +1,37 @@
+# Astragentic 5.0.6
+
+**The Shaper exemption reaches `git push`.** 5.0.4 exempted a Shaper's or QA's merge from the
+ticket-done stamp in `hook-git-guard.py`, the command-line lint, and planted its four cases on
+the lint. The gate is `pre-push-ticket-done.sh`, wired as the project's pre-push hook, and it
+stayed byte-identical: it still took the first ticket id in every merge subject and demanded a
+stamp, so the push nizzy hit was still refused in every shape the lint does not read (heredoc,
+`$(...)`, a person typing). Selftest passed 179/0 with the defect in (inception, 2026-10-29,
+ADAPTATION-REPORT.md at 66476b55). The hook now carries the same three exemptions, read from
+the same places as the guard: a dispatch-record role other than builder, a `shaper/` `shaper `
+`qa/` subject, a `Ticket-done: n/a — <why>` trailer. It also reads first-parent merges only, as
+the guard has since 4.0.3: a merge inside a builder branch is not a merge onto the base. Its
+header no longer claims to mirror the guard "always"; it names the two files that must move
+together.
+
+Selftest: five cases that run the hook through a real `git push` and assert the exit code —
+shaper subject admitted, record role shaper admitted, the same merge with record role builder
+refused, n/a trailer admitted, a sync merge inside the branch owes no stamp. All five were
+watched to fail against the 5.0.5 hook (4 refusals, 1 admitted) before the fix.
+
+Known, in step with the guard, not measured: `qa[ /:-]` also matches a Builder subject such as
+`fix qa-report`, which would then owe no stamp. The record-role check is the stronger of the
+three; tighten both files together if a case appears.
+
+| số đo | nguồn |
+|---|---|
+| 0 of 4 5.0.4 cases exercised the hook; 179/0 selftest with the defect in | inception ADAPTATION-REPORT.md, commit 66476b55 |
+| 5 planted hook cases red on the 5.0.5 hook, 215/0 on 5.0.6 | selftest run 2026-10-29 |
+
+## Upgrade from 5.0.5
+
+- Nothing by hand. The project's pre-push hook runs its copy of `scripts/pre-push-ticket-done.sh`,
+  and the apply replaces that copy.
+
 # Astragentic 5.0.5
 
 **The doctor no longer scans live Builder worktrees.** `.claude/worktrees/` holds a whole checkout
