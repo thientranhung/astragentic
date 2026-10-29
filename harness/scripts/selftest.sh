@@ -1413,7 +1413,10 @@ else
 fi
 # 5.0.0 — doctor: clean on the payload's own trees (exit 0), and a target missing one .claude
 # copy, carrying a retired name in its overlay, and a mod with the old brief regex exits 1 and
-# names all three. Planted first: the clean run alone proves nothing.
+# names all three. Planted first: the clean run alone proves nothing. Package layout only: it
+# copies harness/ and runs the root astragentic.sh, neither of which an adapted project has at
+# those paths (inception, 5.0.1: 1 fail on every project run until this guard, 5.0.3).
+if pkg_only "doctor fixture"; then
 AD="$TMP/doctor"; rm -rf "$AD"; mkdir -p "$AD"
 cp -R "$ROOT/harness/.agents" "$ROOT/harness/.claude" "$AD/"
 ( cd "$AD" && git init -q . ) >/dev/null 2>&1
@@ -1429,6 +1432,7 @@ if [ "$rc_clean" = 0 ] && says "$out_clean" "7/7 astra-* skills" && [ "$rc_bad" 
   ok "astragentic.sh doctor (5.0.0/5.0.1): exit 0 on the payload with the plugin-off key in .claude/settings.json; exit 1 naming a missing .claude copy, a retired name in an overlay and an old brief regex in the mod"
 else
   bad "astragentic.sh doctor" "clean rc=$rc_clean / planted rc=$rc_bad: $out_bad"
+fi
 fi
 # 4.1.0 — the receipt lands by the script's hand, not an agent's: a project had none for three
 # releases applied this way (field audit 2026-10-18). 4.1.1 — one home, .astraler/state/, and

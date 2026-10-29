@@ -1,3 +1,22 @@
+# Astragentic 5.0.3
+
+**The doctor's selftest case runs only in the package layout.** It copies `harness/` and runs
+the root `astragentic.sh`, which an adapted project has at other paths, so every project-side
+selftest run since 5.0.0 reported one failure that was the case, not the project (inception,
+5.0.1 and 5.0.2: 175 passed, 1 failed). Guarded like the installer cases.
+
+Known, not fixed: the watchdog "one alert per episode" case depends on wall-clock timing and
+failed once on a box at load 9.5, then passed on a rerun (inception, 5.0.2 apply). n=1; measured
+before touched.
+
+| số đo | nguồn |
+|---|---|
+| project-layout selftest 175/1 on 5.0.1 and 5.0.2 | inception receipt 2026-10-29 |
+
+## Upgrade from 5.0.2
+
+- Nothing by hand.
+
 # Astragentic 5.0.2
 
 **Two projects fetching the same release no longer delete each other's cache.** nizzy and

@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-5.0.2-blue" alt="version"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-5.0.3-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtime-Claude_Code-green" alt="runtime">
   <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-67_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
@@ -43,15 +43,15 @@ prove what happened.
 # 1. In your project's root, stage the latest release (no project file is written)
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
-#    …or pin a version:  | bash -s -- 5.0.2
+#    …or pin a version:  | bash -s -- 5.0.3
 
 # 2. Verify your machine has what's needed
-bash .astraler/releases/5.0.2/check-requirements.sh
+bash .astraler/releases/5.0.3/check-requirements.sh
 #    Later, from inside the project: what is installed, what is newest, what changed, how to upgrade
 .astraler/astragentic.sh update
 
 # 3. Run the adaptive installer in Claude Code
-claude "Read .astraler/releases/5.0.2/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/5.0.3/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Start the router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable
@@ -301,7 +301,7 @@ the release shipped with.
 ```bash
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash                      # latest, stage only
-curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 5.0.2         # pin a version
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 5.0.3         # pin a version
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --plan  # show what --apply would write
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply # write the payload in
 ```
