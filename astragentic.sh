@@ -61,7 +61,9 @@ case "$CMD" in
     # `.claude/settings*.json` is configuration, not a reference: the per-project way to turn the
     # old plugin OFF is the key `"mattpocock-skills@mattpocock": false` in it (nizzy, 2026-10-29,
     # the day 5.0.0 landed), and a scan that flags the off switch asks for a machine-wide uninstall.
-    hits="$(grep -rIl --exclude-dir=memory --exclude=recurring-failure-modes.md --exclude='settings*.json' -e 'mattpocock-skills' -e 'bmad-' $scope 2>/dev/null | sed "s#^$ROOT/##" || true)"
+    # `.claude/worktrees/` holds whole checkouts of live Builder panes (5.0.5: nizzy, 5 930 hits
+    # from two worktrees, 0 in the checkout itself); node_modules is never ours.
+    hits="$(grep -rIl --exclude-dir=memory --exclude-dir=worktrees --exclude-dir=node_modules --exclude=recurring-failure-modes.md --exclude='settings*.json' -e 'mattpocock-skills' -e 'bmad-' $scope 2>/dev/null | sed "s#^$ROOT/##" || true)"
     n="$(printf '%s' "$hits" | grep -c . || true)"
     if [ "$n" -eq 0 ]; then say "ok   0 files name a retired skill or persona in .agents, .claude, .astraler/project"
     else bad_ "$n file(s) still name mattpocock-skills or bmad-* (5.0.0 ships astra-* only):"; printf '%s\n' "$hits" | sed 's/^/         /'; fi

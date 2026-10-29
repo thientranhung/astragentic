@@ -1451,13 +1451,15 @@ cp -R "$ROOT/harness/.agents" "$ROOT/harness/.claude" "$AD/"
 # 5.0.1 — the per-project OFF switch for the old plugin lives in .claude/settings.json and is not a
 # retired reference (nizzy, 2026-10-29: doctor exit 1 on a clean project the moment the plugin was disabled)
 printf '{ "enabledPlugins": { "mattpocock-skills@mattpocock": false } }\n' > "$AD/.claude/settings.json"
+# 5.0.5 — a live Builder's worktree under .claude/worktrees/ is a whole checkout and not the project layer
+mkdir -p "$AD/.claude/worktrees/builder-ABC-9/.agents/roles"; printf 'Skill(mattpocock-skills:tdd)\n' > "$AD/.claude/worktrees/builder-ABC-9/.agents/roles/builder.md"
 out_clean="$(cd "$AD" && bash "$ROOT/astragentic.sh" doctor 2>&1)"; rc_clean=$?
 rm -rf "$AD/.claude/skills/astra-ui"; mkdir -p "$AD/.astraler/project/overlays"
 printf 'FLOW: 1 Skill(bmad-ux)\n' > "$AD/.astraler/project/overlays/dispatch-brief.md"
 sed -i.bak 's#/\^\\/astra-implement-with-tdd\\b/#/^\\/mattpocock-skills:implement\\b/#' "$AD/.claude/skills/astragentic-dispatch/hooks/register.tsx" && rm -f "$AD/.claude/skills/astragentic-dispatch/hooks/register.tsx.bak"
 out_bad="$(cd "$AD" && bash "$ROOT/astragentic.sh" doctor 2>&1)"; rc_bad=$?
 if [ "$rc_clean" = 0 ] && says "$out_clean" "7/7 astra-* skills" && [ "$rc_bad" = 1 ] && says "$out_bad" "astra-ui: SKILL.md missing in .claude" && says "$out_bad" "overlays/dispatch-brief.md" && says "$out_bad" "does not name /astra-implement-with-tdd" && says "$out_bad" "doctor: 3 finding(s)"; then
-  ok "astragentic.sh doctor (5.0.0/5.0.1): exit 0 on the payload with the plugin-off key in .claude/settings.json; exit 1 naming a missing .claude copy, a retired name in an overlay and an old brief regex in the mod"
+  ok "astragentic.sh doctor (5.0.0/5.0.1/5.0.5): exit 0 on the payload with the plugin-off key in .claude/settings.json and an old name inside .claude/worktrees/; exit 1 naming a missing .claude copy, a retired name in an overlay and an old brief regex in the mod"
 else
   bad "astragentic.sh doctor" "clean rc=$rc_clean / planted rc=$rc_bad: $out_bad"
 fi

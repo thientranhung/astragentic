@@ -1,3 +1,19 @@
+# Astragentic 5.0.5
+
+**The doctor no longer scans live Builder worktrees.** `.claude/worktrees/` holds a whole checkout
+per in-flight pane, and the retired-name scan descended into it: 5 930 hits from two Builder
+worktrees on nizzy, zero in the checkout itself, so the doctor was red whenever a pane was in
+flight (nizzy, 2026-10-29, right after 5.0.4). `worktrees/` and `node_modules/` are excluded;
+planted in the selftest's doctor fixture.
+
+| số đo | nguồn |
+|---|---|
+| 5 930 false hits, 2 965 per worktree, 0 in the checkout | nizzy `.scratch/harness-issues/2026-10-29-doctor-scans-builder-worktrees.md` |
+
+## Upgrade from 5.0.4
+
+- Nothing by hand.
+
 # Astragentic 5.0.4
 
 **A Shaper's merge closes no ticket, and the push guard knows it.** The pre-push rule took the
