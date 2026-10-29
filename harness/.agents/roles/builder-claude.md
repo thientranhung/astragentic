@@ -5,10 +5,10 @@ differs on the Claude Code runtime.
 
 ## Three gates the mod holds
 
-**No content commit without a test file; the first content commit after a brief also needs
-`mattpocock-skills:tdd` called after the brief and a test run that went RED after the brief
-(either order between the two: the red run is the substance, the call loads the method); and no
-arm before the built-in `code-review` has run.** The red run is read from the PostToolUse
+**No content commit without a test file; the first content commit after a brief also needs a
+test run that went RED after the brief (5.0.0: no skill call is asked for — the red run is the
+substance, and `astra-implement-with-tdd` is the brief's own expansion); and no arm before the
+built-in `code-review` has run.** The red run is read from the PostToolUse
 hook's log (`/tmp/harness-test-runs/<toplevel>.log`, written on PostToolUse and on
 PostToolUseFailure — a failing call reaches only the second (4.5.3); every `go test` / `pytest` / `vitest` /
 `jest` / `npm test` / `cargo test` …, or the project's `.astraler/project/test-command-pattern`),
@@ -26,26 +26,27 @@ old "skill was called" form were followed by a test edit in 2 — and refuses th
 call until its record shows the review ran. A project names its test-file pattern in
 `.astraler/project/test-file-pattern` (one regex); the default matches `*_test.*`, `*.test.*`,
 `*.spec.*` and `tests/`, `__tests__/`, `spec/` directories. The exemption is the dispatcher's,
-not yours: a brief line `TDD: n/a — <why>` or `REVIEW: n/a — <why>`; the ux step is owed when
-the brief's `FLOW:` names `bmad-ux`, exempted by `UX: n/a — <why>`, and the band says which
-(`○ ux` owed, `n/a ux` not; no chip before a brief). If a gate fires on a
+not yours: a brief line `TDD: n/a — <why>` or `REVIEW: n/a — <why>`; the ui step is owed when
+the brief's `FLOW:` names `astra-ui`, exempted by `UX: n/a — <why>`, and the band says which
+(`○ ui` owed, `n/a ui` not; no chip before a brief). If a gate fires on a
 ticket that genuinely has no seam, ask Thomas for the line; do not work around the refusal.
 **A quick ticket** (the tracker's `quick` label, `builder.md` § A quick ticket) is exempt from
-the test-file and tdd-order gates and, at merge, from tdd, Matt's review and simplify; the arm
+the test-file and tdd-order gates and, at merge, from tdd, `astra-review` and simplify; the arm
 gate still asks for the built-in review, and the merge gate still asks the record for it.
 `SIMPLIFY: n/a — <why>` on a full ticket's brief exempts simplify alone (4.6.0).
 
-## Bug review — Claude Code invocation
+## Review — Claude Code invocation
 
-**Invoke `Skill(skill: "code-review")`** after `mattpocock-skills:code-review` and before
-simplify. This is Claude Code's built-in bug review — not `mattpocock-skills:code-review`
-(Standards + Spec), and not `code-review:code-review` (the PR plugin). Fold the findings.
+**Invoke `Skill(skill: "astra-review")`** after the UI pass and before simplify. It launches
+`Skill(skill: "code-review")`, Claude Code's built-in bug review, as its correctness lens — not
+`code-review:code-review` (the PR plugin). Both calls land on the record; the merge gate reads
+the built-in's key. A quick ticket invokes the built-in alone.
 
 ## Simplify — Claude Code invocation
 
 **Invoke `Skill(skill: "simplify")`** — model-invocable, no plugin prefix.
 `/simplify` <!-- addr-ok: wrong form, cited --> is the human's form, which you cannot type;
-`mattpocock-skills:simplify` does not exist and the call errors.
+a qualified `<plugin>:simplify` does not exist and the call errors.
 
 **A failed invocation IS the finding.** Report the exact error to Thomas and stop. A
 substitute leaves the same marker, and `Skills run:` on `TURN-END` is what shows it was never invoked.

@@ -30,32 +30,30 @@ owner rather than resolving it with an overwrite.
    configuration, dependency manifests, build and test commands, docs, git status, and any
    existing harness-derived files. Live project truth is evidence, not disposable output.
 
-## 2. The plugin and its setup step — mandatory, and verified
+## 2. The three project documents — written with the owner, and verified
 
-**This package is an operating framework around
-[`mattpocock-skills`](https://github.com/mattpocock/skills), not a replacement for it.**
-Every spine phase the role contracts name — `triage`, `wayfinder`, `to-questionnaire`,
-`ask-matt`, `grill-with-docs`, `to-spec`, `to-tickets`, `implement`, `code-review` — lives in
-that plugin. Without it the contracts point at nothing, so this step comes before any
-integration work.
+**Since 5.0.0 this package ships its whole method as `astra-*` skills** (`astra-grill-with-docs`,
+`astra-ux`, `astra-to-spec`, `astra-to-tickets`, `astra-implement-with-tdd`, `astra-ui`,
+`astra-review`); no external plugin is required or read. What a project still has to supply
+before any phase runs are three documents the contracts read at session start:
 
-1. **Confirm the plugin is installed**, version ≥ 1.3.1. Where it is absent, stop and ask the
-   owner to install it from Matt's own marketplace: `claude plugin marketplace add mattpocock/skills`,
-   then `claude plugin install mattpocock-skills@mattpocock`. The `claude-plugins-official` copy is
-   SHA-pinned at 1.2.3 and reports itself as latest; uninstall it, or two plugins share one name.
-   This is a genuine blocker: record `PENDING` and return rather than adapting around it.
+1. **`docs/agents/issue-tracker.md`** — which tracker, and the pointer half (site, key, prefix);
+   the adapter half lives in the shipped `github-` / `jira-` / `linear-issue-tracker` skill
+   (step 7). Thomas's frontier query and every claim read it.
+2. **`docs/agents/triage-labels.md`** — the label vocabulary a ticket carries. At least:
+   `needs-triage` and `ready-for-agent` (readiness, Thomas promotes), `quick` and `full` (the
+   kind, 4.6.0, the Shaper writes with three evidence lines).
+3. **`docs/agents/domain.md`** — where the project's vocabulary lives: a pointer to
+   `GLOSSARY.md` and `docs/adr/`, which `astra-grill-with-docs` keeps honest, and to the PRD
+   (`docs/prd.md`) that `astra-ux` writes journeys and actors into.
 
-2. **Ask the OWNER to run `/mattpocock-skills:setup-matt-pocock-skills` in this repo, and wait.** You cannot
-   run it yourself: it is `disable-model-invocation: true`, like every flow skill in the
-   plugin, so no model reaches it — only a person typing the command, or that text arriving
-   as a user turn in a pane. Stop here and say so plainly rather than working around it.
+**Write them with the owner, in the pane where the owner speaks** (the BA's or Thomas's), from
+what the tracker and the repo already show; ask only what neither shows. A project upgrading
+from 4.x already has the three from the plugin's setup step: keep them, and add the
+`quick`/`full` and readiness labels where missing.
 
-   It is mandatory because the whole chain's indirection depends on it: Thomas's frontier
-   query reads the tracker named in `docs/agents/issue-tracker.md`, his triage reads the
-   vocabulary in `triage-labels.md`, and the Shaper's domain work reads `domain.md`.
-
-3. **Verify the three files exist, by reading them.** A skill that reported success and a
-   skill that produced files are different claims, and only the second one is checkable:
+4. **Verify the three files exist, by reading them.** A step that reported success and a
+   step that produced files are different claims, and only the second one is checkable:
 
    ```bash
    ./check-requirements.sh .        # MACHINE + TARGET axes, exit 0 = both clean
@@ -63,15 +61,15 @@ integration work.
 
    Or directly: `docs/agents/issue-tracker.md`, `docs/agents/triage-labels.md`,
    `docs/agents/domain.md`. **A missing file after a step that reported success is the
-   finding**, not a detail to fill in yourself — writing one by hand produces a tracker
-   pointer nothing actually configured. Report it and ask the owner.
+   finding**; a tracker pointer must name a tracker that answers (step 6), so write it from
+   what the tracker shows and read it back.
 
-4. **Record the tracker's ticket prefix** in the instructions this project loads at session
+5. **Record the tracker's ticket prefix** in the instructions this project loads at session
    start (`AGENTS.md` or `CLAUDE.md`), beside its tracker pointer.
    `scripts/ticket-git-facts.sh` requires it and refuses to guess. Declare it once; where the
    project keeps both files, the other one points at it.
 
-5. **Confirm the tracker is reachable** using whatever `issue-tracker.md` names, and that a
+6. **Confirm the tracker is reachable** using whatever `issue-tracker.md` names, and that a
    ticket can carry an **assignee** and **blocking edges**. Those two fields are the
    coordination substrate: assignee is the claim that keeps concurrent Builders apart, and
    blocking edges are what the frontier query reads. A tracker missing either one is a
@@ -80,14 +78,12 @@ integration work.
    `.agents/tracker-contract.md` states all five requirements and what each tracker charges
    for them. Read it when the answer is not obvious.
 
-6. **Split `issue-tracker.md` into the pointer half and the adapter half.** The setup skill
-   offers GitHub, GitLab and local markdown as first-class choices and records anything else —
-   Jira, Linear — as freeform prose. That prose is where tracker mechanics accumulate: two
-   projects moved tracker on the same day and each hand-wrote its own operating manual,
-   independently, sharing nothing.
+7. **Keep `issue-tracker.md` to the pointer half; the adapter half is a shipped skill.**
+   Freeform prose is where tracker mechanics accumulate: two projects moved tracker on the same
+   day and each hand-wrote its own operating manual, independently, sharing nothing.
 
    Three adapters ship with this harness: `github-issue-tracker`, `jira-issue-tracker`,
-   `linear-issue-tracker`. Where the project runs one of them, **move the mechanics out of
+   `linear-issue-tracker`. Where the project runs one of them, **keep the mechanics out of
    `issue-tracker.md` and leave the pointer set**:
 
    | Stays in `docs/agents/issue-tracker.md` | Moves to the adapter |
@@ -97,9 +93,8 @@ integration work.
    A shrunk file should read as WHY and WHERE with no commands in it. One measured example
    runs to 56 lines against a 227-line adapter.
 
-   **Say in the file that the mechanics live in the named adapter.** The setup skill owns this
-   file and a later re-run of it can re-expand the prose; a file that describes its own split
-   makes that visibly a regression instead of a silent revert.
+   **Say in the file that the mechanics live in the named adapter**, so a later hand edit that
+   re-expands the prose reads as the regression it is.
 
    Where the project runs a tracker no adapter covers, leave the freeform prose alone — that
    path exists for exactly this case.
@@ -195,10 +190,22 @@ Classify candidate material before editing anything:
   that path and is committed. A worktree loads the copy on its own branch, and a pane with no
   mod is neither recorded nor watched. It has no `.agents/` twin and needs none: only Claude
   loads it.
-- **The BMAD personas and their two skills are payload.** `agents/bmad-*.md` under the
-  dispatch plugin declare six advisory subagent types; `bmad-party` (owner-invoked, a team
-  round table) and `bmad-ux` (a UX pass, reachable from QA and from a Builder) are the skills
-  that use them. They add viewpoints and never replace a step of the method; nothing to wire.
+- **Three advisory personas are payload.** `agents/astra-ui-lens.md`,
+  `astra-slice-reviewer.md` and `astra-test-architect.md` under the dispatch plugin declare
+  read-only subagent types reached from `astra-ui`, Thomas's slice gate and `test-design`. They
+  add a read and never replace a step of the method; nothing to wire.
+- **5.0.0 renames every flow skill.** A project coming from 4.x has the old names in its own
+  layer: overlays (`.astraler/project/overlays/*.md`), `AGENTS.md`/`CLAUDE.md`, project rules.
+  `mattpocock-skills:implement|tdd|code-review|grill-with-docs|to-spec|to-tickets` →
+  `astra-implement-with-tdd` (one skill for implement and tdd), `astra-review`,
+  `astra-grill-with-docs`, `astra-to-spec`, `astra-to-tickets`; `bmad-ux` → `astra-ui`;
+  `astragentic-dispatch:bmad-sally|reviewer|murat` → `astra-ui-lens`, `astra-slice-reviewer`,
+  `astra-test-architect`; `bmad-party`, `bmad-john|mary|winston|paige`, the plugin's `triage`,
+  `wayfinder`, `to-questionnaire`, `ask-matt`, `research` have no replacement (0 calls measured).
+  `.astraler/astragentic.sh doctor` lists every file in the project layer that still carries an
+  old name, and exits 1 until none does. **Apply between lanes**: a Builder mid-ticket keeps the
+  old brief prefix, which the 5.0.0 mod no longer recognises as a Builder brief, so finish or
+  re-brief live lanes first. The owner may then uninstall the plugin from the machine.
 - **`.astraler/project/` is the project's layer, and a release never writes into it.** The
   plugs (`tracker-state.sh`, `cleanup-worktree.sh`, `work-in-flight.sh`, `tracker-status.sh`,
   `ticket-done.sh`, and since 2.20.0 `status-line.sh`, `watchdog-probe.sh`,

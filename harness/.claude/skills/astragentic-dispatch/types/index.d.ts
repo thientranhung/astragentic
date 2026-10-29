@@ -24,7 +24,8 @@ export type Flow = {
   lastTurnEndAt: number
   tddNa: boolean
   reviewNa: boolean
-  uxOwed: boolean | null   // 4.5.3: what the brief said (FLOW names bmad-ux, or `UX: n/a`); null before a brief or with no FLOW line
+  uxOwed: boolean | null   // 4.5.3: what the brief said (FLOW names astra-ui, or `UX: n/a`); null before a brief or with no FLOW line
+  redRun: boolean          // 5.0.0: a RED test run logged since the brief; lights the tdd chip (one Skill expansion is one record line, so tdd cannot be a call)
   simplifyNa: boolean      // 4.6.0: `SIMPLIFY: n/a` on the brief
   /** 4.6.0: the tracker's label, written on the record by the dispatcher before the brief; null when no reader answered */
   kind: 'quick' | 'full' | null

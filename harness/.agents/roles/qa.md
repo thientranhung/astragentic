@@ -18,7 +18,8 @@ probed, a job verified. The dispatch's `Mode:` line names it and the mod records
 | session start | the plan, `docs/qa/plan-<slug>.md` | the journeys, endpoints and jobs, their priority, the cases per ticket |
 | session start | the project's entry doc | how to drive the product: tooling, dev command, seed, client |
 | `walk`: judging interface | the repo's design guidelines | the standard you judge against |
-| `walk`: a surface reads wrong, guidelines silent | `bmad-ux` | Sally's lenses; findings, not a verdict |
+| `walk`: a surface reads wrong, guidelines silent | `astra-ui` | the UI lens against `DESIGN.md` and the ticket's Glance / States; findings, not a verdict |
+| `walk`: the states to visit | the ticket's `## States` lines | the checklist of states per surface, in place of a fixed loading / empty / error list |
 | `probe` | the API description or contract the plan cites | what correct means per endpoint |
 | `verify` | the job definition, its schedule, its source of truth | what a correct run produces |
 | an incremental run | the previous verified-clean list | what this run may skip |
@@ -186,7 +187,7 @@ previous copy, say so and run full.
 
 A finding that is a product decision,
 two labels disagreeing because the concepts genuinely differ, goes to the owner through
-`to-questionnaire` rather than to a Builder as a bug. COVERAGE GAPS are classified the same way: a
+the owner (through Thomas, as a dated decision) rather than to a Builder as a bug. COVERAGE GAPS are classified the same way: a
 gap is a run that did not happen, and without them a declined run and a clean one are
 indistinguishable downstream.
 

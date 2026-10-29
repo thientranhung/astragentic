@@ -11,7 +11,7 @@ so no red run was ever logged and every honest Builder was refused at its first 
 Both events now run this script; the same settings.json entry, twice.
 
 Why (4.5.2): the tdd gate measured a test FILE (4.1.3), and a Builder could write code first,
-stage a test beside it and call `mattpocock-skills:tdd` afterwards — 61 of 161 downstream
+stage a test beside it and call the tdd skill afterwards — 61 of 161 downstream
 tickets did (one downstream project, 14 days to 2026-10-26), 15 never called it. A skill call is a line in a
 record; a red run is the thing TDD is. The mod cannot see a tool's result (its events are
 pre-call), so this hook writes the status and the mod reads the file.

@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-4.6.1-blue" alt="version"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-5.0.0-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtime-Claude_Code-green" alt="runtime">
   <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-67_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
@@ -15,7 +15,8 @@
   <a href="https://astragentic.thisistool.com/"><strong>Website</strong></a> ·
   <a href="RELEASE-NOTES.md">Release notes</a> ·
   <a href="https://astragentic.thisistool.com/tips/">Running several agents</a> ·
-  <a href="docs/bmad-distilled/">BMAD role kit</a>
+  <a href="docs/bmad-distilled-latest/">BMAD, distilled</a> ·
+  <a href="docs/matt-pocock-distilled/">Matt Pocock, distilled</a>
 </p>
 
 <p align="center">
@@ -42,15 +43,15 @@ prove what happened.
 # 1. In your project's root, stage the latest release (no project file is written)
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
-#    …or pin a version:  | bash -s -- 4.6.1
+#    …or pin a version:  | bash -s -- 5.0.0
 
 # 2. Verify your machine has what's needed
-bash .astraler/releases/4.6.1/check-requirements.sh
+bash .astraler/releases/5.0.0/check-requirements.sh
 #    Later, from inside the project: what is installed, what is newest, what changed, how to upgrade
 .astraler/astragentic.sh update
 
 # 3. Run the adaptive installer in Claude Code
-claude "Read .astraler/releases/4.6.1/ADAPT-HARNESS.md completely and execute it."
+claude "Read .astraler/releases/5.0.0/ADAPT-HARNESS.md completely and execute it."
 
 # 4. Start the router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable
@@ -63,8 +64,7 @@ Thomas reads your orchestrator config, claims the workspace, and begins routing 
 
 > **Prerequisites:** [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code),
 > Git (with worktree support),
-> [herdr](https://github.com/herdrdev/herdr) >= 0.8.0,
-> [mattpocock-skills](https://github.com/mattpocock/skills) plugin >= 1.3.1
+> [herdr](https://github.com/herdrdev/herdr) >= 0.8.0
 
 ---
 
@@ -130,9 +130,10 @@ flowchart LR
 ```
 
 Work enters through two doors based on scope. Both converge into the same pipeline:
-**spec → arm → test-design → tickets → implement → review → QA**. The engineering method comes from
-[Matt Pocock's skills](https://github.com/mattpocock/skills) — Astragentic wraps it with
-orchestration and extends it to brownfield.
+**spec → arm → test-design → tickets → implement → review → QA**. The engineering method is the harness's own `astra-*` skill set (5.0.0), distilled from
+[Matt Pocock's skills](https://github.com/mattpocock/skills) and the [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD)
+(both MIT; the distillations and attributions live under `docs/`), with orchestration around it
+and brownfield gates.
 
 ### Orchestration topology
 
@@ -207,31 +208,24 @@ term nobody confirmed, becomes confident-sounding lore that later agents treat a
 
 ---
 
-## A role kit, alongside the method
+## The method, and where it was distilled from
 
-`mattpocock-skills` is the **method**: it is wired into the role contracts, and every ticket
-travels through it. [`docs/bmad-distilled/`](docs/bmad-distilled/) is something else — a
-**role kit** for the sessions that stand outside that road, when there is no ticket to
-dispatch yet and you want a specialist rather than a generic assistant.
+Since 5.0.0 the method is the payload's own seven skills: `astra-grill-with-docs` (the
+Shaper's Align), `astra-ux` (journeys and actors captured from the owner into the PRD, before
+a spec), `astra-to-spec`, `astra-to-tickets` (tracer-bullet tickets; a UI ticket carries
+Glance, States and Criteria), `astra-implement-with-tdd` (the Builder's brief, red before
+green), `astra-ui` (a pass on one rendered surface against `DESIGN.md` and the ticket) and
+`astra-review` (three axes, the built-in `code-review` inside, one triage). Three read-only
+personas back them: `astragentic-dispatch:astra-ui-lens`, `astra-slice-reviewer`,
+`astra-test-architect`.
 
-It is [BMAD](https://bmadcode.com) distilled to markdown: one `roster.md` naming eight roles,
-and `capabilities/` holding 44 files, one per workflow. The personas are quoted verbatim from
-the original; the python resolver, `config.yaml` and the rest of the install machinery are
-gone. There is nothing to install, and an agent loads one role plus one or two capabilities
-rather than the whole set.
-
-```
-Play Winston in docs/bmad-distilled/roster.md, following
-docs/bmad-distilled/capabilities/architecture.md. Design the architecture for: …
-```
-
-Since 2.19.0 six of the roles also ship **inside the payload**, as agents of the dispatch
-plugin (`astragentic-dispatch:bmad-mary|john|sally|winston|murat|paige`), rewritten in the
-method's own vocabulary and bound to advise only. Two skills reach them: `/bmad-party <topic>`
-runs a round table of personas as a team of peer agents in the owner's session, and
-`/bmad-ux audit|polish|upgrade <surface>` runs Sally's pass on one surface, in the session or
-fanned out read-only from a Builder or QA. Both produce findings and positions, never
-artifacts; a conclusion enters the pipeline through the Shaper like any other input.
+They were written from two sources, kept under `docs/` with their attributions and never
+shipped: [`docs/matt-pocock-distilled/`](docs/matt-pocock-distilled/) (Matt Pocock's skills
+1.3.1, MIT: seams, vertical slices, the grilling frontier, the two-axis review) and
+[`docs/bmad-distilled-latest/`](docs/bmad-distilled-latest/) (the BMAD Method at 2026-10-18,
+MIT: journeys captured not authored, FR ids, criteria as rules with a failure path, judge the
+diff, verdicts with evidence). Where the two disagreed the harness chose, and the design notes
+in `docs/audit/2026-10-29-astragentic-5.0.0-design.md` say which and why.
 
 **The limit, stated plainly.** A role kit is prompt level, not contract level. No hook and no
 gate makes an agent follow the file it just read. It improves the shape of an answer; it does
@@ -252,9 +246,9 @@ Type these into the `thomas` tab, in order. Each step waits on the previous one'
 > the project id is set. There is no code in this repo — infer nothing from it.
 
 **2. Bring the idea in**
-> The idea: `<3-5 sentences>`. If it is bigger than one session and still foggy, run
-> `/mattpocock-skills:wayfinder`. If the destination is clear, dispatch a Shaper whose brief
-> opens with `/mattpocock-skills:grill-with-docs`.
+> The idea: `<3-5 sentences>`. If it changes a surface someone looks at, run `astra-ux` with
+> me first so the PRD carries the journeys. Then dispatch a Shaper whose brief opens with
+> `/astra-grill-with-docs`.
 
 **3. Answer the grill.** The expensive step, and the one that cannot be skipped. An empty repo
 makes **you the only source** — every question the Shaper does not ask becomes something it
@@ -307,7 +301,7 @@ the release shipped with.
 ```bash
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash                      # latest, stage only
-curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 4.6.1         # pin a version
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 5.0.0         # pin a version
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --plan  # show what --apply would write
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply # write the payload in
 ```
@@ -424,7 +418,7 @@ harness/
   .agents/
     roles/            four role contracts + the optional junior
     orchestrator.md   role -> runtime/model/effort (your file)
-    skills/           12 skills — dispatch, QA, test design, tracker (the one you name, or all three), arm, BMAD
+    skills/           17 skills — the seven astra-* method skills, dispatch, QA, test design, tracker (the one you name, or all three), arm
     memory/
       recurring-failure-modes.md
   .claude/

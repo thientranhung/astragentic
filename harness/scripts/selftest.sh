@@ -1381,6 +1381,22 @@ if [ -f "$AX/get-args" ] && says "$(cat "$AX/get-args")" "0.0.10 --apply"; then
 else
   bad "astragentic.sh --apply" "$out / $(cat "$AX/get-args" 2>/dev/null)"
 fi
+# 5.0.0 — doctor: clean on the payload's own trees (exit 0), and a target missing one .claude
+# copy, carrying a retired name in its overlay, and a mod with the old brief regex exits 1 and
+# names all three. Planted first: the clean run alone proves nothing.
+AD="$TMP/doctor"; rm -rf "$AD"; mkdir -p "$AD"
+cp -R "$ROOT/harness/.agents" "$ROOT/harness/.claude" "$AD/"
+( cd "$AD" && git init -q . ) >/dev/null 2>&1
+out_clean="$(cd "$AD" && bash "$ROOT/astragentic.sh" doctor 2>&1)"; rc_clean=$?
+rm -rf "$AD/.claude/skills/astra-ui"; mkdir -p "$AD/.astraler/project/overlays"
+printf 'FLOW: 1 Skill(bmad-ux)\n' > "$AD/.astraler/project/overlays/dispatch-brief.md"
+sed -i.bak 's#/\^\\/astra-implement-with-tdd\\b/#/^\\/mattpocock-skills:implement\\b/#' "$AD/.claude/skills/astragentic-dispatch/hooks/register.tsx" && rm -f "$AD/.claude/skills/astragentic-dispatch/hooks/register.tsx.bak"
+out_bad="$(cd "$AD" && bash "$ROOT/astragentic.sh" doctor 2>&1)"; rc_bad=$?
+if [ "$rc_clean" = 0 ] && says "$out_clean" "7/7 astra-* skills" && [ "$rc_bad" = 1 ] && says "$out_bad" "astra-ui: SKILL.md missing in .claude" && says "$out_bad" "overlays/dispatch-brief.md" && says "$out_bad" "does not name /astra-implement-with-tdd" && says "$out_bad" "doctor: 3 finding(s)"; then
+  ok "astragentic.sh doctor (5.0.0): exit 0 on the payload; exit 1 naming a missing .claude copy, a retired name in an overlay and an old brief regex in the mod"
+else
+  bad "astragentic.sh doctor" "clean rc=$rc_clean / planted rc=$rc_bad: $out_bad"
+fi
 # 4.1.0 — the receipt lands by the script's hand, not an agent's: a project had none for three
 # releases applied this way (field audit 2026-10-18). 4.1.1 — one home, .astraler/state/, and
 # overwritten: 4.1.0 appended to a second file at the root while ADAPT §7 overwrote this one.
@@ -1753,7 +1769,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     await every()
     // 4.3.1 — a send to the pane's OWN fork ("code-review [ce2df1]") is not readdressed to the
     // dispatcher; a send to a role name still is (one downstream ticket, 2026-10-22)
-    await fire('session.receive', { text: '<cross-session-message from="uds:/tmp/d.sock" from-name="disp-07">\n/mattpocock-skills:implement AB-5\nQA: none — no surface\n</cross-session-message>', origin: { kind: 'plugin' } }, async () => ({}))
+    await fire('session.receive', { text: '<cross-session-message from="uds:/tmp/d.sock" from-name="disp-07">\n/astra-implement-with-tdd AB-5\nQA: none — no surface\n</cross-session-message>', origin: { kind: 'plugin' } }, async () => ({}))
     liveAgents = [{ id: 'a-7f3-ce2df1', name: 'code-review', status: 'running', description: 'Review the changes' }]
     const sendTo = async (to) => { let seen = null; await fire('session.send', { to, text: 'Report your final findings summary now.', origin: { kind: 'model' } }, async ev => { seen = ev.to; return { isDelivered: true } }); return seen }
     const sendToFork = await sendTo('code-review [ce2df1]')
@@ -1765,18 +1781,18 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     // is "○", not a yellow "next"; before any step the first is "→" (one downstream ticket,
     // 2026-10-22: a built-in code-review read ✓ while its four agents still ran, and the owner read
     // the yellow step after it as the pane hanging there)
-    // 4.5.3 — ux is owed or it is not: no FLOW line → no ux chip; FLOW without bmad-ux → `n/a ux`;
-    // `UX: n/a` → `n/a ux` even when FLOW names it; FLOW with bmad-ux → a required `○ ux` (one
+    // 4.5.3 — ui is owed or it is not: no FLOW line → no ui chip; FLOW without astra-ui → `n/a ui`;
+    // `UX: n/a` → `n/a ui` even when FLOW names it; FLOW with astra-ui → a required `○ ui` (one
     // downstream ticket, 2026-10-26: the dim `· ux` read as waiting on a ticket with no UI)
     const bandNoFlow = await band()
-    const brief = (lines) => fire('session.receive', { text: `<cross-session-message from="uds:/tmp/d.sock" from-name="disp-07">\n/mattpocock-skills:implement AB-5\nQA: none — no surface\n${lines}\n</cross-session-message>`, origin: { kind: 'plugin' } }, async () => ({}))
-    await brief('FLOW: 1 Skill(mattpocock-skills:tdd) → 2 Skill(mattpocock-skills:code-review)\n  → 3 Skill(code-review) → 4 Skill(simplify) → 5 arm(ticket)')
+    const brief = (lines) => fire('session.receive', { text: `<cross-session-message from="uds:/tmp/d.sock" from-name="disp-07">\n/astra-implement-with-tdd AB-5\nQA: none — no surface\n${lines}\n</cross-session-message>`, origin: { kind: 'plugin' } }, async () => ({}))
+    await brief('FLOW: 1 Skill(astra-review) → 2 Skill(simplify) → 3 arm(ticket)')
     const bandUxOff = await band()
-    await brief('UX: n/a — gate tooling, no surface\nFLOW: 1 Skill(mattpocock-skills:tdd) → 2 Skill(bmad-ux) → 3 Skill(code-review)')
+    await brief('UX: n/a — gate tooling, no surface\nFLOW: 1 Skill(astra-ui) → 2 Skill(astra-review)')
     const bandUxNa = await band()
-    await brief('FLOW: 1 Skill(mattpocock-skills:tdd) → 2 Skill(bmad-ux) [UI ticket] → 3 Skill(mattpocock-skills:code-review)\n  → 4 Skill(code-review) → 5 Skill(simplify) → 6 arm(ticket)')
+    await brief('## Glance\n- **List:** the seller must see the overdue row first.\n## States\n- empty: …\n## Criteria\n1. **Overdue first** (FR-1)\nFLOW: 1 Skill(astra-ui) [UI ticket] → 2 Skill(astra-review)\n  → 3 Skill(simplify) → 4 arm(ticket)')
     const bandNext = await band()
-    await fire('skill.prompt', { skill: 'code-review' }, async () => ({}))
+    await fire('skill.prompt', { skill: 'astra-review' }, async () => ({}))
     liveAgents = [{ id: 'r1', status: 'running', description: 'review' }, { id: 'r2', status: 'running', description: 'review' }, { id: 'r3', status: 'pending', description: 'review' }, { id: 'r4', status: 'running', description: 'review' }]
     await fire('turn.complete', { reason: 'answer', answer: 'reviewing', turnId: 't4' }, async () => ({}))
     const bandHeld = await band()
@@ -1792,23 +1808,24 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     liveAgents = []
     // two steps stamped in the same millisecond (4.3.2 downstream, 2026-10-22): the later step in
     // flow order is the one running
-    { const r = rec(); const t = Math.max(tick, Date.now()) + 10; r['AB-5'].skills_last = { ...(r['AB-5'].skills_last ?? {}), 'code-review': t, simplify: t }; fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    { const r = rec(); const t = Math.max(tick, Date.now()) + 10; r['AB-5'].skills_last = { ...(r['AB-5'].skills_last ?? {}), 'astra-review': t, simplify: t }; fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
     liveAgents = [{ id: 'x2', status: 'running', description: 'simplify angle' }]
     await fire('turn.complete', { reason: 'answer', answer: 'simplifying', turnId: 't6' }, async () => ({}))
     const bandTie = await band()
     liveAgents = []
     // (the tdd-order block runs after the band reads: its tdd call would otherwise light a chip the band cases expect unlit)
-    // 4.5.2 — the FIRST content commit after a brief needs tdd called after the brief AND a RED
-    // test run after it, besides the test file (one downstream ticket: test file beside the code passed,
-    // tdd called six minutes after the commit). Planted against 4.5.1: all three commits passed.
+    // 4.5.2 — the FIRST content commit after a brief needs a RED test run after the brief,
+    // besides the test file (one downstream ticket: test file beside the code passed, tdd called
+    // six minutes after the commit). 5.0.0 — the skill-name half is gone: the commit passes with
+    // NO Skill call at all once a red run is logged (`astra-implement-with-tdd` is the brief's own
+    // expansion, so its name proves nothing). Planted against 4.5.1: all three commits passed.
     const runLog = path.join('/tmp/harness-test-runs', fs.realpathSync(String(rec()['AB-5']?.worktree ?? root)).replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '') + '.log')
     try { fs.unlinkSync(runLog) } catch {}
     fs.writeFileSync(path.join(root, 'order.js'), 'x'); fs.writeFileSync(path.join(root, 'order.test.js'), 'x'); git('add', 'order.js', 'order.test.js')
     const orderDeny = async (command) => { const r = await fire('tool.call', { tool: 'Bash', command }, async () => ({})); return r?.deny ? String(r.deny) : 'pass' }
-    const tddOrderNoCall = /mattpocock-skills:tdd\) has not been called since/.test(await orderDeny('git commit -m "feat: order, test beside it"'))
+    const tddOrderNoCall = /no test run has gone RED since/.test(await orderDeny('git commit -m "feat: order, test beside it"'))
     await new Promise(r => setTimeout(r, 5))
-    await fire('skill.prompt', { skill: 'mattpocock-skills:tdd' }, async () => ({}))
-    const tddOrderNoRed = /no test run has gone RED since/.test(await orderDeny('git commit -m "feat: order, tdd called"'))
+    const tddOrderNoRed = /no test run has gone RED since/.test(await orderDeny('git commit -m "feat: order, still no red run"'))
     fs.mkdirSync('/tmp/harness-test-runs', { recursive: true })
     fs.writeFileSync(runLog, `${Date.now()}\t0\tnpm test\n`)
     const tddOrderGreenOnly = /no test run has gone RED since/.test(await orderDeny('git commit -m "feat: order, green run only"'))
@@ -1817,7 +1834,10 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const tddOrderMaskedDeny = await orderDeny('git commit -m "feat: order, masked run"')
     const tddOrderMasked = /no test run has gone RED since/.test(tddOrderMaskedDeny) && /2 run\(s\) logged since the brief, last: exit masked — npm test > log/.test(tddOrderMaskedDeny)
     fs.appendFileSync(runLog, `${Date.now()}\t1\tnpm test\n`)
-    const tddOrderOk = (await orderDeny('git commit -m "feat: order, red run recorded"')) === 'pass' && typeof rec()['AB-5']?.first_content_commit_at === 'number'
+    const tddOrderOk = (await orderDeny('git commit -m "feat: order, red run recorded"')) === 'pass' && typeof rec()['AB-5']?.first_content_commit_at === 'number' && typeof rec()['AB-5']?.red_run_at === 'number'
+    // 5.0.0 — the tdd chip lights from that red run, with no tdd Skill call on the record
+    await fire('turn.complete', { reason: 'answer', answer: 'red', turnId: 't7' }, async () => ({}))
+    const tddOrderChip = /✓ tdd/.test(await band()) && !Object.keys(rec()['AB-5']?.skills_run ?? {}).some(k => /tdd/.test(k))
     // a second content commit on the same brief is not asked again
     fs.writeFileSync(path.join(root, 'order.js'), 'y'); git('add', 'order.js')
     const tddOrderSecond = (await orderDeny('git commit -m "feat: order, second commit"')) === 'pass'
@@ -1827,10 +1847,10 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     await fire('session.receive', { text: '<cross-session-message from="uds:/tmp/d.sock" from-name="disp-07">\nPlease also cover the empty-list case before you hand back.\n</cross-session-message>', origin: { kind: 'plugin' } }, async () => ({}))
     fs.writeFileSync(path.join(root, 'order.js'), 'z'); git('add', 'order.js')
     const tddOrderSteer = (await orderDeny('git commit -m "feat: order, after a steer"')) === 'pass' && typeof rec()['AB-5']?.last_message_received_at === 'number' && rec()['AB-5'].last_message_received_at > rec()['AB-5'].last_brief_received_at
-    const tddOrderLog = Array.isArray(rec()['AB-5']?.skills_log) && rec()['AB-5'].skills_log.some(x => x.skill === 'mattpocock-skills:tdd')
+    const tddOrderLog = !(rec()['AB-5']?.skills_log ?? []).some(x => /tdd/.test(String(x.skill)))
     git('reset', '-q'); try { fs.unlinkSync(path.join(root, 'order.js')); fs.unlinkSync(path.join(root, 'order.test.js')) } catch {}
     try { fs.unlinkSync(runLog) } catch {}
-    const tddOrder = { noCall: tddOrderNoCall, noRed: tddOrderNoRed, greenOnly: tddOrderGreenOnly, masked: tddOrderMasked, ok: tddOrderOk, second: tddOrderSecond, steer: tddOrderSteer, log: tddOrderLog }
+    const tddOrder = { noCall: tddOrderNoCall, noRed: tddOrderNoRed, greenOnly: tddOrderGreenOnly, masked: tddOrderMasked, ok: tddOrderOk, chip: tddOrderChip, second: tddOrderSecond, steer: tddOrderSteer, log: tddOrderLog }
     // 4.6.0 — a quick ticket: `kind` on the record (the dispatcher wrote it from the tracker's
     // label), the band's first row says so and drops the exempt steps, a content commit with no
     // test file passes, and the prompt carries the KIND section; `SIMPLIFY: n/a` on a full brief
@@ -1839,17 +1859,20 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     { const r = rec(); r['AB-5'].kind = 'quick'; fs.writeFileSync(recPath5, JSON.stringify(r)) }
     await brief('FLOW: 1 Skill(code-review)')
     const bandQuickText = (await band()).replace(/⛔ \S+ refused/, '')   // the last refusal's chip names its gate
-    const bandQuick = /builder AB-5 quick/.test(bandQuickText) && !/tdd/.test(bandQuickText) && !/simplify/.test(bandQuickText) && !/ux/.test(bandQuickText) && /review:built-in/.test(bandQuickText)
+    const bandQuick = /builder AB-5 quick/.test(bandQuickText) && !/\btdd\b/.test(bandQuickText) && !/simplify/.test(bandQuickText) && !/\bui\b/.test(bandQuickText) && /\breview\b/.test(bandQuickText)
     fs.writeFileSync(path.join(root, 'q.js'), 'q'); git('add', 'q.js')
     const commitQuick = await cmdOf('git commit -m "quick: no test file"')
     const composedQuick = await fire('prompt.compose', {}, async () => ({ sections: [] }))
     const kindSection = (composedQuick?.sections ?? []).some(s => /KIND: quick/.test(String(s.text)))
     git('reset', '-q'); try { fs.unlinkSync(path.join(root, 'q.js')) } catch {}
     { const r = rec(); r['AB-5'].kind = null; fs.writeFileSync(recPath5, JSON.stringify(r)) }
-    await brief('SIMPLIFY: n/a — docs only\nFLOW: 1 Skill(mattpocock-skills:tdd) → 2 Skill(code-review)')
-    await band()
+    await brief('SIMPLIFY: n/a — docs only\nFLOW: 1 Skill(astra-review)')
+    const bandRebrief = await band()
+    // 5.0.0 — a NEW brief starts the tdd question over: the previous brief's red run (stamped on the
+    // record at its first content commit, above) no longer lights the chip; the log was cleared
+    const rebriefTdd = /○ tdd/.test(bandRebrief) && !/✓ tdd/.test(bandRebrief) && rec()['AB-5']?.red_run_at === null
     const bandSimplifyNa = Boolean(rec()['AB-5']?.simplify_na) && (await engine.read($, { id: 'astragentic-dispatch.flow', init: {} })).simplifyNa === true
-    const quick = { band: bandQuick, commit: commitQuick, section: kindSection, simplifyNa: bandSimplifyNa }
+    const quick = { band: bandQuick, commit: commitQuick, section: kindSection, simplifyNa: bandSimplifyNa, rebriefTdd }
     const bandText = { bandNoFlow, bandUxOff, bandUxNa, bandNext, bandHeld, bandSimplify, bandDone, bandAfterAgent, bandTie }
     // 4.6.1 — a dispatched pane waits by ending its turn: ScheduleWakeup is refused (3 of 4
     // Builder panes reached for it downstream, 2026-10-27); `stop: true` passes so an armed
@@ -1863,15 +1886,15 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     await fire('turn.complete', { reason: 'answer', answer: 'done', turnId: 'tz' }, async () => ({}))
     const bypassHint = /shift\+tab/.test(await band())
     const bandRead = {
-      noFlow: /→ implement ○ tdd ○ review:matt/.test(bandNoFlow) && !/ux/.test(bandNoFlow),
-      uxOff: /○ tdd n\/a ux ○ review:matt/.test(bandUxOff),
-      uxNa: /○ tdd n\/a ux ○ review:matt/.test(bandUxNa),
-      next: /→ implement ○ tdd ○ ux ○ review:matt/.test(bandNext) && !/…/.test(bandNext) && !/· ux/.test(bandNext),
-      held: /… review:built-in \(4 agents\)/.test(bandHeld) && !/✓ review:built-in/.test(bandHeld) && !/→/.test(bandHeld),
-      simplify: /✓ review:built-in/.test(bandSimplify) && /… simplify/.test(bandSimplify) && !/→/.test(bandSimplify),
+      noFlow: /→ implement ○ tdd ○ review/.test(bandNoFlow) && !/\bui\b/.test(bandNoFlow),
+      uxOff: /○ tdd n\/a ui ○ review/.test(bandUxOff),
+      uxNa: /○ tdd n\/a ui ○ review/.test(bandUxNa),
+      next: /→ implement ○ tdd ○ ui ○ review/.test(bandNext) && !/…/.test(bandNext) && !/· ui/.test(bandNext),
+      held: /… review \(4 agents\)/.test(bandHeld) && !/✓ review/.test(bandHeld) && !/→/.test(bandHeld),
+      simplify: /✓ review/.test(bandSimplify) && /… simplify/.test(bandSimplify) && !/→/.test(bandSimplify),
       done: /✓ simplify/.test(bandDone) && !/…/.test(bandDone) && /→ implement/.test(bandDone),
       afterAgent: /✓ simplify/.test(bandAfterAgent) && !/…/.test(bandAfterAgent),
-      tie: /… simplify \(1 agent\)/.test(bandTie) && /✓ review:built-in/.test(bandTie),
+      tie: /… simplify \(1 agent\)/.test(bandTie) && /✓ review/.test(bandTie),
     }
     console.log(JSON.stringify({ quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, wakeup, wakeupStop, bypassHint, bandText, log }))
     return
@@ -1879,7 +1902,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   await fire('session.start', {}, async () => ({}))
   await new Promise(r => setTimeout(r, 800))  // the newer-release lookup runs beside the start
   const latestChip = (await engine.read($, { id: 'astragentic-dispatch.banner', init: {} })).latest
-  await fire('session.send', { to: 'builder-ab-1-32 [1c2d95]', text: '/mattpocock-skills:verify AB-1', origin: { kind: 'model' } }, async () => ({ isDelivered: true }))
+  await fire('session.send', { to: 'builder-ab-1-32 [1c2d95]', text: '/astra-qa-verify AB-1', origin: { kind: 'model' } }, async () => ({ isDelivered: true }))
   const afterSend = await rows()
   const ack = `<cross-session-message from="uds:/tmp/x.sock" from-name="builder-ab-1-32">\n[astragentic-dispatch] RECEIVED key=AB-1 pane=p1\n</cross-session-message>`
   await fire('session.receive', { text: ack, origin: { kind: 'plugin' } }, async () => ({}))
@@ -1933,7 +1956,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const r = await fire('tool.call', { tool: 'Bash', command: 'git merge --no-ff builder/AB-6' }, async () => { nextRan = true; return {} })
     return `${r?.deny ? 'deny' : 'pass'}:${nextRan ? 'ran' : 'held'}${r?.deny && /has no record of: [^.]*\btdd\b/.test(String(r.deny)) ? ':tdd' : ''}`
   }
-  const full = { 'mattpocock-skills:implement': 1, 'mattpocock-skills:tdd': 1, 'mattpocock-skills:code-review': 1, 'code-review': 1, 'simplify': 1, 'codex-arm': 1 }
+  const full = { 'astra-implement-with-tdd': 1, 'astra-review': 1, 'code-review': 1, 'simplify': 1, 'codex-arm': 1 }
   const mergeGap = await mergeOf({ ...full, simplify: undefined })
   const mergeFull = await mergeOf(full)
   const mergeEmpty = await mergeOf({})
@@ -1947,11 +1970,11 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   fs.writeFileSync(path.join(root, 'feat.js'), 'f'); fs.writeFileSync(path.join(root, 'feat.test.js'), 't')
   gitq('add', 'feat.js', 'feat.test.js'); gitq('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'feat with test')
   gitq('checkout', '-q', '-')
-  const mergeTddByBranch = await mergeOf({ ...full, 'mattpocock-skills:tdd': undefined }, { start_sha: baseSha })
+  const mergeTddByBranch = await mergeOf({ ...full, 'astra-implement-with-tdd': undefined }, { start_sha: baseSha })
   gitq('branch', '-q', '-D', 'builder/AB-6'); gitq('checkout', '-q', '-b', 'builder/AB-6')
   fs.writeFileSync(path.join(root, 'feat.js'), 'f2'); gitq('add', 'feat.js'); gitq('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'feat alone')
   gitq('checkout', '-q', '-')
-  const mergeTddNoTest = await mergeOf({ ...full, 'mattpocock-skills:tdd': undefined }, { start_sha: baseSha })
+  const mergeTddNoTest = await mergeOf({ ...full, 'astra-implement-with-tdd': undefined }, { start_sha: baseSha })
   gitq('branch', '-q', '-D', 'builder/AB-6'); gitq('clean', '-fdq', '--', 'feat.js', 'feat.test.js')
   // the dispatcher learns every off scope: it runs the marker check at merge
   const composed = await fire('prompt.compose', {}, async () => ({ sections: [] }))
@@ -1962,14 +1985,19 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   const orchPath = path.join(root, '.agents/orchestrator.md')
   const orchText = fs.readFileSync(orchPath, 'utf8')
   // (1) a brief with no QA line
-  const briefNoQa = await sendBrief('/mattpocock-skills:implement AB-9\nWorktree: x · Branch: y · Base: main')
+  const briefNoQa = await sendBrief('/astra-implement-with-tdd AB-9\nWorktree: x · Branch: y · Base: main')
+  // (1b) 5.0.0 — a UI brief (FLOW names astra-ui) without the ticket's three sections is not sent;
+  // with them it goes; a brief whose FLOW has no astra-ui is not asked for them
+  const briefUiNoSections = await sendBrief('/astra-implement-with-tdd AB-9\nQA: none — no surface\nFLOW: 1 Skill(astra-ui) [UI ticket] → 2 Skill(astra-review)\n## Glance\n- **Orders:** the seller must see the overdue row first.\nAcceptance criteria: …')
+  const briefUiSections = await sendBrief('/astra-implement-with-tdd AB-9\nQA: none — no surface\nFLOW: 1 Skill(astra-ui) [UI ticket] → 2 Skill(astra-review)\n## Glance\n- **Orders:** the seller must see the overdue row first.\n## States\n- empty: a line saying no orders\n## Criteria\n1. **Overdue first** (FR-1)')
+  const briefNoUi = await sendBrief('/astra-implement-with-tdd AB-9\nQA: none — no surface\nFLOW: 1 Skill(astra-review)')
   // (2) an upgrade that stopped part-way
   fs.writeFileSync(path.join(root, '.astraler/state/apply-incomplete'), '0.0.2')
-  const briefUpgrade = await sendBrief('/mattpocock-skills:implement AB-9\nQA: none — no surface')
+  const briefUpgrade = await sendBrief('/astra-implement-with-tdd AB-9\nQA: none — no surface')
   fs.unlinkSync(path.join(root, '.astraler/state/apply-incomplete'))
   // (3) an orchestrator whose Active assignments table has no Advisor column
   fs.writeFileSync(orchPath, orchText.replace('| Role | Runtime | Model | Effort | Advisor |', '| Role | Runtime | Model | Effort |').replace('|---|---|---|---|---|', '|---|---|---|---|').replace('| builder | claude | m | medium | opus |', '| builder | claude | m | medium |'))
-  const briefAdvisor = await sendBrief('/mattpocock-skills:implement AB-9\nQA: none — no surface')
+  const briefAdvisor = await sendBrief('/astra-implement-with-tdd AB-9\nQA: none — no surface')
   fs.writeFileSync(orchPath, orchText)
   // (4) closing the pane of a Builder that is mid-turn
   fs.writeFileSync(recPath, JSON.stringify({ 'AB-9': { role: 'builder', pane_id: 'p9', tab_id: 't9', session_id: 's9', last_brief_received_at: Date.now() } }))
@@ -1978,18 +2006,18 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   const closeRefusal = `${closeR?.deny ? 'deny' : 'pass'}:${closeRan ? 'ran' : 'held'}`
   const roleAtDispatch = (() => { fs.writeFileSync(recPath, '{}'); return null })()
   // a delivered Builder brief writes the role on the record at dispatch
-  await sendBrief('/mattpocock-skills:implement AB-9\nQA: none — no surface')
+  await sendBrief('/astra-implement-with-tdd AB-9\nQA: none — no surface')
   const roleWritten = JSON.parse(fs.readFileSync(recPath, 'utf8'))['AB-9']?.role === 'builder'
   // 4.1.0 — builder-target is read by the mod: two live Builders against a row of 2 refuse a third brief
   fs.writeFileSync(orchPath, orchText.replace(/\| builder-target \| `\d+` \|/, '| builder-target | `2` |'))
   fs.writeFileSync(recPath, JSON.stringify({ 'AB-10': { role: 'builder', pane_id: 'p10' }, 'AB-11': { role: 'builder', pane_id: 'p11' } }))
-  const briefOverTarget = await sendBrief('/mattpocock-skills:implement AB-12\nQA: none — no surface')
+  const briefOverTarget = await sendBrief('/astra-implement-with-tdd AB-12\nQA: none — no surface')
   fs.writeFileSync(recPath, JSON.stringify({ 'AB-10': { role: 'builder', pane_id: 'p10', worktree_removed_at: 1 }, 'AB-11': { role: 'builder', pane_id: 'p11' } }))
-  const briefUnderTarget = await sendBrief('/mattpocock-skills:implement AB-12\nQA: none — no surface')
+  const briefUnderTarget = await sendBrief('/astra-implement-with-tdd AB-12\nQA: none — no surface')
   // the destination registered itself first (the protocol): its own entry is not a competing lane
   fs.writeFileSync(orchPath, orchText.replace(/\| builder-target \| `\d+` \|/, '| builder-target | `1` |'))
   fs.writeFileSync(recPath, JSON.stringify({ 'AB-13': { role: 'builder', pane_id: 'p13' } }))
-  const briefToRegistered = await sendBrief('/mattpocock-skills:implement AB-13\nQA: none — no surface')
+  const briefToRegistered = await sendBrief('/astra-implement-with-tdd AB-13\nQA: none — no surface')
   fs.writeFileSync(orchPath, orchText); fs.writeFileSync(recPath, '{}')
   // 4.6.0 — the ticket's kind is the tracker's label, read at the send and written on the record
   // before the brief goes. The project's plug enforces (no label → not sent); the package reader
@@ -2000,13 +2028,13 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   const plugSays = t => { fs.writeFileSync(labelsPlug, `#!/bin/sh\necho "${t}"\n`); fs.chmodSync(labelsPlug, 0o755) }
   fs.writeFileSync(recPath, JSON.stringify({ 'AB-14': { role: 'builder', pane_id: 'p14' } }))
   plugSays('bug QUICK')
-  const briefQuick = await sendBrief('/mattpocock-skills:implement AB-14\nQA: none — no surface')
+  const briefQuick = await sendBrief('/astra-implement-with-tdd AB-14\nQA: none — no surface')
   const kindQuick = kindOf('AB-14')
   plugSays('bug')
-  const briefUnlabelled = await sendBrief('/mattpocock-skills:implement AB-14\nQA: none — no surface')
+  const briefUnlabelled = await sendBrief('/astra-implement-with-tdd AB-14\nQA: none — no surface')
   const kindAfterUnlabelled = kindOf('AB-14')
   plugSays('full')
-  const briefFull = await sendBrief('/mattpocock-skills:implement AB-14\nQA: none — no surface')
+  const briefFull = await sendBrief('/astra-implement-with-tdd AB-14\nQA: none — no surface')
   const kindFull = kindOf('AB-14')
   fs.unlinkSync(labelsPlug)
   // the package reader: `.astraler/project/tracker` says jira, scripts/tracker.sh is the payload's,
@@ -2017,17 +2045,17 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   fs.writeFileSync(path.join(root, '.astraler/project/tracker'), 'jira AB\n')
   const savedPath = process.env.PATH; process.env.PATH = `${path.join(root, 'bin')}:${savedPath}`
   fs.writeFileSync(recPath, JSON.stringify({ 'AB-14': { role: 'builder', pane_id: 'p14', kind: 'quick' } }))
-  const briefJira = await sendBrief('/mattpocock-skills:implement AB-14\nQA: none — no surface')
+  const briefJira = await sendBrief('/astra-implement-with-tdd AB-14\nQA: none — no surface')
   const kindJira = kindOf('AB-14')
   process.env.PATH = savedPath; fs.unlinkSync(path.join(root, '.astraler/project/tracker'))
   // the merge gate: a quick record with the built-in review alone passes, without it is refused,
   // and the same record with no kind is refused; `SIMPLIFY: n/a` exempts simplify alone; the
   // merge of a quick lane carries the no-marker note
-  const mergeQuick = await mergeOf({ 'mattpocock-skills:implement': 1, 'code-review': 1 }, { kind: 'quick' })
-  const mergeQuickNoReview = await mergeOf({ 'mattpocock-skills:implement': 1 }, { kind: 'quick' })
-  const mergeUnkinded = await mergeOf({ 'mattpocock-skills:implement': 1, 'code-review': 1 })
+  const mergeQuick = await mergeOf({ 'astra-implement-with-tdd': 1, 'code-review': 1 }, { kind: 'quick' })
+  const mergeQuickNoReview = await mergeOf({ 'astra-implement-with-tdd': 1 }, { kind: 'quick' })
+  const mergeUnkinded = await mergeOf({ 'astra-implement-with-tdd': 1, 'code-review': 1 })
   const mergeSimplifyNa = await mergeOf({ ...full, simplify: undefined }, { simplify_na: 'SIMPLIFY: n/a — docs only' })
-  fs.writeFileSync(recPath, JSON.stringify({ 'AB-6': { role: 'builder', pane_id: 'p6', tab_id: 't6', session_id: 's6', branch: 'builder/AB-6', skills_run: { 'mattpocock-skills:implement': 1, 'code-review': 1 }, kind: 'quick' } }))
+  fs.writeFileSync(recPath, JSON.stringify({ 'AB-6': { role: 'builder', pane_id: 'p6', tab_id: 't6', session_id: 's6', branch: 'builder/AB-6', skills_run: { 'astra-implement-with-tdd': 1, 'code-review': 1 }, kind: 'quick' } }))
   const mergeQuickRan = await fire('tool.call', { tool: 'Bash', command: 'git merge --no-ff builder/AB-6' }, async () => ({}))
   const mergeQuickNote = (mergeQuickRan?.context ?? []).some(t => /AB-6 is a quick ticket/.test(String(t)))
   // the dispatcher's prompt lists the live quick lanes; the band is a header row plus one row per lane
@@ -2039,7 +2067,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   const bandRows = /\d+ lanes?/.test(bandDisp) && /AB-15\s+builder\s+registered/.test(bandDisp) && /↑0\.0\.2/.test(bandDisp) && !/available/.test(bandDisp)
   fs.writeFileSync(recPath, '{}')
   const kind = { briefQuick, kindQuick, briefUnlabelled: briefUnlabelled.slice(0, 7), kindAfterUnlabelled, briefFull, kindFull, briefJira, kindJira, mergeQuick, mergeQuickNoReview, mergeUnkinded, mergeSimplifyNa, mergeQuickNote, quickLanes, bandRows }
-  console.log(JSON.stringify({ kind, afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, ownerBells, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, briefNoQa, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
+  console.log(JSON.stringify({ kind, afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, ownerBells, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, briefNoQa, briefUiNoSections, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
@@ -2064,7 +2092,7 @@ DRVEOS
     bad "mod merge gate" "$out"
   fi
   # 4.1.0 — the four gates no field data had seen fire, each shown firing on its planted defect
-  if says "$out" '"briefNoQa":"refused:' && says "$out" 'no \"QA:' && says "$out" '"briefUpgrade":"refused:' && says "$out" '"briefAdvisor":"refused:' && says "$out" '"closeRefusal":"deny:held"' && says "$out" '"roleWritten":true' && says "$out" '"briefOverTarget":"refused:' && says "$out" '"briefUnderTarget":"sent"' && says "$out" '"briefToRegistered":"sent"'; then
+  if says "$out" '"briefNoQa":"refused:' && says "$out" 'no \"QA:' && says "$out" '"briefUiNoSections":"refused:' && says "$out" 'FLOW names astra-ui' && says "$out" '"briefUiSections":"sent"' && says "$out" '"briefNoUi":"sent"' && says "$out" '"briefUpgrade":"refused:' && says "$out" '"briefAdvisor":"refused:' && says "$out" '"closeRefusal":"deny:held"' && says "$out" '"roleWritten":true' && says "$out" '"briefOverTarget":"refused:' && says "$out" '"briefUnderTarget":"sent"' && says "$out" '"briefToRegistered":"sent"'; then
     ok "brief refused without a QA line, during a half-applied upgrade, without an Advisor column, and at builder-target; a mid-turn pane's close is refused; a delivered brief writes the role on the record"
   else
     bad "mod merge gate" "$out"
@@ -2109,13 +2137,13 @@ EOS
     ok "planted: a mod that reads the tracker on the tick is caught by the count"
   fi
   out="$(mod_drive "$MOD" pane)"
-  if says "$out" '"quick":{"band":true,"commit":"pass:ran","section":true,"simplifyNa":true}'; then
-    ok "quick ticket in the pane (4.6.0): the band's first row says quick and the steps row keeps only implement and the built-in review; a content commit with no test file passes; the prompt carries KIND: quick; SIMPLIFY: n/a greys the simplify chip"
+  if says "$out" '"quick":{"band":true,"commit":"pass:ran","section":true,"simplifyNa":true,"rebriefTdd":true}'; then
+    ok "quick ticket in the pane (4.6.0): the band's first row says quick and the steps row keeps only implement and the review; a content commit with no test file passes; the prompt carries KIND: quick; SIMPLIFY: n/a greys the simplify chip; a new brief resets the tdd chip (5.0.0)"
   else
     bad "quick ticket in the pane (4.6.0)" "$(printf '%s' "$out" | grep -o '"quick":{[^}]*}' | head -1)"
   fi
-  if says "$out" '"tddOrder":{"noCall":true,"noRed":true,"greenOnly":true,"masked":true,"ok":true,"second":true,"steer":true,"log":true}'; then
-    ok "tdd order (4.5.2): the first content commit after a brief is refused until tdd is called after the brief and a test run went RED; a green run is not red; the second commit is not asked; the skill log keeps the call"
+  if says "$out" '"tddOrder":{"noCall":true,"noRed":true,"greenOnly":true,"masked":true,"ok":true,"chip":true,"second":true,"steer":true,"log":true}'; then
+    ok "tdd order (4.5.2, 5.0.0): the first content commit after a brief is refused until a test run went RED after the brief, with no Skill call asked for; a green run is not red; the tdd chip lights from the red run; the second commit is not asked"
   else
     bad "tdd order (4.5.2)" "$(printf '%s' "$out" | grep -o '"tddOrder":{[^}]*}' | head -1)"
   fi

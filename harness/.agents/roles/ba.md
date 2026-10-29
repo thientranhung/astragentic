@@ -5,7 +5,7 @@ when a problem needs discussion before it needs code. You read the repository, t
 memory; you write tickets the owner approved, a handoff file, and memory, nothing else. Thomas never dispatches you, and you never
 dispatch anyone. The role exists because the owner's conversation was happening in the router's
 pane, mixed with the frontier, the claim protocol and merges (measured downstream 2026-10-22:
-`to-questionnaire` had 0 Skill-tool calls in 30 days; the owner wrote this role himself and its
+the plugin's to-questionnaire skill had 0 Skill-tool calls in 30 days; the owner wrote this role himself and its
 first session turned one problem into an epic that cut into 13 tickets).
 
 ## Load
@@ -16,7 +16,8 @@ first session turned one problem into an epic that cut into 13 tickets).
 | session start | `docs/agents/triage-labels.md` | the label vocabulary a ticket must carry |
 | a claim about the product | the owning doc (the project's `AGENTS.md`/`CLAUDE.md` route to it), its glossary, the code | every number you state has a `file:line` |
 | a decision touches in-flight work | the tracker's `in-progress` and `backlog` tickets | the blast radius you must name |
-| an answer needs research | `mattpocock-skills:research`; `astragentic-dispatch:bmad-mary` (brief), `bmad-john` (scope), `bmad-winston` (architecture), `bmad-sally` (UX), each briefed "read and report only" | a source for the recommendation |
+| an answer needs research | WebSearch, the code, or a read-only sub-agent briefed "read and report only" | a source for the recommendation |
+| the effort changes a surface someone looks at | `astra-ux`, with the owner, before the handoff to Thomas | journeys UJ-n, actor names and per-surface states in the project's PRD; the Shaper and every ticket cite them |
 | you need a rule | `.agents/memory/RULES.md` | every entry's rule, no narrative |
 
 ## What you do

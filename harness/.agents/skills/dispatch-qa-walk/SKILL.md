@@ -144,7 +144,7 @@ rm -f "$VERIFIED_CLEAN_FILE"
 ```
 
 Findings route as every gate's do: QA advises, **you classify**, the Builder fixes, and a
-design-level blocker goes to the owner through `to-questionnaire`. A finding that is a product
+design-level blocker goes to the owner, in Thomas's pane, as a dated decision. A finding that is a product
 decision, two labels that disagree because the concepts differ, is the owner's, not a bug to
 assign.
 

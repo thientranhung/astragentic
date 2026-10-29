@@ -5,8 +5,6 @@ description: Use when a spec is finalized and tickets are about to be cut, or wh
 
 # Test design: the plan exists before the tickets do
 
-Distilled from the BMAD Method (BMad Code, LLC, MIT), adapted for Astragentic.
-
 **A plan written after the build lists what was built. A plan written before it lists what could
 go wrong.** QA's run reads this file as its oracle, so a journey, endpoint or job missing here is
 one nobody exercises. Without it QA derives the oracle from the source and the verdict loses
@@ -14,12 +12,12 @@ confidence: an inferred oracle never earns an unconditional pass.
 
 ## When it runs
 
-In the Shaper session, after `to-spec` and the spec arm, before `to-tickets`; and, since no
+In the Shaper session, after `astra-to-spec` and the spec arm, before `astra-to-tickets`; and, since no
 ticket is dispatched without a plan, over a set of loose tickets that have no spec. Two inputs,
 one of them required:
 
-- **A committed spec** with its acceptance criteria: the plan covers it whole (BMAD's system
-  mode and epic mode, folded into one unit).
+- **A committed spec** with its acceptance criteria: the plan covers it whole (one unit, whether the
+  spec is a system or a single epic).
 - **Loose tickets with no spec** (a gate's follow-ups, small fixes): the input is each ticket's
   acceptance criteria plus the source it cites (a gate report, a defect record). The plan has one
   section per ticket, and a ticket with no surface gets its line: `QA: none — <why>`.
@@ -46,7 +44,7 @@ halts the skill. Name what is missing and hand back.
 7. **Thresholds are measured or unknown.** Take a number from the spec, never from a guess. A
    missing threshold goes to Open questions as UNKNOWN.
 8. **Assign cases to tickets.** Where the ticket boundaries are not yet drawn, group cases by the
-   spec section they belong to so `to-tickets` can cut along them.
+   spec section they belong to so `astra-to-tickets` can cut along them.
 
 ## The file: `docs/qa/plan-<slug>.md`
 
@@ -72,15 +70,15 @@ expected result.
 
 ## Full persona method
 
-Spawn `astragentic-dispatch:bmad-murat` when the session wants the Test Architect's full method:
+Spawn `astragentic-dispatch:astra-test-architect` when the session wants the Test Architect's full method:
 risk scoring, level choice and gap hunting beyond the steps above. The spawn is **read-only**.
 The persona reads the spec and the repo and returns findings; you write the plan. It never writes
 a file, runs a test or fires a gate.
 
 ## What it never does
 
-- **Writes no tests.** Red tests belong to the Builder, through `tdd`.
-- **Cuts no tickets.** `to-tickets` does, from the spec and this plan.
+- **Writes no tests.** Red tests belong to the Builder, through `astra-implement-with-tdd`.
+- **Cuts no tickets.** `astra-to-tickets` does, from the spec and this plan.
 - **Does not edit the spec.** A gap in the spec is an Open question, repaired by the Shaper in the
   spec itself.
 - **Invents no thresholds, and does not pad.** A P3 list that exists to look complete is noise

@@ -5,6 +5,7 @@
 #   .astraler/astragentic.sh update           installed vs latest, what changed between, the one-liner
 #   .astraler/astragentic.sh update --apply   pull the latest release and apply it (get.sh latest --apply)
 #   .astraler/astragentic.sh version          the installed version only
+#   .astraler/astragentic.sh doctor           5.0.0: is the installed scaffold whole — exit 0 clean, 1 findings
 #
 # `update` changes nothing: it reads `.astraler/state/applied-version`, asks the package remote
 # for its newest v-tag, prints the release notes of every release in between, and prints the
@@ -41,11 +42,58 @@ installed="$(cat "$APPLIED_FILE" 2>/dev/null | tr -d '[:space:]' || true)"
 case "$CMD" in
   version)
     echo "${installed:-none}"; exit 0 ;;
+  doctor)
+    # DOCTOR (5.0.0, minimal; the eight-group doctor is 5.1). Three questions a release
+    # cannot answer for the project after it lands, each with the number it counted:
+    #   1. no retired name (the Matt Pocock plugin, the BMAD personas) in payload, plugs or overlays
+    #   2. every astra-* skill present in both trees and identical (install.sh:67-104 asks the same
+    #      of the package; this asks it of the project after a partial apply or a hand edit)
+    #   3. the dispatch mod's brief regex and flow table name skills that exist
+    # Exit 1 on any finding, so a gate can read it (CLAUDE.md: verify exit codes, not strings).
+    findings=0
+    say() { printf '  %s\n' "$1"; }
+    bad_() { findings=$((findings+1)); printf '  FAIL %s\n' "$1"; }
+    echo "astragentic doctor · $ROOT · installed ${installed:-none}"
+    # 1. retired names
+    scope=""
+    for d in .agents .claude .astraler/project; do [ -d "$ROOT/$d" ] && scope="$scope $ROOT/$d"; done
+    # shellcheck disable=SC2086
+    hits="$(grep -rIl --exclude-dir=memory --exclude=recurring-failure-modes.md -e 'mattpocock-skills' -e 'bmad-' $scope 2>/dev/null | sed "s#^$ROOT/##" || true)"
+    n="$(printf '%s' "$hits" | grep -c . || true)"
+    if [ "$n" -eq 0 ]; then say "ok   0 files name a retired skill or persona in .agents, .claude, .astraler/project"
+    else bad_ "$n file(s) still name mattpocock-skills or bmad-* (5.0.0 ships astra-* only):"; printf '%s\n' "$hits" | sed 's/^/         /'; fi
+    # 2. astra-* skills, paired and identical
+    want="astra-grill-with-docs astra-ux astra-to-spec astra-to-tickets astra-implement-with-tdd astra-ui astra-review"
+    okn=0
+    for sk in $want; do
+      a="$ROOT/.agents/skills/$sk/SKILL.md"; c="$ROOT/.claude/skills/$sk/SKILL.md"
+      if [ ! -f "$a" ] || [ ! -f "$c" ]; then bad_ "$sk: SKILL.md missing in $([ -f "$a" ] || printf '.agents ')$([ -f "$c" ] || printf '.claude')"
+      elif ! cmp -s "$a" "$c"; then bad_ "$sk: .agents and .claude copies differ"
+      elif ! head -1 "$a" | grep -q '^---$' || ! grep -q "^name: $sk\$" "$a"; then bad_ "$sk: SKILL.md has no frontmatter naming it"
+      else okn=$((okn+1)); fi
+    done
+    say "ok   $okn/7 astra-* skills present in both trees, identical, with frontmatter"
+    # 3. the mod points at skills that exist
+    mod="$ROOT/.claude/skills/astragentic-dispatch/hooks/register.tsx"
+    if [ ! -f "$mod" ]; then bad_ "dispatch mod not found at .claude/skills/astragentic-dispatch/hooks/register.tsx"
+    else
+      if grep -qF '/^\/astra-implement-with-tdd\b/' "$mod" && [ -f "$ROOT/.agents/skills/astra-implement-with-tdd/SKILL.md" ]; then
+        say "ok   the mod recognises a Builder brief by /astra-implement-with-tdd, and that skill exists"
+      else bad_ "the mod's Builder-brief regex does not name /astra-implement-with-tdd, or that skill is missing"; fi
+      missing=""
+      for sk in $(grep -o "\['astra-[a-z-]*'" "$mod" | tr -d "['" | sort -u); do
+        [ -f "$ROOT/.agents/skills/$sk/SKILL.md" ] || missing="$missing $sk"
+      done
+      if [ -z "$missing" ]; then say "ok   every astra-* name in the mod's flow table has a SKILL.md"
+      else bad_ "the mod's flow table names skills with no SKILL.md:$missing"; fi
+    fi
+    if [ "$findings" -eq 0 ]; then echo "doctor: clean"; exit 0; fi
+    echo "doctor: $findings finding(s)"; exit 1 ;;
   update) ;;
   --help|-h|help)
-    sed -n '2,20p' "$0"; exit 0 ;;
+    sed -n '2,21p' "$0"; exit 0 ;;
   *)
-    echo "astragentic.sh: unknown command $CMD (update | update --apply | version)" >&2; exit 2 ;;
+    echo "astragentic.sh: unknown command $CMD (update | update --apply | version | doctor)" >&2; exit 2 ;;
 esac
 
 # Numeric sort of dotted versions: `sort` alone reads 0.0.10 below 0.0.9.

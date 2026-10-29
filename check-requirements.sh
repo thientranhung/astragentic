@@ -83,45 +83,12 @@ else
     "install Claude Code: https://claude.com/claude-code. With no Claude the answer is STOP and ask the owner"
 fi
 
-# 2. The mattpocock-skills plugin — the method itself. Every spine step this package routes
-# to lives in the plugin, so an absent plugin leaves the whole chain pointing at nothing.
-PLUGINS_JSON="$HOME/.claude/plugins/installed_plugins.json"
-PLUGIN_FLOOR="1.3.1"
-plugin_version() {
-  [ -f "$PLUGINS_JSON" ] || return 1
-  if command -v python3 >/dev/null 2>&1; then
-    python3 - "$PLUGINS_JSON" <<'PY' 2>/dev/null
-import json,sys
-try:
-    d = json.load(open(sys.argv[1]))
-except Exception:
-    sys.exit(1)
-for name, installs in (d.get("plugins") or {}).items():
-    if name.split("@")[0] == "mattpocock-skills":
-        for i in installs or []:
-            v = i.get("version")
-            if v and v != "unknown":
-                print(v); sys.exit(0)
-        print("unknown"); sys.exit(0)
-sys.exit(1)
-PY
-  else
-    grep -q '"mattpocock-skills@' "$PLUGINS_JSON" && echo unknown
-  fi
-}
-MP_VERSION="$(plugin_version)"
-if [ -z "$MP_VERSION" ]; then
-  miss "mattpocock-skills plugin not installed" \
-    "claude plugin marketplace add mattpocock/skills, then claude plugin install mattpocock-skills@mattpocock (the claude-plugins-official copy is pinned at 1.2.3). This package routes every spine step into it"
-elif [ "$MP_VERSION" = "unknown" ]; then
-  warn "mattpocock-skills plugin present, version unreadable" \
-    "the install record carries no version; confirm it is >= $PLUGIN_FLOOR with /plugin"
-elif version_ge "$MP_VERSION" "$PLUGIN_FLOOR"; then
-  ok "mattpocock-skills plugin $MP_VERSION (>= $PLUGIN_FLOOR)"
-else
-  miss "mattpocock-skills plugin $MP_VERSION is below the $PLUGIN_FLOOR floor" \
-    "update it: /plugin → update 'mattpocock-skills'"
-fi
+# 2. The method ships as the payload's own `astra-*` skills (5.0.0); no external plugin is
+# required. What this axis can still check on the MACHINE is nothing; the TARGET axis below
+# checks that the seven skills landed in both trees. A leftover plugin is not a finding here:
+# uninstalling it is the owner's call after the project runs 5.0.0 (ADAPT-HARNESS § 3).
+
+PLUGINS_JSON="$HOME/.claude/plugins/installed_plugins.json"   # read by the Codex plugin check below
 
 # 2b. Bundled skills reachable by the model. The Builder's simplify pass is a Claude Code
 # built-in skill it invokes itself. Three switches take that reach away, and all three fail
@@ -278,8 +245,8 @@ fi
 # TARGET axis
 # ---------------------------------------------------------------------------
 # These three files are what the spine reads to find the tracker, the triage vocabulary,
-# and the domain language. `setup-matt-pocock-skills` produces them, which is why the
-# remedy is always that skill rather than a hand-written file.
+# and the domain language. The adapting agent writes them with the owner (ADAPT-HARNESS § 2);
+# from 5.0.0 no plugin setup step produces them.
 
 echo
 if [ -z "$TARGET" ]; then
@@ -289,19 +256,39 @@ if [ -z "$TARGET" ]; then
 else
   # This axis describes a target that has finished adapting. Before adaptation these files
   # do not exist yet, and that is the normal starting state rather than something to fix
-  # first — setup-matt-pocock-skills produces them DURING the adaptation run.
+  # first — they are written DURING the adaptation run (ADAPT-HARNESS § 2).
   echo "TARGET $TARGET (post-adaptation state):"
   TARGET_READY=1
+  # 5.0.0: the seven astra-* skills, in both trees and identical (install.sh writes them; a
+  # partial apply or a hand edit is what this catches)
+  ASTRA_OK=0; ASTRA_BAD=""
+  for SK in astra-grill-with-docs astra-ux astra-to-spec astra-to-tickets astra-implement-with-tdd astra-ui astra-review; do
+    if [ -f "$TARGET/.agents/skills/$SK/SKILL.md" ] && [ -f "$TARGET/.claude/skills/$SK/SKILL.md" ] && cmp -s "$TARGET/.agents/skills/$SK/SKILL.md" "$TARGET/.claude/skills/$SK/SKILL.md"; then
+      ASTRA_OK=$((ASTRA_OK+1))
+    else
+      ASTRA_BAD="$ASTRA_BAD $SK"
+    fi
+  done
+  if [ -z "$ASTRA_BAD" ]; then
+    ok "7/7 astra-* skills in .agents/skills and .claude/skills, identical"
+  elif [ "$ADAPTED" = "1" ]; then
+    miss "astra-* skills missing or unpaired after adaptation:$ASTRA_BAD" \
+      "re-run the installer with --apply; .astraler/astragentic.sh doctor names each"
+    TARGET_READY=0
+  else
+    warn "astra-* skills not present yet:$ASTRA_BAD" \
+      "install.sh --apply writes them; expected to be absent before adaptation"
+  fi
   for DOC in issue-tracker triage-labels domain; do
     if [ -f "$TARGET/docs/agents/${DOC}.md" ]; then
       ok "docs/agents/${DOC}.md"
     else
       if [ "$ADAPTED" = "1" ]; then
         miss "docs/agents/${DOC}.md is missing after adaptation" \
-          "thomas.md reads it at session start; the OWNER types /setup-matt-pocock-skills in that repo (no model can invoke it)"
+          "thomas.md reads it at session start; write it with the owner from what the tracker and the repo show (ADAPT-HARNESS § 2)"
       else
         warn "docs/agents/${DOC}.md not present yet" \
-          "the OWNER types /setup-matt-pocock-skills in that repo (no model can invoke it) during adaptation; expected to be absent before then"
+          "written with the owner during adaptation (ADAPT-HARNESS § 2); expected to be absent before then"
       fi
       TARGET_READY=0
     fi

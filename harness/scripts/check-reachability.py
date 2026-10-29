@@ -74,10 +74,9 @@ SKILL_GLOBS = [
 README = os.path.join(ROOT, "README.md")
 PROMPT = os.path.join(ROOT, "prompts", "ADAPT-HARNESS.md")
 
-# A plugin skill is addressed as `<plugin>:<skill>` — that qualified form is what a typed
-# command must use, so contracts write it. Every comparison here is against the bare name,
-# so strip a known plugin prefix rather than teaching each check about it.
-PLUGIN_PREFIXES = ("mattpocock-skills:",)
+# 5.0.0: the payload ships every flow skill as `astra-*`; no plugin prefix is in use. The
+# strip stays so a project that adds its own plugin can list its prefix here.
+PLUGIN_PREFIXES = ()
 def unqualify(name):
     for pre in PLUGIN_PREFIXES:
         if name.startswith(pre):
@@ -87,7 +86,7 @@ def unqualify(name):
 # Paths the project authors during adaptation. The harness references them and does not ship
 # them, so their absence in this package is correct. Named, not hidden in a regex — and
 # check-requirements.sh is what verifies them in an adapted project.
-PROJECT_SIDE_PREFIXES = ("docs/agents/", "docs/adr/")
+PROJECT_SIDE_PREFIXES = ("docs/agents/", "docs/adr/", "docs/prd")  # 5.0.0: the PRD astra-ux writes is the project's
 
 # Paths every ADAPTED project has and this package's payload directory does not, because the
 # installer injects them from the package root rather than shipping them inside `harness/`.
@@ -202,38 +201,8 @@ if not roles:
     print(f"No role contracts under {ROLES_DIR} — nothing to check.", file=sys.stderr)
     sys.exit(2)
 
-# Plugin skills are legitimate references that this payload does not ship. Read the
-# installed manifest when it is there; fall back to the names the method depends on, so
-# the check still runs on a machine without the plugin installed.
-PLUGIN_FALLBACK = {
-    "triage", "wayfinder", "to-questionnaire", "ask-matt", "grill-with-docs", "to-spec",
-    "to-tickets", "implement", "code-review", "grilling", "tdd", "codebase-design",
-    "domain-modeling", "research", "prototype", "diagnosing-bugs", "wizard",
-    "implement-spec", "pr", "retro", "improve-codebase-architecture",
-    "setup-matt-pocock-skills", "handoff", "teach", "grill-me", "wait-what",
-    "writing-for-agents",
-}
-def plugin_skills():
-    manifest = os.path.expanduser("~/.claude/plugins/installed_plugins.json")
-    try:
-        with open(manifest, encoding="utf-8") as fh:
-            data = json.load(fh)
-    except (OSError, ValueError):
-        return set(PLUGIN_FALLBACK)
-    for name, installs in (data.get("plugins") or {}).items():
-        if name.split("@")[0] != "mattpocock-skills":
-            continue
-        for entry in installs or []:
-            manifest_path = os.path.join(entry.get("installPath", ""),
-                                         ".claude-plugin", "plugin.json")
-            try:
-                with open(manifest_path, encoding="utf-8") as fh:
-                    return {s.rsplit("/", 1)[-1] for s in json.load(fh).get("skills", [])}
-            except (OSError, ValueError):
-                continue
-    return set(PLUGIN_FALLBACK)
-
-PLUGIN = plugin_skills()
+# 5.0.0: no external plugin ships flow skills; every skill a contract names is payload.
+PLUGIN = set()
 # A Claude Code mod ships as `.claude/skills/<name>/.claude-plugin/plugin.json` with no
 # SKILL.md: the engine auto-loads a plugin from a project skills folder. It is shipped payload
 # that a contract names, so it resolves. Counting only SKILL.md failed every doc that named the
@@ -245,7 +214,10 @@ SHIPPED_MODS = {os.path.basename(os.path.dirname(os.path.dirname(p))) for p in
 SHIPPED_AGENTS = {os.path.basename(p)[:-3] for p in
                   glob.glob(os.path.join(PAYLOAD, ".claude", "skills", "*", "agents", "*.md"))}
 # A name is resolvable when anything on this machine actually provides it.
-KNOWN = set(all_skills) | PLUGIN | USER_SKILLS | SHIPPED_MODS | SHIPPED_AGENTS
+# Claude Code's own skills a contract may name by their bare word (5.0.0: `code-review` and
+# `simplify` are called from inside astra-review and the Builder flow).
+BUILTIN_NAMED = {"simplify", "code-review"}
+KNOWN = set(all_skills) | PLUGIN | USER_SKILLS | SHIPPED_MODS | SHIPPED_AGENTS | BUILTIN_NAMED
 
 # Kebab-case tokens that are vocabulary rather than skill references. Each is here because
 # it appears in backticks and looks like a skill name; the list stays short on purpose,
@@ -288,7 +260,7 @@ NOT_A_SKILL = {
     "no-secrets-in-exports", "expand-contract", "recent-unwrapped", "code-map",
     "agent-not-idle", "agent-not-found", "agent-prompt-stalled", "read-only",
     "cross-vendor", "single-provider", "gate-arm", "wontfix-with-a-recorded-reason",
-    "claude-plugins-official", "mattpocock-skills", "claude-sonnet-4-6", "openai-codex",
+    "claude-plugins-official", "claude-sonnet-4-6", "openai-codex",
     "issue-tracker", "triage-labels", "check-requirements", "install", "uninstall",
     # CLI subcommands and flags that happen to be kebab-case.
     "adversarial-review", "send-text", "send-keys", "gate-diff", "no-focus",
@@ -533,31 +505,21 @@ CLI_LOCAL = {"compact", "clear", "resume", "cost", "doctor", "help", "login", "l
 BUILTIN_SKILL = {"simplify", "code-review", "verify", "commit", "pr", "commit-push-pr", "go",
                  "security-review", "init", "schedule", "update-config", "run"}
 
-# A plugin skill's own frontmatter is the authority on which kind it is. Read it where the
-# plugin is installed; fall back to the flow skills the method names, so a machine without
-# the plugin still runs this check rather than passing it vacuously.
-USERONLY_FALLBACK = {
-    "wayfinder", "grill-with-docs", "to-spec", "to-tickets", "implement", "triage",
-    "to-questionnaire", "ask-matt", "improve-codebase-architecture", "handoff", "teach",
-    "grill-me", "wait-what", "setup-matt-pocock-skills",
-}
-def plugin_invocability():
-    """({skill name: True if user-invoked only}, where that came from).
-
-    The plugin nests its skills under <version>/skills/<category>/<name>/, and both those
-    middle segments move between releases — so walk rather than spell the depth out.
-    """
+# A shipped skill's own frontmatter is the authority on which kind it is (5.0.0: read from
+# the payload's `.agents/skills/*/SKILL.md`, where every flow skill now lives).
+def payload_invocability():
+    """({skill name: True if user-invoked only}, where that came from)."""
     out = {}
-    for skill_md in glob.iglob(os.path.expanduser(
-            "~/.claude/plugins/cache/*/mattpocock-skills/**/SKILL.md"), recursive=True):
-        out[os.path.basename(os.path.dirname(skill_md))] = (
-            "disable-model-invocation: true" in read(skill_md))
-    if out:
-        return out, f"plugin frontmatter ({len(out)} skills read)"
-    return ({n: True for n in USERONLY_FALLBACK},
-            "fallback list — plugin not installed, built-ins still checked")
+    for skill_md in glob.glob(os.path.join(PAYLOAD, ".agents", "skills", "*", "SKILL.md")):
+        text = read(skill_md)
+        # the FRONTMATTER only: a body that quotes the flag (dispatch-ticket explains it) is prose
+        m = re.match(r"---\n(.*?)\n---", text, re.S)
+        front = m.group(1) if m else ""
+        out[os.path.basename(os.path.dirname(skill_md))] = bool(
+            re.search(r"^disable-model-invocation:\s*true\s*$", front, re.M))
+    return out, f"payload frontmatter ({len(out)} skills read)"
 
-INVOCABILITY, ADDR_SOURCE = plugin_invocability()
+INVOCABILITY, ADDR_SOURCE = payload_invocability()
 
 def user_only(name):
     """True = only a typed user turn reaches it. None = not a skill we can classify."""
@@ -586,12 +548,6 @@ for path, text in sorted(addr_sources.items()):
             continue
         for name in SLASH.findall(line):
             bare = unqualify(name)
-            # A plugin command typed bare resolves only while nothing else claims the word.
-            # 1.4.1 qualified every one of them by hand; this is what keeps them qualified.
-            if bare in INVOCABILITY and bare == name:
-                fail("6", f"{os.path.basename(path)}:{lineno} writes `/{name}` unqualified",
-                     f"a plugin command needs its plugin: `/mattpocock-skills:{name}`, since "
-                     f"a bare name resolves only until something else claims it (AST-050)")
             if user_only(bare) is False:
                 fail("6", f"{os.path.basename(path)}:{lineno} addresses `{bare}` as "
                           f"`/{name}`, but the model can invoke it",

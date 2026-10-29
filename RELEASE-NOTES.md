@@ -1,3 +1,76 @@
+# Astragentic 5.0.0
+
+**The method is the harness's own: seven `astra-*` skills, and nothing in the payload names an
+external plugin or a BMAD persona.** The owner's call of 2026-10-29: "khi cài bộ astragentic vào
+thì sẽ chỉ toàn skill astra thôi, không có dấu hiệu của bmad hay matt-pocock nữa; mình chỉ dùng
+chưng cất ra cái hay, cái phù hợp." Matt Pocock's skills (1.3.1, MIT) and the BMAD Method (HEAD
+2026-10-18, MIT) are distilled under `docs/matt-pocock-distilled/` and `docs/bmad-distilled-latest/`
+in this repository and are not shipped; the design, with every choice between the two sources,
+is `docs/audit/2026-10-29-astragentic-5.0.0-design.md`.
+
+| Skill | Replaces | Who calls it |
+|---|---|---|
+| `astra-grill-with-docs` | grill-with-docs (grilling + domain-modeling) | Shaper Align, `/astra-grill-with-docs` |
+| `astra-ux` | nothing (new): journeys UJ-n, actors and per-surface states captured from the owner into the project's PRD | BA or Thomas, where the owner speaks, before a Shaper on a surface |
+| `astra-to-spec` | to-spec | Shaper Spec; FR-n requirements, no `As a` list, no UX-DR section |
+| `astra-to-tickets` | to-tickets | Shaper Tickets, `/astra-to-tickets <spec-id>`; a UI ticket carries `## Glance`, `## States`, `## Criteria`; quiz the owner before publish |
+| `astra-implement-with-tdd` | implement + tdd | the Builder brief's first line |
+| `astra-ui` | bmad-ux + persona sally | Builder on a UI ticket, QA walk |
+| `astra-review` | Matt code-review + the built-in run beside it | Builder; the built-in `code-review` runs inside as the correctness lens |
+
+Personas: `astragentic-dispatch:astra-ui-lens`, `astra-slice-reviewer`, `astra-test-architect`
+(were sally, reviewer, murat). Gone with no replacement: `bmad-party`, the personas john, mary,
+winston, paige, and the plugin's triage, wayfinder, to-questionnaire, ask-matt, research.
+
+**Every skill asks the owner before its irreversible step, and no skill decides who answers.**
+Owner 2026-10-29: "cứ xem như anh luôn ngồi máy, còn anh cho phép Thomas trả lời hay anh trả
+lời là vấn đề của anh và Thomas." `astra-to-tickets` quizzes before publishing; `astra-to-spec`
+checks the seams; `astra-grill-with-docs` puts every decision to the owner and finds every fact
+itself. `thomas.md` carries the routing: Thomas answers for the owner what he can, takes the
+rest to him.
+
+**The mod `astragentic-dispatch` upgraded with it.** A Builder brief is recognised by
+`/astra-implement-with-tdd` (four regex sites). The tdd-order gate asks for no skill call any
+more: a RED run after the brief is the whole question (the skill name would be the brief's own
+expansion, true by construction). The band's Builder row is implement · tdd · ui · review ·
+simplify · arm; the tdd chip lights from the RED run in the test log, the review chip from
+`astra-review` (or the built-in alone on a quick ticket). New refusal: a brief whose `FLOW:`
+names `astra-ui` and lacks `## Glance`, `## States` or `## Criteria` is not sent; the mod sees
+the brief and not the tracker, so `dispatch-ticket` pastes the three sections.
+
+**A minimal doctor.** `.astraler/astragentic.sh doctor` exits 0 when no file in `.agents`,
+`.claude` or `.astraler/project` names a retired skill or persona, the seven skills are present
+in both trees and identical, and the mod's brief regex and flow table name skills that exist;
+exit 1 names each finding. The eight-group doctor is 5.1.
+
+`check-requirements.sh` no longer requires a plugin; its TARGET axis checks the seven skills
+paired. `check-reachability.py` reads invocability from the payload's own frontmatter.
+
+Selftest: every case that named the old skills renamed; new cases: a UI brief lacking `## States`
+and `## Criteria` is refused and the same brief with the sections goes; a brief whose FLOW has
+no `astra-ui` is not asked; the first content commit passes on a red run with no Skill call on
+the record; the tdd chip reads ✓ from that red run.
+
+| số đo | nguồn |
+|---|---|
+| 7 skills, 29 413 bytes; Builder pane 11 899 (was 18 200) | `wc -c harness/.agents/skills/astra-*/SKILL.md` |
+| 0 files in the payload name mattpocock or bmad (the ledger's history excepted) | `grep -rIl` |
+| 11 mod line items, 4 brief-regex sites, 1 gate half removed | `git diff register.tsx` |
+| nizzy Thomas pane: 0 Skill calls of triage, wayfinder, to-questionnaire, ask-matt, research | transcript grep `"name":"Skill","input":{"skill":"…"}` |
+| 101 of 202 UI tickets skipped the UI pass; 65 of 209 UI merges were corrections | nizzy transcripts and git, 2026-10-29 |
+| selftest 203 passed, 0 failed (HEAD 4.6.1: 202); planted defects watched to fail first | `harness/scripts/selftest.sh` 2026-10-29 |
+
+## Upgrade from 4.6.1
+
+- **Apply between lanes.** A Builder mid-ticket holds a brief that opens with the old prefix,
+  which this mod does not recognise as a Builder brief: finish or re-brief live lanes first.
+- Rename in the project's own layer (overlays, `AGENTS.md`/`CLAUDE.md`, rules): the table in
+  `ADAPT-HARNESS.md` § 3; `.astraler/astragentic.sh doctor` lists what is left and exits 1 until
+  nothing is.
+- `docs/agents/triage-labels.md` carries `quick`, `full`, `needs-triage`, `ready-for-agent`.
+- The owner may uninstall the `mattpocock-skills` plugin from the machine once the project
+  runs on 5.0.0; the harness reads nothing from it.
+
 # Astragentic 4.6.1
 
 **A dispatched pane waits by ending its turn; the mod now refuses `ScheduleWakeup` there.**

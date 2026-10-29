@@ -13,7 +13,7 @@ or no row means you implement alone and this skill does not fire. The runtime na
 supplement the junior reads: `.agents/roles/junior-<runtime>.md`. A runtime with no supplement
 file in the worktree is a misconfigured row: STOP and tell Thomas.
 
-**What stays yours:** every phase in `builder.md` except the typing. `tdd` red tests,
+**What stays yours:** every phase in `builder.md` except the typing. the red tests of `astra-implement-with-tdd`,
 both reviews, simplify, the arm, the markers, the handback and the push are the Builder's, run
 over the junior's commits exactly as over your own. The mod's gates read your pane, not the
 junior's, so nothing about them changes.

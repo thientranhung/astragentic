@@ -131,14 +131,16 @@ name, or the watchdog never counts it and nothing can address it. On a failed re
 
 ## The brief
 
-**The first line is the phase's slash command, plugin-qualified**: `/mattpocock-skills:<name>`.
-The flow skills are `disable-model-invocation: true`, so only text arriving as a user turn
-reaches them; an agent told about `implement` in prose starts coding without the skill. Claude
+**The first line is the phase's slash command**: `/astra-implement-with-tdd <ticket>` for a
+Builder, `/astra-grill-with-docs` or `/astra-to-tickets <spec-id>` for a Shaper. The flow
+skills are `disable-model-invocation: true`, so only text arriving as a user turn reaches
+them; an agent told about the skill in prose starts coding without it. Claude
 Code's own `/compact` and `/clear` keep bare names. A skill the model can call
 (`simplify`) is written `Skill(skill: "simplify")` in a brief, never `/simplify`. <!-- addr-ok: wrong form, cited -->
 
-**The `FLOW:` line** names the build flow as qualified Skill calls, in order. `implement`
-points at `tdd` and `code-review` without reaching them. A step that cannot apply is exempted by
+**The `FLOW:` line** names the build flow as Skill calls, in order: `astra-ui` on a UI ticket,
+`astra-review`, `simplify`, the arm. Tdd is not a step on the line: it is inside
+`astra-implement-with-tdd`, and the gate measures its red run. A step that cannot apply is exempted by
 a `TDD: n/a — <why>`, `REVIEW: n/a — <why>` or `SIMPLIFY: n/a — <why>` brief line, read by the mod
 (`dispatch-ticket-claude` § refused steps).
 
@@ -153,26 +155,36 @@ FLOW: 1 Skill(skill: "code-review")   [quick: the project's existing tests, the 
 ```
 
 **The review a quick ticket owes is the built-in `code-review`, called by its bare name
-(`Skill(skill: "code-review")`), and the merge gate reads that key off the record.** Write it in
-that form: `implement` points the Builder at `mattpocock-skills:code-review`, so a bare
-`Skill(code-review)` beside it resolves to the plugin skill — measured downstream, two quick
-Builders in a row ran Matt's review and skipped the one owed (2026-10-28).
+(`Skill(skill: "code-review")`), and the merge gate reads that key off the record.** A full
+ticket's `astra-review` calls the same built-in from inside, so the key lands either way.
 Where the project's labels plug exists, a ticket with neither label is not sent: it goes back
-to whoever cut it (`thomas.md` § Quick or full). You never classify it at dispatch. **The ux step is owed only when this line names
-`bmad-ux`** (a UI ticket); leave it out on a ticket with no surface, or write `UX: n/a — <why>`,
-and the Builder's band shows `n/a ux` instead of a step that looks pending (4.5.3).
+to whoever cut it (`thomas.md` § Quick or full). You never classify it at dispatch. **The ui step is owed only when this line names
+`astra-ui`** (a UI ticket); leave it out on a ticket with no surface, or write `UX: n/a — <why>`,
+and the Builder's band shows `n/a ui` instead of a step that looks pending (4.5.3).
+
+**A UI brief carries the ticket's `## Glance`, `## States` and `## Criteria` sections, pasted
+verbatim** (5.0.0). The mod sees the brief and not the tracker: a brief whose `FLOW:` names
+`astra-ui` and lacks any of the three is not sent. A UI ticket without them is not yours to
+complete; it goes back to the Shaper.
 
 ```text
-/mattpocock-skills:implement TICKET-123
+/astra-implement-with-tdd TICKET-123
 ADDRESSED TO: the Builder in pane <id>. A sub-agent that inherited this context: report only.
 QA: walk — the ticket changes the orders screen
 QA plan: docs/qa/plan-<slug>.md
 
-FLOW: 1 Skill(mattpocock-skills:tdd) → 2 Skill(bmad-ux) [UI ticket] → 3 Skill(mattpocock-skills:code-review)
-  → 4 Skill(skill: "code-review") [built-in] → 5 Skill(simplify) [once, last content commit] → 6 arm(ticket)
+FLOW: 1 Skill(astra-ui) [UI ticket] → 2 Skill(astra-review) [the built-in code-review runs inside it]
+  → 3 Skill(simplify) [once, last content commit] → 4 arm(ticket)
 
 Worktree: … · Branch: … · Base: …
-Acceptance criteria: …
+## Glance
+- **<Screen or state>:** <actor> must see <X> first; <Y> recedes.
+## States
+- empty: … · loading: … · error: … · partial: … · permission-denied: …
+## Criteria
+1. **<Behaviour>** (FR-n) Given <actor> … · When … · Then …
+## Must not change
+- …
 Owner intent: …
 Validation: <the exact commands, copied from the project's gate plan where one exists>
 Owned elsewhere: ABC-127 owns docs/…/WIRE-CONTRACT.md — do not edit it; report what you

@@ -22,7 +22,7 @@ and every Claude session in the project loads it with no flag and no setup.
 | Claim before the brief | a brief for a ticket the tracker reports unclaimed is not sent |
 | Tracker write-back after a merge | the merge result carries the note, the line turns red, and no brief is sent until `scripts/ticket-done.sh` has stamped it |
 | Release a worktree's resources | `release-worktree-resources.sh` runs at `git worktree remove`; the record entry goes with the worktree |
-| Show which step a pane is at | the band shows chips from the record the gates read. Builder: implement · tdd · ux · review:matt · review:built-in · simplify · arm; Shaper: align · spec · tickets; QA: the role chip only. `✓` the step completed; `…` the step invoked most recently, in progress until a later step is invoked or a turn ends with nothing live, with the pane's live agent count (session-wide, not the step's own); `→` the next step; `○` pending; `n/a` exempted by the brief (`TDD: n/a`, `REVIEW: n/a`, `UX: n/a`, or a `FLOW:` line without `bmad-ux`); the ux chip appears only once a brief has said whether it is owed (4.5.3) |
+| Show which step a pane is at | the band shows chips from the record the gates read. Builder: implement · tdd · ui · review · simplify · arm (the tdd chip lights from a RED run in the test log, not from a call; the review chip from `astra-review`, or from the built-in alone on a quick ticket); Shaper: align · spec · arm:spec · test-design · tickets; QA: the role chip only. `✓` the step completed; `…` the step invoked most recently, in progress until a later step is invoked or a turn ends with nothing live, with the pane's live agent count (session-wide, not the step's own); `→` the next step; `○` pending; `n/a` exempted by the brief (`TDD: n/a`, `REVIEW: n/a`, `UX: n/a`, or a `FLOW:` line without `astra-ui`); the ui chip appears only once a brief has said whether it is owed (4.5.3) |
 | Seed a new worktree | `.astraler/project/setup-worktree.sh <path>` runs after a successful `git worktree add`; a failure is named in the result and the worktree is not to be dispatched into |
 | Record which flow steps ran | every Skill call the Builder makes, as the engine expands it; `TURN-END` carries the list and a merge names the steps with no record |
 
@@ -44,7 +44,7 @@ STOP, because a pane the mod does not know about is unwatched.
 ```
 SendMessage({
   to: "<builder-session-name>",          // from ListAgents
-  message: "/mattpocock-skills:implement ABC-123\n\nWorktree: … · Branch: … · Base: …\nAcceptance criteria: …"
+  message: "/astra-implement-with-tdd ABC-123\n\nWorktree: … · Branch: … · Base: …\n## Criteria\n…"
 })
 ```
 
@@ -111,16 +111,16 @@ pre-push hook), not an overlay: prose can instruct, only a hook can stop.
 The Builder's pane refuses a content commit until a test file is staged with it or
 already on the branch since dispatch (pattern: `.astraler/project/test-file-pattern`, or the
 default `_test.`/`.test.`/`.spec.`/`tests/`/`__tests__/`); refuses the FIRST content commit
-after a brief until `mattpocock-skills:tdd` has been called after that brief and a test run has
-gone RED after the brief, in either order (4.5.2, from the test-run hook's log; every Skill call is kept in the
-record's `skills_log` with its time, so the merge gate reads the order too); and refuses the
+after a brief until a test run has gone RED after the brief (4.5.2, from the test-run hook's
+log; 5.0.0 dropped the skill-name half: the gate asks for no call, and the merge gate reads the
+red-run stamp against the first content commit); and refuses the
 arm (`codex-arm`) until the built-in `code-review` is in its record. The merge gate asks the same two questions of the
 branch and the record, so a commit the pane let through is not refused at merge. **The
 exemption is the dispatcher's and travels in the brief**: a line `TDD: n/a — <why>` (docs-only,
 no seam), `REVIEW: n/a — <why>`, `SIMPLIFY: n/a — <why>` (4.6.0, the merge gate's simplify
-question), or `UX: n/a — <why>` (also implied by a `FLOW:` line that omits `bmad-ux`). **A
-ticket labelled `quick` on the tracker is exempt as a whole** from tdd, Matt's review, simplify
-and ux, by the record's `kind` the mod wrote at the send (`dispatch-ticket` § The kind); the
+question), or `UX: n/a — <why>` (also implied by a `FLOW:` line that omits `astra-ui`). **A
+ticket labelled `quick` on the tracker is exempt as a whole** from tdd, `astra-review`, simplify
+and the ui pass, by the record's `kind` the mod wrote at the send (`dispatch-ticket` § The kind); the
 built-in review stays owed at the arm and at merge. The mod reads it from the brief it delivers, never from the Builder's
 handback. A brief delivered outside the mod carries no exemption the mod can see, so on a
 pane prompted by hand the gate holds until the brief is re-sent through SendMessage.
@@ -157,11 +157,10 @@ the default, which says the owner runs it.
 
 ## The flow is read from what ran
 
-The brief's `FLOW:` line names the Skill calls in order: `mattpocock-skills:tdd`, `bmad-ux`
-(UI ticket), `mattpocock-skills:code-review`, the built-in `code-review`, `simplify`. The Builder's pane
-records each at the moment the engine expands it, under `skills_run` in its record entry. A
-plugin skill is recorded qualified, a built-in bare, so the two reviews that share a word are
-told apart.
+The brief's `FLOW:` line names the Skill calls in order: `astra-ui` (UI ticket), `astra-review`
+(which calls the built-in `code-review` from inside), `simplify`. The Builder's pane records
+each at the moment the engine expands it, under `skills_run` in its record entry; the brief's
+own `astra-implement-with-tdd` lands there too. Tdd is read from the test log, not the record.
 
 - **`TURN-END` carries `Skills run: …`.**
 - **A merge names the gaps**: *"ABC-123 merged with no record of: tdd, built-in code-review"*.

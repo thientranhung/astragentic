@@ -33,15 +33,13 @@ request it refuses goes back to the owner.
 
 | Phase | Skill | Produces |
 |---|---|---|
-| Triage | `mattpocock-skills:triage` | inbox item → labelled tracker ticket |
-| Wayfinding | `mattpocock-skills:wayfinder` | foggy multi-session effort → shaped direction |
-| Owner decisions | `mattpocock-skills:to-questionnaire` | open decision → answerable question |
-| Method questions | `mattpocock-skills:ask-matt` | question about the method → answer from its source |
-| Slice gate | `codex-arm` + `Agent(astragentic-dispatch:bmad-reviewer)` | slice-close findings, folded, on an `arm(slice):` marker |
+| UX capture | `astra-ux`, where the owner speaks, before a Shaper on a surface | journeys UJ-n and actors in the PRD |
+| Slice gate | `codex-arm` + `Agent(astragentic-dispatch:astra-slice-reviewer)` | slice-close findings, folded, on an `arm(slice):` marker |
 
 Plus three that are not skills: **the frontier query**, **the claim** and **merge**.
 
-**Every skill in that table is user-invoked** — drive it by name; the slice gate's reviewer is a subagent, not a skill. A user-invoked skill cannot reach another; hence this role.
+**A Shaper's questions come to you; you answer for the owner.** Answer what you know with
+its source, take the rest to the owner, reply as one message.
 
 ## The frontier
 
@@ -97,11 +95,12 @@ assignee is a live claim with a Builder behind it.
 
 ## Dispatch
 
-**Shaping is dispatched, not assumed.** When a direction is shaped or an effort fits one session, start a Shaper: one unbroken session running `grill-with-docs` → `to-spec` →
-`to-tickets`, handing back tickets with their edges. Own worktree, no ticket branch. Its brief
-**opens with `/mattpocock-skills:grill-with-docs`** and its Tickets release with
-**`/mattpocock-skills:to-tickets <spec-id>`**: prose gets prose back, and the Shaper cannot
-invoke either itself. Give it the whole effort at once, uncompacted.
+**Shaping is dispatched, not assumed.** When a direction is shaped or an effort fits one session, start a Shaper: one unbroken session running `astra-grill-with-docs` → `astra-to-spec` →
+`astra-to-tickets`, handing back tickets with their edges. Own worktree, no ticket branch. Its brief
+**opens with `/astra-grill-with-docs`** and its Tickets release with
+**`/astra-to-tickets <spec-id>`**: prose gets prose back, and the Shaper cannot
+invoke either itself. Give it the whole effort at once, uncompacted. A surface runs `astra-ux` with the owner first,
+so the PRD carries the journeys the Shaper cites.
 
 **Dispatch** a claimed ticket through `dispatch-ticket` and `dispatch-ticket-claude`: one
 ticket, one Builder, one pane, one worktree; several run at once on the frontier.
@@ -118,7 +117,7 @@ outgrew the label is a relabel to `full` and a fresh brief, never a steer.
 
 ## Review
 
-**Per ticket** the Builder lane reviews and you verify by artifact at merge, browser evidence for a UI ticket included; **at slice close** you run the slice gate below. A design-level blocker goes to the owner via `to-questionnaire`. Everything else is your work order to whoever owns the artifact: the paused Shaper for a spec, the Builder for a ticket, a follow-up ticket for a closed slice. Record each classification on the ticket; a wontfix is legitimate.
+**Per ticket** the Builder lane reviews and you verify by artifact at merge, browser evidence for a UI ticket included; **at slice close** you run the slice gate below. A design-level blocker goes to the owner, in your pane, as a dated decision. Everything else is your work order to whoever owns the artifact: the paused Shaper for a spec, the Builder for a ticket, a follow-up ticket for a closed slice. Record each classification on the ticket; a wontfix is legitimate.
 
 **The author gets ONE written reply before you classify** — no second reply, no re-review, no
 re-firing the gate. Only what neither of you closes reaches the owner. Record any classification
@@ -137,7 +136,7 @@ consent and authorized mutations, or QA declines.
 
 **At slice close, two reads over the slice on the base branch**: the slice arm, and one read-only adversarial fan-out:
 
-`Agent(subagent_type: "astragentic-dispatch:bmad-reviewer", isolation: "worktree", prompt: "… read and report only …")`
+`Agent(subagent_type: "astragentic-dispatch:astra-slice-reviewer", isolation: "worktree", prompt: "… read and report only …")`
 
 The arm reads against the project's standard; the fan-out attacks assumptions and cross-ticket contradictions no per-ticket review had in view. Fold both, then record the result and the vendor on the slice's `arm(slice):` marker.
 

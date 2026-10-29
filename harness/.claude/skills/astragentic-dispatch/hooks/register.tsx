@@ -49,14 +49,15 @@ import type { BoardRow, Banner, Flow } from '../types'
 
 const MARK = '[astragentic-dispatch]'
 
-// The Builder flow, as the skill names the engine reports at `skill.prompt`. Measured
-// 2026-10-09 on Claude Code 2.1.294: a plugin skill arrives qualified (`mattpocock-skills:tdd`),
-// a built-in bare (`code-review`), so the two reviews that share a word are told apart here
-// where the brief's prose could not (AST-050). The record is the pane's own observation of the
-// call, which a commit message cannot forge the way a `Pass:` line can (AST-055, AST-130).
+// The Builder flow, as the skill names the engine reports at `skill.prompt` (5.0.0: the
+// harness's own `astra-*` skills; the built-in `code-review` arrives bare and is called from
+// inside `astra-review`, so both keys land on the record). The record is the pane's own
+// observation of the call, which a commit message cannot forge the way a `Pass:` line can
+// (AST-055, AST-130). `tdd` is not a skill call: the commit gate measures a test file and a
+// RED run, and the merge gate reads that stamp (4.1.0, 4.5.2).
 const FLOW: ReadonlyArray<readonly [string, string]> = [
-  ['mattpocock-skills:tdd', 'tdd'],
-  ['mattpocock-skills:code-review', "Matt's code-review"],
+  ['astra-implement-with-tdd', 'tdd'],
+  ['astra-review', 'astra-review'],
   ['code-review', 'built-in code-review'],
   ['simplify', 'simplify'],
 ]
@@ -90,12 +91,6 @@ function qaOwed(rec: Record<string, Entry>, key: string): string | null {
 function skillsLog(entry: Entry): Array<{ skill: string; at: number }> {
   const log = entry?.skills_log
   return Array.isArray(log) ? log.filter(x => x && typeof x.skill === 'string' && typeof x.at === 'number') : []
-}
-function tddCalledAfter(entry: Entry, since: number): number | null {
-  const hits = skillsLog(entry).filter(x => x.skill === 'mattpocock-skills:tdd' && x.at > since).map(x => x.at)
-  if (hits.length > 0) return Math.min(...hits)
-  const last = entry?.skills_last?.['mattpocock-skills:tdd']
-  return typeof last === 'number' && last > since ? last : null
 }
 // The test-run log `scripts/hook-test-run.py` (PostToolUse) writes: `<ms>\t<status>\t<cmd>` per
 // test command, one file per git toplevel under /tmp/harness-test-runs/. A RED run is a
@@ -279,30 +274,33 @@ const banner = atom({ plugin: 'astragentic-dispatch', key: 'banner' } as const, 
 // The Builder pane's own band: which FLOW steps have run, read from the same record the gates
 // read, so the person watching the pane sees the step the Builder is at without reading the
 // transcript (owner's ask, 2026-10-09).
-const flow = atom({ plugin: 'astragentic-dispatch', key: 'flow' } as const, { ran: [], latest: null, lastTurnEndAt: 0, tddNa: false, reviewNa: false, simplifyNa: false, uxOwed: null, kind: null, refusals: 0, lastRefusal: null, qaMode: null } as Flow)
+const flow = atom({ plugin: 'astragentic-dispatch', key: 'flow' } as const, { ran: [], latest: null, lastTurnEndAt: 0, tddNa: false, reviewNa: false, simplifyNa: false, uxOwed: null, redRun: false, kind: null, refusals: 0, lastRefusal: null, qaMode: null } as Flow)
 
 // One step list per dispatched role, in the order the contract names the phases, each step
 // the skill name the engine reports at `skill.prompt`. Builder's is the gated flow with two
-// optional step (ux: owed when the brief's FLOW names bmad-ux, 4.5.3); Shaper's is its five phases. QA runs its plan in the product and calls no
+// optional step (ui: owed when the brief's FLOW names astra-ui, 4.5.3/5.0.0); Shaper's is its five phases. QA runs its plan in the product and calls no
 // skill, so its band carries the role chip and the mode chip. The owner's ask (2026-10-10): see
 // on every dispatched pane which step it is at, so a dropped step shows as a gap in the order.
+// `red-run` (5.0.0) is not a skill: one Skill expansion yields one record line, and
+// `astra-implement-with-tdd` is the expansion, so the tdd chip lights from the RED run in the
+// test-run log — the thing the commit gate measures — not from a call.
 type Step = readonly [string, string, boolean?]   // skill name, chip label, optional
+const RED_RUN = 'red-run'
 const FLOW_BY_ROLE: Record<string, ReadonlyArray<Step>> = {
   builder: [
-    ['mattpocock-skills:implement', 'implement'],
-    ['mattpocock-skills:tdd', 'tdd'],
-    ['bmad-ux', 'ux', true],
-    ['mattpocock-skills:code-review', 'review:matt'],
-    ['code-review', 'review:built-in'],
+    ['astra-implement-with-tdd', 'implement'],
+    [RED_RUN, 'tdd'],
+    ['astra-ui', 'ui', true],
+    ['astra-review', 'review'],
     ['simplify', 'simplify'],
     ['codex-arm', 'arm'],
   ],
   shaper: [
-    ['mattpocock-skills:grill-with-docs', 'align'],
-    ['mattpocock-skills:to-spec', 'spec'],
+    ['astra-grill-with-docs', 'align'],
+    ['astra-to-spec', 'spec'],
     ['codex-arm', 'arm:spec'],
     ['test-design', 'test-design'],
-    ['mattpocock-skills:to-tickets', 'tickets'],
+    ['astra-to-tickets', 'tickets'],
   ],
   qa: [],
 }
@@ -311,8 +309,17 @@ async function refreshFlow($: any, root: string, key: string): Promise<void> {
   const entry = ((await readRecord($, root)) ?? {})[key] ?? {}
   const refusals = Array.isArray(entry.refusals) ? entry.refusals : []
   const last = refusals.length ? refusals[refusals.length - 1] : null
+  // the tdd chip: a RED run logged since the brief (the commit gate's stamp once it passed, the
+  // log itself before that), in the pane's worktree
+  // Builder panes only: a Shaper or QA pane carries a brief too and owes no red run, and the
+  // read spawns `realpath` (one process per refresh, never on the band's tick: refreshFlow runs
+  // on a skill call, a brief, a turn end, a refusal)
+  const briefAt = entry.role === 'builder' ? Number(entry.last_brief_received_at ?? 0) : 0
+  const dir = typeof entry.worktree === 'string' && entry.worktree ? entry.worktree : root
+  const redRun = typeof entry.red_run_at === 'number' || (briefAt > 0 && (await redRunAfter($, dir, briefAt).catch(() => null)) !== null)
   await update($, flow, () => ({
     ran: Object.keys(skillsRun(entry)),
+    redRun,
     latest: latestInvoked(entry),
     lastTurnEndAt: Number(entry.last_turn_end_at ?? 0),
     tddNa: Boolean(entry.tdd_na),
@@ -1288,7 +1295,7 @@ export const register: Register = on => {
     if (root) {
       const rec = (await readRecord($, root)) ?? {}
       if (me?.role === 'builder' && rec[me.key]?.kind === 'quick') {
-        text = `${text ? text + '\n\n' : ''}KIND: quick — the tracker labels this ticket quick (builder.md § A quick ticket). Owed: the code, the project's existing tests run green, the built-in code-review (Skill(skill: "code-review"), findings folded), commit, push, handback. Not owed, and the pane's gates are set so: tdd, mattpocock-skills:code-review, bmad-ux, simplify, the arm; write no simplify(increment) or arm(ticket) marker. If the work reaches past the label (a risky path, logic only a test would catch, more files than the project's ceiling), say so in the handback and stop: Thomas relabels it full.`
+        text = `${text ? text + '\n\n' : ''}KIND: quick — the tracker labels this ticket quick (builder.md § A quick ticket). Owed: the code, the project's existing tests run green, the built-in code-review (Skill(skill: "code-review"), findings folded), commit, push, handback. Not owed, and the pane's gates are set so: tdd, astra-review, astra-ui, simplify, the arm; write no simplify(increment) or arm(ticket) marker. If the work reaches past the label (a risky path, logic only a test would catch, more files than the project's ceiling), say so in the handback and stop: Thomas relabels it full.`
       } else if (!me) {
         const live = Object.entries(rec).filter(([, en]) => en?.role === 'builder' && isLive(en) && !en.worktree_removed_at)
         const quick = live.filter(([, en]) => en.kind === 'quick').map(([k]) => k)
@@ -1359,12 +1366,12 @@ export const register: Register = on => {
     const simplifyNa = isBriefText ? unfenced.match(/^[ \t]*SIMPLIFY[ \t]*:[ \t]*n\/a\b[^\n]*/im)?.[0]?.trim() ?? null : undefined
     // UX IS OWED OR IT IS NOT (4.5.3). The ux step was "optional" and its chip dim `· ux`, which
     // reads as waiting (one downstream ticket, 2026-10-26: the owner asked why the Builder skipped
-    // UX on a ticket with no UI). The brief's FLOW line already says: it names `bmad-ux` on a UI
+    // UX on a ticket with no UI). The brief's FLOW line already says: it names `astra-ui` on a UI
     // ticket and omits it otherwise; `UX: n/a — <why>` says no out loud. Owed → a required chip;
     // not owed → a grey `n/a ux`; a brief with no FLOW line says nothing and the chip is dropped.
     const flowLine = isBriefText ? unfenced.match(/^[ \t]*FLOW[ \t]*:[^\n]*(?:\n[ \t]+[^\n]*)*/im)?.[0] ?? null : null
     const uxNa = isBriefText ? /^[ \t]*UX[ \t]*:[ \t]*n\/a\b/im.test(unfenced) : false
-    const uxOwed = isBriefText ? (uxNa ? false : flowLine === null ? null : /\bbmad-ux\b/.test(flowLine)) : undefined
+    const uxOwed = isBriefText ? (uxNa ? false : flowLine === null ? null : /\bastra-ui\b/.test(flowLine)) : undefined
     // `QA: walk|probe|verify|none — <why>` on a Builder's brief is the dispatcher's declaration of
     // what the station owes this ticket before merge; `Mode: walk|probe|verify` on a QA brief is
     // which of the three the pane runs. Both are read here, from the delivered brief only.
@@ -1383,7 +1390,8 @@ export const register: Register = on => {
       if (isBriefText) {
         patch.last_brief_received_at = now
         patch.tdd_na = tddNa; patch.review_na = reviewNa; patch.ux_owed = uxOwed; patch.simplify_na = simplifyNa
-        if (me.role === 'builder') { patch.qa_required = qaRequired; patch.qa_plan = qaPlan; patch.first_content_commit_at = null }
+        // a new brief starts the tdd question over: the stamp of the previous brief's red run goes too (5.0.0)
+        if (me.role === 'builder') { patch.qa_required = qaRequired; patch.qa_plan = qaPlan; patch.first_content_commit_at = null; patch.red_run_at = null }
         if (me.role === 'qa') patch.qa_mode = qaMode
       }
       await patchRecord($, root, me.key, patch)
@@ -1633,7 +1641,7 @@ export const register: Register = on => {
       // merge (field audit 2026-10-18, §4). A Builder brief is refused while as many Builders are
       // live as the row allows; a live Builder is a recorded entry with a pane that has not been
       // merged or had its worktree removed. Absent row: 4, as thomas.md has always said.
-      if (/^\/mattpocock-skills:implement\b/.test(first)) {
+      if (/^\/astra-implement-with-tdd\b/.test(first)) {
         const target = Number(orch.match(/^\|\s*builder-target\s*\|\s*`?(\d+)`?\s*\|/m)?.[1] ?? 4)
         const rec0 = (await readRecord($, root)) ?? {}
         // The destination pane registered itself before this brief (that is the protocol), so
@@ -1652,7 +1660,7 @@ export const register: Register = on => {
       // brief whose first line merely names the tickets it plans for was refused on one of them
       // (measured downstream, 3.0.0's first day), so the role is read from the command, not the
       // id from any word.
-      const isBuilderBrief = /^\/mattpocock-skills:implement\b/.test(first)
+      const isBuilderBrief = /^\/astra-implement-with-tdd\b/.test(first)
       const id = isBuilderBrief ? first.split(/\s+/).slice(1).find(word => TICKET.test(word)) : undefined
       const ts = id ? await trackerState($, root, id) : null
       if (id && ts && (ts.assignee === '-' || ts.assignee === '' || /^(closed|done|unclaimed)$/i.test(ts.state))) {
@@ -1689,7 +1697,7 @@ export const register: Register = on => {
     // its plan from test-design run over its acceptance criteria; a ticket with no surface gets a
     // plan line saying none. The gate is here because the brief is the one moment every dispatch
     // passes through.
-    if (!me && root && e.origin.kind === 'model' && e.agentId === undefined && /^\/mattpocock-skills:implement\b/.test(first)) {
+    if (!me && root && e.origin.kind === 'model' && e.agentId === undefined && /^\/astra-implement-with-tdd\b/.test(first)) {
       const body = e.text.replace(/```[\s\S]*?```/g, '')
       const qa = body.match(/^[ \t]*QA[ \t]*:[ \t]*(walk|probe|verify|none)\b/im)?.[1]?.toLowerCase()
       const plan = body.match(/^[ \t]*QA plan[ \t]*:[ \t]*(\S+)/im)?.[1]?.replace(/^['"`]|['"`]$/g, '')
@@ -1705,6 +1713,19 @@ export const register: Register = on => {
           return { isDelivered: false, reason: `${MARK} not sent. QA plan: ${plan} does not exist in this checkout. Commit the plan test-design wrote, then send this brief again.` }
         }
       }
+      // A UI TICKET CARRIES GLANCE, STATES AND CRITERIA (5.0.0). The brief's FLOW line naming
+      // `astra-ui` is the dispatcher's own declaration that a surface changes; the three sections
+      // are what the Builder, the UI pass and QA's walk read (astra-to-tickets § Write each
+      // ticket). The mod sees the brief, never the tracker, so `dispatch-ticket` pastes them.
+      // Measured on the first adopter before this existed: 101 of 202 UI tickets skipped the UI
+      // pass and nobody saw it; 65 of 209 UI merges were corrections of an earlier UI merge.
+      const flowDecl = body.match(/^[ \t]*FLOW[ \t]*:[^\n]*(?:\n[ \t]+[^\n]*)*/im)?.[0] ?? ''
+      if (/\bastra-ui\b/.test(flowDecl)) {
+        const missing = ['## Glance', '## States', '## Criteria'].filter(h => !new RegExp(`^[ \\t]*${h}\\b`, 'm').test(body))
+        if (missing.length > 0) {
+          return { isDelivered: false, reason: `${MARK} not sent. FLOW names astra-ui (a UI ticket) and the brief lacks ${missing.join(', ')}. A UI ticket carries Glance, States and Criteria (astra-to-tickets § Write each ticket): paste the ticket's three sections into the brief, or send the ticket back to the Shaper to add them.` }
+        }
+      }
     }
     const isBrief = !me && root && e.origin.kind === 'model' && e.agentId === undefined && first.startsWith('/')
     const brief = isBrief && root ? await overlay($, root, 'dispatch-brief') : ''
@@ -1713,7 +1734,7 @@ export const register: Register = on => {
     // audit found 129 of 131 entries without one (stubs the dispatcher's own patches created
     // before any pane wrote), so lanes could not be counted by role (4.1.0).
     if (isBrief && root && res.isDelivered) {
-      const builderId = /^\/mattpocock-skills:implement\b/.test(first) ? first.split(/\s+/).slice(1).find(w => TICKET.test(w)) : undefined
+      const builderId = /^\/astra-implement-with-tdd\b/.test(first) ? first.split(/\s+/).slice(1).find(w => TICKET.test(w)) : undefined
       if (builderId) {
         await patchRecord($, root, builderId, { role: 'builder', dispatched_at: await $.clock.now() })
         void refreshTracker($, root)
@@ -1827,8 +1848,8 @@ export const register: Register = on => {
     // A QUICK TICKET OWES NO TEST (4.6.0): its kind came from the tracker's label, written on the
     // record by the dispatcher before the brief went (see trackerLabels).
     if (entry.tdd_na || entry.kind === 'quick') return next(e)
-    // THE GATE MEASURES A TEST, NOT A SKILL CALL (4.1.0). Until now it asked whether
-    // `mattpocock-skills:tdd` had been called; measured on the first adopter, 48 refusals, 48
+    // THE GATE MEASURES A TEST, NOT A SKILL CALL (4.1.0). Until then it asked whether
+    // the tdd skill had been called; measured on the first adopter, 48 refusals, 48
     // skill calls right after, and a test file edited before the next commit in 2. So it now
     // asks git: is a test file staged for this commit, or already on this branch since the
     // dispatch? The pattern is the project's (`.astraler/project/test-file-pattern`, one regex)
@@ -1902,23 +1923,17 @@ export const register: Register = on => {
     const hasTest = willCarry.some(p => testRe.test(p))
     if (hasTest) {
       // TDD IS ALSO AN ORDER (4.5.2, owner's ruling 2026-10-26). A test file beside the code
-      // passed this gate while `mattpocock-skills:tdd` was called after the commit (one
-      // downstream ticket: commit 12:19, tdd 12:25 after the dispatcher steered; 61 of 161 tickets).
-      // The FIRST content commit after a brief needs two things recorded after that brief:
-      // the tdd call, and a test run that went RED (hook-test-run.py's log) — a skill call is a
-      // line in a record, a red run is what TDD is. Later commits on the same brief are not
-      // asked again; `TDD: n/a` exempted the whole gate above; a pane with no brief delivered
-      // through the mod (prompted by hand) has no "after the brief" to measure.
+      // passed this gate while the tdd skill was called after the commit (one downstream
+      // ticket: commit 12:19, tdd 12:25 after the dispatcher steered; 61 of 161 tickets). The
+      // FIRST content commit after a brief needs a test run that went RED after that brief
+      // (hook-test-run.py's log): a red run is what TDD is. 5.0.0 dropped the skill-name half
+      // of this question — `astra-implement-with-tdd` is the brief's own expansion, so a call
+      // after the brief would always be true and a call by any other name always false. Later
+      // commits on the same brief are not asked again; `TDD: n/a` exempted the whole gate
+      // above; a pane with no brief delivered through the mod has no "after the brief" to measure.
       const brief = typeof entry.last_brief_received_at === 'number' ? entry.last_brief_received_at : 0
       const seen = typeof entry.first_content_commit_at === 'number' ? entry.first_content_commit_at : 0
       if (brief > 0 && !(seen > brief)) {
-        const tddAt = tddCalledAfter(entry, brief)
-        if (tddAt === null) {
-          await logRefusal($, root, me.key, 'tdd-order', `first content commit with no tdd call since the brief: ${contentCommits[0]?.join(' ') ?? ''}`)
-          return {
-            deny: `astragentic-dispatch: this is the first content commit since the brief and Skill(mattpocock-skills:tdd) has not been called since it (the test file is staged, the red test is not: 61 of 161 downstream tickets wrote the code first). Call tdd — a failing test first, then the code — and commit again; or ask the dispatcher for "TDD: n/a — <why>" on the brief.`,
-          }
-        }
         const redAt = await redRunAfter($, cwd, brief)
         if (redAt === null) {
           await logRefusal($, root, me.key, 'tdd-order', `first content commit with no RED test run since the brief: ${contentCommits[0]?.join(' ') ?? ''}`)
@@ -1926,7 +1941,7 @@ export const register: Register = on => {
             deny: `astragentic-dispatch: this is the first content commit since the brief and no test run has gone RED since it (${await lastRunLine($, cwd, brief)}; log: ${testRunLogPath(cwd)}, written by the PostToolUse hook for go test / pytest / vitest / jest / npm test / cargo test …, or the project's .astraler/project/test-command-pattern). Run the failing test ALONE in the foreground — a test followed by \`;\`, \`|\` or a newline reports the other command's exit code and is logged masked — then commit; or ask the dispatcher for "TDD: n/a — <why>".`,
           }
         }
-        await patchRecord($, root, me.key, { first_content_commit_at: await $.clock.now(), tdd_called_at: tddAt, red_run_at: redAt })
+        await patchRecord($, root, me.key, { first_content_commit_at: await $.clock.now(), red_run_at: redAt })
       }
       return next(e)
     }
@@ -2154,7 +2169,7 @@ export const register: Register = on => {
     // record (a dispatcher restart, a stub) is not judged either — a gate that fires on its own
     // missing data is noise, and the note below still names the gap.
     // TDD IS A TEST FILE, AT MERGE AS AT COMMIT (4.1.3). 4.1.0 made the commit gate ask git for a
-    // test file and left this gate asking the record for `mattpocock-skills:tdd`; measured
+    // test file and left this gate asking the record for the tdd skill; measured
     // downstream (one ticket, 2026-10-22): 5 content commits each carrying test files passed the commit
     // gate, then the merge was refused "no record of: tdd" after the whole build cycle. One
     // question, asked twice: a test file on the branch since the dispatch base, or `TDD: n/a`.
@@ -2166,17 +2181,17 @@ export const register: Register = on => {
       for (const label of flowGaps(entry)) {
         if (label === 'built-in code-review' && entry.review_na) continue
         if (label === 'simplify' && (quick || entry.simplify_na)) continue
-        if (label === "Matt's code-review" && quick) continue
+        if (label === 'astra-review' && quick) continue
         if (label === 'tdd') {
           if (entry.tdd_na || quick) continue
           const carries = await branchCarriesTest($, root, entry, ref)
           if (carries === false) { out.push('tdd (no test file on the branch since dispatch)'); continue }
-          // 4.5.2: the record says whether tdd ran before the first content commit of the last brief
+          // 4.5.2/5.0.0: the record says whether a RED run came before the first content commit of the last brief
           const brief = typeof entry.last_brief_received_at === 'number' ? entry.last_brief_received_at : 0
           const first = typeof entry.first_content_commit_at === 'number' ? entry.first_content_commit_at : 0
           if (brief > 0 && first > brief) {
-            const tddAt = tddCalledAfter(entry, brief)
-            if (tddAt === null || tddAt > first) out.push('tdd (called after the first content commit, or not since the brief)')
+            const redAt = typeof entry.red_run_at === 'number' ? entry.red_run_at : null
+            if (redAt === null || redAt > first) out.push('tdd (no RED test run before the first content commit)')
           }
           continue
         }
@@ -2298,7 +2313,7 @@ export const register: Register = on => {
       // ticket's exempt steps leave the row — what is shown is what is owed; a full ticket keeps
       // its grey n/a chips as 4.5.3 shipped them.
       const kind = f?.kind ?? null
-      const quickDrop = new Set(['mattpocock-skills:tdd', 'bmad-ux', 'mattpocock-skills:code-review', 'simplify', 'codex-arm'])
+      const quickDrop = new Set([RED_RUN, 'astra-ui', 'simplify', 'codex-arm'])
       const shown = kind === 'quick' ? (steps ?? []).filter(([name]) => !quickDrop.has(name)) : (steps ?? [])
       return (
         <Box flexDirection="column">
@@ -2325,10 +2340,11 @@ export const register: Register = on => {
               {shown.length > 0 ? (
                 <Box flexDirection="row" flexWrap="wrap">
                   {shown.map(([name, label, isOptional]) => {
-                    const isRan = f.ran.includes(name) || (name === 'codex-arm' && f.ran.includes('codex-claude-arm'))
+                    // the tdd chip lights from the RED run; a quick ticket's review chip from the built-in alone (5.0.0)
+                    const isRan = name === RED_RUN ? f.redRun : f.ran.includes(name) || (name === 'codex-arm' && f.ran.includes('codex-claude-arm')) || (name === 'astra-review' && kind === 'quick' && f.ran.includes('code-review'))
                     // an optional step is shown only once the brief has said whether it is owed (4.5.3)
                     if (isOptional && !isRan && f.uxOwed === null) return null
-                    const isNa = (name === 'mattpocock-skills:tdd' && f.tddNa) || (name === 'code-review' && f.reviewNa) || (name === 'simplify' && f.simplifyNa) || (isOptional && f.uxOwed === false)
+                    const isNa = (name === RED_RUN && f.tddNa) || (name === 'astra-review' && f.reviewNa) || (name === 'simplify' && f.simplifyNa) || (isOptional && f.uxOwed === false)
                     if (name === running) return <Chip bg="warning" fg="inverseText" label={`… ${label}${live.length ? ` (${live.length} agent${live.length === 1 ? '' : 's'})` : ''}`} />
                     if (isRan) return <Chip bg="success" fg="inverseText" label={`✓ ${label}`} />
                     if (isNa) return <Chip bg="inactive" fg="inverseText" label={`n/a ${label}`} />

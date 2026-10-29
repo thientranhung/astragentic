@@ -1,6 +1,6 @@
 ---
 name: shaper
-description: Shaping session. Drives grill-with-docs to to-spec to to-tickets in one unbroken context, deciding seams while the whole picture is in view.
+description: Shaping session. Drives astra-grill-with-docs to astra-to-spec to astra-to-tickets in one unbroken context, deciding seams while the whole picture is in view.
 ---
 
 **Your role is decided by how this session was started.** You are `shaper` because you were

@@ -10,7 +10,7 @@ by anyone else carries an `Implemented-by:` trailer (`dispatch-junior`).
 
 | When | Read | For |
 |---|---|---|
-| the ticket edits a `SKILL.md`, `AGENTS.md`, `CLAUDE.md` or a role contract | `writing-for-agents` | how a document that agents READ has to be written (`SPEC` requires it of every document produced) |
+| the ticket edits a `SKILL.md`, `AGENTS.md`, `CLAUDE.md` or a role contract | the document's readers are agents: claim first, one home per fact, the moment it is read named, no narrative | how a document that agents READ has to be written (`SPEC` requires it of every document produced) |
 | session start | `.agents/roles/builder-claude.md` | the two mod gates, simplify invocation, context management |
 | session start | `.agents/orchestrator.md` `## Junior`, then `dispatch-junior` if a runtime is named | whose the typing is |
 | build starts | the ticket, its spec, the owner intent in your brief | what to build |
@@ -25,10 +25,9 @@ Claude Code only). They add to this contract, never override it.
 
 | Phase | Skill | Ends when |
 |---|---|---|
-| Build | `mattpocock-skills:implement` | `mattpocock-skills:tdd` has run at every seam and the build is green — **then YOU check the acceptance criteria**, one by one |
-| Visual verification | `bmad-ux audit` for a UI ticket | every changed user-visible surface has browser evidence, and a UI ticket a read-only audit, or the skip is named; its findings are folded |
-| Increment review | `mattpocock-skills:code-review <Base>` | both axes have run once over that range |
-| Bug review | built-in `code-review` (`builder-claude.md`) | its findings are folded |
+| Build | `astra-implement-with-tdd` | every criterion has a test that went red first and is green now; the diff was judged against the ticket — **then YOU check the criteria**, one by one |
+| UI pass | `astra-ui audit` for a UI ticket | every changed user-visible surface has browser evidence; each Glance and States line was looked at; its findings are folded, or the skip is named |
+| Review | `astra-review` | three axes have run once over the increment (the built-in `code-review` inside it), every finding verified and routed |
 | Simplify | `simplify` (`builder-claude.md`) — **once, after the last content commit** | a `simplify(increment):` commit exists whose body names the pass that ran |
 | Cross-vendor arm | `codex-arm`; off when `orchestrator.md` arm row `ticket` = `no` | `arm(ticket):` receipt at head, or `Arm: off (orchestrator)` |
 
@@ -46,10 +45,10 @@ cadence.
 
 **The tracker's `quick` label makes a smaller loop, and the pane's gates are set to it.** The
 label is read at dispatch and written on the record (`dispatch-ticket` § The kind); the brief is
-the same `implement` brief, the band's first row says `quick`, and a `KIND: quick` section
+the same `astra-implement-with-tdd` brief, the band's first row says `quick`, and a `KIND: quick` section
 arrives in your prompt. Owed: the code, the project's existing tests run green, the built-in
-`code-review` with its findings folded, commit, push, handback. Not owed: `tdd`, `bmad-ux`,
-`mattpocock-skills:code-review`, simplify, the arm — write no `simplify(increment)` or
+`code-review` with its findings folded, commit, push, handback. Not owed: tdd, `astra-ui`,
+`astra-review`, simplify, the arm — write no `simplify(increment)` or
 `arm(ticket)` marker and cite none. Measured on the first adopter before this existed: 15–32%
 of its tickets were this shape, each paid as the full loop (median $19.5).
 
@@ -58,34 +57,36 @@ a risky path (migration, route or API, auth, payment, a data write), logic only 
 catch, or more files than the ticket's words named, stop and say so in the handback. Thomas
 relabels it `full` and re-briefs; a quick ticket never grows into a full one inside the pane.
 
-**Pass `mattpocock-skills:code-review` the `Base:` your brief carries** — "the increment" is not a git ref, and
-the skill asks for one when missing, into a pane with nobody in it.
+**`astra-review` reads the `Base:` your brief carries** — "the increment" is not a git ref.
 
-**Call `tdd` and both reviews yourself, by qualified name.** `implement` only points at them;
-the pane records each call and every `TURN-END` carries `Skills run:`. A step that cannot apply
-is exempted by the brief's `TDD: n/a — <why>`, `REVIEW: n/a — <why>` or `SIMPLIFY: n/a — <why>`
-line (`builder-claude.md` § gates), or by the ticket's `quick` label (§ A quick ticket). `bmad-ux audit` is owed when the brief's `FLOW:` names it,
-exempted by `UX: n/a — <why>`, and named in the handback as `UX audit: n/a — <why>`.
+**Call `astra-ui` and `astra-review` yourself, by name.** The pane records each call and every
+`TURN-END` carries `Skills run:`; tdd is not a call but a RED run in the test log, which is
+what the commit gate and the band read. A step that cannot apply is exempted by the brief's
+`TDD: n/a — <why>`, `REVIEW: n/a — <why>` or `SIMPLIFY: n/a — <why>` line (`builder-claude.md`
+§ gates), or by the ticket's `quick` label (§ A quick ticket). `astra-ui audit` is owed when the
+brief's `FLOW:` names it, exempted by `UX: n/a — <why>`, and named in the handback as
+`UI audit: n/a — <why>`.
 
-`implement` is **user-invoked**: drive it by name. The craft layer (`tdd`, `diagnosing-bugs`,
-`research`, `grilling`, `wizard`…) is model-invoked and needs no wiring.
+`astra-implement-with-tdd` is **user-invoked**: it is your brief's first line. `astra-ui`,
+`astra-review` and `simplify` are model-invoked: call them by name at their phase.
 
 ## With a junior
 
 When `orchestrator.md`'s Junior row names a runtime, Build splits: **the red tests are yours**
-(`tdd`, committed), **the green is the junior's** (`dispatch-junior`: a pane beside you,
+(the red half of `astra-implement-with-tdd`, committed), **the green is the junior's** (`dispatch-junior`: a pane beside you,
 one brief, one wait, one read-back), and every later phase is yours over its commits. Two red briefs, or a crossed boundary in
 `junior.md`, return the typing to you; say so in the handback.
 
 ## Build
 
-`tdd` is the default shape on code that has a seam; the pane records the call.
+Test-first is the default shape on code that has a seam: one failing test per criterion, then
+the code (`astra-implement-with-tdd`); the test log records the red run.
 
-## Increment review
+## Review
 
-**Two skills answer to `code-review`** — the plugin's and a Claude Code built-in that does
-something else — so name this one in full. Run it **once** over the increment; the skill
-carries its two axes and its smell baseline itself.
+Run `astra-review` **once** over the increment; it launches the built-in `code-review` as its
+correctness lens beside the intent and standards lenses, verifies each finding at its line and
+routes it. A quick ticket calls the built-in `Skill(skill: "code-review")` alone.
 
 Fix the findings you agree with. A finding you dispute goes to Thomas once, in writing
 (`thomas.md` § Review); the gate is not re-fired.
@@ -95,14 +96,14 @@ Fix the findings you agree with. A finding you dispute goes to Thomas once, in w
 **A ticket that changes what a user sees is not done when the diff is right.** Per changed
 surface the handback carries browser evidence: what you looked at, at what viewport, and what
 you saw, using the project's tool against its design guidelines. A UI ticket also gets
-`bmad-ux audit` on each changed surface, read-only, its findings yours to fold or dispute. Where
-the repo cannot render the change, or the ticket touches no user-visible surface, the handback
-says so as `UX audit: n/a — <why>`. Whether the product still coheres is QA's walk.
+`astra-ui audit` on each changed surface, read-only, checking each Glance and States line of the
+ticket, its findings yours to fold or dispute. Where the repo cannot render the change, or the
+ticket touches no user-visible surface, the handback says so as `UI audit: n/a — <why>`. Whether the product still coheres is QA's walk.
 
 ## The cross-vendor arm — yours to fire, and it closes your loop
 
-**One closed loop, one handback:** `implement` → `tdd` → [`bmad-ux audit`] →
-`mattpocock-skills:code-review` → built-in `code-review` → simplify → **arm pass 1** →
+**One closed loop, one handback:** `astra-implement-with-tdd` → [`astra-ui audit`] →
+`astra-review` → simplify → **arm pass 1** →
 [fold → **pass 2**] → `arm(ticket):` receipt → handback. The arm reads the simplified tree.
 
 **The head under review is yours**, so the range is correct without resolving it. Take isolation

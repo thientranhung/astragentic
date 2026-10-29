@@ -26,7 +26,7 @@ from this table — read the entry.
 | `AST-042` | Two skills answering to one name means the model-invoked path picks the wrong one | promoted | 126 | selftest.sh |
 | `AST-045` | A green test suite and a coherent product are different claims | promoted | 331 | check-reachability.py |
 | `AST-047` | "Local" is a deployment fact, not a data fact | promoted | 163 | check-reachability.py |
-| `AST-050` | Qualify a plugin command always, not once it is known to collide | promoted | 217 | check-reachability.py,docs-staleness-audit.sh,register.tsx,selftest.sh |
+| `AST-050` | Qualify a plugin command always, not once it is known to collide | promoted | 217 | docs-staleness-audit.sh,selftest.sh |
 | `AST-051` | An address the caller cannot use produces a substitute, not an error | promoted | 319 | check-reachability.py,docs-staleness-audit.sh |
 | `AST-052` | The word-budget audit ran its loop zero times and reported all clean | promoted | 227 | docs-staleness-audit.sh |
 | `AST-054` | `git add -A` committed two releases nobody ever applied | promoted | 146 | hook-git-guard.py |
