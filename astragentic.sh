@@ -5,7 +5,7 @@
 #   .astraler/astragentic.sh update           installed vs latest, what changed between, the one-liner
 #   .astraler/astragentic.sh update --apply   pull the latest release and apply it (get.sh latest --apply)
 #   .astraler/astragentic.sh version          the installed version only
-#   .astraler/astragentic.sh doctor           5.0.0: is the installed scaffold whole — exit 0 clean, 1 findings
+#   .astraler/astragentic.sh doctor           5.0.0: is the installed scaffold whole — exit 0 clean, 1 findings (5.0.1: settings*.json exempt)
 #
 # `update` changes nothing: it reads `.astraler/state/applied-version`, asks the package remote
 # for its newest v-tag, prints the release notes of every release in between, and prints the
@@ -58,7 +58,10 @@ case "$CMD" in
     scope=""
     for d in .agents .claude .astraler/project; do [ -d "$ROOT/$d" ] && scope="$scope $ROOT/$d"; done
     # shellcheck disable=SC2086
-    hits="$(grep -rIl --exclude-dir=memory --exclude=recurring-failure-modes.md -e 'mattpocock-skills' -e 'bmad-' $scope 2>/dev/null | sed "s#^$ROOT/##" || true)"
+    # `.claude/settings*.json` is configuration, not a reference: the per-project way to turn the
+    # old plugin OFF is the key `"mattpocock-skills@mattpocock": false` in it (nizzy, 2026-10-29,
+    # the day 5.0.0 landed), and a scan that flags the off switch asks for a machine-wide uninstall.
+    hits="$(grep -rIl --exclude-dir=memory --exclude=recurring-failure-modes.md --exclude='settings*.json' -e 'mattpocock-skills' -e 'bmad-' $scope 2>/dev/null | sed "s#^$ROOT/##" || true)"
     n="$(printf '%s' "$hits" | grep -c . || true)"
     if [ "$n" -eq 0 ]; then say "ok   0 files name a retired skill or persona in .agents, .claude, .astraler/project"
     else bad_ "$n file(s) still name mattpocock-skills or bmad-* (5.0.0 ships astra-* only):"; printf '%s\n' "$hits" | sed 's/^/         /'; fi

@@ -1,3 +1,21 @@
+# Astragentic 5.0.1
+
+**The doctor no longer flags the per-project switch that turns the old plugin off.** The first
+adopter applied 5.0.0 the day it shipped, renamed its project layer, saw `doctor` exit 0, then
+disabled the Matt Pocock plugin for that project alone — the only per-project form is the key
+`"mattpocock-skills@mattpocock": false` in `.claude/settings.json` — and the doctor exited 1 on
+it as a retired name. Configuration is not a reference: `.claude/settings*.json` is exempt
+from the retired-name scan. Planted in the selftest's doctor fixture; the 5.0.0 doctor fails
+on it, this one passes.
+
+| số đo | nguồn |
+|---|---|
+| 1 file flagged on a clean project, exit 1 | nizzy `.scratch/report-to-astragentic-2026-10-29-doctor-flags-plugin-disable.md` (commit ac86f587d) |
+
+## Upgrade from 5.0.0
+
+- Nothing by hand. `update --apply`, then `doctor` reads 0 on a project with the plugin disabled.
+
 # Astragentic 5.0.0
 
 **The method is the harness's own: seven `astra-*` skills, and nothing in the payload names an
@@ -68,8 +86,10 @@ the record; the tdd chip reads ✓ from that red run.
   `ADAPT-HARNESS.md` § 3; `.astraler/astragentic.sh doctor` lists what is left and exits 1 until
   nothing is.
 - `docs/agents/triage-labels.md` carries `quick`, `full`, `needs-triage`, `ready-for-agent`.
-- The owner may uninstall the `mattpocock-skills` plugin from the machine once the project
-  runs on 5.0.0; the harness reads nothing from it.
+- Turn the `mattpocock-skills` plugin off **for this project only** once it runs on 5.0.0:
+  `"enabledPlugins": { "mattpocock-skills@mattpocock": false }` in `.claude/settings.json`.
+  Never uninstall it machine-wide: plugins are user-scoped and another project may still run
+  on it (owner's ruling 2026-10-29; the 5.0.0 text said "may uninstall" and was wrong).
 
 # Astragentic 4.6.1
 

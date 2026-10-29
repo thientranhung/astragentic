@@ -205,7 +205,10 @@ Classify candidate material before editing anything:
   `.astraler/astragentic.sh doctor` lists every file in the project layer that still carries an
   old name, and exits 1 until none does. **Apply between lanes**: a Builder mid-ticket keeps the
   old brief prefix, which the 5.0.0 mod no longer recognises as a Builder brief, so finish or
-  re-brief live lanes first. The owner may then uninstall the plugin from the machine.
+  re-brief live lanes first. Then **turn the old plugin off for this project only**: `"enabledPlugins": {
+  "mattpocock-skills@mattpocock": false }` in the project's `.claude/settings.json`; plugins are
+  user-scoped and another project may still run on it, so never uninstall it machine-wide. The
+  doctor (5.0.1) does not read that key as a retired name.
 - **`.astraler/project/` is the project's layer, and a release never writes into it.** The
   plugs (`tracker-state.sh`, `cleanup-worktree.sh`, `work-in-flight.sh`, `tracker-status.sh`,
   `ticket-done.sh`, and since 2.20.0 `status-line.sh`, `watchdog-probe.sh`,

@@ -86,7 +86,8 @@ fi
 # 2. The method ships as the payload's own `astra-*` skills (5.0.0); no external plugin is
 # required. What this axis can still check on the MACHINE is nothing; the TARGET axis below
 # checks that the seven skills landed in both trees. A leftover plugin is not a finding here:
-# uninstalling it is the owner's call after the project runs 5.0.0 (ADAPT-HARNESS § 3).
+# the project turns it off in its own .claude/settings.json (ADAPT-HARNESS § 3); never uninstall
+# machine-wide, another project may still run on it (owner, 2026-10-29).
 
 PLUGINS_JSON="$HOME/.claude/plugins/installed_plugins.json"   # read by the Codex plugin check below
 
