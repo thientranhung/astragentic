@@ -861,14 +861,41 @@ def main():
                     # merge in this range too, and it owes nothing: no ticket closed, nothing learned. Measured
                     # downstream: two pushes refused for a `Ledger:` line on such merges, ten minutes of
                     # history rewriting each. What Thomas merges onto the base is the first-parent line.
-                    rc, out = run(["git", "log", "--merges", "--first-parent", "--format=%s", "%s..%s" % (up, src)])
+                    rc, out = run(["git", "log", "--merges", "--first-parent", "--format=%H%x1f%B%x1e", "%s..%s" % (up, src)])
+                    # A SHAPER'S MERGE CLOSES NO TICKET (5.0.4). A Shaper lands its spec, QA plan and
+                    # records on the base under `shaper/<epic-id>`, and the epic stays open by design;
+                    # ticket-done.sh refuses an open ticket, so this rule asked for a stamp nobody could
+                    # make (nizzy, 2026-10-29: the push was reworded to hide the id, which teaches the
+                    # shape this rule exists to catch). The mod's own merge check already skips a record
+                    # whose role is not builder; this rule now reads the same record, and also accepts
+                    # the branch shape (`shaper/…`, `qa/…`) and an explicit `Ticket-done: n/a — <why>`
+                    # trailer for a merge that lands no ticket's work.
+                    roles = {}
+                    rc_t, top = run(["git", "rev-parse", "--show-toplevel"])
+                    if rc_t == 0 and top.strip():
+                        try:
+                            with open(os.path.join(top.strip(), ".astraler", "state", "dispatch-record.json"), encoding="utf-8") as fh:
+                                rec = json.load(fh)
+                            roles = {k: str((v or {}).get("role") or "") for k, v in rec.items() if isinstance(v, dict)}
+                        except (OSError, ValueError):
+                            roles = {}
                     missing = []
-                    for subj in (out.splitlines() if rc == 0 else []):
+                    for chunk in (out.split("\x1e") if rc == 0 else []):
+                        if "\x1f" not in chunk:
+                            continue
+                        body = chunk.split("\x1f", 1)[1]
+                        subj = body.strip().splitlines()[0] if body.strip() else ""
+                        if re.search(r"(?mi)^Ticket-done:\s*n/a\b", body):
+                            continue
+                        if re.search(r"\b(shaper|qa)[ /:-]", subj, re.I):
+                            continue
                         # The FIRST ticket-shaped id in a merge subject is the ticket; later
                         # ones are citations (`… (AST-069)`). Both real merge shapes measured
                         # downstream lead with it: `Merge ABC-490: …` and git's default
                         # `Merge remote-tracking branch 'origin/builder/ABC-467'`.
                         m = re.search(r"\b([A-Z][A-Z0-9]*-[0-9]+)\b", subj)
+                        if m and roles.get(m.group(1), "builder") not in ("", "builder"):
+                            continue
                         if m and not os.path.exists(os.path.join(STAMP_ROOT, "harness-ticket-done", m.group(1))):
                             if m.group(1) not in missing:
                                 missing.append(m.group(1))

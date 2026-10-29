@@ -907,6 +907,34 @@ ld_merge "Merge ABC-1: wrote the ledger and moved on
 This one updated the Ledger: carefully, see the entry."
 guard_in "$LD" deny  "git push origin main"            # a MENTION is not a declaration
 ( cd "$LD" && git reset -q --hard HEAD~1 ) >/dev/null 2>&1
+# 5.0.4 — a Shaper's merge closes no ticket: `shaper/<epic>` with no stamp pushes when the record
+# says role=shaper, or the subject carries the branch shape, or a `Ticket-done: n/a` trailer; the
+# same id as a Builder merge with no stamp is still refused (nizzy, 2026-10-29: an open epic's
+# merge was refused and the subject reworded to hide the id)
+ld_merge "merge: shaper ABC-77 — QA plan section
+
+Ledger: none"
+guard_in "$LD" allow "git push origin main"            # subject names the shaper
+( cd "$LD" && git reset -q --hard HEAD~1 ) >/dev/null 2>&1
+mkdir -p "$LD/.astraler/state"; printf '{"ABC-78":{"role":"shaper","pane_id":"p1"}}' > "$LD/.astraler/state/dispatch-record.json"
+ld_merge "Merge ABC-78: spec and plan landed
+
+Ledger: none"
+guard_in "$LD" allow "git push origin main"            # record says shaper
+( cd "$LD" && git reset -q --hard HEAD~1 ) >/dev/null 2>&1
+printf '{"ABC-78":{"role":"builder","pane_id":"p1"}}' > "$LD/.astraler/state/dispatch-record.json"
+ld_merge "Merge ABC-78: spec and plan landed
+
+Ledger: none"
+guard_in "$LD" deny  "git push origin main"            # ...and the same merge as a Builder's is refused
+( cd "$LD" && git reset -q --hard HEAD~1 ) >/dev/null 2>&1
+ld_merge "Merge ABC-79: records only
+
+Ticket-done: n/a — lands no ticket's work
+Ledger: none"
+guard_in "$LD" allow "git push origin main"            # explicit trailer
+( cd "$LD" && git reset -q --hard HEAD~1 ) >/dev/null 2>&1
+rm -f "$LD/.astraler/state/dispatch-record.json"
 ld_merge "Merge ABC-1: empty value
 
 Ledger:"

@@ -1,3 +1,27 @@
+# Astragentic 5.0.4
+
+**A Shaper's merge closes no ticket, and the push guard knows it.** The pre-push rule took the
+first ticket-shaped id in every first-parent merge subject on the base and demanded a
+ticket-done stamp for it. A Shaper lands its spec, QA plan and records under `shaper/<epic>`
+while the epic stays open by design, and `ticket-done.sh` refuses an open ticket, so the push
+was refused for a stamp nobody could make; the workaround was to reword the subject to hide the
+id, which teaches the shape the rule exists to catch (nizzy, 2026-10-29, epic TRA-1293). The
+rule now reads `.astraler/state/dispatch-record.json` as the mod's merge check already does: a
+record whose role is not builder owes nothing; a subject carrying `shaper/`, `shaper `, `qa/`
+owes nothing; a merge body with a `Ticket-done: n/a — <why>` trailer owes nothing. A Builder's
+merge with no stamp is refused as before.
+
+Selftest: four cases on the push guard — shaper subject allowed, record role shaper allowed, the
+same merge with record role builder refused, the n/a trailer allowed.
+
+| số đo | nguồn |
+|---|---|
+| 1 refused push on an open epic, 1 reworded subject | nizzy `.scratch/harness-issues/2026-10-29-pre-push-ticket-done-shaper-merge.md` |
+
+## Upgrade from 5.0.3
+
+- Nothing by hand. The Shaper's merge subject may name the epic again.
+
 # Astragentic 5.0.3
 
 **The doctor's selftest case runs only in the package layout.** It copies `harness/` and runs
