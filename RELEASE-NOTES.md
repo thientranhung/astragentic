@@ -15,8 +15,9 @@ together.
 
 Selftest: five cases that run the hook through a real `git push` and assert the exit code —
 shaper subject admitted, record role shaper admitted, the same merge with record role builder
-refused, n/a trailer admitted, a sync merge inside the branch owes no stamp. All five were
-watched to fail against the 5.0.5 hook (4 refusals, 1 admitted) before the fix.
+refused, n/a trailer admitted, a sync merge inside the branch owes no stamp. The four admit
+cases were watched red against the 5.0.5 hook before the fix; the refuse case is the control and
+is green on both hooks, as it must be.
 
 Known, in step with the guard, not measured: `qa[ /:-]` also matches a Builder subject such as
 `fix qa-report`, which would then owe no stamp. The record-role check is the stronger of the
@@ -25,7 +26,7 @@ three; tighten both files together if a case appears.
 | số đo | nguồn |
 |---|---|
 | 0 of 4 5.0.4 cases exercised the hook; 179/0 selftest with the defect in | inception ADAPTATION-REPORT.md, commit 66476b55 |
-| 5 planted hook cases red on the 5.0.5 hook, 215/0 on 5.0.6 | selftest run 2026-10-29 |
+| 4 admit cases red on the 5.0.5 hook, 1 refuse case green on both; 215/0 on 5.0.6 | selftest run 2026-10-29 |
 
 ## Upgrade from 5.0.5
 
