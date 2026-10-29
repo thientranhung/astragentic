@@ -1,3 +1,35 @@
+# Astragentic 5.0.7
+
+**A bare agent ref is an agent ref.** A dispatched pane's written sends go to its dispatcher,
+whatever name the model typed, except to the pane's own agents (4.3.1). That test recognised a
+fork by its name, its id, or a bracketed ref ("code-review [ce2df1]"). Three times on one night
+a Builder whose review or simplify fork came back empty asked it for "your final findings" by
+the ref alone — `4c359a`, no name, no brackets — and the mod sent the request to the dispatcher
+as a reply. The dispatcher answered, the Builder read that as the fork's answer and asked again
+(nizzy, 2026-10-30, TRA-1292 once, TRA-1285 twice). The same Builders' sends by name seconds
+later resumed the finished fork ("Resuming agent code-review"), so the name is what resumes.
+Now a bare hex ref that matches one of the pane's agents is rewritten to that agent's name; a
+bare ref no agent carries is refused with the reason (a finished fork's result is the Agent
+tool result already received; an empty one is the finding, re-run the lens) and does not reach
+the dispatcher. A role name ("thomas") is still readdressed as before.
+
+Assumed, in step with the TURN-END hold which filters the same list by status: `$.agent.list()`
+still lists a finished fork. If a runtime drops finished forks from the list, the ref falls
+into the refused branch and the Builder reads why, instead of looping.
+
+Selftest: a send to the bare ref of a completed fork arrives addressed to the fork's name; a send
+to a bare ref no agent carries is refused with "agent ref" in the reason and nothing reaches the
+dispatcher. Both red against the 5.0.6 mod in a fresh clone, 216/0 on 5.0.7.
+
+| số đo | nguồn |
+|---|---|
+| 3 ref-only sends routed to the dispatcher, 2 Builders, each followed by a repeat ask | nizzy `.scratch/harness-issues/2026-10-30-fork-result-requests-routed-to-dispatcher.md`, Builder transcripts 16:05Z and 22:19Z |
+| 3 of 3 sends by name resumed or reported the finished fork honestly | same transcripts |
+
+## Upgrade from 5.0.6
+
+- One mod file. Nothing by hand.
+
 # Astragentic 5.0.6
 
 **The Shaper exemption reaches `git push`.** 5.0.4 exempted a Shaper's or QA's merge from the

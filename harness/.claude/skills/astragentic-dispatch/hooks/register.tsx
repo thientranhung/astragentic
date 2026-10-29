@@ -1559,14 +1559,33 @@ export const register: Register = on => {
       // Builder's "report your findings" to its own code-review fork went to the dispatcher,
       // twice, and the review round was lost (measured downstream 2026-10-22). The name, the id,
       // and the ref against the id all say "mine".
-      const ref = (e.to.match(/\[([0-9a-f]{4,})\]\s*$/i)?.[1] ?? '').toLowerCase()
+      // A BARE REF IS A REF TOO (5.0.7). Three sends on one night (nizzy, 2026-10-30, two
+      // Builders) addressed a finished fork by its ref alone — "4c359a", no name, no brackets —
+      // asking for its final findings. This test read brackets only, so the send went to the
+      // dispatcher as a reply; the Builder took the dispatcher's answer for the fork's and asked
+      // again. The runtime resumes a finished fork by NAME ("Resuming agent code-review") and
+      // not by bare ref, so a ref that names one of this pane's agents is rewritten to that
+      // agent's name; a ref that names none is refused with the reason, not readdressed: the
+      // only reader of a reply is the dispatcher, and a ref is never the dispatcher's address.
+      const bare = (e.to.trim().match(/^([0-9a-f]{4,})$/i)?.[1] ?? '').toLowerCase()
+      const ref = bare || (e.to.match(/\[([0-9a-f]{4,})\]\s*$/i)?.[1] ?? '').toLowerCase()
       const mine = await $.agent.list().catch(() => [])
-      const isAgent = (mine ?? []).some((a: any) => {
+      const owned = (mine ?? []).find((a: any) => {
         const id = String(a.id ?? '')
         return id === to || a.name === to || a.teammateId === to || a.teammateId?.split('@')[0] === to
           || (ref !== '' && id.toLowerCase().includes(ref))
       })
-      if (!isAgent) {
+      if (owned && bare && owned.name) {
+        $.ui.status(`"${e.to}" is the ref of your agent ${owned.name} — sent by name so a finished fork resumes`)
+        return next({ ...e, to: String(owned.name) })
+      }
+      if (!owned && bare) {
+        return {
+          isDelivered: false,
+          reason: `${MARK} not sent. "${e.to}" is an agent ref, and no agent of this session carries it. A finished fork's result is the Agent tool result you already received (an empty one is the finding: re-run the lens directly, as builder-claude.md § Fan-out failure says); a live fork is addressed by its name. Your dispatcher is ${dispatcherName || dispatcher}; a reply goes there by that name.`,
+        }
+      }
+      if (!owned) {
         $.ui.status(`message to "${e.to}" went to the dispatcher (${dispatcherName || dispatcher}) instead — a pane's sends reach its dispatcher and its own agents only`)
         return next({ ...e, to: dispatcher })
       }
