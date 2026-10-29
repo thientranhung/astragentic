@@ -1341,6 +1341,36 @@ unset E_LOG
 # unwatched. Claude Code's own reader validates it the way the engine loads it, and a planted
 # defect proves the reader names one: a check only ever seen passing has not been tested.
 # ---------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------
+# get.sh — a shared cache survives two projects fetching the same release at once (5.0.2)
+# ---------------------------------------------------------------------------------------------
+# get.sh is not staged into a release and not copied by the layout cases, so it is exercised only
+# where it exists (the package root), never from a stage or a copy.
+if pkg_only "get.sh shared cache" && [ -f "$ROOT/get.sh" ]; then
+echo "get.sh — two concurrent fetches of one release share the cache without deleting each other (5.0.2)"
+GX="$TMP/getsh"; rm -rf "$GX"; mkdir -p "$GX/pkg" "$GX/t1" "$GX/t2" "$GX/cache"
+( cd "$GX/pkg" && git init -q . && echo 0.0.5 > VERSION && printf '#!/bin/sh\nsleep 1\necho "stub install $(cat "$(dirname "$0")/VERSION") -> $1"\n' > install.sh \
+  && git add -A && git -c user.name=t -c user.email=t@t commit -q -m v && git tag v0.0.5 ) >/dev/null 2>&1
+for t in t1 t2; do ( cd "$GX/$t" && git init -q . && git -c user.name=t -c user.email=t@t commit -q --allow-empty -m init ) >/dev/null 2>&1; done
+( cd "$GX/t1" && ASTRAGENTIC_REPO="$GX/pkg" ASTRAGENTIC_CACHE="$GX/cache" bash "$ROOT/get.sh" 0.0.5 > "$GX/out1" 2>&1; echo $? > "$GX/rc1" ) &
+( cd "$GX/t2" && ASTRAGENTIC_REPO="$GX/pkg" ASTRAGENTIC_CACHE="$GX/cache" bash "$ROOT/get.sh" 0.0.5 > "$GX/out2" 2>&1; echo $? > "$GX/rc2" ) &
+wait
+leftovers="$(ls -d "$GX"/cache/.fetch-* "$GX"/cache/*.stale.* 2>/dev/null | wc -l | tr -d ' ')"
+if [ "$(cat "$GX/rc1")" = 0 ] && [ "$(cat "$GX/rc2")" = 0 ] && says "$(cat "$GX/out1")" "stub install 0.0.5" && says "$(cat "$GX/out2")" "stub install 0.0.5" \
+   && [ -f "$GX/cache/0.0.5/install.sh" ] && [ "$leftovers" = 0 ]; then
+  ok "two get.sh runs on one cache both install v0.0.5, the cache holds one whole tree, no temp dirs left"
+else
+  bad "get.sh shared cache" "rc1=$(cat "$GX/rc1") rc2=$(cat "$GX/rc2") leftovers=$leftovers out1=$(head -3 "$GX/out1" | tr '\n' ' ') out2=$(head -3 "$GX/out2" | tr '\n' ' ')"
+fi
+# a missing tag says so; a clone that fails with the tag present does not claim the tag is missing
+out="$(cd "$GX/t1" && ASTRAGENTIC_REPO="$GX/pkg" ASTRAGENTIC_CACHE="$GX/cache" bash "$ROOT/get.sh" 0.0.9 2>&1)"; rc=$?
+if [ "$rc" = 1 ] && says "$out" "no release tag v0.0.9"; then ok "get.sh names a missing tag as missing"; else bad "get.sh missing tag" "rc=$rc $out"; fi
+chmod 000 "$GX/cache" 2>/dev/null
+out="$(cd "$GX/t1" && ASTRAGENTIC_REPO="$GX/pkg" ASTRAGENTIC_CACHE="$GX/cache/sub" bash "$ROOT/get.sh" 0.0.5 2>&1)"; rc=$?
+chmod 755 "$GX/cache"
+if [ "$rc" != 0 ] && ! says "$out" "no release tag"; then ok "get.sh with the tag present and the clone failing does not report the tag as missing"; else bad "get.sh clone failure wording" "rc=$rc $out"; fi
+fi
+
 echo "astragentic.sh update — installed vs latest, the gap's notes, the one-liner (3.3.0)"
 # A local package with tags v0.0.9 and v0.0.10: the pair `sort` alone orders wrong, which is
 # the planted shape below. The target has applied 0.0.9.

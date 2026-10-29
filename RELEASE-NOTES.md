@@ -1,3 +1,30 @@
+# Astragentic 5.0.2
+
+**Two projects fetching the same release no longer delete each other's cache.** nizzy and
+inception applied 5.0.1 in the same minute through `get.sh`, which clones into the shared
+`~/.cache/astragentic/<version>` directly: each run saw no `install.sh` yet, each `rm -rf`-ed
+the other's half-cloned tree, one printed "no release tag v5.0.1" for a clone it had itself
+broken, the other lost about thirty files mid-staging and the project was left untouched.
+`get.sh` now checks the tag exists, clones into a private temp dir beside the cache, and moves
+it into place with one rename: the cached tree is either whole or absent, a run that loses the
+race discards its own copy and uses the winner's, and a clone that fails with the tag present
+says so instead of blaming the tag.
+
+Selftest: two `get.sh` runs on one cache against one stub release, started together, both
+install and leave one whole tree and no temp dirs (the 5.0.1 `get.sh` fails this shape, one run
+exiting 1 on the other's `rm`); a missing tag is named as missing; a failing clone with the tag
+present does not say "no release tag".
+
+| số đo | nguồn |
+|---|---|
+| 3 runs: 1 lock error + false "no release tag", 1 with ~30 `cp` errors and the cache gone, 1 clean with a private cache | nizzy `.scratch/report-to-astragentic-2026-10-29-get-sh-shared-cache-race.md` |
+| old get.sh, two runs at once on a stub: exit codes 1 and 0 | selftest shape, run on the 5.0.1 script |
+
+## Upgrade from 5.0.1
+
+- Nothing by hand. `astragentic.sh update --apply` downloads `get.sh` from `main`, so the fix
+  is in effect for the next upgrade of any project.
+
 # Astragentic 5.0.1
 
 **The doctor no longer flags the per-project switch that turns the old plugin off.** The first

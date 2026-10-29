@@ -55,11 +55,28 @@ VERSION="${VERSION#v}"
 
 DEST="$CACHE/$VERSION"
 if [ ! -f "$DEST/install.sh" ]; then
+  # THE CACHE IS SHARED AND TWO PROJECTS UPGRADE AT ONCE (5.0.2). nizzy and inception applied
+  # 5.0.1 in the same minute: each saw no install.sh, each `rm -rf`-ed the other's half-cloned
+  # tree, one printed "no release tag" for a clone it had itself broken, the other lost ~30 files
+  # mid-staging (nizzy report 2026-10-29). So: clone into a private temp dir beside the cache,
+  # then ONE rename into place — a rename is atomic, so DEST is either whole or absent, and a
+  # loser whose rename finds DEST already there discards its own copy and uses the winner's.
   mkdir -p "$CACHE"
-  rm -rf "$DEST"
+  if [ -d "$DEST" ]; then mv "$DEST" "$DEST.stale.$$" 2>/dev/null && rm -rf "$DEST.stale.$$"; fi
+  if ! git ls-remote --tags --refs "$REPO" "refs/tags/v$VERSION" 2>/dev/null | grep -q .; then
+    echo "get.sh: no release tag v$VERSION at $REPO (or the remote could not be listed)" >&2; exit 1
+  fi
+  TMPD="$CACHE/.fetch-$VERSION-$$"
+  rm -rf "$TMPD"
   echo "get.sh: fetching astragentic v$VERSION into $DEST"
-  git clone --quiet --depth 1 --branch "v$VERSION" "$REPO" "$DEST" \
-    || { echo "get.sh: no release tag v$VERSION at $REPO" >&2; rm -rf "$DEST"; exit 1; }
+  git clone --quiet --depth 1 --branch "v$VERSION" "$REPO" "$TMPD" \
+    || { echo "get.sh: clone of v$VERSION from $REPO failed (the tag exists; network, lock or disk)" >&2; rm -rf "$TMPD"; exit 1; }
+  if [ -f "$DEST/install.sh" ]; then
+    rm -rf "$TMPD"                      # another run won the race; its tree is whole
+  elif ! mv "$TMPD" "$DEST" 2>/dev/null; then
+    rm -rf "$TMPD"
+    [ -f "$DEST/install.sh" ] || { echo "get.sh: could not place v$VERSION at $DEST" >&2; exit 1; }
+  fi
 fi
 GOT="$(cat "$DEST/VERSION" 2>/dev/null || true)"
 if [ "$GOT" != "$VERSION" ]; then
