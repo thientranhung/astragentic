@@ -496,8 +496,106 @@ Pass: 1
 Tests: RAN" && printf 'c\n' >> a.js && git add -A && git commit -q -m 'T-1: fold after receipt' ) >/dev/null 2>&1
 out="$( cd "$RA" && bash "$S/check-simplify-markers.sh" "$BA" HEAD --marker 'arm(ticket)' 2>&1 )"; rc=$?
 case "$rc:$(printf '%s' "$out" | tail -n 1)" in
-  1:"NOT GREEN") ok "a 1-line fold on top of an arm(ticket) receipt still STOPs — the allowance is simplify's only (4.5.1)" ;;
+  1:"NOT GREEN") ok "a 1-line fold on top of an arm(ticket) receipt still STOPs — the allowance is simplify's only (4.5.1)"
+                 # 5.0.9 — the STOP named simplify's number on a kind that has none ("81 lines,
+                 # over the fold allowance of 100", inception 2026-10-30).
+                 if says "$out" 'fold allowance'; then bad "arm fold STOP text" "names simplify's allowance: $(printf '%s' "$out" | grep STOP | head -1)"
+                 else ok "the arm fold STOP says no allowance applies to this kind, not simplify's number (5.0.9)"; fi ;;
   *) bad "arm fold" "exit $rc: $(printf '%s' "$out" | tail -n 1)" ;;
+esac
+
+# ---------------------------------------------------------------------------------------------
+# check-simplify-markers — a merge head (5.0.9). Thomas gates on the merge commit, whose tree is
+# base + branch, so `<marker>..<merge>` counted the base's drift — an upgrade commit, the QA
+# report and gate history the protocol commits on the base before the merge — as unreviewed
+# code. Planted 2026-10-30 against 5.0.8: both kinds STOP at 123 lines on this fixture
+# (inception: simplify 119 = 38 branch + 81 upgrade, arm 81). And the protocol's own evidence
+# paths shipped as no default: an arm log above the receipt STOPped every project that had not
+# written the glob itself.
+# ---------------------------------------------------------------------------------------------
+echo "marker gate — a merge head measures the branch side; protocol evidence paths are defaults (5.0.9)"
+RM="$TMP/mergehead"; mkdir -p "$RM"
+( cd "$RM" && git init -q -b main . && git config user.email t@t && git config user.name t \
+  && printf 'a\n' > a.js && git add a.js && git commit -q -m init \
+  && git checkout -q -b t1 && printf 'b\n' >> a.js && git add -A && git commit -q -m 'T-1: work' \
+  && git commit -q --allow-empty -m 'simplify(increment): T-1 clean
+
+Pass: Skill(skill: "simplify")' ) >/dev/null 2>&1
+SM="$( cd "$RM" && git rev-parse HEAD )"; FORK="$( cd "$RM" && git rev-parse main )"
+( cd "$RM" && git commit -q --allow-empty -m "arm(ticket): T-1 pass 1
+
+Range: 1 commits, 1 files
+Reviewed: $SM
+Vendor: codex
+Pass: 1
+Tests: RAN" \
+  && git checkout -q main && for i in $(seq 120); do echo "u$i" >> upgrade.sh; done \
+  && mkdir -p .scratch/qa .astraler/state/gate-history \
+  && printf 'report\n' > .scratch/qa/T-1-walk-abc.md && printf 'gate\n' > .astraler/state/gate-history/T-1-walk-abc.md \
+  && printf 'clean\n' > .astraler/state/qa-verified-clean.md \
+  && git add -A && git commit -q -m 'upgrade + qa evidence' ) >/dev/null 2>&1
+PRE="$( cd "$RM" && git rev-parse HEAD )"
+( cd "$RM" && git merge -q --no-ff t1 -m 'merge T-1' ) >/dev/null 2>&1
+MH="$( cd "$RM" && git rev-parse HEAD )"
+out="$( cd "$RM" && bash "$S/check-simplify-markers.sh" "$PRE" "$MH" --marker 'simplify(increment)' --marker 'arm(ticket)' 2>&1 )"; rc=$?
+case "$rc:$(printf '%s' "$out" | tail -n 1)" in
+  0:GREEN) ok "a clean --no-ff merge over 120 lines of base drift plus QA evidence is GREEN for both kinds when <base> is the pre-merge tip (5.0.8: two STOPs at 123 lines)" ;;
+  *) bad "merge head" "exit $rc: $(printf '%s' "$out" | grep STOP | head -2 | tr '\n' ' ')" ;;
+esac
+# The fork point as <base> puts both sides in range: the compare stays on the merge tree and
+# the NOTE names the base to pass. Status quo, never a new GREEN.
+out="$( cd "$RM" && bash "$S/check-simplify-markers.sh" "$FORK" "$MH" --marker 'simplify(increment)' 2>&1 )"; rc=$?
+if [ "$rc" = 1 ] && says "$out" "Pass ${MH:0:9}^1"; then
+  ok "the fork point as <base> keeps the STOP and the NOTE names <merge>^1 as the base to pass"
+else
+  bad "merge head, fork-point base" "exit $rc: $(printf '%s' "$out" | tail -n 2 | tr '\n' ' ')"
+fi
+# The field's usual shape: the Builder rebased before handback, so the branch is fast-forwardable
+# and the --no-ff merge's tree IS the branch tip's. merge-tree must replay that as clean.
+# A rebase strands the old receipt's Reviewed: (rule 7, by design), so the Builder re-fires the
+# arm at the new tip; the fresh receipt is the one the head scope reads.
+( cd "$RM" && git reset -q --hard "$PRE" && git checkout -q t1 && git rebase -q main ) >/dev/null 2>&1
+SMR="$( cd "$RM" && git rev-parse HEAD )"
+( cd "$RM" && git commit -q --allow-empty -m "arm(ticket): T-1 pass 1 after rebase
+
+Range: 1 commits, 1 files
+Reviewed: $SMR
+Vendor: codex
+Pass: 1
+Tests: RAN" && git checkout -q main && git merge -q --no-ff t1 -m 'merge T-1 (rebased)' ) >/dev/null 2>&1
+MHR="$( cd "$RM" && git rev-parse HEAD )"
+out="$( cd "$RM" && bash "$S/check-simplify-markers.sh" "$PRE" "$MHR" --marker 'simplify(increment)' --marker 'arm(ticket)' 2>&1 )"; rc=$?
+[ "$rc" = 0 ] && ok "a --no-ff merge of a rebased (fast-forwardable) branch is GREEN for both kinds" \
+              || bad "merge head, rebased branch" "exit $rc: $(printf '%s' "$out" | grep STOP | head -1)"
+( cd "$RM" && git reset -q --hard "$MH" ) >/dev/null 2>&1
+# An edited merge commit: the branch side is covered, the merge carries one line of its own.
+( cd "$RM" && printf 'z\n' >> a.js && git add -A && git commit -q --amend --no-edit ) >/dev/null 2>&1
+MH2="$( cd "$RM" && git rev-parse HEAD )"
+out="$( cd "$RM" && bash "$S/check-simplify-markers.sh" "$PRE" "$MH2" --marker 'simplify(increment)' --marker 'arm(ticket)' 2>&1 )"; rc=$?
+if [ "$rc" = 1 ] && says "$out" 'not the clean three-way result' && says "$out" '1 line(s) in 1 file(s)'; then
+  ok "a merge commit edited by one line STOPs naming the merge, not the branch (5.0.9)"
+else
+  bad "edited merge" "exit $rc: $(printf '%s' "$out" | grep STOP | head -1)"
+fi
+# Protocol evidence paths are defaults: an arm log committed above the receipt, no project file.
+RL="$TMP/armlog"; mkdir -p "$RL"
+( cd "$RL" && git init -q -b main . && git config user.email t@t && git config user.name t \
+  && printf 'a\n' > a.js && git add a.js && git commit -q -m init ) >/dev/null 2>&1
+BL="$( cd "$RL" && git rev-parse HEAD )"
+( cd "$RL" && printf 'b\n' >> a.js && git add -A && git commit -q -m 'T-1: work' ) >/dev/null 2>&1
+PL="$( cd "$RL" && git rev-parse HEAD )"
+( cd "$RL" && git commit -q --allow-empty -m "arm(ticket): T-1 pass 1
+
+Range: $BL..$PL
+Reviewed: $PL
+Vendor: codex
+Pass: 1
+Tests: RAN" && mkdir -p .scratch/gates && printf 'log\n' > .scratch/gates/arm-T-1-ticket-pass1.md \
+  && git add -A && git commit -q -m 'T-1: arm log' ) >/dev/null 2>&1
+out="$( cd "$RL" && bash "$S/check-simplify-markers.sh" "$BL" HEAD --marker 'arm(ticket)' 2>&1 )"; rc=$?
+case "$rc:$(printf '%s' "$out" | tail -n 1)" in
+  0:GREEN) ok "an arm log under .scratch/gates/ above the receipt is GREEN with no project evidence file (5.0.8: STOP)" ;;
+  *) bad "default evidence globs" "exit $rc: $(printf '%s' "$out" | grep STOP | head -1)" ;;
 esac
 
 # ---------------------------------------------------------------------------------------------
@@ -2121,6 +2219,19 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   const briefUiNoSections = await sendBrief('/astra-implement-with-tdd AB-9\nQA: none — no surface\nFLOW: 1 Skill(astra-ui) [UI ticket] → 2 Skill(astra-review)\n## Glance\n- **Orders:** the seller must see the overdue row first.\nAcceptance criteria: …')
   const briefUiSections = await sendBrief('/astra-implement-with-tdd AB-9\nQA: none — no surface\nFLOW: 1 Skill(astra-ui) [UI ticket] → 2 Skill(astra-review)\n## Glance\n- **Orders:** the seller must see the overdue row first.\n## States\n- empty: a line saying no orders\n## Criteria\n1. **Overdue first** (FR-1)')
   const briefNoUi = await sendBrief('/astra-implement-with-tdd AB-9\nQA: none — no surface\nFLOW: 1 Skill(astra-review)')
+  // (1c) 5.0.9 — a Shaper brief declares the journeys astra-ux captured (or UX: n/a); the PRD
+  // must exist and carry a heading for every id cited (nizzy 2026-10-30: Shaper sent with no PRD)
+  const shaperNoUx = await sendBrief('/astra-grill-with-docs\nEffort: the map screen')
+  const shaperUxNa = await sendBrief('/astra-grill-with-docs\nUX: n/a — a cron job, no surface')
+  const shaperNoPrd = await sendBrief('/astra-grill-with-docs\nUX: docs/prd.md — UJ-1')
+  fs.mkdirSync(path.join(root, 'docs'), { recursive: true })
+  fs.writeFileSync(path.join(root, 'docs/prd.md'), '# PRD — x\n\n### UJ-1 · Seller uploads a design\n\n- must see: the country first\n')
+  // on the dispatcher's disk and not in HEAD: the Shaper's worktree is cut from the base and will not see it
+  const shaperUncommitted = await sendBrief('/astra-grill-with-docs\nUX: docs/prd.md — UJ-1')
+  require('child_process').execSync('git add docs/prd.md && git -c user.name=t -c user.email=t@t commit -q -m prd', { cwd: root })
+  const shaperUxMissingId = await sendBrief('/astra-grill-with-docs\nUX: docs/prd.md — UJ-1, UJ-2')
+  const shaperUx = await sendBrief('/astra-grill-with-docs\nUX: docs/prd.md — UJ-1')
+  const shaper = { shaperNoUx, shaperUxNa, shaperNoPrd, shaperUncommitted, shaperUxMissingId, shaperUx }
   // (2) an upgrade that stopped part-way
   fs.writeFileSync(path.join(root, '.astraler/state/apply-incomplete'), '0.0.2')
   const briefUpgrade = await sendBrief('/astra-implement-with-tdd AB-9\nQA: none — no surface')
@@ -2197,7 +2308,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   const bandRows = /\d+ lanes?/.test(bandDisp) && /AB-15\s+builder\s+registered/.test(bandDisp) && /↑0\.0\.2/.test(bandDisp) && !/available/.test(bandDisp)
   fs.writeFileSync(recPath, '{}')
   const kind = { briefQuick, kindQuick, briefUnlabelled: briefUnlabelled.slice(0, 7), kindAfterUnlabelled, briefFull, kindFull, briefJira, kindJira, mergeQuick, mergeQuickNoReview, mergeUnkinded, mergeSimplifyNa, mergeQuickNote, quickLanes, bandRows }
-  console.log(JSON.stringify({ kind, afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, ownerBells, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, briefNoQa, briefUiNoSections, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
+  console.log(JSON.stringify({ kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, ownerBells, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, briefNoQa, briefUiNoSections, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
@@ -2226,6 +2337,13 @@ DRVEOS
     ok "brief refused without a QA line, during a half-applied upgrade, without an Advisor column, and at builder-target; a mid-turn pane's close is refused; a delivered brief writes the role on the record"
   else
     bad "mod merge gate" "$out"
+  fi
+  # 5.0.9 — a Shaper brief is not sent until it names the PRD journeys astra-ux captured with the
+  # owner, or says UX: n/a (nizzy 2026-10-30: one Shaper dispatched on "no PRD, astra-ux not run")
+  if says "$out" '"shaperNoUx":"refused:' && says "$out" '"shaperUxNa":"sent"' && says "$out" '"shaperNoPrd":"refused:' && says "$out" 'UX: names docs/prd.md, whic' && says "$out" '"shaperUncommitted":"refused:' && says "$out" '"shaperUxMissingId":"refused:' && says "$out" 'docs/prd.md has no heading' && says "$out" '"shaperUx":"sent"'; then
+    ok "a Shaper brief is refused without a UX: line, with a PRD absent or on disk but not committed on the base, and with a journey id the PRD has no heading for; UX: n/a and a cited journey the committed PRD carries are sent (5.0.9)"
+  else
+    bad "mod shaper ux gate" "$out"
   fi
   # 4.6.0 — the ticket's kind is the tracker's label (one project measured 15–32% quick-shaped
   # tickets, each paid as a full loop, 2026-10-25); the plug enforces, the package reader informs

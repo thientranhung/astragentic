@@ -41,7 +41,11 @@
 #                             crosses `/`). Rule 5 below: a head whose only changes since the
 #                             newest live marker match these still counts as covered. For a log
 #                             that is evidence a review happened, not code the marker had to
-#                             re-cover. Absent: no exemptions.
+#                             re-cover. ADDED to DEFAULT_EVIDENCE_GLOBS, the paths the harness
+#                             protocol itself commits above a marker (the arm log, the QA report,
+#                             the gate-history copy, the verified-clean list); a project that
+#                             redirects the QA report with qa-report-path.sh lists its path here.
+#                             Absent: the defaults alone.
 #
 # The rules, and the attack each one closes. Rules 1-3 are the Supersedes LAUNDERING economy and
 # STOP only on kinds with `economy: True`; 4-9 run on every kind. Resolving the Supersedes CHAIN —
@@ -79,6 +83,18 @@
 #      Above the allowance the STOP stands: a 1,892-line fold is not a fold. Cumulative, so
 #      stacking small commits cannot walk past it. Generated files a project regenerates after
 #      a rebase belong in marker-evidence-paths.txt.
+#      A MERGE HEAD (5.0.9): Thomas gates on the merge commit, whose tree is base + branch, so
+#      `<marker>..<merge>` also counted everything that landed on the BASE after the branch was
+#      cut — an upgrade commit, the QA report and gate history the protocol commits on the base
+#      between handback and merge (inception, 2026-10-30: simplify STOP at 119 lines = 38 branch
+#      + 81 upgrade; arm STOP at 81, all upgrade; the QA files alone were ~325 lines). When
+#      `<base>` is one of the merge's parents, the OTHER parent is the ticket side and the
+#      delta is `<marker>..<that parent>`; the merge commit itself must then be the clean
+#      three-way result of its parents (`git merge-tree --write-tree`), else a conflict
+#      resolution or an edit to the merge is code no pass read, and that is the STOP. When
+#      `<base>` is neither parent (a fork point under an unrebased branch) both sides are in
+#      range and nothing structural says which is the ticket: the compare stays on the merge
+#      tree and a NOTE names `<merge>^1` as the base to pass.
 #   6. Where a kind sets `reviewed`, the marker's `Reviewed:` SHA is its own parent — the marker
 #      commits empty, so the parent IS the tree the gate read — OR it declares the gap with
 #      `Unreviewed-delta:`. Never neither. A fold moves the tree past what any pass read, which
@@ -312,11 +328,23 @@ _kinds_path = os.path.join(PROJECT_DIR, "marker-kinds.json")
 if os.path.isfile(_kinds_path):
     merge_project_kinds(_kinds_path)
 
-EVIDENCE_GLOBS = []
+# What the harness's own protocol commits above a marker, so no project has to discover it at
+# its first refused merge: the arm log on the branch (codex-arm § output), and on the base
+# between handback and merge the QA report (dispatch-qa-walk § Collection), the gate-history
+# copy (GATE.md § 3) and the verified-clean list. Two projects had each written the first glob
+# into their own file; the other three refused a correct merge (inception, 2026-10-30).
+DEFAULT_EVIDENCE_GLOBS = [
+    ".scratch/gates/*.md",
+    ".scratch/qa/*.md",
+    ".astraler/state/gate-history/*.md",
+    ".astraler/state/qa-verified-clean.md",
+]
+EVIDENCE_GLOBS = list(DEFAULT_EVIDENCE_GLOBS)
 _evidence_path = os.path.join(PROJECT_DIR, "marker-evidence-paths.txt")
 if os.path.isfile(_evidence_path):
     with open(_evidence_path, encoding="utf-8") as fh:
-        EVIDENCE_GLOBS = [l.strip() for l in fh if l.strip() and not l.lstrip().startswith("#")]
+        EVIDENCE_GLOBS += [l.strip() for l in fh
+                           if l.strip() and not l.lstrip().startswith("#") and l.strip() not in EVIDENCE_GLOBS]
 
 OUTPUT_PLUG = os.path.join(PROJECT_DIR, "marker-output-check.sh")
 
@@ -602,6 +630,49 @@ def orphan_supersedes_values(body, in_range_shas):
 
 
 exit_code = 0
+
+# ── a merge head (header § 5, "A MERGE HEAD") ───────────────────────────────────────────────
+# COVER_TARGET is the tree rule 5 measures the newest live marker against: the merge's ticket
+# side when `<base>` is one of its parents, else the head itself. MERGE_PROBLEM is a STOP every
+# checked kind reports: the merge commit is not the clean three-way result of its parents.
+MERGE_PARENTS = git("rev-list", "--parents", "-n", "1", head_sha).split()[1:]
+COVER_TARGET, MERGE_PROBLEM = head_sha, ""
+if len(MERGE_PARENTS) == 2:
+    _base_full = resolve_commit(base)
+    if _base_full in MERGE_PARENTS:
+        COVER_TARGET = [p for p in MERGE_PARENTS if p != _base_full][0]
+        _mt = subprocess.run(["git", "merge-tree", "--write-tree", MERGE_PARENTS[0], MERGE_PARENTS[1]],
+                             capture_output=True, text=True)
+        _clean_tree = (_mt.stdout.splitlines() or [""])[0].strip()
+        _head_tree = git("rev-parse", f"{head_sha}^{{tree}}").strip()
+        if _mt.returncode == 1:
+            MERGE_PROBLEM = (f"merge {head_sha[:9]} resolves a CONFLICT between its parents "
+                             f"({MERGE_PARENTS[0][:9]}, {MERGE_PARENTS[1][:9]}): the resolution is "
+                             f"code no pass read. Rebase the branch on {_base_full[:9]}, re-run the "
+                             f"pass and merge again")
+        elif _mt.returncode != 0 or not _clean_tree:
+            MERGE_PROBLEM = (f"git merge-tree --write-tree could not replay merge {head_sha[:9]} "
+                             f"(exit {_mt.returncode}: {(_mt.stderr.strip().splitlines() or ['no reason'])[0]}); "
+                             f"a required check that cannot run does not pass")
+        elif _clean_tree != _head_tree:
+            _n = _f = 0
+            for row in git("diff", "--numstat", _clean_tree, _head_tree).split("\n"):
+                parts = row.split("\t")
+                if len(parts) < 3:
+                    continue
+                _f += 1
+                if parts[0] != "-":
+                    _n += int(parts[0]) + int(parts[1])
+            MERGE_PROBLEM = (f"merge {head_sha[:9]} is not the clean three-way result of its parents: "
+                             f"{_n} line(s) in {_f} file(s) sit in the merge commit itself, beyond "
+                             f"what either side brought. An edit to a merge commit is code no pass "
+                             f"read. Redo the merge with --no-ff and no edits, or rebase and re-run "
+                             f"the pass")
+    else:
+        notes.append(f"NOTE: {head_sha[:9]} is a merge commit and {base} is neither of its parents, "
+                     f"so both sides are in range and the cover check runs on the merge tree "
+                     f"(base drift counts). Pass {head_sha[:9]}^1 — the pre-merge tip — as <base> "
+                     f"to measure the branch side alone.")
 
 # ONE git call for the whole range, and NO `--grep`. The kinds carry parentheses, and `--grep`
 # takes a POSIX BASIC regex where `\(` is a group — escaping with `re.escape` produced
@@ -920,13 +991,17 @@ for kind in kinds:
     # Rule 5 — covers-head, by TREE, within FOLD_ALLOWANCE non-test lines (header § 5). The
     # delta is cumulative over `<marker>..<head>`, by line count not commit count: the gap
     # AST-122 closed was real code on top of a pass, and a 1,892-line fold still STOPs here.
-    if live and live[0] != head_sha:
+    # At a merge head, `<head>` is the ticket side (COVER_TARGET) and the merge itself is judged
+    # separately: a fold on the branch and an edited merge commit are two different findings.
+    if MERGE_PROBLEM:
+        stop.append(MERGE_PROBLEM)
+    if live and live[0] != COVER_TARGET:
         live_tree = git("rev-parse", f"{live[0]}^{{tree}}").strip()
-        head_tree = git("rev-parse", f"{head_sha}^{{tree}}").strip()
+        head_tree = git("rev-parse", f"{COVER_TARGET}^{{tree}}").strip()
         if live_tree != head_tree:
             delta = 0
             content_changed = []
-            for row in git("diff", "--no-renames", "--numstat", live[0], head_sha).split("\n"):
+            for row in git("diff", "--no-renames", "--numstat", live[0], COVER_TARGET).split("\n"):
                 parts = row.split("\t")
                 if len(parts) < 3:
                     continue
@@ -945,14 +1020,25 @@ for kind in kinds:
                              f"file(s) sit on top of marker {live[0][:9]} — within the fold "
                              f"allowance of {FOLD_ALLOWANCE}; the pass is not owed again.")
             elif content_changed:
-                ahead = git("rev-list", "--count", f"{live[0]}..{head_sha}").strip() or "?"
-                stop.append(
-                    f"newest live marker {live[0][:9]} is not the head being merged "
-                    f"({head_sha[:9]}); {ahead} commit(s) with {delta} non-test line(s) sit on "
-                    f"top of it, over the fold allowance of {FOLD_ALLOWANCE}, so the pass did "
-                    f"not cover them (AST-122). Run the simplify pass once more over "
-                    f"{live[0][:9]}..{head_sha[:9]} and commit a fresh marker — an empty one is "
-                    f"valid. A regenerated file belongs in marker-evidence-paths.txt.")
+                ahead = git("rev-list", "--count", f"{live[0]}..{COVER_TARGET}").strip() or "?"
+                where = (f"newest live marker {live[0][:9]} is not the head being merged "
+                         f"({COVER_TARGET[:9]}); {ahead} commit(s) with {delta} non-test line(s) "
+                         f"sit on top of it")
+                if spec["economy"]:
+                    stop.append(
+                        f"{where}, over the fold allowance of {FOLD_ALLOWANCE}, so the pass did "
+                        f"not cover them (AST-122). Run the simplify pass once more over "
+                        f"{live[0][:9]}..{COVER_TARGET[:9]} and commit a fresh marker — an empty "
+                        f"one is valid. A regenerated file belongs in marker-evidence-paths.txt.")
+                else:
+                    # The allowance is simplify's and was named here for every kind: an arm STOP
+                    # read "81 lines, over the fold allowance of 100" (inception, 2026-10-30).
+                    stop.append(
+                        f"{where}. No allowance applies to {kind}: the receipt covers the tree "
+                        f"its own parent is, and a fold after it is code the other vendor never "
+                        f"read (4.5.1). Re-fire the arm over {live[0][:9]}..{COVER_TARGET[:9]} "
+                        f"and commit a fresh receipt. A committed log belongs in "
+                        f"marker-evidence-paths.txt.")
 
     for msg in stop:
         print(f"  STOP: {msg}")

@@ -31,10 +31,22 @@ be empty, so it costs one commit. Test files (the project's `test-file-pattern`)
 `marker-evidence-paths.txt` globs are outside the count.
 
 The comparison is of trees, not commit counts: an empty `arm(ticket)` receipt committed after
-`simplify(increment)` leaves the tree unchanged, so both kinds may be named in one call. A
-committed arm log above the marker is declared in
-`.astraler/project/marker-evidence-paths.txt` as a glob, and the script exempts it.
-`arm(slice)` and `qa(walk)` stack on top of anything and are exempt.
+`simplify(increment)` leaves the tree unchanged, so both kinds may be named in one call. The
+paths the protocol itself commits above a marker are exempt by default (5.0.9): the arm log
+under `.scratch/gates/`, the QA report under `.scratch/qa/`, the gate-history copy and
+`qa-verified-clean.md` under `.astraler/state/`. A project adds its own globs in
+`.astraler/project/marker-evidence-paths.txt` (a redirected QA report path, a regenerated
+file). `arm(slice)` and `qa(walk)` stack on top of anything and are exempt.
+
+**At merge, `<base>` is the pre-merge tip and `<head>` is the merge commit** (5.0.9). A merge's
+tree is base plus branch, so with any other base the check counted what landed on the base
+after the branch was cut — an upgrade, another ticket, the QA evidence you just committed —
+as code the pass never read (inception, 2026-10-30: 119 lines = 38 branch + 81 upgrade). With
+the pre-merge tip as `<base>` the script measures the branch side alone and asks one more
+question of the merge itself: it must be the clean three-way result of its parents. A conflict
+resolution or an edit to the merge commit is code no pass read, and that is its own STOP:
+rebase the branch, re-run the pass, merge again. With a fork point as `<base>` the old compare
+stands and a NOTE names `<merge>^1` as the base to pass.
 
 ## Retraction happens in the open
 

@@ -1768,6 +1768,43 @@ export const register: Register = on => {
         }
       }
     }
+    // A SURFACE HAS JOURNEYS BEFORE IT HAS A SPEC (5.0.9). `astra-ux` sits with the owner before
+    // a Shaper and writes UJ-n and the actors into the PRD; the Shaper cites them (thomas.md
+    // § Dispatch, shaper.md § inputs). On nizzy (2026-10-30) the dispatcher sent the Shaper
+    // first, the Shaper reported "no PRD, astra-ux not run", and the dispatch went on: the order
+    // was text and nothing read it. A Shaper brief now declares it on a `UX:` line — `n/a —
+    // <why>` when no one looks at a surface, else `<prd path> — UJ-n, UJ-m`, the journeys the
+    // spec realizes — and the PRD must be COMMITTED ON THE BASE with a `### UJ-n` heading for
+    // every id cited: the Shaper's worktree is cut from the base, so a PRD on the dispatcher's
+    // disk and not in HEAD is the same "no PRD" one step later. The brief is the one moment
+    // every Shaper dispatch passes through.
+    if (!me && root && e.origin.kind === 'model' && e.agentId === undefined && /^\/astra-grill-with-docs\b/.test(first)) {
+      const body = e.text.replace(/```[\s\S]*?```/g, '')
+      const ux = body.match(/^[ \t]*UX[ \t]*:[ \t]*([^\n]*)/im)?.[1]?.trim() ?? ''
+      const howTo = 'Run astra-ux with the owner first (it writes the journeys into the PRD), then send this brief with `UX: <prd path> — UJ-n, …`; an effort nobody looks at writes `UX: n/a — <why>`.'
+      if (!ux) {
+        return { isDelivered: false, reason: `${MARK} not sent. A Shaper brief carries a "UX:" line naming the PRD and the journeys astra-ux captured with the owner, or "UX: n/a — <why>". ${howTo}` }
+      }
+      if (!/^n\/a\b/i.test(ux)) {
+        const prd = ux.split(/\s+/)[0]?.replace(/^['"`]|['"`]$/g, '') ?? ''
+        const ids = Array.from(new Set(ux.match(/\bUJ-\d+\b/g) ?? []))
+        if (!/\.md$/i.test(prd) || ids.length === 0) {
+          return { isDelivered: false, reason: `${MARK} not sent. "UX: ${ux.slice(0, 80)}" names no PRD path and journey ids. The form is \`UX: docs/prd.md — UJ-1, UJ-2\`. ${howTo}` }
+        }
+        if (prd.startsWith('/')) {
+          return { isDelivered: false, reason: `${MARK} not sent. UX: names ${prd}, an absolute path; the PRD is a repo-relative file committed on the base (docs/prd.md), which is what the Shaper's worktree carries.` }
+        }
+        const blob = await run($, ['git', '-C', root, 'show', `HEAD:${prd}`])
+        if (blob.code !== 0) {
+          return { isDelivered: false, reason: `${MARK} not sent. UX: names ${prd}, which is not committed on the base (git show HEAD:${prd} fails) — the Shaper's worktree is cut from the base and will not see it. ${howTo} Commit the PRD first.` }
+        }
+        const prdText = blob.out
+        const absent = ids.filter(id => !new RegExp(`^[ \\t]*#{2,4}[ \\t]+${id}\\b`, 'm').test(prdText))
+        if (absent.length > 0) {
+          return { isDelivered: false, reason: `${MARK} not sent. ${prd} has no heading for ${absent.join(', ')} (astra-ux writes each journey as \`### UJ-n · <Actor> <doing the thing>\`). Cite only journeys the PRD carries, or run astra-ux with the owner to capture the missing ones.` }
+        }
+      }
+    }
     const isBrief = !me && root && e.origin.kind === 'model' && e.agentId === undefined && first.startsWith('/')
     const brief = isBrief && root ? await overlay($, root, 'dispatch-brief') : ''
     const res = await next(brief ? { ...e, text: `${e.text.trimEnd()}\n\n${brief}` } : e)

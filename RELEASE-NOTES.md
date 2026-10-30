@@ -1,3 +1,52 @@
+# Astragentic 5.0.9
+
+Two defects from two projects on 2026-10-30, one release: the merge gate refused correct merges
+on inception, and nizzy's dispatcher sent a Shaper before the journeys existed.
+
+**The marker check measured the base's drift as unreviewed code.** Thomas gates on the merge
+commit (thomas.md § Merge), whose tree is base plus branch, and rule 5 diffed
+`<marker>..<merge>`: everything that landed on the base after the branch was cut counted
+against the pass. Measured on inception (5.0.8): `simplify(increment)` STOP at 119 lines =
+38 branch + 81 from the 5.0.7→5.0.8 upgrade commit (0571287f); `arm(ticket)` STOP at 81, all
+upgrade; the QA report, gate-history copy and verified-clean list the protocol itself commits
+on the base between handback and merge were ~325 more lines in the same window. Every upgrade
+or sibling merge during a live Builder forced a base sync and a re-mark. Now, when `<base>` is
+one of the merge's parents, the other parent is the ticket side and the delta is
+`<marker>..<that parent>`; the merge commit must then be the clean three-way result of its
+parents (`git merge-tree --write-tree`), else the STOP names the merge: a conflict resolution
+or an edited merge is code no pass read. With a fork point as `<base>` both sides are in range
+and nothing structural says which is the ticket, so the old compare stands and a NOTE names
+`<merge>^1` as the base to pass; thomas.md § Merge and MARKERS.md say the same. Selftest plants
+a `--no-ff` merge over 120 lines of base drift plus the three QA files: two STOPs at 123 lines
+on 5.0.8, GREEN on both kinds now; a merge amended by one line STOPs naming the merge; the fork
+point as base keeps its STOP and prints the NOTE.
+
+**The protocol's own evidence paths are exempt by default.** The script shipped no
+`marker-evidence-paths.txt` defaults; an arm log committed above the receipt STOPped every
+project that had not written the glob itself (nizzy and inception each had, in their own file;
+inception added the three QA paths at 7b7590d2). `.scratch/gates/*.md`, `.scratch/qa/*.md`,
+`.astraler/state/gate-history/*.md` and `.astraler/state/qa-verified-clean.md` are now built
+in; the project file adds to them. Selftest: an arm log above the receipt with no project
+file, STOP on 5.0.8, GREEN now.
+
+**The arm STOP named simplify's allowance.** "81 lines, over the fold allowance of 100" on a
+kind that has no allowance (inception's second STOP). The message now says no allowance
+applies to `arm(ticket)` and what to do; the selftest's 4.5.1 case asserts the text.
+
+**A Shaper brief is refused until the journeys exist.** `astra-ux` sits with the owner before a
+Shaper and writes UJ-n and actors into the PRD; the Shaper cites them. On nizzy the dispatcher
+sent the Shaper first, the Shaper reported "no PRD, astra-ux not run", and the dispatch went
+on (one incident, the owner's report, 2026-10-30): the order was in thomas.md and nothing
+read it. `/astra-grill-with-docs` is now refused without a `UX:` line; `UX: <prd path> —
+UJ-n, …` must name a PRD committed on the base (read from `HEAD`, because the Shaper's worktree
+is cut from the base and a file on the dispatcher's disk is not in it) with a `### UJ-n`
+heading for each id; `UX: n/a — <why>` says no surface. Six planted sends: no line, no PRD, a
+PRD written but not committed, a missing id refused; n/a and a cited journey sent. The case
+fails on the 5.0.8 mod.
+
+Owed: how often the merge gate's fork-point NOTE prints in the field (0 measured yet), and
+whether a UX: n/a shows up on efforts that did have a surface.
+
 # Astragentic 5.0.8
 
 Four gaps from one night on nizzy (2026-10-30, on 5.0.6), one release. Two are mod rules, two

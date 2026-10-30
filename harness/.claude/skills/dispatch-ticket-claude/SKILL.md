@@ -125,6 +125,14 @@ built-in review stays owed at the arm and at merge. The mod reads it from the br
 handback. A brief delivered outside the mod carries no exemption the mod can see, so on a
 pane prompted by hand the gate holds until the brief is re-sent through SendMessage.
 
+**A Shaper brief is refused until the journeys exist** (5.0.9). `/astra-grill-with-docs` is
+not sent without a `UX:` line: `UX: <prd path> — UJ-n, …` names the PRD `astra-ux` wrote with
+the owner and the journeys the spec realizes, and the mod reads the file from `HEAD` of the base
+(a PRD on disk and not committed is invisible to the Shaper's worktree) and checks a `### UJ-n`
+heading for each id; `UX: n/a — <why>` says no surface. One
+Shaper (nizzy, 2026-10-30) was dispatched on "no PRD, astra-ux not run" and the dispatch went
+on; the order was in thomas.md and nothing read it.
+
 ## The station owes QA, and the brief says which
 
 **No QA plan, no dispatch.** A Builder brief is not sent until a committed

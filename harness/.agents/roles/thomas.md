@@ -100,7 +100,8 @@ assignee is a live claim with a Builder behind it.
 **opens with `/astra-grill-with-docs`** and its Tickets release with
 **`/astra-to-tickets <spec-id>`**: prose gets prose back, and the Shaper cannot
 invoke either itself. Give it the whole effort at once, uncompacted. A surface runs `astra-ux` with the owner first,
-so the PRD carries the journeys the Shaper cites.
+so the PRD carries the journeys the Shaper cites, and the brief names them: `UX: <prd path> —
+UJ-n, …` or `UX: n/a — <why>`; the mod refuses a Shaper brief without it (5.0.9).
 
 **Dispatch** a claimed ticket through `dispatch-ticket` and `dispatch-ticket-claude`: one
 ticket, one Builder, one pane, one worktree; several run at once on the frontier.
@@ -168,17 +169,16 @@ through a pipe (`dispatch-ticket/WATCHING.md` § pipes), and never merge on a fa
 explained away: re-run the failing scope alone and merge on a green you observed.
 
 Yours alone, on a clean final SHA, verified **by artifact rather than handback**: run
-`check-simplify-markers.sh` for every receipt a full ticket owes (a `quick` ticket owes none,
-§ Quick or full), and **never hand-roll a `git log --grep` beside
-it** — it matches bodies, and 23 real markers once read as 193 (AST-133).
+`check-simplify-markers.sh <pre-merge tip> <merge sha>` for every receipt a full ticket owes (a
+`quick` ticket owes none, § Quick or full), and **never hand-roll a `git log --grep` beside
+it** — it matches bodies, and 23 real markers once read as 193 (AST-133). The pre-merge tip is
+`<merge>^1`, never the fork point (`MARKERS.md` § The head check).
 
 **Pass `--marker 'arm(slice)'` and `--marker 'qa(walk)'` too.** Advisory: they print **merges on
-the base since the last round of that kind** and never block. That figure is what the
-`>10 merges` STOP asks for — it rises with every merge and resets when a round runs, so it can
-cross the threshold (`MARKERS.md`).
+the base since the last round of that kind** and never block; that figure is the `>10 merges`
+STOP's count (`MARKERS.md`).
 
-**The script checks the relationship; you read the body.** The invocation, the marker rules and why existence is not relationship:
-`dispatch-ticket/MARKERS.md`.
+**The script checks the relationship; you read the body** (`dispatch-ticket/MARKERS.md`).
 
 **A `check-payload-drift.sh` failure** is either your own reviewed edit (re-hash it) or an upgrade that overwrote project content, which you diff first (AST-132).
 

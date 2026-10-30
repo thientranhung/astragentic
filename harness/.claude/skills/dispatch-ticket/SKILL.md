@@ -138,6 +138,12 @@ them; an agent told about the skill in prose starts coding without it. Claude
 Code's own `/compact` and `/clear` keep bare names. A skill the model can call
 (`simplify`) is written `Skill(skill: "simplify")` in a brief, never `/simplify`. <!-- addr-ok: wrong form, cited -->
 
+**A Shaper brief carries a `UX:` line** (5.0.9): `UX: docs/prd.md — UJ-1, UJ-2`, the journeys
+`astra-ux` captured with the owner that the spec realizes, or `UX: n/a — <why>` when no one
+looks at a surface. The mod refuses the brief without it, when the PRD is not committed on the
+base (the Shaper's worktree is cut from the base, so a file on your disk is not there), or when
+a cited `UJ-n` has no heading in it (`dispatch-ticket-claude` § refused steps).
+
 **The `FLOW:` line** names the build flow as Skill calls, in order: `astra-ui` on a UI ticket,
 `astra-review`, `simplify`, the arm. Tdd is not a step on the line: it is inside
 `astra-implement-with-tdd`, and the gate measures its red run. A step that cannot apply is exempted by
