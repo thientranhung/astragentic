@@ -41,6 +41,11 @@ file or a one-line fold, ≈$335 in 14 days.
 **Commit and push at every phase boundary**, not only at handback — the table above is the
 cadence.
 
+**A thin context window is not a stop reason.** Commit what is done and continue; the mod
+compacts your context between turns once it passes its ceiling, and the brief survives the
+compaction. A handback that says "context too thin" with criteria unmet is a stop nobody asked
+for (one downstream ticket, 2026-10-30, half its criteria done; a compaction and a steer resumed it).
+
 ## A quick ticket
 
 **The tracker's `quick` label makes a smaller loop, and the pane's gates are set to it.** The

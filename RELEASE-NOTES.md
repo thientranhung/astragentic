@@ -1,3 +1,60 @@
+# Astragentic 5.0.8
+
+Four gaps from one night on nizzy (2026-10-30, on 5.0.6), one release. Two are mod rules, two
+are text; two measurements are still owed and named below.
+
+**A finished agent takes no message; 5.0.7's resume is reversed.** 5.0.7 rewrote a bare ref to
+the fork's name "so a finished fork resumes". The third incident shows what a resumed finished
+fork does: a Builder asked its completed Standards review for the report again by raw id, the
+resume counted as live, and the pane held its TURN-END for 20 minutes until the dispatcher
+killed the agent (held-stale rang at 20 min as designed). All three measured asks were a Builder
+asking a finished fork to re-report: by bare ref (two), by raw id (one). A dispatched pane's send
+to one of its own agents whose status is completed, failed or killed is now refused with the
+reason (its result is the Agent tool result already received; an empty one is the finding; re-run
+the lens directly), by ref, name or id. A live own agent is reached as before, a bare ref by
+name. Nizzy had not applied 5.0.7, so no pane saw both behaviours.
+
+**The hold records what it waits on, with status.** `waiting_on.what` carried descriptions only;
+the one held-stale bell nizzy could report had no statuses to read, so which word (`waiting`?
+`running`?) kept the hold is unmeasured. Each entry is now `<description> [<status>]`.
+
+**A QA gate pane's turn end is a record bell by design, and now says so.** A gate pane is briefed
+by `herdr agent prompt` and runs under permissions, so its mod has no dispatcher address; six
+turn ends on one night reached the dispatcher as "not delivered (no dispatcher address)", after
+the dispatcher had already collected the report by watching the pane. The pending reason and the
+bell are now worded as a gate pane's turn end, and GATE.md § 3 (both copies) says the bell
+arrives within the 30-second poll and the verdict is `$GATE_FILE`. Direct delivery was not
+added: a send from a permissions pane to a bypass dispatcher is held on the mode boundary
+(board note, 4.3.x), which is why the record is the path.
+
+**After compaction, the branch is the truth for steps done.** One Builder waited on a simplify
+fan-out whose marker was already on the branch and planned to re-run it. The compaction
+instructions now end: run `scripts/check-simplify-markers.sh <Base> HEAD`; a marker on the
+branch means the step is done; never re-run a step whose marker exists.
+
+**A thin context window is not a stop reason** (`builder.md`): one Builder handed back
+mid-ticket on "context too thin" with half its criteria done; a compaction and a steer resumed
+it. The line is text. Whether the window was smaller than the mod's 300k ceiling, in which case
+compaction never fires before the window fills and the fix is a clamp, is the owed measurement.
+
+Selftest: the agent-send case now asserts a live fork's bare ref goes by name, a finished agent
+is refused by ref, by name and by id, an unknown ref is refused; the held case asserts the status
+rides with the description. The agent-send case was red against the 5.0.7 mod in a fresh clone.
+
+| số đo | nguồn |
+|---|---|
+| 3 re-report asks to finished forks (2 by bare ref, 1 by raw id), 2 Builders | nizzy Builder transcripts 2026-10-29/30, `.scratch/harness-issues/2026-10-30-builder-and-qa-pane-gaps.md` |
+| 1 hold of 20+ min on a resumed completed agent; 3 agents listed at the second ring | same note |
+| 6 QA turn ends read as "not delivered", each after the report was collected | same note |
+| 1 compaction re-plan of a finished simplify (marker already on the branch) | same note |
+| 1 thin-window stop at about half the criteria | same note |
+| statuses that kept the hold | chưa đo — this release records them |
+| window size vs 300k ceiling on the thin-window stop | chưa đo — asked nizzy for the model and window |
+
+## Upgrade from 5.0.7
+
+- One mod file, `builder.md`, GATE.md (both copies). Nothing by hand.
+
 # Astragentic 5.0.7
 
 **A bare agent ref is an agent ref.** A dispatched pane's written sends go to its dispatcher,

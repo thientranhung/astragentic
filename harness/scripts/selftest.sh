@@ -1668,7 +1668,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const registered = rec()['AB-5']?.pane_id === 'p5'
     liveAgents = [{ id: 'a1', status: 'running', description: 'Standards axis code review' }]
     await fire('turn.complete', { reason: 'answer', answer: 'working', turnId: 't1' }, async () => ({}))
-    const paneHeld = rec()['AB-5']?.waiting_on?.n === 1
+    const paneHeld = rec()['AB-5']?.waiting_on?.n === 1 && rec()['AB-5']?.waiting_on?.what?.[0] === 'Standards axis code review [running]' // 5.0.8: the status rides with the description
     liveAgents = []
     await fire('turn.start', { text: '', turnId: 't2' }, async () => ({}))
     await new Promise(r => setTimeout(r, 300))
@@ -1893,8 +1893,15 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     // rewritten to the fork's name, which is what resumes it; a bare ref no agent carries is
     // refused with the reason and does not reach the dispatcher (nizzy, 2026-10-30: three sends
     // on two Builders went to the dispatcher as replies, and the Builder looped on the answer)
-    liveAgents = [{ id: 'a-7f3-ce2df1', name: 'code-review', status: 'completed', description: 'Review the changes' }]
+    // 5.0.8 — a FINISHED own agent takes no message, by bare ref, by name or by raw id (one downstream ticket, 2026-10-30:
+    // a resumed completed fork held the TURN-END 20 min); a live one is reached, a bare ref by name
+    const refuseTo = async (to) => { let seen = null; const r = await fire('session.send', { to, text: 'Report your findings now (final answer)', origin: { kind: 'model' } }, async ev => { seen = ev.to; return { isDelivered: true } }); return seen === null && r?.isDelivered === false && /finished/.test(String(r?.reason ?? '')) ? 'refused' : `seen=${seen} res=${JSON.stringify(r)}` }
+    liveAgents = [{ id: 'a-7f3-ce2df1', name: 'code-review', status: 'running', description: 'Review the changes' }]
     const sendToBareRef = await sendTo('ce2df1')
+    liveAgents = [{ id: 'a-7f3-ce2df1', name: 'code-review', status: 'completed', description: 'Review the changes' }]
+    const sendToDoneRef = await refuseTo('ce2df1')
+    const sendToDoneName = await refuseTo('code-review')
+    const sendToDoneId = await refuseTo('a-7f3-ce2df1')
     let unknownSeen = null
     const unknownRes = await fire('session.send', { to: 'ffff01', text: 'Report your findings now (final answer)', origin: { kind: 'model' } }, async ev => { unknownSeen = ev.to; return { isDelivered: true } })
     const sendToUnknownRef = unknownSeen === null && unknownRes?.isDelivered === false && /agent ref/.test(String(unknownRes?.reason ?? '')) ? 'refused' : `seen=${unknownSeen} res=${JSON.stringify(unknownRes)}`
@@ -2019,7 +2026,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
       afterAgent: /✓ simplify/.test(bandAfterAgent) && !/…/.test(bandAfterAgent),
       tie: /… simplify \(1 agent\)/.test(bandTie) && /✓ review/.test(bandTie),
     }
-    console.log(JSON.stringify({ quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, wakeup, wakeupStop, bypassHint, sendToBareRef, sendToUnknownRef, bandText, log }))
+    console.log(JSON.stringify({ quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, wakeup, wakeupStop, bypassHint, sendToBareRef, sendToDoneRef, sendToDoneName, sendToDoneId, sendToUnknownRef, bandText, log }))
     return
   }
   await fire('session.start', {}, async () => ({}))
@@ -2270,10 +2277,10 @@ EOS
   else
     bad "tdd order (4.5.2)" "$(printf '%s' "$out" | grep -o '"tddOrder":{[^}]*}' | head -1)"
   fi
-  if says "$out" '"sendToBareRef":"code-review","sendToUnknownRef":"refused"'; then
-    ok "bare agent ref (5.0.7): a send to the bare ref of the pane's own finished fork goes to the fork by name; a bare ref no agent carries is refused, not readdressed to the dispatcher"
+  if says "$out" '"sendToBareRef":"code-review","sendToDoneRef":"refused","sendToDoneName":"refused","sendToDoneId":"refused","sendToUnknownRef":"refused"'; then
+    ok "agent sends (5.0.7/5.0.8): a bare ref of the pane's own LIVE fork goes to it by name; a finished own agent takes no message by ref, name or id; a bare ref no agent carries is refused; none is readdressed to the dispatcher"
   else
-    bad "bare agent ref (5.0.7)" "$(printf '%s' "$out" | grep -o '"sendToBareRef":"[^"]*","sendToUnknownRef":"[^"]*"' | head -1)"
+    bad "agent sends (5.0.8)" "$(printf '%s' "$out" | grep -o '"sendToBareRef":"[^"]*","sendToDoneRef":"[^"]*","sendToDoneName":"[^"]*","sendToDoneId":"[^"]*","sendToUnknownRef":"[^"]*"' | head -1)"
   fi
   if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"sendToFork":"code-review [ce2df1]","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"noFlow":true,"uxOff":true,"uxNa":true,"next":true,"held":true,"simplify":true,"done":true,"afterAgent":true,"tie":true},"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","refusedWhy":true,"compacted":1,"commitNoTest":"deny:held","commitWithTest":"pass:ran","commitDeletedTest":"deny:held","commitLaterDeletedTest":"deny:held","commitPathLimited":"deny:held","commitAllDeleted":"deny:held","commitAddThenCommit":"pass:ran","commitRmThenCommit":"deny:held","commitRestageDeleted":"deny:held","commitDashMAttached":"deny:held","commitScopedAddAll":"deny:held","commitPathRestored":"deny:held","commitAfterMv":"deny:held","mvNotReplayed":true,"commitTwice":"deny:held","commitDashCSrc":"deny:held","commitAmendOnly":"deny:held","commitRmAddAll":"deny:held","rmNotReplayed":true,"commitPathspecFile":"deny:held","commitRepeatedC":"deny:held","commitDotUntracked":"deny:held","commitDotStaged":"pass:ran","commitSkippedAdd":"deny:held","commitRmNoCached":"deny:held","fileSurvived":true,"commitOrAdd":"deny:held","commitEchoAdd":"deny:held","commitRmAbsent":"deny:held","commitSubstQuoted":"deny:held","testStillStaged":true,"commitWorkTree":"deny:held","commitConfigOpt":"deny:held","commitSubstApos":"deny:held","commitBacktickDouble":"deny:held","commitSubstLiteral":"pass:ran","commitConfigEnv":"deny:held","commitCommentedAdd":"deny:held","commitAbbrevOpt":"deny:held","commitMessageEq":"pass:ran","commitRedirect":"deny:held","commitFdDup":"pass:ran","ampNamed":true,"commitHeredocMsg":"pass:ran","commitHeredocOpen":"deny:held","commitHeredocExtra":"deny:held","commitHeredocBare":"deny:held","substFixNamed":true,"noScratchLeft":true,"wakeup":"deny:held","wakeupStop":"pass:ran","bypassHint":true'; then
     ok "pane side: a turn end with a live agent is held, the next turn start ends the hold, the band reads the latest step as … with the pane's agent count until a later step or a clean turn end and the step after it as ○, an arm row at no reaches the Builder's prompt, a command on the project's refused list is refused, a turn over the context ceiling is compacted, ScheduleWakeup is refused except stop, and a bypass-launched pane whose send lost its verdict is told to return to bypass"

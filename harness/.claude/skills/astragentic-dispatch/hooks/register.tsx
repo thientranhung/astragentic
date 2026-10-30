@@ -1117,7 +1117,12 @@ async function wakeFromRecord($: any, root: string, bell: (text: string) => void
     const mark = parseMark(String(pending.text ?? ''))
     await patchRecord($, root, key, { turn_end_pending: { ...pending, woken_at: await $.clock.now() } })
     const role = entry.role ?? 'agent'
-    bell(`${MARK} ${role} ${key} ended its turn (${mark?.reason ?? 'unknown'}) — read from the record: its TURN-END message was not delivered (${pending.reason}). A bell, not proof: verify by artifact before acting.\n\nIts last words:\n${mark?.body ?? ''}`)
+    // A QA gate pane runs under permissions and is briefed by `herdr agent prompt`; the record
+    // is its designed path, so its bell is a turn end, not a failed delivery (5.0.8: six such
+    // bells on one night read as "not delivered" and arrived as news already collected).
+    bell(role === 'qa'
+      ? `${MARK} ${role} ${key} ended its turn (${mark?.reason ?? 'unknown'}) — by the record, a gate pane's path (within the 30 s poll). Collect $GATE_FILE as GATE.md § 3 says; a verdict is the file, not this bell.\n\nIts last words:\n${mark?.body ?? ''}`
+      : `${MARK} ${role} ${key} ended its turn (${mark?.reason ?? 'unknown'}) — read from the record: its TURN-END message was not delivered (${pending.reason}). A bell, not proof: verify by artifact before acting.\n\nIts last words:\n${mark?.body ?? ''}`)
   }
 }
 
@@ -1134,7 +1139,7 @@ let isBusy = false
 // (eleven per thousand-call ticket); 300k leaves ~170 (five). Tune with ASTRAGENTIC_CONTEXT_CEILING.
 let compactDue = false
 let contextCeiling = 300_000
-const COMPACT_INSTRUCTIONS = 'Keep, verbatim where short: the ticket id and its brief (acceptance criteria, validation commands, Base, write-set, Owned elsewhere), the phase you are in and which flow steps have run, the current branch and HEAD, open review findings not yet folded, the agent IDs of your subagents still running (after a compaction SendMessage reaches a subagent by ID, not by name — Claude Code 2.1.299), and anything you owe the handback. Drop test output, file contents you can re-read, and finished tool results.'
+const COMPACT_INSTRUCTIONS = 'Keep, verbatim where short: the ticket id and its brief (acceptance criteria, validation commands, Base, write-set, Owned elsewhere), the phase you are in and which flow steps have run, the current branch and HEAD, open review findings not yet folded, the agent IDs of your subagents still running (after a compaction SendMessage reaches a subagent by ID, not by name — Claude Code 2.1.299), and anything you owe the handback. Drop test output, file contents you can re-read, and finished tool results. After this compaction, before planning any step, run scripts/check-simplify-markers.sh <Base> HEAD and read the branch: a `simplify(increment):` or `arm(ticket):` marker on it means that step is done; never re-run a step whose marker exists.'
 
 // Bells that arrived while the dispatcher's own turn was running (a gate pass, a picker
 // waiting on the owner). Each would have become a turn of its own once the session went
@@ -1480,7 +1485,9 @@ export const register: Register = on => {
       const live = await liveAgents($)
       if (live.length > 0) {
         if (root) {
-          await patchRecord($, root, me.key, { waiting_on: { n: live.length, at: await $.clock.now(), what: live.slice(0, 3).map(a => a.description) } })
+          // The status rides with the description (5.0.8): the one held-stale bell nizzy could
+          // report (one ticket, 20 min) had no statuses to read, so which word kept the hold is unmeasured.
+          await patchRecord($, root, me.key, { waiting_on: { n: live.length, at: await $.clock.now(), what: live.slice(0, 3).map(a => `${a.description} [${a.status}]`) } })
           await refreshFlow($, root, me.key)
         }
         $.ui.status(`${live.length} agent(s) still running — TURN-END held until they finish`)
@@ -1504,7 +1511,7 @@ export const register: Register = on => {
       // address; the dispatcher's poll wakes from it.
       if (root && me.role !== 'resident') {
         await patchRecord($, root, me.key, { last_turn_end_at: await $.clock.now(), last_turn_reason: e.reason,
-          turn_end_pending: { at: await $.clock.now(), reason: 'no dispatcher address (brief did not arrive through the mod)', text: `${MARK} TURN-END key=${me.key} pane=${me.pane} reason=${e.reason}\n${e.answer.slice(-1500)}` } })
+          turn_end_pending: { at: await $.clock.now(), reason: me.role === 'qa' ? 'QA pane: the brief arrived by herdr agent prompt, and the record is a gate pane\'s turn-end path (GATE.md § 3)' : 'no dispatcher address (brief did not arrive through the mod)', text: `${MARK} TURN-END key=${me.key} pane=${me.pane} reason=${e.reason}\n${e.answer.slice(-1500)}` } })
         await refreshFlow($, root, me.key)
       }
       return res
@@ -1575,8 +1582,23 @@ export const register: Register = on => {
         return id === to || a.name === to || a.teammateId === to || a.teammateId?.split('@')[0] === to
           || (ref !== '' && id.toLowerCase().includes(ref))
       })
+      // A FINISHED AGENT TAKES NO MESSAGE (5.0.8, reversing 5.0.7's resume). 5.0.7 rewrote a
+      // bare ref to the agent's name "so a finished fork resumes". one downstream ticket (nizzy, 2026-10-30)
+      // is what a resumed finished fork does: the Builder asked its completed Standards review
+      // for the report again by raw id, the resume counted as live, and the pane held its
+      // TURN-END for 20 minutes until the dispatcher killed the agent. All three measured asks
+      // (three tickets, two Builders) were a Builder asking a finished fork to re-report, by bare ref or
+      // by raw id. Its result is the Agent tool result already received; an empty one is the
+      // finding (builder-claude.md § Fan-out failure: re-run the lens directly).
+      const finished = owned && ['completed', 'failed', 'killed'].includes(String(owned.status ?? ''))
+      if (finished) {
+        return {
+          isDelivered: false,
+          reason: `${MARK} not sent. Your agent ${owned.name ?? owned.id} (${owned.status}) has finished; a finished fork takes no message, and resuming it holds your TURN-END. Its result is the Agent tool result you already received. An empty or truncated result is the finding: re-run that lens directly in this session (builder-claude.md § Fan-out failure), then continue.`,
+        }
+      }
       if (owned && bare && owned.name) {
-        $.ui.status(`"${e.to}" is the ref of your agent ${owned.name} — sent by name so a finished fork resumes`)
+        $.ui.status(`"${e.to}" is the ref of your live agent ${owned.name} — sent by name`)
         return next({ ...e, to: String(owned.name) })
       }
       if (!owned && bare) {

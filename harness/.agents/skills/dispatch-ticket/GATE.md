@@ -100,6 +100,13 @@ rm -f "$GATE_FILE"                                            # only what THIS d
 
 **A missing or empty file is a failed gate: re-dispatch.** A fresh dispatch takes a fresh token. A verdict you cannot read in full is not a verdict, and there is no subagent to fall back to. A gate pane's `idle` is a bell, so collecting the file is what ends the gate.
 
+**The turn end arrives by the record, not by message.** A gate pane is briefed by `herdr agent
+prompt` and runs under permissions, so its mod has no dispatcher address and a direct message
+would be held on the mode boundary. At each turn end the pane writes `turn_end_pending` on its
+`qa:<artifact-key>` entry and your mod rings it within the 30-second poll, worded as a gate
+pane's turn end. That bell says the pane stopped; the verdict is `$GATE_FILE`. Reading the pane
+with `herdr-watch-terminal.sh` is a second path, not a requirement.
+
 **Evidence goes to files. Panes and replies carry pointers and headlines.** A verdict held only in your context dies at the next compaction.
 
 ## 4. Cleanup
