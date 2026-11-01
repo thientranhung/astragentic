@@ -222,6 +222,13 @@ quick allow 'git push origin main'
 quick allow 'git push -u origin ops/images-1022'
 quick deny  'git push origin feature/x'
 quick deny  'git push --force origin main'
+# 5.1.1 — the base is origin's HEAD: on a master-based project `push origin master` is the fast-forward
+# push and `push origin main` is a stranger (inception, 2026-11-01: step 5 could not push master)
+QB="$TMP/quick-bare"; rm -rf "$QB"; git init -q --bare -b master "$QB"
+( cd "$QR" && git branch -q -M master && git remote add origin "$QB" && git push -q origin master && git remote set-head origin master ) >/dev/null 2>&1
+quick allow 'git push origin master'
+quick deny  'git push origin main'
+( cd "$QR" && git remote remove origin && git branch -q -M main ) >/dev/null 2>&1
 quick allow 'git worktree add -b ops/images-1022 /tmp/wt main'
 quick deny  'git worktree add -b feat/x /tmp/wt main'
 quick deny  'git rebase main'

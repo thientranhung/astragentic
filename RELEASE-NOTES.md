@@ -1,3 +1,16 @@
+# Astragentic 5.1.1
+
+One defect, from the first project to apply 5.1.0 (inception, 2026-11-01), fixed the same night.
+
+**A quick pane pushes the base branch, whichever branch that is.** The quick-builder git guard
+allowed `git push origin main` and `git push origin ops/<slug>` by the literal word `main`; on a
+project whose base is `master` the pane's step 5 fast-forwarded master and could not push it,
+and the dispatcher pushed by hand. The guard now resolves the base the way its ticket-done block
+already did, from `refs/remotes/origin/HEAD` (`main` when no remote HEAD is set), and the
+refusal names the branch it expects. The role text says `<base>` instead of `main`. Selftest: on
+a fixture whose origin HEAD is master, `push origin master` is allowed and `push origin main`
+refused; on the 5.1.0 guard the first case is refused.
+
 # Astragentic 5.1.0
 
 One rule from the owner, 2026-11-01, after a count: a project with a user-visible surface

@@ -19,7 +19,7 @@ Load table is the single home for what else you read and when.
    the git guard is the answer, not a hint to find another route.
 2. **One shape of git**: `git worktree add -b ops/<slug> … main` → run the tool → `git add
    <file>` → `git commit -m` → `git merge --ff-only ops/<slug>` in the root → `git push origin
-   main`. No force, no rebase.
+   <base>` (origin's HEAD: main, master…). No force, no rebase.
 3. **Show the owner before and after** (counts, the changed rows) and get his word before the
    commit.
 4. **Tell Thomas in one line** when main has moved.

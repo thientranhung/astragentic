@@ -42,7 +42,7 @@ looking at the before/after.
    or names, and the validation printed. Wait for his word.
 4. `git add <file>...` by name, `git commit -m "<what changed, in the change's own terms>"`.
    The commit message carries no ticket id.
-5. `git -C <root> merge --ff-only ops/<slug>`, then `git -C <root> push origin main`.
+5. `git -C <root> merge --ff-only ops/<slug>`, then `git -C <root> push origin <base>` (the base is origin's HEAD: main, master…).
 6. Tell Thomas in one line (SendMessage to the resident pane): what landed, the commit.
 7. `git worktree remove` the worktree and `git branch -d ops/<slug>`.
 

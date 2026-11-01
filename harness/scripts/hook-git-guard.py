@@ -195,10 +195,15 @@ def quick_gate(cmd):
             words = [a for a in rest if not a.startswith("-")]
             remote = words[0] if words else "origin"
             refs = words[1:] if len(words) > 1 else []
-            ok_ref = lambda r: r == "main" or r == "HEAD" or QUICK_BRANCH.match(r.split(":")[0]) is not None
+            # THE BASE IS THE REMOTE'S HEAD, NOT THE WORD "main" (5.1.1). A master-based project's
+            # quick pane could fast-forward master and never push it (inception, 2026-11-01: the
+            # dispatcher pushed by hand). Same resolution as the ticket-done block below.
+            rc, head = run(["git", "symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"])
+            base = head.split("/", 1)[1] if rc == 0 and "/" in head else "main"
+            ok_ref = lambda r: r == base or r == "HEAD" or QUICK_BRANCH.match(r.split(":")[0]) is not None
             if remote != "origin" or not refs or not all(ok_ref(r) for r in refs):
-                deny("a quick pane pushes `git push origin ops/<slug>` or `git push origin main` "
-                     "(the fast-forward it just made), nothing else.", cmd)
+                deny("a quick pane pushes `git push origin ops/<slug>` or `git push origin %s` "
+                     "(the fast-forward it just made; the base is origin's HEAD), nothing else." % base, cmd)
         elif sub in ("checkout", "switch", "branch"):
             flag = {"checkout": ("-b", "-B"), "switch": ("-c", "-C"), "branch": ()}[sub]
             if sub == "branch":
