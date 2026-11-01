@@ -1,7 +1,48 @@
 # Astragentic 5.0.9
 
-Two defects from two projects on 2026-10-30, one release: the merge gate refused correct merges
-on inception, and nizzy's dispatcher sent a Shaper before the journeys existed.
+Two defects from two projects on 2026-10-30 and three from nizzy on 2026-10-31 / 11-01, one
+release: the merge gate refused correct merges on inception, nizzy's dispatcher sent a Shaper
+before the journeys existed, a merge by sha named a live lane as merged, three panes died on
+one auth error and nobody heard for 36 hours, and a launch doubled its executable.
+
+**A dead pane is news for a person, not for a model.** Measured on nizzy from the transcripts:
+at 2026-10-30 18:39:54Z and 18:39:55Z two Builders' turns ended on `oauth_org_not_allowed`
+("Your organization has disabled Claude subscription access"), one error turn each (not every
+turn: the first pane recorded 1 error turn, then nothing for 36 h, then a second when poked).
+Their TURN-END `reason=error` bells reached the dispatcher at 18:46:15 as one flushed prompt
+("4 turn ends arrived while you were busy"), and the dispatcher's own call died on the same
+error at 18:46:14 and 18:46:15. The owner typed into the dead dispatcher at 22:01 and 00:44 and
+redispatched at 07:25 the next day. So the ask "ring the dispatcher at once" was already met;
+every path from the bell to a person was a model call, and all three models were dead. Now a
+turn that ends on `error` or `refusal` writes `last_turn_error` (first line of the answer) on
+the record, shows a desktop notification from the pane itself (`herdr notification show`, no
+dispatcher, no model), and the dispatcher's board reads the lane `dead`, red, with that line,
+rendered without a model; the bell's first line says the pane is DEAD and to redispatch, both
+on the direct path and on the record path. The next answered turn clears it. Selftest: an
+errored turn in pane mode records the line and calls the notification, a dead entry reads
+`dead` on the board and its bell carries the sentence; all three false on the 5.0.8 mod. Not
+in this release: nizzy's watchdog logged THOMAS_CRASHED once at 2026-10-30 21:44 and nothing
+since, with no pane-memory file written in two days, so it analysed no pane during the
+incident; why is unmeasured.
+
+**The merged ticket is the merge's argument, not a word in its message.** nizzy 2026-10-31:
+`git merge --no-ff <sha> -m "merge: <lane A> … routed to <lane B> …"` noted lane B, a live
+lane with 22 unmerged commits, as "merged owing a QA walk", and found lane A only through that
+same message word. The same set feeds the merge refusal, so a gapped live lane cited in a
+message would refuse another lane's merge. Now the words are the merge segment's own shell words
+with option values dropped, and the ref is resolved to a commit: the lane whose branch resolves
+to it, or carries it while the base does not yet, is the merged one. Selftest: a merge by sha
+whose message cites a gapped live lane passes and names only the merged lane; on 5.0.8 the same
+merge is refused (`deny:held`) and, with a full record, notes both lanes.
+
+**The launcher argv must not repeat the executable.** `herdr agent start --kind claude -- …`
+prepends `claude` itself; the Claude launcher matrix rows began with `claude`, so a row pasted
+after `--` produced `["claude","claude","--agent",…]` and the pane's first turn ran on the
+prompt "claude" with no brief (nizzy 2026-11-01, one launch: a QA declined for "no consent", a
+Builder handed back "stale dispatch", both as real bells). The matrix rows now start at the
+first flag and say why; GATE.md § 2 says the argv omits the executable; the dispatcher's mod
+refuses a `herdr agent start` whose first token after `--` equals its `--kind`. Selftest: the
+doubled launch is refused, the plain one passes; both pass on 5.0.8.
 
 **The marker check measured the base's drift as unreviewed code.** Thomas gates on the merge
 commit (thomas.md § Merge), whose tree is base plus branch, and rule 5 diffed
@@ -44,8 +85,10 @@ heading for each id; `UX: n/a — <why>` says no surface. Six planted sends: no 
 PRD written but not committed, a missing id refused; n/a and a cited journey sent. The case
 fails on the 5.0.8 mod.
 
-Owed: how often the merge gate's fork-point NOTE prints in the field (0 measured yet), and
-whether a UX: n/a shows up on efforts that did have a surface.
+Owed: how often the merge gate's fork-point NOTE prints in the field (0 measured yet), whether
+a UX: n/a shows up on efforts that did have a surface, how many `dead` rows and desktop
+notifications the field produces (0 so far; three would have fired on 2026-10-30), and why
+nizzy's watchdog analysed no pane for two days.
 
 # Astragentic 5.0.8
 

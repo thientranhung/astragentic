@@ -236,10 +236,16 @@ record. On a dispatched pane it consumes every peer message, the trust a pane la
 
 ## Launcher matrix — Claude rows
 
+Each row is the argv **after `--`**: `herdr agent start --kind claude` supplies the `claude`
+executable itself, so the row starts at its first flag. A row pasted with `claude` in front
+launches `claude claude --agent …`, and the pane's first turn runs on the prompt "claude" with no
+brief (measured once, 2026-11-01: a QA declined for "no consent", a Builder handed back "stale
+dispatch", both as real bells). The dispatcher's mod refuses that launch.
+
 ```text
-builder  → claude --dangerously-skip-permissions --agent builder --model <row: Model> --autocompact 300000 <--effort only when the row sets one> <--advisor only when the row sets one>
-shaper   → claude --dangerously-skip-permissions --agent shaper --model <row: Model> --autocompact 300000 <--effort only when the row sets one> <--advisor only when the row sets one>
-qa       → claude --agent qa --model <row: Model> --autocompact 300000 <--effort only when the row sets one> <--advisor only when the row sets one>
+builder  → --dangerously-skip-permissions --agent builder --model <row: Model> --autocompact 300000 <--effort only when the row sets one> <--advisor only when the row sets one>
+shaper   → --dangerously-skip-permissions --agent shaper --model <row: Model> --autocompact 300000 <--effort only when the row sets one> <--advisor only when the row sets one>
+qa       → --agent qa --model <row: Model> --autocompact 300000 <--effort only when the row sets one> <--advisor only when the row sets one>
 ```
 
 Model and effort come from the role's `orchestrator.md` row, never from memory. **A ticket

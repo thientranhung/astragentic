@@ -712,6 +712,12 @@ function parseEnvelope(text: string): Envelope | null {
   return { from, fromName: attrs.match(/\bfrom-name="([^"]*)"/)?.[1] ?? '', inner: (m?.[2] ?? '').trim() }
 }
 
+// 5.0.9: a turn that ended on an API error or a refusal left a pane whose model cannot go on;
+// the bell says so on its first line, so the dispatcher redispatches instead of waiting.
+function deadNote(reason: string): string {
+  return reason === 'error' || reason === 'refusal' ? ' The pane is DEAD: its model call failed and it cannot continue — do not wait on it; its last words name the cause, fix that and redispatch.' : ''
+}
+
 function parseMark(inner: string): { kind: string; key: string; pane: string; reason: string; body: string } | null {
   const [head = '', ...rest] = inner.split('\n')
   const m = head.match(/^\[astragentic-dispatch\] (RECEIVED|TURN-END) key=(\S+) pane=(\S+)(?: reason=(\S+))?/)
@@ -1048,6 +1054,9 @@ async function refreshBoard($: any, root: string | null, sends: Map<string, numb
       const w = entry.waiting_on
       const stale = w && now - (w.at ?? now) > HOLD_STALE_MS
       rows.push({ key, role, state: 'working', since: lastReceivedAt(entry), note: w ? `${w.n} agent(s) still running, turn end held${stale ? ` ${ago(now - w.at)} — stale, read that pane` : ''}` : undefined })
+    } else if (entry.last_turn_end_at && entry.last_turn_error) {
+      // 5.0.9: the pane's last turn died on an API error or a refusal; its model cannot continue
+      rows.push({ key, role, state: 'dead', since: entry.last_turn_end_at, note: `${entry.last_turn_error.reason}: ${entry.last_turn_error.text || 'no text'} — redispatch, do not wait` })
     } else if (entry.last_turn_end_at) {
       rows.push({ key, role, state: 'ended', since: entry.last_turn_end_at, note: [entry.last_turn_reason, qaNote].filter(Boolean).join(' · ') || undefined })
     } else {
@@ -1122,7 +1131,7 @@ async function wakeFromRecord($: any, root: string, bell: (text: string) => void
     // bells on one night read as "not delivered" and arrived as news already collected).
     bell(role === 'qa'
       ? `${MARK} ${role} ${key} ended its turn (${mark?.reason ?? 'unknown'}) — by the record, a gate pane's path (within the 30 s poll). Collect $GATE_FILE as GATE.md § 3 says; a verdict is the file, not this bell.\n\nIts last words:\n${mark?.body ?? ''}`
-      : `${MARK} ${role} ${key} ended its turn (${mark?.reason ?? 'unknown'}) — read from the record: its TURN-END message was not delivered (${pending.reason}). A bell, not proof: verify by artifact before acting.\n\nIts last words:\n${mark?.body ?? ''}`)
+      : `${MARK} ${role} ${key} ended its turn (${mark?.reason ?? 'unknown'}).${deadNote(mark?.reason ?? '')} Read from the record: its TURN-END message was not delivered (${pending.reason}). A bell, not proof: verify by artifact before acting.\n\nIts last words:\n${mark?.body ?? ''}`)
   }
 }
 
@@ -1350,7 +1359,7 @@ export const register: Register = on => {
       await refreshBoard($, root, sends)
       if (rec[mark.key]?.turn_end_pending) await patchRecord($, root, mark.key, { turn_end_pending: null })
       const role = rec[mark.key]?.role ?? 'agent'
-      bell($, `${MARK} ${role} ${mark.key} ended its turn (${mark.reason}). A bell, not proof: verify by artifact before acting.\n\nIts last words:\n${mark.body}`)
+      bell($, `${MARK} ${role} ${mark.key} ended its turn (${mark.reason}).${deadNote(mark.reason)} A bell, not proof: verify by artifact before acting.\n\nIts last words:\n${mark.body}`)
       return { consumed: `astragentic-dispatch: ${mark.key} turn end handed to the dispatcher` }
     }
 
@@ -1494,6 +1503,20 @@ export const register: Register = on => {
         return res
       }
     }
+    // A DEAD PANE IS NEWS FOR A PERSON, NOT FOR A MODEL (5.0.9). Measured on one project,
+    // 2026-10-30 18:39Z: three panes lost auth within seven minutes (two Builders, then their
+    // dispatcher). Each Builder's TURN-END reason=error reached the dispatcher inside 7 min,
+    // and the dispatcher's own call died on the same error, so the bell rang into a dead session
+    // and the owner found the pane 36 h later by poking it. Every path so far was a model call.
+    // An errored or refused turn therefore also writes its first line on the record, which the
+    // board reads red with no model, and shows a desktop notification from this pane itself.
+    const dead = e.reason === 'error' || e.reason === 'refusal'
+    const deadLine = dead ? (e.answer.split('\n').find(l => l.trim()) ?? '').trim().slice(0, 200) : ''
+    const lastErr = dead ? { at: await $.clock.now(), reason: e.reason, text: deadLine } : null
+    if (dead && me.role !== 'resident') {
+      await herdrJson($, ['notification', 'show', `${me.role} ${me.key} died (${e.reason})`, '--body', deadLine || 'the turn ended on an API error with no text', '--sound', 'request'])
+      $.ui.status(`turn ended on ${e.reason}: ${deadLine.slice(0, 80) || 'no text'} — on the record; the dispatcher's board reads it red`)
+    }
     // The lane is retired when its entry has left the record (cleanup) or names another pane:
     // writing here would recreate a stub entry, and the turn end would reach the dispatcher as
     // a recap of finished work (measured downstream, 2026-10-13).
@@ -1510,14 +1533,14 @@ export const register: Register = on => {
       // and nothing reached the dispatcher for minutes. The record is the path that needs no
       // address; the dispatcher's poll wakes from it.
       if (root && me.role !== 'resident') {
-        await patchRecord($, root, me.key, { last_turn_end_at: await $.clock.now(), last_turn_reason: e.reason,
+        await patchRecord($, root, me.key, { last_turn_end_at: await $.clock.now(), last_turn_reason: e.reason, last_turn_error: lastErr,
           turn_end_pending: { at: await $.clock.now(), reason: me.role === 'qa' ? 'QA pane: the brief arrived by herdr agent prompt, and the record is a gate pane\'s turn-end path (GATE.md § 3)' : 'no dispatcher address (brief did not arrive through the mod)', text: `${MARK} TURN-END key=${me.key} pane=${me.pane} reason=${e.reason}\n${e.answer.slice(-1500)}` } })
         await refreshFlow($, root, me.key)
       }
       return res
     }
     if (root) {
-      await patchRecord($, root, me.key, { last_turn_end_at: await $.clock.now(), last_turn_reason: e.reason, waiting_on: null })
+      await patchRecord($, root, me.key, { last_turn_end_at: await $.clock.now(), last_turn_reason: e.reason, last_turn_error: lastErr, waiting_on: null })
       await refreshFlow($, root, me.key)
     }
     // A QA pane's entry goes with its worktree at cleanup, so the fact that QA ended a turn is
@@ -2068,6 +2091,20 @@ export const register: Register = on => {
     const rec = (await readRecord($, root)) ?? {}
     const cmd = runnable(e.command)
 
+    // -- a launch whose argv repeats the executable that --kind supplies (5.0.9) ----------------
+    // `herdr agent start --kind claude -- …` prepends `claude` itself. A launcher row pasted with
+    // the executable produced ["claude","claude","--agent",…]: the pane's first prompt was the
+    // word "claude", a QA declined for "no consent", a Builder handed back "stale dispatch", and
+    // both reached the dispatcher as real bells (one project, 2026-11-01, one launch).
+    const launch = cmd.match(new RegExp(AT_COMMAND + String.raw`herdr\s+agent\s+start\b([^\n;&|]*)`))
+    if (launch) {
+      const kind = launch[1]?.match(/--kind[\s=]+['"]?([a-z]+)/)?.[1]
+      const first = launch[1]?.match(/\s--\s+['"]?([^\s'"]+)/)?.[1]
+      if (kind && first && first === kind) {
+        return { deny: `astragentic-dispatch: the argv after \`--\` starts with "${first}", which --kind ${kind} already supplies: herdr would run \`${kind} ${kind} …\` and the pane's first prompt would be the word "${kind}". Start the argv at its first flag (dispatch-ticket-claude § Launch).` }
+      }
+    }
+
     // -- closing a pane, tab or workspace that holds a mid-turn agent ---------------------
     const close = cmd.match(new RegExp(AT_COMMAND + String.raw`herdr\s+(tab|pane|workspace)\s+close\s+['"]?([A-Za-z0-9:_-]+)`))
     if (close) {
@@ -2232,10 +2269,45 @@ export const register: Register = on => {
       : ''
     // Whole-token matches only: `feature/foo` must not claim `gh pr merge feature/foo-fix`
     // (found by the 2.18.0 gate), and a ticket id must not match inside a longer one.
-    const words = e.command.split(/\s+/)
-    const named = Object.entries(rec).filter(([key, entry]) =>
-      words.includes(key) || (head && entry?.branch === head) ||
-      (typeof entry?.branch === 'string' && entry.branch.length > 0 && words.includes(entry.branch)))
+    // THE MERGED TICKET IS THE MERGE'S ARGUMENT, NOT A WORD IN ITS MESSAGE (5.0.9). Measured on
+    // one project 2026-10-31: `git merge --no-ff <sha> -m "merge: <lane A> … routed to <lane B> …"`
+    // noted lane B — live, 22 commits unmerged — as "merged owing a QA walk", and lane A
+    // itself was found only by that same message word, the ref being a sha. The same
+    // set feeds the refusal below, so a gapped lane cited in a message would refuse another
+    // lane's merge. So the words are the shell words of the merge segment after `merge`, with
+    // option values dropped (the message is one word nobody matches), and the ref — the first
+    // of them that is not an option — is resolved to a commit: an entry whose branch resolves
+    // to that commit, or carries it while the base does not yet, is the merged one.
+    const mergeSeg = simpleCommands(cmd).find(seg => /^git\s+(?:-C\s+\S+\s+)?merge\b/.test(seg)) ?? ''
+    const words: string[] = []
+    let ref = ''
+    {
+      const w = shellWords(mergeSeg)
+      const at = w.indexOf('merge')
+      const valued = new Set(['-m', '--message', '-F', '--file', '-s', '--strategy', '-X', '--strategy-option', '-S', '--gpg-sign', '--into-name', '--cleanup'])
+      for (let i = at + 1; at >= 0 && i < w.length; i++) {
+        const t = w[i] ?? ''
+        if (valued.has(t)) { i++; continue }
+        if (t.startsWith('-')) continue
+        words.push(t)
+        if (!ref) ref = t
+      }
+    }
+    const tip = ref && !/[$`]/.test(ref) ? await run($, ['git', '-C', root, 'rev-parse', '--verify', '-q', `${ref}^{commit}`]) : null
+    const mergedSha = tip && tip.code === 0 && /^[0-9a-f]{40}$/.test(tip.out) ? tip.out : ''
+    const carriesTip = async (branch: string): Promise<boolean> => {
+      if (!mergedSha || !branch) return false
+      const b = await run($, ['git', '-C', root, 'rev-parse', '--verify', '-q', `${branch}^{commit}`])
+      if (b.code !== 0) return false
+      if (b.out === mergedSha) return true
+      if ((await run($, ['git', '-C', root, 'merge-base', '--is-ancestor', mergedSha, b.out])).code !== 0) return false
+      return (await run($, ['git', '-C', root, 'merge-base', '--is-ancestor', mergedSha, 'HEAD'])).code !== 0
+    }
+    const named: Array<[string, Entry]> = []
+    for (const [key, entry] of Object.entries(rec)) {
+      const branch = typeof entry?.branch === 'string' ? entry.branch : ''
+      if (words.includes(key) || (head && branch === head) || (branch && words.includes(branch)) || await carriesTip(branch)) named.push([key, entry])
+    }
     // THE RECORD IS THE EVIDENCE, AND IT REFUSES THE MERGE (4.0.2). Until now a merge whose
     // Builder pane recorded no run of a flow step got a NOTE after the fact, while the marker
     // script read the `Pass:` line in the commit — a line anyone can type. Measured downstream
@@ -2342,7 +2414,7 @@ export const register: Register = on => {
         <Text dimColor>{[b.version ? `astragentic ${b.version}` : '', b.branch ? `⎇ ${b.branch}` : ''].filter(Boolean).join(' · ')}</Text>
         {rows.length === 0 && <Text dimColor>No live dispatches.</Text>}
         {rows.map(r => (
-          <Text color={r.note === 'not confirmed received' || r.state === 'merged' || (r.note ?? '').includes('— stale') ? 'red' : undefined}>
+          <Text color={r.note === 'not confirmed received' || r.state === 'merged' || r.state === 'dead' || (r.note ?? '').includes('— stale') ? 'red' : undefined}>
             {r.key.padEnd(14)} {r.role.padEnd(8)} {r.state.padEnd(10)} {ago(now - r.since).padStart(4)} {r.note ?? ''}
           </Text>
         ))}

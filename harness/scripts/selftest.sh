@@ -1700,6 +1700,7 @@ m._compile(js, m.filename)
 const hooks = {}
 m.exports.register((name, a, b) => { const fn = typeof a === 'function' ? a : b; const sel = typeof a === 'function' ? null : a; (hooks[name] ??= []).push({ fn, sel }) })
 const log = []
+const herdrCalls = []
 let liveAgents = []
 let tick = 0
 let everyFn = async () => {}
@@ -1711,7 +1712,7 @@ const $ = {
   command: { register: () => {}, run: async () => ({}) },
   session: { id: async () => 'disp', send: async () => ({ isDelivered: true }), usage: async () => ({ startedAt: 0, context: { tokens: 1000, window: 1_000_000, percent: 0 } }), compact: async () => ({}) },
   fs: { read: async p => fs.readFileSync(p, 'utf8'), write: async (p, t) => fs.writeFileSync(p, t), exists: async p => fs.existsSync(p) },
-  process: { run: async (argv, o = {}) => { if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? (mode === 'qapane' ? '{"result":{"tab":{"label":"qa:AB-5"}}}' : '{"result":{"tab":{"label":"ticket:AB-5"}}}') : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8', env: { ...process.env, ...(o.env ?? {}) } }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
+  process: { run: async (argv, o = {}) => { if (argv[0] === 'herdr') { herdrCalls.push(argv) } if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? (mode === 'qapane' ? '{"result":{"tab":{"label":"qa:AB-5"}}}' : '{"result":{"tab":{"label":"ticket:AB-5"}}}') : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8', env: { ...process.env, ...(o.env ?? {}) } }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
   ui: { status: t => log.push(t), toast: () => {}, open: () => {}, resolve: () => ({ Box: 'Box', Text: 'Text' }) },
   prompt: { submit: async () => {} },
   agent: { list: async () => liveAgents },
@@ -2124,7 +2125,19 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
       afterAgent: /✓ simplify/.test(bandAfterAgent) && !/…/.test(bandAfterAgent),
       tie: /… simplify \(1 agent\)/.test(bandTie) && /✓ review/.test(bandTie),
     }
-    console.log(JSON.stringify({ quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, wakeup, wakeupStop, bypassHint, sendToBareRef, sendToDoneRef, sendToDoneName, sendToDoneId, sendToUnknownRef, bandText, log }))
+    // 5.0.9 — a turn that ends on an API error writes its first line on the record and shows a
+    // desktop notification from the pane itself (one project, 2026-10-30: three panes lost auth
+    // together, the bells rang into a dead dispatcher, the owner found out 36 h later)
+    herdrCalls.length = 0
+    await fire('turn.start', { text: '', turnId: 'td1' }, async () => ({}))
+    await fire('turn.complete', { reason: 'error', answer: 'Your organization has disabled Claude subscription access for Claude Code · Use an API key instead', turnId: 'td1' }, async () => ({}))
+    const deadErr = rec()['AB-5']?.last_turn_error
+    const deadRecorded = deadErr?.reason === 'error' && /disabled Claude subscription/.test(String(deadErr?.text ?? ''))
+    const deadNotified = herdrCalls.some(a => a[1] === 'notification' && a[2] === 'show' && /AB-5 died \(error\)/.test(String(a[3])) && /disabled Claude subscription/.test(String(a[5])))
+    await fire('turn.start', { text: '', turnId: 'td2' }, async () => ({}))
+    await fire('turn.complete', { reason: 'answer', answer: 'back', turnId: 'td2' }, async () => ({}))
+    const deadCleared = rec()['AB-5']?.last_turn_error === null
+    console.log(JSON.stringify({ deadRecorded, deadNotified, deadCleared, quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, wakeup, wakeupStop, bypassHint, sendToBareRef, sendToDoneRef, sendToDoneName, sendToDoneId, sendToUnknownRef, bandText, log }))
     return
   }
   await fire('session.start', {}, async () => ({}))
@@ -2203,7 +2216,39 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   fs.writeFileSync(path.join(root, 'feat.js'), 'f2'); gitq('add', 'feat.js'); gitq('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'feat alone')
   gitq('checkout', '-q', '-')
   const mergeTddNoTest = await mergeOf({ ...full, 'astra-implement-with-tdd': undefined }, { start_sha: baseSha })
-  gitq('branch', '-q', '-D', 'builder/AB-6'); gitq('clean', '-fdq', '--', 'feat.js', 'feat.test.js')
+  // 5.0.9 — the merged ticket is the merge's argument, not a word in its message (one project,
+  // 2026-10-31: a merge by sha whose -m body routed a station finding to a live lane noted that
+  // lane as "merged owing a QA walk"; the same set feeds the refusal, so a gapped live lane
+  // cited in the message would refuse another lane's merge)
+  gitq('branch', '-q', '-D', 'builder/AB-6'); gitq('checkout', '-q', '-b', 'builder/AB-6')
+  fs.writeFileSync(path.join(root, 'feat.js'), 'f3'); fs.writeFileSync(path.join(root, 'feat.test.js'), 't3')
+  gitq('add', 'feat.js', 'feat.test.js'); gitq('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'feat with test')
+  gitq('checkout', '-q', '-'); gitq('checkout', '-q', '-b', 'builder/AB-7', baseSha)
+  fs.writeFileSync(path.join(root, 'live.js'), 'l'); gitq('add', 'live.js'); gitq('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'live lane')
+  gitq('checkout', '-q', '-')
+  const ab6Sha = gitq('rev-parse', 'builder/AB-6').stdout.trim()
+  const lane = (p, branch, skills) => ({ role: 'builder', pane_id: p, tab_id: `t${p}`, session_id: `s${p}`, branch, skills_run: skills, qa_required: 'walk', start_sha: baseSha, last_turn_end_at: 5 })
+  const mergeBySha = async (ab7Skills) => {
+    fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify({ 'AB-6': lane('p6', 'builder/AB-6', full), 'AB-7': lane('p7', 'builder/AB-7', ab7Skills) }))
+    let nextRan = false
+    const r = await fire('tool.call', { tool: 'Bash', command: `git merge --no-ff ${ab6Sha} -m "merge: AB-6 — the thing; station reds routed to AB-7 and #12"` }, async () => { nextRan = true; return {} })
+    const notes = (r?.context ?? []).map(String).join('\n')
+    return `${r?.deny ? 'deny' : 'pass'}:${nextRan ? 'ran' : 'held'}:${/AB-6 merged owing a QA walk/.test(notes) ? 'AB-6' : '-'}:${/AB-7 merged/.test(notes) ? 'AB-7' : '-'}`
+  }
+  const mergeByShaLiveGapped = await mergeBySha({ ...full, simplify: undefined })
+  const mergeByShaLiveFull = await mergeBySha(full)
+  gitq('branch', '-q', '-D', 'builder/AB-6'); gitq('branch', '-q', '-D', 'builder/AB-7'); gitq('clean', '-fdq', '--', 'feat.js', 'feat.test.js', 'live.js')
+  // 5.0.9 — a lane whose last turn died reads `dead`, red, with the error's first line; its bell
+  // says redispatch on the first line; a launch whose argv repeats the executable is refused
+  fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify({ 'AB-9': { role: 'builder', pane_id: 'p9', tab_id: 't9', session_id: 's9', last_brief_received_at: 10, last_turn_end_at: 20, last_turn_reason: 'error', last_turn_error: { at: 20, reason: 'error', text: 'Your organization has disabled Claude subscription access' } } }))
+  await fire('prompt.submit', { text: 'hello', origin: { kind: 'composer' } }, async () => ({}))
+  const deadRow = await rows()
+  bells.length = 0
+  await fire('session.receive', { text: `<cross-session-message from="uds:/tmp/y.sock" from-name="builder-ab-9">\n[astragentic-dispatch] TURN-END key=AB-9 pane=p9 reason=error\nYour organization has disabled Claude subscription access</cross-session-message>`, origin: { kind: 'plugin' } }, async () => ({}))
+  const deadBell = bells.length === 1 && /ended its turn \(error\)\. The pane is DEAD/.test(bells[0])
+  const launchOf = async (command) => { let ran = false; const r = await fire('tool.call', { tool: 'Bash', command }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` }
+  const launchDoubled = await launchOf('herdr agent start "builder-ab-9" --kind claude --pane p9 --timeout 60000 -- claude --dangerously-skip-permissions --agent builder --model m')
+  const launchPlain = await launchOf('herdr agent start "builder-ab-9" --kind claude --pane p9 --timeout 60000 -- --dangerously-skip-permissions --agent builder --model m')
   // the dispatcher learns every off scope: it runs the marker check at merge
   const composed = await fire('prompt.compose', {}, async () => ({ sections: [] }))
   const armOffDispatcher = (composed?.sections ?? []).some(s => /ARM: off at ticket[\s\S]*arm\(ticket\)/.test(String(s.text)))
@@ -2308,7 +2353,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   const bandRows = /\d+ lanes?/.test(bandDisp) && /AB-15\s+builder\s+registered/.test(bandDisp) && /↑0\.0\.2/.test(bandDisp) && !/available/.test(bandDisp)
   fs.writeFileSync(recPath, '{}')
   const kind = { briefQuick, kindQuick, briefUnlabelled: briefUnlabelled.slice(0, 7), kindAfterUnlabelled, briefFull, kindFull, briefJira, kindJira, mergeQuick, mergeQuickNoReview, mergeUnkinded, mergeSimplifyNa, mergeQuickNote, quickLanes, bandRows }
-  console.log(JSON.stringify({ kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, ownerBells, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, briefNoQa, briefUiNoSections, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
+  console.log(JSON.stringify({ deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, ownerBells, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
@@ -2344,6 +2389,21 @@ DRVEOS
     ok "a Shaper brief is refused without a UX: line, with a PRD absent or on disk but not committed on the base, and with a journey id the PRD has no heading for; UX: n/a and a cited journey the committed PRD carries are sent (5.0.9)"
   else
     bad "mod shaper ux gate" "$out"
+  fi
+  # 5.0.9 — the merged ticket is the merge's argument (one project, 2026-10-31: a merge by sha
+  # whose message routed a finding to a live lane noted that lane "merged owing a QA walk")
+  if says "$out" '"mergeByShaLiveGapped":"pass:ran:AB-6:-"' && says "$out" '"mergeByShaLiveFull":"pass:ran:AB-6:-"'; then
+    ok "a merge by sha names the lane whose branch carries that commit: the live lane its message cites is neither noted as merged nor, with a gapped record, able to refuse the merge (5.0.9)"
+  else
+    bad "mod merge by sha" "$out"
+  fi
+  # 5.0.9 — a dead lane (one project, 2026-10-30: three panes lost auth together, the owner found
+  # out 36 h later) reads red on the board and its bell says redispatch; the launch guard refuses
+  # an argv that repeats the executable --kind supplies (same project, 2026-11-01, one launch)
+  if says "$out" '"deadRow":"AB-9:dead:error: Your organization has disabled Claude subscription access — redispatch, do not wait"' && says "$out" '"deadBell":true,"launchDoubled":"deny:held","launchPlain":"pass:ran"'; then
+    ok "a lane whose last turn died reads dead with the error's first line; its turn-end bell says the pane is dead on its first line; a launch argv that repeats the --kind executable is refused and the plain one passes (5.0.9)"
+  else
+    bad "mod dead lane / launch argv" "$out"
   fi
   # 4.6.0 — the ticket's kind is the tracker's label (one project measured 15–32% quick-shaped
   # tickets, each paid as a full loop, 2026-10-25); the plug enforces, the package reader informs
@@ -2399,6 +2459,11 @@ EOS
     ok "agent sends (5.0.7/5.0.8): a bare ref of the pane's own LIVE fork goes to it by name; a finished own agent takes no message by ref, name or id; a bare ref no agent carries is refused; none is readdressed to the dispatcher"
   else
     bad "agent sends (5.0.8)" "$(printf '%s' "$out" | grep -o '"sendToBareRef":"[^"]*","sendToDoneRef":"[^"]*","sendToDoneName":"[^"]*","sendToDoneId":"[^"]*","sendToUnknownRef":"[^"]*"' | head -1)"
+  fi
+  if says "$out" '"deadRecorded":true,"deadNotified":true,"deadCleared":true'; then
+    ok "a turn that ends on an API error writes its first line on the record and shows a desktop notification from the pane itself; the next answered turn clears it (5.0.9)"
+  else
+    bad "mod dead turn" "$out"
   fi
   if says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"sendToFork":"code-review [ce2df1]","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"noFlow":true,"uxOff":true,"uxNa":true,"next":true,"held":true,"simplify":true,"done":true,"afterAgent":true,"tie":true},"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","refusedWhy":true,"compacted":1,"commitNoTest":"deny:held","commitWithTest":"pass:ran","commitDeletedTest":"deny:held","commitLaterDeletedTest":"deny:held","commitPathLimited":"deny:held","commitAllDeleted":"deny:held","commitAddThenCommit":"pass:ran","commitRmThenCommit":"deny:held","commitRestageDeleted":"deny:held","commitDashMAttached":"deny:held","commitScopedAddAll":"deny:held","commitPathRestored":"deny:held","commitAfterMv":"deny:held","mvNotReplayed":true,"commitTwice":"deny:held","commitDashCSrc":"deny:held","commitAmendOnly":"deny:held","commitRmAddAll":"deny:held","rmNotReplayed":true,"commitPathspecFile":"deny:held","commitRepeatedC":"deny:held","commitDotUntracked":"deny:held","commitDotStaged":"pass:ran","commitSkippedAdd":"deny:held","commitRmNoCached":"deny:held","fileSurvived":true,"commitOrAdd":"deny:held","commitEchoAdd":"deny:held","commitRmAbsent":"deny:held","commitSubstQuoted":"deny:held","testStillStaged":true,"commitWorkTree":"deny:held","commitConfigOpt":"deny:held","commitSubstApos":"deny:held","commitBacktickDouble":"deny:held","commitSubstLiteral":"pass:ran","commitConfigEnv":"deny:held","commitCommentedAdd":"deny:held","commitAbbrevOpt":"deny:held","commitMessageEq":"pass:ran","commitRedirect":"deny:held","commitFdDup":"pass:ran","ampNamed":true,"commitHeredocMsg":"pass:ran","commitHeredocOpen":"deny:held","commitHeredocExtra":"deny:held","commitHeredocBare":"deny:held","substFixNamed":true,"noScratchLeft":true,"wakeup":"deny:held","wakeupStop":"pass:ran","bypassHint":true'; then
     ok "pane side: a turn end with a live agent is held, the next turn start ends the hold, the band reads the latest step as … with the pane's agent count until a later step or a clean turn end and the step after it as ○, an arm row at no reaches the Builder's prompt, a command on the project's refused list is refused, a turn over the context ceiling is compacted, ScheduleWakeup is refused except stop, and a bypass-launched pane whose send lost its verdict is told to return to bypass"

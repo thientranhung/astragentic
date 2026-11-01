@@ -47,10 +47,10 @@ herdr tab create --workspace <workspace-id> --label "qa:<artifact-key>" \
 herdr pane rename <returned-root-pane-id> "qa:<artifact-key>"
 herdr pane get <returned-root-pane-id>    # foreground_cwd gate, a mismatch is STOP
 herdr agent start "qa-<artifact-key, lowercased>" --pane <returned-root-pane-id> --timeout 60000 \   # agent names take no uppercase and no ":" (dispatch-ticket § Agent names)
-  --kind <qa row: Runtime> -- <argv from the runtime-specific dispatch-ticket skill>
+  --kind <qa row: Runtime> -- <argv from the runtime-specific dispatch-ticket skill>   # the argv starts at its first flag: --kind supplies the executable
 ```
 
-**The argv comes from `dispatch-ticket-claude`.** The `qa` row's Runtime column in `orchestrator.md` must read `claude`; anything else means STOP.
+**The argv comes from `dispatch-ticket-claude` (§ Launcher matrix), and it omits the executable.** `--kind claude` makes herdr run `claude` itself; an argv that begins with `claude` launches `claude claude …` and the pane's first turn runs on the prompt "claude" with no brief (measured once, 2026-11-01). The `qa` row's Runtime column in `orchestrator.md` must read `claude`; anything else means STOP.
 
 Every check in that block is fail-closed:
 
