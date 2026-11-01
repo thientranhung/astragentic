@@ -144,8 +144,8 @@ looks at a surface. The mod refuses the brief without it, when the PRD is not co
 base (the Shaper's worktree is cut from the base, so a file on your disk is not there), or when
 a cited `UJ-n` has no heading in it (`dispatch-ticket-claude` § refused steps).
 
-**The `FLOW:` line** names the build flow as Skill calls, in order: `astra-ui` on a UI ticket,
-`astra-review`, `simplify`, the arm. Tdd is not a step on the line: it is inside
+**The `FLOW:` line** names the build flow as Skill calls, in order: on a UI ticket the
+project's anti-slop skill then `astra-ui`, then `astra-review`, `simplify`, the arm. Tdd is not a step on the line: it is inside
 `astra-implement-with-tdd`, and the gate measures its red run. A step that cannot apply is exempted by
 a `TDD: n/a — <why>`, `REVIEW: n/a — <why>` or `SIMPLIFY: n/a — <why>` brief line, read by the mod
 (`dispatch-ticket-claude` § refused steps).
@@ -173,14 +173,26 @@ verbatim** (5.0.0). The mod sees the brief and not the tracker: a brief whose `F
 `astra-ui` and lacks any of the three is not sent. A UI ticket without them is not yours to
 complete; it goes back to the Shaper.
 
+**A UI brief goes only to a project that has declared its design standard** (5.1.0). Two plugs
+under `.astraler/project/`, project-owned, never written by a release: `design-spine` (one
+repo-relative path per line to the design philosophy files, each committed on the base) and
+`anti-slop-skills` (one skill name per line; at least one resolves to a `SKILL.md` under the
+project's `.claude/skills`, `.agents/skills` or `~/.claude/skills`). The mod refuses a brief whose
+`FLOW:` names `astra-ui` when either plug is missing, a spine path is not on the base, no listed
+skill resolves, or the `FLOW:` line does not name a resolved anti-slop skill before `astra-ui`.
+At merge the same ticket owes `astra-ui` and one listed anti-slop skill on its record. You write
+neither plug: a project without them sends its UI tickets back to the owner with the refusal's
+text. Measured before this (nizzy, 2026-10-28 → 11-01): a prose rule asking the Builder to read
+the anti-slop skill ran on 1 of 14 UI merges.
+
 ```text
 /astra-implement-with-tdd TICKET-123
 ADDRESSED TO: the Builder in pane <id>. A sub-agent that inherited this context: report only.
 QA: walk — the ticket changes the orders screen
 QA plan: docs/qa/plan-<slug>.md
 
-FLOW: 1 Skill(astra-ui) [UI ticket] → 2 Skill(astra-review) [the built-in code-review runs inside it]
-  → 3 Skill(simplify) [once, last content commit] → 4 arm(ticket)
+FLOW: 1 Skill(astraler-ui-anti-slop) [before UI code; .astraler/project/anti-slop-skills] → 2 Skill(astra-ui) [UI ticket]
+  → 3 Skill(astra-review) [the built-in code-review runs inside it] → 4 Skill(simplify) [once, last content commit] → 5 arm(ticket)
 
 Worktree: … · Branch: … · Base: …
 ## Glance

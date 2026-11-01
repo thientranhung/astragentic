@@ -111,7 +111,8 @@ Classify candidate material before editing anything:
 - **Project plugs — the project's answers, at a path no release writes.** `.astraler/project/`
   is project-owned and tracked in git; `install.sh` never touches it, so an upgrade cannot
   overwrite what the project declared. The harness states an obligation and the moment; the
-  plug is the project's answer. Six plugs are asked for:
+  plug is the project's answer. Nine plugs are asked for (the last two only of a project with a
+  user-visible surface):
   - **`cleanup-worktree.sh <worktree-path>`** — *what does a worktree allocate in this project
     beyond git, and what releases it?* A database, a port registration, a container, a broker,
     a lease on something shared. Write the release for THIS worktree only, never a
@@ -182,6 +183,25 @@ Classify candidate material before editing anything:
     seven false alerts in one shift downstream. Any exit other than 0 or 1 reads as in flight.
     Absent, `STUCK` fires on pane state alone; a project with no long-running verification
     declines it in the receipt.
+  - **`design-spine`** (a list, not a script; 5.1.0) — *where is this project's written design
+    standard?* One repo-relative path per line to the design philosophy files (a `DESIGN.md`,
+    a token contract, a component guide), each committed on the base. The dispatch mod refuses
+    a UI brief (one whose `FLOW:` names `astra-ui`) while the list is missing or a path is not
+    on `HEAD`; `astra-ui` judges each surface against these files; `astragentic.sh doctor`
+    counts the paths it finds. A project with no user-visible surface writes neither this nor
+    the next plug and says so in the receipt. First adopters at this release: one project had
+    two candidates (1211 and 235 lines, both under `docs/`) and none declared; the other had
+    no design document at all.
+  - **`anti-slop-skills`** (a list, not a script; 5.1.0) — *which skill does a Builder read
+    before writing UI code?* One skill name per line; at least one must resolve to a
+    `SKILL.md` under the project's `.claude/skills`, `.agents/skills` or the user's
+    `~/.claude/skills`. The brief names it before `astra-ui` on the `FLOW:` line, the names that
+    resolved are stamped on the record at the send, the pane records the call, and the merge
+    gate refuses a UI ticket whose record carries the stamp and lacks the call. A lane dispatched
+    before the plug existed carries no stamp and is not judged on it. The owner's
+    house skill is `astraler-ui-anti-slop` (his my-skills repo, symlinked under
+    `~/.claude/skills`); a project with its own rules names its own. Measured before this plug:
+    a prose rule asking for the same read ran on 1 of 14 UI merges.
 - **Runtime-specific** — every role runs on Claude Code, so Claude Markdown/YAML agents and
   skills stay Claude-native. The one other runtime is the optional junior under the Builder
   (`.agents/roles/junior-<runtime>.md`, `dispatch-junior`), named in `orchestrator.md`.
@@ -560,7 +580,7 @@ Only after validation succeeds:
    and why, ownership conflicts, defects found in the candidate, and validation failures.
    And one line per project plug under `.astraler/project/` — `cleanup-worktree.sh`,
    `tracker-state.sh`, `ticket-done.sh`, `tracker-status.sh`, `not-a-skill.txt`,
-   `work-in-flight.sh` — written (what it does) or
+   `work-in-flight.sh`, `design-spine`, `anti-slop-skills` — written (what it does) or
    declined (why) — an unrecorded plug is an empty socket the next session cannot tell from a
    considered one.
    A clean upgrade produces a receipt of a few lines, and that is the correct output, not a

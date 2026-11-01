@@ -256,6 +256,8 @@ NOT_A_SKILL = {
     "quick-builder", "builder-quick", "claude-sonnet-5",
     # Triage labels. Skill-shaped, and the vocabulary lives in docs/agents/triage-labels.md.
     "needs-triage", "ready-for-agent",
+    # 5.1.0: the two UI-standard plugs under .astraler/project/ (lists, not skills).
+    "design-spine", "anti-slop-skills",
 
     "no-secrets-in-exports", "expand-contract", "recent-unwrapped", "code-map",
     "agent-not-idle", "agent-not-found", "agent-prompt-stalled", "read-only",

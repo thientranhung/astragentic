@@ -59,7 +59,7 @@ và có số|nguồn. Thứ tự là thứ tự phụ thuộc, không phải ưu
 
 ### A. Tài liệu tham gia vận hành (ai viết, ai đọc, mốc đọc)
 
-- [ ] **A1. Mẫu `DESIGN.md` theo spec Google** trong `harness/`: frontmatter YAML 5 nhóm token
+- [ ] (5.1.0 bắt **có** file qua plug `.astraler/project/design-spine`, path phải commit trên base; mẫu/lint vẫn chưa) **A1. Mẫu `DESIGN.md` theo spec Google** trong `harness/`: frontmatter YAML 5 nhóm token
   (colors/typography/rounded/spacing/components), 8 section theo thứ tự spec. Từ vựng token: tên
   khuyến nghị của spec là bắt buộc, cộng `status-<level>`, `link*`, `row-hover` của harness.
   Số: spec 28.6k star, npm 390k/tuần; nizzy 0 token YAML, 46 CSS var; inception 0 DESIGN.md, 221 CSS var
@@ -100,7 +100,8 @@ và có số|nguồn. Thứ tự là thứ tự phụ thuộc, không phải ưu
 
 - [ ] **C1. Cài**: `@google/design.md` CLI (npx), Hallmark `sloplint.mjs` (chỉ linter), axe/pa11y. Đã có:
   `frontend-design` Anthropic 1.1.1 (nạp kèm surface mới), `ui-ux-pro-max` (lookup).
-- [ ] (5.0.0, gật qua mục 4) **C2. Tách `astraler-ui-anti-slop`**: R1–R10 → rule LLM đọc trong `/code-review` cùng DESIGN.md
+- [~] (5.0.0, gật qua mục 4; **đổi hướng 2026-11-01**, owner: "phải có ít nhất một skill về anti slop AI") **C2. Tách `astraler-ui-anti-slop`**: 5.1.0 giữ skill nguyên vẹn và bắt gọi: plug `.astraler/project/anti-slop-skills` (≥1 skill resolve), FLOW của brief UI nêu tên trước `astra-ui`, merge gate đọc trên record. Số: 1/14 merge UI nizzy từng chạy skill khi còn là rule prose (dispatch-record + git log 28/10→01/11). Phần "R1–R10 → rule review" không làm nữa; token contract → A1 giữ.
+  Cũ: R1–R10 → rule LLM đọc trong `/code-review` cùng DESIGN.md
   (hàng trống ma trận R1b/R2/R6/R7/R8 là rule LLM); token contract → từ vựng A1; phần còn lại là house rule
   gọi ở mốc "trước code UI" hoặc bỏ. Số: 0 lần gọi mọi project | transcript toàn máy.
 - [ ] (5.0.0, gật qua mục 4) **C3. `bmad-ux`**: gỡ EXPERIENCE.md, giữ advisor, đọc 3 mục ticket. Số: 101/202 ticket UI bỏ qua

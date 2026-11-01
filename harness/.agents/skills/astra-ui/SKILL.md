@@ -17,11 +17,15 @@ Skill(skill: "astra-ui", args: "upgrade <surface>")
 
 ## What the pass reads first
 
-**`DESIGN.md` wins.** The project's design spine (tokens, typography, spacing, components,
-Do's and Don'ts) is the standard; a finding is a gap between the surface and a section of it,
-cited. No `DESIGN.md`: the first finding is that the project has no written standard, and the
-pass judges against the UI system the code names (shadcn, MUI, an internal kit) with that
-caveat on every finding.
+**The design spine wins.** The project's design philosophy files (tokens, typography, spacing,
+components, Do's and Don'ts) are the standard; their paths are the lines of
+`.astraler/project/design-spine` (5.1.0; a project that has not declared it gets no UI brief, so
+a pass without one is a pass the owner asked for by hand). A finding is a gap between the
+surface and a section of a spine file, cited. No spine file: the first finding is that the
+project has no written standard, and the pass judges against the UI system the code names
+(shadcn, MUI, an internal kit) with that caveat on every finding. The anti-slop skill the
+project lists in `.astraler/project/anti-slop-skills` was read by the Builder before the UI
+code; its rules are house rules the pass may cite by name, the spine stays the standard.
 
 **The ticket's Glance and States are the checklist.** Each Glance line: does the must-see win
 in two seconds in that actor's seat, does the rest recede? A must-see that loses is **P0**,

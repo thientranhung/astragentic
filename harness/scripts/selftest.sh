@@ -1599,14 +1599,22 @@ printf '{ "enabledPlugins": { "mattpocock-skills@mattpocock": false } }\n' > "$A
 # 5.0.5 — a live Builder's worktree under .claude/worktrees/ is a whole checkout and not the project layer
 mkdir -p "$AD/.claude/worktrees/builder-ABC-9/.agents/roles"; printf 'Skill(mattpocock-skills:tdd)\n' > "$AD/.claude/worktrees/builder-ABC-9/.agents/roles/builder.md"
 out_clean="$(cd "$AD" && bash "$ROOT/astragentic.sh" doctor 2>&1)"; rc_clean=$?
+# 5.1.0 — a declared UI standard: spine path committed on HEAD and an anti-slop skill that resolves
+# read clean with their counts; an uncommitted path and a name with no SKILL.md are two findings
+mkdir -p "$AD/.astraler/project" "$AD/docs" "$AD/.claude/skills/x-anti-slop"
+printf '# DESIGN\n' > "$AD/docs/DESIGN.md"; printf -- '---\nname: x-anti-slop\n---\n' > "$AD/.claude/skills/x-anti-slop/SKILL.md"
+( cd "$AD" && git add docs/DESIGN.md && git -c user.name=t -c user.email=t@t commit -q -m design ) >/dev/null 2>&1
+printf 'docs/DESIGN.md\n' > "$AD/.astraler/project/design-spine"; printf 'x-anti-slop\n' > "$AD/.astraler/project/anti-slop-skills"
+out_ui="$(cd "$AD" && bash "$ROOT/astragentic.sh" doctor 2>&1)"; rc_ui=$?
+printf 'docs/DESIGN.md\ndocs/tokens.md\n' > "$AD/.astraler/project/design-spine"; printf 'no-such-skill\n' > "$AD/.astraler/project/anti-slop-skills"
 rm -rf "$AD/.claude/skills/astra-ui"; mkdir -p "$AD/.astraler/project/overlays"
 printf 'FLOW: 1 Skill(bmad-ux)\n' > "$AD/.astraler/project/overlays/dispatch-brief.md"
 sed -i.bak 's#/\^\\/astra-implement-with-tdd\\b/#/^\\/mattpocock-skills:implement\\b/#' "$AD/.claude/skills/astragentic-dispatch/hooks/register.tsx" && rm -f "$AD/.claude/skills/astragentic-dispatch/hooks/register.tsx.bak"
 out_bad="$(cd "$AD" && bash "$ROOT/astragentic.sh" doctor 2>&1)"; rc_bad=$?
-if [ "$rc_clean" = 0 ] && says "$out_clean" "7/7 astra-* skills" && [ "$rc_bad" = 1 ] && says "$out_bad" "astra-ui: SKILL.md missing in .claude" && says "$out_bad" "overlays/dispatch-brief.md" && says "$out_bad" "does not name /astra-implement-with-tdd" && says "$out_bad" "doctor: 3 finding(s)"; then
-  ok "astragentic.sh doctor (5.0.0/5.0.1/5.0.5): exit 0 on the payload with the plugin-off key in .claude/settings.json and an old name inside .claude/worktrees/; exit 1 naming a missing .claude copy, a retired name in an overlay and an old brief regex in the mod"
+if [ "$rc_clean" = 0 ] && says "$out_clean" "7/7 astra-* skills" && says "$out_clean" "no UI standard declared" && [ "$rc_ui" = 0 ] && says "$out_ui" "design-spine: 1/1 path(s) committed" && says "$out_ui" "anti-slop-skills: 1/1 skill(s) resolve" && [ "$rc_bad" = 1 ] && says "$out_bad" "astra-ui: SKILL.md missing in .claude" && says "$out_bad" "overlays/dispatch-brief.md" && says "$out_bad" "does not name /astra-implement-with-tdd" && says "$out_bad" "design-spine: 1/2 path(s) committed on HEAD; not on HEAD: docs/tokens.md" && says "$out_bad" "anti-slop-skills: 0/1 skill(s) resolve" && says "$out_bad" "doctor: 5 finding(s)"; then
+  ok "astragentic.sh doctor (5.0.0/5.0.1/5.0.5/5.1.0): exit 0 on the payload (no UI standard declared, said so) and with a committed spine + a resolving anti-slop skill (1/1, 1/1); exit 1 naming a missing .claude copy, a retired name in an overlay, an old brief regex in the mod, an uncommitted spine path and an anti-slop name with no SKILL.md"
 else
-  bad "astragentic.sh doctor" "clean rc=$rc_clean / planted rc=$rc_bad: $out_bad"
+  bad "astragentic.sh doctor" "clean rc=$rc_clean / ui rc=$rc_ui: $out_ui / planted rc=$rc_bad: $out_bad"
 fi
 fi
 # 4.1.0 — the receipt lands by the script's hand, not an agent's: a project had none for three
@@ -1705,9 +1713,10 @@ let liveAgents = []
 let tick = 0
 let everyFn = async () => {}
 let selfSock
+let homeDir
 const every = () => everyFn()
 const $ = {
-  env: { get: async k => k === 'CLAUDE_CODE_MESSAGING_SOCKET' ? selfSock : k === 'ASTRAGENTIC_REPO' ? root : (isPane && k === 'HERDR_TAB_ID') ? 't5' : (isPane && k === 'HERDR_PANE_ID') ? 'p5' : undefined },
+  env: { get: async k => k === 'CLAUDE_CODE_MESSAGING_SOCKET' ? selfSock : k === 'ASTRAGENTIC_REPO' ? root : k === 'HOME' ? homeDir : (isPane && k === 'HERDR_TAB_ID') ? 't5' : (isPane && k === 'HERDR_PANE_ID') ? 'p5' : undefined },
   clock: { now: async () => { tick = Math.max(tick + 1, Date.now()); return tick }, every: (_ms, fn) => { everyFn = fn } },
   command: { register: () => {}, run: async () => ({}) },
   session: { id: async () => 'disp', send: async () => ({ isDelivered: true }), usage: async () => ({ startedAt: 0, context: { tokens: 1000, window: 1_000_000, percent: 0 } }), compact: async () => ({}) },
@@ -2195,11 +2204,26 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify({ 'AB-6': { role: 'builder', pane_id: 'p6', tab_id: 't6', session_id: 's6', branch: 'builder/AB-6', skills_run: skills, ...extra } }))
     let nextRan = false
     const r = await fire('tool.call', { tool: 'Bash', command: 'git merge --no-ff builder/AB-6' }, async () => { nextRan = true; return {} })
-    return `${r?.deny ? 'deny' : 'pass'}:${nextRan ? 'ran' : 'held'}${r?.deny && /has no record of: [^.]*\btdd\b/.test(String(r.deny)) ? ':tdd' : ''}`
+    const d = r?.deny ? String(r.deny) : ''
+    return `${r?.deny ? 'deny' : 'pass'}:${nextRan ? 'ran' : 'held'}${d && /has no record of: [^.]*\btdd\b/.test(d) ? ':tdd' : ''}${/astra-ui \(a UI ticket/.test(d) ? ':ui' : ''}${/anti-slop \(none of x-anti-slop on the record/.test(d) ? ':slop' : ''}`
   }
   const full = { 'astra-implement-with-tdd': 1, 'astra-review': 1, 'code-review': 1, 'simplify': 1, 'codex-arm': 1 }
   const mergeGap = await mergeOf({ ...full, simplify: undefined })
   const mergeFull = await mergeOf(full)
+  // 5.1.0 — a UI ticket (ux_owed on the record, from the brief's FLOW) owes astra-ui and one of the
+  // project's anti-slop skills on the record; a record from before 5.1.0 (no ux_owed) is not judged
+  const slopPlug = path.join(root, '.astraler/project/anti-slop-skills')
+  fs.mkdirSync(path.dirname(slopPlug), { recursive: true }); fs.writeFileSync(slopPlug, '# house rules\nx-anti-slop\n')
+  const stamped = { ux_owed: true, ui_standard: ['x-anti-slop'] }
+  const mergeUiNeither = await mergeOf(full, stamped)
+  const mergeUiNoSlop = await mergeOf({ ...full, 'astra-ui': 1 }, stamped)
+  const mergeUiFull = await mergeOf({ ...full, 'astra-ui': 1, 'x-anti-slop': 1 }, stamped)
+  const mergeUiNotOwed = await mergeOf(full, { ux_owed: false, ui_standard: null })
+  // a lane dispatched under 5.0.9: ux_owed true, no stamp — judged by its own brief, not the plug
+  const mergeUiPreStamp = await mergeOf(full, { ux_owed: true })
+  const mergeUiQuick = await mergeOf({ 'astra-implement-with-tdd': 1, 'code-review': 1 }, { ...stamped, kind: 'quick' })
+  fs.unlinkSync(slopPlug)
+  const mergeUi = { mergeUiNeither, mergeUiNoSlop, mergeUiFull, mergeUiNotOwed, mergeUiPreStamp, mergeUiQuick }
   const mergeEmpty = await mergeOf({})
   // 4.1.3 — tdd at merge is the commit gate's question (one downstream ticket, 2026-10-22: five commits
   // with test files passed the pane, the merge was refused "no record of: tdd"): a record with
@@ -2253,7 +2277,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   const composed = await fire('prompt.compose', {}, async () => ({ sections: [] }))
   const armOffDispatcher = (composed?.sections ?? []).some(s => /ARM: off at ticket[\s\S]*arm\(ticket\)/.test(String(s.text)))
   // 4.1.0 — four gates a 30-day field audit saw fire 0 times, each driven here with its defect planted
-  const sendBrief = async text => { const r = await fire('session.send', { to: 'builder-ab-9', text, origin: { kind: 'model' } }, async () => ({ isDelivered: true })); return r?.isDelivered === false ? `refused:${String(r.reason ?? '').slice(0, 60)}` : 'sent' }
+  const sendBrief = async text => { const r = await fire('session.send', { to: 'builder-ab-9', text, origin: { kind: 'model' } }, async () => ({ isDelivered: true })); return r?.isDelivered === false ? `refused:${String(r.reason ?? '').slice(0, 140)}` : 'sent' }
   const recPath = path.join(root, '.astraler/state/dispatch-record.json')
   const orchPath = path.join(root, '.agents/orchestrator.md')
   const orchText = fs.readFileSync(orchPath, 'utf8')
@@ -2262,7 +2286,29 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   // (1b) 5.0.0 — a UI brief (FLOW names astra-ui) without the ticket's three sections is not sent;
   // with them it goes; a brief whose FLOW has no astra-ui is not asked for them
   const briefUiNoSections = await sendBrief('/astra-implement-with-tdd AB-9\nQA: none — no surface\nFLOW: 1 Skill(astra-ui) [UI ticket] → 2 Skill(astra-review)\n## Glance\n- **Orders:** the seller must see the overdue row first.\nAcceptance criteria: …')
-  const briefUiSections = await sendBrief('/astra-implement-with-tdd AB-9\nQA: none — no surface\nFLOW: 1 Skill(astra-ui) [UI ticket] → 2 Skill(astra-review)\n## Glance\n- **Orders:** the seller must see the overdue row first.\n## States\n- empty: a line saying no orders\n## Criteria\n1. **Overdue first** (FR-1)')
+  const uiTail = '\n## Glance\n- **Orders:** the seller must see the overdue row first.\n## States\n- empty: a line saying no orders\n## Criteria\n1. **Overdue first** (FR-1)'
+  // (1d) 5.1.0 — a UI brief goes only to a project that declared its design standard: a committed
+  // design spine and an anti-slop skill that resolves, named on the FLOW line before astra-ui
+  const spinePlug = path.join(root, '.astraler/project/design-spine')
+  fs.mkdirSync(path.dirname(spinePlug), { recursive: true })
+  const briefUiNoSpine = await sendBrief('/astra-implement-with-tdd AB-9\nQA: none — no surface\nFLOW: 1 Skill(astra-ui) [UI ticket] → 2 Skill(astra-review)' + uiTail)
+  fs.mkdirSync(path.join(root, 'docs'), { recursive: true }); fs.writeFileSync(path.join(root, 'docs/DESIGN.md'), '# DESIGN\n'); fs.writeFileSync(spinePlug, 'docs/DESIGN.md\n')
+  const briefUiSpineUncommitted = await sendBrief('/astra-implement-with-tdd AB-9\nQA: none — no surface\nFLOW: 1 Skill(astra-ui) [UI ticket] → 2 Skill(astra-review)' + uiTail)
+  require('child_process').execSync('git add docs/DESIGN.md && git -c user.name=t -c user.email=t@t commit -q -m design', { cwd: root })
+  const briefUiNoSlopPlug = await sendBrief('/astra-implement-with-tdd AB-9\nQA: none — no surface\nFLOW: 1 Skill(astra-ui) [UI ticket] → 2 Skill(astra-review)' + uiTail)
+  fs.writeFileSync(slopPlug, 'x-anti-slop\n')
+  const briefUiSlopUnresolved = await sendBrief('/astra-implement-with-tdd AB-9\nQA: none — no surface\nFLOW: 1 Skill(astra-ui) [UI ticket] → 2 Skill(astra-review)' + uiTail)
+  fs.mkdirSync(path.join(root, '.claude/skills/x-anti-slop'), { recursive: true }); fs.writeFileSync(path.join(root, '.claude/skills/x-anti-slop/SKILL.md'), '---\nname: x-anti-slop\n---\n')
+  const briefUiSlopNotInFlow = await sendBrief('/astra-implement-with-tdd AB-9\nQA: none — no surface\nFLOW: 1 Skill(astra-ui) [UI ticket] → 2 Skill(astra-review)' + uiTail)
+  const briefUiSections = await sendBrief('/astra-implement-with-tdd AB-9\nQA: none — no surface\nFLOW: 1 Skill(x-anti-slop) [before UI code] → 2 Skill(astra-ui) [UI ticket] → 3 Skill(astra-review)' + uiTail)
+  const uiStampWritten = (JSON.parse(fs.readFileSync(recPath, 'utf8'))['AB-9']?.ui_standard ?? ['none']).join('+')
+  // the first adopter's path: the skill lives only under ~/.claude/skills, as a symlink into another repo
+  fs.mkdirSync(path.join(root, 'fakehome/.claude/skills'), { recursive: true }); fs.mkdirSync(path.join(root, 'elsewhere/y-anti-slop'), { recursive: true })
+  fs.writeFileSync(path.join(root, 'elsewhere/y-anti-slop/SKILL.md'), '---\nname: y-anti-slop\n---\n'); fs.symlinkSync(path.join(root, 'elsewhere/y-anti-slop'), path.join(root, 'fakehome/.claude/skills/y-anti-slop'))
+  fs.writeFileSync(slopPlug, 'y-anti-slop\n'); homeDir = path.join(root, 'fakehome')
+  const briefUiHomeSymlink = await sendBrief('/astra-implement-with-tdd AB-9\nQA: none — no surface\nFLOW: 1 Skill(y-anti-slop) [before UI code] → 2 Skill(astra-ui) [UI ticket] → 3 Skill(astra-review)' + uiTail)
+  homeDir = undefined; fs.writeFileSync(slopPlug, 'x-anti-slop\n')
+  const briefUiStd = { briefUiNoSpine, briefUiSpineUncommitted, briefUiNoSlopPlug, briefUiSlopUnresolved, briefUiSlopNotInFlow, uiStampWritten, briefUiHomeSymlink }
   const briefNoUi = await sendBrief('/astra-implement-with-tdd AB-9\nQA: none — no surface\nFLOW: 1 Skill(astra-review)')
   // (1c) 5.0.9 — a Shaper brief declares the journeys astra-ux captured (or UX: n/a); the PRD
   // must exist and carry a heading for every id cited (nizzy 2026-10-30: Shaper sent with no PRD)
@@ -2353,7 +2399,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   const bandRows = /\d+ lanes?/.test(bandDisp) && /AB-15\s+builder\s+registered/.test(bandDisp) && /↑0\.0\.2/.test(bandDisp) && !/available/.test(bandDisp)
   fs.writeFileSync(recPath, '{}')
   const kind = { briefQuick, kindQuick, briefUnlabelled: briefUnlabelled.slice(0, 7), kindAfterUnlabelled, briefFull, kindFull, briefJira, kindJira, mergeQuick, mergeQuickNoReview, mergeUnkinded, mergeSimplifyNa, mergeQuickNote, quickLanes, bandRows }
-  console.log(JSON.stringify({ deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, ownerBells, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
+  console.log(JSON.stringify({ deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, ownerBells, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeUi, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiStd, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
@@ -2372,14 +2418,14 @@ DRVEOS
     bad "mod send/ack keys" "$out"
   fi
   # 4.0.2 — the record refuses the merge. one downstream ticket (2026-10-16) shipped forged Pass: lines past the marker gate.
-  if says "$out" '"mergeGap":"deny:held","mergeFull":"pass:ran","mergeEmpty":"pass:ran","mergeTddByBranch":"pass:ran","mergeTddNoTest":"deny:held:tdd","armOffDispatcher":true'; then
+  if says "$out" '"mergeGap":"deny:held","mergeFull":"pass:ran","mergeUi":{"mergeUiNeither":"deny:held:ui:slop","mergeUiNoSlop":"deny:held:slop","mergeUiFull":"pass:ran","mergeUiNotOwed":"pass:ran","mergeUiPreStamp":"pass:ran","mergeUiQuick":"pass:ran"},"mergeEmpty":"pass:ran","mergeTddByBranch":"pass:ran","mergeTddNoTest":"deny:held:tdd","armOffDispatcher":true'; then
     ok "merge gate: a recorded pane missing simplify is refused before the merge runs; a full record passes; an empty record is not judged; tdd is judged by a test file on the branch since dispatch, not by the skill call (one downstream ticket, 2026-10-22); the dispatcher's prompt names the off arm scope and its marker"
   else
     bad "mod merge gate" "$out"
   fi
   # 4.1.0 — the four gates no field data had seen fire, each shown firing on its planted defect
-  if says "$out" '"briefNoQa":"refused:' && says "$out" 'no \"QA:' && says "$out" '"briefUiNoSections":"refused:' && says "$out" 'FLOW names astra-ui' && says "$out" '"briefUiSections":"sent"' && says "$out" '"briefNoUi":"sent"' && says "$out" '"briefUpgrade":"refused:' && says "$out" '"briefAdvisor":"refused:' && says "$out" '"closeRefusal":"deny:held"' && says "$out" '"roleWritten":true' && says "$out" '"briefOverTarget":"refused:' && says "$out" '"briefUnderTarget":"sent"' && says "$out" '"briefToRegistered":"sent"'; then
-    ok "brief refused without a QA line, during a half-applied upgrade, without an Advisor column, and at builder-target; a mid-turn pane's close is refused; a delivered brief writes the role on the record"
+  if says "$out" '"briefNoQa":"refused:' && says "$out" 'no \"QA:' && says "$out" '"briefUiNoSections":"refused:' && says "$out" 'FLOW names astra-ui' && says "$out" '"briefUiNoSpine":"refused:' && says "$out" 'declares no design spine' && says "$out" '"briefUiSpineUncommitted":"refused:' && says "$out" 'not committed on the base' && says "$out" '"briefUiNoSlopPlug":"refused:' && says "$out" 'declares no anti-slop skill' && says "$out" '"briefUiSlopUnresolved":"refused:' && says "$out" 'none resolves to a SKILL.md' && says "$out" '"briefUiSlopNotInFlow":"refused:' && says "$out" 'not the project' && says "$out" '"uiStampWritten":"x-anti-slop"' && says "$out" '"briefUiHomeSymlink":"sent"' && says "$out" '"briefUiSections":"sent"' && says "$out" '"briefNoUi":"sent"' && says "$out" '"briefUpgrade":"refused:' && says "$out" '"briefAdvisor":"refused:' && says "$out" '"closeRefusal":"deny:held"' && says "$out" '"roleWritten":true' && says "$out" '"briefOverTarget":"refused:' && says "$out" '"briefUnderTarget":"sent"' && says "$out" '"briefToRegistered":"sent"'; then
+    ok "brief refused without a QA line, during a half-applied upgrade, without an Advisor column, and at builder-target; a UI brief refused on a project with no design spine, an uncommitted spine path, no anti-slop plug, an anti-slop name with no SKILL.md, or a FLOW that skips it (5.1.0), sent with all five and the admitted names stamped on the record, sent with the skill reachable only through a ~/.claude/skills symlink; a mid-turn pane's close is refused; a delivered brief writes the role on the record"
   else
     bad "mod merge gate" "$out"
   fi

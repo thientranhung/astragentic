@@ -5,7 +5,7 @@
 #   .astraler/astragentic.sh update           installed vs latest, what changed between, the one-liner
 #   .astraler/astragentic.sh update --apply   pull the latest release and apply it (get.sh latest --apply)
 #   .astraler/astragentic.sh version          the installed version only
-#   .astraler/astragentic.sh doctor           5.0.0: is the installed scaffold whole — exit 0 clean, 1 findings (5.0.1: settings*.json exempt)
+#   .astraler/astragentic.sh doctor           5.0.0: is the installed scaffold whole — exit 0 clean, 1 findings (5.0.1: settings*.json exempt; 5.1.0: UI standard plugs)
 #
 # `update` changes nothing: it reads `.astraler/state/applied-version`, asks the package remote
 # for its newest v-tag, prints the release notes of every release in between, and prints the
@@ -43,12 +43,13 @@ case "$CMD" in
   version)
     echo "${installed:-none}"; exit 0 ;;
   doctor)
-    # DOCTOR (5.0.0, minimal; the eight-group doctor is 5.1). Three questions a release
+    # DOCTOR (5.0.0, minimal; the eight-group doctor is owed). Four questions a release
     # cannot answer for the project after it lands, each with the number it counted:
     #   1. no retired name (the Matt Pocock plugin, the BMAD personas) in payload, plugs or overlays
     #   2. every astra-* skill present in both trees and identical (install.sh:67-104 asks the same
     #      of the package; this asks it of the project after a partial apply or a hand edit)
     #   3. the dispatch mod's brief regex and flow table name skills that exist
+    #   4. (5.1.0) a declared UI standard holds: spine files committed, an anti-slop skill reachable
     # Exit 1 on any finding, so a gate can read it (CLAUDE.md: verify exit codes, not strings).
     findings=0
     say() { printf '  %s\n' "$1"; }
@@ -91,6 +92,38 @@ case "$CMD" in
       done
       if [ -z "$missing" ]; then say "ok   every astra-* name in the mod's flow table has a SKILL.md"
       else bad_ "the mod's flow table names skills with no SKILL.md:$missing"; fi
+    fi
+    # 4. the UI standard (5.1.0): a project that declares one (.astraler/project/design-spine,
+    #    anti-slop-skills) has every spine path committed on HEAD and at least one anti-slop skill
+    #    that resolves to a SKILL.md; a project that declares neither is told what a UI brief
+    #    will be refused for. The dispatch mod reads the same two files at the brief and at merge.
+    spine_f="$ROOT/.astraler/project/design-spine"; slop_f="$ROOT/.astraler/project/anti-slop-skills"
+    plug_lines() { [ -f "$1" ] && sed -e 's/^[[:space:]]*//;s/[[:space:]]*$//' "$1" | grep -v '^#' | grep -v '^$' || true; }
+    spine="$(plug_lines "$spine_f")"; slop="$(plug_lines "$slop_f")"
+    if [ -z "$spine" ] && [ -z "$slop" ]; then
+      say "ok   no UI standard declared (no .astraler/project/design-spine, anti-slop-skills): a project with no surface; one with a surface gets its first UI brief refused until both exist"
+    else
+      sn=0; sm=0; smiss=""
+      while IFS= read -r pth; do [ -n "$pth" ] || continue; sn=$((sn+1))
+        case "$pth" in /*) smiss="$smiss $pth";; *) (cd "$ROOT" && git cat-file -e "HEAD:$pth" 2>/dev/null) || smiss="$smiss $pth";; esac
+      done <<EOF
+$spine
+EOF
+      sm=$((sn - $(printf '%s' "$smiss" | wc -w)))
+      if [ "$sn" -eq 0 ]; then bad_ "design-spine: anti-slop-skills exists but .astraler/project/design-spine names no file (one repo-relative path per line, committed)"
+      elif [ -n "$smiss" ]; then bad_ "design-spine: $sm/$sn path(s) committed on HEAD; not on HEAD:$smiss"
+      else say "ok   design-spine: $sm/$sn path(s) committed on HEAD"; fi
+      kn=0; kr=0; kres=""
+      while IFS= read -r sk; do [ -n "$sk" ] || continue; kn=$((kn+1))
+        for d in "$ROOT/.claude/skills" "$ROOT/.agents/skills" "$HOME/.claude/skills"; do
+          if [ -f "$d/$sk/SKILL.md" ]; then kr=$((kr+1)); kres="$kres $sk"; break; fi
+        done
+      done <<EOF
+$slop
+EOF
+      if [ "$kn" -eq 0 ]; then bad_ "anti-slop-skills: design-spine exists but .astraler/project/anti-slop-skills names no skill (one name per line; a SKILL.md under .claude/skills, .agents/skills or ~/.claude/skills)"
+      elif [ "$kr" -eq 0 ]; then bad_ "anti-slop-skills: 0/$kn skill(s) resolve to a SKILL.md (.claude/skills, .agents/skills, ~/.claude/skills):$(printf '%s\n' "$slop" | tr '\n' ' ' | sed 's/^/ /;s/ *$//')"
+      else say "ok   anti-slop-skills: $kr/$kn skill(s) resolve to a SKILL.md:$kres"; fi
     fi
     if [ "$findings" -eq 0 ]; then echo "doctor: clean"; exit 0; fi
     echo "doctor: $findings finding(s)"; exit 1 ;;

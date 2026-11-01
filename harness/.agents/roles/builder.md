@@ -26,7 +26,8 @@ Claude Code only). They add to this contract, never override it.
 | Phase | Skill | Ends when |
 |---|---|---|
 | Build | `astra-implement-with-tdd` | every criterion has a test that went red first and is green now; the diff was judged against the ticket — **then YOU check the criteria**, one by one |
-| UI pass | `astra-ui audit` for a UI ticket | every changed user-visible surface has browser evidence; each Glance and States line was looked at; its findings are folded, or the skip is named |
+| Anti-slop read | the skill your FLOW names before `astra-ui`, **before any UI code** | invoked in this pane (the merge gate reads the record); the spine decides |
+| UI pass | `astra-ui audit` for a UI ticket | every changed surface has browser evidence; each Glance and States line was checked against the design spine; findings folded, or the skip named |
 | Review | `astra-review` | three axes have run once over the increment (the built-in `code-review` inside it), every finding verified and routed |
 | Simplify | `simplify` (`builder-claude.md`) — **once, after the last content commit** | a `simplify(increment):` commit exists whose body names the pass that ran |
 | Cross-vendor arm | `codex-arm`; off when `orchestrator.md` arm row `ticket` = `no` | `arm(ticket):` receipt at head, or `Arm: off (orchestrator)` |
@@ -102,7 +103,8 @@ Fix the findings you agree with. A finding you dispute goes to Thomas once, in w
 surface the handback carries browser evidence: what you looked at, at what viewport, and what
 you saw, using the project's tool against its design guidelines. A UI ticket also gets
 `astra-ui audit` on each changed surface, read-only, checking each Glance and States line of the
-ticket, its findings yours to fold or dispute. Where the repo cannot render the change, or the
+ticket against the design spine, its findings yours to fold or dispute. A UI ticket owes the
+anti-slop read and `astra-ui` on its record at merge (5.1.0). Where the repo cannot render the change, or the
 ticket touches no user-visible surface, the handback says so as `UI audit: n/a — <why>`. Whether the product still coheres is QA's walk.
 
 ## The cross-vendor arm — yours to fire, and it closes your loop

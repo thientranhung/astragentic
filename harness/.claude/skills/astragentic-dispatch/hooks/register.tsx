@@ -195,6 +195,41 @@ async function overlayFile($: any, path: string): Promise<string> {
   }
 }
 
+// A UI PROJECT DECLARES ITS DESIGN STANDARD (5.1.0). Two plugs under `.astraler/project/`, the
+// project's answers at a path no release writes: `design-spine` lists the design philosophy
+// files (one repo-relative path per line, each committed on the base), `anti-slop-skills` lists
+// the skill names a Builder reads before UI code (one per line; at least one must resolve to a
+// SKILL.md in the project's .claude/skills, .agents/skills, or the user's ~/.claude/skills).
+// Measured before this existed (nizzy, 2026-10-28 → 11-01): the project's own rule told the
+// Builder to call its anti-slop skill before UI code; the Shaper half of the same rule, which
+// the mod reads, produced 98 Glance sections; the Builder half, which nothing read, ran on
+// 1 of 14 UI merges. astra-ui's first finding on a project with no DESIGN.md is "no written
+// standard" — and nothing refused the ticket. A UI brief is now refused until both plugs hold.
+type UiStandard = { spine: string[]; antiSlop: string[]; spineMissing: string[]; antiSlopResolved: string[] }
+function plugLines(text: string): string[] {
+  return text.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'))
+}
+async function skillResolves($: any, root: string, name: string): Promise<boolean> {
+  if (!/^[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(name)) return false
+  const home = (await $.env.get('HOME')) ?? ''
+  const dirs = [`${root}/.claude/skills`, `${root}/.agents/skills`, ...(home ? [`${home}/.claude/skills`] : [])]
+  for (const d of dirs) if (await exists($, `${d}/${name}/SKILL.md`)) return true
+  return false
+}
+async function uiStandard($: any, root: string): Promise<UiStandard> {
+  const spine = plugLines(await overlayFile($, `${root}/.astraler/project/design-spine`))
+  const antiSlop = plugLines(await overlayFile($, `${root}/.astraler/project/anti-slop-skills`))
+  const spineMissing: string[] = []
+  for (const p of spine) {
+    if (p.startsWith('/')) { spineMissing.push(p); continue }
+    const r = await run($, ['git', '-C', root, 'cat-file', '-e', `HEAD:${p}`])
+    if (r.code !== 0) spineMissing.push(p)
+  }
+  const antiSlopResolved: string[] = []
+  for (const n of antiSlop) if (await skillResolves($, root, n)) antiSlopResolved.push(n)
+  return { spine, antiSlop, spineMissing, antiSlopResolved }
+}
+
 // THE ARM IS A ROW THE OWNER CAN TURN OFF (4.0.2). `orchestrator.md` § Cross-vendor arm carries
 // one row per scope (ticket, spec, slice); `no` turns that scope's arm off for the project — a
 // machine with no Codex, or a Builder the owner wants faster. The role that owns the scope reads
@@ -1754,6 +1789,11 @@ export const register: Register = on => {
         await patchRecord($, root, id, { kind })
       }
     }
+    // THE UI STANDARD THE BRIEF WAS ADMITTED WITH (5.1.0): the anti-slop names that resolved at
+    // this send, stamped on the record below as `ui_standard`; the merge gate judges by that
+    // stamp, so a lane dispatched before the plug existed is judged by its own brief, not by a
+    // plug written later. Null on a brief with no UI step clears a stale stamp from a prior brief.
+    let uiStandardStamp: string[] | null = null
     // NO QA PLAN, NO DISPATCH — the owner's rule (2026-10-10), replacing the payload's earlier
     // default where QA inferred a plan and capped its verdict at CONCERNS. A Builder brief
     // carries `QA: walk|probe|verify|none — <why>` and, unless none, `QA plan: <path>` naming a
@@ -1789,6 +1829,28 @@ export const register: Register = on => {
         if (missing.length > 0) {
           return { isDelivered: false, reason: `${MARK} not sent. FLOW names astra-ui (a UI ticket) and the brief lacks ${missing.join(', ')}. A UI ticket carries Glance, States and Criteria (astra-to-tickets § Write each ticket): paste the ticket's three sections into the brief, or send the ticket back to the Shaper to add them.` }
         }
+        // A UI PROJECT DECLARES ITS DESIGN STANDARD (5.1.0): the design philosophy files, committed,
+        // and at least one anti-slop skill the Builder can reach; the FLOW line names that skill
+        // before astra-ui so the Builder reads it before UI code, and the merge gate reads it off
+        // the record (owner, 2026-11-01: "hệ thống có UI thì phải tuân thủ chuẩn design").
+        const std = await uiStandard($, root)
+        const plugHow = 'The project declares its UI standard in two plugs no release writes: .astraler/project/design-spine (one repo-relative path per line to its design philosophy files, e.g. docs/design/DESIGN.md, each committed on the base) and .astraler/project/anti-slop-skills (one skill name per line, e.g. astraler-ui-anti-slop; a SKILL.md under the project\'s .claude/skills or .agents/skills, or ~/.claude/skills). Commit both, then send this brief again.'
+        if (std.spine.length === 0) {
+          return { isDelivered: false, reason: `${MARK} not sent. FLOW names astra-ui (a UI ticket) and the project declares no design spine (.astraler/project/design-spine is missing or empty). A UI ticket is built against the project\'s written design standard, never against taste. ${plugHow}` }
+        }
+        if (std.spineMissing.length > 0) {
+          return { isDelivered: false, reason: `${MARK} not sent. .astraler/project/design-spine names ${std.spineMissing.join(', ')}, not committed on the base (git cat-file -e HEAD:<path> fails; an absolute path is never on the base). The Builder\'s worktree is cut from the base and will not see it. Commit the file, or fix the path, then send this brief again.` }
+        }
+        if (std.antiSlop.length === 0) {
+          return { isDelivered: false, reason: `${MARK} not sent. FLOW names astra-ui (a UI ticket) and the project declares no anti-slop skill (.astraler/project/anti-slop-skills is missing or empty). A UI project reads at least one anti-slop skill before UI code. ${plugHow}` }
+        }
+        if (std.antiSlopResolved.length === 0) {
+          return { isDelivered: false, reason: `${MARK} not sent. .astraler/project/anti-slop-skills names ${std.antiSlop.join(', ')}, and none resolves to a SKILL.md (looked in ${root}/.claude/skills, ${root}/.agents/skills and ~/.claude/skills). Install or symlink one of them, or name the skill that exists, then send this brief again.` }
+        }
+        if (!std.antiSlopResolved.some(n => new RegExp(`\\b${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(flowDecl))) {
+          return { isDelivered: false, reason: `${MARK} not sent. FLOW names astra-ui (a UI ticket) and not the project\'s anti-slop skill (${std.antiSlopResolved.join(' or ')}, from .astraler/project/anti-slop-skills). The Builder reads it before UI code and the merge gate reads it off the record: write the step before astra-ui, e.g. \`FLOW: 1 Skill(${std.antiSlopResolved[0]}) [before UI code] → 2 Skill(astra-ui) → …\`.` }
+        }
+        uiStandardStamp = std.antiSlopResolved
       }
     }
     // A SURFACE HAS JOURNEYS BEFORE IT HAS A SPEC (5.0.9). `astra-ux` sits with the owner before
@@ -1837,7 +1899,7 @@ export const register: Register = on => {
     if (isBrief && root && res.isDelivered) {
       const builderId = /^\/astra-implement-with-tdd\b/.test(first) ? first.split(/\s+/).slice(1).find(w => TICKET.test(w)) : undefined
       if (builderId) {
-        await patchRecord($, root, builderId, { role: 'builder', dispatched_at: await $.clock.now() })
+        await patchRecord($, root, builderId, { role: 'builder', dispatched_at: await $.clock.now(), ui_standard: uiStandardStamp })
         void refreshTracker($, root)
       }
     }
@@ -2328,6 +2390,18 @@ export const register: Register = on => {
       // A QUICK TICKET (4.6.0, the tracker's label) owes the built-in code-review and nothing
       // else here; `SIMPLIFY: n/a` on the brief exempts simplify alone.
       const quick = entry.kind === 'quick'
+      // A UI TICKET OWES ITS UI PASS AND ITS ANTI-SLOP READ (5.1.0). `ui_standard` is the list of
+      // anti-slop names that resolved when the brief was admitted (session.send, the UI gate);
+      // a UI brief is not sent without one, so a non-empty stamp IS "this lane is a UI ticket
+      // under the standard". A lane dispatched before the plug existed carries no stamp and is
+      // judged by its own brief, not by a plug written after it (`ux_owed` alone, from 4.5.3,
+      // would have asked such lanes for a step their brief never named).
+      const stamp = Array.isArray(entry.ui_standard) ? entry.ui_standard.filter((n: unknown) => typeof n === 'string') as string[] : []
+      if (stamp.length > 0 && !quick) {
+        const run = skillsRun(entry)
+        if (!('astra-ui' in run)) out.push('astra-ui (a UI ticket, by the brief\'s FLOW)')
+        if (!stamp.some(n => n in run)) out.push(`anti-slop (none of ${stamp.join(', ')} on the record; the names the brief was admitted with, from .astraler/project/anti-slop-skills)`)
+      }
       for (const label of flowGaps(entry)) {
         if (label === 'built-in code-review' && entry.review_na) continue
         if (label === 'simplify' && (quick || entry.simplify_na)) continue

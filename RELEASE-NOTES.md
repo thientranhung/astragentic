@@ -1,3 +1,58 @@
+# Astragentic 5.1.0
+
+One rule from the owner, 2026-11-01, after a count: a project with a user-visible surface
+follows a written design standard, which means the design philosophy files exist and at least
+one anti-slop skill is read before UI code. Both were prose until now, and prose measured
+near zero.
+
+**A UI project declares its design standard in two plugs, and the mod reads them at the two
+moments it already owns.** Measured on nizzy, the first adopter, 2026-10-28 → 11-01: a
+project-owned rule (`.claude/rules/ui-glance-map.md`) asked the Shaper to write a `## Glance`
+section and the Builder to call `astraler-ui-anti-slop` before UI code. The Shaper half, which
+the 5.0.0 mod reads at dispatch, produced 98 files carrying the section; the Builder half, which
+nothing read, ran on 1 of 14 UI merges in the same window (dispatch-record `skills_run`, git log
+of `apps/dashboard`, `apps/extension`). The project's `DESIGN.md` (1211 lines, under
+`docs/stakeholder/design-guidelines/`) was read by hand; `astra-ui` looked for one at a path
+nobody had declared. The second adopter, inception, has a frontend
+(`services/app-inception-core/web`) and no design document at all, and `astragentic.sh doctor`
+read it clean. Across every project on the machine the anti-slop skill had been invoked once.
+Now `.astraler/project/design-spine` lists the design philosophy files (one repo-relative path
+per line, each committed on the base) and `.astraler/project/anti-slop-skills` lists the skill
+names (one per line; at least one resolves to a `SKILL.md` under the project's `.claude/skills`,
+`.agents/skills` or `~/.claude/skills`). A brief whose `FLOW:` names `astra-ui` is refused
+while either plug is missing or empty, a spine path is not on `HEAD`, no listed skill resolves,
+or the `FLOW:` line does not name a resolved anti-slop skill before `astra-ui`; each refusal
+says which file to write and what goes in it. When the brief is admitted the names that resolved are
+stamped on the record as `ui_standard`; at merge a lane carrying that stamp owes `astra-ui` and
+one of those names on `skills_run`, like every other step. The stamp, not the plug, is what the
+merge reads: a lane dispatched before the plug existed carries none and is judged by its own
+brief (`ux_owed` alone, from 4.5.3, is already on such records and would have asked them for a
+step their brief never named). A quick ticket is not judged on it. `astragentic.sh doctor` asks a fourth question: no plugs reads `ok` with a
+sentence saying what the first UI brief will be refused for; declared plugs report `n/m paths
+committed` and `n/m skills resolve`, a miss on either is a finding. Selftest: five planted
+briefs refused for the five reasons, one sent with all five met and the stamp read back off the
+record, one sent with the skill reachable only through a `~/.claude/skills` symlink into another
+directory (the first adopter's layout); a UI merge refused with neither step, with the UI pass
+alone, passed with both, not judged without a stamp (a 5.0.9 lane), with `ux_owed: false`, or
+on a quick ticket; doctor exit 0 with no plugs and with valid plugs (1/1, 1/1), exit 1 naming an
+uncommitted path and an unresolved name. All UI cases fail on the 5.0.9 mod and doctor.
+
+**This reverses one backlog decision and says so.** The 2026-10-29 backlog (C2) chose to
+dissolve the anti-slop skill into the review rubric because it had 0 calls. The owner's rule
+today is "at least one anti-slop skill", so the skill stays whole and the harness makes the call
+happen; the backlog line carries the new direction. The harness ships no anti-slop skill of its
+own: the owner's is in his my-skills repo, a project with its own rules names its own. A1 (a
+`DESIGN.md` template and lint) is still owed; this release requires the file, not its shape.
+
+**Both adopters are refused on their first UI dispatch after apply, by design.** nizzy: two
+candidate spine files, 0 declared, skill reachable via `~/.claude/skills`. inception: 0 design
+files, 0 declared. Each writes its two plugs (ADAPT-HARNESS § Project plugs names them) and
+records them in the receipt; the refusal text is the instruction.
+
+Owed: UI merges on nizzy with both steps on the record (0 measured under this release), the
+first `design-spine` inception writes and what it points at, whether any project lists a skill
+other than `astraler-ui-anti-slop`, and A1.
+
 # Astragentic 5.0.9
 
 Two defects from two projects on 2026-10-30 and three from nizzy on 2026-10-31 / 11-01, one
