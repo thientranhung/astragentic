@@ -22,7 +22,7 @@ yours.
 
 **The BA is not yours to dispatch.** The owner opens it (`claude --agent ba`, tab `ba`); it
 reads and discusses, and cuts a ticket only on the owner's yes; those reach you through the
-frontier like any other.
+frontier.
 When it names in-flight work a decision invalidates, that note is your hold-back list.
 **Nor is the Quick Builder** (`claude --agent quick-builder`, tab `quick-builder`): the owner's pane for small
 changes (tool-produced data, the project's own plugs, a small fix), committed on an `ops/*`
@@ -65,9 +65,9 @@ A queue with a trigger and no top-up rule drains: measured at **two of four slot
 ## The claim protocol
 
 **Assigning a ticket is the claim, and it happens before its worktree exists.** One atomic
-interlock plus an advisory readback are what keep concurrent Builders apart — **no tracker
+interlock plus an advisory readback keep concurrent Builders apart — **no tracker
 holds `builder/<ticket-id>`**, so the readback cannot tell whose claim it read (see the
-adapter). Branch creation is the half that decides.
+adapter). Branch creation decides.
 
 1. **Query** the frontier. Take the first ticket.
 2. **Write** the assignee: `builder/<ticket-id>`.
@@ -81,7 +81,7 @@ adapter). Branch creation is the half that decides.
    found it, and `git worktree remove` — never `rm -rf` — any worktree it created (AST-096).
 6. **Record** ticket → branch → worktree → workspace → tab → pane → **write-set** in the
    dispatch record. Cleanup needs the exact IDs; a durable record lets a later session finish
-   a dispatch this one started.
+   this dispatch.
 
 A blocking edge expresses ORDER, not EXCLUSION; the write-set (`dispatch-ticket` § Inputs) makes concurrency safe.
 
@@ -89,7 +89,7 @@ A blocking edge expresses ORDER, not EXCLUSION; the write-set (`dispatch-ticket`
 
 Release on merge or owner abandonment: clear the assignee during cleanup, after the worktree
 and branch are gone, and **only when a fresh readback shows your own**. Someone else's
-assignee is a live claim with a Builder behind it.
+assignee is a live claim.
 
 **A stale claim is an assignee with no branch**; check the worktree.
 
@@ -114,11 +114,11 @@ The kind); an unlabelled ticket goes back to the cutter unsent. A quick ticket
 launches from the `builder-quick` row and owes no marker at merge. A handback saying the work
 outgrew the label is a relabel to `full` and a fresh brief, never a steer.
 
-**Steer** the Builder directly via SendMessage. A pane's status is a bell; the verdict is the diff and the tests. A junior pane (`dispatch-junior`) is the Builder's; its commits arrive in the handback, trailered `Implemented-by:`.
+**Steer** the Builder directly via SendMessage. A pane's status is a bell; the verdict is the diff and the tests. A TURN-END that says it waits on agents while its `Agents:` line reads 0 running is parked: send it on. A junior pane (`dispatch-junior`) is the Builder's; its commits arrive in the handback, trailered `Implemented-by:`.
 
 ## Review
 
-**Per ticket** the Builder lane reviews and you verify by artifact at merge, browser evidence for a UI ticket included; **at slice close** you run the slice gate below. A design-level blocker goes to the owner, in your pane, as a dated decision. Everything else is your work order to whoever owns the artifact: the paused Shaper for a spec, the Builder for a ticket, a follow-up ticket for a closed slice. Record each classification on the ticket; a wontfix is legitimate.
+**Per ticket** the Builder lane reviews and you verify by artifact at merge, browser evidence for a UI ticket included; **at slice close** you run the slice gate below. A design-level blocker goes to the owner, in your pane, as a dated decision. Everything else is a work order to the artifact's owner: the paused Shaper for a spec, the Builder for a ticket, a follow-up ticket for a closed slice. Record each classification on the ticket; a wontfix is legitimate.
 
 **The author gets ONE written reply before you classify** — no second reply, no re-review, no
 re-firing the gate. Only what neither of you closes reaches the owner. Record any classification
@@ -129,8 +129,7 @@ a reply changes.
 **you** saying a slice is closed. **More than 10 merges since the last `arm(slice)` is a STOP.**
 
 **Before a PR, a merge or a release**, dispatch QA's product walk (`dispatch-qa-walk`) on any
-user-visible surface or public endpoint, and **read the walk report's COVERAGE GAPS**, not only
-its findings; a declined walk and a clean one look identical without them. State browser
+user-visible surface or public endpoint, and **read the walk report's COVERAGE GAPS**, : a declined walk and a clean one look identical without them. State browser
 consent and authorized mutations, or QA declines.
 
 ## Slice gate

@@ -116,7 +116,10 @@ the block and read the log, never the notice's number (`dispatch-ticket/WATCHING
 agent, an `Agent(...)` call) keeps your TURN-END held: the mod sends it only when no agent of
 yours is running, and the agent's completion re-invokes you. A backgrounded shell job is not an
 agent — the hold does not see it, so a turn that ends on one reports TURN-END with the work
-still running; that is the PARKED case above, and the cure is the foreground. Never
+still running; that is the PARKED case above, and the cure is the foreground. A `roster`
+or idle seat in ListAgents is not work: a finished agent stays listed and never wakes you, so a
+turn that ends unheld has nothing of yours running — continue, do not wait for a notice
+(nizzy 2026-11-01: one Builder parked 374 min on five finished review seats). Never
 `ScheduleWakeup`: it is `/loop`'s tool, it refuses without a `prompt`, and a heartbeat it arms
 keeps waking an idle pane after your handback. The mod refuses it in a dispatched pane
 (measured 2026-10-27: 3 of 4 Builder panes reached for it, one rang for 30 minutes after

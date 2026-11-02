@@ -1221,6 +1221,20 @@ async function liveAgents($: any): Promise<Array<{ description: string; status: 
   }
 }
 
+// The agent list as one line of fact for the TURN-END, beside the Builder's own words. Measured
+// on one project (2026-11-01): a Builder read five finished code-review seats (`roster`, idle)
+// as running, ended its turn "to wait for the notification", and its TURN-END carried only its
+// words; the dispatcher repeated them and the pane sat 374 min. An idle teammate never wakes
+// its parent; the count that says so comes from the mod, never from the model.
+async function agentLine($: any): Promise<string> {
+  let list: any[]
+  try { list = (await $.agent.list()) ?? [] } catch { return 'Agents: list unavailable' }
+  const n = (...st: string[]) => list.filter((a: any) => st.includes(String(a.status))).length
+  const running = n('pending', 'running', 'waiting'), idle = n('idle'), ended = n('completed', 'failed', 'killed')
+  const parts = [`${running} running`, idle ? `${idle} idle` : '', ended ? `${ended} ended` : ''].filter(Boolean)
+  return `Agents: ${parts.join(', ')}${running === 0 && idle > 0 ? ' — an idle teammate does not wake this pane; nothing of its own is running' : ''}`
+}
+
 function boardLine(rows: BoardRow[], now: number): string {
   return rows
     .map(r => `${r.key} ${r.state} ${ago(now - r.since)}${r.note ? ` (${r.note})` : ''}`)
@@ -1590,7 +1604,7 @@ export const register: Register = on => {
     if (me.role !== 'resident' && root) {
       const entry = ((await readRecord($, root)) ?? {})[me.key] ?? {}
       const ran = Object.keys(entry.skills_run ?? {})
-      flow = `Skills run: ${ran.length ? ran.join(', ') : 'none'}\n`
+      flow = `Skills run: ${ran.length ? ran.join(', ') : 'none'}\n${await agentLine($)}\n`
     }
     const text = `${MARK} TURN-END key=${me.key} pane=${me.pane} reason=${e.reason}\n${flow}${answer}`
     const sent = await $.session.send({ to: dispatcher, text })

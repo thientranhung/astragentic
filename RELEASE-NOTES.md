@@ -1,3 +1,28 @@
+# Astragentic 5.1.2
+
+One defect from nizzy, 2026-11-01 → 11-02, read against its transcripts and the machine's sleep log.
+
+**The TURN-END carries the mod's own agent count beside the Builder's words.** A Builder ended
+its turn at 19:04Z saying "the five angle sub-agents are still in-roster, I'll wait for the
+completion notification". ListAgents had shown five code-review seats as `roster`; `$.agent.list()`
+had none of them pending, running or waiting (an idle teammate sits between turns until a message
+wakes it, and never wakes its parent), so the mod held nothing and sent the TURN-END, which the
+dispatcher received at 19:04:21Z and answered by repeating the Builder's words. The pane sat
+374 min; the dispatcher was active for hours in that window; `pmset` shows no sleep until the
+last 30 min of it. The bell had the Builder's reading and no fact to contradict it. The TURN-END
+now adds `Agents: <n> running[, <n> idle][, <n> ended]` under `Skills run:`, with the clause "an
+idle teammate does not wake this pane" when 0 run and some idle; a list the engine cannot give
+reads `Agents: list unavailable`, never 0. `thomas.md`: a TURN-END that says it waits while its
+`Agents:` line reads 0 running is parked, send it on. `builder-claude.md` § Background work: a
+`roster`/idle seat is not work. Selftest: five idle seats and one completed → the turn end is sent
+(not held) and names `0 running, 5 idle, 1 ended`; a throwing list → `list unavailable`; the first
+case fails on the 5.1.1 mod.
+
+Not changed, with the numbers: the 20-min held-stale ceiling (asked to cover idle panes with a
+non-empty roster) — the roster held idle seats, so the ceiling would have rung false on every
+finished code-review; a sleep/wake re-ping — 0 sleeps in the first 5 h 45 min of the window.
+Owed: how many Builder turn ends since code-review's team fan-out said "wait" while unheld (n=1).
+
 # Astragentic 5.1.1
 
 One defect, from the first project to apply 5.1.0 (inception, 2026-11-01), fixed the same night.
