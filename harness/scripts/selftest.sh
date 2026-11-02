@@ -1484,36 +1484,43 @@ fi
 # The 3.1.1 loop fires on every poll a condition holds (the overnight 26), so the case fails on it.
 # ---------------------------------------------------------------------------------------------
 echo "watchdog — one alert per episode, not one per poll"
+# One label per run. The watchdog keys its lock, state and log on the workspace label under
+# /tmp, so two selftests on one machine sharing `wdedge` shared one episode: the second run's
+# `rm -rf` of the state dir erased the first run's fired_ stamp, and that watchdog alerted
+# again (nizzy + inception, 2026-11-02, `update --apply` started 19 s apart: 218/1 on one, the
+# other clean; the re-run passed). The load on the box was a bystander.
+WDL="wdedge$$"
 E="$TMP/wd-edge"; mkdir -p "$E/bin" "$E/repo/.agents"
-( cd "$E/repo" && git init -q . && printf '| workspace-label | `wdedge` |\n' > .agents/orchestrator.md )
+( cd "$E/repo" && git init -q . && printf '| workspace-label | `%s` |\n' "$WDL" > .agents/orchestrator.md )
 cat > "$E/bin/herdr" <<'EOS'
 #!/bin/sh
 case "$1 $2" in
   "agent list") echo '{"result":{"agents":[{"pane_id":"w9:t","name":"thomas","agent_status":"done","workspace_id":"w9"},{"pane_id":"w9:b","name":"builder-e","agent_status":"idle","workspace_id":"w9"}]}}' ;;
-  "workspace list") echo '{"result":{"workspaces":[{"label":"wdedge","workspace_id":"w9"}]}}' ;;
+  "workspace list") echo '{"result":{"workspaces":[{"label":"'"$WD_LABEL"'","workspace_id":"w9"}]}}' ;;
   "agent prompt") echo "PROMPTED $3" >> "$E_LOG"; exit 0 ;;
   *) echo '{"result":{}}' ;;
 esac
 EOS
 printf '#!/bin/sh\nexit 1\n' > "$E/bin/pgrep"; printf '#!/bin/sh\nexit 0\n' > "$E/bin/caffeinate"
 chmod +x "$E/bin/"*
-rm -f /tmp/herdr-watchdog-wdedge.lock; rm -rf /tmp/herdr-watchdog-wdedge.state /tmp/herdr-watchdog-wdedge.log
-export E_LOG="$E/prompts.log"; : > "$E_LOG"
+rm -f "/tmp/herdr-watchdog-$WDL.lock"; rm -rf "/tmp/herdr-watchdog-$WDL.state" "/tmp/herdr-watchdog-$WDL.log"
+export E_LOG="$E/prompts.log" WD_LABEL="$WDL"; : > "$E_LOG"
 # Started as a plain child and ended by its own PID: the script's `stop` signals a process
 # group, and under a test runner that group can be the runner's (measured: the first draft of
-# this case stopped the selftest). TERM lands on its `trap 'exit 0'`.
+# this case stopped the selftest). TERM lands on its `trap 'exit 0'`. Its helpers (lock holder,
+# reaper) watch the parent and exit on their own; a `pkill -f` by argv would also kill another
+# selftest's watchdog on the same machine.
 ( cd "$E/repo" && PATH="$E/bin:$PATH" exec bash "$WD" 1 0 50 ) >/dev/null 2>&1 &
 wdpid=$!
 sleep 9
 kill -TERM "$wdpid" 2>/dev/null; sleep 1; kill -KILL "$wdpid" 2>/dev/null; wait "$wdpid" 2>/dev/null || true
-pkill -f "herdr-watchdog.sh 1 0 50" 2>/dev/null || true
-rm -f /tmp/herdr-watchdog-wdedge.lock
 n="$(grep -c '^PROMPTED' "$E_LOG" 2>/dev/null || true)"
 # seen on first poll, idle on the second → STUCK or NEVER_STARTED fires on poll 2; polls 3..8 must not repeat it
 if [ "${n:-0}" -eq 1 ]; then ok "a condition that holds across eight polls alerts once"
-elif [ "${n:-0}" -eq 0 ]; then bad "edge alert baseline" "no alert fired at all in nine seconds (log: $(cat /tmp/herdr-watchdog-wdedge.log 2>/dev/null | tail -3))"
+elif [ "${n:-0}" -eq 0 ]; then bad "edge alert baseline" "no alert fired at all in nine seconds (log: $(cat "/tmp/herdr-watchdog-$WDL.log" 2>/dev/null | tail -3))"
 else bad "alert per poll" "the same condition alerted $n times in nine seconds — level-triggered again"; fi
-unset E_LOG
+rm -f "/tmp/herdr-watchdog-$WDL.lock"; rm -rf "/tmp/herdr-watchdog-$WDL.state" "/tmp/herdr-watchdog-$WDL.log"
+unset E_LOG WD_LABEL
 
 # ---------------------------------------------------------------------------------------------
 # The dispatch mod. On a Claude root it is the only thing that records a pane, delivers its

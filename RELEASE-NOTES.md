@@ -1,3 +1,21 @@
+# Astragentic 5.1.3
+
+One selftest defect, from two projects applying 5.1.2 at the same minute (nizzy and inception,
+2026-11-02, `update --apply` started 19 s apart: 218 passed / 1 failed on one, clean on the other,
+the re-run clean).
+
+**The watchdog selftest case keys its state on a per-run label.** The case "one alert per
+episode" ran a watchdog on the fixed workspace label `wdedge`, and the watchdog keys its lock,
+state dir and log on that label under `/tmp`. Two selftests on one machine therefore shared one
+episode: the second run's `rm -rf` of the state dir erased the first run's `fired_` stamp, so that
+watchdog alerted the same condition again, and the second run's `pkill -f` by argv killed the
+first run's watchdog. Reproduced: two copies of the 5.1.2 case started 3 s apart fail as
+"alerted 2 times in nine seconds" and "no alert fired at all"; the fixed case passes both. The
+label is now `wdedge<pid>`, the mock herdr answers that label, the case cleans its own files and
+kills its watchdog by PID alone. The watchdog itself is unchanged: the double alert was an episode
+whose state another process deleted, not a re-alert under load (load1 28 on 14 cores was a
+bystander).
+
 # Astragentic 5.1.2
 
 One defect from nizzy, 2026-11-01 → 11-02, read against its transcripts and the machine's sleep log.
