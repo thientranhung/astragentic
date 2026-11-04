@@ -243,8 +243,8 @@ brief (measured once, 2026-11-01: a QA declined for "no consent", a Builder hand
 dispatch", both as real bells). The dispatcher's mod refuses that launch.
 
 ```text
-builder  → --dangerously-skip-permissions --agent builder --model <row: Model> --autocompact 300000 <--effort only when the row sets one> <--advisor only when the row sets one>
-shaper   → --dangerously-skip-permissions --agent shaper --model <row: Model> --autocompact 300000 <--effort only when the row sets one> <--advisor only when the row sets one>
+builder  → --dangerously-skip-permissions --allowedTools Grep,Glob --agent builder --model <row: Model> --autocompact 300000 <--effort only when the row sets one> <--advisor only when the row sets one>
+shaper   → --dangerously-skip-permissions --allowedTools Grep,Glob --agent shaper --model <row: Model> --autocompact 300000 <--effort only when the row sets one> <--advisor only when the row sets one>
 qa       → --agent qa --model <row: Model> --autocompact 300000 <--effort only when the row sets one> <--advisor only when the row sets one>
 ```
 
@@ -253,6 +253,13 @@ labelled `quick` launches from the `builder-quick` row** when Active assignments
 (shipped default: `claude-sonnet-5`, effort `low`, no advisor; measure ten quick tickets before
 trying Haiku), else from the `builder` row. **QA runs
 without `--dangerously-skip-permissions`**: a gate runs under permissions.
+
+**`--allowedTools Grep,Glob` travels with `--dangerously-skip-permissions`.** The bypass flag
+alone drops the `Grep` and `Glob` tools from the pane (Claude Code 2.1.318, measured 2026-11-04:
+a `-p` run asked to use Grep answered with Bash and a failed ToolSearch; a Shaper pane and its
+Explore fork reported the same), and the shell `grep` it falls back to is the engine's ugrep
+wrapper, which reads the project's `.scratch/` and `.astraler/` records. With the flag the same
+run emits a `Grep` tool_use block. QA keeps both tools without it.
 
 **`--autocompact 300000` is the context ceiling, and it is not optional.** The engine's window
 for these models is 1M and a dispatched pane runs its whole flow in one context, so nothing
@@ -285,7 +292,7 @@ For **builder** and **shaper** (write roles):
 
 ```bash
 herdr agent start "<role>-<ticket-id-lowercased>" --kind claude --pane <pane-id> --timeout 60000 \
-  -- --dangerously-skip-permissions --agent <role> --model <row: Model> --autocompact 300000 <--effort only when the row sets one> <--advisor only when the row sets one>
+  -- --dangerously-skip-permissions --allowedTools Grep,Glob --agent <role> --model <row: Model> --autocompact 300000 <--effort only when the row sets one> <--advisor only when the row sets one>
 ```
 
 For **qa** (no `--dangerously-skip-permissions`):

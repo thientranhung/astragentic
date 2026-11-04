@@ -1,3 +1,35 @@
+# Astragentic 5.1.4
+
+Three findings from one project shaping a ticket on 5.1.3 (nizzy TRA-1339, 2026-11-04, Claude
+Code 2.1.318). Prose and one launcher flag; the mod and the scripts are unchanged.
+
+**A dispatched Builder or Shaper keeps its `Grep` and `Glob` tools.** `--dangerously-skip-permissions`
+alone drops both from the pane: a Shaper pane and its Explore fork found neither via ToolSearch,
+and a `-p` control run asked to use Grep answered with Bash plus a failed ToolSearch (3 of 3
+runs). The pane's shell `grep` is the engine's ugrep wrapper, which reads hidden dirs, so every
+search also read the project's `.scratch/` and `.astraler/` records (364 of 700 hits for one
+domain term). `--allowedTools Grep,Glob` beside the bypass flag restores them: the same `-p` run
+emits a `Grep` tool_use block (1 of 1). The launcher rows for builder and shaper carry it; QA,
+which runs under permissions, already had both.
+
+**The Shaper's quick/full count excludes the records.** Rule (3) counted `git grep` files, and
+`git grep` sees tracked records that `rg` and `.gitignore` hide. Measured on the reporting
+project for four domain terms: bare `git grep` 700 / 148 / 63 / 32 files, with
+`-- ':!.scratch' ':!.astraler'` 304 / 117 / 34 / 24, `rg` 303 / 116 / 33 / 24. The rule names
+the pathspec. All four terms exceed the 3-file ceiling under both counts, so 0 observed
+classifications flipped; what changed is what is counted.
+
+**The failure-modes memory no longer names `docs/SYSTEM.md`.** One line in a shipped payload file
+cited a path the project owns and may want to move; the project counted it among 34 citers and
+left the file in place because the payload citation was not its to fix. The line now says "the
+project's own system doc". No other payload line names a project-owned `docs/` path outside the
+harness's own contract files.
+
+Not changed, with the number: the ugrep wrapper honouring `.ignore` only with
+`--ignore-files=.ignore` and `--exclude-dir` matching depth 1 only are engine behaviours
+(2.1.318); a project's per-directory exclusions stay in its own `.claude/rules`, where the
+reporting project already keeps them.
+
 # Astragentic 5.1.3
 
 One selftest defect, from two projects applying 5.1.2 at the same minute (nizzy and inception,

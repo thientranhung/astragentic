@@ -85,8 +85,8 @@ built too early.
 Ask in order; the first "yes" is `full`: (1) does it touch the project's risky paths — a
 migration, a route or API, auth, payment, a data write? (2) would a defect need a test to be
 seen (logic, arithmetic, state, data), or is it seen by looking (copy, a label, a position, a
-colour, a config value)? (3) does `git grep` of the words the ticket names reach more than 3
-files? (The ceiling is the first mark; after 30 measured merges it becomes the project's own
+colour, a config value)? (3) does `git grep -l <words> -- ':!.scratch' ':!.astraler'` reach more than 3
+files (the records under those two do not count)? (The ceiling is the first mark; after 30 measured merges it becomes the project's own
 p25.) Write the three answers on the ticket as the evidence lines, then the label. Thomas does
 not reclassify: a ticket with no label comes back to you.
 

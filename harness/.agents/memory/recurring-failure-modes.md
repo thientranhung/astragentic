@@ -41,7 +41,7 @@ also why the staleness audit excludes this file from its fossil scan.
 
 ## Product failure modes (FM-*)
 
-> None recorded yet. First one: class `product`, promote the guardrail into `docs/SYSTEM.md`.
+> None recorded yet. First one: class `product`, promote the guardrail into the project's own system doc.
 
 ---
 
