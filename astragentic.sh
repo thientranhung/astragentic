@@ -26,16 +26,50 @@ RAW="${ASTRAGENTIC_RAW:-https://raw.githubusercontent.com/thientranhung/astragen
 CACHE="${ASTRAGENTIC_CACHE:-$HOME/.cache/astragentic}"
 GET_URL="https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh"
 
+if [ "${1:-}" = --help ] || [ "${1:-}" = -h ] || [ "${1:-}" = help ]; then
+  echo "Usage: astragentic.sh {version|doctor|update} [--runtime claude|codex] [--apply]"
+  echo "Runtime defaults to claude. Codex update stages and prints an agent setup prompt."
+  echo "--apply installs files; the Codex adaptation prompt must still be completed."
+  exit 0
+fi
 CMD="${1:-update}"
+[ $# -eq 0 ] || shift
 APPLY=0
-for arg in "${@:2}"; do
-  case "$arg" in
-    --apply) APPLY=1 ;;
-    *) echo "astragentic.sh: unknown argument $arg" >&2; exit 2 ;;
+RUNTIME=claude
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --apply) APPLY=1; shift ;;
+    --runtime) RUNTIME="${2:?--runtime requires claude or codex}"; shift 2 ;;
+    *) echo "astragentic.sh: unknown argument $1" >&2; exit 2 ;;
   esac
 done
-
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+if [ "$RUNTIME" = codex ]; then
+  case "$CMD" in
+    version)
+      echo "installed: $(cat "$ROOT/.astraler/codex/state/installed-version" 2>/dev/null || echo none)"
+      echo "adapted: $(cat "$ROOT/.astraler/codex/state/adapted-version" 2>/dev/null || echo none)"
+      exit 0 ;;
+    doctor)
+      v="$(cat "$ROOT/.astraler/codex/state/installed-version")"
+      [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+      exec python3 "$ROOT/.astraler/codex/releases/$v/runtimes/codex/install.py" doctor --project "$ROOT" ;;
+    update)
+      flags=(--runtime codex)
+      [ "$APPLY" = 0 ] || flags+=(--apply)
+      cd "$ROOT"
+      if [ -d "$REPO" ]; then
+        exec bash "$REPO/get.sh" latest "${flags[@]}"
+      fi
+      fetch="$(mktemp)"
+      trap 'rm -f "$fetch"' EXIT
+      curl -fsSL "$GET_URL" -o "$fetch"
+      bash "$fetch" latest "${flags[@]}"
+      exit $? ;;
+    *) echo "Unknown command: $CMD (version | doctor | update)" >&2; exit 2 ;;
+  esac
+fi
+[ "$RUNTIME" = claude ] || { echo "Unknown runtime: $RUNTIME" >&2; exit 2; }
 APPLIED_FILE="$ROOT/.astraler/state/applied-version"
 installed="$(cat "$APPLIED_FILE" 2>/dev/null | tr -d '[:space:]' || true)"
 

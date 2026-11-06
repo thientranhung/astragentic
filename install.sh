@@ -17,6 +17,20 @@
 set -euo pipefail
 
 HARNESS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Route explicitly before any legacy checks or source normalization.
+RUNTIME=claude
+RUNTIME_ARGS=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --runtime) RUNTIME="${2:?--runtime requires claude or codex}"; shift 2 ;;
+    *) RUNTIME_ARGS+=("$1"); shift ;;
+  esac
+done
+case "$RUNTIME" in
+  codex) exec python3 "$HARNESS_ROOT/runtimes/codex/stage.py" "${RUNTIME_ARGS[@]}" ;;
+  claude) set -- "${RUNTIME_ARGS[@]}" ;;
+  *) echo "Unknown runtime: $RUNTIME (claude | codex)" >&2; exit 2 ;;
+esac
 PAYLOAD="$HARNESS_ROOT/harness"
 # TWO LAYOUTS, because this script now ships INSIDE a release. The package keeps its prompts
 # under `prompts/`; staging flattens them to the release root, so the copy that lands in
@@ -176,7 +190,7 @@ set -- "${ARGS[@]+"${ARGS[@]}"}"
 
 TARGET="${1:-}"
 [ -n "$TARGET" ] || {
-  echo "Usage: $0 <target-repo-path> [--project-name NAME] [--plan|--apply]" >&2
+  echo "Usage: $0 <target-repo-path> [--runtime claude|codex] [--project-name NAME] [--plan|--apply]" >&2
   echo "  (default)  stage only — edits no project file" >&2
   echo "  --plan     show what --apply would write; writes nothing" >&2
   echo "  --apply    write the payload in; owner files kept, diverged paths reported" >&2
@@ -311,6 +325,17 @@ cp "$HARNESS_ROOT/install.sh"         "$STAGING_DIR/install.sh"
 # them, so this line needs no revisit then.
 [ -d "$HARNESS_ROOT/templates" ] && cp -R "$HARNESS_ROOT/templates" "$STAGING_DIR/templates"
 [ -f "$HARNESS_ROOT/astragentic.sh" ] && cp "$HARNESS_ROOT/astragentic.sh" "$STAGING_DIR/astragentic.sh"
+# Shared setup entrypoint; runtime contracts remain separate. Older staged packages
+# without Codex keep their existing Claude-only adaptation path.
+ROUTER="$HARNESS_ROOT/prompts/ADAPT-RUNTIME.md"
+[ -f "$ROUTER" ] || ROUTER="$HARNESS_ROOT/ADAPT-RUNTIME.md"
+if [ -f "$ROUTER" ] && [ -d "$HARNESS_ROOT/runtimes/codex" ]; then
+  cp "$ROUTER" "$STAGING_DIR/ADAPT-RUNTIME.md"
+  mkdir -p "$STAGING_DIR/runtimes"
+  cp -R "$HARNESS_ROOT/runtimes/codex" "$STAGING_DIR/runtimes/codex"
+  find "$STAGING_DIR/runtimes/codex" -type d -name __pycache__ -prune -exec rm -rf {} +
+  [ ! -f "$HARNESS_ROOT/get.sh" ] || cp "$HARNESS_ROOT/get.sh" "$STAGING_DIR/get.sh"
+fi
 find "$STAGING_DIR" -name '.DS_Store' -delete
 
 # THE SELF-CHECKS RUN HERE, at staging. Commit 54c85c2 kept them out of role contracts on
@@ -769,13 +794,19 @@ PY
   exit 0
 fi
 
+NEXT_PROMPT=ADAPT-HARNESS.md
+SETUP_AGENT="root Claude Code agent"
+if [ -f "$RELEASE_DIR/ADAPT-RUNTIME.md" ]; then
+  NEXT_PROMPT=ADAPT-RUNTIME.md
+  SETUP_AGENT="current agent (Claude Code, Codex, or a supported runtime)"
+fi
 cat <<EOF
 
 No project files were changed. The agent-driven install/upgrade is ready.
 
-Give your root Claude Code agent this instruction:
+Give your $SETUP_AGENT this instruction:
 
-  Read .astraler/releases/$VERSION/ADAPT-HARNESS.md completely and execute it.
+  Read .astraler/releases/$VERSION/$NEXT_PROMPT completely and execute it.
 
 It will inspect this project, compare any previously applied release, integrate the
 candidate, verify the result by artifact, and record the applied version.

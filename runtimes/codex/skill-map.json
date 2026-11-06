@@ -1,0 +1,22 @@
+{
+  "astra-grill-with-docs": "codex-astra-grill-with-docs",
+  "astra-implement-with-tdd": "codex-astra-implement-with-tdd",
+  "astra-review": "codex-astra-review",
+  "astra-to-spec": "codex-astra-to-spec",
+  "astra-to-tickets": "codex-astra-to-tickets",
+  "astra-ui": "codex-astra-ui",
+  "astra-ux": "codex-astra-ux",
+  "batch-triage": "codex-batch-triage",
+  "bootstrap-glossary": "codex-bootstrap-glossary",
+  "codex-arm": "codex-cross-vendor-review",
+  "dispatch-junior": "codex-dispatch-junior",
+  "dispatch-qa-walk": "codex-dispatch-qa-walk",
+  "dispatch-ticket": "codex-dispatch-ticket",
+  "dispatch-ticket-codex": "codex-dispatch-ticket-codex",
+  "github-issue-tracker": "codex-github-issue-tracker",
+  "jira-issue-tracker": "codex-jira-issue-tracker",
+  "linear-issue-tracker": "codex-linear-issue-tracker",
+  "reconcile-tracker": "codex-reconcile-tracker",
+  "simplify": "codex-simplify",
+  "test-design": "codex-test-design"
+}

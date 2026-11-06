@@ -1,3 +1,36 @@
+# Astragentic 6.0.0
+
+**One install/update workflow, separate Claude Code and Codex operating contracts.**
+A project owner can ask their current agent to check and update Astragentic. The
+new shared `astragentic-update-install` skill resolves a tagged release, stages it
+with the existing installer, then follows `ADAPT-RUNTIME.md` in the same session.
+An install or download is not reported as completed semantic adaptation.
+
+**Codex is an independent runtime overlay.** It ships seven roles, twenty namespaced
+workflow skills plus the shared update skill, five native helper profiles, an
+owner-controlled model table, and native Git/Herdr/queue dispatch instructions.
+Claude role contracts and default mechanical apply behavior are preserved. Codex
+uses its own orchestrator, integrity manifest and installed/adapted version records;
+project rules, existing Claude state and personal Codex configuration are retained.
+A known pre-accept queue failure may use one same-event Herdr fallback; accepted or
+ambiguous delivery is never blindly replayed. Prompted policy is not an enforced gate.
+
+**Upgrade from 5.x:** use the same default stage-only `get.sh` command and give its
+printed `ADAPT-RUNTIME.md` instruction to the current agent. Projects already given
+the shared skill can ask it to update directly. The agent selects its own runtime's
+adapter; owners do not need a runtime flag. Bare `--apply` remains the legacy Claude
+mechanical apply, so use the shared skill/default stage route for Codex adoption.
+The skill is present in both discovery trees; an existing identical shared copy is
+reused without Codex ownership transfer. A changed shared copy requires verified
+baseline reconciliation, preserving mirrors and project edits. Other agent runtimes
+need a corresponding adapter; the portable skill alone does not claim support.
+
+Validation and limits are recorded in `docs/codex/RELEASE-VALIDATION.md`. The core
+Codex journey has a bounded native pilot; automatic skill selection from natural
+language and full adaptation on an owner's production project are not certified by
+unit tests. Remote tracker/model access remains project-specific. No Claude runtime
+was invoked for this release work.
+
 # Astragentic 5.1.4
 
 Three findings from one project shaping a ticket on 5.1.3 (nizzy TRA-1339, 2026-11-04, Claude

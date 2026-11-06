@@ -4,8 +4,8 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-5.1.4-blue" alt="version"></a>
-  <img src="https://img.shields.io/badge/runtime-Claude_Code-green" alt="runtime">
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-6.0.0-blue" alt="version"></a>
+  <img src="https://img.shields.io/badge/runtime-Claude_Code_%2B_Codex-green" alt="runtime">
   <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-67_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/vi/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache_2.0-blue" alt="license"></a>
@@ -42,15 +42,16 @@ nhau, review xong trong một vòng, và artifact chứng minh được điều 
 # 1. Đứng ở gốc project, stage bản mới nhất (không ghi file nào của project)
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
-#    …hoặc ghim một bản:  | bash -s -- 5.1.4
+#    …hoặc ghim một bản:  | bash -s -- 6.0.0
 
 # 2. Kiểm máy đã đủ thứ cần chưa
-bash .astraler/releases/5.1.4/check-requirements.sh
+bash .astraler/releases/6.0.0/check-requirements.sh
 #    Về sau, ngay trong project: bản đang cài, bản mới nhất, có gì thay đổi, nâng cấp thế nào
 .astraler/astragentic.sh update
 
 # 3. Chạy bộ cài thích nghi trong Claude Code
-claude "Read .astraler/releases/5.1.4/ADAPT-HARNESS.md completely and execute it."
+# In your current agent (Claude Code or Codex):
+# Read .astraler/releases/6.0.0/ADAPT-RUNTIME.md completely and execute it.
 
 # 4. Mở router
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable
@@ -299,7 +300,7 @@ và merge hook đều là của bản release ấy.
 ```bash
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash                      # bản mới nhất, chỉ stage
-curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 5.1.4         # ghim một bản
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 6.0.0         # ghim một bản
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --plan  # xem --apply sẽ ghi gì
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply # ghi payload vào
 ```
@@ -323,7 +324,7 @@ Từ một checkout của package này, hai bước đó là `./install.sh <targ
 Mở Claude Code trong repo đích:
 
 ```
-Read .astraler/releases/<version>/ADAPT-HARNESS.md completely and execute it.
+Read .astraler/releases/<version>/ADAPT-RUNTIME.md completely and execute it.
 ```
 
 Agent khảo sát project của bạn, tích hợp harness, chạy bootstrap brownfield nếu cần, và kiểm
@@ -380,8 +381,8 @@ Vẫn câu lệnh một dòng đó, giữa hai ticket, ở gốc project:
 
 ```bash
 cat .astraler/state/applied-version                                                                             # bạn đang ở bản nào
-curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply   # stage + ghi payload mới
-claude "Read .astraler/releases/<bản-mới>/ADAPT-HARNESS.md completely and execute it."                            # kiểm, giải conflict, ghi receipt
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash                           # stage; agent chọn runtime
+# Agent hiện tại: Read .astraler/releases/<bản-mới>/ADAPT-RUNTIME.md completely and execute it.                            # kiểm, giải conflict, ghi receipt
 ```
 
 Ba điều bản nâng cấp không làm thay bạn, nêu ra vì đã đo được: nó không đổi pane đang chạy —
@@ -506,3 +507,12 @@ các ngày không ai cần thì không thuộc về chỗ đó.**
 | **frontier** | Tập ticket mà agent đang có thể claim |
 | **gate** | Một chốt kiểm — QA walk sản phẩm đang chạy, hoặc gate slice khi đóng slice |
 | **arm** | Lượt review chéo hãng (Codex đọc lại việc của Claude) |
+
+## Cài và cập nhật bằng agent
+
+Sau khi cài bản có skill `astragentic-update-install`, anh chỉ cần nói với agent:
+“Astragentic có bản mới rồi, kiểm tra phiên bản và cập nhật project này.”
+Skill dùng bộ cài/update chung, stage release rồi tự thực hiện adaptation phù hợp
+với phiên Claude Code hoặc Codex hiện tại. Không cần chủ dự án nhớ flag runtime.
+Runtime khác cần adapter và khả năng tải skill tương ứng; chưa mặc định được hỗ trợ.
+Hướng dẫn Codex: [OPERATIONS.md](docs/codex/OPERATIONS.md).

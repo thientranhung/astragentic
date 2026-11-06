@@ -4,8 +4,8 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-5.1.4-blue" alt="version"></a>
-  <img src="https://img.shields.io/badge/runtime-Claude_Code-green" alt="runtime">
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-6.0.0-blue" alt="version"></a>
+  <img src="https://img.shields.io/badge/runtime-Claude_Code_%2B_Codex-green" alt="runtime">
   <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-67_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache_2.0-blue" alt="license"></a>
@@ -43,17 +43,18 @@ prove what happened.
 # 1. In your project's root, stage the latest release (no project file is written)
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
-#    …or pin a version:  | bash -s -- 5.1.4
+#    …or pin a version:  | bash -s -- 6.0.0
 
 # 2. Verify your machine has what's needed
-bash .astraler/releases/5.1.4/check-requirements.sh
+bash .astraler/releases/6.0.0/check-requirements.sh
 #    Later, from inside the project: what is installed, what is newest, what changed, how to upgrade
 .astraler/astragentic.sh update
 
-# 3. Run the adaptive installer in Claude Code
-claude "Read .astraler/releases/5.1.4/ADAPT-HARNESS.md completely and execute it."
+# 3. Give the printed setup instruction to your current agent
+# In your current agent (Claude Code or Codex):
+# Read .astraler/releases/6.0.0/ADAPT-RUNTIME.md completely and execute it.
 
-# 4. Start the router
+# 4. Claude Code: start the router (Codex: see docs/codex/OPERATIONS.md)
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable
 ```
 
@@ -301,7 +302,7 @@ the release shipped with.
 ```bash
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash                      # latest, stage only
-curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 5.1.4         # pin a version
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 6.0.0         # pin a version
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --plan  # show what --apply would write
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply # write the payload in
 ```
@@ -324,10 +325,10 @@ From a checkout of this package the same two steps are `./install.sh <target-rep
 
 ### Phase 2 — Adapt
 
-Open Claude Code in the target repo:
+Open your current agent (Claude Code or Codex) in the target repo:
 
 ```
-Read .astraler/releases/<version>/ADAPT-HARNESS.md completely and execute it.
+Read .astraler/releases/<version>/ADAPT-RUNTIME.md completely and execute it.
 ```
 
 The agent inspects your project, integrates the harness, runs brownfield bootstrap if needed,
@@ -356,6 +357,17 @@ Then: `claude --dangerously-skip-permissions --agent thomas --model claude-opus-
 
 ---
 
+## Install and update from your agent
+
+After this release is installed, tell your current agent: “Astragentic has a new
+release; check the version and update this project.” The shared
+`astragentic-update-install` skill checks releases, uses the existing stage-first
+installer, then completes the selected runtime's adaptation. Claude Code and Codex
+use the same owner request; runtime-specific contracts remain separate. Other
+runtimes need a shipped adapter and native skill discovery before they are supported.
+The shared staged entrypoint is `ADAPT-RUNTIME.md`; the owner does not need runtime
+flags. See [Codex operations](docs/codex/OPERATIONS.md) for runtime setup and validation limits.
+
 ## Versions and releases
 
 `VERSION` is the single source, and it is the number a staged release is named after:
@@ -383,8 +395,8 @@ The same one-liner, between tickets, in the project's root:
 
 ```bash
 cat .astraler/state/applied-version                                                                             # what you are on
-curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply   # stage + write the new payload
-claude "Read .astraler/releases/<new-version>/ADAPT-HARNESS.md completely and execute it."                        # verify, reconcile conflicts, record the receipt
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash                           # stage; agent selects the runtime
+# Current agent: Read .astraler/releases/<new-version>/ADAPT-RUNTIME.md completely and execute it.                        # verify, reconcile conflicts, record the receipt
 ```
 
 Three things the upgrade does not do for you, each stated because it was measured: it does
@@ -418,7 +430,7 @@ harness/
   .agents/
     roles/            four role contracts + the optional junior
     orchestrator.md   role -> runtime/model/effort (your file)
-    skills/           17 skills — the seven astra-* method skills, dispatch, QA, test design, tracker (the one you name, or all three), arm
+    skills/           18 skills — the seven astra-* method skills, dispatch, QA, test design, tracker (the one you name, or all three), arm
     memory/
       recurring-failure-modes.md
   .claude/

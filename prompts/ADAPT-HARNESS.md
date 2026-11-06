@@ -7,6 +7,10 @@ candidate, verify the result **by artifact**, and leave an auditable receipt.
 Work autonomously where the evidence is sufficient. Take a genuine ownership conflict to the
 owner rather than resolving it with an overwrite.
 
+The payload also ships `astragentic-update-install`, the shared skill for future
+version checks, installs and upgrades from the owner's natural-language request.
+Keep its `.agents` and `.claude` copies identical when installing the payload.
+
 ## 1. Resolve the installation state
 
 1. Read `.astraler/CANDIDATE` — call its value `<candidate>`.

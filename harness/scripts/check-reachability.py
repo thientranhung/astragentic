@@ -73,6 +73,9 @@ SKILL_GLOBS = [
 ]
 README = os.path.join(ROOT, "README.md")
 PROMPT = os.path.join(ROOT, "prompts", "ADAPT-HARNESS.md")
+if not os.path.isfile(PROMPT):
+    # install.sh flattens prompts into the immutable release root.
+    PROMPT = os.path.join(ROOT, "ADAPT-HARNESS.md")
 
 # 5.0.0: the payload ships every flow skill as `astra-*`; no plugin prefix is in use. The
 # strip stays so a project that adds its own plugin can list its prefix here.

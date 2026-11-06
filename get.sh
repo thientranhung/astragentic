@@ -25,11 +25,14 @@ REPO="${ASTRAGENTIC_REPO:-https://github.com/thientranhung/astragentic.git}"
 CACHE="${ASTRAGENTIC_CACHE:-$HOME/.cache/astragentic}"
 VERSION="latest"
 PASS=()
-for arg in "$@"; do
+while [ $# -gt 0 ]; do
+  arg="$1"; shift
   case "$arg" in
+    --runtime) PASS+=("--runtime" "${1:?--runtime requires claude or codex}"); shift ;;
     --apply|--plan) PASS+=("$arg") ;;
     --help|-h)
-      sed -n '2,20p' "$0" 2>/dev/null || true
+      echo "Usage: get.sh [latest|VERSION] [--runtime claude|codex] [--plan|--apply]"
+      echo "Default: stage release and print agent adaptation prompt. Runtime defaults to claude."
       exit 0 ;;
     -*) echo "get.sh: unknown option $arg" >&2; exit 2 ;;
     *) VERSION="$arg" ;;
