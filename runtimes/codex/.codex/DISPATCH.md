@@ -8,7 +8,13 @@ only Git's branch/worktree checks and the native tools enforce their own invaria
 ## Before launch
 
 Use one Thomas per project frontier. Resolve tracker readiness, parent/dependency
-status, authorization and available capacity from the Codex orchestrator. Builders
+status, authorization and available capacity from the project's
+`.agents/orchestrator-for-codex.md` (or the owner's explicit launch-selected Codex
+override). Re-read it before each launch; record its absolute path, hash and role
+row. Do not use `.agents/orchestrator.md`, a Claude adapter, bundled defaults or a
+hard-coded model as a fallback when the selected table is missing or invalid.
+This procedure starts Codex workers, regardless of other runtimes installed in the
+project. Missing model/effort/policy decisions must be resolved before dispatch. Builders
 may run concurrently only with disjoint write-sets and independent prerequisites.
 Use a deterministic ticket branch so a duplicate `git worktree add -b` fails instead
 of creating another writer. Do not delete a conflicting branch to make it succeed.
@@ -22,7 +28,9 @@ Project / base SHA:
 Branch / worktree:
 Herdr workspace / tab / pane:
 Coordinator thread UUID / worker thread UUID:
+Selected Codex orchestrator absolute path / SHA-256 / role row:
 Model / effort:
+Worker CLI permission mode (default | yolo) / owner selection source:
 Brief path / SHA-256:
 Write-set / forbidden paths:
 QA plan and cases (Builder/QA); effort scope (Shaper):
@@ -39,6 +47,25 @@ Write a separate brief with intent, criteria, write-set, exact base, validation 
 QA plan/cases, UI Glance/States where applicable, authorized mutations and handback
 path. Shaper produces its QA plan after Spec release; do not require that future plan
 at shaping startup. Resolve the base to a SHA before launch, not a moving branch name.
+
+## Permission propagation
+
+A new Herdr pane starts a separate Codex process: it does not inherit Thomas's CLI
+flags. Resolve `WORKER_PERMISSION_MODE` from the owner's launcher bootstrap (`yolo`
+only when --yolo was explicitly selected) or a later explicit owner instruction.
+Without that evidence use `default`. Do not infer yolo from environment variables,
+installed binaries, tool access, a worker request, or a transport failure.
+
+For an authorized dispatch, copy that selection and its source into the record and
+worker bootstrap. It applies to Shaper, Builder (quick/full), QA, any separately
+launched review/simplify pass and Builder → Junior. A narrower owner choice wins.
+Yolo does not authorize a new role, task, write-set, commit, merge or external action;
+QA/reviewer remain behaviorally read-only. Quick Builder still cannot dispatch.
+
+Native helper agents spawned by Codex are not launched through this CLI template. Their permissions are governed by Codex; do not invent a yolo
+spawn argument or claim independent read-only sandboxing. Helpers retain their
+contract boundaries. This propagation is a coordinator procedure, not an enforced
+scheduler: verify the actual child argv and observed permissions when claiming it.
 
 ## Launch
 
@@ -71,8 +98,11 @@ herdr tab create --workspace "$WORKSPACE_ID" --cwd "$WORKTREE" --label "$DISPATC
 ```
 
 Read tab/pane IDs from the response and record them immediately. Select model/effort
-from `orchestrator-for-codex.md`; builder-quick uses the Builder contract but the quick
-model row. Do not invent `codex --agent` for a business role. Start the native CLI:
+from the recorded selected Codex orchestrator: full tickets use the `builder` row;
+quick-labelled tickets use `builder-quick` with the Builder contract, never the
+owner-only `quick-builder` row. Shaper, QA, Junior and separately launched review
+passes use their respective rows from that same file. Verify MODEL/EFFORT against
+that row immediately before executing the command; yolo must not change them. Do not invent `codex --agent` for a business role. Start the native CLI:
 
 Use a stable agent launch name with letters, digits, hyphens or underscores; the
 installed Herdr rejects dots in agent names. Keep native ticket IDs unchanged in
@@ -85,12 +115,20 @@ Herdr's terminal line limit can reject a long command before Codex starts; inspe
 the same pane before correcting that command, rather than launching a second agent.
 
 ```sh
+# Run this block with bash (arrays preserve argv boundaries).
+PERMISSION_ARGS=()
+case "${WORKER_PERMISSION_MODE:?record default or yolo before launch}" in
+  default) ;;
+  yolo) PERMISSION_ARGS=(--dangerously-bypass-approvals-and-sandbox) ;;
+  *) echo "Unknown worker permission mode" >&2; exit 2 ;;
+esac
 herdr agent start "$DISPATCH_ID" --kind codex --pane "$PANE_ID" --timeout 30000 -- \
-  --cd "$WORKTREE" --model "$MODEL" -c "model_reasoning_effort=\"$EFFORT\"" "$BOOTSTRAP"
+  "${PERMISSION_ARGS[@]}" --cd "$WORKTREE" --model "$MODEL" -c "model_reasoning_effort=\"$EFFORT\"" "$BOOTSTRAP"
 ```
 
 BOOTSTRAP names the absolute Codex role/common contract, orchestrator and Codex skill
-root, dispatch ID and durable brief path. Ask the worker to print its own
+root, dispatch ID, durable brief path, worker permission mode and its owner-selection
+source. A Builder carries that same selection to an authorized Junior dispatch. Ask the worker to print its own
 `CODEX_THREAD_ID` from a shell command, verify cwd/branch/base, then end the turn. It must not
 guess another session's UUID. Read the result with Herdr and bind it to this pane in
 the record. Thomas likewise obtains its own UUID from its own environment.
@@ -100,8 +138,8 @@ Queued messages are consumed at a turn boundary. Coordinator observation of a
 running worker is a separate activity, not a recipient waiting for its own queue.
 
 A startup timeout does not prove failure. Inspect the same pane with `herdr agent get`
-and `herdr agent read --source visible`; do not relaunch while it is alive. Trust or
-capacity prompts are reported, not bypassed. Model substitution needs owner approval.
+and `herdr agent read --source visible`; do not relaunch while it is alive. Unexpected
+trust or capacity prompts are reported; do not add bypasses beyond the recorded owner choice. Model substitution needs owner approval.
 
 Junior is the exception to worktree creation: launch a sibling pane in the Builder's
 worktree, and pause Builder writes until Junior returns. Never run both writers there.
@@ -175,3 +213,14 @@ known to belong to this worktree. Inspect tracked, untracked and ignored files b
 `git worktree remove`; do not use --force to discard work. Delete only an owned branch
 that is proven integrated or contains no unique work. Record retained resources and
 why they remain. Do not clear tracker claims on ambiguous cleanup or delivery.
+
+## Resume permission selection
+
+Record the selected mode in the checkpoint before ending a turn. Resume the exact
+thread with the same recorded choice: for yolo use native
+`codex --yolo resume <thread-UUID>` from the recorded checkout; for default use
+`codex resume <thread-UUID>` with any explicitly selected scoped profile preserved.
+Do not assume a resumed process restores old CLI flags. If the owner revokes or
+narrows permissions, do not keep passing the old flag; reconcile the active session
+and checkpoint first. Changing argv in a record does not alter an already running
+worker. A missing or contradictory selection needs reconciliation before resume.

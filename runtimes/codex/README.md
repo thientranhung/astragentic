@@ -44,7 +44,8 @@ cho worktree overlay khi không cần bookkeeping release; setup project chính 
 entrypoint phía trên. Gỡ chỉ xóa file nguyên vẹn thuộc manifest, giữ bảng owner.
 Xung đột/file đã sửa làm dừng trước khi ghi. Không sửa trust/config cá nhân.
 Mở phiên Codex mới sau cài để tải catalog/helper.
-Launcher có `--dry-run` và `--orchestrator PATH`. Worktree mới cần cài overlay và
+Launcher có `--dry-run`, `--orchestrator PATH` và opt-in `--yolo` (từ 6.0.1). Yolo không ghép với `--herdr`; dispatch mới phải truyền flag tường
+minh theo permission mode trong bootstrap/record. Không suy ra quyền từ môi trường. Worktree mới cần cài overlay và
 chạy doctor riêng, mang snapshot config owner nếu chưa có; xem DISPATCH.md.
 
 Kiểm tra tiện ích/installer:
@@ -53,7 +54,7 @@ Kiểm tra tiện ích/installer:
 python3 -m unittest discover -s tests/codex -p 'test_*.py'
 ```
 
-Hiện có 30 tests đạt. Probe `python3 tests/codex/probe_overlay.py` chạy installer/doctor
+Hiện có 33 tests đạt. Probe `python3 tests/codex/probe_overlay.py` chạy installer/doctor
 thật và discover 21/21 skill; `python3 tests/codex/probe_context.py` đạt 10 assertions.
 Các probe có phạm vi riêng, không thay cho
 hành trình Thomas → worker → handback → QA → verify. Native explorer đã được spawn

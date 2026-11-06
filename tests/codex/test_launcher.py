@@ -84,6 +84,61 @@ class LauncherTests(unittest.TestCase):
                 self.assertEqual(before, sorted(str(p.relative_to(project)) for p in project.rglob('*')))
                 self.assertTrue(sock_path.is_socket())
 
+    def test_yolo_exec_explicit_opt_in_and_dispatch_policy(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            project = root / 'project'
+            subprocess.run(['git', 'init', '-q', str(project)], check=True)
+            binary = root / 'codex'
+            binary.write_text('#!' + sys.executable + '\nimport json, sys\nprint(json.dumps(sys.argv[1:]))\n')
+            binary.chmod(0o755)
+            env = {**os.environ, 'PATH': str(root) + os.pathsep + os.environ['PATH']}
+            for role in ('thomas', 'ba', 'quick-builder'):
+                result = self.run_cli(role, '--project', str(project), '--yolo', env=env)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                argv = json.loads(result.stdout)
+                self.assertEqual(argv.count('--dangerously-bypass-approvals-and-sandbox'), 1)
+                self.assertIn('Worker CLI permission mode: yolo', argv[-1])
+                self.assertNotIn('default_permissions="astragentic-local"', argv)
+            normal = self.run_cli('thomas', '--project', str(project), '--dry-run', env=env)
+            self.assertEqual(normal.returncode, 0, normal.stderr)
+            argv = json.loads(normal.stdout)['argv']
+            self.assertNotIn('--dangerously-bypass-approvals-and-sandbox', argv)
+            self.assertIn('Worker CLI permission mode: default', argv[-1])
+            self.assertEqual(list(project.iterdir()), [project / '.git'])
+
+    def test_yolo_and_scoped_herdr_profile_conflict(self):
+        result = self.run_cli('thomas', '--project', str(ROOT), '--yolo', '--herdr', '--dry-run')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('not allowed with argument', result.stderr)
+        self.assertFalse(result.stdout)
+
+    def test_documented_worker_dispatch_passes_permission_flags_at_herdr_boundary(self):
+        document = (ROOT / 'runtimes/codex/.codex/DISPATCH.md').read_text()
+        blocks = [part.split('```', 1)[0] for part in document.split('```sh\n')[1:]]
+        script = next(block for block in blocks if 'PERMISSION_ARGS=()' in block)
+        with tempfile.TemporaryDirectory() as d:
+            binary = Path(d) / 'herdr'
+            binary.write_text('#!' + sys.executable + '\nimport json, sys\nprint(json.dumps(sys.argv[1:]))\n')
+            binary.chmod(0o755)
+            env = {**os.environ, 'PATH': d + os.pathsep + os.environ['PATH'],
+                   'DISPATCH_ID': 'worker-1', 'PANE_ID': 'w1:p1', 'WORKTREE': '/tmp/tree with spaces',
+                   'MODEL': 'gpt-6.1-sol', 'EFFORT': 'medium', 'BOOTSTRAP': 'Read /tmp/bootstrap.md'}
+            for mode in ('default', 'yolo'):
+                result = subprocess.run(['bash', '-c', script], env={**env, 'WORKER_PERMISSION_MODE': mode},
+                                        text=True, capture_output=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                argv = json.loads(result.stdout)
+                native = argv[argv.index('--') + 1:]
+                self.assertEqual('--dangerously-bypass-approvals-and-sandbox' in native, mode == 'yolo')
+                self.assertEqual(native[native.index('--cd') + 1], '/tmp/tree with spaces')
+                self.assertEqual(native[-1], 'Read /tmp/bootstrap.md')
+            for mode in ('', 'typo'):
+                result = subprocess.run(['bash', '-c', script], env={**env, 'WORKER_PERMISSION_MODE': mode},
+                                        text=True, capture_output=True)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertFalse(result.stdout)
+
     def test_dispatch_role_is_not_owner_launch(self):
         self.assertNotEqual(self.run_cli('builder','--project',str(ROOT),'--dry-run').returncode,0)
 

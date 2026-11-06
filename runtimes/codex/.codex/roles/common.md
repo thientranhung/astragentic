@@ -29,7 +29,7 @@ Apply the authorization for the current task and your role's narrower boundaries
 
 Read `../DISPATCH.md` when receiving a dispatch, follow-up, release or recovery event.
 Keep a worker-owned checkpoint at the brief's durable output path; Thomas alone updates
-the coordinator dispatch record. Store role/dispatch, project/cwd/branch, base/current
+the coordinator dispatch record. Store role/dispatch, worker CLI permission mode and owner-selection source, project/cwd/branch, base/current
 head and dirty paths, current phase, completed criteria and evidence paths, pending
 decisions, last processed event IDs and next action. Save it before waiting, handback
 or a phase change; do not persist secrets. A report/hash identifies the actual artifact,
@@ -54,3 +54,8 @@ When an authorized workflow needs a native helper, installed agent types are
 comes from the orchestrator-generated TOML. Do not substitute builtin agent types
 or silently override their model. A helper returns advice to its parent and never
 becomes Thomas, Shaper, Builder or QA.
+
+For a new CLI child, follow DISPATCH.md permission propagation. Carry an explicit
+owner yolo selection through authorized delegations, including Builder → Junior;
+otherwise use default. Permissions do not override role/write-set/release/review
+constraints or grant new external actions. Never infer yolo from ambient access.

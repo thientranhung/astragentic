@@ -5,7 +5,10 @@ description: "Prepare an Astragentic Codex ticket dispatch with verified claim, 
 
 # Prepare a ticket dispatch
 
-Read the project's tracker configuration and Codex orchestrator. Resolve ticket, spec,
+Read the project's tracker configuration and `.agents/orchestrator-for-codex.md`
+(or the owner's explicit launch-selected Codex override). Use its role assignments
+and operating policies; never fall back to `.agents/orchestrator.md`. Full Builder
+uses `builder`, quick tickets use `builder-quick`, not owner `quick-builder`. Resolve ticket, spec,
 criteria, full/quick evidence, dependencies and parent readiness. Reconcile tracker
 and Git before claiming. A same-account assignee is not a unique worker identity.
 Use a deterministic ticket branch and Git's exclusive branch creation to catch

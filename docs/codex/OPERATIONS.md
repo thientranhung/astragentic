@@ -81,6 +81,26 @@ python3 .codex/astragentic/launch.py ba --project .
 python3 .codex/astragentic/launch.py quick-builder --project .
 ```
 
+Từ 6.0.1, launcher hỗ trợ quyền yolo do owner chủ động chọn:
+
+```sh
+python3 .codex/astragentic/launch.py thomas --project . --yolo
+```
+
+`--yolo` bỏ sandbox và yêu cầu xác nhận thực thi cho phiên mới. Bootstrap mang lựa
+chọn này vào dispatch record; các tiến trình Codex mới được phép dispatch nhận
+cùng flag tường minh, kể cả Builder → Junior. Không bật thì không tự thêm yolo.
+Đây là quy trình agent thực hiện theo mẫu lệnh; không phải OS tự kế thừa hay
+scheduler cưỡng chế. Kiểm tra argv/permission thực tế của worker trước khi khẳng
+định quyền đã đúng. Quyền không mở rộng task/write-set hay bỏ gate review/QA.
+Native helper/subagent dùng cơ chế quyền của Codex, không có cờ CLI riêng ở đây.
+
+Chọn **một** trong `--yolo` và `--herdr`; launcher từ chối ghép hai chế độ. Yolo
+không cần profile socket hạn chế của `--herdr`; dispatch vẫn cần Herdr đang hoạt
+động và xác minh đúng workspace/pane. Không ghi config/trust cá nhân. Khi resume,
+áp dụng lại mode đã ghi, ví dụ `codex --yolo resume <UUID>`; worker đang chạy không
+đổi quyền chỉ vì Thomas được mở lại với flag khác.
+
 Để Thomas điều phối qua Herdr trong phiên đã mở từ Herdr, dùng opt-in:
 
 ```sh

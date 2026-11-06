@@ -1,3 +1,39 @@
+# Astragentic 6.0.1
+
+**Explicit yolo selection reaches authorized Codex CLI workers.** The owner launcher
+accepts `--yolo` and passes Codex's native approval/sandbox bypass flag only when
+selected. Its bootstrap records the worker permission mode. The native dispatch
+procedure carries that mode and its owner-selection source into each new worker's
+argv and checkpoint, including Builder → Junior. Default launches add no bypass;
+`--yolo` and the scoped `--herdr` profile are mutually exclusive. No personal config
+or trust file is changed. Running workers are not retroactively changed by a new
+Thomas launch; resume must reconcile the recorded choice with current owner intent.
+
+**Codex Thomas dispatch follows the Codex orchestrator.** It reads the project's
+`.agents/orchestrator-for-codex.md` (or an explicit owner-selected Codex override),
+records its path/hash/role row, and uses its model, effort and operating policy.
+Full tickets select `builder`; quick tickets select `builder-quick`, never the
+owner-only `quick-builder`. Missing or invalid assignments block dispatch, without
+falling back to Claude configuration or a hard-coded model. Yolo changes permissions,
+not model selection, task authorization, role boundaries or review/QA requirements.
+
+Native helpers use Codex's permission handling; this release does not invent a
+helper yolo argument or claim an independent read-only sandbox. Dispatch propagation
+is an agent procedure with a tested command template, not an enforced scheduler.
+
+**Upgrade:** use the shared `astragentic-update-install` skill in Codex to update
+its overlay, then start a new Thomas session. In the updated project:
+
+```sh
+python3 .codex/astragentic/launch.py thomas --project . --yolo
+```
+
+Claude contracts, hooks, dispatch implementation and installer apply/conflict logic
+are unchanged from 6.0.0. Validation: 33 local tests, including launcher exec and
+actual shell dispatch-template argv capture; native Codex 0.166.0 parser checks.
+Live model yolo dispatch/Junior/resume have not been re-run for this patch. Published
+artifact smoke-test results are recorded in the GitHub release notes after upload.
+
 # Astragentic 6.0.0
 
 **One install/update workflow, separate Claude Code and Codex operating contracts.**

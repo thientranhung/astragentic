@@ -46,7 +46,9 @@ def main():
     parser.add_argument('role', choices=OWNER_ROLES)
     parser.add_argument('--project', required=True, type=Path, help='Git checkout in which the role will work')
     parser.add_argument('--orchestrator', type=Path, help='Explicit model assignment file; otherwise prefer the project Codex orchestrator')
-    parser.add_argument('--herdr', action='store_true', help='Opt in to granting the Herdr API socket per launch using a native workspace permission profile; requires HERDR_ENV=1 and absolute HERDR_SOCKET_PATH naming an existing socket')
+    permissions = parser.add_mutually_exclusive_group()
+    permissions.add_argument('--yolo', action='store_true', help='Explicitly bypass Codex approvals and sandbox for this owner session and authorized new CLI worker dispatches; does not grant new task actions or change personal configuration')
+    permissions.add_argument('--herdr', action='store_true', help='Opt in to granting the Herdr API socket per launch using a native workspace permission profile; requires HERDR_ENV=1 and absolute HERDR_SOCKET_PATH naming an existing socket')
     parser.add_argument('--dry-run', action='store_true', help='Print launch argv as JSON without invoking Codex')
     args = parser.parse_args()
     try:
@@ -87,14 +89,26 @@ def main():
                   'Read the Codex role contract at ' + json.dumps(str(contract)) + ' and the common contract at ' + json.dumps(str(common)) + ' before acting. '
                   'Project: ' + json.dumps(str(project)) + '. Model assignments: ' + json.dumps(str(config)) + '. '
                   'Do not start work from a previous session or infer a ticket. After loading your role, end the turn and await the owner task; do not run a sleep or polling loop. '
+                  'All authorized Codex worker dispatches must use this selected Codex orchestrator for role model, effort and operating policy; never fall back to .agents/orchestrator.md or hard-coded model defaults. Yolo does not change the selected model table. '
                   'For authorized worker dispatch, read ' + json.dumps(str(dispatch)) + '. '
                   'Follow that native procedure; do not claim custom commit or merge guards are active.')
+        worker_mode = 'yolo' if args.yolo else 'default'
+        prompt += (' Worker CLI permission mode: ' + worker_mode + '. '
+                   + ('The owner explicitly selected --yolo for this session and its authorized new CLI worker dispatches. '
+                      'Carry this mode into each dispatch record/bootstrap and native child argv, including delegated Junior; '
+                      'a narrower explicit owner decision takes precedence. '
+                      if args.yolo else
+                      'No --yolo dispatch opt-in was supplied by this launcher. Do not infer it from environment variables or broad tool access. ')
+                   + 'This selection does not authorize extra dispatches, mutations, commits, merges or publication. '
+                   'Native helpers use Codex permission handling, not a separate CLI flag. ')
         if not installed:
             prompt += (' This project has no installed Astragentic overlay. The bundled role contract is available, '
                        'but native skill and helper discovery in this project has not been established. '
                        'Report missing capabilities before using them; source files alone do not register tools.')
         argv = ['codex', '--cd', str(project), '--model', model,
                 '-c', 'model_reasoning_effort=' + json.dumps(effort)]
+        if args.yolo:
+            argv.append('--dangerously-bypass-approvals-and-sandbox')
         if args.herdr:
             if os.environ.get('HERDR_ENV') != '1':
                 raise ValueError('--herdr requires HERDR_ENV=1')
@@ -110,7 +124,7 @@ def main():
         argv.append(prompt)
         if args.dry_run:
             print(json.dumps({'role': args.role, 'orchestrator': str(config), 'contract': str(contract),
-                              'overlay_installed': installed, 'argv': argv}, ensure_ascii=False, indent=2))
+                              'overlay_installed': installed, 'worker_permission_mode': worker_mode, 'argv': argv}, ensure_ascii=False, indent=2))
             return 0
         binary = shutil.which('codex')
         if not binary:

@@ -3,7 +3,17 @@
 Owner-opened resident session. Read common.md in this directory at startup. You own
 routing and verification, not implementation inside a Builder's worktree.
 
-Load the launch-selected orchestrator, project tracker coordinates/status mapping,
+For this Codex session, dispatch authority is the project's
+`.agents/orchestrator-for-codex.md`, or the explicit Codex orchestrator override
+selected by the owner at launch. Never read `.agents/orchestrator.md` as a fallback
+for runtime, model, effort, capacity, Junior or cross-vendor choices. Worker runtime
+stays Codex for this dispatch procedure; a model name does not select a runtime.
+Re-read the selected Codex table before each dispatch and record its path, hash and
+exact role row. Full Builder uses `builder`; a quick ticket uses `builder-quick`,
+not the owner role `quick-builder`. Missing or invalid assignments block dispatch;
+model capacity errors never authorize a substitute. Yolo changes permissions only.
+
+Load the selected Codex orchestrator, project tracker coordinates/status mapping,
 triage labels and project entry documentation. If missing, report exactly what is
 unknown; do not fabricate a tracker or model. Query actual blockers and assignees to
 form the frontier. Read relevant memory rules when installed, evidence only as needed.
