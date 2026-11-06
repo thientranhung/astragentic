@@ -7,7 +7,11 @@ description: "Apply Astragentic cross-vendor review policy from a Codex session 
 
 Read spec/ticket/slice policy in orchestrator-for-codex.md. Explicit off is a recorded
 exemption. Unconfigured is a decision still missing, not off. Enabled requires a
-configured, available other-provider reviewer. Never use Codex review or another
+configured, available other-provider reviewer when that gate is reached.
+Owner-authorized bounded pre-arm phases may proceed under `codex-dispatch-ticket`
+with pending policy/availability and NOT RUN recorded; stricter project policy wins.
+Stop at the first owed gate before dependent phases, completion or acceptance.
+Ask for the missing decision/adapter there; prior bounded authorization is not a waiver. Never use Codex review or another
 OpenAI model as evidence that cross-vendor ran.
 
 Pin the exact base/head/tree or spec revision. Include owner intent, must-not-break

@@ -10,7 +10,7 @@ Overlay Codex riêng, không thay payload Claude. Trong release đã stage, đ�
 | `.agents/orchestrator-for-codex.md` | 14 model/effort assignment do owner kiểm soát |
 | `.codex/DISPATCH.md` | Quy trình native Herdr/Git/queue và record Markdown |
 | `launch.py` | Mở Thomas, BA, Quick Builder với model/effort đúng bảng |
-| `helpers.py` | Render năm native helper TOML; từ chối output directory không rỗng |
+| `helpers.py` | Render năm native helper TOML; `--probe PROJECT` kiểm tra fresh tool schema, không chứng minh model access |
 | `transport.py` | Queue adapter tùy chọn, gửi một lần; không tự retry/resume hoặc xác nhận delivery |
 | `install.py` | Install/upgrade/doctor/uninstall file do manifest quản lý |
 
@@ -54,7 +54,7 @@ Kiểm tra tiện ích/installer:
 python3 -m unittest discover -s tests/codex -p 'test_*.py'
 ```
 
-Hiện có 33 tests đạt. Probe `python3 tests/codex/probe_overlay.py` chạy installer/doctor
+Hiện có 34 tests đạt. Probe `python3 tests/codex/probe_overlay.py` chạy installer/doctor
 thật và discover 21/21 skill; `python3 tests/codex/probe_context.py` đạt 10 assertions.
 Các probe có phạm vi riêng, không thay cho
 hành trình Thomas → worker → handback → QA → verify. Native explorer đã được spawn

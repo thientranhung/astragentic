@@ -25,6 +25,17 @@ class HelperTests(unittest.TestCase):
                 self.assertNotIn('sandbox_mode', parsed)
                 self.assertTrue(parsed['developer_instructions'])
 
+    def test_probe_ignores_prose_and_partial_catalog(self):
+        prose = '\n'.join('astragentic_' + r.replace('-', '_') + ': {' for r in helpers.HELPERS)
+        self.assertEqual(helpers.discover([{'content': prose}])['status'], 'capability-gap')
+        tool = {'type': 'function', 'name': 'spawn_agent', 'parameters': {'properties': {
+            'agent_type': {'description': 'Available roles:\nastragentic_reviewer: {'}}}}
+        result = helpers.discover([tool])
+        self.assertEqual(result['visible'], ['astragentic_reviewer'])
+        self.assertEqual(len(result['missing']), 4)
+        tool['parameters']['properties']['agent_type']['description'] = prose
+        self.assertEqual(helpers.discover([tool])['status'], 'catalog-visible')
+
     def test_missing_assignment_fails_instead_of_fallback(self):
         with tempfile.TemporaryDirectory() as d:
             config = Path(d) / 'empty.md'

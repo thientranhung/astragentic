@@ -189,3 +189,49 @@ là lịch sử riêng, không phủ nhận profile scoped mới đã chạy.
 Các kiểm tra trên là trách nhiệm điều phối, không phải custom gate cưỡng chế. Harness
 không có state machine, receipt service hay verifier engine riêng. Xem bảng kiểm
 chứng để biết nhánh nào mới có contract và nhánh nào đã được đo thực tế.
+
+
+## Helper discovery diagnostic
+
+`install.py doctor` checks files and model-table consistency only. In the exact
+worker checkout, with the launch environment/config, run:
+
+```sh
+python3 .codex/astragentic/helpers.py --probe .
+```
+
+Exit 0 means all five names occur in the fresh native `spawn_agent` tool schema;
+exit 1 reports a capability gap or probe error. This is not a model call, active
+session refresh, or successful spawn. Compare with the running session's actual
+agent-type inventory before invoking a helper. Launch-only configuration overrides
+must be reflected in the probe environment. Do not change trust/settings or restart
+an active worker automatically. Record separately authorized CLI review contexts as
+a workaround, never as successful helper discovery or cross-vendor evidence.
+
+Measured on Codex CLI 0.166.0: a trusted fixture discovers 5/5; the same files with
+no trust or with `agents.enabled=false` discover 0/5. A linked worktree beneath
+`.claude/worktrees/` with its parent repository trusted discovers 5/5. These reproduce
+possible discovery boundaries, not the cause of any particular existing session.
+The standalone TOML format is described in the
+[official custom-agent documentation](https://developers.openai.com/codex/multi-agent/).
+No extra registration keys or feature toggles are installed by Astragentic.
+
+For pre-arm dispatch, record owner authorization, permitted phases, pending gate,
+NOT RUN, and a stop point. Bounded code/tests/same-vendor review may proceed under
+that authorization; stricter project policy wins. Stop at the first owed gate before
+dependent work or acceptance. Existing owner orchestrator files remain preserved on
+upgrade; the new template does not rewrite an owner's stricter policy.
+
+
+### Direct collaboration tools are a separate inventory
+
+Check the active session's direct `collaboration.spawn_agent` declaration and its
+agent-type description. `ALL_TOOLS` inside `functions.exec` lists nested tools, not
+all direct tools. An empty search there must not be reported as missing helpers.
+Call declared collaboration tools directly. Record a real invocation error separately
+from catalog presence or missing evidence; never infer model access from registration.
+
+A retained CLI 0.166.0 worker startup declaration showed all five helpers, but the
+worker searched only the nested catalog and falsely reported absence. No helper
+spawn was attempted in that observation. The fix is the inventory/invocation
+procedure above; it does not require trust changes or reinstalling agent profiles.

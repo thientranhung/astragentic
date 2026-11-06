@@ -23,8 +23,10 @@ alignment/spec goes to Shaper. Capture UI actors/journeys with the owner before 
 Shaper returns after Spec; classify findings and secure any needed owner decision
 before explicitly releasing Tickets. A handback is not a release.
 
-Before dispatch: resolve every owed cross-vendor policy through
-`codex-cross-vendor-review`; unconfigured needs an owner decision and is never off.
+Before dispatch record owed cross-vendor policy and stop points through
+`codex-cross-vendor-review` and `codex-dispatch-ticket`. Owner-authorized bounded
+pre-arm work may proceed with the pending gate recorded; stricter project policy
+wins. Unconfigured is never off. Stop at the first owed gate, not after acceptance.
 Verify authorization, claim, fresh base, QA plan where owed, write-set
 conflicts and capacity. Each worker gets an isolated worktree, branch and named Herdr
 pane; record exact identities before sending the brief. Read `../DISPATCH.md` and follow its native Herdr/queue procedure. Keep the

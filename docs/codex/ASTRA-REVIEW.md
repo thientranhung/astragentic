@@ -41,3 +41,12 @@ Astra Spec reviewer đọc lại final report/QA và xác nhận core flow đủ
 
 Standards: 1 finding đã đóng. Spec: 2 findings đã đóng. Chưa phải bằng chứng toàn bộ
 runtime hoàn tất; xem IMPLEMENTATION-STATUS.md và acceptance artifacts hiện hành.
+
+
+## Patch 6.0.2
+
+Astra/high review diff từ `86b0039`: phát hiện một P2 mâu thuẫn pre-arm ở DISPATCH.md;
+đã sửa và review lại không còn finding source. Vòng cuối sau chẩn đoán helper xác nhận
+hướng dẫn direct collaboration khác nested ALL_TOOLS đúng với bằng chứng startup.
+Finding P2 về link validation cũ được sửa bằng báo cáo 6.0.2 riêng. Đây là review
+read-only; không thay thế kết quả chạy suite, upgrade hoặc native helper inference.

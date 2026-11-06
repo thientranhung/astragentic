@@ -1,3 +1,39 @@
+# Astragentic 6.0.2
+
+**Correct helper discovery and invocation guidance.** A retained worker startup
+schema contained all five Astragentic helpers, but the worker searched only
+`ALL_TOOLS` inside `functions.exec` and incorrectly reported them missing. Direct
+`collaboration.spawn_agent` tools are outside that nested catalog. The common role
+contract now requires inspecting the direct declaration and invoking it directly;
+an empty nested search is not a missing-helper result. This observed incident did
+not establish broken registration, trust or a failed helper spawn.
+
+`helpers.py --probe PROJECT` checks all five names in a fresh native spawn tool
+schema. Doctor remains a file-integrity check; probe visibility does not prove that
+an existing session refreshed or that a model call succeeded. Neither tool changes
+personal trust, model configuration or a running worker.
+
+**Bounded pre-arm dispatch is consistent.** Owner-authorized code, tests and
+same-vendor review may proceed with pending cross-vendor policy/availability,
+NOT RUN and a recorded stop point. Stricter owner/project policy wins. Stop at
+the first owed gate before dependent work or acceptance; never infer OFF or waiver.
+
+**Thread identity is derived from the shell.** The dispatch procedure validates
+CODEX_THREAD_ID when authoring metadata, rejects missing/invalid/nil UUIDs, and
+preserves independently observed peer startup bindings over narrative placeholders.
+This is procedure guidance, not a custom identity service or enforced write gate.
+
+**Upgrade:** use the existing shared `astragentic-update-install` skill. Update at
+a safe coordination checkpoint; preserve active workers and do not replay work.
+Owner orchestrator files stay intact, including stricter existing policies. New
+sessions load updated startup guidance; a live session is not silently refreshed.
+Claude payload, hooks, shared skill mirrors and mechanical installer logic are unchanged.
+
+Validation: 34 tests; actual CLI 0.166.0 positive/negative discovery fixtures;
+local 6.0.1-to-6.0.2 shared-stage/apply/doctor upgrade preserving owner and Claude
+files; independent Astra review; an isolated native helper spawn returned a result. See docs/codex/RELEASE-VALIDATION.md for final
+measurement scope and published-artifact results in the GitHub release notes.
+
 # Astragentic 6.0.1
 
 **Explicit yolo selection reaches authorized Codex CLI workers.** The owner launcher

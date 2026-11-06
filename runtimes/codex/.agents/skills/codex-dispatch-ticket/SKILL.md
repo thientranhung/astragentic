@@ -23,9 +23,16 @@ and criterion validation instead of inventing product surfaces. Missing quick/fu
 evidence returns to shaping. For Shaper,
 name effort and Spec checkpoint; for QA use codex-dispatch-qa-walk.
 
-Before launch resolve every owed cross-vendor policy: unconfigured requires an owner
-decision; enabled requires an available other-provider adapter; off requires the
-recorded owner choice. A quick ticket owes only its explicit brief requirements.
+Before launch record every owed cross-vendor policy and its gate boundary through
+`codex-cross-vendor-review`. Policy resolution and adapter availability are distinct.
+With owner-authorized bounded pre-arm work, dispatch may proceed for the named code,
+tests and same-vendor review even if policy is unconfigured or an enabled adapter is
+unavailable. Record authorization, allowed phases, pending policy/availability,
+NOT RUN and the exact stop point in the brief/checkpoint. A stricter project or owner
+policy takes precedence. Without bounded authorization, resolve the dependency before
+launch. At the first owed gate, stop dependent work and request the missing decision
+or adapter; never disable the arm, infer a waiver, or accept/integrate an artifact
+without required evidence. A quick ticket owes only its explicit brief requirements.
 Before launch verify authorization, capacity, worktree/branch/base and claim. Use
 `codex-dispatch-ticket-codex` for launch and coordination. Follow the native command procedure in that skill; the owner launcher is not a
 worker dispatcher. Do not introduce another runtime service for this workflow.

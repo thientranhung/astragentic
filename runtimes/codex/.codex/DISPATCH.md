@@ -14,8 +14,12 @@ override). Re-read it before each launch; record its absolute path, hash and rol
 row. Do not use `.agents/orchestrator.md`, a Claude adapter, bundled defaults or a
 hard-coded model as a fallback when the selected table is missing or invalid.
 This procedure starts Codex workers, regardless of other runtimes installed in the
-project. Missing model/effort/policy decisions must be resolved before dispatch. Builders
-may run concurrently only with disjoint write-sets and independent prerequisites.
+project. Missing model/effort decisions must be resolved before dispatch. Resolve
+operating policy before launch except for owner-authorized bounded pre-arm work under
+`codex-dispatch-ticket`: record pending cross-vendor policy/availability, NOT RUN,
+allowed phases and the first owed gate as the stop point. Stricter project/owner
+policy wins; this exception never waives the gate or permits acceptance without it.
+Builders may run concurrently only with disjoint write-sets and independent prerequisites.
 Use a deterministic ticket branch so a duplicate `git worktree add -b` fails instead
 of creating another writer. Do not delete a conflicting branch to make it succeed.
 
@@ -47,6 +51,33 @@ Write a separate brief with intent, criteria, write-set, exact base, validation 
 QA plan/cases, UI Glance/States where applicable, authorized mutations and handback
 path. Shaper produces its QA plan after Spec release; do not require that future plan
 at shaping startup. Resolve the base to a SHA before launch, not a moving branch name.
+
+## Verified thread identity
+
+When authoring a checkpoint, report or outbound message, obtain self identity in that
+same shell operation from `CODEX_THREAD_ID`; do not type or copy a UUID from narrative
+text. Validate syntax and reject nil UUIDs before writing identity metadata. For example:
+
+```sh
+python3 - <<'PY_IDENTITY'
+import json, os, uuid
+thread = uuid.UUID(os.environ['CODEX_THREAD_ID'])
+if thread.int == 0:
+    raise SystemExit('Refuse nil CODEX_THREAD_ID; reconcile identity before writing')
+print(json.dumps({'self_thread_uuid': str(thread)}))
+PY_IDENTITY
+```
+
+Use that validated value directly when serializing the record in the same operation.
+Missing/invalid identity blocks that metadata write/send; it is not a reason to invent
+a placeholder or restart a worker. Before sending, validate the peer UUID as non-nil
+and compare it to the independently captured startup binding (observed pane plus the
+peer's shell-reported identity). Before startup binding exists, mark it `not yet bound`
+and do not send; never populate a UUID field with all-zero text. Generated checkpoints,
+reports and messages cannot overwrite a verified binding. On mismatch, preserve the
+binding and reconcile via the same observed session and pinned brief. Record a correction
+event without replaying work. An agent-authored metadata mistake does not establish
+queue/runtime corruption. This is procedure validation, not a new identity service.
 
 ## Permission propagation
 

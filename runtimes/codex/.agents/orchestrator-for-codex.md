@@ -43,8 +43,9 @@ are generated from the same table at installation. Values apply to new sessions.
 - Junior: disabled by default; enabling is an owner choice, not implied by a model row.
   When enabled, Builder pauses writes while Junior owns the assigned subset.
 - Cross-vendor arm: unconfigured for spec, ticket and slice. Configure an available
-  other-provider reviewer or record the owner's explicit off decision before a task
-  owing that gate. Unconfigured never means off. Do not manufacture a passing receipt.
+  other-provider reviewer or record the owner's explicit off decision before crossing
+  that gate. Owner-authorized bounded pre-arm work may proceed with pending policy,
+  NOT RUN and an explicit stop point in its brief; stricter project policy wins. Unconfigured never means off. Do not manufacture a passing receipt.
 - Review/disposition: required checks are run with native tools and the project's
   existing verification commands. Thomas inspects evidence; there is no additional
   Astragentic state machine or claimed automatic merge enforcement.
