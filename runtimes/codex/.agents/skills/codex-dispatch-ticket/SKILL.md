@@ -42,3 +42,9 @@ A handback is a candidate artifact. Verify exact head/tree, write-set, criteria,
 checks and required review/QA/arm before integration. Dirty or changed artifacts need
 new evidence. Release claims and clean only owned resources after preserving artifacts
 and confirming no live worker writes there. Never force-remove uncommitted work.
+
+After integration, follow DISPATCH.md's coordinator close-out section before reporting
+full done or refilling capacity. Record each owned resource as released with evidence,
+retained with reason/owner/next checkpoint and capacity impact, or justified not
+applicable. Include QA/station resources. Preserve shared/active resources; a retention
+is not permission to force cleanup or claim freed capacity.

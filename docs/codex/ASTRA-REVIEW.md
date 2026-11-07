@@ -50,3 +50,13 @@ Astra/high review diff từ `86b0039`: phát hiện một P2 mâu thuẫn pre-ar
 hướng dẫn direct collaboration khác nested ALL_TOOLS đúng với bằng chứng startup.
 Finding P2 về link validation cũ được sửa bằng báo cáo 6.0.2 riêng. Đây là review
 read-only; không thay thế kết quả chạy suite, upgrade hoặc native helper inference.
+
+## Patch 6.0.3
+
+Astra/high review độc lập tracked diff từ `cf583c0`: PASS phạm vi source, không có
+P1/P2. Reviewer chạy 14 launcher tests đạt, kiểm tra syntax/whitespace và đối chiếu
+bằng chứng Herdr/Stage1/2. Một P3 về ví dụ resume thiếu endpoint đã được sửa: ví dụ
+local được ghi rõ, route endpoint phải giữ --remote. Maintainer kiểm tra lại diff;
+không gọi đó là một vòng review độc lập mới. Review không thay thế full regression,
+selftest, exact candidate upgrade hay public-install smoke. Claude/shared payload
+không đổi; pause/dedup và continuation vẫn là thủ tục, không phải runtime gate.

@@ -32,9 +32,25 @@ conflicts and capacity. Each worker gets an isolated worktree, branch and named 
 pane; record exact identities before sending the brief. Read `../DISPATCH.md` and follow its native Herdr/queue procedure. Keep the
 Markdown dispatch record current; do not introduce a separate orchestration engine.
 
+When the owner chooses separate sessions, follow DISPATCH.md's native separate-session
+procedure for Builder, QA and reviewer contexts. Keep per-Builder pending events and
+follow-ups separate. Use queue --resume only for the verified endpoint and eligible
+recipient lifecycle; do not treat idle as permission to resume an owner-paused session.
+
+Follow DISPATCH.md's coordinator continuation procedure for direct helpers. When a
+worker is paused for your review decision, own result collection, finding disposition
+and the authorized follow-up. Do not end with only a progress promise. If blocked,
+record pending handles, the paused worker, next action and a concrete observation
+owner/trigger; do not assume a checkpoint or queued message guarantees wake-up.
+
 When work returns, read the artifact and verify acceptance/tests/review/QA at the
 actual head. idle/done is only a runtime observation. Route ambiguous intent to the
 owner; send concrete fixes to the owning worker. Run QA in the relevant modes, and
 integrate only within task authorization after the required checks have evidence.
 Collect reports before cleanup; inspect dirty worktrees instead of force-removing.
-Reconcile tracker and refill authorized capacity after integration.
+Reconcile tracker after integration. Before reporting full close-out or refilling
+capacity, record DISPATCH.md's close-out disposition for every owned pane, process/dev
+stack, worktree and branch (including QA/station resources): released with readback,
+retained with reason/owner/next checkpoint, or justified not applicable. Retained
+resources still count toward capacity; use only verified available capacity. Do not
+force cleanup, touch shared/active resources, or conflate merged with fully closed out.

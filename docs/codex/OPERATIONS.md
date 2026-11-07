@@ -98,7 +98,7 @@ Native helper/subagent dùng cơ chế quyền của Codex, không có cờ CLI 
 Chọn **một** trong `--yolo` và `--herdr`; launcher từ chối ghép hai chế độ. Yolo
 không cần profile socket hạn chế của `--herdr`; dispatch vẫn cần Herdr đang hoạt
 động và xác minh đúng workspace/pane. Không ghi config/trust cá nhân. Khi resume,
-áp dụng lại mode đã ghi, ví dụ `codex --yolo resume <UUID>`; worker đang chạy không
+áp dụng lại mode đã ghi, ví dụ `codex resume --dangerously-bypass-approvals-and-sandbox <UUID>`; worker đang chạy không
 đổi quyền chỉ vì Thomas được mở lại với flag khác.
 
 Để Thomas điều phối qua Herdr trong phiên đã mở từ Herdr, dùng opt-in:
@@ -129,6 +129,39 @@ Thomas điều phối; BA giúp làm rõ nhu cầu; Quick Builder nhận việc 
 Quick Builder khác Builder nhận ticket nhãn quick. Sau khi tải contract, phiên chờ
 owner giao việc bằng cách kết thúc lượt, không chạy vòng sleep/poll hoặc tự nhặt việc cũ.
 
+## Phiên riêng qua endpoint native (6.0.3)
+
+Để chọn một daemon Codex đã kiểm chứng cho **phiên owner mới**:
+
+```sh
+python3 .codex/astragentic/launch.py thomas --project . --yolo \
+  --remote unix:///absolute/path/to/app-server-control.sock --dry-run
+```
+
+Bỏ `--dry-run` chỉ sau khi đối chiếu endpoint và checkpoint bàn giao. Đường dẫn socket
+lấy từ thông tin daemon thực tế, không suy từ tên project. Launcher chỉ kiểm tra đó
+là socket Unix hiện hữu; không tự khởi động daemon, cấp trust hay chứng minh quyền
+sở hữu UUID. Không truyền `--remote` thì hành vi launcher cũ giữ nguyên. Yolo là lựa
+chọn owner cho phiên mới; quyền ít hơn cần được đo riêng với endpoint đó.
+
+Thomas ghi endpoint đã chọn vào dispatch; worker mới và queue trả về dùng cùng
+endpoint. `queue --resume` chỉ dùng khi đã xác minh binding và được phép tiếp tục.
+Một tin báo Queued không phải ACK hoặc kết quả. Phiên bị owner dừng không được tự
+resume. Với phiên đã thuộc đúng daemon, TUI Herdr có thể attach bằng
+`codex resume --remote <endpoint> <UUID>`; kiểm tra UUID, cwd, model/quyền và không
+phát sinh lượt chạy thứ hai. Đóng tab không đồng nghĩa thread trong daemon đã dừng.
+
+Đã đo trên fixture CLI 0.167.0: hai Builder cùng chạy, kết quả về coordinator đã hết
+lượt, một follow-up; tin đến khi bận được xử lý sau lượt hiện tại; duplicate không
+lặp follow-up trong phép thử. Herdr attach giữ một writer PID và quyền, queue hiển
+thị kết quả trong TUI, đóng tab rồi archive thread idle có readback. Đây không phải
+bằng chứng migration phiên sản phẩm cũ. Recovery sau unloaded/crash/compaction vẫn
+chưa đo. Quy tắc pause/dedup là thủ tục, không phải runtime tự cưỡng chế.
+
+Sau update: giữ worker cũ và checkpoint, chạy doctor/dry-run; coordinator xác nhận
+thời điểm an toàn rồi hướng dẫn owner mở **phiên mới**, bind endpoint/UUID và đọc
+lại checkpoint. Không dùng `--last`, không tự reset/resume phiên cũ qua daemon khác.
+
 ## Giao việc, theo dõi và quyết định của owner
 
 Thomas dùng [DISPATCH.md](../../runtimes/codex/.codex/DISPATCH.md) được cài tại
@@ -149,7 +182,9 @@ Sandbox mặc định đã từ chối socket Herdr. Profile opt-in mới đã �
    tại worktree trước khi mở worker. Junior dùng worktree của Builder với một writer
    tại một lúc.
 2. Worker tự đọc `CODEX_THREAD_ID`; Thomas bind UUID với đúng pane/project. Follow-up
-   dùng `codex queue --thread UUID --message ...` với event ID duy nhất. Exit 0 chỉ
+   dùng route endpoint đã ghi trong DISPATCH; đường local mặc định dùng
+   `codex queue --thread UUID --message ...`, còn đường endpoint tường minh phải giữ
+   `--remote` ở cả hai chiều, với event ID duy nhất. Exit 0 chỉ
    là queue chấp nhận; cần ACK và kết quả. Không gửi hai đường đồng thời hoặc fallback
    mù. Nếu queue chắc chắn thất bại trước acceptance, dùng một Herdr fallback cùng
    event theo DISPATCH; timeout/accepted/ambiguous không cho phép replay.

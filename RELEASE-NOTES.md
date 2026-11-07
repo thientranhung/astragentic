@@ -1,3 +1,32 @@
+# Astragentic 6.0.3
+
+**Codex separate-session coordination on a verified native endpoint.** An explicit
+owner launcher `--remote unix:///absolute/socket` opt-in carries the selected endpoint
+into the bootstrap and native CLI. The dispatch recipe carries that recorded endpoint
+into new workers and both queue directions. Default launches stay unchanged. Existing
+socket validation is not proof of ownership; bind UUID/cwd/model/permissions and the
+actual endpoint before using queue --resume. Never migrate or auto-resume an old or
+owner-paused session merely because it appears idle.
+
+**Coordinator continuation and close-out.** Thomas owns pending review-result
+collection and the authorized follow-up when a worker awaits its decision. A blocked
+handoff records who continues, on what trigger, and the exact pending action. Before
+claiming full completion or refilling capacity, record every owned resource as released
+with readback, retained with reason/owner/checkpoint, or justified not applicable.
+Recipient checkpoint/end-turn behavior and product gates are preserved.
+
+Measured on CLI 0.167.0: disposable same-daemon two-Builder overlap, independent
+returns, one follow-up, procedural duplicate response, busy-recipient deferred
+processing, local-default routing, and same-endpoint Herdr TUI attachment/queue/detach.
+Pause/dedup remain procedures, not enforced runtime gates. Unloaded/crash/compaction
+recovery and migration of existing product sessions are not certified.
+
+Upgrade through the existing shared `astragentic-update-install` skill at a safe
+checkpoint. Use a verified endpoint for NEW sessions; installing files does not refresh
+or reset live sessions. Preserve old worker checkpoints and let the project coordinator
+schedule any new owner session. Claude payload, shared skill mirrors and personal
+configuration are unchanged. Validation and limits: docs/codex/RELEASE-VALIDATION.md.
+
 # Astragentic 6.0.2
 
 **Correct helper discovery and invocation guidance.** A retained worker startup

@@ -15,6 +15,28 @@ class LauncherTests(unittest.TestCase):
     def run_cli(self, *args, env=None):
         return subprocess.run([sys.executable, str(CLI), *args], text=True, capture_output=True, env=env)
 
+    def test_explicit_unix_endpoint_reaches_native_argv_without_permission_changes(self):
+        with tempfile.TemporaryDirectory() as d:
+            endpoint = Path(d) / 'codex socket'
+            with socket.socket(socket.AF_UNIX) as listener:
+                listener.bind(str(endpoint))
+                uri = 'unix://' + str(endpoint)
+                result = self.run_cli('thomas', '--project', str(ROOT), '--remote', uri, '--dry-run')
+                self.assertEqual(result.returncode, 0, result.stderr)
+                data = json.loads(result.stdout)
+                self.assertEqual(data['lifecycle_endpoint'], uri)
+                self.assertEqual(data['argv'][data['argv'].index('--remote') + 1], uri)
+                self.assertIn('both queue directions', data['argv'][-1])
+                self.assertNotIn('--dangerously-bypass-approvals-and-sandbox', data['argv'])
+                self.assertNotIn('resume', data['argv'])
+
+    def test_remote_rejects_unverified_address_shapes_and_non_socket(self):
+        for value in ['', 'unix://relative', 'unix:///nonexistent-astra.sock', 'ws://localhost:1234',
+                      'unix://' + str(CLI)]:
+            result = self.run_cli('thomas', '--project', str(ROOT), '--remote', value, '--dry-run')
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('existing Codex socket', result.stderr)
+
     def test_owner_models_and_no_config_or_permission_overrides(self):
         with tempfile.TemporaryDirectory(prefix='astra project ') as d:
             subprocess.run(['git','init','-q',d], check=True)
@@ -133,6 +155,22 @@ class LauncherTests(unittest.TestCase):
                 self.assertEqual('--dangerously-bypass-approvals-and-sandbox' in native, mode == 'yolo')
                 self.assertEqual(native[native.index('--cd') + 1], '/tmp/tree with spaces')
                 self.assertEqual(native[-1], 'Read /tmp/bootstrap.md')
+            endpoint = Path(d) / 'endpoint.sock'
+            with socket.socket(socket.AF_UNIX) as listener:
+                listener.bind(str(endpoint))
+                uri = 'unix://' + str(endpoint)
+                result = subprocess.run(['bash', '-c', script],
+                                        env={**env, 'WORKER_PERMISSION_MODE': 'yolo', 'CODEX_LIFECYCLE_ENDPOINT': uri},
+                                        text=True, capture_output=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                argv = json.loads(result.stdout)
+                self.assertEqual(argv[argv.index('--remote') + 1], uri)
+                self.assertIn('--dangerously-bypass-approvals-and-sandbox', argv)
+            result = subprocess.run(['bash', '-c', script],
+                                    env={**env, 'WORKER_PERMISSION_MODE': 'default', 'CODEX_LIFECYCLE_ENDPOINT': 'unix:///missing'},
+                                    text=True, capture_output=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse(result.stdout)
             for mode in ('', 'typo'):
                 result = subprocess.run(['bash', '-c', script], env={**env, 'WORKER_PERMISSION_MODE': mode},
                                         text=True, capture_output=True)

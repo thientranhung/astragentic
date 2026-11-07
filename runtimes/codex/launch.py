@@ -46,6 +46,7 @@ def main():
     parser.add_argument('role', choices=OWNER_ROLES)
     parser.add_argument('--project', required=True, type=Path, help='Git checkout in which the role will work')
     parser.add_argument('--orchestrator', type=Path, help='Explicit model assignment file; otherwise prefer the project Codex orchestrator')
+    parser.add_argument('--remote', help='Opt in to an already verified local Codex Unix endpoint (unix:///absolute/socket); opens a NEW owner session, never migrates an existing UUID')
     permissions = parser.add_mutually_exclusive_group()
     permissions.add_argument('--yolo', action='store_true', help='Explicitly bypass Codex approvals and sandbox for this owner session and authorized new CLI worker dispatches; does not grant new task actions or change personal configuration')
     permissions.add_argument('--herdr', action='store_true', help='Opt in to granting the Herdr API socket per launch using a native workspace permission profile; requires HERDR_ENV=1 and absolute HERDR_SOCKET_PATH naming an existing socket')
@@ -59,6 +60,9 @@ def main():
         if git.returncode:
             raise ValueError('project must be a Git checkout')
         project = Path(git.stdout.strip()).resolve()
+        if args.remote is not None:
+            if not args.remote.startswith('unix:///') or not Path(args.remote[7:]).is_socket():
+                raise ValueError('--remote requires unix:///absolute/path to an existing Codex socket; verify endpoint ownership separately')
         project_config = project / '.agents/orchestrator-for-codex.md'
         config = (args.orchestrator or (project_config if project_config.is_file() else ROOT / '.agents/orchestrator-for-codex.md')).resolve(strict=True)
         table = assignments(config)
@@ -105,8 +109,15 @@ def main():
             prompt += (' This project has no installed Astragentic overlay. The bundled role contract is available, '
                        'but native skill and helper discovery in this project has not been established. '
                        'Report missing capabilities before using them; source files alone do not register tools.')
+        if args.remote is not None:
+            prompt += (' Owner-selected Codex lifecycle endpoint: ' + json.dumps(args.remote) + '. '
+                       'Record and verify this endpoint and the actual new session UUID before coordination. '
+                       'For authorized separate-session dispatch, carry the explicitly selected endpoint into new worker CLI argv and both queue directions. '
+                       'Never resume a pre-existing session on this endpoint without its own ownership and continuation checks. ')
         argv = ['codex', '--cd', str(project), '--model', model,
                 '-c', 'model_reasoning_effort=' + json.dumps(effort)]
+        if args.remote is not None:
+            argv += ['--remote', args.remote]
         if args.yolo:
             argv.append('--dangerously-bypass-approvals-and-sandbox')
         if args.herdr:
@@ -124,7 +135,8 @@ def main():
         argv.append(prompt)
         if args.dry_run:
             print(json.dumps({'role': args.role, 'orchestrator': str(config), 'contract': str(contract),
-                              'overlay_installed': installed, 'worker_permission_mode': worker_mode, 'argv': argv}, ensure_ascii=False, indent=2))
+                              'overlay_installed': installed, 'worker_permission_mode': worker_mode,
+                              'lifecycle_endpoint': args.remote, 'argv': argv}, ensure_ascii=False, indent=2))
             return 0
         binary = shutil.which('codex')
         if not binary:

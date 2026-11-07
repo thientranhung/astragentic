@@ -42,6 +42,7 @@ Junior and cross-vendor policy:
 Current phase / last observed time:
 Spec revision / release decision (Shaper only):
 Report path / reviewed HEAD / validation:
+Close-out disposition / evidence path / retained resources and capacity impact:
 
 | Event ID | Direction | Purpose | Sent | ACK | Result |
 |---|---|---|---|---|---|
@@ -153,13 +154,24 @@ case "${WORKER_PERMISSION_MODE:?record default or yolo before launch}" in
   yolo) PERMISSION_ARGS=(--dangerously-bypass-approvals-and-sandbox) ;;
   *) echo "Unknown worker permission mode" >&2; exit 2 ;;
 esac
+ENDPOINT_ARGS=()
+# Set this only from the recorded owner-selected endpoint, never ambient inference.
+if [ -n "${CODEX_LIFECYCLE_ENDPOINT:-}" ]; then
+  case "$CODEX_LIFECYCLE_ENDPOINT" in
+    unix:///*) test -S "${CODEX_LIFECYCLE_ENDPOINT#unix://}" || exit 2 ;;
+    *) echo "Expected verified local Unix Codex endpoint" >&2; exit 2 ;;
+  esac
+  ENDPOINT_ARGS=(--remote "$CODEX_LIFECYCLE_ENDPOINT")
+fi
 herdr agent start "$DISPATCH_ID" --kind codex --pane "$PANE_ID" --timeout 30000 -- \
-  "${PERMISSION_ARGS[@]}" --cd "$WORKTREE" --model "$MODEL" -c "model_reasoning_effort=\"$EFFORT\"" "$BOOTSTRAP"
+  "${PERMISSION_ARGS[@]}" "${ENDPOINT_ARGS[@]}" --cd "$WORKTREE" --model "$MODEL" -c "model_reasoning_effort=\"$EFFORT\"" "$BOOTSTRAP"
 ```
 
 BOOTSTRAP names the absolute Codex role/common contract, orchestrator and Codex skill
 root, dispatch ID, durable brief path, worker permission mode and its owner-selection
-source. A Builder carries that same selection to an authorized Junior dispatch. Ask the worker to print its own
+source, plus the selected lifecycle endpoint when present. Clear the endpoint variable
+for the default route; do not inherit an unrelated shell value. A Builder carries
+the recorded selections to an authorized Junior dispatch. Ask the worker to print its own
 `CODEX_THREAD_ID` from a shell command, verify cwd/branch/base, then end the turn. It must not
 guess another session's UUID. Read the result with Herdr and bind it to this pane in
 the record. Thomas likewise obtains its own UUID from its own environment.
@@ -181,9 +193,100 @@ Do not create a temporary commit or check out the base SHA and call it the dirty
 
 ## Queue and observation
 
+### Separate-session native coordination
+
+When the owner selects separate Codex sessions, keep Thomas, each Builder, QA and
+reviewer as separately bound sessions. Native child helpers do not silently replace
+this topology. Use the selected orchestrator rows for model/effort and its capacity
+limit. Two Builders require independent worktrees, non-overlapping write-sets and a
+test environment that supports their concurrent work. Track each dispatch separately.
+
+Before using native resume, record the exact recipient UUID/cwd/role/pane, its
+model/effort/permission selection, lifecycle endpoint and continuation authority.
+Distinguish a normal ended turn from an owner pause: idle alone is not authorization
+to resume. If ownership or pause state is unknown, stop and reconcile it. Never start
+a second CLI process for a UUID already owned by a live session. Do not resume a
+thread through a different server merely because it was not found on this server.
+
+For a verified native endpoint that already owns the eligible recipient, send once:
+
+```sh
+codex queue --remote "$CODEX_ENDPOINT" \
+  --thread "$RECIPIENT_UUID" --message "$(cat "$MESSAGE_FILE")" --resume
+```
+
+The measured local route is `unix:///absolute/path/to/app-server-control.sock`.
+Use the endpoint's existing authentication configuration; an authenticated WebSocket
+endpoint additionally requires its configured `--remote-auth-token-env` name, never
+the token value in briefs or reports. Without `--remote`, Codex uses its local daemon path. Validate that
+path separately before adoption: success with an isolated remote endpoint does not
+prove a Herdr-launched local session will wake. Do not bootstrap/restart a shared
+daemon or broaden worker permissions as an implicit transport fallback.
+
+Capture exit code, stdout and stderr. `--resume` can warn about a failed resume while
+queue still exits successfully. Record queue acceptance, observed working transition,
+recipient ACK and verified artifact completion separately. Neither exit zero nor ACK
+is a completion gate. A sender sandbox must permit access to the selected endpoint;
+if denied, preserve the error and use the existing durable-report observation path.
+
+Each worker returns its event ID and artifact pointer to the recorded Thomas UUID.
+An eligible ended Thomas may be resumed through the same verified native route.
+For the remote branch, both directions must use the recorded endpoint and its
+authentication configuration. The local queue examples below do not apply to this
+branch. Include `--resume` only under the recipient eligibility checks above; do not
+silently send a remote session's return message through the local daemon.
+Thomas reconciles per-dispatch results and already-sent follow-ups before releasing
+the next authorized step; it must not wait for the other Builder unnecessarily or
+lose the other Builder's pending result. Duplicate messages must not repeat completed
+operations. This is an agent procedure, not a native exactly-once delivery guarantee.
+
+Roll out only lifecycle branches measured in an isolated fixture for that endpoint
+and permission mode. Loaded-ended, busy, unloaded and owner-paused are separate cases;
+do not infer one from another. Keep existing sessions and completed review evidence
+unchanged until the owner-authorized safe adoption checkpoint.
+
+For an already verified NEW disposable or owner-released daemon-owned session, a
+Herdr TUI can attach with `codex resume --remote "$CODEX_ENDPOINT" "$RECIPIENT_UUID"`.
+This attaches to the same endpoint; it is not permission to migrate an old independent
+TUI session. Verify the exact UUID/cwd, model/effort, effective permissions, unique
+writer ownership and absence of an extra turn. Read enough visible terminal lines
+to include the whole viewport when checking returned output. Closing the tab does
+not prove the daemon-owned thread stopped: read its lifecycle state, preserve the
+report, and archive only an owned idle/finished thread when cleanup is authorized.
+
+### Coordinator continuation while helpers or workers are pending
+
+When Thomas starts direct native helpers, record their returned handles, the reviewed
+artifact/revision, any worker paused for their result, and the next action Thomas owns.
+Use the available native collaboration wait/result tools to collect those helpers'
+returns and disposition the findings. A wait timeout is not completion or permission
+to respawn the review. Reconcile completed returns before requesting more work.
+
+If a worker is paused awaiting Thomas's review decision, collecting helper results
+and sending the authorized disposition remains Thomas's work. Do not end the turn
+with only "review in progress" or imply unattended progress without a verified
+continuation mechanism. Continue through result collection and the permitted worker
+handoff, or report the concrete blocker. Release only supported fixes within existing
+authority; an owner pause or owed gate still requires its actual decision/evidence.
+
+If interruption, unavailable tools or an external decision prevents continuation,
+save the pending handles/results, worker identity and pause reason, exact next action,
+and who will perform the next observation and on what trigger in the dispatch record.
+State explicitly when owner continuation is required; a saved checkpoint alone does
+not schedule a wake-up. On return, reconcile current results and prior send receipts
+before acting, so recovered results do not replay an already released follow-up.
+
+This is coordinator-owned observation, distinct from a recipient waiting for a new
+incoming queue message. Keep that recipient's checkpoint-and-end-turn rule. Do not
+add self-queue polling, sleep keepalive loops, automatic owner-pause resumption, or a
+custom scheduler to simulate continuation. These instructions are procedural, not an
+enforced runtime wake guarantee.
+
 Save each short message to a file. Include dispatch ID, unique event ID, sender,
 recipient role, purpose and artifact path/hash. Prefix it as agent coordination,
 not owner approval. Before sending, check the record for an existing event attempt.
+
+For the separately validated local/Herdr route (not the remote branch above):
 
 ```sh
 codex queue --thread "$WORKER_UUID" --message "$(cat "$MESSAGE_FILE")"
@@ -209,8 +312,10 @@ then fresh `agent get` and `agent read --source recent-unwrapped --lines 160`. A
 requires another observation of that same handle, not a duplicate dispatch. Idle/done
 alone never satisfies a ticket. Record blocked questions and request the actual decision.
 
-The worker sends ACK/questions/handback pointers back with `codex queue --thread
-<coordinator-UUID> --message <message>` where its permissions allow it. If queue cannot
+For that local route, the worker sends ACK/questions/handback pointers back with
+`codex queue --thread <coordinator-UUID> --message <message>` where its permissions
+allow it. Remote workers instead use the recorded remote endpoint/authentication
+in both directions, with resume eligibility checked as above. If queue cannot
 run inside its sandbox, it writes the durable report and prints its pointer; Thomas
 reads it through the observed pane. Do not broaden sandbox rights to force queue.
 Do not claim automatic wake-up in this fallback: Thomas must keep observing the worker.
@@ -245,12 +350,44 @@ known to belong to this worktree. Inspect tracked, untracked and ignored files b
 that is proven integrated or contains no unique work. Record retained resources and
 why they remain. Do not clear tracker claims on ambiguous cleanup or delivery.
 
+## Coordinator close-out before done or refill
+
+Integration/tracker closure and resource close-out are separate facts. Before reporting
+the dispatch fully done or refilling its capacity, Thomas must save a close-out section
+in the existing dispatch record; do not create a new lifecycle service or marker gate.
+Inventory all resources recorded for this dispatch, including Builder, QA and station
+resources, not only the main worker. Preserve reports/evidence first and apply the
+ownership, idle-state and dirty-file checks above before any release.
+
+| Resource / exact owned identity | Disposition | Evidence / retention reason | Follow-up owner / next checkpoint | Capacity impact |
+|---|---|---|---|---|
+| Herdr panes/tabs | released / retained / not applicable | | | |
+| Worktree-owned processes/dev stack | released / retained / not applicable | | | |
+| Worktrees, including station/snapshot | released / retained / not applicable | | | |
+| Owned branches | released / retained / not applicable | | | |
+
+Use one row per concrete resource where needed. `released` requires observed success
+and readback of absence/inactivity, not merely a command being issued. A shared,
+active, dirty, uncertain or unauthorized-to-remove resource is retained with its exact
+reason and follow-up owner/checkpoint; never force cleanup to fill the table. Mark
+not applicable only with a reason. Do not stop shared services or touch another ticket.
+
+An unresolved retention is not free capacity. If resources remain, report
+“integrated; resources retained” with their disposition, not unqualified close-out.
+Refill only independently available capacity after recording this disposition and
+rechecking conflicts/prerequisites; a documented retention need not block unrelated
+work. On resume, reconcile recorded dispositions against current state without
+replaying successful cleanup. These are coordinator instructions, not runtime enforcement.
+
 ## Resume permission selection
 
 Record the selected mode in the checkpoint before ending a turn. Resume the exact
 thread with the same recorded choice: for yolo use native
-`codex --yolo resume <thread-UUID>` from the recorded checkout; for default use
+`codex resume --dangerously-bypass-approvals-and-sandbox <thread-UUID>` from the recorded checkout; for default use
 `codex resume <thread-UUID>` with any explicitly selected scoped profile preserved.
+These bare examples are for the local route. For an explicitly bound endpoint,
+include its recorded `--remote <endpoint>` on resume; never move the UUID to a
+different endpoint or resume an owner-paused session implicitly.
 Do not assume a resumed process restores old CLI flags. If the owner revokes or
 narrows permissions, do not keep passing the old flag; reconcile the active session
 and checkpoint first. Changing argv in a record does not alter an already running
