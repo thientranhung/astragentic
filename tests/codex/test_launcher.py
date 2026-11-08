@@ -146,7 +146,7 @@ class LauncherTests(unittest.TestCase):
             env = {**os.environ, 'PATH': d + os.pathsep + os.environ['PATH'],
                    'DISPATCH_ID': 'worker-1', 'PANE_ID': 'w1:p1', 'WORKTREE': '/tmp/tree with spaces',
                    'MODEL': 'gpt-6.1-sol', 'EFFORT': 'medium', 'BOOTSTRAP': 'Read /tmp/bootstrap.md',
-                   'THOMAS_UUID': '01a1bb4e-972f-7f10-baf8-be8979a45637'}
+                   'THOMAS_UUID': '01a1bb4e-972f-7f10-baf8-be8979a45637', 'AGENT_NAME': 'builder-tra-1345'}
             bell = ['bash', '/tmp/tree with spaces/.codex/astragentic/turn-end.sh', 'worker-1',
                     '01a1bb4e-972f-7f10-baf8-be8979a45637']
 
@@ -166,6 +166,16 @@ class LauncherTests(unittest.TestCase):
                 self.assertEqual(native[-1], 'Read /tmp/bootstrap.md')
                 self.assertEqual(notify_of(native), bell)
                 self.assertNotIn('--resume', native)
+                # The Herdr display name comes from the naming table (6.0.7); the dispatch id stays the
+                # bell/record key. Nizzy's sidebar showed the raw id twice (owner, 2026-11-09).
+                self.assertEqual(argv[argv.index('start') + 1], 'builder-tra-1345')
+                self.assertNotIn('worker-1', argv[:argv.index('--')])
+            missing_name = {k: v for k, v in env.items() if k != 'AGENT_NAME'}
+            result = subprocess.run(['bash', '-c', script], env={**missing_name, 'WORKER_PERMISSION_MODE': 'default'},
+                                    text=True, capture_output=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse(result.stdout)
+            self.assertIn('AGENT_NAME', result.stderr)
             missing_uuid = {k: v for k, v in env.items() if k != 'THOMAS_UUID'}
             result = subprocess.run(['bash', '-c', script], env={**missing_uuid, 'WORKER_PERMISSION_MODE': 'default'},
                                     text=True, capture_output=True)

@@ -111,6 +111,26 @@ scheduler: verify the actual child argv and observed permissions when claiming i
 
 Check `HERDR_ENV=1`, current installed `herdr agent start --help`, and the project's
 explicit workspace ID from `herdr workspace list`. Never infer IDs from UI focus.
+Choose short display names separately from the durable `DISPATCH_ID`:
+
+| Worker | Tab label | Agent name |
+|---|---|---|
+| Builder (full/quick) | `ticket:TRA-1345` | `builder-tra-1345` |
+| Shaper | `spec:TRA-1345` | `shaper-tra-1345` |
+| QA | `qa:TRA-1345` | `qa-walk-tra-1345` (or `probe`/`verify`) |
+| Correctness review | `rev:TRA-1345:correct` | `review-correctness-tra-1345` |
+| Intent review | `rev:TRA-1345:intent` | `review-intent-tra-1345` |
+| Standards review | `rev:TRA-1345:standard` | `review-standards-tra-1345` |
+
+Use the actual ticket/spec ID; lowercase it in agent names. Set `TAB_LABEL` and
+`AGENT_NAME` from this table, adding a short distinguishing suffix for concurrent
+same-role/same-target sessions. Labels may truncate with client width: never parse
+them for identity or transport. Record both display names and returned opaque
+tab/pane IDs. Use the verified pane ID for `agent prompt/get/read/wait`; native
+queue still uses the verified thread UUID and endpoint. Keep `DISPATCH_ID` unchanged
+in records, event IDs, ACKs and bell argv. Reusing a reviewer for another target
+requires a new pinned review record; a display-name change is not a task release.
+
 For an isolated worker, use these native operations with the resolved values:
 
 ```sh
@@ -119,7 +139,7 @@ git worktree add -b "$TICKET_BRANCH" "$WORKTREE" "$BASE_SHA"
 
 When Herdr's native worktree API is the authorized creation surface, inspect its
 installed help and use `herdr worktree create --cwd <repo-parent-checkout> --branch
-<ticket-branch> --base <base-SHA> --path <worktree> --label <dispatch-id> --no-focus`.
+<ticket-branch> --base <base-SHA> --path <worktree> --label <tab-label> --no-focus`.
 Herdr rejects a linked worktree as the source; resolve the repository parent through
 its worktree inventory, not by guessing a directory. Record the returned workspace,
 tab and pane and reuse them instead of creating another tab below. Do not add
@@ -134,7 +154,7 @@ explicitly rather than silently overwriting it. Run the installer doctor there. 
 and helper TOMLs must be discoverable in the worker checkout, not only its parent.
 
 ```sh
-herdr tab create --workspace "$WORKSPACE_ID" --cwd "$WORKTREE" --label "$DISPATCH_ID" --no-focus
+herdr tab create --workspace "$WORKSPACE_ID" --cwd "$WORKTREE" --label "${TAB_LABEL:?from the display-name table}" --no-focus
 ```
 
 Read tab/pane IDs from the response and record them immediately. Select model/effort
@@ -177,7 +197,7 @@ fi
 # recorded lifecycle endpoint; the bell never adds --resume.
 BELL="$WORKTREE/.codex/astragentic/turn-end.sh"
 NOTIFY="notify=[\"bash\",\"$BELL\",\"$DISPATCH_ID\",\"${THOMAS_UUID:?read your own UUID first}\"${CODEX_LIFECYCLE_ENDPOINT:+,\"$CODEX_LIFECYCLE_ENDPOINT\"}]"
-herdr agent start "$DISPATCH_ID" --kind codex --pane "$PANE_ID" --timeout 30000 -- \
+herdr agent start "${AGENT_NAME:?from the display-name table, not DISPATCH_ID}" --kind codex --pane "$PANE_ID" --timeout 30000 -- \
   "${PERMISSION_ARGS[@]}" "${ENDPOINT_ARGS[@]}" --cd "$WORKTREE" --model "$MODEL" -c "model_reasoning_effort=\"$EFFORT\"" -c "$NOTIFY" "$BOOTSTRAP"
 ```
 
@@ -368,6 +388,32 @@ Resume an existing Codex session by its recorded UUID using the installed CLI's 
 interface. Never use --last. Recheck project/cwd and current artifact before continuing.
 
 ## Handoff, checks and cleanup
+
+### Review-to-QA continuation owned by Thomas
+
+This applies to direct helpers and separate reviewer sessions alike. After collecting
+the final required review, verify its target and disposition findings, then carry out
+the next authorized phase in the same turn. With no open review blocker, prepare QA:
+read `codex-dispatch-qa-walk`, pin the target/build inputs, resolve plan/consent/runtime
+requirements and obtain the required Builder/Junior source/build-write freeze ACK
+before releasing dirty-artifact QA. Review PASS is not QA PASS or publication authority.
+
+For each pending event reconcile the latest receipt into its dispatch row (retain
+the historical send/receipt pointers). Distinguish delivery ACK, task result and
+phase precondition. A delayed ACK for a result already verified is not itself a new
+gate. Never omit an independently required freeze/consent/owner decision. If a real
+precondition is missing, name the exact event, expected sender, next action and
+observation owner/trigger; issue the authorized request before waiting. Do not wait
+for an ACK to a disposition that was only saved locally and never sent. While one
+ticket is blocked, continue other authorized independent work within capacity.
+
+Before ending the review phase, preserve reports and reconcile reviewer resources.
+Close only owned finished reviewer panes/tabs under the existing cleanup rules,
+or retain each with a concrete next review target/checkpoint and capacity cost.
+"May need later" is not a next checkpoint. Preserve Builder worktrees/stacks needed
+for frozen QA. No forced cleanup, automatic owner-pause resume, duplicate dispatch,
+self-queue timer or new scheduler is authorized. A TURN-END bell is observation;
+it does not execute this phase transition or replace a missing precondition.
 
 Worker reports exact base/head, dirty status, changed paths, per-criterion evidence,
 validation commands/results, review findings/dispositions, applicable UI/codex-simplify/arm,

@@ -1,3 +1,32 @@
+# Astragentic 6.0.7
+
+**A Codex coordinator carries review into QA in the same turn.** On nizzy the Codex Thomas
+collected the last reviewer report for TRA-1344 at 02:54, wrote its disposition, answered a
+late ACK and ended its turn; the next coordinator action came at 06:43 when the owner asked
+twice. Gap 3 h 46 min, 0 of 26 pending ACK rows actually unanswered, 3 reviewer sessions held
+the whole time with no next checkpoint (docs/codex/STALL-TRA1345-2026-11-09.md, from the
+coordinator rollout; measured by the Codex builder pane, read-only). The 6.0.3 contract told
+Thomas to own collection and follow-up for "direct helpers" and never said what to do once
+the last required review is in. DISPATCH.md gains a review-to-QA continuation Thomas owns:
+verify the final review, reconcile each pending row into its latest receipt (a delayed ACK for
+a verified result is not a gate; a disposition saved locally and never sent has no ACK to
+wait for), prepare the pinned QA target and request the real freeze precondition, close or
+re-checkpoint owned reviewer panes. thomas.md applies the continuation to separate reviewer
+sessions and states that "QA pending" alone is not a stopping condition. No timer, no
+self-queue, no auto-resume: the bell stays an observation.
+
+**Codex Herdr tabs and agents get display names.** The dispatch recipe labelled the tab and
+named the agent with the raw dispatch id, so the sidebar read `tra1345-r003-correctness`
+twice while the Claude side reads `ticket:IN-315` over `builder-in-315`. DISPATCH.md now sets
+`TAB_LABEL` / `AGENT_NAME` from a table (`ticket:TRA-1345` / `builder-tra-1345`, `spec:`,
+`qa:`, `rev:TRA-1345:correct`); the dispatch id is unchanged in records, event ids, ACKs and
+the bell argv. Nothing in the Codex runtime reads a tab label (grep, 0 hits). The dispatch-
+block test asserts the agent name and refuses an unset `AGENT_NAME`; with the old line
+planted it fails on `'worker-1' != 'builder-tra-1345'`. Not measured: Herdr's actual label
+truncation width (the API does not expose the rendered sidebar).
+
+Codex suite 49/0; selftest unchanged. Claude payload untouched.
+
 # Astragentic 6.0.6
 
 **The reachability check now reads the adaptation prompt inside a project.** Check 3

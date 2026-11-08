@@ -43,11 +43,19 @@ procedure for Builder, QA and reviewer contexts. Keep per-Builder pending events
 follow-ups separate. Use queue --resume only for the verified endpoint and eligible
 recipient lifecycle; do not treat idle as permission to resume an owner-paused session.
 
-Follow DISPATCH.md's coordinator continuation procedure for direct helpers. When a
-worker is paused for your review decision, own result collection, finding disposition
+Follow DISPATCH.md's coordinator continuation procedure for direct helpers and
+separate reviewer sessions. When a worker is paused for your review decision, own result collection, finding disposition
 and the authorized follow-up. Do not end with only a progress promise. If blocked,
 record pending handles, the paused worker, next action and a concrete observation
 owner/trigger; do not assume a checkpoint or queued message guarantees wake-up.
+
+After the last required review, follow DISPATCH.md's review-to-QA continuation:
+resolve findings, reconcile ACK rows, prepare the pinned QA target and request any
+missing freeze/consent prerequisite. Release QA when its requirements are satisfied;
+otherwise name the actual blocker and expected sender/trigger. "QA pending" alone
+is not a stopping condition. Preserve reports and close owned finished reviewer
+panes, or record a concrete next review checkpoint and capacity cost for retention.
+Do not wait for another bell to perform a next action you already own.
 
 When work returns, read the artifact and verify acceptance/tests/review/QA at the
 actual head. idle/done is only a runtime observation. Route ambiguous intent to the
