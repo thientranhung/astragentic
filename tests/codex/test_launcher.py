@@ -40,7 +40,7 @@ class LauncherTests(unittest.TestCase):
     def test_owner_models_and_no_config_or_permission_overrides(self):
         with tempfile.TemporaryDirectory(prefix='astra project ') as d:
             subprocess.run(['git','init','-q',d], check=True)
-            for role,model,effort in [('thomas','gpt-6-astra','medium'),('ba','gpt-6-astra','high'),('quick-builder','gpt-6.1-sol','low')]:
+            for role,model,effort in [('thomas','gpt-6-astra','medium'),('ba','gpt-6-astra','high'),('quick-builder','gpt-6-astra','low')]:
                 result=self.run_cli(role,'--project',d,'--dry-run')
                 self.assertEqual(result.returncode,0,result.stderr)
                 data=json.loads(result.stdout); argv=data['argv']

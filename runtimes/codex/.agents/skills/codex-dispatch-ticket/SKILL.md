@@ -23,6 +23,17 @@ and criterion validation instead of inventing product surfaces. Missing quick/fu
 evidence returns to shaping. For Shaper,
 name effort and Spec checkpoint; for QA use codex-dispatch-qa-walk.
 
+Derive the scoped validation set from the project's BASE-owned plan and rules, not
+only the changed package or a previous brief. Record the plan source/base/hash and
+map each applicable obligation to an exact command/cwd and owner (Builder or station).
+Include affected app/entrypoint compile consumers of interface changes, generated
+artifact freshness, and required companion guards of a selected lint/test command.
+Keep the station's full integration commands separate; do not replay them in Builder.
+If the planner cannot address a dirty artifact, record that limit and reconcile the
+changed paths against BASE rules; do not invent a commit or call an old plan current.
+Recompute affected obligations after a scope expansion. Missing command mapping blocks
+handback; a narrow green test does not waive an omitted project-required guard.
+
 Before launch record every owed cross-vendor policy and its gate boundary through
 `codex-cross-vendor-review`. Policy resolution and adapter availability are distinct.
 With owner-authorized bounded pre-arm work, dispatch may proceed for the named code,

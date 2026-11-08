@@ -44,6 +44,7 @@ def owned_path(relative):
             or relative.startswith('.codex/agents/astragentic-') and relative.endswith('.toml')
             or relative in {'.codex/DISPATCH.md', '.codex/astragentic/launch.py',
                             '.codex/astragentic/helpers.py', '.codex/astragentic/transport.py',
+                            '.codex/astragentic/merge.py',
                             '.codex/astragentic/skill-map.json'})
 
 
@@ -86,7 +87,7 @@ def operate(project, action, apply=False):
             for source in (SOURCE / directory).rglob('*.md'):
                 payload[str(source.relative_to(SOURCE))] = source.read_bytes()
         payload['.codex/DISPATCH.md'] = (SOURCE / '.codex/DISPATCH.md').read_bytes()
-        for name in ('launch.py', 'helpers.py', 'transport.py', 'skill-map.json'):
+        for name in ('launch.py', 'helpers.py', 'transport.py', 'merge.py', 'skill-map.json'):
             payload['.codex/astragentic/' + name] = (SOURCE / name).read_bytes()
         for name, content in render(config if config.exists() else SOURCE / CONFIG).items():
             payload['.codex/agents/astragentic-' + name] = content.encode()

@@ -54,7 +54,7 @@ Kiểm tra tiện ích/installer:
 python3 -m unittest discover -s tests/codex -p 'test_*.py'
 ```
 
-Hiện có 34 tests đạt. Probe `python3 tests/codex/probe_overlay.py` chạy installer/doctor
+Hiện có 43 tests đạt. Probe `python3 tests/codex/probe_overlay.py` chạy installer/doctor
 thật và discover 21/21 skill; `python3 tests/codex/probe_context.py` đạt 10 assertions.
 Các probe có phạm vi riêng, không thay cho
 hành trình Thomas → worker → handback → QA → verify. Native explorer đã được spawn
@@ -66,3 +66,11 @@ Bằng chứng phát triển và hướng dẫn chi tiết nằm trong checkout 
 được đóng gói trong release Codex. Pilot đã nối Thomas → Shaper → Builder → ba
 Astra reviews → QA → verify. Queue trong sandbox lỗi pre-accept; Herdr fallback
 đã đo. Dùng launcher `--herdr` để opt-in socket profile, không ghi personal config.
+
+## Merge message preflight
+
+`.codex/astragentic/merge.py` validates required project trailers and the candidate HEAD
+before an explicitly authorized GitHub merge. It defaults to check-only. See
+`.codex/DISPATCH.md` for the exact command and optional project validator contract.
+This is a command boundary, not a hook intercepting direct `gh` use; it does not replace
+review, QA, station, owner permission or post-merge readback.

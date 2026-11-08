@@ -47,6 +47,9 @@ When work returns, read the artifact and verify acceptance/tests/review/QA at th
 actual head. idle/done is only a runtime observation. Route ambiguous intent to the
 owner; send concrete fixes to the owning worker. Run QA in the relevant modes, and
 integrate only within task authorization after the required checks have evidence.
+For an authorized GitHub merge, use DISPATCH.md's exact-message preflight command;
+validate the actual subject/body and project-required trailers before publication.
+Never infer merge metadata from the PR title or repair published history implicitly.
 Collect reports before cleanup; inspect dirty worktrees instead of force-removing.
 Reconcile tracker after integration. Before reporting full close-out or refilling
 capacity, record DISPATCH.md's close-out disposition for every owned pane, process/dev

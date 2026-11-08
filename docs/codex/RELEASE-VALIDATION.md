@@ -1,3 +1,25 @@
+# Kiểm chứng ứng viên 6.0.4
+
+Ngày: 2026-11-08. Baseline: v6.0.3 (`b696dd53`). Chưa suy ra đã publish/install
+chỉ từ VERSION hoặc nội dung tài liệu này.
+
+- 43/43 Codex tests PASS: parser Git thật trong repo tạm, command CLI và mock gh,
+  installer/doctor/uninstall, local distribution, launcher, helper và transport.
+- Bảy merge tests bao gồm thiếu/rỗng/trùng trailer, validator từ chối/sửa message,
+  sai HEAD, payload subject/body/SHA/repo chính xác, response chưa merged và lỗi mơ hồ
+  không retry. Không merge GitHub thật.
+- Independent Astra review phát hiện đường gh pr merge có thể autoqueue; đã thay bằng
+  immediate REST PUT với repo/host/SHA rõ ràng. Astra follow-up PASS sau sửa, 7/7 tests.
+- Shared codex-arm twins bằng nhau, owner Astra selection giữ nguyên. Reachability và
+  whitespace đạt. Shared installer phát hiện model ID prose bị hiểu nhầm là skill;
+  đã sửa prose, không bỏ checker hay thêm exception.
+- Full package selftest, disposable exact-candidate install/upgrade và publish scope
+  được ghi trong release-preparation packet riêng. Public tagged-install chỉ có thể
+  xác nhận sau publication; kết quả phải có trong release handoff/GitHub release.
+- Không chạy lại lifecycle fixtures vốn không đổi, không động Etsy worker/config,
+  không repair merge metadata đã publish. BASE scoped-map, QA membership và retirement
+  là quy trình; wrapper mới chỉ enforce bên trong lệnh của nó, không có global hook.
+
 # Kiểm chứng phát hành 6.0.3
 
 Ngày: 2026-11-07. Baseline: 6.0.2 (`cf583c0`).

@@ -26,6 +26,13 @@ silently exercise a fresh HEAD checkout in place of the dirty artifact.
 
 ## Modes and mandatory coverage
 
+Before comparing displayed counts, derive expected membership independently from the
+requirements and fixture inputs. For each filter/status/tab record included record IDs,
+excluded IDs and why (including empty/sentinel/cancelled cases where applicable). Check
+actual identities against that oracle, then badge/list/total/pagination consistency.
+Three wrong rows and badge three are still wrong. If fixture provenance or semantic
+requirements cannot establish the oracle, report a coverage gap instead of PASS.
+
 - Walk: compare repeated counts/statuses/dates across screens; test exact-record
   deeplinks, including cold/auth redirects; follow end-of-journey links. Exercise
   ticket States and applicable loading/empty/error/permission conditions. Use DOM

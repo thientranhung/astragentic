@@ -55,6 +55,14 @@ at shaping startup. Resolve the base to a SHA before launch, not a moving branch
 
 ## Verified thread identity
 
+Herdr environment pane/tab IDs are hints, not verified bindings. Before advertising a
+return address, compare live `herdr pane get <explicit-id>` cwd and the pane transcript
+with this session. If `--current` follows a stale environment ID, it repeats the error;
+focus/title alone also cannot prove identity. Reconcile the raw thread UUID against
+its own session metadata and current transcript before binding it to the live pane.
+Record a mismatch and retain the verified binding; never send a probe to an unrelated
+pane to discover who owns it or silently rewrite shared runtime configuration.
+
 When authoring a checkpoint, report or outbound message, obtain self identity in that
 same shell operation from `CODEX_THREAD_ID`; do not type or copy a UUID from narrative
 text. Validate syntax and reject nil UUIDs before writing identity metadata. For example:
@@ -350,7 +358,44 @@ known to belong to this worktree. Inspect tracked, untracked and ignored files b
 that is proven integrated or contains no unique work. Record retained resources and
 why they remain. Do not clear tracker claims on ambiguous cleanup or delivery.
 
+## Exact merge-message boundary
+
+Before an owner-authorized GitHub merge, prepare the subject and body from project
+policy, including its required trailers. Use the installed wrapper below from the
+verified candidate checkout. This command validates message/HEAD and does not publish
+unless `--execute` is present. Supply every project-required trailer; `Ledger` here is
+an example, not a universal project policy. If the project requires semantic message
+checks, provide `--validator /absolute/project-owned-executable`: it receives the full
+message file as its sole argument and must exit zero without changing it.
+
+```sh
+python3 .codex/astragentic/merge.py --project "$CANDIDATE_CHECKOUT" \
+  --repo "$GITHUB_OWNER_REPO" --pr "$PR_NUMBER" --head "$REVIEWED_HEAD" --subject "$MERGE_SUBJECT" \
+  --body-file "$MERGE_BODY_FILE" --require-trailer Ledger
+```
+
+After all review/QA/station and owner authorization requirements are satisfied, add
+`--execute` to the same command. It revalidates and sends the exact subject/body and expected head SHA through
+`gh api` to GitHub.com REST immediate merge (`PUT /repos/OWNER/REPO/pulls/N/merge`).
+The explicit repo/host prevent ambient GH_REPO/GH_HOST from redirecting the request.
+It never enables auto-merge, enqueues work, bypasses protection or cleans branches.
+Queue-required branches need their own project procedure; a refusal here is a blocker. A nonzero/ambiguous merge outcome requires remote readback, never blind retry.
+On success also read back published commit/message/tree before ticket-done and cleanup.
+Do not use this route for a different merge strategy without a supported procedure.
+
+This is enforcement inside this wrapper only, not a global hook or a substitute for
+project gates. Direct `gh pr merge` bypasses it and is not this Codex procedure. A
+missing required project validator is a blocker, not permission to omit it. Preserve
+an existing project's stricter merge command instead if it already enforces the exact
+message and head; document that binding during adaptation.
+
 ## Coordinator close-out before done or refill
+
+A compact delta handback can reference an immutable prior checkpoint by path/hash and
+list only changed artifact pins, new event/ACK/result receipts, invalidated/carried
+coverage and the next action with owner/trigger. Never replace the original evidence
+or carry a verdict across changed behavior without explicit scope reconciliation.
+This reduces repeated narrative; it does not schedule a wake-up.
 
 Integration/tracker closure and resource close-out are separate facts. Before reporting
 the dispatch fully done or refilling its capacity, Thomas must save a close-out section

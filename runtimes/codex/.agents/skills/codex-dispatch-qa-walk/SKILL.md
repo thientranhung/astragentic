@@ -34,6 +34,8 @@ qa model row and separate dispatch identity; the dirty-worktree route is an expl
 exception to fresh-checkout creation, with no QA source-write ownership.
 
 Read the returned matrix, not only the verdict. Verify target identity, P0/P1 coverage,
-mandatory mode checks, evidence and declared gaps. Save reports outside disposable
+mandatory mode checks, evidence and declared gaps. For filtered/status surfaces,
+require the requirement-derived positive AND negative membership oracle and actual
+record identities; matching badge/list totals alone cannot establish acceptance. Save reports outside disposable
 checkouts and preserve them in the project under authorization. A different target
 requires new coverage. QA output never authorizes production mutations or integration.

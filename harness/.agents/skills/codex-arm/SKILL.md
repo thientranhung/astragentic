@@ -57,9 +57,20 @@ range header below):
 ```bash
 CC="$CLAUDE_PLUGIN_ROOT/scripts/codex-companion.mjs"
 { echo "arm range: $COMMIT_COUNT commits, $FILE_COUNT files changed ($BASE..HEAD)"
-  node "$CC" adversarial-review --background --base "$BASE" <focus words>   # prints a job id
+  node "$CC" adversarial-review --background --model gpt-6-astra --base "$BASE" <focus words>   # prints a job id
 } | tee "$OUT"
 ```
+
+**Model policy (owner-selected): every arm pass uses Astra (model ID gpt-6-astra) explicitly**, at
+spec, ticket and slice scope, including a second pass and any permitted raw fallback.
+Do not inherit the Codex default model or silently substitute Sol when Astra is at
+capacity or unavailable. Record `cross-vendor arm: NOT RUN — Astra unavailable` with
+the actual error; changing the selected model requires an explicit owner decision.
+Companion 1.0.6 accepts `--model` for both review commands even though its help omits
+that option. Its review parser does not accept `--effort`; do not borrow that flag
+from the separate `task` command. If using plain `review` without focus, also pass
+`--model gpt-6-astra`. Record the requested model in the arm log; only claim the
+actual model verified when session metadata or runtime evidence confirms it.
 
 Plugin root: `~/.claude/plugins/cache/openai-codex/codex/<version>`. Plain `review --background
 --base "$BASE"` takes no focus text. **Poll in the foreground in short increments; do not wait
@@ -90,9 +101,11 @@ The findings have a declared shape in the plugin's `schemas/review-output.schema
 `verdict`, `summary`, `findings[]` of `severity / title / body / file / line_start / line_end /
 confidence / recommendation` — so fold by field rather than by parsing prose.
 
-Where the plugin is genuinely unavailable, the working raw form is plain `codex exec` with the
-range named in the prompt, not `codex exec review`, in the same brace group piped to `tee "$OUT"`;
-`codex-arm` in `.agents/skills/` carries it and the measurements behind it.
+Where the plugin is genuinely unavailable, use plain `codex exec --model gpt-6-astra`
+with the exact reviewed base/head and owner intent in the prompt, not `codex exec review`.
+Keep the same range header and `tee "$OUT"` log. Use the project-approved permission
+mode and require a completed final verdict tied to the reviewed artifact. This transport
+fallback must not change the model or bypass an Astra capacity/access error.
 
 ### Bind it to the reviewed head, and fail closed
 

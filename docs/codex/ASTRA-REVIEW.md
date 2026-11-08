@@ -60,3 +60,12 @@ local được ghi rõ, route endpoint phải giữ --remote. Maintainer kiểm 
 không gọi đó là một vòng review độc lập mới. Review không thay thế full regression,
 selftest, exact candidate upgrade hay public-install smoke. Claude/shared payload
 không đổi; pause/dedup và continuation vẫn là thủ tục, không phải runtime gate.
+
+## Patch 6.0.4
+
+Independent Astra source review: một medium về gh pr merge có thể tự schedule khi
+branch dùng merge queue. Đã sửa command boundary thành immediate REST PUT, truyền
+repo/host/head SHA và exact message; response phải có merged=true cùng commit SHA.
+Astra follow-up PASS, 7/7 merge tests; không có live GitHub mutation. Installer
+install/doctor/uninstall và preservation checks đạt. Scoped-check/QA/retirement prose
+không được coi là enforcement. Review không cấp quyền publish hay downstream install.

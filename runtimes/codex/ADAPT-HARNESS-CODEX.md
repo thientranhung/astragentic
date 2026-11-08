@@ -112,6 +112,13 @@ required unresolved setup choices are visible.
 
 ## 4. Validate and hand back
 
+Bind project-owned validation in the adaptation report: BASE plan entrypoint, scoped
+Builder checks and their companion guards, app/entrypoint compile consumers, generated
+freshness checks, and separate station commands. Do not flatten station commands into
+every Builder brief. Bind required merge trailers and any existing message-validator
+executable (input: complete message file; exit zero means accepted). Do not invent a
+project validator or claim the Codex wrapper intercepts direct GitHub commands.
+
 Run candidate `install.py doctor --project <absolute-project-root>`. Run installed
 `.codex/astragentic/launch.py thomas --project <absolute-project-root> --dry-run`
 with Python 3; inspect the selected model/effort and startup argv. Use another role

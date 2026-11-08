@@ -1,3 +1,44 @@
+# Astragentic 6.0.4
+
+**Validate the actual merge message before publication.** A downstream merge omitted
+its required Ledger trailer and was correctly refused by ticket-done after the merge
+had already been published. The Codex overlay now includes an explicit, check-only-by-
+default merge command. It validates required project trailers, the reviewed HEAD and
+an optional project-owned message validator, then sends the exact message and expected
+SHA through GitHub.com's immediate REST merge endpoint only with `--execute`. It does
+not schedule auto-merge, bypass branch protection, retry ambiguous outcomes or repair
+published history. Direct commands bypass this boundary; it is not a global hook.
+
+**Catch scoped validation and acceptance omissions earlier.** Codex dispatch and
+implementation map BASE-owned obligations to Builder versus station commands, including
+app compile consumers, generated freshness and required companion guards. QA derives
+positive and negative membership from requirements/fixture inputs before comparing
+counts. Removed tests need a behavior/replacement disposition. These are agent procedures,
+not new automatic scanners or proof that future sessions obey them.
+
+**Use Astra for the Claude cross-vendor arm.** The owner-selected codex-arm recipe now
+passes `--model gpt-6-astra` on every pass and permitted raw fallback. No silent Sol
+substitution on capacity errors. Both shared skill copies remain identical; other
+Claude role/settings behavior and personal configuration are unchanged.
+
+**Every Codex role runs gpt-6-astra.** The orchestrator table ships all 14 rows on
+`gpt-6-astra` with efforts unchanged (owner decision 2026-11-08); the earlier
+Astra/Sol/Luna/Terra split was an unmeasured starting point and is retired. Installed
+helper TOMLs are regenerated from that table on apply. Launcher and helper tests 17/17,
+Codex suite 43/43 on the released tree.
+
+Compact delta handbacks retain immutable evidence and pending follow-up ownership.
+Herdr environment IDs must be reconciled with the live pane and own thread evidence;
+`--current` alone can repeat an inherited wrong ID. Existing helper-discovery,
+continuation, owner-pause and resource-closeout rules remain in force.
+
+Upgrade via the shared install/update skill, then adapt project scoped checks and
+required merge trailers/validator. Preserve project owner policies and active worker
+checkpoints. Install/adaptation precede any coordinator restart; a restart alone does
+not install files. Source validation: 43 Codex tests and independent Astra review;
+live GitHub merge is not measured. Full release/package checks and public-install
+results must be reported separately at publication. See docs/codex/RELEASE-VALIDATION.md.
+
 # Astragentic 6.0.3
 
 **Codex separate-session coordination on a verified native endpoint.** An explicit

@@ -30,6 +30,11 @@ the unwanted state is reachable. Assign high (data loss/security/silently wrong 
 medium (broken behavior or verification gap), low, false, or undecidable with needed
 evidence. Severity is impact, not fix cost. Group surviving shared root causes while
 keeping per-axis verdicts. Missing-test claims require searching and reading tests.
+For removed tests, independently reconcile the behavior-retirement inventory against
+production behavior and replacement assertions. For validation, compare actual command
+receipts to the BASE-owned scoped obligation map; do not infer a required guard ran
+because a nearby lint command passed. For interface changes inspect executable wiring
+and generated consumers, not only the package that declares the interface.
 
 Route unambiguous in-scope defects to patch and rerun covering checks; ambiguous owner
 intent to decision_needed; pre-existing or undecidable findings to explicit defer.

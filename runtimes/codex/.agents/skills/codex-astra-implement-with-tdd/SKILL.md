@@ -18,6 +18,12 @@ Mock only actual system boundaries such as external services/time/randomness.
 A source-string assertion or a mock-call count alone does not prove the user behavior.
 Do not weaken assertions, skip tests or alter fixtures merely to make green.
 
+When deleting or replacing tests, record each removed behavior, its requirement,
+whether production still supports it, and the replacement test or explicit retirement
+reason. A file or component rename is not evidence the behavior is retired. Preserve
+independent link/accessibility/empty/limit guards when removing obsolete derivation
+assertions from the same file. Review the deletion diff, not only the green remainder.
+
 If Junior is enabled and allowed, Builder owns the red tests; delegate only bounded
 green implementation through `codex-dispatch-junior` while pausing checkout writes. Read back Junior's diff and
 rerun the criteria. Otherwise implement directly.
@@ -32,6 +38,11 @@ Keep unfinished slices explicit rather than claiming a complete ticket from one 
 
 Before handback inspect the actual diff and evaluate each criterion plus Must not
 change. Run the brief's named checks, recording argv/cwd/exit and output artifact.
+Reconcile those commands with the BASE-owned obligation mapping from
+`codex-dispatch-ticket`, including impacted executable compile consumers, generated
+freshness and cheap companion guards. Run the mapped Builder checks before handback
+and normal commit hooks; full station checks remain station-owned. A new delta needs
+an updated mapping and fresh affected checks, not a duplicate full-suite replay.
 Report coverage gaps, pre-existing failures and justified TDD exemptions separately.
 Stop for a write-set expansion, dependency change or product decision requiring
 new authority; continue independent authorized criteria while waiting.

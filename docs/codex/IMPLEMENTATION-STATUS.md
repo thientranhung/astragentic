@@ -1,4 +1,4 @@
-# Trạng thái Astragentic Codex 6.0.3
+# Trạng thái Astragentic Codex 6.0.4
 
 Khung vận hành Codex độc lập với Claude; dùng chung skill install/update và entrypoint
 stage → adaptation. Có bảy role, 20 skill Codex và một skill cập nhật chung, năm helper
@@ -6,7 +6,8 @@ TOML cùng bảng 14 model assignment. Hướng dẫn: [OPERATIONS.md](OPERATION
 
 | Phạm vi | Bằng chứng và giới hạn |
 |---|---|
-| Installer / distribution | 36 tests: stage chung, apply Claude/Codex, upgrade local tag, giữ owner config, chặn drift/collision, uninstall giữ shared skill không thuộc Codex |
+| Installer / distribution | 43 tests: stage chung, apply Claude/Codex, upgrade local tag, giữ owner config, chặn drift/collision, uninstall giữ shared skill không thuộc Codex |
+| Merge message | Check-only CLI, exact required trailers/HEAD; explicit REST merge only with execute. Mock gh boundary + real local Git/installer tested; no live merge, no global hook |
 | Discovery | Native Codex catalog 21/21, không thiếu; không phải phép thử model tự chọn skill |
 | Model / helpers | Một bảng cấu hình cho launcher/helper; lệch bảng thì dừng. Model access phụ thuộc tài khoản của project |
 | Pilot tích hợp | Thomas → Shaper/release → Builder → ba Astra review → QA → verify đã chạy trong fixture; QA suite và oracle đều 4/4, không drift |
