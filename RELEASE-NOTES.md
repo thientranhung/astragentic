@@ -1,3 +1,33 @@
+# Astragentic 6.0.6
+
+**The reachability check now reads the adaptation prompt inside a project.** Check 3
+accepts three reachers for a shipped skill: a role contract, another skill, or the
+adaptation prompt. The script looked for that prompt at `prompts/ADAPT-HARNESS.md` and at
+`ADAPT-HARNESS.md` under the root under test, which are the package's home and a staged
+release's. An adopted project has it only at `.astraler/releases/<applied>/ADAPT-HARNESS.md`,
+so in every project the prompt was never read while the verdict's scope line still claimed
+it. The first skill named by the prompt alone, `astragentic-update-install` (6.0.0),
+passed the package and failed the project: inception reported
+`[FAIL 3] skill 'astragentic-update-install' is reached by nothing` after applying 6.0.5
+from 5.1.2 (its ADAPTATION-REPORT.md, 2026-11-08), and nizzy's gate is green only because
+its own AGENTS.md routes to the skill. The script now reads every staged copy of the prompt, applied version and candidate
+both, the same two releases the ownership manifest already reads: install.sh stamps only on a
+conflict-free apply, so §6's gate can run while applied-version still names the old release. Thomas's contract (Claude and Codex) also names the skill at the moment it is used:
+the owner says a new release exists or asks which version is installed.
+
+Measured: 2 of 2 adopters on 6.0.x carry a local AGENTS.md route for the skill; the 6.0.5
+checker on a project-layout fixture of the 6.0.5 payload exits 1 with that one FAIL 3, the
+6.0.6 checker exits 0 on the same tree. Selftest gains a project-layout case (payload at
+the root, release staged beside it, prompt only in the release dir, a fixture skill the
+prompt alone names) that is green with the prompt, red once it is removed, and green again
+when only the CANDIDATE release's prompt names it; run against the 6.0.5 checker those cases
+fail (220 passed, 3 red: the two cases and staging, which runs the suite). Selftest 231/0. Thomas's contract lost 30 words of restated prose (the Quick Builder
+parenthetical, the orchestrator-default clause, the board sentence) to stay inside its word
+budget after the new Load row; no rule changed. Not fixed here, batched: in a project layout checks 9 and 10
+derive `pkg_root` as the project's parent directory, so their `prompts/` and README
+surfaces are dead and check 10 walks sibling repos for basenames (chưa đo on a live
+project). Codex overlay, mod, hooks unchanged.
+
 # Astragentic 6.0.5
 
 **A Codex worker now rings TURN-END.** Codex-to-Codex coordination had one bell short of

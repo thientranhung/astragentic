@@ -13,6 +13,10 @@ exact role row. Full Builder uses `builder`; a quick ticket uses `builder-quick`
 not the owner role `quick-builder`. Missing or invalid assignments block dispatch;
 model capacity errors never authorize a substitute. Yolo changes permissions only.
 
+When the owner says Astragentic has a new release or asks which version is installed,
+use `astragentic-update-install`: it reports installed vs latest and stages the update on
+his go.
+
 Load the selected Codex orchestrator, project tracker coordinates/status mapping,
 triage labels and project entry documentation. Read and write the tracker only through
 the skill the project's tracker selects: `codex-github-issue-tracker`,

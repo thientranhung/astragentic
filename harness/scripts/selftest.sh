@@ -1396,6 +1396,54 @@ says "$out" "names 'some-project-stage-server'" \
   && bad "check 4 project vocabulary" "the plug was declared and the token is still reported" \
   || ok "check 4 accepts .astraler/project/not-a-skill.txt"
 
+# 3 — PROJECT layout reads the adaptation prompt from the staged release. The checker looked
+# for ADAPT-HARNESS.md at `<ROOT>/prompts/` and `<ROOT>/`, which are the package's and a staged
+# release's homes; an adopted project has it at `.astraler/releases/<applied>/` only. So in every
+# project check 3 ran without the prompt while the verdict's scope line still claimed it, and the
+# first skill the prompt alone names (`astragentic-update-install`, 6.0.0) passed here and failed
+# downstream (inception, 2026-11-08, first 5.1.x -> 6.0.x apply). The suite never saw it because
+# every reachability fixture is package layout. This one is project layout: payload at the root,
+# the release staged beside it, the prompt ONLY in the release dir, and a fixture skill that the
+# prompt alone names. Green with the prompt in place, red the moment it is removed — both halves,
+# because a surface that is claimed and never read is exactly the defect.
+PRJ="$TMP/rxprj"; rm -rf "$PRJ"; mkdir -p "$PRJ/.astraler/releases/9.9.9" "$PRJ/.astraler/state"
+cp -R "$RX/harness/." "$PRJ/"; cp -R "$RX/harness" "$PRJ/.astraler/releases/9.9.9/harness"
+cp "$RX/prompts/ADAPT-HARNESS.md" "$PRJ/.astraler/releases/9.9.9/ADAPT-HARNESS.md"
+cp "$RX/README.md" "$RX/check-requirements.sh" "$PRJ/" 2>/dev/null
+echo 9.9.9 > "$PRJ/.astraler/state/applied-version"
+# the project's entry doc names the two scripts the prompt tells it to run, as adopters do
+printf '# fixture\nRun `scripts/check-reachability.py` and `scripts/docs-staleness-audit.sh` before a release.\n' > "$PRJ/AGENTS.md"
+PS="prompt-only""-fixture-skill"
+for d in "$PRJ" "$PRJ/.astraler/releases/9.9.9/harness"; do
+  mkdir -p "$d/.claude/skills/$PS"
+  printf -- '---\nname: %s\ndescription: named by the adaptation prompt and nothing else\n---\n' "$PS" > "$d/.claude/skills/$PS/SKILL.md"
+done
+printf '\nThe payload also ships `%s`.\n' "$PS" >> "$PRJ/.astraler/releases/9.9.9/ADAPT-HARNESS.md"
+out="$(python3 "$S/check-reachability.py" "$PRJ" 2>&1)"
+says "$out" "project layout" && says "$out" "All reachability checks passed" \
+  && ok "check 3 reads the staged release's ADAPT-HARNESS.md in a project layout" \
+  || bad "check 3 project prompt" "a skill the adaptation prompt names is reported unreached in a project: $(printf '%s' "$out" | grep FAIL | head -3)"
+rm "$PRJ/.astraler/releases/9.9.9/ADAPT-HARNESS.md"
+out="$(python3 "$S/check-reachability.py" "$PRJ" 2>&1)"
+says "$out" "skill '$PS' is reached by nothing" \
+  && ok "check 3 goes red once the staged prompt is gone" \
+  || bad "check 3 project prompt (red half)" "with no prompt anywhere the fixture skill still passed — the surface is not being read"
+# ...and mid-upgrade: applied-version still names the OLD release, whose prompt does not name
+# the skill, while CANDIDATE names the new one, whose prompt does. install.sh stamps only on a
+# conflict-free --apply; otherwise ADAPT-HARNESS §7 stamps AFTER §6's gate runs. Reading the
+# applied prompt alone leaves a skill the new prompt names red in exactly that window, so every
+# staged prompt the project is answerable for is read, as the ownership manifest already is.
+mkdir -p "$PRJ/.astraler/releases/8.8.8"
+cp "$RX/prompts/ADAPT-HARNESS.md" "$PRJ/.astraler/releases/8.8.8/ADAPT-HARNESS.md"
+cp -R "$RX/harness" "$PRJ/.astraler/releases/8.8.8/harness"
+echo 8.8.8 > "$PRJ/.astraler/state/applied-version"; echo 9.9.9 > "$PRJ/.astraler/CANDIDATE"
+cp "$RX/prompts/ADAPT-HARNESS.md" "$PRJ/.astraler/releases/9.9.9/ADAPT-HARNESS.md"
+printf '\nThe payload also ships `%s`.\n' "$PS" >> "$PRJ/.astraler/releases/9.9.9/ADAPT-HARNESS.md"
+out="$(python3 "$S/check-reachability.py" "$PRJ" 2>&1)"
+says "$out" "All reachability checks passed" \
+  && ok "check 3 reads the CANDIDATE release's prompt while applied-version still names the old one" \
+  || bad "check 3 mid-upgrade prompt" "the new release's prompt was not read before the stamp: $(printf '%s' "$out" | grep FAIL | head -3)"
+
 fi
 # A path is never built from unvetted input: a role name with a separator must not escape.
 out="$(printf '%s' '{"hook_event_name":"SessionStart","source":"compact","agent_type":"../../etc/passwd"}' \

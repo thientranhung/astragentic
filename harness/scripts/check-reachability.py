@@ -72,10 +72,44 @@ SKILL_GLOBS = [
     os.path.join(PAYLOAD, ".agents", "skills", "*", "SKILL.md"),
 ]
 README = os.path.join(ROOT, "README.md")
-PROMPT = os.path.join(ROOT, "prompts", "ADAPT-HARNESS.md")
-if not os.path.isfile(PROMPT):
-    # install.sh flattens prompts into the immutable release root.
-    PROMPT = os.path.join(ROOT, "ADAPT-HARNESS.md")
+
+def read(path):
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return fh.read()
+    except OSError:
+        return ""
+
+# The releases this project is answerable for: the applied one AND the candidate, not the first
+# found (4.1.0). An upgrade whose conflicts block the stamp leaves applied-version at the old
+# release while the new payload is already in the tree; reading only the old manifest makes
+# every skill the new release added look project-owned. Empty in package layout.
+STAGED_VERSIONS = []
+for _candidate in (os.path.join(ROOT, ".astraler", "state", "applied-version"),
+                   os.path.join(ROOT, ".astraler", "CANDIDATE")):
+    if os.path.isfile(_candidate):
+        _v = read(_candidate).strip()
+        if _v and _v not in STAGED_VERSIONS:
+            STAGED_VERSIONS.append(_v)
+
+# The adaptation prompt lives in THREE places, one per layout: `prompts/` in this package, the
+# root of a staged release (install.sh flattens prompts/ there, and this suite runs inside one),
+# and — in an adapted project — `.astraler/releases/<applied>/ADAPT-HARNESS.md`, never at the
+# repo root. Until 6.0.6 the third was not on this list, so in every adopted project check 3
+# ran without the prompt while the verdict's scope line still claimed it: a skill the prompt
+# alone names passed the package and failed the project (measured on the first 5.1.x -> 6.0.x
+# adopter, 2026-11-08, `astragentic-update-install`).
+#
+# EVERY copy that exists is read, not the first. An upgrade whose conflicts block the stamp
+# leaves applied-version at the old release while CANDIDATE names the new one, and §6's gate
+# runs before §7's stamp: read only the applied prompt and a skill the NEW prompt alone names
+# is unreached in exactly that window — the union harness_owned() already takes, for the same
+# reason.
+PROMPTS = [c for c in [os.path.join(ROOT, "prompts", "ADAPT-HARNESS.md"),
+                       os.path.join(ROOT, "ADAPT-HARNESS.md")]
+           + [os.path.join(ROOT, ".astraler", "releases", _v, "ADAPT-HARNESS.md")
+              for _v in STAGED_VERSIONS]
+           if os.path.isfile(c)]
 
 # 5.0.0: the payload ships every flow skill as `astra-*`; no plugin prefix is in use. The
 # strip stays so a project that adds its own plugin can list its prefix here.
@@ -110,13 +144,6 @@ def payload_missing(ref):
 findings = []
 def fail(check, msg, detail=""):
     findings.append((check, msg, detail))
-
-def read(path):
-    try:
-        with open(path, encoding="utf-8") as fh:
-            return fh.read()
-    except OSError:
-        return ""
 
 # --- inventory --------------------------------------------------------------------------
 # Runtime supplements (builder-claude.md, etc.) are role extensions, not
@@ -156,15 +183,8 @@ def harness_owned():
     # added counts as project-owned, and check 5 reports the new role files as read by no pane —
     # exactly when the operator is reconciling and needs the check right (measured downstream on
     # the 4.0.1 apply). The union is correct on a clean tree too: a stamped release has no candidate.
-    versions = []
-    for candidate in (os.path.join(ROOT, ".astraler", "state", "applied-version"),
-                      os.path.join(ROOT, ".astraler", "CANDIDATE")):
-        if os.path.isfile(candidate):
-            v = read(candidate).strip()
-            if v and v not in versions:
-                versions.append(v)
     owned = set()
-    for v in (versions or ["*"]):
+    for v in (STAGED_VERSIONS or ["*"]):
         for sub in (".claude", ".agents"):
             owned |= {os.path.basename(os.path.dirname(q)) for q in glob.glob(os.path.join(
                 ROOT, ".astraler", "releases", v, "harness", sub, "skills", "*", "SKILL.md"))}
@@ -364,7 +384,7 @@ for phase, holders in sorted(owned.items()):
 # --- 3. SKILL -> REACHED ----------------------------------------------------------------
 reachers = {"contract " + r: t for r, t in roles.items()}
 reachers.update({"skill " + n: t for n, (_, t) in skills.items()})
-prompt_text = read(PROMPT)
+prompt_text = "\n".join(read(c) for c in PROMPTS)
 if prompt_text:
     reachers["the adaptation prompt"] = prompt_text
 # A project routes its own skills from its entry docs, and the harness's from contracts.

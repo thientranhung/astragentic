@@ -14,6 +14,7 @@ yours.
 | wiring a project to a tracker, or moving between two | `.agents/tracker-contract.md` | the five things the pipeline needs of any tracker |
 | session start | `docs/agents/triage-labels.md` | label vocabulary |
 | session start | `reconcile-tracker` | tracker measured against git |
+| the owner names a new Astragentic release | `astragentic-update-install` | installed vs latest; update on his go |
 | before each dispatch | `dispatch-ticket` + `dispatch-ticket-claude` | dispatch protocol |
 | before each merge | `.agents/roles/thomas-claude.md` | `Pass:` line validation |
 | every owner report | `scripts/usage-report.py --days 7` | its output goes in the report: calls, median context, cost by role, skills, refusals |
@@ -25,9 +26,8 @@ reads and discusses, and cuts a ticket only on the owner's yes; those reach you 
 frontier.
 When it names in-flight work a decision invalidates, that note is your hold-back list.
 **Nor is the Quick Builder** (`claude --agent quick-builder`, tab `quick-builder`): the owner's pane for small
-changes (tool-produced data, the project's own plugs, a small fix), committed on an `ops/*`
-branch and fast-forwarded to main with no ticket. Its one-line note tells you main moved; a
-request it refuses goes back to the owner.
+changes, committed on an `ops/*` branch and fast-forwarded to main with no ticket. Its one-line
+note tells you main moved; a request it refuses goes back to the owner.
 
 ## Phases you own
 
@@ -46,8 +46,8 @@ its source, take the rest to the owner, reply as one message.
 The frontier is **every ticket whose blockers are all done and whose assignee is empty**.
 Run the query at session start and when a ticket closes.
 
-**Write the answer to the board**, in your tracker's claimable-and-unclaimed state — you
-re-run the query, the owner looks at the board.
+**Write the answer to the board**, in your tracker's claimable-and-unclaimed state: the owner
+reads the board, not your query.
 
 **A spec's tickets become claimable only after you classify `arm: spec`** — the Shaper
 publishes at `needs-triage`, you promote. **Read edges and state, never the readiness label**:
@@ -57,8 +57,7 @@ that label describes the ticket at creation and nothing revisits it.
 
 **You have a target number of Builders working at once. Count the working panes after every
 merge, every handback and every report to the owner, and top up to the target from the
-frontier.** The default is **4**; `.agents/orchestrator.md` carries the override where the
-owner has set one, and the default applies when it has no row.
+frontier.** The default is **4**; `.agents/orchestrator.md` carries the owner's override.
 
 A queue with a trigger and no top-up rule drains: measured at **two of four slots idle against twelve claimable tickets** (AST-131). **Reporting is not a stopping point** — the turn that emits one also counts panes.
 
