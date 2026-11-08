@@ -1,3 +1,35 @@
+# Astragentic 6.0.5
+
+**A Codex worker now rings TURN-END.** Codex-to-Codex coordination had one bell short of
+the Claude side: Thomas learned that a Builder's turn had ended only by polling Herdr.
+Codex 0.167.0 runs a configured `notify` command when a turn ends, outside the agent
+sandbox, settable per invocation. The dispatch recipe now adds
+`-c notify=["bash", <worktree>/.codex/astragentic/turn-end.sh, DISPATCH_ID, THOMAS_UUID[, endpoint]]`
+to every worker argv; the installed `turn-end.sh` checks the event type and UUID shapes,
+drops repeated (dispatch, worker, turn) keys, stays silent while
+`.astraler/codex/state/bell-off` exists, and queues one `TURN-END …` line to the
+coordinator, carrying `--remote` only when the dispatch recorded an endpoint and never
+`--resume`. Measured 2026-11-08 on a two-session fixture: 10/10 bells fired, 10/10
+queued, 10/10 woke an idle coordinator, 0 duplicates, median 9.6 s from turn end to
+the coordinator's reply (min 6.3, max 14.5; docs/codex/NOTIFY-BELL-PROBE.md). TURN-END is
+a received signal, not completion: Thomas still reads the record and artifact, and the
+bounded Herdr wait remains the fallback. The Codex builder then measured the two open cases on the same CLI, 15 workers, 0 duplicates (docs/codex/NOTIFY-BUSY-HERDR-PROBE.md): a coordinator busy in a 10 s command received the queue 5/5 and answered in the next turn, median 15.3 s from queue return; a worker running under the launcher's `--herdr` permission profile rang 5/5 locally and 5/5 through the recorded `unix://` endpoint, median 2.8 s and 3.1 s. Not measured: owner pause or Esc, unloaded or compacted coordinator, more than five rounds per branch.
+
+**Every shipped Codex skill is now named by a caller.** Counting SKILL.md reads in the 29
+Codex sessions run inside the nizzy checkout (05–08 Nov) showed `codex-github-issue-tracker`
+loaded 21 times although no contract named it, and six skills loaded 0 times
+(docs/codex/NIZZY-SKILL-USE-2026-11-08.md). Thomas's contract now names the three tracker
+skills (selected by the project's tracker) and `codex-reconcile-tracker` at the step that
+already said "reconcile tracker"; Builder names `codex-astra-ux` for flow changes beside
+`codex-astra-ui`; the Codex adaptation prompt names `codex-bootstrap-glossary` and
+`codex-batch-triage` as the same two adoption phases the Claude prompt runs. Nothing was
+deleted: 0 reads in 29 sessions says unobserved, not useless.
+
+Codex suite 49 tests (6 new for the bell; the dispatch-block test now renders the notify
+TOML and fails when THOMAS_UUID is unset). Two planted defects (dedup removed, pause
+marker ignored) were each named by exactly one test before the fix was restored. Claude
+payload, mod, hooks and roles unchanged.
+
 # Astragentic 6.0.4
 
 **Validate the actual merge message before publication.** A downstream merge omitted

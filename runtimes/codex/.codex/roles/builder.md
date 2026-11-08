@@ -12,7 +12,9 @@ worker's checkout. Keep the dispatch checkpoint current across compaction/resume
    implement and run the named checks. Record actual red and green output/exit codes.
    A brief may exempt TDD with a concrete reason; do not manufacture a red result.
 2. For UI work, read the project's design guidance before implementation and run
-   `codex-astra-ui` on rendered changed surfaces and the ticket's Glance/States. Fold findings
+   `codex-astra-ui` on rendered changed surfaces and the ticket's Glance/States. When the
+   ticket changes a user flow (actors, journeys, states), run `codex-astra-ux` on that flow
+   first; it judges the journey, `codex-astra-ui` inspects the rendered surface. Fold findings
    before review. No renderable environment means a documented coverage gap.
 3. `codex-astra-review`: correctness, owner intent and project standards on the explicit
    base/head. Verify findings, fix supported defects and send disputes to Thomas.

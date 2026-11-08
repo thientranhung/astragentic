@@ -32,6 +32,10 @@ class InstallTests(unittest.TestCase):
         merge = self.project / '.codex/astragentic/merge.py'
         self.assertEqual(merge.read_bytes(), (ROOT / 'runtimes/codex/merge.py').read_bytes())
         subprocess.run([sys.executable, str(merge), '--help'], check=True, capture_output=True)
+        bell = self.project / '.codex/astragentic/turn-end.sh'
+        self.assertEqual(bell.read_bytes(), (ROOT / 'runtimes/codex/turn-end.sh').read_bytes())
+        owned = json.loads((self.project / '.codex/astragentic/manifest.json').read_text())['files']
+        self.assertIn('.codex/astragentic/turn-end.sh', owned)
         mapping = self.project / '.codex/astragentic/skill-map.json'
         self.assertEqual(len(json.loads(mapping.read_text())), 20)
         config = self.project / '.agents/orchestrator-for-codex.md'
@@ -53,6 +57,7 @@ class InstallTests(unittest.TestCase):
         self.assertFalse((self.project / '.codex/astragentic/launch.py').exists())
         self.assertFalse(mapping.exists())
         self.assertFalse(merge.exists())
+        self.assertFalse(bell.exists())
 
     def test_shared_skill_reuses_legacy_copy_without_claiming_or_removing_it(self):
         source = ROOT / 'harness/.agents/skills/astragentic-update-install/SKILL.md'

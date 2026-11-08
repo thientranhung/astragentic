@@ -7,6 +7,7 @@ Overlay Codex riêng, không thay payload Claude. Trong release đã stage, đ�
 |---|---|
 | `.codex/roles/` | Bảy vai trò và common contract, độc lập với Claude |
 | `.agents/skills/` | 20 entrypoint `codex-*` và skill chung `astragentic-update-install`; mapping cài tại `.codex/astragentic/skill-map.json` |
+| `turn-end.sh` | bell TURN-END: Codex `notify` của worker queue một dòng về Thomas khi lượt kết thúc (cài tại `.codex/astragentic/turn-end.sh`) |
 | `.agents/orchestrator-for-codex.md` | 14 model/effort assignment do owner kiểm soát |
 | `.codex/DISPATCH.md` | Quy trình native Herdr/Git/queue và record Markdown |
 | `launch.py` | Mở Thomas, BA, Quick Builder với model/effort đúng bảng |
@@ -54,7 +55,7 @@ Kiểm tra tiện ích/installer:
 python3 -m unittest discover -s tests/codex -p 'test_*.py'
 ```
 
-Hiện có 43 tests đạt. Probe `python3 tests/codex/probe_overlay.py` chạy installer/doctor
+Hiện có 49 tests đạt. Probe `python3 tests/codex/probe_overlay.py` chạy installer/doctor
 thật và discover 21/21 skill; `python3 tests/codex/probe_context.py` đạt 10 assertions.
 Các probe có phạm vi riêng, không thay cho
 hành trình Thomas → worker → handback → QA → verify. Native explorer đã được spawn

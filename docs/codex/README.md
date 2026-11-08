@@ -3,7 +3,7 @@
 Harness gọn dựa trên Markdown, native Codex và Herdr: bảy role contract, 20 skill Codex và một skill install/update chung,
 bảng 14 model assignment, launcher, helper và installer riêng. **Luồng chính đã chạy
 đầu-cuối**: Thomas → Shaper/release → Builder → ba reviewer Astra → QA → verify.
-Suite hiện tại 43 tests đạt; QA fixture 4/4 không drift. Bắt đầu theo OPERATIONS.md; xem bảng
+Suite hiện tại 49 tests đạt; QA fixture 4/4 không drift. Bắt đầu theo OPERATIONS.md; xem bảng
 trạng thái để phân biệt cấu hình đã đo, policy mỗi project và các nhánh chưa benchmark.
 
 Đọc theo thứ tự:

@@ -145,7 +145,16 @@ class LauncherTests(unittest.TestCase):
             binary.chmod(0o755)
             env = {**os.environ, 'PATH': d + os.pathsep + os.environ['PATH'],
                    'DISPATCH_ID': 'worker-1', 'PANE_ID': 'w1:p1', 'WORKTREE': '/tmp/tree with spaces',
-                   'MODEL': 'gpt-6.1-sol', 'EFFORT': 'medium', 'BOOTSTRAP': 'Read /tmp/bootstrap.md'}
+                   'MODEL': 'gpt-6.1-sol', 'EFFORT': 'medium', 'BOOTSTRAP': 'Read /tmp/bootstrap.md',
+                   'THOMAS_UUID': '01a1bb4e-972f-7f10-baf8-be8979a45637'}
+            bell = ['bash', '/tmp/tree with spaces/.codex/astragentic/turn-end.sh', 'worker-1',
+                    '01a1bb4e-972f-7f10-baf8-be8979a45637']
+
+            def notify_of(native):
+                values = [native[i + 1] for i, value in enumerate(native) if value == '-c' and native[i + 1].startswith('notify=')]
+                self.assertEqual(len(values), 1, native)
+                return tomllib.loads('v=' + values[0].partition('=')[2])['v']
+
             for mode in ('default', 'yolo'):
                 result = subprocess.run(['bash', '-c', script], env={**env, 'WORKER_PERMISSION_MODE': mode},
                                         text=True, capture_output=True)
@@ -155,6 +164,14 @@ class LauncherTests(unittest.TestCase):
                 self.assertEqual('--dangerously-bypass-approvals-and-sandbox' in native, mode == 'yolo')
                 self.assertEqual(native[native.index('--cd') + 1], '/tmp/tree with spaces')
                 self.assertEqual(native[-1], 'Read /tmp/bootstrap.md')
+                self.assertEqual(notify_of(native), bell)
+                self.assertNotIn('--resume', native)
+            missing_uuid = {k: v for k, v in env.items() if k != 'THOMAS_UUID'}
+            result = subprocess.run(['bash', '-c', script], env={**missing_uuid, 'WORKER_PERMISSION_MODE': 'default'},
+                                    text=True, capture_output=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse(result.stdout)
+            self.assertIn('THOMAS_UUID', result.stderr)
             endpoint = Path(d) / 'endpoint.sock'
             with socket.socket(socket.AF_UNIX) as listener:
                 listener.bind(str(endpoint))
@@ -166,6 +183,7 @@ class LauncherTests(unittest.TestCase):
                 argv = json.loads(result.stdout)
                 self.assertEqual(argv[argv.index('--remote') + 1], uri)
                 self.assertIn('--dangerously-bypass-approvals-and-sandbox', argv)
+                self.assertEqual(notify_of(argv[argv.index('--') + 1:]), bell + [uri])
             result = subprocess.run(['bash', '-c', script],
                                     env={**env, 'WORKER_PERMISSION_MODE': 'default', 'CODEX_LIFECYCLE_ENDPOINT': 'unix:///missing'},
                                     text=True, capture_output=True)

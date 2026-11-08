@@ -171,9 +171,18 @@ if [ -n "${CODEX_LIFECYCLE_ENDPOINT:-}" ]; then
   esac
   ENDPOINT_ARGS=(--remote "$CODEX_LIFECYCLE_ENDPOINT")
 fi
+# TURN-END bell (6.0.5): the worker's own Codex `notify` hook queues one line to Thomas
+# when each worker turn ends. THOMAS_UUID is the coordinator's own UUID, read from its
+# own environment before dispatch, never guessed. The optional endpoint is the same
+# recorded lifecycle endpoint; the bell never adds --resume.
+BELL="$WORKTREE/.codex/astragentic/turn-end.sh"
+NOTIFY="notify=[\"bash\",\"$BELL\",\"$DISPATCH_ID\",\"${THOMAS_UUID:?read your own UUID first}\"${CODEX_LIFECYCLE_ENDPOINT:+,\"$CODEX_LIFECYCLE_ENDPOINT\"}]"
 herdr agent start "$DISPATCH_ID" --kind codex --pane "$PANE_ID" --timeout 30000 -- \
-  "${PERMISSION_ARGS[@]}" "${ENDPOINT_ARGS[@]}" --cd "$WORKTREE" --model "$MODEL" -c "model_reasoning_effort=\"$EFFORT\"" "$BOOTSTRAP"
+  "${PERMISSION_ARGS[@]}" "${ENDPOINT_ARGS[@]}" --cd "$WORKTREE" --model "$MODEL" -c "model_reasoning_effort=\"$EFFORT\"" -c "$NOTIFY" "$BOOTSTRAP"
 ```
+
+The per-worker `-c notify` replaces any global `notify` from the owner's config for that
+worker session only; the coordinator's own session keeps the owner's hook.
 
 BOOTSTRAP names the absolute Codex role/common contract, orchestrator and Codex skill
 root, dispatch ID, durable brief path, worker permission mode and its owner-selection
@@ -313,6 +322,26 @@ that same event once with `herdr agent prompt <pane-id> <message>`; record the f
 queue attempt and fallback attempt separately. This is not successful queue delivery.
 Never use this fallback on timeout, an accepted/queued response, or an ambiguous
 outcome; inspect the same session/checkpoint instead of replaying the task.
+
+### TURN-END bell
+
+A worker launched with the bell above makes Codex run `turn-end.sh` when its turn
+ends. The script checks the event type, the UUID shapes and a per-(dispatch, worker,
+turn) seen-list under `.astraler/codex/state/`, then sends exactly once:
+`codex queue --thread "$THOMAS_UUID" --message "TURN-END dispatch=… worker=… turn=… last=…"`,
+with `--remote` only when the dispatch recorded an endpoint. It logs every send and skip
+to `.astraler/codex/state/turn-end.log`. Measured 2026-11-08 on CLI 0.167.0: 10/10
+bells reached an idle coordinator, median 9.6 s from turn end to the coordinator's
+reply (docs/codex/NOTIFY-BELL-PROBE.md).
+
+TURN-END is a received signal, not completion and not a handback: on waking, read the
+dispatch record, the worker's artifact pointer and the pane as before. A missing bell
+is not failure; the bounded Herdr wait below remains the fallback and the only path
+when the worker's sandbox cannot run `codex queue`. The bell cannot tell an owner
+pause from an idle coordinator: before pausing Thomas, create
+`.astraler/codex/state/bell-off` and the script stays silent until it is removed.
+Repeated turn IDs are dropped by the script; a repeated dispatch ID with a new turn is
+a new turn of the same worker, never a reason to dispatch again.
 
 Observe a new working transition after sending. Once working has been observed, use
 bounded `herdr agent wait "$PANE_ID" --until idle --until done --until blocked --timeout 30000`,

@@ -14,8 +14,10 @@ not the owner role `quick-builder`. Missing or invalid assignments block dispatc
 model capacity errors never authorize a substitute. Yolo changes permissions only.
 
 Load the selected Codex orchestrator, project tracker coordinates/status mapping,
-triage labels and project entry documentation. If missing, report exactly what is
-unknown; do not fabricate a tracker or model. Query actual blockers and assignees to
+triage labels and project entry documentation. Read and write the tracker only through
+the skill the project's tracker selects: `codex-github-issue-tracker`,
+`codex-jira-issue-tracker` or `codex-linear-issue-tracker`. If missing, report exactly
+what is unknown; do not fabricate a tracker or model. Query actual blockers and assignees to
 form the frontier. Read relevant memory rules when installed, evidence only as needed.
 
 BA and Quick Builder are owner-opened roles; do not dispatch them. An effort needing
@@ -51,7 +53,7 @@ For an authorized GitHub merge, use DISPATCH.md's exact-message preflight comman
 validate the actual subject/body and project-required trailers before publication.
 Never infer merge metadata from the PR title or repair published history implicitly.
 Collect reports before cleanup; inspect dirty worktrees instead of force-removing.
-Reconcile tracker after integration. Before reporting full close-out or refilling
+Reconcile the tracker after integration with `codex-reconcile-tracker`. Before reporting full close-out or refilling
 capacity, record DISPATCH.md's close-out disposition for every owned pane, process/dev
 stack, worktree and branch (including QA/station resources): released with readback,
 retained with reason/owner/next checkpoint, or justified not applicable. Retained

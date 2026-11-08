@@ -106,6 +106,13 @@ substitute a model/provider to bypass a missing choice. A provider access probe
 requires the owner's existing authorization and should avoid unnecessary spend.
 Record inaccessible or untested access explicitly.
 
+Two adoption phases are Thomas's, in this order, because the first feeds the second
+(the Claude adaptation runs the same two): `codex-bootstrap-glossary` seeds
+`GLOSSARY.md` from the terms the code already uses, each term citing its file and
+marked `UNREVIEWED` until the owner confirms it; `codex-batch-triage` runs only where
+the repository arrives with an existing backlog, and its closures wait for the owner.
+An empty repository skips both.
+
 Completion: every relevant project rule and owner choice is preserved or has an
 explicit disposition, the Codex entrypoint reaches self-contained contracts, and
 required unresolved setup choices are visible.
