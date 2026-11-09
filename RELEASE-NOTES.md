@@ -1,3 +1,31 @@
+# Astragentic 6.1.1
+
+Staged on main, not tagged: VERSION stays 6.1.0 until the owner's go.
+
+**A turn end with 0 running beside a finished agent waits 5 s before it rings.** Field report from inception on
+6.1.0/Orca (2026-11-10): two Builders "parked on idle sub-agents", "both needed a Thomas steer". Measured on the
+Builder transcripts: the awaited lens's result was queued before the Stop and started the next turn 6 ms after it
+(IN-333 18:50:43.648Z → .654Z; IN-334 the same second); the panes' first own action came +3.7 s and +18.2 s; the
+steers landed +15.3 s and +20.2 s, on panes already working. Across both projects since 5.1.2: 81 TURN-ENDs carried
+the 5.1.2 idle line, 23 beside words that said "wait", 20 matched a stop, and 20 of 20 were woken by the awaited
+agent's own result or task-notification before any steer; 7 steers, all after the wake; 0 real parks since
+TRA-1321. Same shape on IN-259…IN-313 under Herdr, so not Orca. Working named teammates read `running` in the
+agent list (5 of 5 ListAgents calls on IN-333), so the hold engages; the bell rang in the gap after the last one
+finished. The mod now holds a 0-running turn end with an idle roster for `TURN_END_GRACE_MS` (5 s;
+`ASTRA_TURN_END_GRACE_MS` for the selftest) and drops it when the main loop starts a turn inside the grace; the
+line it carries afterwards reads "nothing woke it in the 5 s after the turn end", a measured fact in place of the
+old forecast. A real park rings 5 s later than before. Planted: idle roster + turn start inside the grace → no send;
+idle roster + nothing → one send after the grace with the new line; a running lens still holds without arming the
+grace; a list the engine cannot give still sends at once. thomas.md § Steer and builder-claude.md § Background
+work say the same in prose. The grace arms on an idle roster only: 0-running bells with `ended` and no `idle`
+(151 inception, 55 nizzy) carried wait-words 12 times, every one a backgrounded Bash or Monitor job (the PARKED
+case, woken by its task-notification), none an awaited fork. A turn end cancelled inside the grace writes no
+`last_turn_end_at`: the board keeps the pane's prior row and the owed check reads the turn end that does ring.
+Owed before the tag: the grace live in one fixture pane (a bell ≈5 s after the Stop with the new line; a teammate
+result inside the grace and no bell) — the selftest's fake handle cannot show whether `$` and `setTimeout` outlive
+the hook in the engine; and whether the Codex coordinator's Stop hook has the same race (`chưa đo`). Audit:
+`docs/audit/2026-11-10-610-field-incidents.md` (I-1 nizzy worktree collision runbook gap, report only; I-2 this).
+
 # Astragentic 6.1.0
 
 **One host per session: a session started in Orca follows Orca's dispatch and never runs `herdr`; one

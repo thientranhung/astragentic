@@ -119,7 +119,10 @@ agent — the hold does not see it, so a turn that ends on one reports TURN-END 
 still running; that is the PARKED case above, and the cure is the foreground. A `roster`
 or idle seat in ListAgents is not work: a finished agent stays listed and never wakes you, so a
 turn that ends unheld has nothing of yours running — continue, do not wait for a notice
-(nizzy 2026-11-01: one Builder parked 374 min on five finished review seats). Never
+(nizzy 2026-11-01: one Builder parked 374 min on five finished review seats). The one exception
+is the agent that finished while you were still talking: its result is already queued and starts
+your next turn by itself (measured 6 ms after the Stop, 20 of 20), which is why ending the turn
+on a `running` lens is right and polling ListAgents between its messages is waste. Never
 `ScheduleWakeup`: it is `/loop`'s tool, it refuses without a `prompt`, and a heartbeat it arms
 keeps waking an idle pane after your handback. The mod refuses it in a dispatched pane
 (measured 2026-10-27: 3 of 4 Builder panes reached for it, one rang for 30 minutes after

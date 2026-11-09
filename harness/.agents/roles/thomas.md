@@ -113,7 +113,7 @@ The kind); an unlabelled ticket goes back to the cutter unsent. A quick ticket
 launches from the `builder-quick` row and owes no marker at merge. A handback saying the work
 outgrew the label is a relabel to `full` and a fresh brief, never a steer.
 
-**Steer** the Builder directly via SendMessage. A pane's status is a bell; the verdict is the diff and the tests. A TURN-END that says it waits on agents while its `Agents:` line reads 0 running is parked: send it on. A junior pane (`dispatch-junior`) is the Builder's; its commits arrive in the handback, trailered `Implemented-by:`.
+**Steer** the Builder directly via SendMessage. A pane's status is a bell; the verdict is the diff and the tests. A TURN-END that says it waits on agents while its `Agents:` line reads 0 running (sent only after 5 s unwoken, 6.1.1) is parked: send it on. A junior pane (`dispatch-junior`) is the Builder's; its commits arrive in the handback, trailered `Implemented-by:`.
 
 ## Review
 

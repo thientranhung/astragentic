@@ -1208,6 +1208,14 @@ async function wakeFromRecord($: any, root: string, bell: (text: string) => void
 // Whether this session's main turn is running (turn.start … turn.complete). Module-level so
 // the bell functions below are plain declarations, as the engine's reader requires.
 let isBusy = false
+// A TURN END WITH 0 RUNNING AND A FINISHED AGENT WAITS A MOMENT (6.1.1). Measured on two projects
+// since 5.1.2: 81 TURN-ENDs carried the idle line, 23 beside words that said "wait", and 20 of
+// the 20 that matched a stop were woken by the awaited agent's own result — queued before the
+// Stop, delivered 6 ms after it — before any steer; the 7 steers all landed on a pane already
+// working (inception IN-333/IN-334, 2026-11-09). The bell is held this long and dropped when the
+// main loop starts a turn inside it; a real park (nizzy TRA-1321, 374 min) rings 5 s later.
+const TURN_END_GRACE_MS = 5_000
+let pendingTurnEnd: ReturnType<typeof setTimeout> | null = null
 // A CEILING ON A DISPATCHED PANE'S CONTEXT (4.0.4). Builders run the whole flow in one context
 // and the engine's window is 1M, so nothing trimmed: measured on one project over one night,
 // 4,800 Builder calls at a median 400–550k tokens of context each, 2.3B cache-read tokens
@@ -1261,13 +1269,26 @@ async function liveAgents($: any): Promise<Array<{ description: string; status: 
 // as running, ended its turn "to wait for the notification", and its TURN-END carried only its
 // words; the dispatcher repeated them and the pane sat 374 min. An idle teammate never wakes
 // its parent; the count that says so comes from the mod, never from the model.
-async function agentLine($: any): Promise<string> {
+async function agentLine($: any, graceMs: number): Promise<string> {
   let list: any[]
   try { list = (await $.agent.list()) ?? [] } catch { return 'Agents: list unavailable' }
   const n = (...st: string[]) => list.filter((a: any) => st.includes(String(a.status))).length
   const running = n('pending', 'running', 'waiting'), idle = n('idle'), ended = n('completed', 'failed', 'killed')
   const parts = [`${running} running`, idle ? `${idle} idle` : '', ended ? `${ended} ended` : ''].filter(Boolean)
-  return `Agents: ${parts.join(', ')}${running === 0 && idle > 0 ? ' — an idle teammate does not wake this pane; nothing of its own is running' : ''}`
+  // 6.1.1: this line goes out only after the grace, so "nothing woke it" is a measured fact, not
+  // a forecast — the finished agent's own result, had it been queued, would have started a turn.
+  return `Agents: ${parts.join(', ')}${running === 0 && idle > 0 ? ` — nothing of this pane's own is running, and nothing woke it in the ${Math.round(graceMs / 1000)} s after the turn end; an idle teammate never does` : ''}`
+}
+
+// The agents of this session that have finished and sit idle: a finished agent's result may still
+// be queued for this pane when its turn ends (see TURN_END_GRACE_MS).
+async function idleAgents($: any): Promise<number> {
+  try { return ((await $.agent.list()) ?? []).filter((a: any) => a.status === 'idle').length } catch { return 0 }
+}
+
+async function turnEndGraceMs($: any): Promise<number> {
+  const v = Number((await $.env.get('ASTRA_TURN_END_GRACE_MS').catch(() => '')) ?? '')
+  return Number.isFinite(v) && v > 0 ? v : TURN_END_GRACE_MS
 }
 
 function boardLine(rows: BoardRow[], now: number): string {
@@ -1355,6 +1376,12 @@ export const register: Register = on => {
     // until the next main turn completed.
     if ((e as any).agentId !== undefined) return next(e)
     isBusy = true
+    // The turn that starts inside the grace is the wake the last turn end waited for: no bell.
+    if (pendingTurnEnd) {
+      clearTimeout(pendingTurnEnd)
+      pendingTurnEnd = null
+      $.ui.status(undefined)
+    }
     // A dispatched pane that starts a turn is working: whatever it held at its last turn end
     // is over. The hold was left standing through the turns that followed, so the dispatcher's
     // ceiling read a pane committing every few minutes as stuck, twice, naming review agents
@@ -1589,6 +1616,8 @@ export const register: Register = on => {
         return res
       }
     }
+    const grace = await turnEndGraceMs($)
+    const finish = async () => {
     // A DEAD PANE IS NEWS FOR A PERSON, NOT FOR A MODEL (5.0.9). Measured on one project,
     // 2026-10-30 18:39Z: three panes lost auth within seven minutes (two Builders, then their
     // dispatcher). Each Builder's TURN-END reason=error reached the dispatcher inside 7 min,
@@ -1611,7 +1640,7 @@ export const register: Register = on => {
       const own = ((await readRecord($, root)) ?? {})[me.key]
       if (own?.pane_id !== me.pane) {
         $.ui.status(`${me.key} is no longer in the record (lane retired) — turn end not reported`)
-        return res
+        return
       }
     }
     if (!dispatcher) {
@@ -1624,7 +1653,7 @@ export const register: Register = on => {
           turn_end_pending: { at: await $.clock.now(), reason: me.role === 'qa' ? 'QA pane: the brief arrived by herdr agent prompt, and the record is a gate pane\'s turn-end path (GATE.md § 3)' : 'no dispatcher address (brief did not arrive through the mod)', text: `${MARK} TURN-END key=${me.key} pane=${me.pane} reason=${e.reason}\n${e.answer.slice(-1500)}` } })
         await refreshFlow($, root, me.key)
       }
-      return res
+      return
     }
     if (root) {
       await patchRecord($, root, me.key, { last_turn_end_at: await $.clock.now(), last_turn_reason: e.reason, last_turn_error: lastErr, waiting_on: null })
@@ -1642,7 +1671,7 @@ export const register: Register = on => {
     if (me.role !== 'resident' && root) {
       const entry = ((await readRecord($, root)) ?? {})[me.key] ?? {}
       const ran = Object.keys(entry.skills_run ?? {})
-      flow = `Skills run: ${ran.length ? ran.join(', ') : 'none'}\n${await agentLine($)}\n`
+      flow = `Skills run: ${ran.length ? ran.join(', ') : 'none'}\n${await agentLine($, grace)}\n`
     }
     const text = `${MARK} TURN-END key=${me.key} pane=${me.pane} reason=${e.reason}\n${flow}${answer}`
     const sent = await $.session.send({ to: dispatcher, text })
@@ -1656,6 +1685,16 @@ export const register: Register = on => {
       $.ui.status(`TURN-END not delivered — ${sent.reason}; recorded for the dispatcher to pick up`)
       if (root) await patchRecord($, root, me.key, { turn_end_pending: { at: await $.clock.now(), reason: String(sent.reason ?? ''), text } })
     }
+    }
+    // 0 running beside a finished agent: its result may be queued for this pane (measured: 6 ms
+    // after the Stop). Hold the bell for the grace; turn.start inside it drops the bell.
+    if (e.reason === 'answer' && me.role !== 'resident' && (await idleAgents($)) > 0) {
+      if (pendingTurnEnd) clearTimeout(pendingTurnEnd)
+      $.ui.status(`an agent of this pane has finished — TURN-END held ${Math.round(grace / 1000)} s for its result to start the next turn`)
+      pendingTurnEnd = setTimeout(() => { pendingTurnEnd = null; void finish().catch(() => {}) }, grace)
+      return res
+    }
+    await finish()
     return res
   })
 
