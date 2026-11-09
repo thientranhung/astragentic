@@ -15,6 +15,7 @@ Use a deterministic ticket branch and Git's exclusive branch creation to catch
 duplicate dispatch; do not rely on same-account label readback as a unique claim.
 Keep one Thomas per frontier and separate records for concurrent tickets.
 
+A full ticket's brief carries DISPATCH.md's review line verbatim.
 The brief must name dispatch/attempt, role, ticket/kind, owner intent, base SHA,
 write-set, forbidden paths, criteria, validation commands, QA plan/cases, UI Glance/
 States or exemption, Junior policy, arm policy and durable output directory. No QA
@@ -29,10 +30,8 @@ map each applicable obligation to an exact command/cwd and owner (Builder or sta
 Include affected app/entrypoint compile consumers of interface changes, generated
 artifact freshness, and required companion guards of a selected lint/test command.
 Keep the station's full integration commands separate; do not replay them in Builder.
-If the planner cannot address a dirty artifact, record that limit and reconcile the
-changed paths against BASE rules; do not invent a commit or call an old plan current.
-Recompute affected obligations after a scope expansion. Missing command mapping blocks
-handback; a narrow green test does not waive an omitted project-required guard.
+Recompute affected obligations after a scope expansion. The commands you map are the Builder's
+validation line, and it runs exactly those.
 
 Before launch record every owed cross-vendor policy and its gate boundary through
 `codex-cross-vendor-review`. Policy resolution and adapter availability are distinct.
@@ -49,9 +48,9 @@ Before launch verify authorization, capacity, worktree/branch/base and claim. Us
 worker dispatcher. Do not introduce another runtime service for this workflow.
 Keep an uncertain launch recorded for reconciliation rather than blindly repeating.
 
-A handback is a candidate artifact. Verify exact head/tree, write-set, criteria,
-checks and required review/QA/arm before integration. Dirty or changed artifacts need
-new evidence. Release claims and clean only owned resources after preserving artifacts
+A handback is a candidate artifact at a pushed SHA. Verify exact head/tree, write-set,
+criteria, checks and required review/QA/arm before integration. Dirty or changed artifacts
+go back to the Builder. Release claims and clean only owned resources after preserving artifacts
 and confirming no live worker writes there. Never force-remove uncommitted work.
 
 After integration, follow DISPATCH.md's coordinator close-out section before reporting

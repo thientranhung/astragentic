@@ -258,6 +258,71 @@ class LauncherTests(unittest.TestCase):
     def test_missing_project_rejected(self):
         self.assertNotEqual(self.run_cli('ba','--project','/nonexistent-astra-probe','--dry-run').returncode,0)
 
+    def test_review_lives_in_the_builder_session_not_a_thomas_pane(self):
+        dispatch = (ROOT / 'runtimes/codex/.codex/DISPATCH.md').read_text()
+        thomas = (ROOT / 'runtimes/codex/.codex/roles/thomas.md').read_text()
+        builder = (ROOT / 'runtimes/codex/.codex/roles/builder.md').read_text()
+        # 6.0.3 to 6.0.8 shipped reviewer panes (rev:TRA-1345:correct) and "separate reviewer
+        # sessions"; nizzy paid 25 briefs / 7 review rounds / 0 merges for 2 tickets in 16 h.
+        self.assertNotIn('rev:TRA', dispatch)
+        # REHEARSAL-609: Builder stopped on a failed probe while its session could spawn the reviewer.
+        common = (ROOT / 'runtimes/codex/.codex/roles/common.md').read_text()
+        self.assertIn('Before stopping for a missing helper, attempt one real `spawn_agent` call', common)
+        self.assertNotIn('agent-type inventory', common)
+        self.assertNotIn('helper configuration', builder + dispatch)
+        self.assertIn('Helpers are not a startup check', builder)
+        # 4 of 4 rehearsal Builders stopped at review; both told to call the tool did. The inventory
+        # passage and two added sentences did not help, so the check is gone and the step names the call.
+        review = (ROOT / 'runtimes/codex/.agents/skills/codex-astra-review/SKILL.md').read_text()
+        self.assertIn('correctness via `$review-agent`', builder)
+        # A6: this line in the brief, 0 corrections, code to QA in 7m13s, after 5 stops of 5 without it.
+        self.assertIn('spawn three astragentic_reviewer helpers yourself with\nspawn_agent', dispatch)
+        self.assertIn('Use $review-agent to review <base>..<head>', review)
+        self.assertNotIn('codex review', review)
+        self.assertIn('A failed commit or push is a blocker', builder)
+        self.assertRegex(dispatch, r"workspace-write sandbox keeps `\.git` read-only")
+        self.assertNotRegex(dispatch + thomas, r'(?i)reviewer (session|context|pane)s?\b')
+        self.assertIn('spawn the three `astragentic_reviewer` helpers yourself', builder)
+        self.assertIn('astra-codex-simplify', builder)
+        self.assertTrue((ROOT / 'runtimes/codex/.agents/skills/astra-codex-simplify/SKILL.md').is_file())
+        self.assertFalse((ROOT / 'runtimes/codex/.agents/skills/codex-simplify').exists())
+        self.assertIn('never opens a review session', dispatch)
+        # Parity with the Claude lane, each row read from both contracts, 2026-11-09.
+        self.assertIn('one run\ncovers a batch', dispatch)
+        self.assertIn('More than 10 such merges', dispatch)
+        self.assertIn('a fix\nowes no second QA run', dispatch)
+        self.assertNotRegex(dispatch, r'QA re-runs')
+        self.assertIn('Review runs once over the increment', builder)
+        self.assertNotIn('invalidate coverage', builder)
+        self.assertIn('ONE written reply', thomas)
+        tdd = (ROOT / 'runtimes/codex/.agents/skills/codex-astra-implement-with-tdd/SKILL.md').read_text()
+        self.assertIn('a test failing three times in a row', tdd)
+        self.assertIn('Run exactly the commands', tdd)
+        self.assertNotIn('Missing command mapping blocks', (ROOT / 'runtimes/codex/.agents/skills/codex-dispatch-ticket/SKILL.md').read_text())
+        self.assertNotIn('needs renewed review', (ROOT / 'runtimes/codex/.agents/skills/astra-codex-simplify/SKILL.md').read_text())
+        # Polling path the first review of 6.0.9 found still prescribed (DISPATCH.md:376-379).
+        self.assertNotRegex(dispatch, r'Once working has been observed, use\s+bounded `herdr agent wait')
+        self.assertIn('`agent wait` loops and repeated\n`agent get` are forbidden while a bell is configured', dispatch)
+        # 0 commits, 47 and 58 dirty files, 46 of 83 messages on QA, 2 tickets: nizzy 2026-11-09.
+        qa = (ROOT / 'runtimes/codex/.agents/skills/codex-dispatch-qa-walk/SKILL.md').read_text()
+        qa_role = (ROOT / 'runtimes/codex/.codex/roles/qa.md').read_text()
+        common = (ROOT / 'runtimes/codex/.codex/roles/common.md').read_text()
+        self.assertIn('Commit and push to your\nticket branch at every phase boundary', builder)
+        self.assertNotRegex(builder, r'(?i)only when\s+the active task authorizes')
+        for text in (dispatch, thomas, qa, qa_role):
+            self.assertNotRegex(text, r'(?i)freeze ACK|dirty[- ](no-commit|artifact)|content manifest')
+        for text in (dispatch, thomas, common):
+            self.assertNotRegex(text, r'\bACK\b')
+        self.assertIn('hands over the WHOLE ticket', dispatch)
+        # The second review of 6.0.9: a receipt commit must not void its own receipt.
+        arm = (ROOT / 'runtimes/codex/.agents/skills/codex-cross-vendor-review/SKILL.md').read_text()
+        review = (ROOT / 'runtimes/codex/.agents/skills/codex-astra-review/SKILL.md').read_text()
+        junior = (ROOT / 'runtimes/codex/.codex/roles/junior.md').read_text()
+        self.assertIn('under 100 changed non-test lines', arm)
+        self.assertNotIn('a later commit invalidates the receipt', arm)
+        self.assertNotRegex(review, r'committed-plus-dirty')
+        self.assertNotRegex(junior, r'(?i)commits are not authorized')
+
     def test_shipped_orchestrator_arm_table_is_not_read_as_roles(self):
         config = ROOT / 'runtimes/codex/.agents/orchestrator-for-codex.md'
         text = config.read_text()

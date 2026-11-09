@@ -62,10 +62,12 @@ The verdict is `structured_output.verdict` in the JSON the CLI printed, nothing 
 `stop_reason` reads `tool_use` on a complete result; do not read it. Any of these is
 `cross-vendor arm: NOT RUN — <reason>` even when the shell exit is 0: no `structured_output`,
 `is_error` true, the alarm killed it, a login/quota error on stderr, a budget stop. A
-non-empty `permission_denials` goes into the log verbatim and into the handback. Verify the
-`head=` in the header is the SHA you hand back; a later commit invalidates the receipt.
+non-empty `permission_denials` goes into the log verbatim and into the handback. `head=` in
+the header is the reviewed code. Commit `$OUT` alone after the pass (with `-f` when ignored):
+the receipt holds while later commits outside `$OUT` stay under 100 changed non-test lines in total
+since `<head>` (`git diff --numstat`); past that, run the pass again. The handback names both `head=` and the pushed SHA.
 
 Classify each finding with evidence. Fold supported fixes, bump `N`, re-run over the whole
 artifact. Record provider `claude-code`, model, range, exit, cost (`total_cost_usd`),
-duration and `$OUT` in the handback; commit `$OUT` (with `-f` when ignored) before the handback names it. Clean only resources this invocation created. Do not
+duration and `$OUT` in the handback. Clean only resources this invocation created. Do not
 emit legacy marker commits or pretend the old runtime's receipt machinery ran.

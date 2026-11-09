@@ -1,3 +1,94 @@
+# Astragentic 6.0.9
+
+**The Codex Builder's review stops inventorying tools and uses `review-agent`; `astra-codex-simplify`
+replaces `codex-simplify`.** Rehearsal on fixtures, 2026-11-09, `docs/codex/REHEARSAL-609-2026-11-09.md`.
+5 of 5 full-ticket Builders stopped at review and reported no spawn tool, in workspace-write and yolo,
+though the rollout declares it (the same 49,279-byte tool block as a session that spawned); 2 of 2 told
+to call it then did. Nizzy's coordinator sessions made 26 `spawn_agent` calls and 18 reviewers ran at
+the same model and medium effort, so sandbox and effort are not the cause. Two added sentences did not
+help, nor did deleting common.md's inventory passage (n=1); step 3 names the call and the root cause
+is not established. `helpers.py --probe` returns `inconclusive` when the CLI cannot run (EPERM in the sandbox,
+n=1), and helpers are no longer a startup check. The correctness lens is Codex's system skill
+`review-agent`, the counterpart of Claude's `code-review`, in a subagent; `codex review` leaves the skill
+(owner, 2026-11-09). Simplify is our own skill on the Codex runtime only, its checklist drawn from
+addyosmani/agent-skills `code-simplification` (MIT); Claude's lane is untouched. Under workspace-write
+`git add`/`git commit` fail with `.git/index.lock: Operation not permitted`, 0 commits; under yolo 3 of 3
+sessions committed and pushed. DISPATCH.md says to tell the owner before a `default` launch that would
+stop every commit; a failed commit or push is a blocker with the exact error; openai/codex#54574 is open.
+The sixth run changed the brief to name the call and dropped its generic "return with a blocker" lines:
+0 corrections, 3 spawns, code through review, simplify, Claude arm ($0.2172136) and QA on the pushed SHA in
+7 m 13 s (n=1, a small stdlib ticket, QA run by the observer, the arm read the diff only). So DISPATCH.md now
+gives the brief that line verbatim. That run changed the contract as well, so this is not proof the brief alone
+was the cause. The stop hook passed live on Orca (n=1: one block, one native continuation, no second block).
+
+**The Codex lane's gate counts now match the Claude lane's.** A row-by-row read of both contracts found
+Codex running more rounds at the points that cost time; nizzy spent 7 review rounds and 7 QA walks on
+TRA-1344, though those ran under the older Thomas-led flow, so the gain is not measured. QA runs before a
+PR, merge or release and one run covers a batch, with a STOP past 10 merges, where it was once per ticket;
+a QA fix owes no second run; review runs once and its fixes and simplify do not re-fire it; the arm receipt
+survives later commits under 100 non-test lines; a dispute gets one reply; the Builder runs exactly the
+brief's validation commands; three reds on one test stop it. Codex keeps what it measured better: the whole
+ticket in one brief, no polling with a bell, arm timeout and budget, QA's membership oracle. A contract test
+pins each row.
+
+**Review moves back inside the Codex Builder's session; Thomas opens no review pane and
+dispatches QA once per ticket.** The Claude lane has always run the three review lenses as
+subagents inside the Builder (`builder.md` § Review) and handed back once. The Codex overlay
+(6.0.3 to 6.0.8) said "keep Thomas, each Builder, QA and reviewer as separately bound
+sessions", gave reviewer panes display names (`rev:TRA-1345:correct`, 6.0.7) and told Thomas
+to run a "review-to-QA continuation" over "separate reviewer sessions". The nizzy Codex
+coordinator followed that text. Measured 2026-11-09 from `.scratch/codex/owner-20261109`
+and the coordinator rollout: 2 tickets, 16 h (00:26 to 16:15), 0 merges; 25 briefs (12 + 13);
+TRA-1344 alone 7 review rounds, 7 QA walks, 4 QA preparations; Thomas 208 turns, 518 tool
+calls of which 157 (30%) were `herdr agent get/wait` polls. The Claude lane on the same repo
+merged 10 to 29 tickets a day in the week of 2026-10-27; since the Codex switch on 11-06: 2,
+8, 3, 1. The Codex coordinator's own post-mortem named the same causes (too many handoffs,
+QA tooling growing past the product change, late preparation). Changes: DISPATCH.md drops the
+three review rows and the reviewer from the separate-session topology, renames the
+continuation to handback-to-QA (QA once per ticket on the handback head; a QA finding is a
+work order to the Builder, dev stack and fixtures are the Builder's preflight), and forbids
+`agent get/wait` polling in favour of the bell; thomas.md never opens a review session and
+verifies the handback's three reports by artifact; builder.md step 3 spawns the three
+`astragentic_reviewer` helpers itself and hands back once; `codex-astra-review` says who
+spawns. A contract test refuses a `rev:` row or "reviewer session/context/pane" wording and
+requires the Builder sentence; with a reviewer row planted it fails. The nizzy project
+policy ("three lenses, each in a separate read-only context", 2026-11-06) stays true: the
+separate contexts are the Builder's helpers, not Thomas's panes. The Codex builder pane's read-only review of the first cut found the observation
+passage still prescribing `agent wait … --timeout 30000` then fresh `get`/`read` after a
+timeout; it now allows one `agent get` after sending, the bell, and one `read` on waking,
+with a single bounded wait per turn only for a worker launched without a bell, and the
+contract test pins that. Also measured by that review: CLI 0.167.0 has `multi_agent=true`;
+both nizzy Builder rollouts declare `spawn_agent`/`wait_agent`/`astragentic_reviewer` at
+line 3 and made 0 spawn calls, so the tools are exposed but a three-lens run inside a
+Herdr-launched Builder TUI is not yet measured. In an Orca terminal the same Builder ran
+3/3 helpers and named a planted bug at `calc.py:2`, n=1 (docs/codex/ORCA-PROBE-2026-11-09.md).
+
+**The Codex Builder commits, QA runs on a SHA, a brief is the whole ticket, and the ACK
+protocol is gone.** Same evidence base: the two nizzy worktrees sat at 0 commits with 47 and 58
+uncommitted files, and 46 of the coordinator's 83 sends that day were QA (walk, preparation,
+freeze) against 5 for review. The overlay caused it: the Claude Builder commits and pushes at
+every phase, while the Codex text allowed commits "only when the active task authorizes them",
+so QA had a dirty-artifact route with a writer freeze ACK and a content manifest, and one QA
+run failed because a dirty Go input could not be linked to the served binary. Owner ruling
+2026-11-09: a Builder that works commits. builder.md commits and pushes at every phase with no
+further authorization, and a handback is a pushed SHA with a clean tree; junior and simplify
+follow. `codex-dispatch-qa-walk` and qa.md keep only the committed route, and an uncommitted
+target goes back to the Builder. DISPATCH.md's brief hands over the whole ticket with its local
+authority and forbids phase-by-phase releases. The ACK column and replies are removed; the
+event ID stays for deduplication and the worker's next turn or report is the proof. TRA-1345
+had 0 of 26 pending ACK rows actually missing. The contract test refuses each old sentence;
+planted old commit text, an ACK table row and a dirty-artifact route each fail it. The Codex
+builder pane's second read-only review found the arm skill voiding its own receipt (head must
+equal the handback SHA, yet the receipt must be committed first); a receipt now holds while
+only `$OUT` changed after `head=`. It also removed the mixed committed-plus-dirty review route
+and the Junior wording, and found no executable dependency on ACK. Not fixed:
+helper effort. `spawn_agent` declares `astragentic_reviewer` at `high` and "cannot be changed",
+but helper turn contexts read the parent's effort (`low` in Orca, n=3); the cause is unknown
+and no contract text can change it. A second `codex exec` probe matched the parent again
+(`low`, `medium`), weak because its role field was empty. Not measured: messages per ticket and
+merges per day under the new text; the first measurement is the next ticket a Codex project runs
+after applying. Codex suite 64/0. Claude payload untouched.
+
 # Astragentic 6.0.8
 
 **A Codex root can fire the cross-vendor arm at Claude Code.** The Claude runtime has called

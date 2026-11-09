@@ -16,8 +16,8 @@ DISPATCH.md; explicitly pass yolo for authorized child launches only when select
 Carry it in the worker bootstrap for further authorized delegation.
 
 Prepare the brief and record, create the isolated worktree, start Codex through
-Herdr, obtain the worker's own UUID, then queue the brief once. Observe ACK and actual
-work. On return, inspect the artifact and required evidence before integration.
+Herdr, obtain the worker's own UUID, then queue the brief once and observe one working
+transition. The whole ticket is the brief; do not release it phase by phase. On return, inspect the artifact and required evidence before integration.
 For Junior, use its shared-worktree exception with one writer at a time.
 
 Keep the exact project/pane/session/event identities across waits and resume. A

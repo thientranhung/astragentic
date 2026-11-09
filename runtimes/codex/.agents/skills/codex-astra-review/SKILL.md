@@ -5,21 +5,15 @@ description: "Review an Astragentic full-ticket increment for correctness, owner
 
 # Three review axes
 
-Pin base/head/tree and current dirty state. Read the full ticket intent and applicable
-project standards. Do not hide untracked or unstaged changes. For committed work the
-native correctness entrypoint is `codex review --base <base>`; confirm installed help
-before invocation. `--uncommitted` covers staged, unstaged and untracked changes;
-for a mixed committed-plus-dirty increment inspect both ranges and record the final
-tree. Do not silently drop either range. Native correctness review is optional when
-the authorized helper already provides that lens; avoid duplicate inference for the
-same scope. Never pass an incompatible option combination or treat process
-exit alone as a clean review. Save the report and check the reviewed artifact matches.
+Commit first, then pin base/head/tree; review a committed head. Read the full ticket intent and applicable
+project standards. Do not hide untracked or unstaged changes. Save the report and check the
+reviewed artifact matches.
 
-Use `astragentic_reviewer` in separate contexts for correctness, intent and standards
-when native helpers are available and delegation is authorized. Otherwise use native `codex review` for correctness when authorized and available.
-Inspect intent and standards locally to find defects, but record their independent
-coverage as incomplete until separately reviewed in authorized contexts. A local
-inspection never substitutes for an independent required lens. Correctness examines defects/reachable states.
+The Builder spawns `astragentic_reviewer` three times with `spawn_agent` from its own session, one
+lens each, all three before reading any result, and collects them with `wait_agent`. A lens is a
+helper, not a Herdr pane, and Thomas is not in the loop. If `spawn_agent` fails, write the exact
+error and record coverage as incomplete. A local inspection never substitutes for a required lens.
+Correctness is the built-in review: its message starts `Use $review-agent to review <base>..<head>`.
 Intent maps every criterion and Must-not-change to actual test and behavior coverage.
 Standards cites applicable project rules, excluding issues already enforced by lint.
 Helpers inspect only: no edits, no test runs, no recursive delegation. If a required
@@ -39,5 +33,5 @@ and generated consumers, not only the package that declares the interface.
 Route unambiguous in-scope defects to patch and rerun covering checks; ambiguous owner
 intent to decision_needed; pre-existing or undecidable findings to explicit defer.
 Do not defer a verified defect introduced by this change. Record every disposition.
-Finish with per-axis status and artifact identity, then run codex-simplify. Quick tickets
+Finish with per-axis status and artifact identity, then run astra-codex-simplify. Quick tickets
 need correctness review only. A failed lens is not zero findings.

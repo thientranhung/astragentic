@@ -21,4 +21,4 @@ Use `codex-cross-vendor-review` for the configured spec policy. Unconfigured nee
 an owner decision; report it as blocked, never off or passed. Then hand Thomas the exact revision,
 findings and open questions. Stop before codex-test-design/tickets. Release must name this
 revision; a revised spec needs a renewed release. Only an owner decision can accept
-an unresolved blocker. Invocation of this skill, queue delivery or ACK is not release.
+an unresolved blocker. Invocation of this skill, queue delivery is not release.

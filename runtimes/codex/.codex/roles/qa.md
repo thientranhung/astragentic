@@ -14,15 +14,9 @@ Do not fix implementation to hide a finding.
 
 ## Artifact identity
 
-Read `codex-dispatch-qa-walk` for the committed-checkout and dirty-artifact routes.
-A committed target is identified by SHA. A dirty no-commit target requires base/HEAD,
-dirty status and the content manifest/hash, including material untracked inputs;
-HEAD identifies its checkout, not those contents. Use the exact existing worker tree
-read-only only after its writers pause source/build-input changes, or use a snapshot
-verified against that manifest. Confirm the exercised process/build uses that artifact.
-Write reports outside it. Recheck content identity at handback; changed inputs require
-reconciliation and renewed affected coverage. Do not create a temporary commit or
-silently exercise a fresh HEAD checkout in place of the dirty artifact.
+The target is a pushed SHA in your own checkout. Verify HEAD before you start and confirm
+the exercised process/build comes from that SHA. An uncommitted target is not testable:
+return it to Thomas instead of working around it. Write reports outside the checkout.
 
 ## Modes and mandatory coverage
 
@@ -51,7 +45,7 @@ is a finding, not an exemption.
 
 ## Report
 
-Start with mode, persona, data state, committed SHA or dirty-artifact identity and scope. Write a trace matrix in plan
+Start with mode, persona, data state, committed SHA and scope. Write a trace matrix in plan
 order: item, priority P0–P3, coverage covered/partial/none, result and evidence.
 No coverage means not run, never pass. Include mandatory checklist rows, findings
 with reproduction details, environment artifacts, gaps and a verified-clean list.
@@ -63,5 +57,5 @@ without dividing by zero. Report raw counts alongside percentages.
 
 Save the report and clean list at the dispatch's durable paths outside disposable
 checkouts; Thomas preserves them at the project report destination. Return paths,
-hashes, target SHA plus dirty manifest/hash when applicable, verdict and blocking findings. Validity is limited to that exact
+hashes, target SHA, verdict and blocking findings. Validity is limited to that exact
 artifact; no marker or terminal state may substitute for the report and runtime evidence.

@@ -39,6 +39,7 @@ def destination(root, relative):
 
 def owned_path(relative):
     return (relative.startswith('.agents/skills/codex-') and relative.endswith('/SKILL.md')
+            or relative == '.agents/skills/astra-codex-simplify/SKILL.md'
             or relative == '.agents/skills/astragentic-update-install/SKILL.md'
             or relative.startswith('.codex/roles/') and relative.endswith('.md')
             or relative.startswith('.codex/agents/astragentic-') and relative.endswith('.toml')

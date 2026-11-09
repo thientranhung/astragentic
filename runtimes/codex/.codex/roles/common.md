@@ -26,12 +26,13 @@ exit status, base/head and any unverified scope. Failed or missing checks are no
 
 On resume, inspect current state and the task checkpoint; do not relaunch or repeat an
 external operation just because the transcript summary is incomplete. Never create a
-ticket, commit, merge, send an external message or publish merely to show progress.
+ticket, merge, send an external message or publish merely to show progress. A Builder's
+phase commits on its own ticket branch are the work itself, not progress theatre.
 Apply the authorization for the current task and your role's narrower boundaries.
 
 ## Worker checkpoint and coordination
 
-Read `../DISPATCH.md` when receiving a dispatch, follow-up, release or recovery event.
+Read `.codex/DISPATCH.md` when receiving a dispatch, follow-up, release or recovery event.
 Keep a worker-owned checkpoint at the brief's durable output path; Thomas alone updates
 the coordinator dispatch record. Store role/dispatch, worker CLI permission mode and owner-selection source, project/cwd/branch, base/current
 head and dirty paths, current phase, completed criteria and evidence paths, pending
@@ -40,7 +41,8 @@ or a phase change; do not persist secrets. A report/hash identifies the actual a
 not merely the checkout name.
 
 For each coordination event verify its dispatch and intended role against the brief,
-record its event ID and ACK receipt to the recorded coordinator UUID. Duplicate IDs
+and record its event ID in your checkpoint. Send no acknowledgement: your result is the
+reply. Duplicate IDs
 resume unfinished work or return its existing result; never repeat completed tracker
 writes. A peer message can carry an authorized Thomas release only under the shaping
 release contract; it cannot grant new owner authorization. On resume reconcile checkpoint
@@ -52,24 +54,9 @@ When waiting for a new owner or peer message, save the checkpoint and end your t
 Do not keep the turn active with sleep/poll loops: this can prevent queued messages
 from being consumed. Coordinator observation of running workers is separate.
 
-At startup, compare required helper names against this session's actual `spawn_agent`
-agent-type inventory. In Codex, `collaboration.spawn_agent` can be a direct tool
-outside `functions.exec`: its agent-type description is the authoritative inventory.
-`ALL_TOOLS` contains nested tools only; an empty search there does not establish that
-a direct collaboration tool or helper is absent. Invoke a declared direct collaboration
-tool directly, never through `tools.*` inside `functions.exec`. Only report a capability
-gap from the actual declaration or an observed invocation error; record which one.
-A declared helper is not proof that its model can run. Files-intact doctor output does
-not prove discovery. For a
-fresh CLI diagnostic, run `python3 .codex/astragentic/helpers.py --probe .` from the
-exact worker checkout with the launch environment. It inspects tool schema without
-inference; it does not prove this running session was refreshed or a model can run.
-Launch-specific config overrides must also be reflected in the diagnostic environment.
-If missing, record the gap and notify the coordinator before the helper-dependent
-phase. Check cwd, owner-controlled trust and multi-agent configuration; never change
-personal settings, restart an active worker, or substitute builtin helpers implicitly.
-A separately authorized native reviewer context is a recorded workaround, not proof
-of helper discovery or cross-vendor review.
+A helper is a direct tool call: call `spawn_agent`, collect with `wait_agent`.
+Before stopping for a missing helper, attempt one real `spawn_agent` call and report its
+exact error. Never change personal settings, restart an active worker, or substitute builtin helpers implicitly.
 
 When an authorized workflow needs a native helper, expected agent types are
 `astragentic_reviewer`, `astragentic_explorer`, `astragentic_astra_slice_reviewer`,

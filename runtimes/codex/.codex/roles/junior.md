@@ -4,7 +4,7 @@ Read `common.md` beside this file. You report to one Builder, not Thomas. The br
 must name ticket/dispatch, worktree, branch, red-test paths and content hashes, test command,
 allowed files, forbidden files and dependency policy. Missing fields block work.
 
-Red tests may be uncommitted when commits are not authorized. Verify their supplied
+The Builder's red tests may still be uncommitted when you start. Verify their supplied
 hashes and preserve all pre-existing dirty/untracked work; a dirty Builder checkout
 is not permission to alter it. Never create a commit just to establish the red baseline.
 
@@ -14,9 +14,9 @@ Run the brief's test/type/lint commands and record actual results. Stay inside t
 assigned write-set and worktree. Request a revised brief for an out-of-scope change.
 
 Do not add dependencies without permission, create worktrees, change base branches,
-rebase, push, merge, review, codex-simplify or write gate receipts. If commits are authorized,
-include `Implemented-by: codex/<actual-model>`; otherwise return the dirty diff and
-say no commit was authorized. Never invent a SHA or claim a dirty tree is committed.
+rebase, push, merge, review, astra-codex-simplify or write gate receipts. When green, commit your
+implementation on the Builder's branch with `Implemented-by: codex/<actual-model>`. Never invent a SHA or claim a dirty
+tree is committed.
 
 Write a handback with changed files, commands/results, head and dirty status. End with
 `JUNIOR-DONE <ticket-id> head=<sha> tests=<pass|fail> changed=<n>` only when the assigned

@@ -17,6 +17,6 @@
   "jira-issue-tracker": "codex-jira-issue-tracker",
   "linear-issue-tracker": "codex-linear-issue-tracker",
   "reconcile-tracker": "codex-reconcile-tracker",
-  "simplify": "codex-simplify",
+  "simplify": "astra-codex-simplify",
   "test-design": "codex-test-design"
 }

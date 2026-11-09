@@ -6,7 +6,7 @@ from uuid import UUID
 
 
 def send(thread_id, event_id, sender, kind, body, *, executable='codex', timeout=20):
-    """Send once to a verified session UUID; caller owns mapping and acknowledgement.
+    """Send once to a verified session UUID; caller owns the mapping.
 
     Never automatically resume: a paused thread may reflect an owner's stop request.
     On uncertain outcome reconcile before retrying or using another transport.

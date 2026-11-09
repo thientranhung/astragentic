@@ -37,12 +37,9 @@ owes it. Unconfigured required policy is a missing owner decision, not a clean s
 Keep unfinished slices explicit rather than claiming a complete ticket from one green test.
 
 Before handback inspect the actual diff and evaluate each criterion plus Must not
-change. Run the brief's named checks, recording argv/cwd/exit and output artifact.
-Reconcile those commands with the BASE-owned obligation mapping from
-`codex-dispatch-ticket`, including impacted executable compile consumers, generated
-freshness and cheap companion guards. Run the mapped Builder checks before handback
-and normal commit hooks; full station checks remain station-owned. A new delta needs
-an updated mapping and fresh affected checks, not a duplicate full-suite replay.
+change. Run exactly the commands the brief's validation line names, nothing more, recording
+argv/cwd/exit and output artifact, plus normal commit hooks; the station runs the rest. Run
+single test files per slice and the full suite once at the end.
 Report coverage gaps, pre-existing failures and justified TDD exemptions separately.
-Stop for a write-set expansion, dependency change or product decision requiring
-new authority; continue independent authorized criteria while waiting.
+Stop for a write-set expansion, dependency change, a test failing three times in a row or a
+product decision requiring new authority; continue independent authorized criteria while waiting.

@@ -83,7 +83,10 @@ def probe(project):
     result = subprocess.run(['codex', 'debug', 'prompt-input', 'Astragentic helper discovery probe'],
                             cwd=project.resolve(strict=True), text=True, capture_output=True, timeout=45)
     if result.returncode:
-        raise ValueError('native prompt probe failed; private CLI output withheld')
+        # A sandboxed session can fail here (EPERM, REHEARSAL-609) and still hold the spawn tool.
+        return {'status': 'inconclusive', 'cli_exit': result.returncode,
+                'scope': 'the probe CLI did not run here, so it says nothing about helpers; private CLI output withheld',
+                'next_action': 'Not a capability gap. Attempt one real spawn_agent call; only its invocation error is a gap.'}
     return discover(json.loads(result.stdout))
 
 

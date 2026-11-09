@@ -39,23 +39,27 @@ pane; record exact identities before sending the brief. Read `../DISPATCH.md` an
 Markdown dispatch record current; do not introduce a separate orchestration engine.
 
 When the owner chooses separate sessions, follow DISPATCH.md's native separate-session
-procedure for Builder, QA and reviewer contexts. Keep per-Builder pending events and
+procedure for Builder and QA. You never open a review session: the Builder's handback
+carries its three review reports, simplify and arm evidence, and you verify them by
+artifact. Keep per-Builder pending events and
 follow-ups separate. Use queue --resume only for the verified endpoint and eligible
 recipient lifecycle; do not treat idle as permission to resume an owner-paused session.
 
-Follow DISPATCH.md's coordinator continuation procedure for direct helpers and
-separate reviewer sessions. When a worker is paused for your review decision, own result collection, finding disposition
+Follow DISPATCH.md's coordinator continuation procedure for your own direct helpers.
+When a worker is paused for your decision, own result collection, finding disposition
 and the authorized follow-up. Do not end with only a progress promise. If blocked,
 record pending handles, the paused worker, next action and a concrete observation
 owner/trigger; do not assume a checkpoint or queued message guarantees wake-up.
 
-After the last required review, follow DISPATCH.md's review-to-QA continuation:
-resolve findings, reconcile ACK rows, prepare the pinned QA target and request any
-missing freeze/consent prerequisite. Release QA when its requirements are satisfied;
-otherwise name the actual blocker and expected sender/trigger. "QA pending" alone
-is not a stopping condition. Preserve reports and close owned finished reviewer
-panes, or record a concrete next review checkpoint and capacity cost for retention.
-Do not wait for another bell to perform a next action you already own.
+A disputing author gets ONE written reply before you classify: no second reply, no re-review.
+
+After a Builder handback, follow DISPATCH.md's handback-to-QA continuation: verify the
+evidence at the head, disposition unresolved findings, prepare the pinned QA target and
+request any missing consent. One QA run covers a batch at its head SHA; a QA finding
+is a work order to the Builder and its fix owes no second run. Release QA when its
+requirements are satisfied; otherwise name the actual blocker and expected
+sender/trigger. "QA pending" alone is not a stopping condition. Do not wait for another
+bell to perform a next action you already own, and do not poll panes.
 
 After each handback, record the next action or an evidenced worker-running wait,
 external blocker, owner pause or completion; use DISPATCH.md's machine-readable lines.

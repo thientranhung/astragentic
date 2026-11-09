@@ -44,14 +44,18 @@ Current phase / last observed time:
 Spec revision / release decision (Shaper only):
 Report path / reviewed HEAD / validation:
 Close-out disposition / evidence path / retained resources and capacity impact:
-
-| Event ID | Direction | Purpose | Sent | ACK | Result |
-|---|---|---|---|---|---|
 ```
 
 Write a separate brief with intent, criteria, write-set, exact base, validation commands,
 QA plan/cases, UI Glance/States where applicable, authorized mutations and handback
-path. Shaper produces its QA plan after Spec release; do not require that future plan
+path. A brief hands over the WHOLE ticket with its local authority: build, tests, dev stack
+and fixtures, commits and pushes on the ticket branch. Never split a ticket into phases that
+each wait for a Thomas release (scope, fixture, compile, run): nizzy sent 83 messages for 2
+tickets that way. The Builder returns only for a decision outside the brief, or to hand back. A full ticket's
+brief carries this review line verbatim: "spawn three astragentic_reviewer helpers yourself with
+spawn_agent, one lens each (correctness via $review-agent, owner intent, project standards), and
+collect them with wait_agent. If spawn_agent fails, write the exact error." Write no generic
+"return with a blocker" line in a brief. Shaper produces its QA plan after Spec release; do not require that future plan
 at shaping startup. Resolve the base to a SHA before launch, not a moving branch name.
 
 ## Verified thread identity
@@ -94,13 +98,15 @@ queue/runtime corruption. This is procedure validation, not a new identity servi
 A new Herdr pane starts a separate Codex process: it does not inherit Thomas's CLI
 flags. Resolve `WORKER_PERMISSION_MODE` from the owner's launcher bootstrap (`yolo`
 only when --yolo was explicitly selected) or a later explicit owner instruction.
-Without that evidence use `default`. Do not infer yolo from environment variables,
+Without that evidence use `default`. A Builder must commit at every phase boundary, and
+Codex's workspace-write sandbox keeps `.git` read-only (index.lock EPERM, REHEARSAL-609,
+n=1), so tell the owner before a `default` launch whose sandbox would stop every commit. Do not infer yolo from environment variables,
 installed binaries, tool access, a worker request, or a transport failure.
 
 For an authorized dispatch, copy that selection and its source into the record and
 worker bootstrap. It applies to Shaper, Builder (quick/full), QA, any separately
 launched review/simplify pass and Builder → Junior. A narrower owner choice wins.
-Yolo does not authorize a new role, task, write-set, commit, merge or external action;
+Yolo does not authorize a new role, task, write-set, merge or external action;
 QA/reviewer remain behaviorally read-only. Quick Builder still cannot dispatch.
 
 Native helper agents spawned by Codex are not launched through this CLI template. Their permissions are governed by Codex; do not invent a yolo
@@ -119,18 +125,22 @@ Choose short display names separately from the durable `DISPATCH_ID`:
 | Builder (full/quick) | `ticket:TRA-1345` | `builder-tra-1345` |
 | Shaper | `spec:TRA-1345` | `shaper-tra-1345` |
 | QA | `qa:TRA-1345` | `qa-walk-tra-1345` (or `probe`/`verify`) |
-| Correctness review | `rev:TRA-1345:correct` | `review-correctness-tra-1345` |
-| Intent review | `rev:TRA-1345:intent` | `review-intent-tra-1345` |
-| Standards review | `rev:TRA-1345:standard` | `review-standards-tra-1345` |
+
+There is no review row: the three review lenses are native helpers the Builder spawns
+inside its own session (`codex-astra-review`), never a Thomas-opened pane. Measured on
+nizzy 2026-11-09: Thomas-opened review and QA sessions cost 25 briefs and 7 review rounds
+for 2 tickets in 16 hours with 0 merges; the Claude lane on the same repo merges 10 to 29
+tickets a day with review inside the Builder.
 
 Use the actual ticket/spec ID; lowercase it in agent names. Set `TAB_LABEL` and
 `AGENT_NAME` from this table, adding a short distinguishing suffix for concurrent
 same-role/same-target sessions. Labels may truncate with client width: never parse
 them for identity or transport. Record both display names and returned opaque
-tab/pane IDs. Use the verified pane ID for `agent prompt/get/read/wait`; native
+tab/pane IDs. Use the verified pane ID for `agent prompt/get/read`; native
 queue still uses the verified thread UUID and endpoint. Keep `DISPATCH_ID` unchanged
-in records, event IDs, ACKs and bell argv. Reusing a reviewer for another target
-requires a new pinned review record; a display-name change is not a task release.
+in records, event IDs and bell argv. Do not poll a worker with `agent get`/`agent
+wait` loops: the TURN-END bell is the signal (the nizzy coordinator spent 157 of 518
+tool calls, 30%, on `agent get/wait`).
 
 For an isolated worker, use these native operations with the resolved values:
 
@@ -161,8 +171,9 @@ herdr tab create --workspace "$WORKSPACE_ID" --cwd "$WORKTREE" --label "${TAB_LA
 Read tab/pane IDs from the response and record them immediately. Select model/effort
 from the recorded selected Codex orchestrator: full tickets use the `builder` row;
 quick-labelled tickets use `builder-quick` with the Builder contract, never the
-owner-only `quick-builder` row. Shaper, QA, Junior and separately launched review
-passes use their respective rows from that same file. Verify MODEL/EFFORT against
+owner-only `quick-builder` row. Shaper, QA and Junior use their respective rows from
+that same file; the Builder's review helpers take the `reviewer` row through their
+generated TOML. Verify MODEL/EFFORT against
 that row immediately before executing the command; yolo must not change them. Do not invent `codex --agent` for a business role. Start the native CLI:
 
 Use a stable agent launch name with letters, digits, hyphens or underscores; the
@@ -224,18 +235,17 @@ trust or capacity prompts are reported; do not add bypasses beyond the recorded 
 
 Junior is the exception to worktree creation: launch a sibling pane in the Builder's
 worktree, and pause Builder writes until Junior returns. Never run both writers there.
-QA of an uncommitted artifact can also inspect the existing worker worktree read-only
-with all artifact writers paused, as specified in `codex-dispatch-qa-walk`. Pin its
-file manifest/hashes, include untracked inputs, and keep reports outside that tree.
-Do not create a temporary commit or check out the base SHA and call it the dirty target.
+QA always gets its own checkout at the pushed SHA it covers (`codex-dispatch-qa-walk`).
 
 ## Queue and observation
 
 ### Separate-session native coordination
 
-When the owner selects separate Codex sessions, keep Thomas, each Builder, QA and
-reviewer as separately bound sessions. Native child helpers do not silently replace
-this topology. Use the selected orchestrator rows for model/effort and its capacity
+When the owner selects separate Codex sessions, keep Thomas, each Builder and QA as
+separately bound sessions. Review is not a session: the Builder runs the three lenses as
+native helpers in its own session and hands back once, with the three reports. Thomas
+never opens a review session for a Builder's ticket. Native child helpers do not silently
+replace this topology. Use the selected orchestrator rows for model/effort and its capacity
 limit. Two Builders require independent worktrees, non-overlapping write-sets and a
 test environment that supports their concurrent work. Track each dispatch separately.
 
@@ -262,9 +272,8 @@ prove a Herdr-launched local session will wake. Do not bootstrap/restart a share
 daemon or broaden worker permissions as an implicit transport fallback.
 
 Capture exit code, stdout and stderr. `--resume` can warn about a failed resume while
-queue still exits successfully. Record queue acceptance, observed working transition,
-recipient ACK and verified artifact completion separately. Neither exit zero nor ACK
-is a completion gate. A sender sandbox must permit access to the selected endpoint;
+queue still exits successfully. Exit zero is not a completion gate; the verified artifact
+is. There is no acknowledgement step: nobody sends or waits for one. A sender sandbox must permit access to the selected endpoint;
 if denied, preserve the error and use the existing durable-report observation path.
 
 Each worker returns its event ID and artifact pointer to the recorded Thomas UUID.
@@ -294,8 +303,10 @@ report, and archive only an owned idle/finished thread when cleanup is authorize
 
 ### Coordinator continuation while helpers or workers are pending
 
-When Thomas starts direct native helpers, record their returned handles, the reviewed
-artifact/revision, any worker paused for their result, and the next action Thomas owns.
+Thomas starts direct native helpers only for its own phases (slice review, spec
+classification), never for a Builder's ticket review. When it does, record their
+returned handles, the reviewed artifact/revision, any worker paused for their result,
+and the next action Thomas owns.
 Use the available native collaboration wait/result tools to collect those helpers'
 returns and disposition the findings. A wait timeout is not completion or permission
 to respawn the review. Reconcile completed returns before requesting more work.
@@ -331,10 +342,10 @@ codex queue --thread "$WORKER_UUID" --message "$(cat "$MESSAGE_FILE")"
 herdr agent get "$PANE_ID"
 ```
 
-Record queue acceptance as unconfirmed. Recipient replies `ACK <dispatch-id> <event-id>`
-and includes that ID in its report/checkpoint. It checks its prior checkpoint before
-acting on repeated events: continue unfinished work, never start a second copy or
-repeat completed external operations. ACK means received, not finished.
+Queue acceptance is unconfirmed; the worker's next observed turn or its report is the proof.
+The recipient puts the event ID in its report/checkpoint and checks its prior checkpoint
+before acting on repeated events: continue unfinished work, never start a second copy or
+repeat completed external operations.
 
 If outbound queue fails before acceptance with a definite local startup error (for
 example, `failed to start embedded app server: Operation not permitted`), preserve
@@ -364,19 +375,22 @@ pause from an idle coordinator: before pausing Thomas, create
 Repeated turn IDs are dropped by the script; a repeated dispatch ID with a new turn is
 a new turn of the same worker, never a reason to dispatch again.
 
-Observe a new working transition after sending. Once working has been observed, use
-bounded `herdr agent wait "$PANE_ID" --until idle --until done --until blocked --timeout 30000`,
-then fresh `agent get` and `agent read --source recent-unwrapped --lines 160`. A timeout
-requires another observation of that same handle, not a duplicate dispatch. Idle/done
-alone never satisfies a ticket. Record blocked questions and request the actual decision.
+Observe ONE working transition after sending (a single `agent get`), then stop looking:
+the TURN-END bell wakes you, and on waking you read the record, the artifact pointer and
+`agent read --source recent-unwrapped --lines 160` once. `agent wait` loops and repeated
+`agent get` are forbidden while a bell is configured; the fallback below applies only to a
+worker whose argv carries no bell. Idle/done alone never satisfies a ticket. Record
+blocked questions and request the actual decision.
 
-For that local route, the worker sends ACK/questions/handback pointers back with
+For that local route, the worker sends questions and handback pointers back with
 `codex queue --thread <coordinator-UUID> --message <message>` where its permissions
 allow it. Remote workers instead use the recorded remote endpoint/authentication
 in both directions, with resume eligibility checked as above. If queue cannot
 run inside its sandbox, it writes the durable report and prints its pointer; Thomas
 reads it through the observed pane. Do not broaden sandbox rights to force queue.
-Do not claim automatic wake-up in this fallback: Thomas must keep observing the worker.
+Do not claim automatic wake-up in this fallback: without a bell, Thomas observes the worker
+with one bounded `herdr agent wait "$PANE_ID" --until idle --until done --until blocked
+--timeout 30000` per turn and records the observation; never a loop.
 This requires Thomas's actual execution environment to permit the Herdr socket.
 If it cannot call Herdr, report the missing host capability. Host-driven observation
 is not evidence that native Thomas can observe or orchestrate autonomously; do not
@@ -435,34 +449,36 @@ process that never emits notify, or lack of Herdr access. Do not claim unattende
 coverage of those cases or that an alert executes the next action. Rollout import
 and active downstream upgrade are separate authorized operations, never automatic.
 
-### Review-to-QA continuation owned by Thomas
+### Handback-to-QA continuation owned by Thomas
 
-This applies to direct helpers and separate reviewer sessions alike. After collecting
-the final required review, verify its target and disposition findings, then carry out
-the next authorized phase in the same turn. With no open review blocker, prepare QA:
-read `codex-dispatch-qa-walk`, pin the target/build inputs, resolve plan/consent/runtime
-requirements and obtain the required Builder/Junior source/build-write freeze ACK
-before releasing dirty-artifact QA. Review PASS is not QA PASS or publication authority.
+The Builder's handback already carries a pushed SHA plus review, simplify and arm
+evidence. After reading it, verify its target and disposition the Builder's unresolved
+findings, then carry out the next authorized phase in the same turn. QA runs before a PR,
+merge or release on anything with a user-visible surface or public endpoint, and one run
+covers a batch: several tickets landing together get one run at the batch head SHA, scoped
+to the union of their surfaces. More than 10 such merges since the last run is a STOP:
+dispatch QA or write down why not. QA advises, Thomas classifies, the Builder fixes; a fix
+owes no second QA run, and Thomas verifies it at the artifact. A brief or owner decision may
+require QA on a named ticket before merge.
+The pushed SHA is the freeze: no Builder pause is requested. Dev stack
+and fixtures are the Builder's preflight, named in its brief, not a
+Thomas phase. With no open blocker, prepare QA:
+read `codex-dispatch-qa-walk`, pin the SHA and resolve plan/consent/runtime requirements.
+Review PASS is not QA PASS or publication authority.
 
-For each pending event reconcile the latest receipt into its dispatch row (retain
-the historical send/receipt pointers). Distinguish delivery ACK, task result and
-phase precondition. A delayed ACK for a result already verified is not itself a new
-gate. Never omit an independently required freeze/consent/owner decision. If a real
-precondition is missing, name the exact event, expected sender, next action and
-observation owner/trigger; issue the authorized request before waiting. Do not wait
-for an ACK to a disposition that was only saved locally and never sent. While one
+Never omit an independently required consent or owner decision. If a real precondition is
+missing, name it, the expected sender, the next action and observation owner/trigger, and
+issue the authorized request before waiting. While one
 ticket is blocked, continue other authorized independent work within capacity.
 
-Before ending the review phase, preserve reports and reconcile reviewer resources.
-Close only owned finished reviewer panes/tabs under the existing cleanup rules,
-or retain each with a concrete next review target/checkpoint and capacity cost.
+Before ending the phase, preserve reports and reconcile any helper resources you own.
 "May need later" is not a next checkpoint. Preserve Builder worktrees/stacks needed
-for frozen QA. No forced cleanup, automatic owner-pause resume, duplicate dispatch,
+for QA. No forced cleanup, automatic owner-pause resume, duplicate dispatch,
 self-queue timer or new scheduler is authorized. A TURN-END bell is observation;
 it does not execute this phase transition or replace a missing precondition.
 
-Worker reports exact base/head, dirty status, changed paths, per-criterion evidence,
-validation commands/results, review findings/dispositions, applicable UI/codex-simplify/arm,
+Worker reports exact base and pushed head, changed paths, per-criterion evidence,
+validation commands/results, review findings/dispositions, applicable UI/astra-codex-simplify/arm,
 and unresolved blockers. Save full logs/reports in files. Shaper stops after Spec and
 only proceeds on a release naming the exact revision; a changed Spec needs new release.
 
@@ -513,7 +529,7 @@ message and head; document that binding during adaptation.
 ## Coordinator close-out before done or refill
 
 A compact delta handback can reference an immutable prior checkpoint by path/hash and
-list only changed artifact pins, new event/ACK/result receipts, invalidated/carried
+list only changed artifact pins, new results, invalidated/carried
 coverage and the next action with owner/trigger. Never replace the original evidence
 or carry a verdict across changed behavior without explicit scope reconciliation.
 This reduces repeated narrative; it does not schedule a wake-up.
