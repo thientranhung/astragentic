@@ -726,7 +726,8 @@ function printable(text: string, max = 300): string {
 }
 
 
-type Me = { role: string; key: string; tab: string; pane: string }
+type Host = 'herdr' | 'orca'
+type Me = { role: string; key: string; tab: string; pane: string; host: Host; terminal?: string }
 type Envelope = { from: string; fromName: string; inner: string }
 
 // A session name as the dispatcher must type it when two sessions share a prefix: SendMessage
@@ -775,7 +776,41 @@ async function herdrJson($: any, args: string[]): Promise<any | null> {
   }
 }
 
+// 6.1.0: the host is the environment this session was started in, read once, never a guess from
+// the record. Orca is checked first: an Orca opened from a Herdr pane may inherit HERDR_* (chưa đo).
+// Owner rule (2026-11-09): a session follows its own host's dispatch and never runs the other
+// host's CLI, even though both CLIs answer from either pane (measured: `herdr` lists 8 workspaces
+// from an Orca pane).
+async function hostOf($: any): Promise<Host | null> {
+  if (await $.env.get('ORCA_PANE_KEY')) return 'orca'
+  if ((await $.env.get('HERDR_ENV')) === '1' || (await $.env.get('HERDR_TAB_ID'))) return 'herdr'
+  return null
+}
+
+async function orcaJson($: any, args: string[]): Promise<any | null> {
+  const dir = await $.env.get('ORCA_CLI_BIN_DIR')
+  try {
+    const r = await $.process.run([dir ? `${dir}/orca` : 'orca', ...args, '--json'], { timeoutMs: 10_000 })
+    return r.exitCode === 0 ? JSON.parse(r.stdout) : null
+  } catch {
+    return null
+  }
+}
+
 async function whoAmI($: any): Promise<Me | null> {
+  const host = await hostOf($)
+  if (host === 'orca') {
+    // Orca rewrites a tab's title while the agent runs ("." became the brief's first words, with a
+    // spinner glyph, 2026-11-09), so the role rides in the launch command's own environment:
+    // `ASTRA_DISPATCH=ticket:KEY claude …` (dispatch-ticket § Orca). AST-084 is the same trap.
+    const tab = await $.env.get('ORCA_TAB_ID')
+    const pane = await $.env.get('ORCA_PANE_KEY')
+    const m = String((await $.env.get('ASTRA_DISPATCH')) ?? '').match(/^(ticket|spec|qa|resident):(.+)$/)
+    const role = ROLE_BY_PREFIX[m?.[1] ?? '']
+    const key = m?.[2] ? (role === 'qa' ? `qa:${m[2]}` : m[2]) : undefined
+    const terminal = await $.env.get('ORCA_TERMINAL_HANDLE')
+    return role && key && tab && pane ? { role, key, tab, pane, host, terminal } : null
+  }
   const tab = await $.env.get('HERDR_TAB_ID')
   const pane = await $.env.get('HERDR_PANE_ID')
   if (!tab || !pane) return null
@@ -785,7 +820,7 @@ async function whoAmI($: any): Promise<Me | null> {
   // A QA pane walks a Builder's ticket, so its record entry is keyed `qa:<key>`: the same key as
   // the Builder's would overwrite the Builder's entry (role, pane, skills) at QA's session start.
   const key = m?.[2] ? (role === 'qa' ? `qa:${m[2]}` : m[2]) : undefined
-  return role && key ? { role, key, tab, pane } : null
+  return role && key ? { role, key, tab, pane, host: 'herdr' } : null
 }
 
 async function repoRoot($: any): Promise<string | null> {
@@ -1277,6 +1312,8 @@ export const register: Register = on => {
         role: me.role,
         tab_id: me.tab,
         pane_id: me.pane,
+        host: me.host,
+        terminal: me.terminal ?? null,
         session_id: await $.session.id(),
         worktree: e.cwd,
         branch,
@@ -1563,7 +1600,8 @@ export const register: Register = on => {
     const deadLine = dead ? (e.answer.split('\n').find(l => l.trim()) ?? '').trim().slice(0, 200) : ''
     const lastErr = dead ? { at: await $.clock.now(), reason: e.reason, text: deadLine } : null
     if (dead && me.role !== 'resident') {
-      await herdrJson($, ['notification', 'show', `${me.role} ${me.key} died (${e.reason})`, '--body', deadLine || 'the turn ended on an API error with no text', '--sound', 'request'])
+      // Orca has no notification command (`orca --help`, 1.4.254): the record and the board carry it there.
+      if (me.host !== 'orca') await herdrJson($, ['notification', 'show', `${me.role} ${me.key} died (${e.reason})`, '--body', deadLine || 'the turn ended on an API error with no text', '--sound', 'request'])
       $.ui.status(`turn ended on ${e.reason}: ${deadLine.slice(0, 80) || 'no text'} — on the record; the dispatcher's board reads it red`)
     }
     // The lane is retired when its entry has left the record (cleanup) or names another pane:
@@ -2162,6 +2200,26 @@ export const register: Register = on => {
     }
   })
 
+  // -- one host per session (6.1.0) --------------------------------------------------------
+  // Owner rule, 2026-11-09: a session started in Orca follows Orca's dispatch and never runs
+  // `herdr`; one started in Herdr never runs `orca`. Both CLIs work from either pane, so the
+  // leak is real: Builders would appear in the other app. The match is the command position
+  // plus a subcommand, so a path or a doc named orca is not a command.
+  on('tool.call', { tool: 'Bash' }, async ($, e, next) => {
+    const host = await hostOf($)
+    if (!host) return next(e)
+    const cmd = runnable(e.command)
+    const herdr = cmd.match(new RegExp(AT_COMMAND + String.raw`herdr\s+(agent|tab|pane|workspace|notification|command)\b`))
+    const orca = cmd.match(new RegExp(AT_COMMAND + String.raw`(?:\S*/)?orca\s+(terminal|orchestration|worktree|agent|repo|project)\b`))
+    if (host === 'orca' && herdr) {
+      return { deny: `astragentic-dispatch: this session runs in Orca (ORCA_PANE_KEY is set); \`herdr ${herdr[1]}\` would put the work in Herdr. Use the Orca rows of dispatch-ticket, or stop and tell the owner.` }
+    }
+    if (host === 'herdr' && orca) {
+      return { deny: `astragentic-dispatch: this session runs in Herdr (HERDR_ENV=1); \`orca ${orca[1]}\` would put the work in Orca. Use the Herdr rows of dispatch-ticket, or stop and tell the owner.` }
+    }
+    return next(e)
+  })
+
   on('tool.call', { tool: 'Bash' }, async ($, e, next) => {
     if (me || !root) return next(e)
     const rec = (await readRecord($, root)) ?? {}
@@ -2182,14 +2240,18 @@ export const register: Register = on => {
     }
 
     // -- closing a pane, tab or workspace that holds a mid-turn agent ---------------------
-    const close = cmd.match(new RegExp(AT_COMMAND + String.raw`herdr\s+(tab|pane|workspace)\s+close\s+['"]?([A-Za-z0-9:_-]+)`))
+    // `orca terminal close --terminal <handle> [--tab]` names the handle the pane recorded (6.1.0).
+    const orcaClose = cmd.match(new RegExp(AT_COMMAND + String.raw`(?:\S*/)?orca\s+terminal\s+close\b[^\n;&|]*?--terminal[\s=]+['"]?(term_[A-Za-z0-9-]+)`))
+    const close = orcaClose
+      ? [orcaClose[0], 'terminal', orcaClose[1]]
+      : cmd.match(new RegExp(AT_COMMAND + String.raw`herdr\s+(tab|pane|workspace)\s+close\s+['"]?([A-Za-z0-9:_-]+)`))
     if (close) {
       const [, kind, id] = close
       // A resident pane is never mid-turn in the record (it gets no brief), and it is the pane
       // with the most context to lose, so it is refused while it is recorded at all.
       const hit = Object.entries(rec).find(([, entry]) =>
         isLive(entry) && (isMidTurn(entry) || entry.role === 'resident') &&
-        (kind === 'tab' ? entry.tab_id === id : kind === 'pane' ? entry.pane_id === id : String(entry.tab_id).startsWith(`${id}:`)),
+        (kind === 'tab' ? entry.tab_id === id : kind === 'pane' ? entry.pane_id === id : kind === 'terminal' ? entry.terminal === id : String(entry.tab_id).startsWith(`${id}:`)),
       )
       if (hit) {
         const [key, entry] = hit
@@ -2200,9 +2262,9 @@ export const register: Register = on => {
         }
       }
       const ran = await next(e)
-      if (ran.deny === undefined && !ran.isError && kind === 'tab') {
+      if (ran.deny === undefined && !ran.isError && (kind === 'tab' || kind === 'terminal')) {
         for (const [key, entry] of Object.entries(rec)) {
-          if (entry?.tab_id !== id) continue
+          if ((kind === 'tab' ? entry?.tab_id : entry?.terminal) !== id) continue
           if (entry.worktree && (await exists($, entry.worktree))) await patchRecord($, root, key, { tab_closed_at: await $.clock.now() })
           else await deleteRecordKey($, root, key)
         }
@@ -2269,7 +2331,9 @@ export const register: Register = on => {
         const [key, entry] = hit
         // The release reaps the agent rooted in the worktree, and herdr closes a tab whose last
         // pane exited, so the tab is usually gone before anyone closes it (measured). Ask herdr.
-        const isTabAlive = Boolean(entry.tab_id) && !entry.tab_closed_at && (await herdrJson($, ['tab', 'get', entry.tab_id])) !== null
+        const isTabAlive = Boolean(entry.tab_id) && !entry.tab_closed_at && (entry.host === 'orca'
+          ? Boolean(entry.terminal) && (await orcaJson($, ['terminal', 'show', '--terminal', entry.terminal])) !== null
+          : (await herdrJson($, ['tab', 'get', entry.tab_id])) !== null)
         if (!isTabAlive) await deleteRecordKey($, root, key)
         else await patchRecord($, root, key, { worktree_removed_at: await $.clock.now() })
         await refreshBoard($, root, sends)

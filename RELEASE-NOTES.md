@@ -1,3 +1,52 @@
+# Astragentic 6.1.0
+
+**One host per session: a session started in Orca follows Orca's dispatch and never runs `herdr`; one
+started in Herdr never runs `orca`.** Owner rule, 2026-11-09, after measuring that both CLIs answer from
+either pane (8 Herdr workspaces listed from an Orca pane; `codex queue` reached an Orca-hosted Codex 2/2), so
+a Thomas opened in Orca on 6.0.9 would have put its Builders in Herdr (DISPATCH.md named Herdr in 33 lines,
+Orca in 0). The host is the environment: `ORCA_PANE_KEY` first, then `HERDR_ENV=1`, else stop. The Claude mod
+reads it once; a `herdr` command in an Orca session or an `orca` command in a Herdr session is refused at the
+call, and `launch.py` prints `host=` and refuses `--herdr` in an Orca pane. Pinned by the selftest mod driver
+(7 planted commands) and a launcher test.
+
+**The Claude mod runs in an Orca pane.** Orca rewrites tab titles while the agent works (`.` became the brief's
+first words), so the role rides in the launch command: `ASTRA_DISPATCH=ticket:KEY claude …` via
+`orca terminal create --command`; the pane records `host=orca` and `terminal=<handle>`, the close guard knows
+`orca terminal close --terminal`, liveness asks `orca terminal show`. Measured in Orca panes: SendMessage
+between two bypass sessions 3 s and 1 s (an auto-mode pane HELD it, Claude's own class rule, as on Herdr);
+`ASTRA_DISPATCH` survives `--command` (1/1). `dispatch-ticket/ORCA.md` is the Orca form of the pane, watching
+and cleanup steps; the Herdr text is unchanged. No watcher and no desktop notification exist on Orca (`orca
+--help` has none): the record and the board carry a dead pane. Measured live in one Orca pane (fixture, 2026-11-09): the mod registered `host=orca terminal=term_…` from
+`ORCA_*`, answered RECEIVED and TURN-END to the dispatcher by SendMessage, refused a planted `herdr tab list` with
+the one-host text, ran `orca terminal list`, and the commit gate refused a redirection-then-commit; a Claude Builder
+in an Orca pane is therefore allowed, with Herdr still the default. Not measured: a QA gate pane on Orca, a pane
+dying or an Orca restart with a live dispatch, `HERDR_*` inherited inside Orca, and the merge gate live (driver only).
+
+**Codex dispatch has an Orca section.** `DISPATCH.md` opens with the host check as a hard stop and gains
+`## Orca`: the worker is launched with `orca terminal create --command` (argv encoded, `notify=[]`), adopted with
+`orchestration worker-start --task --terminal`, and Orca's `worker_done` mail wakes Thomas; `ask`/`reply` for
+questions, `worker-release` then one `terminal close` for release; QA briefs travel as a file plus a two-call
+pointer. Measured on fixtures (2026-11-09, `docs/codex/ORCA-610-2026-11-09.md`): overlay doctor and 5/5 helper
+discovery in an Orca-created checkout (2/2); `worker_done` wake 0.9 s and 2.4 s (n=2) while the 6.0.5 `notify`
+bell also fired (4 signals for 2 workers), hence `notify=[]` on Orca; adoption before TUI readiness fails
+`agent_unconfigured` (1/1); `orca terminal send --text` bodies past about 1,260 characters are accepted and never
+arrive (0/2 at 1,300 and 2,400), a file plus a 63-char pointer arrives (2/2). The Herdr launch block is byte-identical
+to 6.0.9 and a test keeps it so. The coordinator hook template adds a PreToolUse `host-guard.py` beside the Stop
+hook (same `/hooks` trust step): `herdr` under `ORCA_PANE_KEY` denied, `orca` under `HERDR_ENV=1` denied, a path
+or doc named orca passes; unit-tested on 9 planted commands, invoked live by a Codex session (controls logged), live
+denial of a planted call not observed (the planted calls were malformed and never reached the hook). Herdr stays the default host for Codex projects; a Codex Thomas may be
+opened in Orca only as a fresh session.
+
+**One unassisted ticket through the Orca section (M7', n=1): the transport held, the Builder did not.** Launch,
+readiness, adoption, `notify=[]` (0 bell signals), 4 commits and pushes, 2 Claude arm passes ($0.24), a
+`worker_done` and the coordinator woken 1.33 s later all ran with 0 corrections; the Builder then stopped at review
+reporting "spawn_agent and wait_agent are not exposed" after an `ALL_TOOLS` search returned `[]`, with the tool
+declared in its rollout and the review line in its brief. Across the day that stop is 6 of 7 autonomous Codex
+Builders (A1–A5, M7'); A6 is the one pass. It is a 6.0.9 Builder defect, cause not established, not an Orca one.
+The measured mitigation ships in `thomas.md`: on a handback or escalation of that shape, Thomas sends one steer,
+"call `spawn_agent` directly, it is declared", and counts it in the record; the steer worked 2 of 2 times it was
+sent (A2, A4-correction). Code-to-QA on Orca is therefore 0 of 1, and Herdr remains the default.
+
 # Astragentic 6.0.9
 
 **The Codex Builder's review stops inventorying tools and uses `review-agent`; `astra-codex-simplify`

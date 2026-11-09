@@ -91,7 +91,9 @@ stamp does not mean the semantic adaptation below is complete.
 
 In the normal coordinator checkout only, inspect `.codex/hooks.json`. With owner
 authorization, create it from `.codex/astragentic/coordinator-hooks.json` if absent,
-or merge only this Stop entry while preserving existing owner hooks. Never replace
+or merge only its Stop and PreToolUse entries (the PreToolUse entry is the host guard,
+6.1.0: it denies `herdr` under `ORCA_PANE_KEY` and `orca` under `HERDR_ENV=1`) while
+preserving existing owner hooks. Never replace
 an existing hook file or copy it into worker linked worktrees to force discovery.
 The mechanical installer ships a template, not an enabled or trusted project hook.
 

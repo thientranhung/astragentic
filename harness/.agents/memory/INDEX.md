@@ -37,7 +37,7 @@ from this table — read the entry.
 | `AST-072` | Self-monitoring shipped without proof it cannot harm what it monitors | promoted | 345 | herdr-watchdog.sh |
 | `AST-074` | A tracker measured only against itself cannot detect its own drift | promoted | 484 | register.tsx |
 | `AST-076` | AST-072's own fix left a window between acquiring the lock and recording who holds it | promoted | 1427 | herdr-watchdog.sh |
-| `AST-084` | the watchdog trusted a pane title a runtime overwrites after launch | promoted | 326 | herdr-watchdog.sh |
+| `AST-084` | the watchdog trusted a pane title a runtime overwrites after launch | promoted | 326 | herdr-watchdog.sh,register.tsx |
 | `AST-085` | a word budget calibrated against a retired file size passed nothing | promoted | 266 | docs-staleness-audit.sh |
 | `AST-089` | A fork-fallback inside `simplify` read as a substitute because only the `Pass:` line's wordin… | promoted | 366 | builder-claude.md |
 | `AST-090` | The Pass: literal had a two-in-three miss rate among Builders who ran the pass correctly | promoted | 221 | builder-claude.md |

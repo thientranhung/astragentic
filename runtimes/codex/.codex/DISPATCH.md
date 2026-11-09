@@ -5,6 +5,24 @@ of the dispatch record. Workers write their own reports. There is no custom sche
 receipt service or lifecycle engine. Checks below are coordinator responsibilities;
 only Git's branch/worktree checks and the native tools enforce their own invariants.
 
+## The host (6.1.0)
+
+One host per session (owner, 2026-11-09). The host is the environment this session was started
+in, read once before the first dispatch:
+
+```sh
+if [ -n "${ORCA_PANE_KEY:-}" ]; then HOST=orca     # first: an Orca opened from a Herdr pane may inherit HERDR_*
+elif [ "${HERDR_ENV:-}" = "1" ]; then HOST=herdr
+else echo "no host: stop and report to the owner"; exit 2; fi
+```
+
+`HOST=herdr` runs the text below as written. `HOST=orca` runs the `## Orca` section and no
+`herdr` command at all, even though the `herdr` CLI answers from an Orca pane (measured: 8
+workspaces listed); a `herdr …` call in an Orca session is a defect to report, never a fallback.
+A section this file has no Orca form for is a STOP in Orca, not a reason to use the Herdr form.
+`launch.py` prints `host=` at start; the coordinator hook template denies `herdr` under
+`ORCA_PANE_KEY`.
+
 ## Before launch
 
 Use one Thomas per project frontier. Resolve tracker readiness, parent/dependency
@@ -236,6 +254,74 @@ trust or capacity prompts are reported; do not add bypasses beyond the recorded 
 Junior is the exception to worktree creation: launch a sibling pane in the Builder's
 worktree, and pause Builder writes until Junior returns. Never run both writers there.
 QA always gets its own checkout at the pushed SHA it covers (`codex-dispatch-qa-walk`).
+
+## Orca (6.1.0)
+
+Read only when the host check above said `HOST=orca`. Everything host-neutral in this file still
+applies: identity, write-set, brief contents, review and arm obligations, commit and push at every
+phase, QA on a pushed SHA, the dispatch record. What changes is who runs the worker and who wakes
+Thomas: Orca does both, and no `herdr` command runs. Measured 2026-11-09 on fixtures
+(`docs/codex/ORCA-610-2026-11-09.md`, rows M6, M1, S1): doctor and helper discovery intact in an
+Orca-created checkout (2/2, 5/5 helpers); an adopted worker's `worker_done` woke the coordinator
+in 0.9 s and 2.4 s (n=2); the Codex `notify` bell fired as well (4 signals for 2 workers), so on
+Orca the worker is launched with `notify=[]` and Orca mail is the only route (that combination
+chưa đo). One unassisted ticket through this section (M7', n=1): launch, adoption, `notify=[]` with 0
+bell signals, 4 commits, 2 arm passes, `worker_done` and a 1.33 s wake all ran; the Builder stopped at
+review with the false no-tool report (thomas.md § The false no-tool stop), so code-to-QA is 0/1.
+
+**Launch and adopt.** The brief is a file. The argv is encoded, never concatenated:
+
+```python
+argv = ["codex", "--cd", worktree, "--model", model,
+        "-c", 'model_reasoning_effort="' + effort + '"', "-c", "notify=[]"]
+if permission_mode == "yolo":            # recorded owner selection, as in § Permission propagation
+    argv += ["--dangerously-bypass-approvals-and-sandbox"]
+command = shlex.join(argv)
+```
+
+```bash
+orca orchestration run-create --objective "<frontier>" --json            # once per frontier; record RUN_ID
+orca orchestration task-create --run "$RUN_ID" --task-title "<ticket>" --spec "Read $BRIEF_PATH" --json   # record TASK_ID
+orca terminal create --worktree active --title "ticket:<id>" --command "$COMMAND" --json   # record TERMINAL_HANDLE, WORKSPACE_ID
+orca terminal read --terminal "$TERMINAL_HANDLE" --json   # ready TUI, recognized Codex, no trust or permission menu
+orca orchestration worker-start --task "$TASK_ID" --terminal "$TERMINAL_HANDLE" --worktree "id:$WORKSPACE_ID" --run "$RUN_ID" --json
+```
+
+Adoption before the TUI is ready fails with `agent_unconfigured` and creates no Dispatch (measured
+1/1); read the receipt, do not relaunch. A trust or permission menu on screen is TRUST NEEDED to the
+owner: `orca terminal switch --terminal "$TERMINAL_HANDLE"`, name the terminal and the folder or
+hook, never answer it. Record Run, Task and Dispatch ids in the dispatch record beside the terminal
+handle, then **end the turn**.
+
+**Observe.** Orca wakes you: `worker_done` settles the Task; an `escalation` with `stopReason` means
+the worker stopped without reporting, and is steered with `orchestration send --to dispatch:<id>`,
+stopped, or reported to the owner. No `agent wait`, no `codex queue`, no terminal watch, no
+recurring `check`. A worker's question arrives as mail from `orchestration ask`; answer with
+`orchestration reply --id <message_id>` when the brief or the owner's instruction supplies the
+answer, else ask the owner.
+
+**The worker's handback** is the same artifact as on Herdr, and it ends with Orca's own report:
+
+```bash
+orca orchestration send --type worker_done --task-id "$TASK_ID" --dispatch-id "$DISPATCH_ID" \
+  --outcome succeeded --report-path "$HANDBACK_PATH" --subject "<ticket> handback"   # or --outcome failed
+```
+
+**QA.** The checkout, SHA, plan and consent rules are unchanged. The brief is a file; a pane without
+a Task gets a one-line pointer in two calls (`--text`, then `--enter`): bodies past about 1,260
+characters returned `accepted: true` and never arrived (S1, 1,300 and 2,400 chars 0/2; file plus
+63-char pointer 2/2). Then adopt that terminal with its Task as above; a later message to an adopted
+worker goes by `orchestration send`, never by typing into its terminal.
+
+**Release.** `orca orchestration worker-release --dispatch "$DISPATCH_ID" --json`; `released` and
+`already_released` need no close, `retained` is not permission to close, `release_pending` and
+`release_unknown` follow Orca's recovery guide. Only a terminal this dispatch created and that is
+proven settled is closed: `orca terminal close --terminal "$TERMINAL_HANDLE" --json`. Nothing else
+in the owner's Orca is closed, reset or renamed.
+
+**Thomas's own Stop hook** (6.0.8) applies unchanged: Orca wakes only on new mail, and a handback
+whose disposition is still owed holds the turn as before. The coordinator hook template carries the
+host guard beside it (`host-guard.py`): `herdr` under `ORCA_PANE_KEY` is denied at the call.
 
 ## Queue and observation
 

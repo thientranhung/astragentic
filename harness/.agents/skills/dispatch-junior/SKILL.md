@@ -21,7 +21,7 @@ junior's, so nothing about them changes.
 ## 1. The pane — in your tab, beside you
 
 ```bash
-herdr pane split --current --direction right --no-focus      # read result.pane.pane_id
+herdr pane split --current --direction right --no-focus      # read result.pane.pane_id   (Orca: `orca terminal split`, then `terminal send` text and Enter as two calls; dispatch-ticket/ORCA.md)
 herdr pane rename <pane-id> "junior:<ticket-id>"
 ```
 

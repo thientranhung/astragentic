@@ -19,7 +19,7 @@ rules, retraction with `Supersedes:` and the head check are in [`MARKERS.md`](MA
 The Builder pushes and returns the artifact. Thomas reads the real diff and alone decides
 merge. A settled Herdr status does not authorize cleanup: capture the final transcript and
 verify the merge or an explicit owner-approved abandonment first. Herdr refuses to close the
-last tab in a workspace, so resolve the topology first:
+last tab in a workspace, so resolve the topology first (Orca: `ORCA.md` § Cleanup, one handle, no workspace):
 
 ```bash
 herdr tab list --workspace <returned-workspace-id>

@@ -16,7 +16,7 @@ A context-starved reviewer judges "clean", never "right". The prompt carries:
 
 **Resolve `<artifact-key>` first.** It names the tab, the worktree directory, the pane, the agent and the report filename. It is the ticket ID, or the spec or slice slug when no ticket is the subject.
 
-**A gate always runs as a Herdr pane.** If you cannot create one (herdr unreachable, the workspace not nameable, no launcher for the `qa` row's runtime), STOP and tell the owner. A subagent shares your session, so it is not an independent review. A gate nobody can observe is trusted on your word, which is the thing the gate exists to remove.
+**A gate always runs as a pane of this session's host** (Orca: `ORCA.md`, the same block with `orca terminal create --command`). If you cannot create one (herdr unreachable, the workspace not nameable, no launcher for the `qa` row's runtime), STOP and tell the owner. A subagent shares your session, so it is not an independent review. A gate nobody can observe is trusted on your word, which is the thing the gate exists to remove.
 
 **The only question is whether you can name the workspace this gate belongs to.** An ambiguous workspace is a STOP. `herdr tab list` answers a different question: a daemon answering proves the daemon is up, not that a workspace is nameable.
 

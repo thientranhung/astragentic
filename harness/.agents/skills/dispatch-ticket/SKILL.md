@@ -84,6 +84,10 @@ git worktree list
 `scripts/hook-git-guard.py` runs the prune and refuses a relative path or a redirected `add`
 on a Claude root; a pane without the hook (a junior) follows the same two rules by hand.
 
+**Host.** `ORCA_PANE_KEY` set means Orca: the pane, watching and cleanup steps below take their
+Orca form from `ORCA.md`, and no `herdr` command runs in this session (6.1.0). Otherwise
+`HERDR_ENV=1` means Herdr and the text below applies as written.
+
 **Workspace.** Match `workspace-label` from `orchestrator.md` against `herdr workspace list`.
 One match: reuse it. Two or more, or a `<set-me>` label: STOP and ask the owner. None:
 `herdr workspace create --label "<label>" --cwd <repo-root> --no-focus`, then record
@@ -119,10 +123,10 @@ picks the `builder-quick` launcher row (`dispatch-ticket-claude` § Launcher mat
 else the `builder` row. The mod reads the same label again at the send and sets the gates.
 
 ```text
-role=builder   runtime=claude   topology=herdr   kind=<quick|full|->
+role=builder   runtime=claude   topology=<herdr|orca>   kind=<quick|full|->
 executable=<exact launcher command from dispatch-ticket-claude>
 ticket=<id>    worktree=<absolute path>   branch=<ticket branch>
-workspace=<id> workspace_managed_by_root=<true|false>   tab=<id>   pane=<id>
+workspace=<id> workspace_managed_by_root=<true|false>   tab=<id>   pane=<id>   # Orca: terminal=<handle> (ORCA.md)
 ```
 
 Launch with the command in `dispatch-ticket-claude`; the pane ends with a registered agent

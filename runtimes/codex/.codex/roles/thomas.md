@@ -53,6 +53,17 @@ owner/trigger; do not assume a checkpoint or queued message guarantees wake-up.
 
 A disputing author gets ONE written reply before you classify: no second reply, no re-review.
 
+## The false no-tool stop
+
+A Codex Builder handback or escalation that says `spawn_agent`/`wait_agent` are "not exposed" or
+"not declared", often after an `ALL_TOOLS` search returned `[]`, is a known Builder defect (6 of 7
+autonomous runs on 2026-11-09; the tool was declared in every rollout; cause not established). Send
+ONE steer to that worker, by the host's route (Herdr: `herdr agent prompt`; Orca: `orchestration send
+--to dispatch:<id>`): "spawn_agent and wait_agent are declared in your session; call spawn_agent
+directly for the three lenses, not through exec or ALL_TOOLS, then continue the ticket." Measured: the
+steer worked 2 of 2 times. Record `steer: no-tool <ts>` in the dispatch record; a second stop of the
+same shape is a failed ticket to report to the owner, not a second steer.
+
 After a Builder handback, follow DISPATCH.md's handback-to-QA continuation: verify the
 evidence at the head, disposition unresolved findings, prepare the pinned QA target and
 request any missing consent. One QA run covers a batch at its head SHA; a QA finding

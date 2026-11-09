@@ -1751,7 +1751,8 @@ else
 // a brief sent to a "name [ref]" address followed by its RECEIVED ack from the bare name.
 const fs = require('fs'), path = require('path'), Module = require('module')
 const [,, modDir, root, tsPath, mode] = process.argv
-const isPane = mode === 'pane' || mode === 'qapane'
+const isPane = mode === 'pane' || mode === 'qapane' || mode === 'orcapane'
+const isOrca = mode === 'orcapane'
 const ts = require(tsPath)
 const src = fs.readFileSync(path.join(modDir, 'hooks/register.tsx'), 'utf8')
 const js = ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React, jsxFactory: 'h', jsxFragmentFactory: 'Fragment' } }).outputText
@@ -1771,6 +1772,7 @@ const hooks = {}
 m.exports.register((name, a, b) => { const fn = typeof a === 'function' ? a : b; const sel = typeof a === 'function' ? null : a; (hooks[name] ??= []).push({ fn, sel }) })
 const log = []
 const herdrCalls = []
+const orcaCalls = []
 let liveAgents = []
 let tick = 0
 let everyFn = async () => {}
@@ -1778,12 +1780,12 @@ let selfSock
 let homeDir
 const every = () => everyFn()
 const $ = {
-  env: { get: async k => k === 'CLAUDE_CODE_MESSAGING_SOCKET' ? selfSock : k === 'ASTRAGENTIC_REPO' ? root : k === 'HOME' ? homeDir : (isPane && k === 'HERDR_TAB_ID') ? 't5' : (isPane && k === 'HERDR_PANE_ID') ? 'p5' : undefined },
+  env: { get: async k => k === 'CLAUDE_CODE_MESSAGING_SOCKET' ? selfSock : k === 'ASTRAGENTIC_REPO' ? root : k === 'HOME' ? homeDir : (isOrca && k === 'ORCA_PANE_KEY') ? 'tab5:leaf5' : (isOrca && k === 'ORCA_TAB_ID') ? 'tab5' : (isOrca && k === 'ORCA_TERMINAL_HANDLE') ? 'term_5' : (isOrca && k === 'ASTRA_DISPATCH') ? 'ticket:AB-5' : (isOrca && k === 'ORCA_CLI_BIN_DIR') ? '/orca/bin' : isOrca ? undefined : k === 'HERDR_ENV' ? '1' : (isPane && k === 'HERDR_TAB_ID') ? 't5' : (isPane && k === 'HERDR_PANE_ID') ? 'p5' : undefined },
   clock: { now: async () => { tick = Math.max(tick + 1, Date.now()); return tick }, every: (_ms, fn) => { everyFn = fn } },
   command: { register: () => {}, run: async () => ({}) },
   session: { id: async () => 'disp', send: async () => ({ isDelivered: true }), usage: async () => ({ startedAt: 0, context: { tokens: 1000, window: 1_000_000, percent: 0 } }), compact: async () => ({}) },
   fs: { read: async p => fs.readFileSync(p, 'utf8'), write: async (p, t) => fs.writeFileSync(p, t), exists: async p => fs.existsSync(p) },
-  process: { run: async (argv, o = {}) => { if (argv[0] === 'herdr') { herdrCalls.push(argv) } if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? (mode === 'qapane' ? '{"result":{"tab":{"label":"qa:AB-5"}}}' : '{"result":{"tab":{"label":"ticket:AB-5"}}}') : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8', env: { ...process.env, ...(o.env ?? {}) } }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
+  process: { run: async (argv, o = {}) => { if (argv[0] === 'herdr') { herdrCalls.push(argv) } if (String(argv[0]).endsWith('/orca') || argv[0] === 'orca') { orcaCalls.push(argv); return { exitCode: 0, stdout: '{"ok":true}', stderr: '' } } if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? (mode === 'qapane' ? '{"result":{"tab":{"label":"qa:AB-5"}}}' : '{"result":{"tab":{"label":"ticket:AB-5"}}}') : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8', env: { ...process.env, ...(o.env ?? {}) } }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
   ui: { status: t => log.push(t), toast: () => {}, open: () => {}, resolve: () => ({ Box: 'Box', Text: 'Text' }) },
   prompt: { submit: async () => {} },
   agent: { list: async () => liveAgents },
@@ -1829,6 +1831,22 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const qaBand = await band()
     const wakeupQa = await (async () => { let ran = false; const r = await fire('tool.call', { tool: 'ScheduleWakeup', delaySeconds: 300 }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` })()
     console.log(JSON.stringify({ qaRecordPath: /by the record/.test(qaBand), qaNoBypassHint: !/shift\+tab/.test(qaBand), qaNotRed: !/not delivered to the dispatcher/.test(qaBand), wakeupQa, qaBand }))
+    return
+  }
+  if (mode === 'orcapane') {
+    // 6.1.0 — a pane Orca opened: identity from ORCA_* and ASTRA_DISPATCH (Orca rewrites titles),
+    // herdr refused, orca allowed, `orca terminal close` on its own handle refused mid-turn
+    await fire('session.start', { cwd: root }, async () => ({}))
+    const rec = () => JSON.parse(fs.readFileSync(path.join(root, '.astraler/state/dispatch-record.json'), 'utf8'))
+    const e5 = rec()['AB-5'] ?? {}
+    const orcaRegistered = `${e5.role}:${e5.tab_id}:${e5.pane_id}:${e5.host}:${e5.terminal}`
+    const cmdOf = async (command) => { let ran = false; const r = await fire('tool.call', { tool: 'Bash', command }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` }
+    const herdrInOrca = await cmdOf('herdr tab list')
+    const herdrWhy = String((await fire('tool.call', { tool: 'Bash', command: 'herdr agent start x --kind claude' }, async () => ({})))?.deny ?? '')
+    const orcaInOrca = await cmdOf('/orca/bin/orca terminal list --json')
+    const docNamedOrca = await cmdOf('cat docs/codex/ORCA-DESIGN.md && ls orca-notes')
+    const herdrCallsAtStart = herdrCalls.length
+    console.log(JSON.stringify({ orcaRegistered, herdrInOrca, herdrWhy: herdrWhy.slice(0, 60), orcaInOrca, docNamedOrca, herdrCallsAtStart }))
     return
   }
   if (isPane) {
@@ -2478,7 +2496,10 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   const bandRows = /\d+ lanes?/.test(bandDisp) && /AB-15\s+builder\s+registered/.test(bandDisp) && /↑0\.0\.2/.test(bandDisp) && !/available/.test(bandDisp)
   fs.writeFileSync(recPath, '{}')
   const kind = { briefQuick, kindQuick, briefUnlabelled: briefUnlabelled.slice(0, 7), kindAfterUnlabelled, briefFull, kindFull, briefJira, kindJira, mergeQuick, mergeQuickNoReview, mergeUnkinded, mergeSimplifyNa, mergeQuickNote, quickLanes, bandRows }
-  console.log(JSON.stringify({ deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, ownerBells, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeUi, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiStd, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
+  // 6.1.0 — a Herdr dispatcher may not reach into Orca; a doc or path named orca is not a command
+  const orcaInHerdr = await (async () => { let ran = false; const r = await fire('tool.call', { tool: 'Bash', command: 'orca terminal create --worktree active --command claude' }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` })()
+  const orcaDocInHerdr = await (async () => { let ran = false; const r = await fire('tool.call', { tool: 'Bash', command: 'sed -n 1,5p docs/codex/ORCA-DESIGN.md; echo orca' }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` })()
+  console.log(JSON.stringify({ orcaInHerdr, orcaDocInHerdr, deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, ownerBells, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeUi, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiStd, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
@@ -2525,6 +2546,11 @@ DRVEOS
   # 5.0.9 — a dead lane (one project, 2026-10-30: three panes lost auth together, the owner found
   # out 36 h later) reads red on the board and its bell says redispatch; the launch guard refuses
   # an argv that repeats the executable --kind supplies (same project, 2026-11-01, one launch)
+  if says "$out" '"orcaInHerdr":"deny:held","orcaDocInHerdr":"pass:ran"'; then
+    ok "a Herdr dispatcher (HERDR_ENV=1) is refused an orca command and keeps a command that only names orca in a path (6.1.0)"
+  else
+    bad "mod one host per session" "$(printf '%s' "$out" | grep -o '"orcaInHerdr":"[^"]*","orcaDocInHerdr":"[^"]*"')"
+  fi
   if says "$out" '"deadRow":"AB-9:dead:error: Your organization has disabled Claude subscription access — redispatch, do not wait"' && says "$out" '"deadBell":true,"launchDoubled":"deny:held","launchPlain":"pass:ran"'; then
     ok "a lane whose last turn died reads dead with the error's first line; its turn-end bell says the pane is dead on its first line; a launch argv that repeats the --kind executable is refused and the plain one passes (5.0.9)"
   else
@@ -2594,6 +2620,12 @@ EOS
     ok "pane side: a turn end with a live agent is held, the next turn start ends the hold, the band reads the latest step as … with the pane's agent count until a later step or a clean turn end and the step after it as ○, an arm row at no reaches the Builder's prompt, a command on the project's refused list is refused, a turn over the context ceiling is compacted, ScheduleWakeup is refused except stop, and a bypass-launched pane whose send lost its verdict is told to return to bypass"
   else
     bad "mod pane hold" "$out"
+  fi
+  out="$(mod_drive "$MOD" orcapane)"
+  if says "$out" '"orcaRegistered":"builder:tab5:tab5:leaf5:orca:term_5","herdrInOrca":"deny:held","herdrWhy":"astragentic-dispatch: this session runs in Orca (ORCA_PANE_K","orcaInOrca":"pass:ran","docNamedOrca":"pass:ran","herdrCallsAtStart":0'; then
+    ok "an Orca pane (6.1.0) records itself from ORCA_* and ASTRA_DISPATCH without one herdr call, refuses herdr commands, runs orca ones, and a doc or path named orca is not a command"
+  else
+    bad "mod orca pane" "$out"
   fi
   out="$(mod_drive "$MOD" qapane)"
   if says "$out" '"qaRecordPath":true,"qaNoBypassHint":true,"qaNotRed":true,"wakeupQa":"deny:held"'; then

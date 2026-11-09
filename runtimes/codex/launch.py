@@ -117,6 +117,11 @@ def main():
                        'Record and verify this endpoint and the actual new session UUID before coordination. '
                        'For authorized separate-session dispatch, carry the explicitly selected endpoint into new worker CLI argv and both queue directions. '
                        'Never resume a pre-existing session on this endpoint without its own ownership and continuation checks. ')
+        # 6.1.0, owner rule: one host per session. The host is read from the environment this
+        # launcher runs in; the role contract and DISPATCH.md branch on the same variables.
+        host = 'orca' if os.environ.get('ORCA_PANE_KEY') else 'herdr' if os.environ.get('HERDR_ENV') == '1' else 'none'
+        if args.herdr and host == 'orca':
+            raise ValueError('--herdr inside an Orca pane: one host per session, use the Orca rows of DISPATCH.md')
         argv = ['codex', '--cd', str(project), '--model', model,
                 '-c', 'model_reasoning_effort=' + json.dumps(effort)]
         if args.remote is not None:
@@ -143,13 +148,14 @@ def main():
             argv += ['-c', 'notify=' + json.dumps(['bash', str(bell.resolve()), str(project)])]
         argv.append(prompt)
         if args.dry_run:
-            print(json.dumps({'role': args.role, 'orchestrator': str(config), 'contract': str(contract),
+            print(json.dumps({'role': args.role, 'host': host, 'orchestrator': str(config), 'contract': str(contract),
                               'overlay_installed': installed, 'worker_permission_mode': worker_mode,
                               'lifecycle_endpoint': args.remote, 'argv': argv}, ensure_ascii=False, indent=2))
             return 0
         binary = shutil.which('codex')
         if not binary:
             raise ValueError('codex executable not found')
+        print('astra-codex: host=' + host, file=sys.stderr)
         if not installed:
             print('astra-codex: source-only role launch; install the overlay for project-native skills and helpers', file=sys.stderr)
         os.chdir(project)

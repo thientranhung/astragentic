@@ -67,12 +67,46 @@ class LauncherTests(unittest.TestCase):
                 self.assertIn('Read the Codex role contract',argv[-1])
                 self.assertEqual(list(Path(d).iterdir()),[Path(d)/'.git'])
 
+    def test_dispatch_opens_with_the_host_check_as_a_hard_stop(self):
+        dispatch = (ROOT / 'runtimes/codex/.codex/DISPATCH.md').read_text()
+        self.assertLess(dispatch.index('## The host (6.1.0)'), dispatch.index('## Before launch'))
+        self.assertIn('if [ -n "${ORCA_PANE_KEY:-}" ]; then HOST=orca', dispatch)
+        self.assertIn('else echo "no host: stop and report to the owner"; exit 2; fi', dispatch)
+        self.assertIn('never a fallback', dispatch)
+        self.assertRegex(dispatch, r'(?m)^## Orca\b')  # a real section, not the mention in the host paragraph
+
+    def test_herdr_dispatch_text_is_byte_identical_to_6_0_9(self):
+        # 6.1.0 adds Orca beside Herdr; the Herdr path nizzy runs on 6.0.9 must not move (owner rule:
+        # one host per session, the Herdr text stays as it is).
+        old = subprocess.run(['git', '-C', str(ROOT), 'show', 'v6.0.9:runtimes/codex/.codex/DISPATCH.md'], text=True, capture_output=True)
+        if old.returncode != 0:
+            self.skipTest('no v6.0.9 tag in this checkout')
+        start = old.stdout.index('# Run this block with bash (arrays preserve argv boundaries).')
+        end = old.stdout.index('The per-worker `-c notify` replaces any global `notify`')
+        block = old.stdout[start:end]
+        self.assertIn('herdr agent start', block)
+        self.assertIn(block, (ROOT / 'runtimes/codex/.codex/DISPATCH.md').read_text())
+
+    def test_launcher_names_its_host_and_refuses_the_other_hosts_flag(self):
+        # 6.1.0, owner 2026-11-09: one host per session. The launcher reads the host from its own
+        # environment, Orca first, and says so; --herdr inside an Orca pane is refused.
+        base = {k: v for k, v in os.environ.items() if k not in ('HERDR_ENV', 'HERDR_SOCKET_PATH', 'ORCA_PANE_KEY')}
+        for extra, host in [({'ORCA_PANE_KEY': 'tab:leaf', 'HERDR_ENV': '1'}, 'orca'), ({'HERDR_ENV': '1'}, 'herdr'), ({}, 'none')]:
+            with self.subTest(host=host):
+                result = self.run_cli('thomas', '--project', str(ROOT), '--dry-run', env={**base, **extra})
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(json.loads(result.stdout)['host'], host)
+        refused = self.run_cli('thomas', '--project', str(ROOT), '--herdr', '--dry-run',
+                               env={**base, 'ORCA_PANE_KEY': 'tab:leaf', 'HERDR_ENV': '1', 'HERDR_SOCKET_PATH': '/tmp/x.sock'})
+        self.assertNotEqual(refused.returncode, 0)
+        self.assertIn('one host per session', refused.stderr)
+
     def test_herdr_requires_managed_environment_and_existing_absolute_socket(self):
         with tempfile.TemporaryDirectory() as d:
             regular = Path(d) / 'regular.sock'
             regular.write_text('owner file')
             missing_env = {k: value for k, value in os.environ.items()
-                           if k not in ('HERDR_ENV', 'HERDR_SOCKET_PATH')}
+                           if k not in ('HERDR_ENV', 'HERDR_SOCKET_PATH', 'ORCA_PANE_KEY')}
             missing = self.run_cli('thomas', '--project', str(ROOT), '--herdr', '--dry-run', env=missing_env)
             self.assertNotEqual(missing.returncode, 0)
             self.assertIn('HERDR_ENV=1', missing.stderr)
@@ -80,6 +114,7 @@ class LauncherTests(unittest.TestCase):
                                   ('1', str(Path(d) / 'missing.sock')), ('1', str(regular))]:
                 with self.subTest(managed=managed, path=path):
                     env = {**os.environ, 'HERDR_ENV': managed, 'HERDR_SOCKET_PATH': path}
+                    env.pop('ORCA_PANE_KEY', None)  # these are Herdr cases; the suite may itself run in an Orca pane
                     result = self.run_cli('thomas', '--project', str(ROOT), '--herdr', '--dry-run', env=env)
                     self.assertNotEqual(result.returncode, 0)
                     self.assertIn('--herdr requires', result.stderr)
@@ -100,7 +135,7 @@ class LauncherTests(unittest.TestCase):
                 binary.write_text('#!' + sys.executable + '\nimport json, sys\nprint(json.dumps(sys.argv[1:]))\n')
                 binary.chmod(0o755)
                 before = sorted(str(p.relative_to(project)) for p in project.rglob('*'))
-                env = {**os.environ, 'HERDR_ENV': '1', 'HERDR_SOCKET_PATH': str(sock_path),
+                env = {**os.environ, 'HERDR_ENV': '1', 'ORCA_PANE_KEY': '', 'HERDR_SOCKET_PATH': str(sock_path),
                        'PATH': str(root) + os.pathsep + os.environ['PATH']}
                 result = self.run_cli('thomas', '--project', str(project), '--herdr', env=env)
                 self.assertEqual(result.returncode, 0, result.stderr)
@@ -295,6 +330,9 @@ class LauncherTests(unittest.TestCase):
         self.assertIn('Review runs once over the increment', builder)
         self.assertNotIn('invalidate coverage', builder)
         self.assertIn('ONE written reply', thomas)
+        self.assertIn('## The false no-tool stop', thomas)
+        self.assertIn('Send\nONE steer', thomas)
+        self.assertIn('a second stop of the\nsame shape is a failed ticket', thomas)
         tdd = (ROOT / 'runtimes/codex/.agents/skills/codex-astra-implement-with-tdd/SKILL.md').read_text()
         self.assertIn('a test failing three times in a row', tdd)
         self.assertIn('Run exactly the commands', tdd)

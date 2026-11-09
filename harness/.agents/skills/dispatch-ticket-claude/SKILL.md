@@ -12,13 +12,13 @@ and every Claude session in the project loads it with no flag and no setup.
 
 | Step | What the mod does |
 |---|---|
-| Record tab and pane ids | the pane writes them at session start, from herdr's own environment |
+| Record tab and pane ids | the pane writes them at session start, from its host's environment: Herdr's tab label, or Orca's `ORCA_*` plus `ASTRA_DISPATCH` in the launch command (6.1.0) |
 | Deliver the slash command | **one SendMessage**; the pane runs the first line as a real command |
 | Confirm delivery | the pane answers `RECEIVED` |
 | Watch the turn | the pane reports `TURN-END` when a turn ends with none of its agents still running, and wakes you with a prompt |
 | Route a pane's sends to you | the pane's overlay names your session; a SendMessage from it to any name no agent of its own carries (a peer Builder, a session in another project) goes to you instead, and the pane's status line says so |
 | Announce a newer release | at your session start the mod asks the package remote for its newest tag once and shows a chip on your band; `.astraler/astragentic.sh update` prints the gap and the one-liner. Applying stays the owner's call |
-| Protect a working pane | `herdr tab\|pane\|workspace close` on a mid-turn pane is refused |
+| Protect a working pane | `herdr tab\|pane\|workspace close` and `orca terminal close` on a mid-turn pane are refused; a `herdr` command in an Orca session, or an `orca` command in a Herdr session, is refused outright (one host per session, 6.1.0) |
 | Claim before the brief | a brief for a ticket the tracker reports unclaimed is not sent |
 | Tracker write-back after a merge | the merge result carries the note, the line turns red, and no brief is sent until `scripts/ticket-done.sh` has stamped it |
 | Release a worktree's resources | `release-worktree-resources.sh` runs at `git worktree remove`; the record entry goes with the worktree |

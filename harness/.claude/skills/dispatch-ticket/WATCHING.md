@@ -29,6 +29,8 @@ cmd … > /tmp/out.log 2>&1; status=$?; tail -25 /tmp/out.log; exit $status
 
 ## The per-turn watcher
 
+Herdr only. On Orca (`ORCA.md`) nothing here runs: the mod and the record are the only paths.
+
 `<repo-root>/scripts/herdr-watch-terminal.sh <pane-id> 3 3600 120` watches a newly submitted
 turn: it waits to observe `working` first, so an already-idle pane returns `NO_START`. Run it
 by absolute path, alone on its line, immediately after the submit, once per turn. A fold sent
