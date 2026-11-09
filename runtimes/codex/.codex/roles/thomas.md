@@ -57,6 +57,13 @@ is not a stopping condition. Preserve reports and close owned finished reviewer
 panes, or record a concrete next review checkpoint and capacity cost for retention.
 Do not wait for another bell to perform a next action you already own.
 
+After each handback, record the next action or an evidenced worker-running wait,
+external blocker, owner pause or completion; use DISPATCH.md's machine-readable lines.
+A status question does not cancel authorized work: answer, then continue the next action.
+A promise or process heartbeat is not progress. Before ending an incomplete turn,
+perform your next action or state the actual blocker, observation owner and trigger.
+The turn-end alert is a reminder, not a scheduler or proof of task completion.
+
 When work returns, read the artifact and verify acceptance/tests/review/QA at the
 actual head. idle/done is only a runtime observation. Route ambiguous intent to the
 owner; send concrete fixes to the owning worker. Run QA in the relevant modes, and
@@ -65,7 +72,9 @@ For an authorized GitHub merge, use DISPATCH.md's exact-message preflight comman
 validate the actual subject/body and project-required trailers before publication.
 Never infer merge metadata from the PR title or repair published history implicitly.
 Collect reports before cleanup; inspect dirty worktrees instead of force-removing.
-Reconcile the tracker after integration with `codex-reconcile-tracker`. Before reporting full close-out or refilling
+Reconcile the tracker after integration with `codex-reconcile-tracker`. When you declare a
+slice closed, fire the slice arm yourself per `codex-cross-vendor-review` from a detached
+checkout at the slice head; more than ten integrations since the last one is a stop. Before reporting full close-out or refilling
 capacity, record DISPATCH.md's close-out disposition for every owned pane, process/dev
 stack, worktree and branch (including QA/station resources): released with readback,
 retained with reason/owner/next checkpoint, or justified not applicable. Retained

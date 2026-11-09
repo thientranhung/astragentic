@@ -1,3 +1,68 @@
+# Astragentic 6.0.8
+
+**A Codex root can fire the cross-vendor arm at Claude Code.** The Claude runtime has called
+Codex since 4.x (`codex-arm`); the Codex overlay's orchestrator read "Cross-vendor arm:
+unconfigured for spec, ticket and slice. Configure an available other-provider reviewer", and
+no file in `runtimes/codex` said how (grep for an adapter, 0 hits), so every Codex Builder,
+Shaper and Thomas stopped at that gate with NOT RUN by contract. `orchestrator-for-codex.md`
+gains a `## Cross-vendor arm` table (`Scope | Reviewer | Model`, shipped `claude-code` /
+`claude-sonnet-5-5` for ticket, spec, slice; `no` and `unconfigured` keep their 6.0.x
+meanings). `codex-cross-vendor-review` now carries the pass: `claude -p` with the range in the
+prompt, `--output-format json --json-schema .codex/astragentic/arm-schema.json --tools
+Read,Grep,Glob,Bash --allowedTools "Bash(git diff *)"… --permission-mode manual
+--no-session-persistence --max-budget-usd 1`, under `perl alarm`, teed with a range header
+into `.scratch/gates/arm-<key>-<scope>-pass<N>.md`; the verdict is `structured_output.verdict`
+only, and no `structured_output`, `is_error`, a kill or a budget stop is NOT RUN. The schema
+ships as an owned overlay file; builder.md, shaper.md and thomas.md point at the table.
+Measured (docs/codex/CLAUDE-ARM-PROBE-2026-11-09.md): planted off-by-one named at
+calc.py:4 and planted inverted installer guard named at install.py:103 with both
+consequences, clean fixture `pass`, 15 to 39 s and 0.13 to 0.30 USD per pass on Sonnet 5.5;
+`--restricted` dropped Bash despite the allow-list so the reviewer never saw the diff (not
+shipped); `--permission-mode manual` without a TTY denied Edit when the prompt ordered one,
+tree clean, denial listed in `permission_denials`; a CLAUDE.md ordering "fix and commit" was
+refused 4/4; no session token present still ran; 0 harness hook lines from the reviewer; budget
+cap trips with `subtype error_max_budget_usd` and no `structured_output`. Launcher test asserts
+the arm table is not read as roles (an arm row planted in the model table fails on `invalid
+model/effort for ticket`); install test asserts the schema is copied and owned. Not measured:
+fired from a Codex Herdr pane (account, TTY), Opus cost, concurrent arms, a 30-file diff, and
+the spec and slice rows (same command, different range, 0 runs so far).
+**A Codex coordinator that ends its turn on unfinished work is held, then the owner is told.**
+Second stall of the day on nizzy: QA's WALK007 handback reached the Codex Thomas at 12:42:12,
+its disposition was saved at 12:42:33 with the gaps still open, its turn ended at 12:42:40 and
+nothing followed until the owner complained at 14:33:16 (1 h 50 min 35 s; a 13:57 status
+answer promised work and did none; docs/codex/STALL-AUDIT-WALK007 from the nizzy coordinator
+rollout). Root cause as in 6.0.7: Thomas is the last bell in every chain and nothing wakes it
+after it stops. The Claude runtime holds Thomas's turn through the dispatch mod; the Codex
+overlay had prose only. Codex 0.167 has a blocking `Stop` hook (official docs: exit 0 with
+`{"decision":"block","reason"}` creates a continuation turn; `stop_hook_active` marks it), so
+the overlay now ships `coordinator-turn-end.sh` plus a `coordinator-hooks.json` template:
+Thomas appends `handback: <id> <ts>` on receipt and `disposition: <id> <state> <ts>` after the
+real next action (stopping states worker_running, external_wait, owner_paused, completed,
+idle); at Stop, a record bound to the payload's session UUID and cwd with a handback still
+pending blocks once with a reason naming the handback and the contract; on the continuation
+turn it never blocks again and instead shows one Herdr notification per (record, handback),
+reserved before send, silent under `bell-off`. Fallback for a checkout where Stop is not
+verified: `launch.py thomas --coordinator-notify` wires the same script as `notify` (alert
+only, Thomas only). ADAPT-HARNESS-CODEX §3 adds the owner steps: create or merge
+`.codex/hooks.json` in the coordinator checkout only, trust it in `/hooks`, restart the
+session, verify one live Stop. Measured (docs/codex/STALL-FIX-WALK007-2026-11-09.md, Codex
+builder pane; Thomas reviewed and planted): one real Stop payload captured in an
+owner-trusted Herdr TUI (session_id, turn_id, cwd, stop_hook_active=false,
+last_assistant_message); replay of that payload over the WALK007 record blocks once with the
+right handback; stop_hook_active=true gives exactly one `shown:true` in 40.6 ms; duplicates,
+all five stopping states, bell-off, malformed and legacy records give nothing; a planted
+missing dedup fails the test; a planted "block even when stop_hook_active" passed the
+builder's test because its second call reused the turn id, so the test now sends a new turn
+id and the plant fails on it; a planted dropped cwd check fails. The dispatch-record
+template's combined "Coordinator thread UUID / worker thread UUID" line did not match the
+script's binding regex and is split into two lines. Not measured: Codex actually generating
+the continuation from this script's block (the capture hook returned `{}`), a provider-error
+turn (no Stop fires, upstream #45977), hooks inside linked worktrees (#27133), `codex exec`
+(#32491). Upstream pitfalls recorded in ADAPT: trust is per hash (#58011), live edits of
+hooks.json stop hooks for the session (#21160). Codex suite 63/0.
+
+Claude payload untouched.
+
 # Astragentic 6.0.7
 
 **A Codex coordinator carries review into QA in the same turn.** On nizzy the Codex Thomas

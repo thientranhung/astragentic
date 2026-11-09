@@ -20,10 +20,11 @@ worker's checkout. Keep the dispatch checkpoint current across compaction/resume
    base/head. Verify findings, fix supported defects and send disputes to Thomas.
 4. `codex-simplify`: inspect the finished increment for unnecessary complexity. Make only
    justified changes and rerun affected checks. A no-change pass is valid evidence.
-5. Use `codex-cross-vendor-review` for the ticket policy after simplification. At most
-   two passes, the second after folding findings. Unconfigured policy or missing
-   enabled adapter blocks a completion claim; hand back the precise decision/capability
-   gap. Off is valid only with a recorded owner decision; never substitute self-review.
+5. Use `codex-cross-vendor-review` for the ticket arm after simplification: read the
+   orchestrator's arm table and, for `claude-code`, fire the pass from this worktree. At most
+   two passes, the second after folding findings. `unconfigured` or a failed run blocks a
+   completion claim; hand back NOT RUN with the exact reason. Off is valid only with a
+   recorded owner decision; never substitute self-review.
 6. Verify each criterion and hand back the exact artifact and evidence. Code changes
    after review invalidate coverage of that code; do not reuse a receipt for another
    tree. Record exemptions and unresolved findings honestly.

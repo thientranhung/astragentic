@@ -87,6 +87,31 @@ stamp does not mean the semantic adaptation below is complete.
 
 ## 3. Integrate the project meaning
 
+### Coordinator Stop hook (owner trust and fresh-session verification required)
+
+In the normal coordinator checkout only, inspect `.codex/hooks.json`. With owner
+authorization, create it from `.codex/astragentic/coordinator-hooks.json` if absent,
+or merge only this Stop entry while preserving existing owner hooks. Never replace
+an existing hook file or copy it into worker linked worktrees to force discovery.
+The mechanical installer ships a template, not an enabled or trusted project hook.
+
+Have the owner review/trust the hook in `/hooks`; do not edit trust storage or pass
+`--dangerously-bypass-hook-trust`. Review again after script/definition changes;
+record the exact trusted hashes. Restart the coordinator after installation or
+hook changes, preserving its checkpoint under owner control. In a fresh Herdr TUI
+verify actual Stop stdin, correct UUID/cwd and one continuation; configuration or
+`hooks/list` alone is not execution proof. `codex exec` and app-server issue reports
+describe skipped hooks in some versions; do not assume their result establishes
+current TUI behavior. Provider-error turns may omit Stop; do not claim coverage.
+
+After that measured check, launch Thomas normally: no notify override is added;
+its project Stop hook is the primary path. If Stop cannot be verified, explicitly
+select launcher `--coordinator-notify` for alert-only fallback. This flag does not
+install or trust hooks and never blocks/resumes a turn. Do not claim protection from
+an untrusted or untested hook file. Neither route covers process death or provider
+failures without a measured lifecycle event. Report selected route, trust/restart
+status and skipped cases in the adaptation receipt.
+
 Edit AGENTS.md narrowly, preserving its project rules and instruction hierarchy.
 Add a compact Codex entrypoint section that directs setup/startup to installed
 Codex role contracts, `.codex/DISPATCH.md`, and the project-owned

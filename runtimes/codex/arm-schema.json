@@ -1,0 +1,21 @@
+{
+  "type": "object",
+  "required": ["verdict", "findings", "coverage"],
+  "properties": {
+    "verdict": {"type": "string", "enum": ["pass", "block"]},
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["file", "line", "severity", "claim"],
+        "properties": {
+          "file": {"type": "string"},
+          "line": {"type": "integer"},
+          "severity": {"type": "string", "enum": ["blocking", "advisory"]},
+          "claim": {"type": "string"}
+        }
+      }
+    },
+    "coverage": {"type": "string"}
+  }
+}

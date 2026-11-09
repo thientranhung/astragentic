@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.codex/astragentic/coordinator-turn-end.sh\" \"$(git rev-parse --show-toplevel)\" --stop",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

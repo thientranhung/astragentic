@@ -36,8 +36,18 @@ class InstallTests(unittest.TestCase):
         self.assertEqual(bell.read_bytes(), (ROOT / 'runtimes/codex/turn-end.sh').read_bytes())
         owned = json.loads((self.project / '.codex/astragentic/manifest.json').read_text())['files']
         self.assertIn('.codex/astragentic/turn-end.sh', owned)
+        coordinator_bell = self.project / '.codex/astragentic/coordinator-turn-end.sh'
+        self.assertEqual(coordinator_bell.read_bytes(), (ROOT / 'runtimes/codex/coordinator-turn-end.sh').read_bytes())
+        self.assertIn('.codex/astragentic/coordinator-turn-end.sh', owned)
+        template=self.project/'.codex/astragentic/coordinator-hooks.json'
+        self.assertEqual(template.read_bytes(), (ROOT/'runtimes/codex/coordinator-hooks.json').read_bytes())
+        self.assertFalse((self.project/'.codex/hooks.json').exists())
         mapping = self.project / '.codex/astragentic/skill-map.json'
         self.assertEqual(len(json.loads(mapping.read_text())), 20)
+        schema = self.project / '.codex/astragentic/arm-schema.json'
+        self.assertEqual(schema.read_bytes(), (ROOT / 'runtimes/codex/arm-schema.json').read_bytes())
+        self.assertIn('.codex/astragentic/arm-schema.json', owned)
+        self.assertEqual(sorted(json.loads(schema.read_text())['required']), ['coverage', 'findings', 'verdict'])
         config = self.project / '.agents/orchestrator-for-codex.md'
         config.write_text(config.read_text().replace('| thomas | gpt-6-astra | medium |',
                                                    '| thomas | gpt-6-astra | high |'))
@@ -49,6 +59,13 @@ class InstallTests(unittest.TestCase):
         data = json.loads(result.stdout)
         self.assertIn('model_reasoning_effort="high"', data['argv'])
         self.assertEqual(data['contract'], str(self.project / '.codex/roles/thomas.md'))
+        self.assertFalse(any(value.startswith('notify=') for value in data['argv']))
+        fallback = subprocess.run([sys.executable, str(self.project / '.codex/astragentic/launch.py'),
+                                  'thomas', '--project', str(self.project), '--coordinator-notify', '--dry-run'],
+                                 capture_output=True, text=True, check=True)
+        import tomllib
+        notify = next(value for value in json.loads(fallback.stdout)['argv'] if value.startswith('notify='))
+        self.assertEqual(tomllib.loads(notify)['notify'], ['bash', str(coordinator_bell), str(self.project)])
         operate(self.project, 'uninstall', True)
         self.assertTrue(config.is_file())
         self.assertEqual(old_skill.read_text(), 'existing runtime skill')
@@ -58,6 +75,8 @@ class InstallTests(unittest.TestCase):
         self.assertFalse(mapping.exists())
         self.assertFalse(merge.exists())
         self.assertFalse(bell.exists())
+        self.assertFalse(coordinator_bell.exists())
+        self.assertFalse(template.exists())
 
     def test_shared_skill_reuses_legacy_copy_without_claiming_or_removing_it(self):
         source = ROOT / 'harness/.agents/skills/astragentic-update-install/SKILL.md'

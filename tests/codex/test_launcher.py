@@ -12,6 +12,17 @@ ROOT = Path(__file__).resolve().parents[2]
 CLI = ROOT / 'runtimes/codex/launch.py'
 
 class LauncherTests(unittest.TestCase):
+    def test_notify_fallback_is_explicit_thomas_only(self):
+        with tempfile.TemporaryDirectory() as d:
+            subprocess.run(['git','init','-q',d],check=True)
+            ordinary=self.run_cli('thomas','--project',d,'--dry-run')
+            self.assertFalse(any(x.startswith('notify=') for x in json.loads(ordinary.stdout)['argv']))
+            fallback=self.run_cli('thomas','--project',d,'--coordinator-notify','--dry-run')
+            self.assertEqual(fallback.returncode,0,fallback.stderr)
+            value=next(x for x in json.loads(fallback.stdout)['argv'] if x.startswith('notify='))
+            self.assertEqual(tomllib.loads(value)['notify'], ['bash',str(ROOT/'runtimes/codex/coordinator-turn-end.sh'),str(Path(d).resolve())])
+            self.assertNotEqual(self.run_cli('ba','--project',d,'--coordinator-notify','--dry-run').returncode,0)
+
     def run_cli(self, *args, env=None):
         return subprocess.run([sys.executable, str(CLI), *args], text=True, capture_output=True, env=env)
 
@@ -49,8 +60,9 @@ class LauncherTests(unittest.TestCase):
                 self.assertEqual(argv[argv.index('--model')+1],model)
                 self.assertIn('model_reasoning_effort='+json.dumps(effort),argv)
                 self.assertNotIn('--sandbox',argv)
-                self.assertEqual([argv[i + 1] for i, value in enumerate(argv) if value == '-c'],
-                                 ['model_reasoning_effort=' + json.dumps(effort)])
+                values = [argv[i + 1] for i, value in enumerate(argv) if value == '-c']
+                expected = ['model_reasoning_effort=' + json.dumps(effort)]
+                self.assertEqual(values, expected)
                 self.assertFalse(any('developer_instructions=' in a for a in argv))
                 self.assertIn('Read the Codex role contract',argv[-1])
                 self.assertEqual(list(Path(d).iterdir()),[Path(d)/'.git'])
@@ -245,6 +257,19 @@ class LauncherTests(unittest.TestCase):
 
     def test_missing_project_rejected(self):
         self.assertNotEqual(self.run_cli('ba','--project','/nonexistent-astra-probe','--dry-run').returncode,0)
+
+    def test_shipped_orchestrator_arm_table_is_not_read_as_roles(self):
+        config = ROOT / 'runtimes/codex/.agents/orchestrator-for-codex.md'
+        text = config.read_text()
+        self.assertIn('## Cross-vendor arm', text)
+        self.assertRegex(text, r'\| ticket \| claude-code \| claude-[a-z0-9.-]+ \|')
+        sys.path.insert(0, str(ROOT / 'runtimes/codex'))
+        from launch import assignments
+        rows = assignments(config)
+        self.assertEqual(len(rows), 14)
+        self.assertNotIn('ticket', rows)
+        self.assertNotIn('spec', rows)
+        self.assertNotIn('slice', rows)
 
     def test_installed_helpers_must_match_selected_orchestrator(self):
         with tempfile.TemporaryDirectory() as d:

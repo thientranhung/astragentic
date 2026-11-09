@@ -31,7 +31,8 @@ Role / ticket / kind:
 Project / base SHA:
 Branch / worktree:
 Herdr workspace / tab / pane:
-Coordinator thread UUID / worker thread UUID:
+Coordinator thread UUID: <raw UUID>
+Worker thread UUID: <raw UUID, or 'not yet bound'>
 Selected Codex orchestrator absolute path / SHA-256 / role row:
 Model / effort:
 Worker CLI permission mode (default | yolo) / owner selection source:
@@ -388,6 +389,51 @@ Resume an existing Codex session by its recorded UUID using the installed CLI's 
 interface. Never use --last. Recheck project/cwd and current artifact before continuing.
 
 ## Handoff, checks and cleanup
+
+### Coordinator handback alert at turn end
+
+On receiving each handback, append the first line below to its existing dispatch
+record in `.scratch/codex/*.md` immediately, before doing disposition work. After
+performing the next action or verifying a legitimate stop/wait, append the second:
+
+```text
+handback: <original-event-id> <ISO-8601-received-at-with-timezone>
+disposition: <same-event-id> <state> <ISO-8601-disposition-at-with-timezone>
+```
+
+Use one unique event ID per handback; duplicates retain the original timestamp.
+Allowed stopping states: `worker_running`, `external_wait`, `owner_paused`,
+`completed`, `idle`. Record the actual evidence, next owner and trigger in surrounding
+prose; a status promise is not a disposition. `coordinator_pending` or a missing
+disposition means Thomas still owns work. Append updates with increasing timestamps;
+never mark completed merely to silence an alert. Keep exactly one existing
+`Coordinator thread UUID: <raw-UUID>` binding line in each record.
+
+In a coordinator checkout with the owner-trusted project Stop hook verified live,
+launch Thomas normally without a notify override. The same script
+receives Stop JSON on stdin with `--stop`: pending handback and `stop_hook_active=false`
+returns a blocking reason naming that event and the authorized next-action contract.
+`stop_hook_active=true` never blocks again; unresolved work falls through to the
+one-attempt Herdr alert below. A durable per-session/turn guard also prevents duplicate
+hook invocations from looping. Owner pause/bell-off and legitimate dispositions stay
+silent. The hook cannot grant authority or override a pause/approval.
+
+If Stop cannot be verified, explicit launcher `--coordinator-notify` sets
+per-invocation `notify` to `coordinator-turn-end.sh`. At
+`agent-turn-complete`, it checks records bound to that payload's UUID/cwd and shows
+one Herdr notification per (dispatch record, handback ID) still pending. It never
+queues/resumes work. `bell-off` under the coordinator project's `.astraler/codex/state`
+silences it. Attempts, skips and errors go to `coordinator-turn-end.log`; the seen
+file reserves attempts before send, including ambiguous failures, with no retry.
+Herdr acceptance is not owner consumption. No timer or continuing observer runs.
+The fallback replaces `notify` for this Thomas invocation; it does not chain a personal
+notifier or change user config. Worker TURN-END behavior remains separate.
+
+Missing/malformed/legacy records without these lines log skip, not a stall. This
+cannot detect a handback never recorded, a false terminal disposition, a crashed
+process that never emits notify, or lack of Herdr access. Do not claim unattended
+coverage of those cases or that an alert executes the next action. Rollout import
+and active downstream upgrade are separate authorized operations, never automatic.
 
 ### Review-to-QA continuation owned by Thomas
 

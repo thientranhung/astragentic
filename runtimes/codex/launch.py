@@ -51,6 +51,7 @@ def main():
     permissions.add_argument('--yolo', action='store_true', help='Explicitly bypass Codex approvals and sandbox for this owner session and authorized new CLI worker dispatches; does not grant new task actions or change personal configuration')
     permissions.add_argument('--herdr', action='store_true', help='Opt in to granting the Herdr API socket per launch using a native workspace permission profile; requires HERDR_ENV=1 and absolute HERDR_SOCKET_PATH naming an existing socket')
     parser.add_argument('--dry-run', action='store_true', help='Print launch argv as JSON without invoking Codex')
+    parser.add_argument('--coordinator-notify', action='store_true', help='Thomas only: explicit alert-only notify fallback when the project Stop hook cannot be verified; replaces personal notify for this invocation')
     args = parser.parse_args()
     try:
         project = args.project.resolve(strict=True)
@@ -60,6 +61,8 @@ def main():
         if git.returncode:
             raise ValueError('project must be a Git checkout')
         project = Path(git.stdout.strip()).resolve()
+        if args.coordinator_notify and args.role != 'thomas':
+            raise ValueError('--coordinator-notify is only for thomas')
         if args.remote is not None:
             if not args.remote.startswith('unix:///') or not Path(args.remote[7:]).is_socket():
                 raise ValueError('--remote requires unix:///absolute/path to an existing Codex socket; verify endpoint ownership separately')
@@ -132,6 +135,12 @@ def main():
                        'unix_sockets={' + json.dumps(str(socket)) + '="allow"}}}')
             argv += ['-c', 'default_permissions="astragentic-local"',
                      '-c', 'features.network_proxy=true', '-c', profile]
+        if args.role == 'thomas' and args.coordinator_notify:
+            bell = (project / '.codex/astragentic/coordinator-turn-end.sh' if installed
+                    else ROOT / 'coordinator-turn-end.sh')
+            if not bell.is_file():
+                raise ValueError('missing coordinator turn-end callback: ' + str(bell))
+            argv += ['-c', 'notify=' + json.dumps(['bash', str(bell.resolve()), str(project)])]
         argv.append(prompt)
         if args.dry_run:
             print(json.dumps({'role': args.role, 'orchestrator': str(config), 'contract': str(contract),

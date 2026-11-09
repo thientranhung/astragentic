@@ -42,13 +42,27 @@ are generated from the same table at installation. Values apply to new sessions.
   Start with one until the project's test environment supports concurrent runs.
 - Junior: disabled by default; enabling is an owner choice, not implied by a model row.
   When enabled, Builder pauses writes while Junior owns the assigned subset.
-- Cross-vendor arm: unconfigured for spec, ticket and slice. Configure an available
-  other-provider reviewer or record the owner's explicit off decision before crossing
-  that gate. Owner-authorized bounded pre-arm work may proceed with pending policy,
-  NOT RUN and an explicit stop point in its brief; stricter project policy wins. Unconfigured never means off. Do not manufacture a passing receipt.
+- Cross-vendor arm: read the table below. Owner-authorized bounded pre-arm work may
+  proceed with pending policy, NOT RUN and an explicit stop point in its brief; stricter
+  project policy wins. Unconfigured never means off. Do not manufacture a passing receipt.
 - Review/disposition: required checks are run with native tools and the project's
   existing verification commands. Thomas inspects evidence; there is no additional
   Astragentic state machine or claimed automatic merge enforcement.
+
+## Cross-vendor arm
+
+| Scope | Reviewer | Model |
+|---|---|---|
+| ticket | claude-code | claude-sonnet-5-5 |
+| spec | claude-code | claude-sonnet-5-5 |
+| slice | claude-code | claude-sonnet-5-5 |
+
+Reviewer is `claude-code` (the Claude Code CLI, invoked per `codex-cross-vendor-review`),
+`no` (owner's recorded off decision for that scope: no receipt owed, handback says
+`Arm: off (orchestrator)`), or `unconfigured` (decision still missing: the role stops at
+that gate and records NOT RUN). Another OpenAI model is never a reviewer value here. Model
+is the Claude model id the pass runs with; it travels on the command line and has no other
+home. This table is not read by `launch.py`; the roles read it.
 
 ## Evidence
 

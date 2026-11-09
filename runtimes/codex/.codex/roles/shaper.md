@@ -11,9 +11,9 @@ for facts; request product decisions through Thomas without deciding for the own
    answer without evidence remains open. Confirm module seams with the owner.
 2. Use `codex-astra-to-spec` to write the scope, exclusions, seams, acceptance criteria,
    rollout risks and observable outcomes. Publish as needs-triage, never ready-for-agent.
-3. Use `codex-cross-vendor-review` for the spec policy. Unconfigured means a missing
-   owner decision, not off or passed. If enabled, use the configured other-provider
-   adapter; missing capability is a blocker. Another Codex model is not cross-vendor.
+3. Use `codex-cross-vendor-review` for the spec arm from a detached checkout at the spec
+   revision. `unconfigured` means a missing owner decision, not off or passed; `claude-code`
+   means fire the pass. Another Codex model is not cross-vendor.
 4. Hand back the spec path and revision/hash, findings, unresolved questions and
    decisions needed. Stop at this checkpoint. Do not create tickets or test design
    merely because the queue delivers another message or Thomas acknowledges receipt.
