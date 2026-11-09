@@ -1786,7 +1786,7 @@ const $ = {
   command: { register: () => {}, run: async () => ({}) },
   session: { id: async () => 'disp', send: async () => ({ isDelivered: true }), usage: async () => ({ startedAt: 0, context: { tokens: 1000, window: 1_000_000, percent: 0 } }), compact: async () => ({}) },
   fs: { read: async p => fs.readFileSync(p, 'utf8'), write: async (p, t) => fs.writeFileSync(p, t), exists: async p => fs.existsSync(p) },
-  process: { run: async (argv, o = {}) => { if (argv[0] === 'herdr') { herdrCalls.push(argv) } if (String(argv[0]).endsWith('/orca') || argv[0] === 'orca') { orcaCalls.push(argv); const h = argv[1] === 'terminal' && argv[2] === 'show' ? argv[argv.indexOf('--terminal') + 1] : null; return { exitCode: 0, stdout: h ? `{"ok":true,"result":{"terminal":{"handle":"${h}","orphaned":${h === 'term_dead'}}}}` : '{"ok":true}', stderr: '' } } if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? (mode === 'qapane' ? '{"result":{"tab":{"label":"qa:AB-5"}}}' : '{"result":{"tab":{"label":"ticket:AB-5"}}}') : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8', env: { ...process.env, ...(o.env ?? {}) } }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
+  process: { run: async (argv, o = {}) => { if (argv[0] === 'herdr') { herdrCalls.push(argv) } if (String(argv[0]).endsWith('/orca') || argv[0] === 'orca') { orcaCalls.push(argv); const h = argv[1] === 'terminal' && argv[2] === 'show' ? argv[argv.indexOf('--terminal') + 1] : null; return { exitCode: 0, stdout: h ? `{"ok":true,"result":{"terminal":{"handle":"${h}","orphaned":${h !== 'term_5'},"connected":${h !== 'term_dead'}}}}` : '{"ok":true}', stderr: '' } } if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? (mode === 'qapane' ? '{"result":{"tab":{"label":"qa:AB-5"}}}' : '{"result":{"tab":{"label":"ticket:AB-5"}}}') : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8', env: { ...process.env, ...(o.env ?? {}) } }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
   ui: { status: t => log.push(t), toast: () => {}, open: () => {}, resolve: () => ({ Box: 'Box', Text: 'Text' }) },
   prompt: { submit: async () => {} },
   agent: { list: async () => liveAgents },
@@ -1854,7 +1854,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     // 6.1.1 — a dispatcher at the root of an Orca session (ORCA_PANE_KEY, no ASTRA_DISPATCH):
     // an `orca terminal close` whose --terminal is a shell substitution is refused (inception
     // 2026-11-09: 7 of 8 closes, no entry matched, six left behind); a literal handle on an entry
-    // whose worktree is gone removes the entry; a tab whose terminal shows `orphaned: true` is not alive
+    // whose worktree is gone removes the entry; a terminal that shows `connected: false` is not alive
     await fire('session.start', { cwd: root }, async () => ({}))
     const recPath = path.join(root, '.astraler/state/dispatch-record.json')
     fs.writeFileSync(recPath, JSON.stringify({ 'AB-1': { role: 'builder', host: 'orca', pane_id: 't1:l1', tab_id: 't1', terminal: 'term_dead', worktree: path.join(root, 'no-such-worktree'), last_brief_received_at: 1, last_turn_end_at: 2 } }))
@@ -1863,7 +1863,22 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const closeBacktick = await cmdOf('orca terminal close --terminal `cat h` --tab')
     const closeLiteral = await cmdOf('orca terminal close --terminal term_dead --tab --json')
     const closeLiteralReaped = !('AB-1' in JSON.parse(fs.readFileSync(recPath, 'utf8')))
-    console.log(JSON.stringify({ closeSubst, closeBacktick, closeLiteral, closeLiteralReaped }))
+    // `git worktree remove` on an entry whose Orca terminal shows orphaned + connected (nizzy
+    // 2026-11-10: two live Builders no UI pane hosted) keeps the entry with worktree_removed_at;
+    // one whose terminal shows connected: false (closed) goes with the worktree
+    const gitw = (...a) => require('child_process').spawnSync('git', a, { cwd: root, encoding: 'utf8' })
+    const wtOf = n => { const p = path.join(root, n); gitw('worktree', 'add', '-q', '--detach', p, 'HEAD'); fs.writeFileSync(path.join(p, 'dirty.txt'), 'x'); return fs.realpathSync(p) }
+    const wtLive = wtOf('wt-live'), wtDead = wtOf('wt-dead')
+    fs.writeFileSync(recPath, JSON.stringify({
+      'AB-2': { role: 'builder', host: 'orca', pane_id: 't2:l2', tab_id: 't2', terminal: 'term_orphan_live', worktree: wtLive, last_brief_received_at: 1, last_turn_end_at: 2 },
+      'AB-3': { role: 'builder', host: 'orca', pane_id: 't3:l3', tab_id: 't3', terminal: 'term_dead', worktree: wtDead, last_brief_received_at: 1, last_turn_end_at: 2 },
+    }))
+    const rmWt = async p => fire('tool.call', { tool: 'Bash', command: `git worktree remove ${p}` }, async () => { gitw('worktree', 'remove', '--force', p); return {} })
+    await rmWt(wtLive); await rmWt(wtDead)
+    const afterRm = JSON.parse(fs.readFileSync(recPath, 'utf8'))
+    const orphanLiveKept = typeof afterRm['AB-2']?.worktree_removed_at === 'number'
+    const disconnectedReaped = !('AB-3' in afterRm)
+    console.log(JSON.stringify({ closeSubst, closeBacktick, closeLiteral, closeLiteralReaped, orphanLiveKept, disconnectedReaped }))
     return
   }
   if (isPane) {
@@ -2673,8 +2688,8 @@ EOS
     bad "mod orca pane" "$out"
   fi
   out="$(mod_drive "$MOD" orcadisp)"
-  if says "$out" '"closeSubst":"deny:held:literal","closeBacktick":"deny:held:literal","closeLiteral":"pass:ran:-","closeLiteralReaped":true'; then
-    ok "orca dispatcher (6.1.1): a terminal close with a substituted --terminal is refused and told to pass the literal handle; a literal close on an entry whose worktree is gone removes the entry"
+  if says "$out" '"closeSubst":"deny:held:literal","closeBacktick":"deny:held:literal","closeLiteral":"pass:ran:-","closeLiteralReaped":true,"orphanLiveKept":true,"disconnectedReaped":true'; then
+    ok "orca dispatcher (6.1.1): a terminal close with a substituted --terminal is refused and told to pass the literal handle; a literal close on an entry whose worktree is gone removes the entry; at git worktree remove an orphaned-but-connected terminal keeps its entry and a disconnected one goes"
   else
     bad "mod orca close" "$out"
   fi

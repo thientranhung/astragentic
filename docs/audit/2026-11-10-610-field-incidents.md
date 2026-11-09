@@ -92,6 +92,32 @@ often nothing else wakes the dispatcher after an outage.
 | `orca terminal show --terminal <closed>` → exit 0, `orphaned: true, connected: false`; live → `orphaned: false, connected: true` | CLI probe 2026-11-10 |
 | → at `git worktree remove`, `isTabAlive` read non-null as alive, kept the entry | register.tsx 6.1.0 |
 
-Fix staged (6.1.1): substituted handle refused with the literal recipe; `orphaned: true` is not
-alive. Planted in a new `orcadisp` driver mode (3 cases); the `orphaned` branch rests on the CLI probe
-(the driver has no real worktree). The six stale entries are inception's to delete.
+Fix staged (6.1.1): substituted handle refused with the literal recipe; `connected: false` is not
+alive (the first cut keyed on `orphaned`, wrong per I-5). Planted in a new `orcadisp` driver mode
+(5 cases: two real worktrees removed, connected-false reaped, orphaned-connected kept). The six stale
+entries are inception's to delete.
+
+## I-5 — nizzy's Codex Builders on Orca run but the owner cannot see them: `orphaned: true, connected: true`
+
+Reported 2026-11-10 by nizzy Thomas (`.scratch/codex/resume-20261110/ORCA-ORPHANED-VISIBILITY.md`):
+builder-TRA-1344 and builder-TRA-1345 receive dispatches and complete them, `terminal switch` says
+`navigated: true`, nothing shows. Asked for a safe reattachment, no stop/relaunch/duplicate.
+
+| số đo | nguồn |
+|---|---|
+| both terminals `orphaned: true, connected: true, writable: true`, `recordedPaneKey` set, `paneRuntimeId: -1`; PIDs 75489 (00:39) and 97052 (00:50) alive at 06:2x; `lastOutputAt` 06:13 | `orca terminal list/show --json`, `ps -p` |
+| their `worktreeId` is the child worktree (`…/.claude/worktrees/builder-TRA-1344`); `worktree show path:<child>` returns a record (not archived); `worktree list` and `worktree ps` list 3 main checkouts only | orca CLI 1.4.255 |
+| daemon log `session-attached`: Thomas pane 21, inception builder 1–2, a60ce46b 0, 64fd0ceb 0, qa 4217765b 0 | `~/Library/Application Support/orca/logs/daemon.log` |
+| the creates: nizzy 3 of 3 (Codex, `--worktree active`, ran inside the worktree) orphaned; inception 36 of 36 (`active` from the base) attached | Codex rollouts, inception transcripts, terminal list |
+| probe A: `terminal create --worktree path:<child>` → `surface: visible`, 0 attached; after `terminal switch` (`navigated: true`) → `orphaned: true`, `recordedPaneKey`; `worktree activate` → `activated: true`, still orphaned; after `close` → `orphaned: true, connected: false` | this repo, probe-orphan, 23:17–23:20Z |
+| probe B: `terminal create --worktree path:<base> --command "cd <child> && …"` → `session-attached` +80 ms, `orphaned: false`, `paneRuntimeId: 1` | this repo, probe-orphan2, 23:24Z |
+| `paneRuntimeId: -1`, `rendererGraphEpoch: 0` on probe A before any switch, while healthy | probe A |
+| why `active` resolved to the child on nizzy (cwd of the Codex shell call): chưa đo, not in the rollout | rollout 01a1c15f |
+
+Classification: a pane created in a workspace the sidebar does not list has no UI host; Orca keeps
+the PTY and the CLI drives it. No CLI reattachment exists (switch, activate, create tested). The
+staged I-4 reading of `orphaned` as closed would have deleted such a lane's record entry at
+`git worktree remove`; fixed to `connected`. Recipe: name the base checkout's workspace, `cd` in the
+command (ORCA.md § The pane, Codex draft). Advice to nizzy: keep driving by `read`/`send`/`wait`,
+close with the literal handle when done, never relaunch for visibility. A sidebar toggle for hidden
+discovered worktrees (Orca 1.4.250 release notes) is a lead for the owner: chưa đo.

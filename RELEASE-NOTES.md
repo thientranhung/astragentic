@@ -43,13 +43,33 @@ IN-333…IN-339 after merge, `orca terminal close --tab`, `git worktree remove`,
 measured: 7 of 8 closes passed the handle as a shell substitution, which the mod reads before the shell runs, so no
 entry matched — neither the mid-turn guard nor `tab_closed_at` saw the close (0 of the 7 were mid-turn, so no
 Builder was killed); and at `git worktree remove` the liveness probe `orca terminal show` exits 0 for a closed
-terminal, with `orphaned: true` (probed on a closed and a live handle), so the tab read alive and the entry was kept
+terminal, with `connected: false` (probed on a closed and a live handle), so the tab read alive and the entry was kept
 with `worktree_removed_at`. Now a substituted handle is refused with the record-then-literal recipe, as `git worktree
-remove` already does for unexpanded paths, and `orphaned: true` is not alive. Planted (new `orcadisp` driver mode: a
+remove` already does for unexpanded paths, and `connected: false` is not alive. Planted (new `orcadisp` driver mode: a
 dispatcher at the root of an Orca session): `$(…)` and backtick handles refused with the literal recipe; a literal
-close on an entry whose worktree is gone removes the entry. `orphaned` at `git worktree remove` is covered by the live
-probe only — the driver has no real worktree to remove. ORCA.md § Cleanup shows the two-call form;
-dispatch-ticket-claude's table says when the entry leaves. The six stale inception entries are the project's to delete.
+close on an entry whose worktree is gone removes the entry; two real worktrees removed, the one whose terminal shows
+`connected: false` loses its entry, the one whose terminal shows `orphaned: true, connected: true` keeps it with
+`worktree_removed_at`. ORCA.md § Cleanup shows the two-call form; dispatch-ticket-claude's table says when the entry
+leaves. The six stale inception entries are the project's to delete.
+
+**A pane created in a git worktree's own workspace has no UI host: `orphaned: true` is "no pane", not "closed".** The
+first cut of the paragraph above read `orphaned: true` as closed; nizzy's report the same morning (2026-11-10, "owner
+cannot see workers in Orca") showed the flag on two Builders that were alive: `orphaned: true, connected: true,
+writable: true`, PIDs 75489 and 97052 from 00:39 and 00:50, output at 06:13, two follow-up dispatches completed. Their
+terminals were created with `--worktree active` from inside `.claude/worktrees/builder-TRA-134{4,5}`, so the CLI put
+them in the worktree's own Orca workspace, which `worktree show` returns and the sidebar never lists (`worktree list`
+and `worktree ps`: the three main checkouts only). The daemon log has 0 `session-attached` for each of them (and for the
+QA pane at 23:14Z) against 21 for the Thomas pane; inception's 36 creates, all `active` from the base checkout, attached.
+Reproduced on this repo: a terminal created with `path:<child worktree>` was never attached, `terminal switch` answered
+`navigated: true` and marked it `orphaned: true` with a `recordedPaneKey`, `worktree activate` answered
+`activated: true` and changed nothing; closed, it read `orphaned: true, connected: false`. The same command with
+`path:<base checkout>` and `cd <child>` in `--command` attached in 80 ms, `paneRuntimeId: 1`. `paneRuntimeId: -1` and
+`rendererGraphEpoch: 0` appeared on a healthy fresh pane too and are not signals. No CLI call reattaches an orphaned
+pane; `read`, `send`, `wait` keep working on it. The mod now keys liveness on `connected`; ORCA.md § The pane names
+the base checkout's workspace explicitly and says what `active` does inside a worktree. The Codex Orca draft
+(`docs/codex/DISPATCH-ORCA-DRAFT.md`) says the same. Why `active` resolved to the child on nizzy (cwd of the Codex
+shell call, not in the rollout): chưa đo. A sidebar toggle for hidden discovered worktrees (Orca 1.4.250 notes) may show
+such a pane: not verified.
 
 # Astragentic 6.1.0
 

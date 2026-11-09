@@ -2401,11 +2401,13 @@ export const register: Register = on => {
         const [key, entry] = hit
         // The release reaps the agent rooted in the worktree, and herdr closes a tab whose last
         // pane exited, so the tab is usually gone before anyone closes it (measured). Ask herdr.
-        // `orca terminal show` answers exit 0 for a closed terminal too, with `orphaned: true`
-        // (probed 2026-11-10 on a closed and a live handle); a closed one is not alive (6.1.1).
+        // `orca terminal show` answers exit 0 for a closed terminal too. `connected: false` is the
+        // closed state; `orphaned: true` only says no UI pane hosts the PTY — nizzy's two Builders
+        // (2026-11-10) were orphaned, connected, with live PIDs and fresh output, and a probe went
+        // orphaned+connected while alive, then orphaned+disconnected after close (6.1.1).
         const orcaShow = entry.host === 'orca' && entry.terminal ? await orcaJson($, ['terminal', 'show', '--terminal', entry.terminal]) : null
         const isTabAlive = Boolean(entry.tab_id) && !entry.tab_closed_at && (entry.host === 'orca'
-          ? orcaShow !== null && orcaShow?.result?.terminal?.orphaned !== true
+          ? orcaShow !== null && orcaShow?.result?.terminal?.connected !== false
           : (await herdrJson($, ['tab', 'get', entry.tab_id])) !== null)
         if (!isTabAlive) await deleteRecordKey($, root, key)
         else await patchRecord($, root, key, { worktree_removed_at: await $.clock.now() })

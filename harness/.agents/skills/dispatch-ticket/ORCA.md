@@ -25,11 +25,20 @@ agent runs (measured: `.` became the brief's first words). The mod reads `ASTRA_
 the title.
 
 ```bash
-orca terminal create --worktree active --title "<tab>" --json \
+orca terminal create --worktree "path:<base-checkout>" --title "<tab>" --json \
   --command "cd <worktree-path> && ASTRA_DISPATCH=<tab> <launcher argv from dispatch-ticket-claude, executable included>"
 # result.terminal.handle is the pane's address; record it as terminal= in the dispatch line
 orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 60000 --json   # readiness
 ```
+
+`--worktree` names the base checkout's workspace, the one in the sidebar; the worktree is reached by
+the `cd` inside the command. `active` resolves to the innermost Orca workspace around the shell's cwd,
+and a git worktree under `.claude/worktrees/` is such a workspace to the CLI while the sidebar never
+lists it: a pane created there has no UI host, is never attached (daemon log: 0 `session-attached`
+against 21 for a sidebar pane), and reads `orphaned: true, connected: true` in `terminal show` while
+its agent runs on (nizzy 2026-11-10, 3 of 3 Codex panes; reproduced once with `path:<worktree>`).
+`terminal switch` answers `navigated: true` and `worktree activate` `activated: true` without showing
+it. Such a pane is driven by `read`, `send`, `wait` only; no CLI call reattaches it.
 
 `<tab>` is the same `ticket:<id>` / `spec:<id>` / `qa:<id>` as on Herdr. The argv includes
 `claude`: there is no `--kind` to supply it. The pane records `host=orca` and `terminal=<handle>`
@@ -67,15 +76,16 @@ command (`orca --help`, 1.4.254), so there is no desktop alert on Orca: read the
 # 1. read the handle from the record (a separate call: the mod reads the close before the shell runs)
 python3 -c "import json;print(json.load(open('.astraler/state/dispatch-record.json'))['<KEY>']['terminal'])"
 # 2. close with the handle written out; `--terminal $(…)` is refused (6.1.1)
-orca terminal show --terminal term_… --json         # alive? `orphaned: true` means already closed
+orca terminal show --terminal term_… --json         # alive? `connected: false` means already closed
 orca terminal close --terminal term_… --tab --json
 ```
 
 The mod refuses the close while the pane is mid-turn, as it does `herdr tab close`, and only when it
 can read the handle literally: a substituted handle matched no entry, so the guard and the record
 both missed (inception, 2026-11-09: 7 of 8 closes, six entries left behind). Orca closes the tab with
-its last pane; `show` on a closed handle still exits 0, with `orphaned: true`, which the mod reads as
-gone at `git worktree remove`. No workspace to close.
+its last pane; `show` on a closed handle still exits 0, with `connected: false`, which the mod reads as
+gone at `git worktree remove`. `orphaned: true` alone is not closed: it says no UI pane hosts the
+PTY (§ The pane), and a closed terminal shows it too. No workspace to close.
 
 ## Not measured
 
