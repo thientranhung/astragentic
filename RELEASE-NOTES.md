@@ -26,6 +26,31 @@ result inside the grace and no bell) — the selftest's fake handle cannot show 
 the hook in the engine; and whether the Codex coordinator's Stop hook has the same race (`chưa đo`). Audit:
 `docs/audit/2026-11-10-610-field-incidents.md` (I-1 nizzy worktree collision runbook gap, report only; I-2 this).
 
+**A bell whose turn dies on an API error is held for the next clean turn end.** Inception's two QA gate panes on Orca
+(C5, `qa:slice1110-walk`, `-verify`) ended by the record and the dispatcher "never saw" either bell. Both arrived as
+prompts (21:09:15Z and 21:16:15Z) and each was answered one second later by a turn that ended on "Your organization
+has disabled Claude subscription access" — consumed, `woken_at` stamped, never rung again. Counted on both
+dispatchers: 12 of 937 bell prompts on inception and 12 of 1,307 on nizzy died that way, two of them QA record-path
+bells, one a "4 turn ends arrived while you were busy" bundle. The mod remembers the text it submitted, matches the
+turn it starts (by the MARK in the turn's text, else by order), puts the bell back at the head of the held list when
+that turn ends on error or refusal, and flushes nothing into a dead turn; the next clean turn end delivers them.
+Planted: bell turn → error → 0 submits; next clean turn → the same bell once; a clean turn with no bell rings nothing.
+Not yet: a re-held bell rings only when some turn completes cleanly — a dispatcher nothing else wakes after the outage
+sits on it (`chưa đo`; a poll-time re-ring is the next step if the count says so).
+
+**`orca terminal close --terminal $(…)` is refused; a closed Orca terminal counts as gone.** Inception's record kept
+IN-333…IN-339 after merge, `orca terminal close --tab`, `git worktree remove`, `git branch -d`. Two causes, both
+measured: 7 of 8 closes passed the handle as a shell substitution, which the mod reads before the shell runs, so no
+entry matched — neither the mid-turn guard nor `tab_closed_at` saw the close (0 of the 7 were mid-turn, so no
+Builder was killed); and at `git worktree remove` the liveness probe `orca terminal show` exits 0 for a closed
+terminal, with `orphaned: true` (probed on a closed and a live handle), so the tab read alive and the entry was kept
+with `worktree_removed_at`. Now a substituted handle is refused with the record-then-literal recipe, as `git worktree
+remove` already does for unexpanded paths, and `orphaned: true` is not alive. Planted (new `orcadisp` driver mode: a
+dispatcher at the root of an Orca session): `$(…)` and backtick handles refused with the literal recipe; a literal
+close on an entry whose worktree is gone removes the entry. `orphaned` at `git worktree remove` is covered by the live
+probe only — the driver has no real worktree to remove. ORCA.md § Cleanup shows the two-call form;
+dispatch-ticket-claude's table says when the entry leaves. The six stale inception entries are the project's to delete.
+
 # Astragentic 6.1.0
 
 **One host per session: a session started in Orca follows Orca's dispatch and never runs `herdr`; one

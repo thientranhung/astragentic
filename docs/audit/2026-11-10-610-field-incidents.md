@@ -66,3 +66,32 @@ builder-claude.md lines + RELEASE-NOTES 6.1.1.
 | 0-running bells with `ended` and no `idle`: 151 inception, 55 nizzy; with wait-words 12, all backgrounded Bash/Monitor jobs (IN-308/320/327, TRA-1340), 0 awaited forks → grace arms on idle only | dispatcher transcripts |
 | grace live in the engine (`$` and `setTimeout` after the hook returned): chưa đo — one fixture pane, one fan-out, bell ≈5 s after Stop; one teammate result inside the grace, no bell | owed before tag |
 | Codex coordinator Stop hook, same race: chưa đo | owed |
+
+## I-3 — QA gate-pane turn ends on Orca (C5) "never reached" the dispatcher: the bells arrived and were eaten by dead turns
+
+Reported 2026-11-10 by inception Thomas. Measured in its own transcript.
+
+| số đo | nguồn |
+|---|---|
+| `qa:slice1110-walk` bell prompt at 21:09:15Z, next assistant turn 21:09:16Z = "Your organization has disabled Claude subscription access…" (API error); `-verify` at 21:16:15Z, same at 21:16:16Z | inception Thomas transcript |
+| record `turn_end_pending.woken_at` 1794258555881 / 1794258975963 = the same seconds → the record path worked; the prompt's turn died | `.astraler/state/dispatch-record.json` (inception) |
+| bell prompts answered by an API-error turn: inception 12/937, nizzy 12/1307; 2 QA record-path bells, 1 "4 turn ends arrived while you were busy" bundle | both dispatcher transcripts, script in session |
+
+Fix staged (6.1.1): the mod remembers the bell it submitted, matches the turn that starts, re-holds the
+bell when that turn ends on error/refusal, and never flushes into a dead turn. Planted in the
+default driver mode (3 cases). Open: a re-held bell needs some clean turn end to ring; chưa đo how
+often nothing else wakes the dispatcher after an outage.
+
+## I-4 — record entries outlive their worktrees on Orca (IN-333…IN-339)
+
+| số đo | nguồn |
+|---|---|
+| 6 Builder entries with `worktree_removed_at` set, `tab_closed_at` null, worktree gone | inception record |
+| `orca terminal close --terminal $(python3 …)` 7 of 8 closes → the mod's close regex needs a literal `term_…`; no entry matched, no `tab_closed_at`, no mid-turn guard | inception Thomas transcript |
+| mid-turn at those closes: 0 of 7 (`last_turn_end_at` > `last_message_received_at` on all six) | inception record |
+| `orca terminal show --terminal <closed>` → exit 0, `orphaned: true, connected: false`; live → `orphaned: false, connected: true` | CLI probe 2026-11-10 |
+| → at `git worktree remove`, `isTabAlive` read non-null as alive, kept the entry | register.tsx 6.1.0 |
+
+Fix staged (6.1.1): substituted handle refused with the literal recipe; `orphaned: true` is not
+alive. Planted in a new `orcadisp` driver mode (3 cases); the `orphaned` branch rests on the CLI probe
+(the driver has no real worktree). The six stale entries are inception's to delete.

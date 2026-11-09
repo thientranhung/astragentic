@@ -1753,6 +1753,7 @@ const fs = require('fs'), path = require('path'), Module = require('module')
 const [,, modDir, root, tsPath, mode] = process.argv
 const isPane = mode === 'pane' || mode === 'qapane' || mode === 'orcapane'
 const isOrca = mode === 'orcapane'
+const isOrcaHost = isOrca || mode === 'orcadisp'  // 6.1.1: a dispatcher at the root of an Orca-hosted session
 const ts = require(tsPath)
 const src = fs.readFileSync(path.join(modDir, 'hooks/register.tsx'), 'utf8')
 const js = ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React, jsxFactory: 'h', jsxFragmentFactory: 'Fragment' } }).outputText
@@ -1780,12 +1781,12 @@ let selfSock
 let homeDir
 const every = () => everyFn()
 const $ = {
-  env: { get: async k => k === 'CLAUDE_CODE_MESSAGING_SOCKET' ? selfSock : k === 'ASTRAGENTIC_REPO' ? root : k === 'HOME' ? homeDir : k === 'ASTRA_TURN_END_GRACE_MS' ? '120' :(isOrca && k === 'ORCA_PANE_KEY') ? 'tab5:leaf5' : (isOrca && k === 'ORCA_TAB_ID') ? 'tab5' : (isOrca && k === 'ORCA_TERMINAL_HANDLE') ? 'term_5' : (isOrca && k === 'ASTRA_DISPATCH') ? 'ticket:AB-5' : (isOrca && k === 'ORCA_CLI_BIN_DIR') ? '/orca/bin' : isOrca ? undefined : k === 'HERDR_ENV' ? '1' : (isPane && k === 'HERDR_TAB_ID') ? 't5' : (isPane && k === 'HERDR_PANE_ID') ? 'p5' : undefined },
+  env: { get: async k => k === 'CLAUDE_CODE_MESSAGING_SOCKET' ? selfSock : k === 'ASTRAGENTIC_REPO' ? root : k === 'HOME' ? homeDir : k === 'ASTRA_TURN_END_GRACE_MS' ? '120' :(isOrcaHost && k === 'ORCA_PANE_KEY') ? 'tab5:leaf5' : (isOrcaHost && k === 'ORCA_TAB_ID') ? 'tab5' : (isOrcaHost && k === 'ORCA_TERMINAL_HANDLE') ? 'term_5' : (isOrca && k === 'ASTRA_DISPATCH') ? 'ticket:AB-5' : (isOrcaHost && k === 'ORCA_CLI_BIN_DIR') ? '/orca/bin' : isOrcaHost ? undefined : k === 'HERDR_ENV' ? '1' : (isPane && k === 'HERDR_TAB_ID') ? 't5' : (isPane && k === 'HERDR_PANE_ID') ? 'p5' : undefined },
   clock: { now: async () => { tick = Math.max(tick + 1, Date.now()); return tick }, every: (_ms, fn) => { everyFn = fn } },
   command: { register: () => {}, run: async () => ({}) },
   session: { id: async () => 'disp', send: async () => ({ isDelivered: true }), usage: async () => ({ startedAt: 0, context: { tokens: 1000, window: 1_000_000, percent: 0 } }), compact: async () => ({}) },
   fs: { read: async p => fs.readFileSync(p, 'utf8'), write: async (p, t) => fs.writeFileSync(p, t), exists: async p => fs.existsSync(p) },
-  process: { run: async (argv, o = {}) => { if (argv[0] === 'herdr') { herdrCalls.push(argv) } if (String(argv[0]).endsWith('/orca') || argv[0] === 'orca') { orcaCalls.push(argv); return { exitCode: 0, stdout: '{"ok":true}', stderr: '' } } if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? (mode === 'qapane' ? '{"result":{"tab":{"label":"qa:AB-5"}}}' : '{"result":{"tab":{"label":"ticket:AB-5"}}}') : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8', env: { ...process.env, ...(o.env ?? {}) } }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
+  process: { run: async (argv, o = {}) => { if (argv[0] === 'herdr') { herdrCalls.push(argv) } if (String(argv[0]).endsWith('/orca') || argv[0] === 'orca') { orcaCalls.push(argv); const h = argv[1] === 'terminal' && argv[2] === 'show' ? argv[argv.indexOf('--terminal') + 1] : null; return { exitCode: 0, stdout: h ? `{"ok":true,"result":{"terminal":{"handle":"${h}","orphaned":${h === 'term_dead'}}}}` : '{"ok":true}', stderr: '' } } if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? (mode === 'qapane' ? '{"result":{"tab":{"label":"qa:AB-5"}}}' : '{"result":{"tab":{"label":"ticket:AB-5"}}}') : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8', env: { ...process.env, ...(o.env ?? {}) } }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
   ui: { status: t => log.push(t), toast: () => {}, open: () => {}, resolve: () => ({ Box: 'Box', Text: 'Text' }) },
   prompt: { submit: async () => {} },
   agent: { list: async () => liveAgents },
@@ -1847,6 +1848,22 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const docNamedOrca = await cmdOf('cat docs/codex/ORCA-DESIGN.md && ls orca-notes')
     const herdrCallsAtStart = herdrCalls.length
     console.log(JSON.stringify({ orcaRegistered, herdrInOrca, herdrWhy: herdrWhy.slice(0, 60), orcaInOrca, docNamedOrca, herdrCallsAtStart }))
+    return
+  }
+  if (mode === 'orcadisp') {
+    // 6.1.1 — a dispatcher at the root of an Orca session (ORCA_PANE_KEY, no ASTRA_DISPATCH):
+    // an `orca terminal close` whose --terminal is a shell substitution is refused (inception
+    // 2026-11-09: 7 of 8 closes, no entry matched, six left behind); a literal handle on an entry
+    // whose worktree is gone removes the entry; a tab whose terminal shows `orphaned: true` is not alive
+    await fire('session.start', { cwd: root }, async () => ({}))
+    const recPath = path.join(root, '.astraler/state/dispatch-record.json')
+    fs.writeFileSync(recPath, JSON.stringify({ 'AB-1': { role: 'builder', host: 'orca', pane_id: 't1:l1', tab_id: 't1', terminal: 'term_dead', worktree: path.join(root, 'no-such-worktree'), last_brief_received_at: 1, last_turn_end_at: 2 } }))
+    const cmdOf = async (command) => { let ran = false; const r = await fire('tool.call', { tool: 'Bash', command }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}:${String(r?.deny ?? '').includes('pass it literally') ? 'literal' : '-'}` }
+    const closeSubst = await cmdOf('cd /p && orca terminal close --terminal $(python3 -c "import json;print(json.load(open(\'x\'))[\'AB-1\'][\'terminal\'])") --tab --json')
+    const closeBacktick = await cmdOf('orca terminal close --terminal `cat h` --tab')
+    const closeLiteral = await cmdOf('orca terminal close --terminal term_dead --tab --json')
+    const closeLiteralReaped = !('AB-1' in JSON.parse(fs.readFileSync(recPath, 'utf8')))
+    console.log(JSON.stringify({ closeSubst, closeBacktick, closeLiteral, closeLiteralReaped }))
     return
   }
   if (isPane) {
@@ -2279,6 +2296,19 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify({ 'AB-2': { role: 'builder', turn_end_pending: { at: 1, reason: 'dead address', text: '[astragentic-dispatch] TURN-END key=AB-2 pane=p2 reason=answer\nWork is complete' } } }))
   await every()
   const stubBells = bells.length, stubLeft = Object.keys(JSON.parse(fs.readFileSync(path.join(root, '.astraler/state/dispatch-record.json'), 'utf8'))).length
+  // 6.1.1 — a bell whose turn dies on an API error is not lost: it is held and rung at the next
+  // clean turn end (12 of 937 and 12 of 1307 bell prompts on two projects died that way)
+  bells.length = 0
+  await fire('turn.start', { text: '[astragentic-dispatch] qa qa:AB-9 ended its turn (answer) — by the record\n\nIts last words:\nverdict filed', turnId: 'tb1' }, async () => ({}))
+  await fire('turn.complete', { reason: 'error', answer: 'Your organization has disabled Claude subscription access for Claude Code', turnId: 'tb1' }, async () => ({}))
+  const deadTurnBellHeld = bells.length === 0
+  await fire('turn.start', { text: 'hello', turnId: 'tb2' }, async () => ({}))
+  await fire('turn.complete', { reason: 'answer', answer: 'ok', turnId: 'tb2' }, async () => ({}))
+  const deadTurnBellRerung = deadTurnBellHeld && bells.length === 1 && bells[0].includes('qa:AB-9 ended its turn')
+  // a clean turn with no bell in it holds nothing back
+  await fire('turn.start', { text: 'hello again', turnId: 'tb3' }, async () => ({}))
+  await fire('turn.complete', { reason: 'answer', answer: 'ok', turnId: 'tb3' }, async () => ({}))
+  const deadTurnNoDouble = bells.length === 1
   // a held turn end older than the ceiling rings once as held-stale, and the row reads stale
   bells.length = 0
   fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify({ 'AB-3': { role: 'builder', pane_id: 'p3', tab_id: 't3', last_brief_received_at: Date.now() - 5 * 3600_000, waiting_on: { n: 8, at: Date.now() - 4 * 3600_000, what: ['code-review finder'] } } }))
@@ -2514,7 +2544,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   // 6.1.0 — a Herdr dispatcher may not reach into Orca; a doc or path named orca is not a command
   const orcaInHerdr = await (async () => { let ran = false; const r = await fire('tool.call', { tool: 'Bash', command: 'orca terminal create --worktree active --command claude' }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` })()
   const orcaDocInHerdr = await (async () => { let ran = false; const r = await fire('tool.call', { tool: 'Bash', command: 'sed -n 1,5p docs/codex/ORCA-DESIGN.md; echo orca' }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` })()
-  console.log(JSON.stringify({ orcaInHerdr, orcaDocInHerdr, deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, staleBells, staleRow, ownerBells, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeUi, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiStd, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
+  console.log(JSON.stringify({ orcaInHerdr, orcaDocInHerdr, deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, deadTurnBellHeld, deadTurnBellRerung, deadTurnNoDouble, staleBells, staleRow, ownerBells, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeUi, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiStd, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
@@ -2527,7 +2557,7 @@ DRVEOS
     SELFTEST_SCRIPTS="$S" node "$TMP/mod-drive.cjs" "$1" "$TMP/mod-drive-repo" "$TSC_PKG" "${2:-}" 2>&1
   }
   out="$(mod_drive "$MOD")"
-  if says "$out" '"afterSend":"AB-1:sent:"' && says "$out" '"afterAck":"AB-1:registered:no brief yet"' && says "$out" '"afterRetire":""' && says "$out" '"stubBells":0,"stubLeft":0,"staleBells":1,"staleRow":true,"ownerBells":"011","subagentHeld":false,"heldCleared":true,"latestChip":"0.0.2"'; then
+  if says "$out" '"afterSend":"AB-1:sent:"' && says "$out" '"afterAck":"AB-1:registered:no brief yet"' && says "$out" '"afterRetire":""' && says "$out" '"stubBells":0,"stubLeft":0,"deadTurnBellHeld":true,"deadTurnBellRerung":true,"deadTurnNoDouble":true,"staleBells":1,"staleRow":true,"ownerBells":"011","subagentHeld":false,"heldCleared":true,"latestChip":"0.0.2"'; then
     ok "the ack from the bare name clears the send keyed by \"name [ref]\"; a retired lane's send goes with its entry; a stub entry rings no bell; a hold past the ceiling rings once as held-stale, only in the session that briefed the lane unless that session is gone; a subagent's turn.start holds nothing; a bell held in the dispatcher's turn clears its status line when flushed; a newer tag at the remote reaches the band"
   else
     bad "mod send/ack keys" "$out"
@@ -2641,6 +2671,12 @@ EOS
     ok "an Orca pane (6.1.0) records itself from ORCA_* and ASTRA_DISPATCH without one herdr call, refuses herdr commands, runs orca ones, and a doc or path named orca is not a command"
   else
     bad "mod orca pane" "$out"
+  fi
+  out="$(mod_drive "$MOD" orcadisp)"
+  if says "$out" '"closeSubst":"deny:held:literal","closeBacktick":"deny:held:literal","closeLiteral":"pass:ran:-","closeLiteralReaped":true'; then
+    ok "orca dispatcher (6.1.1): a terminal close with a substituted --terminal is refused and told to pass the literal handle; a literal close on an entry whose worktree is gone removes the entry"
+  else
+    bad "mod orca close" "$out"
   fi
   out="$(mod_drive "$MOD" qapane)"
   if says "$out" '"qaRecordPath":true,"qaNoBypassHint":true,"qaNotRed":true,"wakeupQa":"deny:held"'; then

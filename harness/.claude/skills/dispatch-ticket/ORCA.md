@@ -64,12 +64,18 @@ command (`orca --help`, 1.4.254), so there is no desktop alert on Orca: read the
 ## Cleanup (CLEANUP.md)
 
 ```bash
-orca terminal show --terminal <handle> --json      # alive? a closed handle is not an error to fix
-orca terminal close --terminal <handle> --tab --json
+# 1. read the handle from the record (a separate call: the mod reads the close before the shell runs)
+python3 -c "import json;print(json.load(open('.astraler/state/dispatch-record.json'))['<KEY>']['terminal'])"
+# 2. close with the handle written out; `--terminal $(…)` is refused (6.1.1)
+orca terminal show --terminal term_… --json         # alive? `orphaned: true` means already closed
+orca terminal close --terminal term_… --tab --json
 ```
 
-The mod refuses the close while the pane is mid-turn, as it does `herdr tab close`. Orca closes the
-tab with its last pane, so not-found after the worktree removal is expected. No workspace to close.
+The mod refuses the close while the pane is mid-turn, as it does `herdr tab close`, and only when it
+can read the handle literally: a substituted handle matched no entry, so the guard and the record
+both missed (inception, 2026-11-09: 7 of 8 closes, six entries left behind). Orca closes the tab with
+its last pane; `show` on a closed handle still exits 0, with `orphaned: true`, which the mod reads as
+gone at `git worktree remove`. No workspace to close.
 
 ## Not measured
 

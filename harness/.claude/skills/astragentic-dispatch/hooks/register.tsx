@@ -1239,6 +1239,7 @@ function bell($: any, text: string): void {
     $.ui.status(`${heldBells.length} bell(s) held until this turn ends`)
     return
   }
+  submittedBell = text
   void $.prompt.submit({ text })
 }
 function flushBells($: any): void {
@@ -1248,8 +1249,19 @@ function flushBells($: any): void {
   // sat under an idle dispatcher for hours after the flush had delivered them.
   $.ui.status(undefined)
   const text = texts.length === 1 ? texts[0] : `${MARK} ${texts.length} turn ends arrived while you were busy; read them together.\n\n${texts.join('\n\n---\n\n')}`
+  submittedBell = text
   void $.prompt.submit({ text })
 }
+// A BELL IS A PROMPT, AND A PROMPT'S TURN CAN DIE (6.1.1). Measured on both projects: 937 and 1307
+// bell prompts, 12 and 12 of them answered by a turn that ended on an API error one second later
+// (an auth outage), the bell consumed and never rung again — two of them QA gate-pane turn ends
+// by the record (inception qa:slice1110-walk/-verify, 2026-11-09 21:09 and 21:16Z), which the
+// dispatcher learned of by reading the panes. The text submitted last is remembered; the turn
+// it starts is matched by its text (or, when the engine attaches none, by order); a turn that
+// ends on error or refusal puts its bell back at the head of the held list, and nothing is
+// flushed into a dead turn: the next clean turn end delivers them.
+let submittedBell: string | null = null
+let currentBell: string | null = null
 
 // The agents of this session that are still at work: a background review's sub-agents, a
 // fork. A turn that ends while any of these runs is a pause, not a turn end worth a bell
@@ -1376,6 +1388,11 @@ export const register: Register = on => {
     // until the next main turn completed.
     if ((e as any).agentId !== undefined) return next(e)
     isBusy = true
+    if (!me) {
+      const text = String((e as any).text ?? '')
+      currentBell = text.includes(MARK) ? text : submittedBell
+      submittedBell = null
+    }
     // The turn that starts inside the grace is the wake the last turn end waited for: no bell.
     if (pendingTurnEnd) {
       clearTimeout(pendingTurnEnd)
@@ -1586,7 +1603,13 @@ export const register: Register = on => {
     isBusy = false
     if (!me) {
       if (root) await refreshBoard($, root, sends)
-      flushBells($)
+      const dead = e.reason === 'error' || e.reason === 'refusal'
+      if (dead && currentBell) {
+        heldBells.unshift(currentBell)
+        $.ui.status(`the bell's turn ended on ${e.reason}; ${heldBells.length} bell(s) held for the next clean turn end`)
+      }
+      currentBell = null
+      if (!dead) flushBells($)
       return res
     }
     const usage = await $.session.usage().catch(() => null)
@@ -2280,6 +2303,14 @@ export const register: Register = on => {
 
     // -- closing a pane, tab or workspace that holds a mid-turn agent ---------------------
     // `orca terminal close --terminal <handle> [--tab]` names the handle the pane recorded (6.1.0).
+    // AN UNEXPANDED HANDLE IS REFUSED (6.1.1): this hook runs before the shell, so
+    // `--terminal $(python3 -c …record…)` arrives as `$(`, matches no entry, and the mid-turn
+    // guard and the record's tab_closed_at both miss (inception, 2026-11-09: 7 of 8 closes, six
+    // entries left behind). Same rule as `git worktree remove`: pass the literal handle.
+    const orcaCloseUnexpanded = cmd.match(new RegExp(AT_COMMAND + String.raw`(?:\S*/)?orca\s+terminal\s+close\b[^\n;&|]*?--terminal[\s=]+['"]?[$\x60]`))
+    if (orcaCloseUnexpanded) {
+      return { deny: `astragentic-dispatch: the --terminal handle is expanded by the shell after this check runs, so the mod cannot tell which pane this closes (mid-turn guard, record). Read the handle from .astraler/state/dispatch-record.json first, then pass it literally: orca terminal close --terminal term_… --tab --json` }
+    }
     const orcaClose = cmd.match(new RegExp(AT_COMMAND + String.raw`(?:\S*/)?orca\s+terminal\s+close\b[^\n;&|]*?--terminal[\s=]+['"]?(term_[A-Za-z0-9-]+)`))
     const close = orcaClose
       ? [orcaClose[0], 'terminal', orcaClose[1]]
@@ -2370,8 +2401,11 @@ export const register: Register = on => {
         const [key, entry] = hit
         // The release reaps the agent rooted in the worktree, and herdr closes a tab whose last
         // pane exited, so the tab is usually gone before anyone closes it (measured). Ask herdr.
+        // `orca terminal show` answers exit 0 for a closed terminal too, with `orphaned: true`
+        // (probed 2026-11-10 on a closed and a live handle); a closed one is not alive (6.1.1).
+        const orcaShow = entry.host === 'orca' && entry.terminal ? await orcaJson($, ['terminal', 'show', '--terminal', entry.terminal]) : null
         const isTabAlive = Boolean(entry.tab_id) && !entry.tab_closed_at && (entry.host === 'orca'
-          ? Boolean(entry.terminal) && (await orcaJson($, ['terminal', 'show', '--terminal', entry.terminal])) !== null
+          ? orcaShow !== null && orcaShow?.result?.terminal?.orphaned !== true
           : (await herdrJson($, ['tab', 'get', entry.tab_id])) !== null)
         if (!isTabAlive) await deleteRecordKey($, root, key)
         else await patchRecord($, root, key, { worktree_removed_at: await $.clock.now() })
