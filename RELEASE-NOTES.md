@@ -1,7 +1,5 @@
 # Astragentic 6.1.4
 
-Staged on main, not tagged; release on the owner's go.
-
 **A child review lens no longer wears its parent's Orca pane.** First 6.1.3 run on a Codex project (2026-11-10): the
 three child `codex exec` lenses ran (three `-o` reports, exit 0) and Orca raised two "Worker stopped without reporting"
 escalations whose last output was a child's review report, while `worker-show` said working and the parent rollouts
