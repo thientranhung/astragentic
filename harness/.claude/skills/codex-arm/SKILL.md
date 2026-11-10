@@ -244,6 +244,18 @@ production-database-wipe critical surfaced only once intent was packed in. Struc
 (1) the owner's goals in plain words, (2) the safety floors and must-not-break list, (3) the
 instruction to attack the diff AGAINST THAT INTENT.
 
+## Other runtime: a ticket built by the other vendor (6.1.6)
+
+"Other vendor" is counted from the diff's author, never from the station's runtime. A Codex-built
+ticket reaching a Claude station is armed by Claude, so the Codex pass in this file is not its arm.
+The Codex side's exemption does not travel: the station's arm row decides, and only the owner
+waives it. Thomas dispatches a Claude Builder pane on the ticket branch with a brief for the arm
+alone; it runs the Codex payload's cross-vendor pass with Claude as the reviewer over
+`<base>..<head>` and commits the `arm(ticket):` receipt naming the vendor that ran. Without the
+Codex payload installed, record `cross-vendor arm: NOT RUN — no Claude pass installed` and ask the
+owner. Field 2026-11-10: two Codex-built tickets under arm `no` read `markers=0` at a Claude
+station's `--marker 'arm(ticket)'`. No handover arm has run yet.
+
 ## Failover and recording
 
 Codex unavailable or out of quota → **the arm DID NOT RUN.** A same-vendor lens is

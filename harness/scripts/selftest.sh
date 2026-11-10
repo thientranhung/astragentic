@@ -2595,7 +2595,12 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   // 6.1.0 — a Herdr dispatcher may not reach into Orca; a doc or path named orca is not a command
   const orcaInHerdr = await (async () => { let ran = false; const r = await fire('tool.call', { tool: 'Bash', command: 'orca terminal create --worktree active --command claude' }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` })()
   const orcaDocInHerdr = await (async () => { let ran = false; const r = await fire('tool.call', { tool: 'Bash', command: 'sed -n 1,5p docs/codex/ORCA-DESIGN.md; echo orca' }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` })()
-  console.log(JSON.stringify({ orcaInHerdr, orcaDocInHerdr, deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, deadTurnBellHeld, deadTurnBellRerung, deadTurnNoDouble, staleBells, staleRow, ownerBells, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeUi, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiStd, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
+  // 6.1.6 — a harness role is never an in-process agent: refused at the spawn, a report-only fork passes
+  const agentOf = async (input) => { let ran = false; const r = await fire('tool.call', { tool: 'Agent', input }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` }
+  const agentBuilder = await agentOf({ subagent_type: 'builder', prompt: 'build TRA-1', description: 'b' })
+  const agentPlugin = await agentOf({ subagent_type: 'astragentic:shaper', prompt: 'x', description: 'b' })
+  const agentExplore = await agentOf({ subagent_type: 'Explore', prompt: 'x', description: 'b' })
+  console.log(JSON.stringify({ agentBuilder, agentPlugin, agentExplore, orcaInHerdr, orcaDocInHerdr, deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, deadTurnBellHeld, deadTurnBellRerung, deadTurnNoDouble, staleBells, staleRow, ownerBells, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeUi, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiStd, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
@@ -2642,6 +2647,11 @@ DRVEOS
   # 5.0.9 — a dead lane (one project, 2026-10-30: three panes lost auth together, the owner found
   # out 36 h later) reads red on the board and its bell says redispatch; the launch guard refuses
   # an argv that repeats the executable --kind supplies (same project, 2026-11-01, one launch)
+  if says "$out" '"agentBuilder":"deny:held","agentPlugin":"deny:held","agentExplore":"pass:ran"'; then
+    ok "mod (6.1.6): Agent(subagent_type: builder) and a plugin-namespaced role are refused at the spawn; an Explore fork passes"
+  else
+    bad "mod role-as-agent refusal" "$(printf '%s' "$out" | grep -o '"agentBuilder":"[^"]*","agentPlugin":"[^"]*","agentExplore":"[^"]*"')"
+  fi
   if says "$out" '"orcaInHerdr":"deny:held","orcaDocInHerdr":"pass:ran"'; then
     ok "a Herdr dispatcher (HERDR_ENV=1) is refused an orca command and keeps a command that only names orca in a path (6.1.0)"
   else

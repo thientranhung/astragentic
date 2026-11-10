@@ -2072,6 +2072,21 @@ export const register: Register = on => {
     }
   })
 
+  // A harness role is a session, never an in-process agent (6.1.6). nizzy 2026-11-10: an Orca Thomas
+  // ran `Agent(subagent_type: builder)`; the project's fork guard refused its arm(ticket) commit about
+  // 20 minutes later, and the Builder's own /code-review completion was delivered to the dispatcher's
+  // session, so the Builder idled until Thomas forwarded it by hand. Refused here, at the spawn.
+  const ROLE_AGENTS = new Set(['builder', 'quick-builder', 'shaper', 'qa', 'ba', 'thomas', 'junior'])
+  on('tool.call', { tool: 'Agent' }, async ($, e, next) => {
+    if (!root) return next(e)
+    const ev: any = e
+    const type = String(ev.input?.subagent_type ?? ev.subagent_type ?? '').split(':').pop()!.trim()
+    if (!ROLE_AGENTS.has(type)) return next(e)
+    return {
+      deny: `astragentic-dispatch: \`${type}\` is a harness role, and a role runs as its own session in a pane, never as an in-process agent: the gates read the session's role, and an agent's sub-agent completions reach the root session, not the agent. Dispatch it with dispatch-ticket (on Orca: ORCA.md § The pane). Report-only forks (review lenses, simplify, Explore) stay agents.`,
+    }
+  })
+
   // THE TWO GATES. Measured on the first two real dispatches after the FLOW line shipped: one
   // Builder skipped tdd, the other skipped the built-in review, and neither named n/a. A note at
   // merge made the skip visible; it did not make it impossible. So the skip is refused at the

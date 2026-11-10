@@ -286,3 +286,15 @@ separate from I-11.
 
 Classification: Orca's default for its own worktree create, not an Orca defect; the recipe gap let it in. Fixed in
 6.1.5 (DISPATCH.md § Orca checkout rule + base-workspace terminal example, ORCA.md checkout line, launcher test).
+
+## I-13 to I-15 — Claude Builder on Orca: no legal path, role-as-agent, arm vendor at handover
+
+Reported 2026-11-10 by nizzy Thomas (Claude 6.1.5, Orca), `.scratch/harness-issues/report-to-astragentic-2026-11-10-orca-builder.md`.
+
+| số đo | nguồn |
+|---|---|
+| I-13: ORCA.md § Not measured "dispatch Claude Builders on Herdr" vs one host per session; C1 PASS 1/1, C4 commit gate PASS 1/1 already | ORCA-610 rows C1, C4 |
+| I-14: Builder run as `Agent(subagent_type: builder)`; arm commit refused ~20 min in by the project fork guard; sub-agent completion routed to the root | nizzy report § 2 |
+| I-15: TRA-1353/TRA-1355 Codex-built under Codex arm `no`; Claude station `--marker 'arm(ticket)'` → `markers=0` | nizzy report § 3, FINAL-HANDOFF.md |
+
+Fixed in 6.1.6: I-13 text, I-14 mod refusal at the spawn (selftest, planted), I-15 rule text (unmeasured).

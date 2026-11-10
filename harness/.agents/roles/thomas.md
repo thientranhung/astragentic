@@ -155,7 +155,7 @@ reviewer is where a hollow test survives. **The ticket arm is the Builder's**, w
 gate off your turn and puts it in the tree it reads (AST-135); you verify it at merge by
 artifact. The arm at spec scope moved to the Shaper; you classify what it returns before you release it.
 
-**The standard, whoever fires:** it calls the OTHER vendor. It runs at most two passes per invocation, and the second is mandatory when the first returned a blocking finding, over the **full artifact**, because it catches the defect the fix introduced. A vendor that is unavailable is recorded as `cross-vendor arm: NOT RUN — <reason>`, and only the owner may accept proceeding without it.
+**The standard, whoever fires:** it calls the author's OTHER vendor. It runs at most two passes per invocation, and the second is mandatory when the first returned a blocking finding, over the **full artifact**, because it catches the defect the fix introduced. A vendor that is unavailable is recorded as `cross-vendor arm: NOT RUN — <reason>`, and only the owner may accept proceeding without it.
 
 ## Merge
 

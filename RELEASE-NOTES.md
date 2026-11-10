@@ -1,3 +1,30 @@
+# Astragentic 6.1.6
+
+Three issues from nizzy Thomas (Claude 6.1.5 on Orca, 2026-11-10), audit I-13 to I-15.
+
+| số đo | nguồn |
+|---|---|
+| ORCA.md § Not measured told an Orca Thomas to dispatch Claude Builders on Herdr, which one-host-per-session refuses; C1 had passed 1 of 1 and C4's commit gate 1 of 1 on 2026-11-09 | `docs/codex/ORCA-610-2026-11-09.md` rows C1, C4 |
+| `Agent(subagent_type: builder)` from Thomas: the project's fork guard refused its `arm(ticket)` commit about 20 min in; its `/code-review` completion reached the dispatcher's session | nizzy report § 2 |
+| two Codex-built tickets (arm `no` on the Codex table) at a Claude station with arm `ticket = yes`: `markers=0 — STOP`; `codex-arm` fires Codex, the authors' vendor | nizzy report § 3 |
+
+**An Orca Thomas dispatches Claude Builders on Orca.** ORCA.md § Not measured now states what ran (C1, C4 commit gate)
+and what has not (merge gate and git guard live, C5, C6), and says a session started in Orca dispatches by that file
+and reports anomalies. The contradiction is gone; no new measurement is claimed.
+
+**A harness role is refused as an in-process agent, at the spawn.** The mod denies `Agent` with `subagent_type` builder,
+quick-builder, shaper, qa, ba, thomas or junior (a plugin-namespaced `x:builder` too) in any harness project; report-only
+forks pass. Selftest: builder and `astragentic:shaper` `deny:held`, `Explore` `pass:ran`; with the guard planted to pass
+everything the case fails (227 passed, 2 FAILED).
+
+**The arm vendor is counted from the diff's author.** thomas.md now reads "the author's OTHER vendor"; `codex-arm` § Other runtime: a ticket built on the other runtime is armed by the
+vendor that did not write it; the author runtime's `no` does not travel, the station's arm row decides and only the owner
+waives it; a Claude Builder pane on the ticket branch runs the Codex payload's Claude pass and commits the receipt.
+Text only: no handover arm has run (chưa đo).
+
+**Migration.** Nothing to run. A Thomas that spawned a role as an agent now gets the refusal at the spawn. For tickets
+already at a Claude station without a receipt, follow `codex-arm` § Other runtime, or ask the owner.
+
 # Astragentic 6.1.5
 
 **On Orca, a ticket checkout is `git worktree add`, and its one terminal is the worker's in the base workspace.**

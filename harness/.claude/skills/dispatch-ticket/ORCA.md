@@ -97,6 +97,10 @@ PTY (§ The pane), and a closed terminal shows it too. No workspace to close.
 
 ## Not measured
 
-Mod in an Orca pane end to end (C1, C4), a QA gate pane on Orca (C5), a pane dying or an Orca
-restart with a live dispatch (C6), `HERDR_*` inherited inside Orca. Until C1 and C4 pass on a
-fixture, dispatch Claude Builders on Herdr.
+What has run on Orca (6.1.0 fixtures, 2026-11-09): C1, the mod loading in an Orca pane and
+writing its record entry, PASS 1 of 1; C4 for the commit gate, a planted violation refused, PASS 1 of 1.
+The merge gate and git guard in an Orca pane are driver-only (selftest), live chưa đo; so are a QA gate
+pane on Orca (C5), a pane dying or an Orca restart with a live dispatch (C6), and `HERDR_*` inherited
+inside Orca. A session started in Orca dispatches its Claude Builders by this file (one host per
+session); report each anomaly upstream with its handle. A Builder is a pane, never
+`Agent(subagent_type: builder)`: the mod refuses that spawn (6.1.6).
