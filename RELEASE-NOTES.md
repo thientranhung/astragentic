@@ -1,7 +1,5 @@
 # Astragentic 6.1.2
 
-Staged on main, not tagged: VERSION stays 6.1.1 until the owner's go.
-
 **A Codex Builder's simplify marker carries its own provenance line.** nizzy TRA-1355 (2026-11-10): the pass ran
 `astra-codex-simplify`, the Builder wrote `simplify(increment): …`, and the project's commit-msg hook, which runs the
 shipped checker, refused it with `missing 'Pass: Skill(skill: "simplify")' (AST-099)`; `marker-kinds.json` merges
@@ -21,8 +19,8 @@ it as a direct tool call, 3 of 3. The steer's "call it directly" wording worked 
 common.md and builder.md now name the namespace and say the search is void; thomas.md's steer gives the call's
 shape, and a second stop sends one probe ("list every tool namespace and tool name available this turn, take no
 action") and reports the ticket failed with the list attached, so the owner learns whether the runtime dropped
-the tools (chưa đo on the two workers; the probe is nizzy's hand) or the Builder misread them. Codex suite
-passes; selftest numbers in the commit.
+the tools or the Builder misread them. Measured on nizzy before the tag: both workers listed about 40 tool names and omitted `collaboration` (self-report; a rollout records tools once); Orca dispatched workers 0 of 3 ever spawned, sessions without that prompt 3 of 3; after such a list, Thomas asks for one `spawn_agent` receipt, and no call means a fresh session on the committed head, the owner's decision (nizzy, same day: the receipt probe produced 0 `function_call` items in both rollouts; both sessions are unreachable for helpers, mechanism unproven). Codex suite
+passes; selftest 236/0.
 
 # Astragentic 6.1.1
 
