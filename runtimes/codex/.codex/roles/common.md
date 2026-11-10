@@ -54,7 +54,10 @@ When waiting for a new owner or peer message, save the checkpoint and end your t
 Do not keep the turn active with sleep/poll loops: this can prevent queued messages
 from being consumed. Coordinator observation of running workers is separate.
 
-A helper is a direct tool call: call `spawn_agent`, collect with `wait_agent`.
+A helper is a direct tool call: call `spawn_agent`, collect with `wait_agent`. Both live in the
+`collaboration` tool namespace, beside `exec`, not inside it: `ALL_TOOLS` and `tools.*` within
+`exec` list code-mode tools only, so an empty `ALL_TOOLS` search is not a missing tool (nizzy
+2026-11-10, 2 Builders stopped on that search with the namespace declared at startup).
 Before stopping for a missing helper, attempt one real `spawn_agent` call and report its
 exact error. Never change personal settings, restart an active worker, or substitute builtin helpers implicitly.
 

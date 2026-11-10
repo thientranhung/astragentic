@@ -1,6 +1,30 @@
-# Astragentic 6.1.1
+# Astragentic 6.1.2
 
-Staged on main, not tagged: VERSION stays 6.1.0 until the owner's go.
+Staged on main, not tagged: VERSION stays 6.1.1 until the owner's go.
+
+**A Codex Builder's simplify marker carries its own provenance line.** nizzy TRA-1355 (2026-11-10): the pass ran
+`astra-codex-simplify`, the Builder wrote `simplify(increment): …`, and the project's commit-msg hook, which runs the
+shipped checker, refused it with `missing 'Pass: Skill(skill: "simplify")' (AST-099)`; `marker-kinds.json` merges
+`required` by union, so no project file could lift the Claude string. `Pass:` is now a token field with two
+accepted starts, `Skill(skill: "simplify")` and `$astra-codex-simplify`, and the Codex skill writes the second.
+Planted: the Codex form exits 1 on 6.1.1 and GREEN here; the Claude form and its degraded " — reason" form stay
+GREEN; `Pass: ran the four corners by hand` is NOT GREEN naming both forms; a marker with no `Pass:` is
+`missing 'Pass:'`.
+
+**The false no-tool stop, read from the rollouts.** nizzy's two Codex Builders on Orca (TRA-1353, TRA-1355) stopped
+at review saying `spawn_agent` is not declared, got the 6.1.0 steer once each, and repeated it. Both rollouts
+declare the `collaboration` namespace (`spawn_agent`, `wait_agent`, …) at startup; both made 0 direct tool calls
+and 71 `exec` calls; TRA-1353 searched `ALL_TOOLS` inside `exec` and got `[]`. `ALL_TOOLS` is the `exec` tool's
+catalog of code-mode tools and never lists `collaboration`; the 3 sessions that ever spawned a helper (11-09) did
+it as a direct tool call, 3 of 3. The steer's "call it directly" wording worked 2 of 2 as a Herdr `agent prompt`
+(a user turn) and 0 of 2 as an Orca `orchestration send`, which the worker reads back inside an `exec` output.
+common.md and builder.md now name the namespace and say the search is void; thomas.md's steer gives the call's
+shape, and a second stop sends one probe ("list every tool namespace and tool name available this turn, take no
+action") and reports the ticket failed with the list attached, so the owner learns whether the runtime dropped
+the tools (chưa đo on the two workers; the probe is nizzy's hand) or the Builder misread them. Codex suite
+passes; selftest numbers in the commit.
+
+# Astragentic 6.1.1
 
 **A turn end with 0 running beside a finished agent waits 5 s before it rings.** Field report from inception on
 6.1.0/Orca (2026-11-10): two Builders "parked on idle sub-agents", "both needed a Thomas steer". Measured on the

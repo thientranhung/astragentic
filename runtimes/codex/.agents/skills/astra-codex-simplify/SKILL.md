@@ -32,7 +32,10 @@ tests after each. Behavior stays identical: inputs, outputs, errors, side effect
 If a test must change for a simplification to pass, that simplification changed behavior: revert it.
 Removing or weakening error handling is never a simplification.
 
-Commit what remains as `simplify(increment): <what changed>` and push. A pass that changes nothing
+Commit what remains as `simplify(increment): <what changed>` and push, with the provenance line
+on its own line in the body, copied exactly: `Pass: $astra-codex-simplify`. That line is the Codex
+form of the Claude lane's `Pass: Skill(skill: "simplify")`; the marker checker accepts either and
+refuses any other text (6.1.2). A pass that changes nothing
 is valid and creates no commit: record that in the report. Review is not re-fired for these changes.
 Record what was inspected, what changed and why, command results and the
 final artifact identity. Loading this skill is not a receipt.

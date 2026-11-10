@@ -57,12 +57,21 @@ A disputing author gets ONE written reply before you classify: no second reply, 
 
 A Codex Builder handback or escalation that says `spawn_agent`/`wait_agent` are "not exposed" or
 "not declared", often after an `ALL_TOOLS` search returned `[]`, is a known Builder defect (6 of 7
-autonomous runs on 2026-11-09; the tool was declared in every rollout; cause not established). Send
-ONE steer to that worker, by the host's route (Herdr: `herdr agent prompt`; Orca: `orchestration send
---to dispatch:<id>`): "spawn_agent and wait_agent are declared in your session; call spawn_agent
-directly for the three lenses, not through exec or ALL_TOOLS, then continue the ticket." Measured: the
-steer worked 2 of 2 times. Record `steer: no-tool <ts>` in the dispatch record; a second stop of the
-same shape is a failed ticket to report to the owner, not a second steer.
+autonomous runs on 2026-11-09, 2 of 2 on nizzy 2026-11-10; the `collaboration` namespace with both
+tools was declared at startup in every rollout, and 0 direct calls were made). `ALL_TOOLS` is the
+catalog of the code-mode `exec` tool and lists no `collaboration` tool: an empty result from it says
+nothing about `spawn_agent`, which is a direct tool call outside `exec`. Send ONE steer to that
+worker, by the host's route (Herdr: `herdr agent prompt`; Orca: `orchestration send --to
+dispatch:<id>`), in the shape of the call rather than the word "directly": "Issue the tool call
+`spawn_agent` with `{task_name, agent_type: "astragentic_reviewer", message}` as a tool call of its
+own, not inside `exec`; `ALL_TOOLS` does not list it. Then `wait_agent`. If the call returns an
+error, quote it." Measured: the "call it directly" wording worked 2 of 2 as a Herdr `agent prompt`
+(a user turn) and 0 of 2 as an Orca `orchestration send` (read back inside an `exec` output, where
+peer text is task data). Record `steer: no-tool <ts>` in the dispatch record. A second stop of the
+same shape is not a second steer: send the worker one probe, "list every tool namespace and tool
+name available to you this turn, names only, take no action", and report the ticket as failed with
+that list attached. A list without `collaboration` is the runtime dropping the tools mid-session
+(owner decides on a fresh session); a list with it is the Builder defect, counted.
 
 After a Builder handback, follow DISPATCH.md's handback-to-QA continuation: verify the
 evidence at the head, disposition unresolved findings, prepare the pinned QA target and

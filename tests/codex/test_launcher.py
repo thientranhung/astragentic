@@ -331,8 +331,21 @@ class LauncherTests(unittest.TestCase):
         self.assertNotIn('invalidate coverage', builder)
         self.assertIn('ONE written reply', thomas)
         self.assertIn('## The false no-tool stop', thomas)
-        self.assertIn('Send\nONE steer', thomas)
-        self.assertIn('a second stop of the\nsame shape is a failed ticket', thomas)
+        self.assertIn('Send ONE steer', thomas)
+        # nizzy 2026-11-10: the "call it directly" steer, read back inside an exec output, failed 2 of 2;
+        # a second stop now sends the namespace probe and reports failed with the list attached.
+        self.assertNotIn('the\nsteer worked 2 of 2 times', thomas)
+        self.assertIn('0 of 2 as an Orca `orchestration send`', thomas)
+        self.assertIn('list every tool namespace and tool\nname available to you this turn', thomas)
+        self.assertIn('A second stop of the\nsame shape is not a second steer', thomas)
+        for text in (thomas, builder, (ROOT / 'runtimes/codex/.codex/roles/common.md').read_text()):
+            self.assertIn('`ALL_TOOLS`', text)
+        # The Codex pass has its own Pass: form; the checker accepts it beside the Claude one (6.1.2).
+        simplify = (ROOT / 'runtimes/codex/.agents/skills/astra-codex-simplify/SKILL.md').read_text()
+        self.assertIn('`Pass: $astra-codex-simplify`', simplify)
+        checker = (ROOT / 'harness/scripts/check-simplify-markers.sh').read_text()
+        self.assertIn('"$astra-codex-simplify"', checker)
+        self.assertNotIn('''"required": ['Pass: Skill(skill: "simplify")']''', checker)
         tdd = (ROOT / 'runtimes/codex/.agents/skills/codex-astra-implement-with-tdd/SKILL.md').read_text()
         self.assertIn('a test failing three times in a row', tdd)
         self.assertIn('Run exactly the commands', tdd)

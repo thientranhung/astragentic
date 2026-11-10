@@ -140,6 +140,49 @@ Fix staged (6.1.1): the dispatcher claims the key at `orca terminal create … A
 Herdr launches: chưa đo, not claimed. Advice to inception: close the 10-day root session; until the
 release, polling the gate file is right.
 
+## I-7 — nizzy's two Codex Builders stop at review: "no callable spawn_agent", twice, after the one steer
+
+Reported 2026-11-10 by nizzy Thomas (Codex coordinator `01a1c352`, run `run_362765c066b0`,
+`ASTRAGENTIC-BLOCKERS.md` § A). TRA-1353 (`7ba3f3d`) and TRA-1355 (`baf67ce`) built, tested and
+committed locally, then both reported no `spawn_agent`/`wait_agent` declaration, the steer from
+thomas.md was sent once per worker, both repeated the report, both handed back `failed`.
+
+| số đo | nguồn |
+|---|---|
+| tool namespaces declared at startup, both rollouts, line 3 `additional_tools`: `functions`, `clock`, `collaboration`, `mcp__cua_repl`; `collaboration` carries `spawn_agent`, `wait_agent`, `followup_task`, `interrupt_agent`, `list_agents` | `~/.codex/sessions/2026/11/10/rollout-…01a1c35a-00b0…` and `…01a1c35a-01bb…` |
+| direct `function_call` items in both rollouts: 0; every tool use is `custom_tool_call` `exec` (71 in TRA-1355) | same |
+| TRA-1353's search: `ALL_TOOLS.filter(/spawn_agent\|wait_agent\|review.agent/)` inside `exec` returned `[]` (line 277) | TRA-1353 rollout |
+| sessions that called `spawn_agent` as a direct `function_call`: 3 of 3 succeeded (`/root/correctness` …), 11-09 Orca probe `01a1bfd3-759b` (3 spawns, 3 waits) and rehearsal `01a1c058`, `01a1c05b`; 0 sessions ever called it through `exec` | 11-09 rollouts |
+| the Builder's own tool list in its stop note: `functions` (exec, wait, request_user_input…), `clock`, `mcp__cua_repl`; `collaboration` omitted | `native-review-retry.md`, `report.md` |
+| how the steer arrived: as `exec` output of `orca orchestration check` (TRA-1353 line 747), after a user turn that said only "You have 1 orchestration message"; 11-09's 2 of 2 successes were Herdr `agent prompt`, a user turn | both rollouts, RELEASE-NOTES 6.1.0 |
+| `multi_agent` stable true, `multi_agent_v2` false on this box; openai/codex #26753 concerns v2 only | `codex features list` |
+| whether `collaboration` was still in the two workers' tool list at the stop turn | chưa đo: a rollout records tools once; the probe is a one-line follow-up to each idle worker (list namespaces and tool names, take no action), nizzy's hand |
+
+Read: `ALL_TOOLS` is the `exec` tool's own catalog of code-mode tools; the `collaboration` tools are
+direct tools beside `exec` and never appear in it, so the Builders searched the wrong catalog and
+read the empty result as absence. The steer wording "call it directly, not through exec or ALL_TOOLS"
+worked only as a user turn. Staged (6.1.2): common.md and builder.md name the namespace and say the
+search is void; thomas.md's steer gives the call's shape, the "2 of 2" claim is replaced by the counts
+(2 of 2 Herdr, 0 of 2 Orca), and a second stop sends the namespace probe and reports failed with the
+list attached instead of a second steer. Text only; the Builder's read of its own tool list is not
+ours to change, and the probe decides between runtime drop and Builder defect.
+
+## I-8 — a Codex Builder's truthful simplify marker is refused by the shipped checker
+
+Same report, § B. `scripts/check-simplify-markers.sh` (nizzy's copy identical to harness) required
+the literal `Pass: Skill(skill: "simplify")`; the Codex pass runs `astra-codex-simplify`, and the
+skill text named no `Pass:` line at all.
+
+| số đo | nguồn |
+|---|---|
+| refusal: `STOP: (this marker): missing Pass: Skill(skill: "simplify") (AST-099)` on `simplify(increment): …` at the commit-msg hook | `builder-TRA-1355/.scratch/codex/tra-1355-20261110/marker-refusal.log` |
+| `marker-kinds.json` merges `required` by union (checker lines 292–297), so no project file could drop the Claude string | checker source |
+| Codex-form marker on the 6.1.1 checker: NOT GREEN; on the staged checker: GREEN; Claude form and its degraded " — reason" form: GREEN; `Pass: ran the four corners by hand`: NOT GREEN naming both forms; no `Pass:`: `missing 'Pass:'` | `/tmp/cm-probe`, selftest block "6.1.2 — the Codex lane's provenance line" |
+
+Staged (6.1.2): `simplify(increment)` keeps `Pass:` as a token field with two allowed starts,
+`Skill(skill: "simplify")` and `$astra-codex-simplify`; `astra-codex-simplify/SKILL.md` writes the
+line. The field stays self-reported in both lanes, as it was.
+
 ## Owed items measured 2026-11-10
 
 | số đo | nguồn |

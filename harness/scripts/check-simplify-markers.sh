@@ -211,8 +211,14 @@ def advisory_on_base(kind, base):
 # one receipt, and whatever ends up at the head IS that receipt. There is nothing to launder when
 # exactly one commit is asserted against.
 KINDS = {
+    # `Pass:` names the skill that ran, one form per runtime: the Claude Skill tool call, or the
+    # Codex skill mention. Until 6.1.2 the Claude form was the only accepted text, so a Codex
+    # Builder's truthful marker was refused at its own commit-msg hook (a Codex project, 2026-11-10:
+    # `missing 'Pass: Skill(skill: "simplify")'` for a pass that ran `astra-codex-simplify`), and
+    # a project's marker-kinds.json could not replace the field: it merges by union.
     "simplify(increment)": {
-        "required": ['Pass: Skill(skill: "simplify")'],
+        "required": [],
+        "tokens": {"Pass:": ('Skill(skill: "simplify")', "$astra-codex-simplify")},
         "scope": "live",
         "economy": True,
     },

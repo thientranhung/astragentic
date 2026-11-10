@@ -486,6 +486,34 @@ case "$rc:$(printf '%s' "$out" | tail -n 1)" in
                    || bad "big fold STOP text" "$out" ;;
   *) bad "big fold" "exit $rc: $(printf '%s' "$out" | tail -n 1)" ;;
 esac
+# 6.1.2 — the Codex lane's provenance line. A Codex Builder's pass runs `astra-codex-simplify`, and
+# its truthful marker was refused at the project's own commit-msg hook (a Codex project, 2026-11-10:
+# `missing 'Pass: Skill(skill: "simplify")'`); marker-kinds.json merges `required` by union and
+# could not replace the field. Planted against 6.1.1: the Codex form exits 1.
+RC="$TMP/codexmarker"; mkdir -p "$RC"
+( cd "$RC" && git init -q . && git config user.email t@t && git config user.name t \
+  && printf 'a\n' > a.js && git add a.js && git commit -q -m init ) >/dev/null 2>&1
+BC="$( cd "$RC" && git rev-parse HEAD )"
+( cd "$RC" && printf 'b\n' >> a.js && git add -A && git commit -q -m 'T-2: work' \
+  && git commit -q --allow-empty -m 'simplify(increment): T-2 clean
+
+Pass: $astra-codex-simplify' ) >/dev/null 2>&1
+out="$( cd "$RC" && bash "$S/check-simplify-markers.sh" "$BC" HEAD --marker 'simplify(increment)' 2>&1 )"; rc=$?
+case "$rc:$(printf '%s' "$out" | tail -n 1)" in
+  0:GREEN) ok "a simplify marker whose Pass: names the Codex skill (\$astra-codex-simplify) is GREEN (6.1.2)" ;;
+  *) bad "codex simplify marker" "exit $rc: $(printf '%s' "$out" | grep STOP | head -1)" ;;
+esac
+( cd "$RC" && printf 'c\n' >> a.js && git add -A && git commit -q -m 'T-2: more' \
+  && git commit -q --allow-empty -m 'simplify(increment): T-2 again
+
+Pass: ran the four corners by hand' ) >/dev/null 2>&1
+out="$( cd "$RC" && bash "$S/check-simplify-markers.sh" "$BC" HEAD --marker 'simplify(increment)' 2>&1 )"; rc=$?
+case "$rc:$(printf '%s' "$out" | tail -n 1)" in
+  1:"NOT GREEN") printf '%s' "$out" | grep -q 'Pass: does not start with one of' \
+                   && ok "a Pass: naming neither skill form is NOT GREEN and the STOP lists both forms" \
+                   || bad "foreign Pass text" "$out" ;;
+  *) bad "foreign Pass" "exit $rc: $(printf '%s' "$out" | tail -n 1)" ;;
+esac
 # 4.5.1 — the allowance is simplify's only: a fold on top of an arm(ticket) receipt still STOPs
 # (planted: exit 0 on 4.5.0).
 RA="$TMP/armfold"; mkdir -p "$RA"

@@ -19,6 +19,8 @@ worker's checkout. Keep the dispatch checkpoint current across compaction/resume
 3. `codex-astra-review`: spawn the three `astragentic_reviewer` helpers yourself with
    `spawn_agent`, in this session, one lens each (correctness via `$review-agent`, owner
    intent, project standards) on the explicit base/head, and collect them with `wait_agent`.
+   `spawn_agent` is a tool call of its own in the `collaboration` namespace, not a `tools.*`
+   entry inside `exec`, and `ALL_TOOLS` never lists it: search nothing, issue the call.
    If `spawn_agent` fails, write the exact error. Review never goes through
    Thomas and never gets its own pane. Verify findings here, fix supported defects, send
    only genuine intent disputes to Thomas, once and in writing; the review is not re-fired.
