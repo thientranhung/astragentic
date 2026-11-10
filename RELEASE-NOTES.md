@@ -71,6 +71,24 @@ the base checkout's workspace explicitly and says what `active` does inside a wo
 shell call, not in the rollout): chưa đo. A sidebar toggle for hidden discovered worktrees (Orca 1.4.250 notes) may show
 such a pane: not verified.
 
+**The session that opens a pane owns its record-path bells.** Inception, 2026-11-10, no outage this time: two QA gate
+panes finished (reports 06:54 and 07:03 local), the record shows `woken_at` on each, the briefing Thomas sat idle until
+the owner asked at 08:00. The prompts went to another session: a Thomas left open since 2026-10-30 at the same project
+root took all three wakes (23:52:17Z, 23:55:47Z, 00:12:17Z, its transcript). A gate pane is briefed by file and never
+sends a dispatcher message, so its entry carried no `dispatcher` and every root session's 30 s poll could stamp and ring
+it; the 2026-10-23 ownership rule only covered lanes briefed through the mod. The dispatcher's mod now writes the claim at
+the launch: an `orca terminal create` whose command carries `ASTRA_DISPATCH=<prefix>:<key>` patches that key with
+`dispatcher: uds:<this socket>` and `claimed_at` before the shell runs; the pane's session.start patches the same key and
+keeps it, and the poll's existing rule skips an entry another live socket owns. Planted (`orcadisp`): a qa and a ticket
+create each leave the claim. Herdr launches are not claimed (the label rides on the tab, not in the command; count first).
+`woken_at` means a poll consumed the bell, not that the briefing dispatcher saw a prompt. The stale root session is the
+project's to close.
+
+**Measured live before the tag (owed items).** The grace: a probe mod in a fixture pane on Orca armed a 5 s timer in
+`turn.complete`; it fired 5,015 ms after the turn end with `$.fs.write` and `$.ui.status` both working, so `$` and
+`setTimeout` outlive the hook in the engine (Claude Code 2.1.319, Haiku pane, 2026-11-10). Still `chưa đo`: the Codex
+coordinator's Stop hook on the dead-turn race.
+
 # Astragentic 6.1.0
 
 **One host per session: a session started in Orca follows Orca's dispatch and never runs `herdr`; one

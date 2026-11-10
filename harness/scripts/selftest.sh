@@ -1878,7 +1878,15 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const afterRm = JSON.parse(fs.readFileSync(recPath, 'utf8'))
     const orphanLiveKept = typeof afterRm['AB-2']?.worktree_removed_at === 'number'
     const disconnectedReaped = !('AB-3' in afterRm)
-    console.log(JSON.stringify({ closeSubst, closeBacktick, closeLiteral, closeLiteralReaped, orphanLiveKept, disconnectedReaped }))
+    // the session that opens a gate pane claims its entry, so only its poll rings the pane's
+    // record-path bell (inception 2026-11-10: a 10-day-old Thomas session took 3 of 3 QA bells)
+    selfSock = path.join(root, 'self.sock')
+    await fire('tool.call', { tool: 'Bash', command: 'orca terminal create --worktree "path:/p" --title "qa:AB-9" --json --command "cd /p/.claude/worktrees/qa-AB-9 && ASTRA_DISPATCH=qa:AB-9 claude --agent qa"' }, async () => ({}))
+    await fire('tool.call', { tool: 'Bash', command: 'orca terminal create --worktree "path:/p" --title "ticket:AB-10" --json --command "cd /w && ASTRA_DISPATCH=ticket:AB-10 claude"' }, async () => ({}))
+    const afterCreate = JSON.parse(fs.readFileSync(recPath, 'utf8'))
+    const createClaim = [afterCreate['qa:AB-9']?.dispatcher === `uds:${selfSock}` && afterCreate['qa:AB-9']?.role === 'qa', afterCreate['AB-10']?.dispatcher === `uds:${selfSock}` && afterCreate['AB-10']?.role === 'builder'].join(',')
+    selfSock = undefined
+    console.log(JSON.stringify({ closeSubst, closeBacktick, closeLiteral, closeLiteralReaped, orphanLiveKept, disconnectedReaped, createClaim }))
     return
   }
   if (isPane) {
@@ -2688,8 +2696,8 @@ EOS
     bad "mod orca pane" "$out"
   fi
   out="$(mod_drive "$MOD" orcadisp)"
-  if says "$out" '"closeSubst":"deny:held:literal","closeBacktick":"deny:held:literal","closeLiteral":"pass:ran:-","closeLiteralReaped":true,"orphanLiveKept":true,"disconnectedReaped":true'; then
-    ok "orca dispatcher (6.1.1): a terminal close with a substituted --terminal is refused and told to pass the literal handle; a literal close on an entry whose worktree is gone removes the entry; at git worktree remove an orphaned-but-connected terminal keeps its entry and a disconnected one goes"
+  if says "$out" '"closeSubst":"deny:held:literal","closeBacktick":"deny:held:literal","closeLiteral":"pass:ran:-","closeLiteralReaped":true,"orphanLiveKept":true,"disconnectedReaped":true,"createClaim":"true,true"'; then
+    ok "orca dispatcher (6.1.1): a terminal close with a substituted --terminal is refused and told to pass the literal handle; a literal close on an entry whose worktree is gone removes the entry; at git worktree remove an orphaned-but-connected terminal keeps its entry and a disconnected one goes; the session that creates a pane claims its entry as dispatcher"
   else
     bad "mod orca close" "$out"
   fi

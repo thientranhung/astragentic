@@ -2287,6 +2287,21 @@ export const register: Register = on => {
     const rec = (await readRecord($, root)) ?? {}
     const cmd = runnable(e.command)
 
+    // -- the session that opens a pane owns its record-path bells (6.1.1) -------------------
+    // A gate pane briefed by file never sends a dispatcher message, so its entry carried no
+    // `dispatcher` and EVERY root session's poll could ring it: inception, 2026-11-10, a Thomas
+    // session left open since 10-30 consumed 3 of 3 QA bells (23:52Z, 23:55Z, 00:12Z) while the
+    // briefing Thomas sat idle; `woken_at` was stamped and no one who cared saw a prompt. The
+    // launch command names the lane (`ASTRA_DISPATCH=qa:KEY`), so the claim is written here,
+    // before the shell runs; the pane's session.start patches the same key and keeps it.
+    const claim = cmd.match(new RegExp(AT_COMMAND + String.raw`(?:\S*/)?orca\s+terminal\s+create\b[^\n]*?\bASTRA_DISPATCH=['"]?(ticket|spec|qa|resident):([^\s'"&;|]+)`))
+    if (claim) {
+      const sock = await $.env.get('CLAUDE_CODE_MESSAGING_SOCKET')
+      const role = ROLE_BY_PREFIX[claim[1]]
+      const key = role === 'qa' ? `qa:${claim[2]}` : claim[2]
+      if (sock && role) await patchRecord($, root, key, { role, dispatcher: `uds:${sock}`, claimed_at: await $.clock.now() })
+    }
+
     // -- a launch whose argv repeats the executable that --kind supplies (5.0.9) ----------------
     // `herdr agent start --kind claude -- …` prepends `claude` itself. A launcher row pasted with
     // the executable produced ["claude","claude","--agent",…]: the pane's first prompt was the

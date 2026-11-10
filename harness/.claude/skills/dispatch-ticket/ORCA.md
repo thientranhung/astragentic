@@ -69,6 +69,9 @@ No watcher and no watchdog on Orca: `herdr-watch-terminal.sh` and `herdr-watchdo
 programs and are not started. The turn end arrives by the mod (Claude root) or by the record (gate
 pane). A pane that died shows on the board from its own record entry; Orca has no notification
 command (`orca --help`, 1.4.254), so there is no desktop alert on Orca: read the board.
+The session that ran the `terminal create` owns the pane's record bell: the mod stamps `dispatcher` on
+the key at the create, so another root session's poll leaves it (inception 2026-11-10: a Thomas left
+open since 10-30 took 3 of 3 QA bells). `woken_at` says a poll consumed the bell, not who saw it.
 
 ## Cleanup (CLEANUP.md)
 

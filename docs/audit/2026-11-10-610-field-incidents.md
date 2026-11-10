@@ -121,3 +121,28 @@ staged I-4 reading of `orphaned` as closed would have deleted such a lane's reco
 command (ORCA.md § The pane, Codex draft). Advice to nizzy: keep driving by `read`/`send`/`wait`,
 close with the literal handle when done, never relaunch for visibility. A sidebar toggle for hidden
 discovered worktrees (Orca 1.4.250 release notes) is a lead for the owner: chưa đo.
+
+## I-6 — QA gate bells lost again on inception, no outage: another root session consumed them
+
+Reported 2026-11-10 by inception Thomas (`workspace-app-inception-97`): `qa:batch1110b-walk` and
+`-verify` finished, `woken_at` set, no prompt reached the idle dispatcher from 06:47 to 08:00.
+
+| số đo | nguồn |
+|---|---|
+| wake prompts "by the record, a gate pane's path" for batch1110b: 3, all in session `b8277907` (first user turn 2026-10-30T13:04Z, cwd inception root = `workspace-app-inception-c9`, still listed alive); 0 in `1e9ff244` (the briefing Thomas) | inception transcripts |
+| times: 23:52:17Z (walk), 23:55:47Z, 00:12:17Z (verify, the "routine third tick" turn end) | `b8277907` transcript, record `turn_end_pending` |
+| record-path bells per receiving session since 10-30: inception 7 sessions (`b8277907` 10 across 11 days), nizzy 3 sessions | both transcripts dirs |
+| QA entries carry no `dispatcher` (briefed by file, no mod message) | inception record |
+| mod rule since 2026-10-23: skip an entry whose `dispatcher` socket is another live session; unowned entries ring in any root session | register.tsx `wakeFromRecord` |
+
+Fix staged (6.1.1): the dispatcher claims the key at `orca terminal create … ASTRA_DISPATCH=…`
+(`dispatcher`, `claimed_at`, `role`), before the shell runs. Planted in `orcadisp` (qa and ticket).
+Herdr launches: chưa đo, not claimed. Advice to inception: close the 10-day root session; until the
+release, polling the gate file is right.
+
+## Owed items measured 2026-11-10
+
+| số đo | nguồn |
+|---|---|
+| grace live: probe mod, Orca pane, Haiku; timer armed in `turn.complete` fired at +5,015 ms, `$.fs.write` ok, `$.ui.status` ok | `/tmp/probe-grace-1-t{0,1}.json`, pane status line |
+| Codex coordinator Stop hook on the dead-turn race | chưa đo |
