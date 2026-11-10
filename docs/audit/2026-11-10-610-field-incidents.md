@@ -239,6 +239,33 @@ a child's Stop is the parent's Stop to Orca. Staged (6.1.4): the child argv begi
 `env -u ORCA_PANE_KEY`; DISPATCH.md § Orca and thomas.md name the escalation as noise on 6.1.3
 workers (read `worker-show`, send nothing).
 
+Upstream (2026-11-10, filed as comments, no new issue): the preamble is stablyai/orca#40419, the
+inherited pane key is #34188 (Claude path there; the Codex measurement above is the comment).
+Related open: #29107 (`--preamble full|minimal|none`), #37867 closed (idle workers spam the same
+escalation). Measured child under the default sandbox (`sandbox: read-only`, no bypass flag): exit 0,
+`-o` report written, review ran, 1 of 1 (`/tmp/astra-sbx-probe/`); the live Builders all run
+`danger-full-access` (6 of 6 Orca-dispatched rollouts today), so that branch is not the live path.
+
+## I-11 — both 6.1.4 Builders end a turn with `upstream_recovery_failed` at the same instant
+
+Reported 2026-11-10 by nizzy Thomas (`qa-fold-1353-1355/UPSTREAM-INTERRUPTION.md`, msg_881395e6e8b4):
+both QA-fold Builders ended a turn "Incomplete response returned, reason: upstream_recovery_failed"
+before their review lenses; one same-dispatch continuation each resumed both.
+
+| số đo | nguồn |
+|---|---|
+| both `task_complete` errors at `09:47:42.365Z`, same millisecond; turns started 09:30:15Z and 09:30:17Z | rollouts `…T16-29-27-01a1c4ca-7cdb-79a2…` ordinal 285, `…-7a33…` ordinal 301 |
+| relay: last 200 at 09:40:26Z; `WARN looplag 399.5s` at 09:47:38Z (its event loop did not run 09:40:58→09:47:38); two in-flight streams cut `autocut stream error: upstream idle 400s` at 09:47:42.329Z and .332Z (434,371 ms and 442,057 ms) | `~/.ch-relay/agent.out.log` lines 11381–11385 |
+| DNS down 09:47:40–09:48:08Z: `getaddrinfo ENOTFOUND chatgpt.com` and `codex2.nhtbgr.online`, telemetry timeout, 9 × `share 502`; then 128 × `share 200` by 10:00Z | same log 11382–11397; `agent.err.log` lines 24–32 "upstream route down 63–73s why=network" |
+| Mac did not sleep: no sleep/wake rows 16:35–16:50 +07, caffeinate and SpyderEngage hold `PreventUserIdleSystemSleep` | `pmset -g log`, `pmset -g assertions` |
+| earlier relay stalls: looplag 161.6 s (11-09 11:35Z), 397.5 s, 1,075.9 s, 238.1 s (11-10 00:38–01:01Z) | `agent.out.log` 8938, 10098–10103 |
+
+Read: a host-level network stall of about 7 minutes with a 28 s DNS outage at its end; the relay cut
+both streams at its 400 s idle limit and Codex surfaced that as `upstream_recovery_failed`. Nothing in
+6.1.4, Orca, or the Builders' sessions caused it, and the native continuation is the right recovery.
+No payload change. Owed only if it repeats: whether the relay's 400 s autocut should be longer than a
+typical stall, which is the relay vendor's setting, not ours.
+
 ## Owed items measured 2026-11-10
 
 | số đo | nguồn |
