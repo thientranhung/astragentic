@@ -276,7 +276,12 @@ flag) is why that stop happens: under it the model issued no `spawn_agent` call 
 fixture runs without it, and a task line or AGENTS.md rule in its own words lifted it 0 of 4. The
 brief does not try to; on Orca the Builder runs each review lens as a child `codex exec` through
 `exec` (`codex-astra-review` § On Orca; 3 of 3 children ran, the `$review-agent` child named a
-planted defect at its line). The brief's review step is otherwise unchanged.
+planted defect at its line). The brief's review step is otherwise unchanged. The child runs under
+`env -u ORCA_PANE_KEY` (6.1.4): with the key inherited, Orca's Codex hook reports the child's Stop as
+the parent pane's and raises "Worker stopped without reporting" while the parent is still working
+(2 of 2 such escalations on the first 6.1.3 run carried a child's review report as last output;
+fixture: 3 hook POSTs with the key, 0 without). Such an escalation from a 6.1.3 worker is noise:
+`worker-show` says working, the rollout continues; no steer, no restart.
 
 **Launch and adopt.** The brief is a file. The argv is encoded, never concatenated:
 

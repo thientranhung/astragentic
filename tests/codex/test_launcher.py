@@ -345,7 +345,10 @@ class LauncherTests(unittest.TestCase):
         self.assertIn('no subagents or helper workers unless the task asks', thomas)
         self.assertNotIn('no call means a fresh session on the committed head', thomas)
         self.assertIn('## On Orca: a lens is a child process', review)
-        self.assertIn('["codex", "exec", "--cd", worktree', review)
+        self.assertIn('["env", "-u", "ORCA_PANE_KEY"', review)
+        self.assertIn('"codex", "exec", "--cd", worktree', review)
+        # 6.1.4: a child inheriting ORCA_PANE_KEY posts its Stop as the parent pane's (3 hook POSTs vs 0).
+        self.assertIn('Worker stopped without reporting', thomas)
         self.assertIn('child\n   `codex exec`', builder)
         self.assertIn('**Review on Orca (6.1.3).**', dispatch)
         # The Codex pass has its own Pass: form; the checker accepts it beside the Claude one (6.1.2).

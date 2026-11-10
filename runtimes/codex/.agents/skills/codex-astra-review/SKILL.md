@@ -30,12 +30,21 @@ lens is one `codex exec` child run through `exec` from the worktree, all three s
 report is read, the `-o` file being the lens artifact. The argv is encoded, never concatenated:
 
 ```python
-argv = ["codex", "exec", "--cd", worktree, "--model", model,
+argv = ["env", "-u", "ORCA_PANE_KEY",               # 6.1.4: the child must not wear the parent's pane, see below
+        "codex", "exec", "--cd", worktree, "--model", model,
         "-c", 'model_reasoning_effort="' + effort + '"', "-c", "notify=[]",
         "-o", report_path, lens_message]            # lens_message as above, e.g. "Use $review-agent to review <base>..<head> …"
 if permission_mode == "yolo":                       # the parent's recorded owner selection
-    argv.insert(2, "--dangerously-bypass-approvals-and-sandbox")
+    argv.insert(5, "--dangerously-bypass-approvals-and-sandbox")
 ```
+
+`env -u ORCA_PANE_KEY` is not optional. The child inherits the parent's Orca hook variables, and
+Orca's Codex hook (`~/.orca/agent-hooks/codex-hook.sh`, keyed on `ORCA_PANE_KEY`) then posts the
+child's SessionStart, prompt and Stop as the parent pane's: on a Codex project (2026-11-10, 6.1.3)
+three children ending at 08:06:12/27/41Z while the parent kept working to 08:09:36Z produced two
+"Worker stopped without reporting" escalations whose last output was a child's review report.
+Measured on a fixture with a fake hook port: child with the inherited key, 3 POSTs (`SessionStart`,
+`UserPromptSubmit`, `Stop`); child under `env -u ORCA_PANE_KEY`, 0 POSTs, same READY answer.
 
 Measured on a fixture under the full preamble (2026-11-10): 2 of 2 children answered; 1 of 1
 `$review-agent` child pinned base and head and named a planted defect at `stats.py:3`. A child

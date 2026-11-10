@@ -219,6 +219,26 @@ Staged (6.1.2): `simplify(increment)` keeps `Pass:` as a token field with two al
 `Skill(skill: "simplify")` and `$astra-codex-simplify`; `astra-codex-simplify/SKILL.md` writes the
 line. The field stays self-reported in both lanes, as it was.
 
+## I-10 — 6.1.3 child review lenses report their Stop as the parent pane's
+
+Reported 2026-11-10 by nizzy Thomas (`recovery-613/ASTRAGENTIC-613-REVIEW-LIVE.md`): on 6.1.3 the
+three child `codex exec` lenses ran (TRA-1355: three `-o` reports, exit 0), and Orca raised two
+"Worker stopped without reporting" escalations (`msg_stop_37e04f…` for ctx_18445994306d,
+`msg_stop_f7c092…` for ctx_85d3a2f4c96d) whose last-output blocks were child review reports while
+`worker-show` said working and both parent TUIs kept running.
+
+| số đo | nguồn |
+|---|---|
+| TRA-1355 sessions in the worktree: parent `01a1c477-efc9` (originator `codex-tui`, last item 08:09:36Z); children `01a1c47a-3ce5-7560`, `-7612`, `-7833` (originator `codex_exec`, `source: exec`), last items 08:06:41Z, 08:06:12Z, 08:06:27Z | `~/.codex/sessions/2026/11/10/rollout-2026-11-10T14-59-16-…` and `…T15-01-47-…` |
+| Orca's global Codex hook (`~/.codex/hooks.json`, every event incl. `Stop`) runs `~/.orca/agent-hooks/codex-hook.sh` only when `ORCA_PANE_KEY` and a hook root or port are set; the script posts the payload to `127.0.0.1:$ORCA_AGENT_HOOK_PORT/hook/codex` with `paneKey=$ORCA_PANE_KEY`, `tabId`, `worktreeId`; no session id is used for identity | hooks.json `Stop` command; codex-hook.sh lines 8–9, 55, 76–87 |
+| fixture, fake hook port, `codex exec "Reply READY"` from an Orca pane: with the inherited `ORCA_PANE_KEY`, 3 POSTs to `/hook/codex` (`SessionStart`, `UserPromptSubmit`, `Stop`), READY; with `env -u ORCA_PANE_KEY`, 0 POSTs, READY | `/tmp/astra-hook-probe-2/run1/hits.log`, `run1b/hits.log`, `run2/hits.log` |
+| whether Orca disambiguates by the payload's `session_id` | measured no: the two escalations above were raised for the parent dispatches |
+
+Read: the child inherits the parent's Orca hook environment, and Orca keys the hook on the pane, so
+a child's Stop is the parent's Stop to Orca. Staged (6.1.4): the child argv begins
+`env -u ORCA_PANE_KEY`; DISPATCH.md § Orca and thomas.md name the escalation as noise on 6.1.3
+workers (read `worker-show`, send nothing).
+
 ## Owed items measured 2026-11-10
 
 | số đo | nguồn |

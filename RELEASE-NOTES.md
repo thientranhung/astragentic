@@ -1,3 +1,17 @@
+# Astragentic 6.1.4
+
+Staged on main, not tagged; release on the owner's go.
+
+**A child review lens no longer wears its parent's Orca pane.** First 6.1.3 run on a Codex project (2026-11-10): the
+three child `codex exec` lenses ran (three `-o` reports, exit 0) and Orca raised two "Worker stopped without reporting"
+escalations whose last output was a child's review report, while `worker-show` said working and the parent rollouts
+kept going (children ended 08:06:12/27/41Z, parent still at 08:09:36Z). The child inherits the parent's Orca hook
+environment, and Orca's Codex hook keys on `ORCA_PANE_KEY`, so the child's Stop posts as the parent pane's.
+Fixture with a fake hook port: child with the inherited key, 3 POSTs (SessionStart, UserPromptSubmit, Stop); child
+under `env -u ORCA_PANE_KEY`, 0 POSTs, same READY. The child argv in `codex-astra-review` § On Orca now begins
+`env -u ORCA_PANE_KEY`; DISPATCH.md § Orca and thomas.md name such an escalation from a 6.1.3 worker as noise (read
+`worker-show`, send nothing). Audit I-10.
+
 # Astragentic 6.1.3
 
 **On Orca, a Codex review lens is a child `codex exec`, because the dispatched-worker preamble silences `spawn_agent`.**

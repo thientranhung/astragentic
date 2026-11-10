@@ -82,7 +82,11 @@ words lifted it 0 of 2, an AGENTS.md rule 0 of 2. No steer, no probe, no receipt
 session changes that (nizzy's fresh probe: 0 `function_call` in 76 lines). The review on Orca runs
 as child `codex exec` processes (builder.md step 3, `codex-astra-review` § On Orca; 3 of 3 children
 ran). A Builder on that overlay that still stops at review has skipped its skill: report the ticket
-failed with the rollout's `function_call` and `custom_tool_call` counts, the owner's decision.
+failed with the rollout's `function_call` and `custom_tool_call` counts, the owner's decision. An
+Orca escalation "Worker stopped without reporting" whose last output is a child's review report
+while `worker-show` says working is the child's Stop wearing the parent's pane (6.1.3 children
+inherited `ORCA_PANE_KEY`; 2 of 2 on the first run): read `worker-show`, send nothing; 6.1.4 runs
+the child under `env -u ORCA_PANE_KEY` (0 hook posts against 3).
 
 After a Builder handback, follow DISPATCH.md's handback-to-QA continuation: verify the
 evidence at the head, disposition unresolved findings, prepare the pinned QA target and
