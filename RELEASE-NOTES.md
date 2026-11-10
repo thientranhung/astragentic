@@ -1,7 +1,5 @@
 # Astragentic 6.1.3
 
-Staged on main, not tagged; release on the owner's go.
-
 **On Orca, a Codex review lens is a child `codex exec`, because the dispatched-worker preamble silences `spawn_agent`.**
 nizzy's fresh 6.1.2 probe (2026-11-10, Codex 0.167.0, gpt-6-astra/high, yolo, Orca dispatched) answered "no callable
 spawn_agent tool is exposed" with 0 direct calls, the fourth such 0. Everything else was constant between the 11-09
