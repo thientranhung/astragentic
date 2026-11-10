@@ -351,6 +351,16 @@ class LauncherTests(unittest.TestCase):
         self.assertIn('Worker stopped without reporting', thomas)
         self.assertIn('child\n   `codex exec`', builder)
         self.assertIn('**Review on Orca (6.1.3).**', dispatch)
+        # 6.1.5: `orca worktree create` opens a default shell and `worktree activate` reopens one (1 of 1
+        # each, 2026-11-10); `active` from a .claude/worktrees shell orphans the pane (I-5, 3 of 3).
+        orca = dispatch[dispatch.index('## Orca (6.1.0)'):dispatch.index('## Queue and observation')]
+        self.assertIn('**The checkout on Orca (6.1.5)** is the host-neutral `git worktree add`', orca)
+        self.assertIn('Never `worktree activate` a ticket checkout.', orca)
+        self.assertIn('orca terminal create --worktree "path:$BASE_CHECKOUT"', orca)
+        self.assertNotIn('terminal create --worktree active', orca)
+        for host in ('.claude', '.agents'):
+            pane = (ROOT / f'harness/{host}/skills/dispatch-ticket/ORCA.md').read_text()
+            self.assertIn('never `orca worktree create`', pane)
         # The Codex pass has its own Pass: form; the checker accepts it beside the Claude one (6.1.2).
         simplify = (ROOT / 'runtimes/codex/.agents/skills/astra-codex-simplify/SKILL.md').read_text()
         self.assertIn('`Pass: $astra-codex-simplify`', simplify)

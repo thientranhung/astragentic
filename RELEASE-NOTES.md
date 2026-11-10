@@ -1,3 +1,36 @@
+# Astragentic 6.1.5
+
+**On Orca, a ticket checkout is `git worktree add`, and its one terminal is the worker's in the base workspace.**
+Reported by nizzy Thomas (run `run_362765c066b0`, 2026-11-10): `orca worktree create --setup skip` opened an untouched
+default shell in every child checkout, unused because the worker ran from the main workspace with `codex --cd`, and
+closing it did not hold: `orca worktree activate` opened a new one asynchronously. The Codex `DISPATCH.md` § Orca had no
+checkout form (the host-neutral `git worktree add` sat above it, with only a Herdr alternative), and its terminal example
+still read `--worktree active`, the I-5 orphan form that nizzy corrected in a project override.
+
+| số đo | nguồn |
+|---|---|
+| `orca worktree create --setup skip`: 1 connected default shell (prompt only), handle absent from the create JSON | fixture B, `docs/codex/ORCA-EMPTY-SHELL-2026-11-10.md` |
+| that checkout, last terminal closed, then `worktree activate`: 0 terminals at t=0, a new handle at t=15 s | fixture B |
+| `git worktree add` checkout: 0 terminals at create, 0 at +15 s, 0 at +15 s after `worktree activate` | fixture A |
+| worker pane `--worktree path:<base>` + `codex --cd <checkout>`: `orphaned: false`, `paneRuntimeId: 1`, header shows the checkout, YOLO, `GPT-6-Astra high` | fixture A, `terminal read`/`show` |
+| `orca worktree create --agent` / `agent launch`: no argv passthrough for `-c notify=[]` or the yolo flag | `--help`, orca 1.4.255 |
+| `terminal show` right after `close`: `connected: true` 1 of 1; `false` on the next read | fixture B |
+
+DISPATCH.md § Orca gains "The checkout on Orca": `git worktree add`, never `orca worktree create`, never `worktree activate`
+a ticket checkout. The terminal example now reads `--worktree "path:$BASE_CHECKOUT"`, and the release step re-reads
+`connected` and checks that no `terminal list` row sits inside the checkout before `git worktree remove`. ORCA.md (Claude,
+both copies) gains the same checkout rule. Regression: `tests/codex/test_launcher.py` asserts the four lines and the absence
+of `terminal create --worktree active`; with the 6.1.4 DISPATCH.md it fails.
+
+**Migration.** Nothing to run. A project that already overrides Orca placement to the main checkout's workspace
+(nizzy `.astraler/project/codex.md` § Orca visible worker placement) now matches the managed text, so that override can be
+retired at the project's next apply; until then the two agree. A checkout already created by `orca worktree create` keeps
+working: close its untouched default shell by literal handle, do not activate it again, remove it with `orca worktree rm`
+when its branch and evidence are kept.
+
+Not measured: a full ticket on 6.1.5 (dispatch, retry/reconnect, handback, release, remove) on a Codex project; retry and
+reconnect carry no new text in this release.
+
 # Astragentic 6.1.4
 
 **A child review lens no longer wears its parent's Orca pane.** First 6.1.3 run on a Codex project (2026-11-10): the

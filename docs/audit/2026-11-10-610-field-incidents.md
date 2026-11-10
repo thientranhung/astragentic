@@ -272,3 +272,17 @@ typical stall, which is the relay vendor's setting, not ours.
 |---|---|
 | grace live: probe mod, Orca pane, Haiku; timer armed in `turn.complete` fired at +5,015 ms, `$.fs.write` ok, `$.ui.status` ok | `/tmp/probe-grace-1-t{0,1}.json`, pane status line |
 | Codex coordinator Stop hook on the dead-turn race | chưa đo |
+
+## I-12 — an untouched default shell in every Orca child checkout, reborn on activate
+
+Reported 2026-11-10 by nizzy Thomas (run `run_362765c066b0`, `final-1353-1355/UPSTREAM-EMPTY-TERMINAL-REPORT.md`);
+separate from I-11.
+
+| số đo | nguồn |
+|---|---|
+| nizzy: `orca worktree create --setup skip` → 1 connected shell, 1 prompt line, no agent; after close + `worktree activate`, immediate inventory 0, settled a new handle | nizzy `empty-terminal-reproduction.json`, `activation-settled-terminals.json` |
+| here: same, 1 shell after create, a new handle 15 s after activate on the emptied checkout; `git worktree add` checkout 0 / 0 / 0 | `docs/codex/ORCA-EMPTY-SHELL-2026-11-10.md` A, B |
+| Codex DISPATCH.md § Orca 6.1.4: no checkout form; terminal example `--worktree active` (the I-5 orphan form) | `git show v6.1.4:runtimes/codex/.codex/DISPATCH.md` |
+
+Classification: Orca's default for its own worktree create, not an Orca defect; the recipe gap let it in. Fixed in
+6.1.5 (DISPATCH.md § Orca checkout rule + base-workspace terminal example, ORCA.md checkout line, launcher test).

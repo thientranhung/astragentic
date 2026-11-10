@@ -283,6 +283,16 @@ the parent pane's and raises "Worker stopped without reporting" while the parent
 fixture: 3 hook POSTs with the key, 0 without). Such an escalation from a 6.1.3 worker is noise:
 `worker-show` says working, the rollout continues; no steer, no restart.
 
+**The checkout on Orca (6.1.5)** is the host-neutral `git worktree add` above, never `orca worktree
+create`. That command opens a default shell in the new checkout (no `--no-terminal` flag; the handle is
+not in its JSON), and `orca worktree activate` on such a checkout reopens one about 15 s after its last
+terminal closed (fixture 2026-11-10: 1 untouched shell after create; after close and activate, 0 at
+t=0, a new handle at t=15 s). A `git worktree add` checkout had 0 terminals at create, 0 at +15 s and
+0 at +15 s after `worktree activate`. `orca worktree create --agent` or `orca agent launch` cannot carry
+`-c notify=[]` or the yolo flag (no argv passthrough, `--help` 1.4.255), so they are not a substitute.
+Never `worktree activate` a ticket checkout. The worker pane lives in the base checkout's workspace and
+reaches the checkout by `--cd`, the one terminal a ticket owns.
+
 **Launch and adopt.** The brief is a file. The argv is encoded, never concatenated:
 
 ```python
@@ -296,11 +306,16 @@ command = shlex.join(argv)
 ```bash
 orca orchestration run-create --objective "<frontier>" --json            # once per frontier; record RUN_ID
 orca orchestration task-create --run "$RUN_ID" --task-title "<ticket>" --spec "Read $BRIEF_PATH" --json   # record TASK_ID
-orca terminal create --worktree active --title "ticket:<id>" --command "$COMMAND" --json   # record TERMINAL_HANDLE, WORKSPACE_ID
+orca terminal create --worktree "path:$BASE_CHECKOUT" --title "ticket:<id>" --command "$COMMAND" --json   # record TERMINAL_HANDLE, WORKSPACE_ID (the base's)
 orca terminal read --terminal "$TERMINAL_HANDLE" --json   # ready TUI, recognized Codex, no trust or permission menu
 orca orchestration worker-start --task "$TASK_ID" --terminal "$TERMINAL_HANDLE" --worktree "id:$WORKSPACE_ID" --run "$RUN_ID" --json
 ```
 
+`$BASE_CHECKOUT` is the main checkout the sidebar lists, never `active`: from a shell inside a
+`.claude/worktrees/` checkout `active` resolves to that checkout, whose pane has no UI host and reads
+`orphaned: true, connected: true` (I-5; 3 of 3 nizzy panes). Fixture 2026-11-10 on this form: one
+terminal, `orphaned: false`, `paneRuntimeId: 1`, the TUI header showing the checkout path, YOLO and
+`GPT-6-Astra high`, and 0 terminals inside the checkout. Read those from `terminal read` before adopting.
 Adoption before the TUI is ready fails with `agent_unconfigured` and creates no Dispatch (measured
 1/1); read the receipt, do not relaunch. A trust or permission menu on screen is TRUST NEEDED to the
 owner: `orca terminal switch --terminal "$TERMINAL_HANDLE"`, name the terminal and the folder or
@@ -331,7 +346,9 @@ worker goes by `orchestration send`, never by typing into its terminal.
 `already_released` need no close, `retained` is not permission to close, `release_pending` and
 `release_unknown` follow Orca's recovery guide. Only a terminal this dispatch created and that is
 proven settled is closed: `orca terminal close --terminal "$TERMINAL_HANDLE" --json`. Nothing else
-in the owner's Orca is closed, reset or renamed.
+in the owner's Orca is closed, reset or renamed. A `terminal show` right after the close can still say
+`connected: true` (fixture: 1 of 1); read it again before `git worktree remove`, and confirm no row of
+`orca terminal list --json` has a `worktreePath` inside the checkout.
 
 **Thomas's own Stop hook** (6.0.8) applies unchanged: Orca wakes only on new mail, and a handback
 whose disposition is still owed holds the turn as before. The coordinator hook template carries the

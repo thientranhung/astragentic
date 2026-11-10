@@ -40,6 +40,11 @@ its agent runs on (nizzy 2026-11-10, 3 of 3 Codex panes; reproduced once with `p
 `terminal switch` answers `navigated: true` and `worktree activate` `activated: true` without showing
 it. Such a pane is driven by `read`, `send`, `wait` only; no CLI call reattaches it.
 
+The worktree stays `git worktree add` (SKILL.md), never `orca worktree create`: that opens a default
+shell in the checkout with no flag to stop it, and `worktree activate` reopens one about 15 s after its
+last terminal closed (6.1.5 fixture, 1 of 1 each; a `git worktree add` checkout: 0 at create, 0 after
+activate). Never `worktree activate` a ticket worktree.
+
 `<tab>` is the same `ticket:<id>` / `spec:<id>` / `qa:<id>` as on Herdr. The argv includes
 `claude`: there is no `--kind` to supply it. The pane records `host=orca` and `terminal=<handle>`
 beside `tab_id` (`ORCA_TAB_ID`) and `pane_id` (`ORCA_PANE_KEY`). The cwd gate is the `cd` in the
