@@ -4,3 +4,4 @@
 /.claude/worktrees/
 __pycache__/
 *.pyc
+/docs/codex/evidence/
