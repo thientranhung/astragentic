@@ -336,10 +336,18 @@ class LauncherTests(unittest.TestCase):
         # a second stop now sends the namespace probe and reports failed with the list attached.
         self.assertNotIn('the\nsteer worked 2 of 2 times', thomas)
         self.assertIn('0 of 2 as an Orca `orchestration send`', thomas)
-        self.assertIn('list every tool namespace and tool\nname available to you this turn', thomas)
-        self.assertIn('A second stop of the\nsame shape is not a second steer', thomas)
+        self.assertIn('list every tool namespace and tool', thomas)
+        self.assertIn('same shape is not a second steer', thomas)
         for text in (thomas, builder, (ROOT / 'runtimes/codex/.codex/roles/common.md').read_text()):
             self.assertIn('`ALL_TOOLS`', text)
+        # 6.1.3: the Orca preamble silences spawn_agent (0 of 10 with it, 7 of 7 without, 2026-11-10);
+        # a fresh session, a task line or an AGENTS.md rule recovered 0 of 6; a child codex exec ran 3 of 3.
+        self.assertIn('no subagents or helper workers unless the task asks', thomas)
+        self.assertNotIn('no call means a fresh session on the committed head', thomas)
+        self.assertIn('## On Orca: a lens is a child process', review)
+        self.assertIn('["codex", "exec", "--cd", worktree', review)
+        self.assertIn('child\n   `codex exec`', builder)
+        self.assertIn('**Review on Orca (6.1.3).**', dispatch)
         # The Codex pass has its own Pass: form; the checker accepts it beside the Claude one (6.1.2).
         simplify = (ROOT / 'runtimes/codex/.agents/skills/astra-codex-simplify/SKILL.md').read_text()
         self.assertIn('`Pass: $astra-codex-simplify`', simplify)

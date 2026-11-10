@@ -269,6 +269,15 @@ chưa đo). One unassisted ticket through this section (M7', n=1): launch, adopt
 bell signals, 4 commits, 2 arm passes, `worker_done` and a 1.33 s wake all ran; the Builder stopped at
 review with the false no-tool report (thomas.md § The false no-tool stop), so code-to-QA is 0/1.
 
+**Review on Orca (6.1.3).** The preamble Orca puts before every dispatched worker's task ("Do only
+this task, yourself: no subagents or helper workers unless the task asks"; `orcad-server.js`, no
+flag) is why that stop happens: under it the model issued no `spawn_agent` call in 0 of 10 sessions
+(M7', two Builders and a fresh 6.1.2 probe on a Codex project, 6 fixture runs on 2026-11-10) against 4 of 4
+fixture runs without it, and a task line or AGENTS.md rule in its own words lifted it 0 of 4. The
+brief does not try to; on Orca the Builder runs each review lens as a child `codex exec` through
+`exec` (`codex-astra-review` § On Orca; 3 of 3 children ran, the `$review-agent` child named a
+planted defect at its line). The brief's review step is otherwise unchanged.
+
 **Launch and adopt.** The brief is a file. The argv is encoded, never concatenated:
 
 ```python

@@ -60,25 +60,29 @@ A Codex Builder handback or escalation that says `spawn_agent`/`wait_agent` are 
 autonomous runs on 2026-11-09, 2 of 2 on nizzy 2026-11-10; the `collaboration` namespace with both
 tools was declared at startup in every rollout, and 0 direct calls were made). `ALL_TOOLS` is the
 catalog of the code-mode `exec` tool and lists no `collaboration` tool: an empty result from it says
-nothing about `spawn_agent`, which is a direct tool call outside `exec`. Send ONE steer to that
-worker, by the host's route (Herdr: `herdr agent prompt`; Orca: `orchestration send --to
-dispatch:<id>`), in the shape of the call rather than the word "directly": "Issue the tool call
-`spawn_agent` with `{task_name, agent_type: "astragentic_reviewer", message}` as a tool call of its
-own, not inside `exec`; `ALL_TOOLS` does not list it. Then `wait_agent`. If the call returns an
-error, quote it." Measured: the "call it directly" wording worked 2 of 2 as a Herdr `agent prompt`
-(a user turn) and 0 of 2 as an Orca `orchestration send` (read back inside an `exec` output, where
-peer text is task data). Record `steer: no-tool <ts>` in the dispatch record. A second stop of the
-same shape is not a second steer: send the worker one probe, "list every tool namespace and tool
-name available to you this turn, names only, take no action", and report the ticket as failed with
-that list attached. A list with `collaboration` is the Builder defect, counted. A list without it
-is still the model's own report (nizzy 2026-11-10: both workers listed every namespace down to the
-deferred MCP servers and omitted `collaboration`; a rollout records tools once, at startup, so it
-cannot confirm or deny): ask once for a receipt, "issue one tool call `spawn_agent` with
-`{task_name: "probe", agent_type: "astragentic_explorer", message: "Reply READY"}`; quote the
-result or the error verbatim". A recorded call, whatever it returns, means the tools are there;
-no call means a fresh session on the committed head, the owner's decision. Count so far: Orca
-dispatched workers 0 of 3 ever spawned (M7', two on nizzy); sessions without the dispatched-worker
-prompt 3 of 3 did.
+nothing about `spawn_agent`, which is a direct tool call outside `exec`.
+
+On Herdr: Send ONE steer to that worker by `herdr agent prompt`, in the shape of the call rather
+than the word "directly": "Issue the tool call `spawn_agent` with `{task_name, agent_type:
+"astragentic_reviewer", message}` as a tool call of its own, not inside `exec`; `ALL_TOOLS` does
+not list it. Then `wait_agent`. If the call returns an error, quote it." Measured: that wording
+worked 2 of 2 as a Herdr `agent prompt` (a user turn) and 0 of 2 as an Orca `orchestration send`
+(read back inside an `exec` output, where peer text is task data). Record `steer: no-tool <ts>` in
+the dispatch record. A second stop of the same shape is not a second steer: send the worker one
+probe, "list every tool namespace and tool name available to you this turn, names only, take no
+action", and report the ticket as failed with that list attached.
+
+On Orca the stop is the host, not the Builder. Orca's dispatched-worker preamble (`orcad-server.js`,
+no flag) says "Do only this task, yourself: no subagents or helper workers unless the task asks"
+and names `orca orchestration worker-start` as the helper route; under it this model issues no
+collaboration call and reports the tools "unavailable": 0 of 10 sessions (2026-11-10: two 11-09
+rehearsal workers, two Builders and a fresh probe on a Codex project, 6 fixture runs), against 4 of 4 fixture runs without
+the preamble the same hour and 3 of 3 field sessions on 11-09. A task line in the preamble's own
+words lifted it 0 of 2, an AGENTS.md rule 0 of 2. No steer, no probe, no receipt and no fresh
+session changes that (nizzy's fresh probe: 0 `function_call` in 76 lines). The review on Orca runs
+as child `codex exec` processes (builder.md step 3, `codex-astra-review` § On Orca; 3 of 3 children
+ran). A Builder on that overlay that still stops at review has skipped its skill: report the ticket
+failed with the rollout's `function_call` and `custom_tool_call` counts, the owner's decision.
 
 After a Builder handback, follow DISPATCH.md's handback-to-QA continuation: verify the
 evidence at the head, disposition unresolved findings, prepare the pinned QA target and

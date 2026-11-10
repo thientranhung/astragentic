@@ -58,6 +58,8 @@ A helper is a direct tool call: call `spawn_agent`, collect with `wait_agent`. B
 `collaboration` tool namespace, beside `exec`, not inside it: `ALL_TOOLS` and `tools.*` within
 `exec` list code-mode tools only, so an empty `ALL_TOOLS` search is not a missing tool (nizzy
 2026-11-10, 2 Builders stopped on that search with the namespace declared at startup).
+On Orca the dispatched-worker preamble suppresses the call itself (0 of 10 sessions, 2026-11-10):
+there a review lens is a child `codex exec` process, builder.md step 3.
 Before stopping for a missing helper, attempt one real `spawn_agent` call and report its
 exact error. Never change personal settings, restart an active worker, or substitute builtin helpers implicitly.
 

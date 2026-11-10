@@ -1,3 +1,26 @@
+# Astragentic 6.1.3
+
+Staged on main, not tagged; release on the owner's go.
+
+**On Orca, a Codex review lens is a child `codex exec`, because the dispatched-worker preamble silences `spawn_agent`.**
+nizzy's fresh 6.1.2 probe (2026-11-10, Codex 0.167.0, gpt-6-astra/high, yolo, Orca dispatched) answered "no callable
+spawn_agent tool is exposed" with 0 direct calls, the fourth such 0. Everything else was constant between the 11-09
+sessions that spawned and the 11-10 sessions that did not: model, CLI, relay and catalog, the four developer messages
+including `<multi_agent_role>` and `<multi_agent_mode>`. The one difference is the user turn: Orca's preamble before
+every dispatched task, "Do only this task, yourself: no subagents or helper workers unless the task asks", with a
+SUB-DISPATCH block naming `orca orchestration worker-start` as the helper route (`orcad-server.js`, no flag). Controlled
+on fixtures the same day, two runs each: preamble verbatim 0 of 2 calls; preamble minus that line and block 2 of 2;
+no preamble 2 of 2; preamble plus a task line in its own words ("this task asks for native sub-agents") 0 of 2;
+preamble plus the same rule in AGENTS.md 0 of 2. Totals: 0 of 10 with the preamble (4 field, 6 fixture), 7 of 7
+without. A child process is not a sub-agent to the model: under the full preamble a `codex exec` child answered 2 of 2,
+and a `$review-agent` child over a two-commit fixture pinned base and head and named the planted `len(xs) - 1` at
+`stats.py:3`, 1 of 1. So `codex-astra-review` gains § On Orca (encoded argv, `-o` file as the lens artifact, a
+non-zero child is a failed lens), builder.md step 3 and DISPATCH.md § Orca point to it, and thomas.md's no-tool
+section splits: Herdr keeps the steer (2 of 2); Orca sends no steer, probe or receipt, since none can resolve, and a
+stop at review on this overlay is a skipped skill reported with the rollout's call counts. Child sandbox measured
+under `danger-full-access` only; `network_access: false` and the Orca sub-dispatch route as a lens are chưa đo.
+The preamble is Orca's text; filing it upstream is the owner's call.
+
 # Astragentic 6.1.2
 
 **A Codex Builder's simplify marker carries its own provenance line.** nizzy TRA-1355 (2026-11-10): the pass ran

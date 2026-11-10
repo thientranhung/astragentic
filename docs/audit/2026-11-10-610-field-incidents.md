@@ -170,6 +170,39 @@ search is void; thomas.md's steer gives the call's shape, the "2 of 2" claim is 
 list attached instead of a second steer. Text only; the Builder's read of its own tool list is not
 ours to change, and the probe decides between runtime drop and Builder defect.
 
+Superseded for Orca by I-9 (same day): the cause is Orca's dispatched-worker preamble, and neither the
+probe, the receipt nor a fresh session resolves it there. The Herdr steer (2 of 2) stands.
+
+## I-9 — the no-tool stop is Orca's dispatched-worker preamble: 0 of 10 with it, 7 of 7 without
+
+Reported 2026-11-10 by nizzy Thomas (`ASTRAGENTIC-FRESH-PROBE-FAILED.md`, run `run_362765c066b0`):
+a fresh disposable Codex 0.167.0 session on the 6.1.2 overlay, gpt-6-astra/high, yolo, Orca
+dispatched, asked for one `spawn_agent` explorer call, answered "no callable spawn_agent tool is
+exposed" and made 0 direct calls. Fixture work here, nothing in nizzy touched.
+
+| số đo | nguồn |
+|---|---|
+| nizzy's fresh probe: `collaboration` (6 tools incl. `spawn_agent`) declared at line 3; `function_call` 0, `custom_tool_call` `exec` 8, 76 lines; user turn = Orca preamble + "Read PROBE.md" | `~/.codex/sessions/2026/11/10/rollout-2026-11-10T13-59-09-01a1c440-e3ab-7e13-b681-c40df5cbb8bc.jsonl` |
+| constants across the 11-09 sessions that spawned and the 11-10 sessions that did not: model `gpt-6-astra`, cli 0.167.0, provider via ch-relay `127.0.0.1:11500` (catalog `tool_mode: code_mode_only`, `multi_agent_version: v2`, file unchanged since 11-06), the same four developer messages incl. `<multi_agent_role>` ("collaboration tools cannot be called from inside functions.exec … `to=functions.collaboration.spawn_agent`") and `<multi_agent_mode>` (explicit-request-only) | `session_meta`/`turn_context`/developer items of `01a1bfd3-759b`, `01a1c058`, `01a1c35a-00b0`, `01a1c440`; `~/.codex/ch-relay-catalog.json` (mtime 2026-11-06); `~/.codex/config.toml` |
+| the one difference: the user turn. Sessions whose user turn carries Orca's preamble ("You are a dispatched worker … Do only this task, yourself: no subagents or helper workers unless the task asks" + `=== SUB-DISPATCH ===` naming `orca orchestration worker-start`): M7', TRA-1353, TRA-1355, the fresh probe; the 11-09 sessions: 0 mentions | `grep -c 'dispatched worker'` per rollout |
+| the preamble is unconditional in Orca: template `bJ(e)` in `orcad-server.js`; `orca orchestration worker-start --help` lists no preamble flag | `/Applications/Orca.app/Contents/Resources/orcad-template/orcad-server.js` (byte 7354258), `worker-start --help` |
+| controlled fixture, `codex exec`, gpt-6-astra/high, yolo, same TASK ("issue one `spawn_agent` … then `wait_agent`"), `.codex/agents` copied from nizzy's probe fixture, 2 runs each: **A** verbatim preamble → `function_call` 0, 0 ("unavailable in this session's callable tool set"); **B** preamble minus the "no subagents" line and the SUB-DISPATCH block → 2, 2 (`/root/probe`, READY; r1 `unknown agent_type 'astragentic_explorer'` with the same args as r2, a load flake); **C** TASK alone → 2, 2 (`/root/probe`) | `~/.codex/sessions/2026/11/10/rollout-…01a1c44d-43f9-7802…`, `…01a1c452-b7b5-7743…` (A); `…01a1c44d-43f8-79a2…`, `…01a1c452-b7b5-7f71…` (B); `…01a1c44d-43f9-7e62…`, `…01a1c452-b7b2-7ad0…` (C); fixtures `/tmp/astra-spawn-ab-141222/{A,B,C}` |
+| **D** verbatim preamble + TASK opening "This task asks for sub-agents, and it asks for them as native Codex collaboration tool calls, not as Orca helper workers" → 0, 0; **F** verbatim preamble + the same rule in AGENTS.md (the `<multi_agent_mode>` override channel) → 0, 0 | `…01a1c453-e2b6-7aa0…`, `…01a1c453-e2b6-7f12…` (D); `…01a1c457-8613-70d1…`, `…01a1c457-8613-7ff0…` (F) |
+| **E** verbatim preamble + TASK "run `codex exec … 'Reply READY'` through exec" → child ran, READY quoted, 2 of 2; **E2** verbatim preamble + TASK "run `codex exec -o <report> 'Use $review-agent to review <base>..<head> for correctness'`" over a two-commit fixture with `len(xs) - 1` planted → report pinned base `8757112…`/head `5b4c027…`, `[P1] stats.py:3`, both regressions reproduced, 1 of 1 | `…01a1c454-d512-71d3…`, `…01a1c454-d511-7ce2…` (E); `…01a1c458-6bae-7cd1…` (E2); `/tmp/astra-e2-review.md` |
+| totals: preamble present 0 of 10 (4 field, A, D, F); absent or trimmed 7 of 7 (B, C, 11-09 `01a1bfd3-759b`, `01a1c058`, `01a1c05b`); child `codex exec` under the preamble 3 of 3 | rows above |
+| input per fixture run: ~30k tokens (A, D, F), ~85k (B, C, with the spawned child), 122k–152k (E), 261k (E2) | `turn.completed` usage in each `events.jsonl` |
+| child sandbox: measured under `danger-full-access` only; `workspace-write` with `network_access: false` (the 11-09 rehearsal shape) chưa đo | — |
+| the Orca sub-dispatch route (`worker-start` from inside a worker) as a review lens | chưa đo: needs a live Run, not a fixture |
+
+Read: the model treats Orca's "no subagents or helper workers unless the task asks" as a standing
+restriction and voices it as a missing tool; the task text and AGENTS.md do not lift it (D, F), so
+the 6.1.2 recovery (steer, probe, receipt, fresh session) cannot resolve on Orca, and nizzy's fresh
+probe was the fourth 0. A child process is not a sub-agent to it (E, E2). Staged (6.1.3): on Orca the
+Builder runs each review lens as a child `codex exec` through `exec`, `-o` file as the lens
+artifact (`codex-astra-review` § On Orca, builder.md step 3, DISPATCH.md § Orca); thomas.md's
+Orca branch sends no steer and reports a stop at review as a skipped skill; the Herdr steer stands.
+The preamble itself is Orca's; filing it upstream is the owner's call.
+
 ## I-8 — a Codex Builder's truthful simplify marker is refused by the shipped checker
 
 Same report, § B. `scripts/check-simplify-markers.sh` (nizzy's copy identical to harness) required

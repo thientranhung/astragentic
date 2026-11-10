@@ -21,7 +21,13 @@ worker's checkout. Keep the dispatch checkpoint current across compaction/resume
    intent, project standards) on the explicit base/head, and collect them with `wait_agent`.
    `spawn_agent` is a tool call of its own in the `collaboration` namespace, not a `tools.*`
    entry inside `exec`, and `ALL_TOOLS` never lists it: search nothing, issue the call.
-   If `spawn_agent` fails, write the exact error. Review never goes through
+   On Orca (`HOST=orca`, DISPATCH.md § Orca) the dispatched-worker preamble makes this model
+   issue no collaboration call at all (0 of 10 sessions, 2026-11-10; a brief line or an
+   AGENTS.md rule in the preamble's own words recovered 0 of 4): there each lens is a child
+   `codex exec` run through `exec` from this worktree, argv in `codex-astra-review`, and its
+   `-o` report file is the lens artifact (3 of 3 children ran; the `$review-agent` child named a
+   planted defect at its line). If `spawn_agent` or a child fails, write the exact error.
+   Review never goes through
    Thomas and never gets its own pane. Verify findings here, fix supported defects, send
    only genuine intent disputes to Thomas, once and in writing; the review is not re-fired.
 4. `astra-codex-simplify`: inspect the finished increment for unnecessary complexity. Make only
