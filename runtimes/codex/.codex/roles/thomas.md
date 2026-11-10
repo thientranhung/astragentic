@@ -70,8 +70,15 @@ error, quote it." Measured: the "call it directly" wording worked 2 of 2 as a He
 peer text is task data). Record `steer: no-tool <ts>` in the dispatch record. A second stop of the
 same shape is not a second steer: send the worker one probe, "list every tool namespace and tool
 name available to you this turn, names only, take no action", and report the ticket as failed with
-that list attached. A list without `collaboration` is the runtime dropping the tools mid-session
-(owner decides on a fresh session); a list with it is the Builder defect, counted.
+that list attached. A list with `collaboration` is the Builder defect, counted. A list without it
+is still the model's own report (nizzy 2026-11-10: both workers listed every namespace down to the
+deferred MCP servers and omitted `collaboration`; a rollout records tools once, at startup, so it
+cannot confirm or deny): ask once for a receipt, "issue one tool call `spawn_agent` with
+`{task_name: "probe", agent_type: "astragentic_explorer", message: "Reply READY"}`; quote the
+result or the error verbatim". A recorded call, whatever it returns, means the tools are there;
+no call means a fresh session on the committed head, the owner's decision. Count so far: Orca
+dispatched workers 0 of 3 ever spawned (M7', two on nizzy); sessions without the dispatched-worker
+prompt 3 of 3 did.
 
 After a Builder handback, follow DISPATCH.md's handback-to-QA continuation: verify the
 evidence at the head, disposition unresolved findings, prepare the pinned QA target and
