@@ -298,3 +298,15 @@ Reported 2026-11-10 by nizzy Thomas (Claude 6.1.5, Orca), `.scratch/harness-issu
 | I-15: TRA-1353/TRA-1355 Codex-built under Codex arm `no`; Claude station `--marker 'arm(ticket)'` → `markers=0` | nizzy report § 3, FINAL-HANDOFF.md |
 
 Fixed in 6.1.6: I-13 text, I-14 mod refusal at the spawn (selftest, planted), I-15 rule text (unmeasured).
+
+## I-16, I-17 — Builders parked on a companion job; a loop's `$t` claimed the record
+
+Reported 2026-11-11 by nizzy Thomas (Claude 6.1.5, Orca), same report file §§ 4–5.
+
+| số đo | nguồn |
+|---|---|
+| I-16: TRA-1358, TRA-1356 ended the turn after `adversarial-review --background`; 2 of 2 parked until steered | nizzy report § 4 |
+| I-17: record entry keyed `$t` with `dispatcher`; real keys without it; repaired by hand | nizzy report § 5 |
+
+Fixed in 6.1.7: I-16 codex-arm § Waiting (`status --wait`) + TURN-END `Arm job open:` line; I-17 mod refusal of an
+unexpanded lane key + ORCA.md line. Both planted in selftest.

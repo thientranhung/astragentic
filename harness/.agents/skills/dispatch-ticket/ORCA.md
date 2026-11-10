@@ -52,6 +52,9 @@ command; a pane whose first `orca terminal read` shows another directory is a ST
 
 The dispatch line reads `topology=orca terminal=<handle>` in place of `workspace=… tab=… pane=…`.
 
+One `terminal create` per lane, its `ASTRA_DISPATCH=<tab>` written out: the mod reads the command before
+the shell runs, so a loop's `ticket:$t` claims an entry keyed `$t`; it refuses that create (6.1.7).
+
 ## The brief and the turn end
 
 Unchanged on a Claude root: one SendMessage, `RECEIVED`, `TURN-END` (measured in Orca: 3 s and

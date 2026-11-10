@@ -73,9 +73,16 @@ from the separate `task` command. If using plain `review` without focus, also pa
 actual model verified when session metadata or runtime evidence confirms it.
 
 Plugin root: `~/.claude/plugins/cache/openai-codex/codex/<version>`. Plain `review --background
---base "$BASE"` takes no focus text. **Poll in the foreground in short increments; do not wait
-for a bell.** A completion notification never comes for a broker that died, and a stall caught
-in minutes costs minutes (one job sat dead for about 44 of 47 minutes).
+--base "$BASE"` takes no focus text.
+
+**Waiting (6.1.7): no bell comes for a companion job, ever, so the turn never ends with one open.**
+Wait in the foreground, in the same turn, with the companion's own wait:
+`node "$CC" status <job-id> --wait --timeout-ms 480000 --json` (returns when the job finishes, or
+`waitTimedOut: true` after 8 min, under the Bash call's 10-min ceiling); repeat until it is
+finished, then `result`. Measured 2 of 2 Builders that ended the turn on a `--background` launch
+("Agents: 0 running") sat parked until steered; the mod names an open job in the TURN-END. A
+broker that died also never notifies, and a stall caught in minutes costs minutes (one job sat
+dead for about 44 of 47 minutes).
 
 **A hang is a job now, not a verdict** (plugin >= 1.0.6; `codex-companion.mjs --help` lists what
 the installed copy has):
@@ -88,6 +95,10 @@ node "$CC" cancel <job-id> --json # a hang is cancelled, not abandoned
 
 This retires "treat a hang as NOT RUN". `result` is the verdict as an ARTIFACT, and appending it
 to `$OUT` puts the range header, the job id and the verdict in the one file `Output:` names.
+
+The arm needs the OpenAI Responses API: routed through an OpenAI-compatible Chat Completions proxy,
+`adversarial-review` returned JSON with `status` and no `verdict` (field, 1 of 1, 2026-11-11); direct
+to a Responses endpoint it returned the verdict. A missing `verdict` is NOT RUN, never approve.
 
 **Take the verdict only from `result`, with a `Verdict:` header.** A broker that dies mid-review
 leaves partial `{"verdict":"approve"}` lines in the streaming log while the job sits in

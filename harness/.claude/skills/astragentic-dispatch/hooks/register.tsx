@@ -1315,6 +1315,8 @@ export const register: Register = on => {
   let dispatcher: string | null = null
   let dispatcherName = ''
   let isNoticeTurn = false
+  // A codex-companion review launched --background and not yet read by `result`/`cancel` (6.1.7).
+  let armJobOpen = false
   // The dispatched pane's own red line: set when a TURN-END send fails, cleared by the next
   // one that lands. The footer status alone was missed for ten minutes (measured downstream).
   let undelivered = ''
@@ -1695,6 +1697,7 @@ export const register: Register = on => {
       const entry = ((await readRecord($, root)) ?? {})[me.key] ?? {}
       const ran = Object.keys(entry.skills_run ?? {})
       flow = `Skills run: ${ran.length ? ran.join(', ') : 'none'}\n${await agentLine($, grace)}\n`
+      if (armJobOpen) flow += `Arm job open: a codex-companion review was launched --background and no \`result\` or \`cancel\` read it. No bell comes for a companion job; this pane is parked, not waiting. Steer it to \`status <job-id> --wait --timeout-ms 480000\` in the foreground, then \`result\` (codex-arm § Waiting).\n`
     }
     const text = `${MARK} TURN-END key=${me.key} pane=${me.pane} reason=${e.reason}\n${flow}${answer}`
     const sent = await $.session.send({ to: dispatcher, text })
@@ -2072,6 +2075,18 @@ export const register: Register = on => {
     }
   })
 
+  // A companion job has no bell (6.1.7). nizzy 2026-11-11, 2 of 2 Builders on Orca: each ran
+  // `codex-companion adversarial-review --background`, ended the turn with "Agents: 0 running" and
+  // "waiting for the completion notification", and sat until Thomas steered them to status/result.
+  // The pane notes the open job; its TURN-END names it, so the dispatcher's steer is one line.
+  on('tool.call', { tool: 'Bash' }, async ($, e, next) => {
+    if (!me || me.role === 'resident') return next(e)
+    const cmd = runnable(e.command)
+    if (/(?:codex-companion(?:\.mjs)?|\$\{?CC\}?)['"]?\s+(?:adversarial-review|review)\b[^\n]*--background\b/.test(cmd)) armJobOpen = true
+    else if (/(?:codex-companion(?:\.mjs)?|\$\{?CC\}?)['"]?\s+(?:result|cancel)\b/.test(cmd)) armJobOpen = false
+    return next(e)
+  })
+
   // A harness role is a session, never an in-process agent (6.1.6). nizzy 2026-11-10: an Orca Thomas
   // ran `Agent(subagent_type: builder)`; the project's fork guard refused its arm(ticket) commit about
   // 20 minutes later, and the Builder's own /code-review completion was delivered to the dispatcher's
@@ -2309,6 +2324,13 @@ export const register: Register = on => {
     // briefing Thomas sat idle; `woken_at` was stamped and no one who cared saw a prompt. The
     // launch command names the lane (`ASTRA_DISPATCH=qa:KEY`), so the claim is written here,
     // before the shell runs; the pane's session.start patches the same key and keeps it.
+    // AN UNEXPANDED LANE KEY IS REFUSED (6.1.7): this runs before the shell, so a loop
+    // `for t in …; do orca terminal create … ASTRA_DISPATCH=ticket:$t …` claimed a record entry keyed
+    // `$t` with the dispatcher stamp, and the real keys had none (nizzy 2026-11-11, repaired by hand).
+    const claimUnexpanded = cmd.match(new RegExp(AT_COMMAND + String.raw`(?:(?:do|then|else)\s+)*(?:\S*/)?orca\s+terminal\s+create\b[^\n]*?\bASTRA_DISPATCH=['"]?(?:ticket|spec|qa|resident):[^\s'"&;|]*[$\x60]`))
+    if (claimUnexpanded) {
+      return { deny: `astragentic-dispatch: the lane key after ASTRA_DISPATCH= is not literal (\`$\` or a backtick). This hook reads the command before the shell expands it, so the record would be claimed under the variable's name, not the ticket. Write one \`orca terminal create\` per lane with the key written out (ORCA.md § The pane).` }
+    }
     const claim = cmd.match(new RegExp(AT_COMMAND + String.raw`(?:\S*/)?orca\s+terminal\s+create\b[^\n]*?\bASTRA_DISPATCH=['"]?(ticket|spec|qa|resident):([^\s'"&;|]+)`))
     if (claim) {
       const sock = await $.env.get('CLAUDE_CODE_MESSAGING_SOCKET')

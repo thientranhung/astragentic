@@ -1,3 +1,28 @@
+# Astragentic 6.1.7
+
+Two issues and a field note from nizzy Thomas (Claude 6.1.5 on Orca, 2026-11-11), audit I-16, I-17.
+
+| số đo | nguồn |
+|---|---|
+| Builders that ran `codex-companion adversarial-review --background` and ended the turn ("Agents: 0 running", "waiting for the completion notification"), parked until Thomas steered them: 2 of 2 | nizzy report § 4 |
+| a `for t in …; do orca terminal create … ASTRA_DISPATCH=ticket:$t` loop claimed a record entry keyed `$t` with the dispatcher stamp; the real keys had none | nizzy report § 5 |
+| companion through a Chat Completions proxy: JSON with `status`, no `verdict`; direct Responses endpoint: verdict (1 of 1) | nizzy side note |
+
+**A companion arm job is waited on in the same turn.** `codex-arm` § Waiting: no bell ever comes for a companion job;
+wait with `status <job-id> --wait --timeout-ms 480000` in the foreground and repeat, then `result`. The mod notes a
+pane's `--background` review launch (`codex-companion` or `"$CC"`) until a `result` or `cancel`, and a TURN-END ending
+with one open carries an `Arm job open:` line naming the steer. Selftest: the line is in the first TURN-END and gone
+after `result`; planted off, the case fails.
+
+**A lane key is literal at `orca terminal create`.** The mod refuses a create whose `ASTRA_DISPATCH=<lane>:` value has
+`$` or a backtick (also after `do`/`then`/`else`), as it already refuses an unexpanded `--terminal` at close; ORCA.md
+§ The pane says one create per lane. Selftest (Orca dispatcher driver): the loop is `deny:held` and leaves no `$t`
+entry; the literal create still claims; planted off, the case fails.
+
+**The arm needs the Responses API** (`codex-arm`): a missing `verdict` is NOT RUN, never approve.
+
+**Migration.** Nothing to run.
+
 # Astragentic 6.1.6
 
 Three issues from nizzy Thomas (Claude 6.1.5 on Orca, 2026-11-10), audit I-13 to I-15.
