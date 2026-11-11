@@ -1,3 +1,70 @@
+# Astragentic 6.1.8
+
+Six fixes from the 2026-11-11 audit of the hook log, the ticket stamp and the git guard.
+
+| số đo | nguồn |
+|---|---|
+| mod `REFUSED` lines in the live hook log carrying selftest's fixture key `AB-N`: 79,256 of 79,459 (44% of 181,221 lines) | `/tmp/harness-hook-events.log`, 2026-11-11 |
+| that log's first line is 3 minutes after the 2026-10-30 boot; 24,908 lines (13.7%) have no timestamp; recounted at 24,935, of which 2,348 are `HOOK: ` lines from the inline SubagentStop and WorktreeRemove commands | same file |
+| GitHub-side ticket merges nothing can stamp: 1 of 12 (TRA-1343, `a6ed7a6e1`, no `Ledger:` line, `ticket-done.sh` exit 1) | nizzy git log |
+| 312 downstream transcripts since 2026-10-30: 121 `git stash push`, 16 `git stash pop`/`drop` with no ref; 4 stale stashes on nizzy; "stash" in the shipped contracts and skills before this release: 0 lines | transcripts; `grep -rnI stash harness/.agents harness/.claude runtimes` on `main` |
+| planted Builder merges naming `QA - ` or `shaper: ` after the id: 2 of 2 pushed with no stamp | pre-push hook and guard on `main`, exit 0 / no deny |
+| first-parent base merges on two projects since 2026-10-30: 192; exempt by subject 4 before and 4 after, 0 decisions changed; no upper-case id in 8, none a Builder's, and a lower-case id pattern matches 2 of the 8 | `git log --merges --first-parent` on nizzy and inception |
+| guard given a string `tool_input`: AttributeError, exit 1; a lone surrogate in the command: UnicodeEncodeError in `log()`, exit 1; field: 0 hook errors in 47,230 Bash calls | planted; downstream transcripts |
+
+**The hook log is one file per machine, outside `/tmp`.** Default
+`~/.local/state/astragentic/harness-hook-events.log`, one file for every project on the machine so cross-project counts
+read as before; `HARNESS_HOOK_LOG` overrides it in every writer (the guard, both SessionStart hooks, `tracker.sh`, the
+mod, the five inline commands in `settings.json`). The mod read no variable and selftest's refusals went to the live
+file; selftest now exports `HARNESS_HOOK_LOG` for the whole run. One event is one line: newlines in a logged command are
+flattened, and the two `HOOK: ` lines begin with a timestamp. The watchdog and `runtimes/` write 0 lines to this log and
+are unchanged. Selftest: the mod's refusals land in the run's own log. With the shipped mod planted to ignore the
+variable, run under a temp HOME, the case fails (0 `REFUSED` lines in the run's log, 200 `key=AB-` lines in the temp
+HOME's default file). Full run (249 passed, 0 failed, twice): `key=AB-` in the live `/tmp` file 79,256 before and
+after, 0 fixture-marked lines among the 146 it gained meanwhile, and the new default file was not created.
+
+**`ticket-done.sh <id> --late "<reason>"` declares a merge that is already on the remote.** Admitted only when no commit
+naming the ticket is still local-only and `origin/<base>` carries the work (read as the ref stands, no fetch): a merge
+still local is fixed by amending it. The tracker half is asked as always. The plug runs with `TICKET_DONE_LATE=<reason>`,
+cleared on every run without the flag, and still decides; the reason is a line in the stamp. A refused run whose merge
+is on origin prints the flag. Planted on a throwaway remote (exit, stamp): no flag 1, none; inherited variable 1, none;
+tracker open 1, none; merge not pushed 1, none; `--late` 0, stamped. On `main` the inherited variable stamped it.
+The admission test replayed read-only on nizzy for TRA-1343: 0 local-only subjects, 1 on `origin/main`, so it is
+admitted; the run itself has not happened there.
+
+**A red check against the base never pops the shared stash.** `astra-implement-with-tdd` and the Codex tdd skill name
+one pattern: push with a message, read the SHA, `git stash apply <sha>`, drop the `stash@{n}` that SHA sits at. Run in
+two worktrees: a bare pop took the other worktree's entry; `git stash drop <sha>` exits 1, so the drop resolves the
+ref. Text only: whether Builders follow it, and how many of the 16 came from a pane that never loads a tdd skill
+(a quick ticket, a junior), are chưa đo.
+
+**`shaper` or `qa` exempts a merge only right before its id** (`merge: shaper TRA-1339 — …`, `Merge shaper/IN-242: …`),
+in `pre-push-ticket-done.sh` and the guard alike. The two planted Builder merges are now refused (hook exit 1, guard
+deny naming the id); the four real Shaper merges and the PR, upgrade and spec merges pass as before. A subject with no
+upper-case id is still not judged: the 8 real ones cannot be told from a Builder's by their text, so a Builder merge
+with no id or a lower-case id still passes (planted, 2 of 2, unchanged). Over all 1,910 base merges on the two
+projects 11 id-bearing subjects change, all older than 2026-10-30: 5 Builder merges the old rule exempted on a
+mid-subject `QA ` (whether each had its stamp at push is chưa đo), and 6 spec merges (`Merge spec/TRA-1130 …; QA plan`,
+`Merge … spec (IN-216): …`) that now need the record's role or the trailer; whether those six had either is chưa đo.
+
+**A guard crash is recorded.** `main()` runs inside a catch: an unexpected exception writes one
+`hook-git-guard CRASH(<exception>)` line and exits 0 with no decision; `log()` escapes what it cannot encode. Planted:
+both inputs exit 1 with 0 log lines before, exit 0 with 1 line after.
+
+**Migration.**
+1. Read counts from `~/.local/state/astragentic/harness-hook-events.log`. The `/tmp` file is neither moved nor
+   deleted; history before this release stays there until the next reboot.
+2. `.claude/settings.json` is the project's: its inline hook commands keep writing to `/tmp` until the SubagentStop and
+   WorktreeRemove entries (and the four `MISSING` lines) are copied from the candidate's file.
+3. A project tool or doc that greps the old path names the new one.
+4. A `.astraler/project/ticket-done.sh` plug that refuses a merge for a missing trailer skips that one check when
+   `TICKET_DONE_LATE` is non-empty; until it does, `--late` still ends NOT stamped.
+5. A spec merge whose subject does not put `shaper` right before the id needs the dispatch record's role or a
+   `Ticket-done: n/a — <why>` trailer.
+
+Not measured: a sandboxed Bash call writing under `~/.local/state` (`tracker.sh` is the one writer an agent runs); the
+mod reading `HARNESS_HOOK_LOG` in a live session (selftest drives it with a stub engine).
+
 # Astragentic 6.1.7
 
 Two issues and a field note from nizzy Thomas (Claude 6.1.5 on Orca, 2026-11-11), audit I-16, I-17.

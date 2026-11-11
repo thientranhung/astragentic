@@ -30,8 +30,14 @@
 # put the three exemptions in the guard and planted its cases on the guard; this file stayed
 # byte-identical and `git push` kept refusing (inception, 2026-10-29). Exempt, in step with the
 # guard: a merge whose dispatch record (`.astraler/state/dispatch-record.json`) gives the id a
-# role other than builder; a subject carrying `shaper/`, `shaper `, `qa/`, `qa:`; a body with a
-# `Ticket-done: n/a — <why>` trailer. A Builder's merge with no stamp is refused as before.
+# role other than builder; a subject whose first ticket id has `shaper` or `qa` right before it
+# (`merge: shaper ABC-12 — …`, `Merge shaper/ABC-12: …`); a body with a `Ticket-done: n/a — <why>`
+# trailer. A Builder's merge with no stamp is refused as before. Until 6.1.8 the role word counted
+# anywhere in the subject, so `Merge ABC-12: fix the QA - walk` owed no stamp (planted, 2 of 2
+# passed); over 192 base merges on two projects the narrower rule exempts the same 4, all a
+# Shaper's. A subject with no upper-case id is not judged, here or in the guard: 8 of the 192,
+# none a Builder's, and reading a lower-case id would have refused 2 of them (a spec merge and a
+# harness upgrade branch).
 #
 # Bypassing it takes `git push --no-verify`, which is a person's deliberate act, recorded in
 # their shell history, and not something an agent reaches for by accident.
@@ -85,11 +91,11 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     subject="${body%%$'\n'*}"
     # `Ticket-done: n/a — <why>` declares the merge lands no ticket's work.
     printf '%s\n' "$body" | grep -qiE '^Ticket-done:[[:space:]]*n/a([^A-Za-z0-9]|$)' && continue
-    # The branch shape: a Shaper's or QA's merge closes no ticket.
-    printf '%s\n' "$subject" | grep -qiE '(^|[^A-Za-z0-9])(shaper|qa)[ /:-]' && continue
     # The FIRST ticket-shaped id is the ticket; later ones are citations (`… (AST-069)`).
     [[ "$subject" =~ ([A-Z][A-Z0-9]*-[0-9]+) ]] || continue
     id="${BASH_REMATCH[1]}"
+    # A Shaper's or QA's merge closes no ticket: the role word stands right before the id.
+    printf '%s\n' "${subject%%"$id"*}" | grep -qiE '(^|[^A-Za-z0-9])(shaper|qa)[ /:-]+$' && continue
     role="$(role_of "$id")"
     case "$role" in ""|builder) ;; *) continue ;; esac          # the record says not a Builder's
     [ -e "$STAMPS/$id" ] && continue

@@ -18,6 +18,12 @@ Mock only actual system boundaries such as external services/time/randomness.
 A source-string assertion or a mock-call count alone does not prove the user behavior.
 Do not weaken assertions, skip tests or alter fixtures merely to make green.
 
+To check a red against the tree without your change, never use a bare `git stash pop` or
+`drop`: the stash stack is shared by every worktree and the top entry may be another
+Builder's. `git stash push -u -m "red <ticket>"`, read your entry's SHA (`git stash list
+--format='%H %gs'`), `git stash apply <sha>`, then drop the `stash@{n}` that SHA sits at now
+(`git stash list --format='%gd %H'`); `git stash drop <sha>` is refused.
+
 When deleting or replacing tests, record each removed behavior, its requirement,
 whether production still supports it, and the replacement test or explicit retirement
 reason. A file or component rename is not evidence the behavior is retired. Preserve

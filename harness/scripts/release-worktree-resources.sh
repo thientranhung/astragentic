@@ -129,8 +129,7 @@ done
 # 3. Leave evidence. `hook-git-guard.py` refuses `git worktree remove <path>` unless this stamp
 #    exists for the path, so the call above is a MECHANISM, not a remembered step: skipping it
 #    blocks the removal instead of leaking silently. The key is the resolved path, hashed, so
-#    macOS's /tmp → /private/tmp alias cannot split the pair. /tmp, not the repo: this is
-#    machine-local evidence, and the hook-events log already lives there.
+#    macOS's /tmp → /private/tmp alias cannot split the pair.
 if [ "$rc" -eq 0 ]; then
   # HARNESS_STAMP_ROOT overrides /tmp so nested or parallel selftests never share (or delete)
   # each other's evidence; production leaves it unset.

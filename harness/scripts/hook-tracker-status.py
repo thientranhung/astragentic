@@ -38,7 +38,7 @@ push, its contract tells the role to run the sync; this hook tells the role the 
 
 FAILS OPEN, LOUDLY ENOUGH TO SEE. No plug, a non-executable plug, a plug that exits non-zero,
 a plug that hangs, a plug that prints nothing — every one exits 0 with a line on stderr and a
-line in /tmp/harness-hook-events.log. Nothing here raises: a traceback is read by the runtime
+line in the machine's hook log (`EVENTS_LOG`). Nothing here raises: a traceback is read by the runtime
 as a broken hook and disables it silently, and the operator keeps shipping a harness that looks
 armed.
 
@@ -69,7 +69,9 @@ DECLARED_REL = os.path.join(".astraler", "project", "tracker")
 PLUG_TIMEOUT_SECONDS = 15
 SOURCE = ["`%s`, this project's own plug" % PLUG_REL]
 MAX_CHARS = 4000
-EVENTS_LOG = "/tmp/harness-hook-events.log"
+# The machine's one hook log (hook-git-guard.py says why it left /tmp); HARNESS_HOOK_LOG overrides.
+EVENTS_LOG = os.environ.get("HARNESS_HOOK_LOG") or os.path.join(
+    os.path.expanduser("~"), ".local", "state", "astragentic", "harness-hook-events.log")
 
 # `compact` is excluded on purpose. After a compaction the counts already in the summary are
 # the ones the session has been reasoning about, and a second set fetched seconds later
@@ -88,8 +90,9 @@ def _utcnow():
 
 def log(line):
     try:
-        with open(EVENTS_LOG, "a") as fh:
-            fh.write("%s hook-tracker-status %s\n" % (_utcnow(), line))
+        os.makedirs(os.path.dirname(EVENTS_LOG) or ".", exist_ok=True)
+        with open(EVENTS_LOG, "a", errors="backslashreplace") as fh:
+            fh.write("%s hook-tracker-status %s\n" % (_utcnow(), " ".join(str(line).splitlines())))
     except Exception:
         pass
 

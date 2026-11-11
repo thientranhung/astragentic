@@ -75,8 +75,9 @@ without the mod (a QA gate pane, a junior pane).
 - **Bells wait for your turn to end.** While you run a gate pass or hold a picker, arriving turn
   ends are held (the footer counts them) and flushed as one prompt.
 - **A refused gate leaves a trace**: the refusal is appended to the record entry under
-  `refusals`, written to `/tmp/harness-hook-events.log`, and shown red on the Builder's band for
-  two minutes. "Did the gate fire" is answered from the record.
+  `refusals`, written to the machine's hook log
+  (`~/.local/state/astragentic/harness-hook-events.log`), and shown red on the Builder's band
+  for two minutes. "Did the gate fire" is answered from the record.
 - **A TURN-END the pane could not send still arrives from the record within 30 s**, marked
   *read from the record*. For a **QA pane this is every turn end, by contract**: it runs under
   permissions, so its direct send gets no classifier verdict and the record is its path (measured

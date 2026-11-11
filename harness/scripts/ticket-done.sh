@@ -2,6 +2,7 @@
 # ticket-done.sh — the ONE call that closes a ticket's obligations, and the evidence it ran.
 #
 #   scripts/ticket-done.sh <ticket-id> [--moved "<ids the write-back promoted, or none>"]
+#                                      [--late "<why the merge was not declared in time>"]
 #
 # THE MOMENT. A ticket is done when its work is on the base branch AND the tracker says so.
 # Everything owed at that moment — the frontier write-back, the assignee released, the ledger
@@ -30,9 +31,22 @@
 # upgrade that asks for it. Step 2 present and wrong REFUSES: the ticket is not done.
 set -uo pipefail
 
-ID="${1:?usage: ticket-done.sh <ticket-id> [--moved \"<ids or none>\"]}"; shift || true
-MOVED=""
-while [ $# -gt 0 ]; do case "$1" in --moved) MOVED="${2:-}"; shift 2;; *) echo "ticket-done: unknown argument $1" >&2; exit 2;; esac; done
+# --late "<reason>" (6.1.8): A MERGE ALREADY ON THE REMOTE CANNOT BE AMENDED. One downstream
+# ticket was merged GitHub-side with no `Ledger:` line; the project's plug refuses that merge,
+# the commit was on origin, and nothing could ever stamp it (1 of 12 GitHub-side ticket merges
+# on that project). `--late` declares it after the fact. Admitted only when every commit naming the ticket is already on `origin/<base>`:
+# while one is still local it can be amended, and the fix is the amend. The tracker half is
+# asked as always. The plug runs with TICKET_DONE_LATE=<reason> in its environment (unset on
+# every other run, whatever the caller's shell held) and still decides: a plug that checks a
+# trailer relaxes that one check when the variable is set, and keeps the rest. The reason goes
+# in the stamp.
+ID="${1:?usage: ticket-done.sh <ticket-id> [--moved \"<ids or none>\"] [--late \"<reason>\"]}"; shift || true
+MOVED=""; LATE=""
+while [ $# -gt 0 ]; do case "$1" in
+  --moved) MOVED="${2:-}"; shift 2;;
+  --late) LATE="$(printf '%s' "${2:-}" | tr '\r\n' '  ')"; [ -n "${LATE// /}" ] || { echo "ticket-done: --late needs a reason" >&2; exit 2; }; shift 2;;
+  *) echo "ticket-done: unknown argument $1" >&2; exit 2;;
+esac; done
 [[ "$ID" =~ ^[A-Z][A-Z0-9]*-[0-9]+$ ]] || { echo "ticket-done: '$ID' is not a ticket id (PREFIX-number)" >&2; exit 2; }
 
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"; ROOT="${ROOT:-${CLAUDE_PROJECT_DIR:-$PWD}}"
@@ -77,6 +91,26 @@ if [ "$merged" = no ]; then
   echo "ticket-done: STOP — nothing on $BASE carries $ID: no branch is an ancestor and no subject names it. A ticket is not done before its work has landed." >&2; exit 1
 fi
 
+# Is the ticket's merge beyond amending? Yes when origin/<base> carries the work (the branch tip
+# as an ancestor, or a subject naming the id) and no commit naming the id is still local-only.
+# Read from the remote-tracking ref as it stands, no fetch: a stale ref errs on the refusing side.
+# Counted with `grep -c`, never `-q`, for the pipefail reason above.
+UP="refs/remotes/origin/$BASE"
+on_origin=no
+if git rev-parse --verify --quiet "$UP" >/dev/null; then
+  local_only="$(git log "$UP..refs/heads/$BASE" --format='%s' | grep -ciE "\\b${ID}\\b" || true)"
+  if [ "${local_only:-0}" -eq 0 ]; then
+    if [ -n "$branch" ] && git merge-base --is-ancestor "$branch" "$UP" 2>/dev/null; then on_origin=yes
+    elif [ "$(git log "$UP" --format='%s' | grep -ciE "\\b${ID}\\b" || true)" -gt 0 ]; then on_origin=yes; fi
+  fi
+fi
+if [ -n "$LATE" ]; then
+  if [ "$on_origin" != yes ]; then
+    echo "ticket-done: STOP — --late is for a merge already on origin/$BASE, which cannot be amended. $ID's is not there by this checkout's origin/$BASE (\`git fetch origin\` if that is stale). A merge still local is fixed by amending it; then run without --late." >&2; exit 1
+  fi
+  notes+=("late: $LATE (the merge was already on origin/$BASE; declared after the fact)")
+fi
+
 # 2. tracker half — the project's plug
 TS="$ROOT/.astraler/project/tracker-state.sh"
 # 4.4.0: with no plug, a project that declares its tracker (`.astraler/project/tracker`, e.g.
@@ -115,6 +149,8 @@ fi
 
 # 3. the project's own after-close step
 TD="$ROOT/.astraler/project/ticket-done.sh"
+# Set or cleared on every run: a value inherited from the caller's shell is not a declaration.
+if [ -n "$LATE" ]; then export TICKET_DONE_LATE="$LATE"; else unset TICKET_DONE_LATE; fi
 if [ -x "$TD" ]; then
   plug_out="$("$TD" "$ID" 2>&1 | tee /dev/stderr | tail -1)"; plug_rc=${PIPESTATUS[0]}
   if [ "$plug_rc" -eq 0 ]; then notes+=("project plug: ran — ${plug_out:-(printed nothing)}")   # its last line is the evidence
@@ -139,5 +175,8 @@ if [ "$rc" -eq 0 ]; then
   printf '  %s\n' "${notes[@]}"
 else
   echo "ticket-done: NOT stamped (exit $rc)" >&2
+  if [ -z "$LATE" ] && [ "$on_origin" = yes ]; then
+    echo "ticket-done: $ID's merge is already on origin/$BASE and cannot be amended. If that is why the plug refused: \`ticket-done.sh $ID --late \"<reason>\"\` (the plug must honour TICKET_DONE_LATE)." >&2
+  fi
 fi
 exit $rc

@@ -51,7 +51,9 @@ import sys
 REARM_ON = {"compact"}
 
 ROLES_DIR = os.path.join(".agents", "roles")
-EVENTS_LOG = "/tmp/harness-hook-events.log"
+# The machine's one hook log (hook-git-guard.py says why it left /tmp); HARNESS_HOOK_LOG overrides.
+EVENTS_LOG = os.environ.get("HARNESS_HOOK_LOG") or os.path.join(
+    os.path.expanduser("~"), ".local", "state", "astragentic", "harness-hook-events.log")
 
 
 def _utcnow():
@@ -66,8 +68,9 @@ def note(line):
     """Append one line to the shared hook log. Never raises: a hook that dies while
     recording that it ran is worse than one that stays quiet."""
     try:
-        with open(EVENTS_LOG, "a") as fh:
-            fh.write(line.rstrip("\n") + "\n")
+        os.makedirs(os.path.dirname(EVENTS_LOG) or ".", exist_ok=True)
+        with open(EVENTS_LOG, "a", errors="backslashreplace") as fh:
+            fh.write(" ".join(str(line).splitlines()) + "\n")
     except Exception:
         pass
 

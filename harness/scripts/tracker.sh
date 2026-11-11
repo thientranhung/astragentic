@@ -38,8 +38,9 @@
 # status NAMES carry spaces (`To Do` read as state `To`, assignee `Do`), so `state` prints the
 # status CATEGORY key: `new`, `indeterminate` or `done`. `done` is what ticket-done accepts.
 #
-# Every call that reaches a tracker leaves one line in /tmp/harness-hook-events.log, so the
-# rate is a count, not a claim: `grep -c 'tracker.sh' /tmp/harness-hook-events.log`.
+# Every call that reaches a tracker leaves one line in the machine's hook log, so the rate is a
+# count, not a claim: `grep -c 'tracker.sh' ~/.local/state/astragentic/harness-hook-events.log`
+# (HARNESS_HOOK_LOG overrides the path; it left /tmp in 6.1.8 because a reboot empties /tmp).
 set -uo pipefail
 
 OP="${1:-}"; ID="${2:-}"
@@ -53,7 +54,11 @@ ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"; ROOT="${ROOT:-${CLA
 P="$ROOT/.astraler/project"
 TIMEOUT_MS="${TRACKER_TIMEOUT_MS:-20000}"
 
-log() { printf '%s tracker.sh %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" >> /tmp/harness-hook-events.log 2>/dev/null || true; }
+HOOK_LOG="${HARNESS_HOOK_LOG:-${HOME:-/tmp}/.local/state/astragentic/harness-hook-events.log}"
+log() { # one event, one line: a multi-line plug answer is flattened
+  mkdir -p "${HOOK_LOG%/*}" 2>/dev/null
+  printf '%s tracker.sh %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(printf '%s' "$*" | tr '\r\n' '  ')" >> "$HOOK_LOG" 2>/dev/null || true
+}
 
 # 1. the project's own plug
 if [ "$OP" = state ] && [ -x "$P/tracker-state.sh" ]; then

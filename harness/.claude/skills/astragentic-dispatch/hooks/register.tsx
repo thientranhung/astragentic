@@ -381,9 +381,14 @@ async function logRefusal($: any, root: string, key: string, gate: string, detai
   // one line added; a read that failed (or raced another writer) wrote the file back as that
   // one line, and the shared log lost its history. nizzy-ecom measured the file starting on
   // 2026-10-15 on a box booted 10-05 (4.0.2). The shell's `>>` is the append the fs API lacks.
+  // 6.1.8: the path is the machine's one hook log (hook-git-guard.py says why it left /tmp), and
+  // HARNESS_HOOK_LOG overrides it here as in the Python writers. It was a literal /tmp path, so
+  // selftest's fixture refusals went to the live file: 79,256 of its 79,459 REFUSED lines were
+  // key=AB-N. One event is one line: a detail quoting a multi-line command is flattened.
   try {
-    const line = `${new Date(at).toISOString()} astragentic-dispatch REFUSED ${gate} key=${key} ${detail.slice(0, 200)}`
-    await $.process.run(['sh', '-c', 'printf "%s\\n" "$1" >> /tmp/harness-hook-events.log', '_', line], { timeoutMs: 5_000 })
+    const line = `${new Date(at).toISOString()} astragentic-dispatch REFUSED ${gate} key=${key} ${detail.slice(0, 200)}`.replace(/[\r\n]+/g, ' ')
+    const pinned = String((await $.env.get('HARNESS_HOOK_LOG').catch(() => '')) ?? '')
+    await $.process.run(['sh', '-c', 'f="${2:-$HOME/.local/state/astragentic/harness-hook-events.log}"; mkdir -p "${f%/*}" && printf "%s\\n" "$1" >> "$f"', '_', line, pinned], { timeoutMs: 5_000 })
   } catch {}
   await refreshFlow($, root, key)
 }

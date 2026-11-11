@@ -77,18 +77,28 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 
-LOG = os.environ.get("HARNESS_HOOK_LOG", "/tmp/harness-hook-events.log")
+# ONE FILE PER MACHINE, OUTSIDE /tmp (6.1.8). /tmp is emptied at boot, so the log this package's
+# counts are taken from began three minutes after the last restart. Every writer (this guard,
+# the two SessionStart hooks, tracker.sh, the dispatch mod, the inline commands in
+# settings.json) resolves this same path; HARNESS_HOOK_LOG overrides it, as selftest does.
+LOG = os.environ.get("HARNESS_HOOK_LOG") or os.path.join(
+    os.path.expanduser("~"), ".local", "state", "astragentic", "harness-hook-events.log")
 
 
 def log(kind, cmd):
     """AST-102 is the entry about a hook that looked installed and never ran. Without a record
-    of invocations, 'we saw nothing' and 'it never fired' are the same observation."""
+    of invocations, 'we saw nothing' and 'it never fired' are the same observation.
+
+    One event is one line: newlines in the command are flattened (24,908 of 181,221 lines in one
+    machine's log had no timestamp, most of them the tail of a command written raw). It cannot
+    raise: a lone surrogate in the command is written escaped, not as a UnicodeEncodeError."""
     try:
-        with open(LOG, "a", encoding="utf-8") as fh:
+        os.makedirs(os.path.dirname(LOG) or ".", exist_ok=True)
+        with open(LOG, "a", encoding="utf-8", errors="backslashreplace") as fh:
             fh.write("%s hook-git-guard %s | %s\n"
                      % (datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                        kind, cmd[:120]))
-    except OSError:
+                        kind, re.sub(r"[\r\n]+", " ", str(cmd))[:120]))
+    except Exception:
         pass
 
 
@@ -508,7 +518,7 @@ def first_operand(args, after):
 
 
 # Where the two release scripts leave their stamps. Overridable so nested selftests do not
-# share evidence; production leaves it at /tmp, machine-local like the hook-events log.
+# share evidence.
 def _stamp_root():
     # The repository's git common dir, not /tmp: a reboot emptied /tmp, and every finished ticket
     # then read as unfinished here. HARNESS_STAMP_ROOT still overrides it for selftests.
@@ -873,7 +883,7 @@ def main():
                     # make (nizzy, 2026-10-29: the push was reworded to hide the id, which teaches the
                     # shape this rule exists to catch). The mod's own merge check already skips a record
                     # whose role is not builder; this rule now reads the same record, and also accepts
-                    # the branch shape (`shaper/…`, `qa/…`) and an explicit `Ticket-done: n/a — <why>`
+                    # the role word right before the id (`shaper/<id>`, `shaper <id>`, `qa/<id>`) and an explicit `Ticket-done: n/a — <why>`
                     # trailer for a merge that lands no ticket's work.
                     roles = {}
                     rc_t, top = run(["git", "rev-parse", "--show-toplevel"])
@@ -892,13 +902,21 @@ def main():
                         subj = body.strip().splitlines()[0] if body.strip() else ""
                         if re.search(r"(?mi)^Ticket-done:\s*n/a\b", body):
                             continue
-                        if re.search(r"\b(shaper|qa)[ /:-]", subj, re.I):
-                            continue
                         # The FIRST ticket-shaped id in a merge subject is the ticket; later
                         # ones are citations (`… (AST-069)`). Both real merge shapes measured
                         # downstream lead with it: `Merge ABC-490: …` and git's default
                         # `Merge remote-tracking branch 'origin/builder/ABC-467'`.
                         m = re.search(r"\b([A-Z][A-Z0-9]*-[0-9]+)\b", subj)
+                        # THE ROLE WORD STANDS RIGHT BEFORE THE ID (6.1.8): `shaper ABC-12`,
+                        # `shaper/ABC-12`. Until then `shaper` or `qa` anywhere in the subject
+                        # exempted it, so a Builder's `Merge ABC-1: fix the QA - walk` owed no
+                        # stamp (planted, 2 of 2 passed). Replayed over 192 first-parent base
+                        # merges on two projects since 2026-10-30: 4 exempt before and after,
+                        # all four a Shaper's. A subject with no upper-case id is still not
+                        # judged: 8 of those 192, none a Builder's (harness upgrades, PR merges,
+                        # one spec merge), and a lower-case id matches 2 of the 8.
+                        if m and re.search(r"(?:^|[^A-Za-z0-9])(?:shaper|qa)[ /:-]+$", subj[:m.start()], re.I):
+                            continue
                         if m and roles.get(m.group(1), "builder") not in ("", "builder"):
                             continue
                         if m and not os.path.exists(os.path.join(STAMP_ROOT, "harness-ticket-done", m.group(1))):
@@ -956,4 +974,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # A CRASH IS RECORDED (6.1.8). Claude Code reads exit 1 as a non-blocking hook error, so an
+    # unexpected exception already failed open; it also left no trace. Still no decision, now
+    # with one log line naming the exception. A deny leaves through SystemExit, not caught here.
+    try:
+        main()
+    except Exception as exc:
+        log("CRASH(%s)" % type(exc).__name__, exc)
+        sys.exit(0)

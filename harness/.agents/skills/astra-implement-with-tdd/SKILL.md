@@ -32,6 +32,13 @@ Never all tests first, never all code first.
    criterion's code.
 3. **Commit the slice.** Refactoring is **not** in the loop; `simplify` runs once at the end.
 
+**Checking a red against the tree without your change** (is it yours, or the base's?): the
+stash stack is shared by every worktree of the repo, so a bare `git stash pop` or `drop` takes
+whichever entry is on top, another Builder's included. One pattern: `git stash push -u -m
+"red <ticket>"`, read your entry's SHA (`git stash list --format='%H %gs'`), restore with
+`git stash apply <sha>`, then drop the `stash@{n}` that SHA sits at now (`git stash list
+--format='%gd %H'`); `git stash drop <sha>` is refused.
+
 **Never weaken a test to pass**: no `skip`, `fixme`, expected-failure marks, loosened
 assertions, raised timeouts, or a mock that fakes the system under test's success. A test
 that disagrees with a criterion → fix the code; the criterion is ambiguous → stop and hand

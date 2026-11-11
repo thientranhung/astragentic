@@ -9,5 +9,6 @@ sẵn và thấy nó fail). Mục chưa có số ghi `chưa đo` và đi vào b�
 được đề xuất bỏ vì "đắt nhất"), và 42/99 guard trong harness chưa bao giờ bắn ngoài selftest.
 
 Nguồn đo có sẵn: transcript `~/.claude/projects/<project>/*.jsonl` (usage từng lần gọi, tool
-call), `/tmp/harness-hook-events.log`, `/tmp/herdr-watchdog-*.log`, git log của project
+call), `~/.local/state/astragentic/harness-hook-events.log` (từ 6.1.8; trước đó là
+`/tmp/harness-hook-events.log`, mất khi reboot), `/tmp/herdr-watchdog-*.log`, git log của project
 (marker, `Ledger:`, stamp), `.astraler/state/dispatch-record.json`, `npx ccusage@latest`.

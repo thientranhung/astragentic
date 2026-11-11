@@ -68,6 +68,11 @@ trap 'rm -rf "$TMP"' EXIT
 # Evidence stamps go under this run's own TMP: install.sh runs this suite INSIDE this suite, and
 # two runs sharing /tmp deleted each other's stamps mid-run (measured as a flaky "spaced path").
 export HARNESS_STAMP_ROOT="$TMP/stamps"
+# The hook log too (6.1.8): every writer this suite drives (the guard, both SessionStart hooks,
+# tracker.sh, the dispatch mod, the nested install run) resolves its path from this variable.
+# The mod did not, and 79,256 of the 79,459 REFUSED lines in one machine's live log were this
+# suite's fixture key AB-N. A case that tests the default path unsets it under a temp HOME.
+export HARNESS_HOOK_LOG="$TMP/hook.log"
 
 # ---------------------------------------------------------------------------------------------
 # hook-git-guard — 2.7.0 through 2.7.2 shipped three matchers, each bypassable and over-broad in
@@ -252,6 +257,36 @@ out="$(printf '%s' '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_inp
 says "$out" '"permissionDecision": "deny"' \
   && ok "python3 -c \"\$(cat guard)\" denies git add -A like python3 guard does" \
   || bad "wrapper fallback" "the shell-read form did not deny: $out"
+
+echo "hook-git-guard — a crash is recorded and gives no decision; the log is one line per event, outside /tmp (6.1.8)"
+# Planted 2026-11-11: a string `tool_input` raised AttributeError and a lone surrogate raised
+# UnicodeEncodeError inside log(), both exit 1, which Claude Code reads as a non-blocking error
+# with no trace. Exit code, stdout and the log file are asserted, not the words printed.
+CL="$TMP/crash.log"; : > "$CL"
+out="$(printf '%s' '{"tool_name":"Bash","tool_input":"git add -A"}' | HARNESS_HOOK_LOG="$CL" python3 "$S/hook-git-guard.py" 2>/dev/null)"; crc=$?
+if [ "$crc" -eq 0 ] && [ -z "$out" ] && [ "$(grep -c 'hook-git-guard CRASH(AttributeError)' "$CL")" -eq 1 ]; then
+  ok "a payload that crashes the guard exits 0 with no decision and leaves one CRASH line naming the exception"
+else
+  bad "guard crash" "exit=$crc stdout='$out' log: $(cat "$CL")"
+fi
+: > "$CL"
+out="$(printf '%s' '{"tool_name":"Bash","tool_input":{"command":"git status \ud800"}}' | HARNESS_HOOK_LOG="$CL" python3 "$S/hook-git-guard.py" 2>/dev/null)"; crc=$?
+if [ "$crc" -eq 0 ] && [ -z "$out" ] && [ "$(wc -l < "$CL" | tr -d ' ')" -eq 1 ] && [ "$(grep -c 'hook-git-guard allow | git status' "$CL")" -eq 1 ]; then
+  ok "a lone surrogate in the command is logged escaped, not raised from log()"
+else
+  bad "guard log encoding" "exit=$crc stdout='$out' log: $(cat "$CL" 2>/dev/null)"
+fi
+# The default path, with the override unset, under a HOME of this run's own: the file is
+# created (its directory too) and a three-line command is one line.
+rm -rf "$TMP/home-guard"; mkdir -p "$TMP/home-guard"
+printf '%s' '{"tool_name":"Bash","tool_input":{"command":"git status\ngit log -1\ngit diff"}}' \
+  | env -u HARNESS_HOOK_LOG HOME="$TMP/home-guard" python3 "$S/hook-git-guard.py" >/dev/null 2>&1
+DL="$TMP/home-guard/.local/state/astragentic/harness-hook-events.log"
+if [ -f "$DL" ] && [ "$(wc -l < "$DL" | tr -d ' ')" -eq 1 ] && [ "$(grep -cE '^[0-9]{4}-[0-9]{2}-[0-9]{2}T' "$DL")" -eq 1 ]; then
+  ok "with no override the guard logs under ~/.local/state/astragentic, and a multi-line command is one timestamped line"
+else
+  bad "guard default log path" "expected one line in $DL, found: $(cat "$DL" 2>/dev/null || echo 'no file')"
+fi
 # the settings file of the layout this runs in: a project has no harness/ (nizzy, 4.1.0 receipt)
 SJ="$ROOT/harness/.claude/settings.json"; [ "$LAYOUT" = project ] && SJ="$ROOT/.claude/settings.json"
 if python3 - "$SJ" <<'PY' 2>/dev/null
@@ -265,6 +300,21 @@ then
   ok "settings.json wrappers carry the found-but-unreadable fallback"
 else
   bad "wrapper fallback registration" "settings.json has no shell-read fallback for the python hooks"
+fi
+# 6.1.8 — the inline SubagentStop command is a log writer too: run as registered, with the
+# override unset under a temp HOME, it writes one timestamped line to the default path (2,348
+# `HOOK: ` lines in one machine's log began with no timestamp). Package layout only: a project
+# keeps its own settings.json, and running an older copy would write to the machine's log.
+if [ "$LAYOUT" = package ]; then
+  rm -rf "$TMP/home-sub"; mkdir -p "$TMP/home-sub"
+  subcmd="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["hooks"]["SubagentStop"][0]["hooks"][0]["command"])' "$SJ" 2>/dev/null)"
+  printf '%s' '{"agent_type":"Explore","agent_id":"a1","session_id":"s1"}' | env -u HARNESS_HOOK_LOG HOME="$TMP/home-sub" sh -c "$subcmd" >/dev/null 2>&1
+  SL="$TMP/home-sub/.local/state/astragentic/harness-hook-events.log"
+  if [ -n "$subcmd" ] && [ "$(grep -cE '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]+Z HOOK: SubagentStop — type=Explore ' "$SL" 2>/dev/null)" = 1 ]; then
+    ok "the registered SubagentStop command writes one timestamped line to the default log path"
+  else
+    bad "SubagentStop log line" "expected one timestamped line in $SL, found: $(cat "$SL" 2>/dev/null || echo 'no file')"
+  fi
 fi
 
 # The distinction the shrink was FOR: unsupported structure must record no-opinion, not allow.
@@ -949,6 +999,36 @@ print(json.dumps({"hook_event_name":"PreToolUse","tool_name":"Bash","cwd":sys.ar
   | env -u HARNESS_STAMP_ROOT HARNESS_HOOK_LOG="$TMP/hook.log" python3 "$S/hook-git-guard.py" 2>/dev/null)"
 case "$out" in *ABC-14*) bad "guard reads the default stamp home" "refused a push for ABC-14 whose stamp is in .git/astraler-stamps" ;;
                *) ok "the push guard reads stamps from the same default home" ;; esac
+# 6.1.8 — `--late "<reason>"`: a merge already on origin cannot be amended. One downstream ticket
+# was merged GitHub-side with no Ledger: line, the project's plug refused it, and no run could
+# ever stamp it. The plug here is that shape: it refuses a merge with no trailer unless
+# TICKET_DONE_LATE is set. Exit codes and the stamp file, in the order the rule has to hold.
+cat > "$TD/.astraler/project/ticket-done.sh" <<'PLUG'
+#!/bin/sh
+sha="$(git log main --format='%H %s' | grep " Merge $1:" | cut -d' ' -f1 | sed -n 1p)"
+git show -s --format=%B "$sha" | grep '^Ledger: ' >/dev/null && exit 0
+[ -n "${TICKET_DONE_LATE:-}" ] && { echo "admitted late: $TICKET_DONE_LATE"; exit 0; }
+echo "no Ledger line" >&2; exit 1
+PLUG
+chmod +x "$TD/.astraler/project/ticket-done.sh"
+( cd "$TD" && git checkout -q -b builder/ABC-16 main && git commit -q --allow-empty -m "ABC-16: w" \
+  && git checkout -q main && git merge -q --no-ff builder/ABC-16 -m "Merge ABC-16: w" ) >/dev/null 2>&1
+LS="$HARNESS_STAMP_ROOT/harness-ticket-done/ABC-16"
+late_run() { ( cd "$TD" && "$@" ) >/dev/null 2>&1; printf '%s%s' "$?" "$([ -f "$LS" ] && echo +stamp)"; }
+l1="$(late_run bash "$S/ticket-done.sh" ABC-16 --moved none --late "no trailer")"          # still local: amend it
+( cd "$TD" && git update-ref refs/remotes/origin/main main )                                # now it is on origin
+l2="$(late_run bash "$S/ticket-done.sh" ABC-16 --moved none)"                               # the plug refuses
+l3="$(late_run env TICKET_DONE_LATE=inherited bash "$S/ticket-done.sh" ABC-16 --moved none)" # an inherited value is no declaration
+printf '#!/bin/sh\necho "open alice"\n' > "$TD/.astraler/project/tracker-state.sh"
+l4="$(late_run bash "$S/ticket-done.sh" ABC-16 --moved none --late "no trailer")"          # the tracker half still decides
+printf '#!/bin/sh\necho "closed -"\n' > "$TD/.astraler/project/tracker-state.sh"
+l5="$(late_run bash "$S/ticket-done.sh" ABC-16 --moved none --late "merged on GitHub, no trailer")"
+if [ "$l1 $l2 $l3 $l4 $l5" = "1 1 1 1 0+stamp" ] && [ "$(grep -c '^  late: merged on GitHub, no trailer' "$LS")" -eq 1 ]; then
+  ok "ticket-done --late: refused while the merge is still local, without the flag, on an inherited variable and on an open tracker; stamped with the reason once the merge is on origin"
+else
+  bad "ticket-done --late" "exit(+stamp) for [local, no flag, inherited env, tracker open, late] = [$l1 $l2 $l3 $l4 $l5], want [1 1 1 1 0+stamp]; stamp: $(cat "$LS" 2>/dev/null || echo none)"
+fi
+rm -f "$TD/.astraler/project/ticket-done.sh"
 
 # THE PUSH GATE AS A GIT HOOK. hook-git-guard.py is silent on a heredoc, a $(...) or a ( ... )
 # (26% of one day's commands downstream), and a ticket's merge reached origin/main unstamped
@@ -1013,6 +1093,20 @@ Ledger: none"
 pp_push && ok "pre-push admits a merge carrying a Ticket-done: n/a trailer" \
         || bad "pre-push n/a trailer" "refused a merge that declares it lands no ticket's work"
 pp_undo
+# 6.1.8 — the same narrowing as the guard, through the hook: the role word right before the id
+pp_merge shaper/ABC-82 "Merge shaper/ABC-82: spec and QA plan
+Ledger: none"
+pp_push && ok "pre-push admits \`Merge shaper/<id>: …\`, no stamp" \
+        || bad "pre-push shaper/ subject" "refused the second real Shaper merge shape"
+pp_undo
+pp_merge builder/ABC-83 "Merge ABC-83: fix the QA - walk report
+Ledger: none"
+if pp_push; then bad "pre-push QA mid-subject" "a Builder's unstamped merge was pushed because its subject mentions QA"; pp_undo
+else ok "pre-push refuses a Builder's unstamped merge that mentions QA after its id"; ( cd "$PR/work" && git reset -q --hard HEAD~1 ) >/dev/null 2>&1; fi
+pp_merge builder/ABC-84 "Merge ABC-84: shaper: brief wording
+Ledger: none"
+if pp_push; then bad "pre-push shaper mid-subject" "a Builder's unstamped merge was pushed because its subject mentions shaper"; pp_undo
+else ok "pre-push refuses a Builder's unstamped merge that mentions shaper after its id"; ( cd "$PR/work" && git reset -q --hard HEAD~1 ) >/dev/null 2>&1; fi
 # first-parent parity (guard since 4.0.3): a merge INSIDE the builder branch naming another
 # ticket is not a merge onto the base and owes no stamp
 ( cd "$PR/work" && git checkout -qb builder/ABC-80 && git commit -q --allow-empty -m "ABC-80: a" \
@@ -1113,6 +1207,24 @@ ld_merge "Merge ABC-79: records only
 Ticket-done: n/a — lands no ticket's work
 Ledger: none"
 guard_in "$LD" allow "git push origin main"            # explicit trailer
+( cd "$LD" && git reset -q --hard HEAD~1 ) >/dev/null 2>&1
+# 6.1.8 — the role word stands right before the id. Planted 2026-11-11, 2 of 2 passed with no
+# stamp: a Builder's merge that only mentions QA or shaper after its id. Each carries
+# `Ledger: none` and is alone in the range, so a deny here is the missing stamp and nothing else.
+ld_merge "Merge shaper/ABC-82: spec and QA plan
+
+Ledger: none"
+guard_in "$LD" allow "git push origin main"            # the second real Shaper shape
+( cd "$LD" && git reset -q --hard HEAD~1 ) >/dev/null 2>&1
+ld_merge "Merge ABC-83: fix the QA - walk report
+
+Ledger: none"
+guard_in "$LD" deny  "git push origin main"            # a Builder's merge that mentions QA
+( cd "$LD" && git reset -q --hard HEAD~1 ) >/dev/null 2>&1
+ld_merge "Merge ABC-84: shaper: brief wording
+
+Ledger: none"
+guard_in "$LD" deny  "git push origin main"            # ...or shaper
 ( cd "$LD" && git reset -q --hard HEAD~1 ) >/dev/null 2>&1
 rm -f "$LD/.astraler/state/dispatch-record.json"
 ld_merge "Merge ABC-1: empty value
@@ -1809,7 +1921,7 @@ let selfSock
 let homeDir
 const every = () => everyFn()
 const $ = {
-  env: { get: async k => k === 'CLAUDE_CODE_MESSAGING_SOCKET' ? selfSock : k === 'ASTRAGENTIC_REPO' ? root : k === 'HOME' ? homeDir : k === 'ASTRA_TURN_END_GRACE_MS' ? '120' :(isOrcaHost && k === 'ORCA_PANE_KEY') ? 'tab5:leaf5' : (isOrcaHost && k === 'ORCA_TAB_ID') ? 'tab5' : (isOrcaHost && k === 'ORCA_TERMINAL_HANDLE') ? 'term_5' : (isOrca && k === 'ASTRA_DISPATCH') ? 'ticket:AB-5' : (isOrcaHost && k === 'ORCA_CLI_BIN_DIR') ? '/orca/bin' : isOrcaHost ? undefined : k === 'HERDR_ENV' ? '1' : (isPane && k === 'HERDR_TAB_ID') ? 't5' : (isPane && k === 'HERDR_PANE_ID') ? 'p5' : undefined },
+  env: { get: async k => k === 'HARNESS_HOOK_LOG' ? process.env.HARNESS_HOOK_LOG : k === 'CLAUDE_CODE_MESSAGING_SOCKET' ? selfSock : k === 'ASTRAGENTIC_REPO' ? root : k === 'HOME' ? homeDir : k === 'ASTRA_TURN_END_GRACE_MS' ? '120' :(isOrcaHost && k === 'ORCA_PANE_KEY') ? 'tab5:leaf5' : (isOrcaHost && k === 'ORCA_TAB_ID') ? 'tab5' : (isOrcaHost && k === 'ORCA_TERMINAL_HANDLE') ? 'term_5' : (isOrca && k === 'ASTRA_DISPATCH') ? 'ticket:AB-5' : (isOrcaHost && k === 'ORCA_CLI_BIN_DIR') ? '/orca/bin' : isOrcaHost ? undefined : k === 'HERDR_ENV' ? '1' : (isPane && k === 'HERDR_TAB_ID') ? 't5' : (isPane && k === 'HERDR_PANE_ID') ? 'p5' : undefined },
   clock: { now: async () => { tick = Math.max(tick + 1, Date.now()); return tick }, every: (_ms, fn) => { everyFn = fn } },
   command: { register: () => {}, run: async () => ({}) },
   session: { id: async () => 'disp', send: async () => ({ isDelivered: true }), usage: async () => ({ startedAt: 0, context: { tokens: 1000, window: 1_000_000, percent: 0 } }), compact: async () => ({}) },
@@ -2625,7 +2737,24 @@ DRVEOS
     echo '{"AB-1":{"role":"builder","pane_id":"p1","tab_id":"t1","session_name":"builder-ab-1-32","registered_at":1,"branch":"feat/ab-1","start_sha":"abc"}}' > "$TMP/mod-drive-repo/.astraler/state/dispatch-record.json"
     SELFTEST_SCRIPTS="$S" node "$TMP/mod-drive.cjs" "$1" "$TMP/mod-drive-repo" "$TSC_PKG" "${2:-}" 2>&1
   }
+  # 6.1.8 — the mod's refusal lines go where HARNESS_HOOK_LOG says, never to the machine's live
+  # log. Counted in files: before/after this run in the suite's own log, and, planted, a mod
+  # that never reads the variable writes under a temp HOME's default path instead.
+  refused_in() { local n; n="$(grep -c 'astragentic-dispatch REFUSED .* key=AB-' "$1" 2>/dev/null)"; echo "${n:-0}"; }
+  modlog_before="$(refused_in "$HARNESS_HOOK_LOG")"
   out="$(mod_drive "$MOD")"
+  modlog_after="$(refused_in "$HARNESS_HOOK_LOG")"
+  rm -rf "$TMP/mod-nolog" "$TMP/home-mod"; cp -R "$MOD" "$TMP/mod-nolog"; mkdir -p "$TMP/home-mod"
+  sed -i.bak "s/env.get('HARNESS_HOOK_LOG')/env.get('HARNESS_HOOK_LOG_UNREAD')/" "$TMP/mod-nolog/hooks/register.tsx" && rm -f "$TMP/mod-nolog/hooks/register.tsx.bak"
+  HOME="$TMP/home-mod" mod_drive "$TMP/mod-nolog" >/dev/null
+  modlog_planted="$(refused_in "$HARNESS_HOOK_LOG")"
+  modlog_home="$(refused_in "$TMP/home-mod/.local/state/astragentic/harness-hook-events.log")"
+  if [ "$modlog_after" -gt "$modlog_before" ] && [ "$modlog_planted" -eq "$modlog_after" ] && [ "$modlog_home" -gt 0 ] \
+     && [ "$(grep -cvE '^[0-9]{4}-[0-9]{2}-[0-9]{2}T' "$HARNESS_HOOK_LOG")" -eq 0 ]; then
+    ok "the mod logs its refusals to HARNESS_HOOK_LOG, one timestamped line each; planted, a mod that ignores the variable writes to the default path under HOME instead (6.1.8)"
+  else
+    bad "mod hook log path" "suite log REFUSED lines before=$modlog_before after=$modlog_after after-planted=$modlog_planted; planted mod's default file=$modlog_home; untimestamped lines in the suite log=$(grep -cvE '^[0-9]{4}-[0-9]{2}-[0-9]{2}T' "$HARNESS_HOOK_LOG" 2>/dev/null)"
+  fi
   if says "$out" '"afterSend":"AB-1:sent:"' && says "$out" '"afterAck":"AB-1:registered:no brief yet"' && says "$out" '"afterRetire":""' && says "$out" '"stubBells":0,"stubLeft":0,"deadTurnBellHeld":true,"deadTurnBellRerung":true,"deadTurnNoDouble":true,"staleBells":1,"staleRow":true,"ownerBells":"011","subagentHeld":false,"heldCleared":true,"latestChip":"0.0.2"'; then
     ok "the ack from the bare name clears the send keyed by \"name [ref]\"; a retired lane's send goes with its entry; a stub entry rings no bell; a hold past the ceiling rings once as held-stale, only in the session that briefed the lane unless that session is gone; a subagent's turn.start holds nothing; a bell held in the dispatcher's turn clears its status line when flushed; a newer tag at the remote reaches the band"
   else
