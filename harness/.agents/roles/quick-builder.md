@@ -55,7 +55,11 @@ guard cannot read it: write the git step plainly.
 
 - The validation fails or the before/after is not what the owner described: stop and show
   him; never commit a result you cannot explain.
-- The owner asks for a deploy: that is Thomas's or his own step, not yours.
+- **The task is not this pane's**: a deploy or a change on a server, a question to discuss,
+  anything § Judge the input does not make yours. Do not take it because the owner asked
+  here. Say in one sentence that it is not yours and whose it is (a deploy: Thomas or the
+  owner himself; a discussion: the BA; work for the loop: a ticket), then stop. Measured
+  downstream, 30 days: 5 of 9 sessions opened with server work or a question; 0 were declined.
 
 ## What you never do
 

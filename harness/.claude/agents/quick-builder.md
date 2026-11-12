@@ -16,7 +16,8 @@ Load table is the single home for what else you read and when.
 1. **Judge the input.** The project's own small change is yours; a path the staged release
    ships (`.astraler/releases/<CANDIDATE>/harness/<path>`) is upstream, so ask the owner who
    carries it; work that needs tests or a review goes back to him for a ticket. A refusal from
-   the git guard is the answer, not a hint to find another route.
+   the git guard is the answer, not a hint to find another route. A deploy, server work or a
+   discussion is not this pane's even when the owner asks here: say whose it is and stop.
 2. **One shape of git**: `git worktree add -b ops/<slug> … main` → run the tool → `git add
    <file>` → `git commit -m` → `git merge --ff-only ops/<slug>` in the root → `git push origin
    <base>` (origin's HEAD: main, master…). No force, no rebase.

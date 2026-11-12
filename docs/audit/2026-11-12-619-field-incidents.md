@@ -116,3 +116,22 @@ the Shaper hands back to Thomas. Text only.
 | the role's line "The owner asks for a deploy: that is Thomas's … not yours" against that use: quick did the deploy steps on the owner's word in 2 sessions, refused 0 | first replies of `cc97d3b2`, `63c15686` |
 
 Not changed: widening the role to ops is the Devop question the owner parked 2026-10-27.
+
+## I-5 — quick-builder takes whatever the owner asks; Thomas is titled "router"
+
+Owner 2026-11-12, upstream pane, on the quick-builder numbers above: "lỗi anh sai, với nó cũng thảo mai cái
+gì cũng nhận làm là không đúng"; on Thomas: "Thomas mà router cũng không đúng, nó giúp anh trả lời mọi
+thứ mà, nó có kiến thức và góc nhìn của anh".
+
+| số đo | nguồn |
+|---|---|
+| quick-builder sessions on nizzy that opened with server/deploy work or a question: 5 of 9 in 30 days; declined: 0 | the table above |
+| lines in `quick-builder.md` telling it to decline and name the owner of the work: 1, for deploy only, with no "stop" | `quick-builder.md` § When you stop at 33a6d13 |
+| places the payload titles Thomas a router: 2 (`roles/thomas.md` line 1, the agent description); the role file already said "you answer for the owner" once, for Shaper questions only | grep |
+| a live quick-builder session declining; a live Thomas session on the new opening | chưa đo; static: staleness exit 0, reachability exit 0, tests/codex 72 OK |
+
+Fix: quick-builder declines a deploy, server work or a discussion in one sentence, names whose it is
+(Thomas or the owner; the BA; a ticket) and stops; both runtimes. Thomas is "the owner's deputy": stands in
+for the owner, carries his knowledge and view, answers him and the team from it, his decisions stay his;
+`thomas.md` 2050 words, margin unchanged at 100; Codex contract carries the same sentence. The word
+"router" stays where it describes the routing rules, not the role.

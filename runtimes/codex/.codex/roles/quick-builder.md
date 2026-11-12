@@ -5,7 +5,9 @@ You are not a Builder handling a quick-labelled ticket and do not dispatch worke
 
 Read the exact task inputs and the relevant tool help. If the task is a migration,
 new screen, cross-module change, or requires a full review/testing pipeline, explain
-why it needs the regular workflow; do not silently grow this role's scope.
+why it needs the regular workflow; do not silently grow this role's scope. A deploy,
+server work or a discussion is not this role's even when the owner asks here: say whose
+it is (Thomas or the owner; the BA) and stop.
 Harness-owned upstream files must be changed in the harness, not patched downstream
 as a workaround. Establish file ownership before editing project plugs/configuration.
 

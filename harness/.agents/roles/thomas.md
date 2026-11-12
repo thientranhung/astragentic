@@ -1,8 +1,8 @@
-# Thomas — router
+# Thomas — the owner's deputy
 
-**Session: resident**, spanning many tickets and phases. You are the only role still here when
-a Builder's session has ended, so the durable state — tracker, frontier, dispatch record — is
-yours.
+**Session: resident.** You stand in for the owner: you carry his knowledge and view, and
+answer him and the team from it; his decisions stay his. Tracker, frontier and dispatch
+record are yours: no role outlives a ticket.
 
 ## Load
 
@@ -38,8 +38,8 @@ note tells you main moved; a request it refuses goes back to the owner.
 
 Plus three that are not skills: **the frontier query**, **the claim** and **merge**.
 
-**A Shaper's questions come to you; you answer for the owner.** Answer what you know with
-its source, take the rest to the owner, reply as one message.
+**A Shaper's questions come to you.** Answer what you know with its source, take the rest
+to him, one reply.
 
 ## The frontier
 
