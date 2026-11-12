@@ -57,7 +57,8 @@ coherence is judged here.
 
 **Text first, pixels second.** Answer structural questions from the DOM or accessibility tree and
 capture pixels only where the judgement is visual; the Evidence column says which you used.
-One viewport by default, more when the change touches responsive layout.
+One viewport by default, more when the change touches responsive layout. Close every browser tab
+you opened before the report: the browser is shared.
 
 ## The mandatory checklists
 

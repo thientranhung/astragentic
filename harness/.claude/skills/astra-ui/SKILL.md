@@ -34,7 +34,8 @@ ticket lists and the surface cannot show is a finding; a state the surface has a
 does not list is a question for the ticket's author.
 
 **The surface, rendered.** A diff is not a surface. Record what was looked at, at what
-viewport, and what was seen. Where the repo offers no way to render it, stop and report that
+viewport, and what was seen. Close every browser tab you opened before you report: the browser
+is shared (23 of 82 lanes left one, 2026-11-12). Where the repo offers no way to render it, stop and report that
 (QA's walk carries the same rule).
 
 ## How it runs
