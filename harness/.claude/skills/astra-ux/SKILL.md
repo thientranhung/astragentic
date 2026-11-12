@@ -6,8 +6,8 @@ description: "Capture the owner's user journeys before any spec is written: who 
 # UX: journeys from the owner's mouth
 
 Journeys are **captured, not authored**. The owner narrates a real session; you structure it.
-Never volunteer colours, patterns or a direction; if seeing helps, ask the owner for a
-screenshot or a sketch, do not make one.
+Never volunteer colours, patterns or a direction. A screenshot of the product as it runs
+today is a fact you may take; a sketch of what it should become is the owner's to give.
 
 ## When to run, when to skip
 

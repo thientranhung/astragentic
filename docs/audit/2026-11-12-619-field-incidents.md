@@ -57,3 +57,37 @@ close the tabs); § What you do not do keeps "act on production". Text only: no 
 read from a write in the browser, so the no-write half is unenforced.
 
 By hand downstream: none after the upgrade; until then the ruling lives in the project's BA memory.
+
+## I-3 — the BA role is a decision clerk: nothing in it puts the BA in the user's seat
+
+Owner order 2026-11-12 in nizzy's BA session ("role BA markdown như vậy là chưa chuẩn. Cần thiết kế lại
+đi em. Hỏi bmad distilled xem"), repeated in the upstream pane ("tham khảo bmad distilled … để thiết kế
+role ba"). Proposal from the BA session: `~/.astraler/handoff/etsy-fulfillment-thanh/2026-11-12-ba-role-redesign.md`.
+
+| số đo | nguồn |
+|---|---|
+| asked about a screen users get lost on, the BA's calls before the owner's "tại sao không mở prod được": 3 code reads (13:58:42–48Z), 0 browser calls; n=1 session | nizzy transcript `6928dd24…` |
+| lines in `ba.md` about looking at the product, discovery or the user's problem before this batch: 0 of 70 | `ba.md` at 9dfbf78 |
+| `ba.md` words: 953 → 1334; not among the 4 roles the staleness audit budgets (default ceiling 1200 would not pass it) | `wc -w`; `docs-staleness-audit.sh` output |
+| field use of the research row, the re-walk after a fix and the "still stuck: why?" question | chưa đo (owner-directed design) |
+| a live BA session on the new role | chưa đo; static checks only: staleness exit 0, reachability exit 0, tests/codex 72 OK |
+
+Sources read for the method (docs only, no name ships in the payload, ruling 2026-10-29): `docs/bmad-distilled/roster.md`
+(the analyst), `capabilities/product-brief.md`, `prfaq.md`, `forge-idea.md`, `market-research.md`,
+`domain-research.md`; `docs/bmad-distilled-latest/capabilities/advanced-elicitation.md`, `ux.md`.
+
+Taken: whole problem first then "anything else?", stakes read early, drill after the broad shape; the
+user's problem before a solution, how they cope today, terms kept apart; coach not quiz, a hypothesis
+when stuck, no agreement to smooth; assumptions marked, unknowns said; answer first; one pre-mortem
+question per actor; three ends (hardened, killed, clearer). Added from the field: the walk (three
+questions per screen, stuck point with screenshot beside the handoff file, read-only, map to code after).
+Not taken: brainstorming to 100 ideas, the PRFAQ document, full market reports, the 71-method menu,
+personas (astra-ux already caps actors). Kept: every discussion is the BA's (ruling 2026-10-23), ticket
+only on the owner's yes, handoff file, blast radius, sizing, memory.
+
+Differences from the proposal: no project names or competitor examples; journeys stay with `astra-ux`
+(captured, never authored), which now lets the BA take a screenshot of the product as it runs; the
+re-walk is not a gate. Lands in `harness/.agents/roles/ba.md`, `harness/.claude/agents/ba.md`
+(description, compaction list), `runtimes/codex/.codex/roles/ba.md`, both `astra-ux` mirrors.
+
+By hand downstream: restart the BA session after the upgrade.
