@@ -1,3 +1,39 @@
+# Astragentic 6.1.11
+
+One owner ruling (2026-11-12): a change of a few lines was cut as a ticket and run as a lane. Batch file:
+`docs/audit/2026-11-12-6110-field-incidents.md` (J-1). Role and skill text only; no mod, guard or checker
+change.
+
+| số đo | nguồn |
+|---|---|
+| Builder lanes since 2026-10-27 that merged 20 non-test lines or fewer: nizzy 6 of 100, inception 12 of 194; median 88 to 118 model calls, 6 to 10 min of pane, $3.6 to $6.6 at Sonnet list price | `git diff --numstat` per merge, joined to the Builder transcripts |
+| TRA-1428 (17 lines, 3 files): an issue, a record entry, a Builder pane and 20 tool calls in the dispatcher's pane over 9 min; the dispatcher wrote the lines itself inside the Builder's worktree and merged before the review bell | nizzy root transcript, 2026-11-12 |
+| lines in the payload that let the dispatcher send a change anywhere but a ticket: 0 | payload at v6.1.10 |
+| dispatcher-pane cost per small ticket (cut, claim, dispatch, merge, write-back) | chưa đo |
+
+**An owner change judged by looking at the result is not a ticket** (nizzy TRA-1428; owner: "sửa UI nhẹ chỉ
+vài dòng code thì nó cũng cắt tạo ticket"). A colour, a label, spacing, copy or data, off the risky paths:
+Thomas cuts nothing, opens a Quick Builder pane (`dispatch-ticket` § Not a ticket, Herdr and Orca), sends
+the owner's words and answers the pane's before/after for him. No issue, claim, record entry, brief or
+marker. Work the pane returns as needing tests or a review becomes a ticket. The Quick Builder takes
+Thomas's word as the owner's when Thomas sent the task; the BA names such a change a quick-builder change
+and, on the owner's yes, sends Thomas his words. `thomas.md` 2049 words.
+
+Static: selftest 250/0 from a clean clone, tests/codex 72 OK, staleness and reachability exit 0. Live: chưa
+đo; the two launch commands in the skill were not executed before this tag (owner's call).
+
+Not covered: a Thomas-opened pane runs unattended under `--dangerously-skip-permissions` with no lane key,
+so it has no TURN-END bell, no watchdog and no project refused-commands list; only the git guard's quick
+gate bounds it (`ops/*`, `--ff-only`, push to the base), and a stalled pane is silent until Thomas reads it.
+Thomas gives the word only when his base equals origin's and no merge of his waits unpushed.
+
+Codex lane: `roles/thomas.md` carries the recognition rule and cuts nothing; the pane stays owner-opened
+(`launch.py quick-builder`), because the Codex dispatch path has no launch for an unrecorded owner role.
+
+By hand downstream: restart an open Thomas, BA or Quick Builder session to load the new role text. A
+project that keeps its own copy of `thomas.md`, `ba.md` or `quick-builder.md` reconciles it. The
+`builder-quick` row in `.agents/orchestrator.md` sets the pane's model; a project without the row adds it.
+
 # Astragentic 6.1.10
 
 Role and workflow fixes from one day of owner rulings and two downstream sessions (2026-11-12). Batch file:
