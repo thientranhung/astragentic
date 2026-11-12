@@ -91,3 +91,28 @@ re-walk is not a gate. Lands in `harness/.agents/roles/ba.md`, `harness/.claude/
 (description, compaction list), `runtimes/codex/.codex/roles/ba.md`, both `astra-ux` mirrors.
 
 By hand downstream: restart the BA session after the upgrade.
+
+## I-4 — two agent files name skills the payload no longer ships
+
+Found 2026-11-12 while answering the owner ("Thomas được gọi là gì").
+
+| số đo | nguồn |
+|---|---|
+| skills named in `harness/.claude/agents/thomas.md` description that have no directory under `harness/.claude/skills/`: 4 of 4 (triage, wayfinder, to-questionnaire, ask-matt); mentions of the last three in `roles/thomas.md`: 0 | `ls harness/.claude/skills`; grep |
+| `harness/.claude/agents/shaper.md` hands a compacted effort back "for `wayfinder`": 1 line | grep |
+| sessions that tried to call one of them because of these lines | chưa đo |
+
+Fix: the description names what Thomas drives today (reconcile-tracker, astra-ux, dispatch, the QA walk);
+the Shaper hands back to Thomas. Text only.
+
+## Measured, not changed — quick-builder against its use
+
+| số đo | nguồn |
+|---|---|
+| quick-builder sessions in 30 days: nizzy 9, inception 0 | transcripts, `agentSetting` |
+| sessions that ran the role's one git shape (a commit): 3 of 9 | `git commit` Bash calls |
+| sessions that were server or deploy work over ssh: 3 (40 ssh calls); GitHub-side or cluster ops with no commit: 3; questions only: 2 (classified from the opening messages, one label per session beside the commit count) | same transcripts |
+| guard refusals seen in those sessions: 1 | tool results |
+| the role's line "The owner asks for a deploy: that is Thomas's … not yours" against that use: quick did the deploy steps on the owner's word in 2 sessions, refused 0 | first replies of `cc97d3b2`, `63c15686` |
+
+Not changed: widening the role to ops is the Devop question the owner parked 2026-10-27.
