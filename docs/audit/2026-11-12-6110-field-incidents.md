@@ -45,6 +45,16 @@ Bound on the lane, unchanged: `hook-git-guard.py` quick gate (ops/* branch, `--f
 planted in `selftest.sh` (a guard with the gate off lets `git rebase main` through). No size checker added:
 no field number for one.
 
+Not covered: a Thomas-opened pane runs unattended under `--dangerously-skip-permissions` (the owner-opened
+one is permissioned and attended); it carries no lane key, so no TURN-END bell, no watchdog and no
+`refused-in-dispatched-panes` list apply, and a stalled pane is silent until Thomas reads it. The two launch
+commands in the skill have not been executed: one real launch on Herdr and one on Orca before any tag. The
+skill tells Thomas to give the word only when his base equals origin's and no merge of his waits unpushed
+(TRA-1428: his local merge sat unpushed 15:53:37 to 15:56:29Z, and the pane pushes the base from the root).
+A rule saying every change is a ticket: none found in the payload's role, rule and skill text, nor in
+nizzy's or inception's CLAUDE.md, AGENTS.md, rules, roles and overlays (grep, 6 patterns); the ticket was the
+only route the payload gave, not a rule a project added.
+
 Assumptions stated to the owner: the role keeps the name `quick-builder` (a rename touches the guard, the mod,
 the Codex launcher, the README and every project's tab); the three-way call is no ticket / `quick` ticket /
 `full` ticket, the first Thomas's, the other two the cutter's.

@@ -105,16 +105,16 @@ ticket, one Builder, one pane, one worktree; several run at once on the frontier
 ## Not a ticket
 
 **A change the owner judges by looking at the result is not a ticket**: a colour, a label,
-spacing, copy, a data row, off the risky paths (`builder.md` § A quick ticket). Open
+spacing, copy, data, off the risky paths (`builder.md` § A quick ticket). Open
 a Quick Builder pane (`dispatch-ticket` § Not a ticket), send his words, answer its
-before/after for him. Its last line tells you main moved; work it returns becomes a ticket.
+before/after for him. Its note says main moved; work it returns becomes a ticket.
 
 ## Quick or full
 
 **The cutter labels every ticket `quick` or `full` (`shaper.md` § Spec and tickets); you never
 do.** The mod reads the label at your brief and sets the gates; an unlabelled ticket goes back
 to the cutter unsent. A quick ticket owes no marker at merge. A handback saying the work
-outgrew the label is a relabel to `full` and a fresh brief.
+outgrew the label is a relabel to `full` and a fresh brief, never a steer.
 
 **Steer** the Builder directly via SendMessage. A pane's status is a bell; the verdict is the diff and the tests. A TURN-END that says it waits on agents while its `Agents:` line reads 0 running is parked: send it on. A junior pane (`dispatch-junior`) is the Builder's; its commits arrive in the handback, trailered `Implemented-by:`.
 
