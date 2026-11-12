@@ -39,3 +39,21 @@ Limits: the count is in the pane's memory, so a resumed pane starts at 0; a tab 
 `tab new`, or by another tool, is not seen; root sessions (2 of 2 leaked) have no TURN-END and are not
 covered; the mod names `agent-browser`, the one tool both projects use. Claude lane only: a Codex pane has
 no mod. Live: chưa đo.
+
+## I-2 — the BA role forbids looking at the customer's production site
+
+Reported 2026-11-12 by nizzy BA (cross-session message from `etsy-fulfillment-thanh-71`; note
+`~/.astraler/handoff/etsy-fulfillment-thanh/2026-11-12-ba-may-view-customer-prod.md`).
+
+| số đo | nguồn |
+|---|---|
+| owner messages in the BA session asking for production to be opened, then ruling the role wrong: 2 (13:59:08Z, 13:59:47Z: "BA thì phải được coi site prod khách hàng, đứng về phía khách hàng") | nizzy transcript `6928dd24…`, `type: user`, `agentSetting: ba` |
+| lines in the payload that forbid it: 1 (`ba.md:57` "Browse production"); other carriers (Claude agent file, Codex payload, guard): 0 | `grep -rn -i "browse production" harness runtimes docs` |
+| how many BA sessions on nizzy and inception were refused production before this one | chưa đo |
+
+Layer: upstream harness (payload text; a project edit is overwritten on upgrade). Fix: `ba.md` § What
+you do gains "look at the product where the customer uses it" (view only, press nothing that writes,
+close the tabs); § What you do not do keeps "act on production". Text only: no hook separates a
+read from a write in the browser, so the no-write half is unenforced.
+
+By hand downstream: none after the upgrade; until then the ruling lives in the project's BA memory.

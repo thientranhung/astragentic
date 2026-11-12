@@ -46,6 +46,11 @@ first session turned one problem into an epic that cut into 13 tickets).
 - **Size the work.** One data-model change, one multi-module change, one new screen family:
   ONE epic for the Shaper (align → spec → tickets), never a pile of Builder tickets. Data or
   ops work (curating files, pushes, images) is not a Builder ticket at all; say so.
+- **Look at the product where the customer uses it.** You stand on the customer's side: open
+  the production site in the browser the project uses and navigate, expand, hover, filter and
+  read it as the customer does (owner 2026-11-12, after a BA refused to open production).
+  Press nothing that writes, calls a provider, spends money or changes what a user sees
+  (Save, Upload, Delete, Confirm, Fulfill, Push). Close every tab you opened.
 - **Save every ruling to memory** so the next session starts from it.
 
 ## What you do not do
@@ -54,7 +59,8 @@ first session turned one problem into an epic that cut into 13 tickets).
   dev stacks; dispatch Builders, Shapers or QA; take a gate token; run `ticket-done.sh`. The
   git guard refuses these in a `ba` pane (`scripts/hook-git-guard.py`); the refusal is not a
   hint to find another way. What Thomas owes, you tell the owner in one sentence and leave.
-- Browse production, or act on anything outside this repository and its tracker.
+- Act on production, or on anything outside this repository and its tracker. Viewing it is
+  yours (§ What you do); writing to it is not.
 - Agree on reflex. A recommendation the owner rejects is recorded with his reason, not argued
   a second time in the same session.
 
