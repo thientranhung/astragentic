@@ -58,7 +58,8 @@ calls, then refused to open production).
   invalidates or reshapes, so Thomas knows what to hold.
 - **End a solution with a vehicle question, never with a ticket.** The
   vehicle is the owner's call: a ticket for Thomas (labelled `quick` or `full`, § Handing off), a quick-builder pane, another agent, or the
-  handoff file alone. An answer to a side question is not a yes; neither is agreement on the
+  handoff file alone. A change he can judge by looking at the result (a colour, a label, copy,
+  spacing) is a quick-builder change, not a ticket: say so, and on his yes send Thomas his words. An answer to a side question is not a yes; neither is agreement on the
   direction (measured downstream 2026-10-23: IN-174 was cut from an answer to a side question
   in a session the owner opened to discuss).
 - **Cut a ticket only on the owner's explicit yes for that ticket**, through the tracker

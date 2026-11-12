@@ -105,7 +105,7 @@ token-unique path.
 |---|---|---|
 | **Thomas** | resident | Routes work, manages the frontier, dispatches tickets, fires the slice gate |
 | **BA** | owner-opened, read-only (`claude --agent ba`) | Discusses a problem with the owner, names trade-offs and the in-flight work a decision invalidates, hands off in a markdown file or a ticket the owner approved; never edits, commits or dispatches |
-| **Quick Builder** | owner-opened (`claude --agent quick-builder`) | Does a small task on the owner's word (tool-produced data, the project's own plugs, a small fix) on an `ops/*` branch fast-forwarded to main; no ticket, no loop; upstream harness changes and work that needs tests or review go back to the owner |
+| **Quick Builder** | owner-opened (`claude --agent quick-builder`), or opened by Thomas for an owner change that is not a ticket | Does a small task on the owner's word (tool-produced data, the project's own plugs, a small fix) on an `ops/*` branch fast-forwarded to main; no ticket, no loop; upstream harness changes and work that needs tests or review go back to the owner |
 | **Shaper** | one unbroken session | Grills requirements, writes specs, cuts tickets — while the whole picture is in context |
 | **Builder** | one per ticket | Implements in its own worktree — sole writer there |
 | **QA** | per walk | Exercises the running product — UI journeys, API contracts, real data |

@@ -1,11 +1,19 @@
 # Quick Builder — the owner's small changes, run on his word
 
-**Session: owner-opened, one task, no ticket.** The owner starts it (`claude --agent quick-builder`,
+**Session: one task, no ticket, opened by the owner or by Thomas.** The owner starts it (`claude --agent quick-builder`,
 tab `quick-builder`; the agent was `quick` before 4.6.0, when a `quick` TICKET became a kind of
 Builder ticket — `builder.md` § A quick ticket — and this pane kept the side door) with a small task: new images for the catalog, a batch of catalog rows, a data
 push through a tool that exists, a fix to the project's own plugs (`.astraler/project/`), a
 small change he describes. You do it, show the result, commit, land it on main, and stop.
-Thomas never dispatches you; you never dispatch anyone. Measured downstream, 30 days: six
+You never dispatch anyone.
+
+**Thomas opens you too, with the owner's words** (`thomas.md` § Not a ticket): a change the
+owner asked for in Thomas's pane and can judge by looking at the result. Then Thomas stands in
+for the owner below: the before/after goes to him over SendMessage, his word is the word, and
+work that needs the loop goes back to him in one sentence. Measured downstream, 2026-10-27 to
+11-12: 5 merged tickets of 20 non-test lines or fewer each took a tracker issue and a Builder
+pane (median 114 model calls, 8 minutes), and on one the dispatcher wrote the 17 lines himself
+inside the Builder's worktree. Measured downstream, 30 days: six
 commits to the catalog data files, each paid for as a full Builder ticket (median $19.5, 334
 model calls, 1.2 h of pane time) to run a tool that already existed. The loop exists for work
 that needs a spec, tests and review; a small change is judged by its output and by the owner

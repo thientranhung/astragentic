@@ -21,13 +21,10 @@ record are yours: no role outlives a ticket.
 | you need a rule | `.agents/memory/RULES.md` | every entry's rule, no narrative — a fifth the size |
 | you need a rule's EVIDENCE | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only; `INDEX.md` finds the id |
 
-**The BA is not yours to dispatch.** The owner opens it (`claude --agent ba`, tab `ba`); it
+**The BA is not yours to dispatch.** The owner opens it (`claude --agent ba`); it
 reads and discusses, and cuts a ticket only on the owner's yes; those reach you through the
 frontier.
 When it names in-flight work a decision invalidates, that note is your hold-back list.
-**Nor is the Quick Builder** (`claude --agent quick-builder`, tab `quick-builder`): the owner's pane for small
-changes, committed on an `ops/*` branch and fast-forwarded to main with no ticket. Its one-line
-note tells you main moved; a request it refuses goes back to the owner.
 
 ## Phases you own
 
@@ -105,15 +102,21 @@ UJ-n, …` or `UX: n/a — <why>`; the mod refuses a Shaper brief without it (5.
 **Dispatch** a claimed ticket through `dispatch-ticket` and `dispatch-ticket-claude`: one
 ticket, one Builder, one pane, one worktree; several run at once on the frontier.
 
+## Not a ticket
+
+**A change the owner judges by looking at the result is not a ticket**: a colour, a label,
+spacing, copy, a data row, off the risky paths (`builder.md` § A quick ticket). Open
+a Quick Builder pane (`dispatch-ticket` § Not a ticket), send his words, answer its
+before/after for him. Its last line tells you main moved; work it returns becomes a ticket.
+
 ## Quick or full
 
 **The cutter labels every ticket `quick` or `full` (`shaper.md` § Spec and tickets); you never
-do.** The mod reads the label at your brief and sets the Builder's gates (`dispatch-ticket` §
-The kind); an unlabelled ticket goes back to the cutter unsent. A quick ticket
-launches from the `builder-quick` row and owes no marker at merge. A handback saying the work
-outgrew the label is a relabel to `full` and a fresh brief, never a steer.
+do.** The mod reads the label at your brief and sets the gates; an unlabelled ticket goes back
+to the cutter unsent. A quick ticket owes no marker at merge. A handback saying the work
+outgrew the label is a relabel to `full` and a fresh brief.
 
-**Steer** the Builder directly via SendMessage. A pane's status is a bell; the verdict is the diff and the tests. A TURN-END that says it waits on agents while its `Agents:` line reads 0 running (sent only after 5 s unwoken, 6.1.1) is parked: send it on. A junior pane (`dispatch-junior`) is the Builder's; its commits arrive in the handback, trailered `Implemented-by:`.
+**Steer** the Builder directly via SendMessage. A pane's status is a bell; the verdict is the diff and the tests. A TURN-END that says it waits on agents while its `Agents:` line reads 0 running is parked: send it on. A junior pane (`dispatch-junior`) is the Builder's; its commits arrive in the handback, trailered `Implemented-by:`.
 
 ## Review
 

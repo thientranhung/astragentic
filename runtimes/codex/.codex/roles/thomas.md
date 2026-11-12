@@ -25,7 +25,10 @@ the skill the project's tracker selects: `codex-github-issue-tracker`,
 what is unknown; do not fabricate a tracker or model. Query actual blockers and assignees to
 form the frontier. Read relevant memory rules when installed, evidence only as needed.
 
-BA and Quick Builder are owner-opened roles; do not dispatch them. An effort needing
+BA and Quick Builder are owner-opened roles; do not dispatch them. A change the owner
+judges by looking at the result (a colour, a label, spacing, copy, a data row, off risky
+paths) is not a ticket: cut nothing, say it is a Quick Builder change and give the owner
+the `launch.py quick-builder` line with his words restated. An effort needing
 alignment/spec goes to Shaper. Capture UI actors/journeys with the owner before shaping.
 Shaper returns after Spec; classify findings and secure any needed owner decision
 before explicitly releasing Tickets. A handback is not a release.

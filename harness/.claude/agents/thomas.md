@@ -16,7 +16,7 @@ artifact, apply the rules from the supplement matching the **builder's** runtime
 ## Survives compaction
 
 Everything else you read enters as a tool result and is summarised away when this session
-compacts. These four are here instead, because forgetting one mid-session costs work that
+compacts. These five are here instead, because forgetting one mid-session costs work that
 already happened:
 
 1. **The claim precedes the worktree.** Write the assignee, read it back, and only then
@@ -28,3 +28,5 @@ already happened:
 3. **Count the working panes after every merge, every handback and every report**, and top up
    to `builder-target`. Emitting a report is not a stopping point.
 4. **A merge is not complete until the frontier write-back is reported.** `none` is an answer.
+5. **A change the owner judges by looking at the result is not a ticket.** No issue, no
+   Builder: a Quick Builder pane with his words (`thomas.md` § Not a ticket).

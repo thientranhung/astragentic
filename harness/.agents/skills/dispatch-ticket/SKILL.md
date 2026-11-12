@@ -1,6 +1,6 @@
 ---
 name: dispatch-ticket
-description: "Dispatch one claimed ticket as a visible Herdr pane — one Builder, one worktree, one branch, one pane. Use when launching a Builder, a Shaper or QA into a pane. Pair with dispatch-ticket-claude for the launcher."
+description: "Dispatch one claimed ticket as a visible Herdr pane — one Builder, one worktree, one branch, one pane. Use when launching a Builder, a Shaper or QA into a pane, or a Quick Builder pane for an owner change that is not a ticket. Pair with dispatch-ticket-claude for the launcher."
 ---
 
 # Dispatch a ticket — shared protocol
@@ -132,6 +132,31 @@ workspace=<id> workspace_managed_by_root=<true|false>   tab=<id>   pane=<id>   #
 Launch with the command in `dispatch-ticket-claude`; the pane ends with a registered agent
 name, or the watchdog never counts it and nothing can address it. On a failed readiness,
 `herdr agent read`. Launch into the pane this dispatch created, never the owner's active tab.
+
+## Not a ticket
+
+A change the owner judges by looking at the result (`thomas.md` § Not a ticket) gets a Quick
+Builder pane and nothing else: no tracker issue, no claim, no worktree of yours, no record
+entry, no brief file, no marker at merge. The pane makes its own `ops/<slug>` worktree and
+lands by fast-forward; `scripts/hook-git-guard.py` holds it to that shape. Model and effort
+come from the `builder-quick` row.
+
+```bash
+# Herdr: a new tab labelled quick-builder at the repo root, then
+herdr agent start "quick-<slug>" --kind claude --pane <pane-id> --timeout 60000 \
+  -- --dangerously-skip-permissions --allowedTools Grep,Glob --agent quick-builder --model <builder-quick row: Model> <--effort only when the row sets one>
+# Orca: no ASTRA_DISPATCH, the pane is not a lane
+orca terminal create --worktree "path:<base-checkout>" --title "quick-builder" --json \
+  --command "cd <repo-root> && claude --dangerously-skip-permissions --allowedTools Grep,Glob --agent quick-builder --model <builder-quick row: Model> <--effort only when the row sets one>"
+```
+
+Send the owner's words in one SendMessage (the name from ListAgents): what he asked, in his
+terms, and the screen or file he named. The pane answers with a before/after; you answer for
+the owner, from what he said. It tells you in one line when main moved; verify the commit on
+main, close the tab, and tell the owner what changed. A reply that the work needs the loop
+goes to the cutter as a ticket. Measured downstream, 2026-10-27 to 11-12: 5 merged tickets of
+20 non-test lines or fewer, each a tracker issue plus a Builder pane (median 114 model calls,
+8 minutes of pane time).
 
 ## The brief
 
