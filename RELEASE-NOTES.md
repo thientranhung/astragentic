@@ -1,3 +1,55 @@
+# Astragentic 6.1.10
+
+Role and workflow fixes from one day of owner rulings and two downstream sessions (2026-11-12). Batch file:
+`docs/audit/2026-11-12-619-field-incidents.md` (I-1 to I-5). All but one item is role or skill text; the
+one mod change runs on the Claude lane only.
+
+| số đo | nguồn |
+|---|---|
+| `agent-browser … tab new` against `tab close` in 10 days on nizzy and inception: 172 against 148; lanes that left a tab: 23 of 82 (Builder 16 of 44, QA 5 of 36, root 2 of 2); lines in the harness telling a lane to close its tabs: 0 | transcripts of both projects; grep of the payload |
+| BA asked about a screen users get lost on: 3 code reads and 0 browser calls before the owner asked why production was not opened; 1 line in the payload forbade it (`ba.md` "Browse production") | nizzy BA transcript `6928dd24…`, 2026-11-12 |
+| lines in `ba.md` about discovery, the user's problem or looking at the product: 0 of 70 | `ba.md` at v6.1.9 |
+| quick-builder sessions on nizzy in 30 days: 9; opened with server/deploy work or a question: 5; declined: 0 | transcripts, `agentSetting` |
+| skills named in the `thomas` agent description with no directory in the payload: 4 of 4; 1 more in the `shaper` agent file | `ls harness/.claude/skills`; grep |
+
+**A lane closes the browser tabs it opened, and its TURN-END says how many are still open** (nizzy and
+inception; owner: the workflow that opens a tab closes it, not the browser skill). `astra-ui` and `qa.md`
+carry the rule. In a dispatched Claude pane the mod counts `agent-browser … tab new` and `tab close` that
+ran, and the TURN-END line reads `Browser tabs open: n`; a refused or failed `tab new` is not counted.
+Driver (stub): a pane that opened one tab and closed none names 1; planted, the line gone. Live: chưa đo.
+Not covered: root sessions, Codex panes, a page opened without `tab new`; the count lives in the pane's
+memory and restarts with it.
+
+**The BA sits in the user's seat** (nizzy BA session; owner: "BA thì phải được coi site prod khách hàng,
+đứng về phía khách hàng", then "thiết kế lại … hỏi bmad distilled"). The role now opens with discovery
+(the whole problem first, the user's problem before a solution, coach rather than quiz, assumptions and
+unknowns marked, the answer first), and walks the running product as its actor, production included,
+read-only: three questions per screen, each stuck point recorded with actor, step and a screenshot beside
+the handoff file, mapped to code and in-flight tickets after the walk. It presses nothing that writes and
+closes its tabs. A re-walk after a fix is the BA's when the owner opens it; it is not a gate. A discussion
+may end hardened, killed or only clearer. Kept: ticket only on the owner's yes, the handoff file, blast
+radius, sizing, memory. `astra-ux` now lets the pane take a screenshot of the product as it runs; a sketch
+of what it should become stays the owner's. `ba.md` 953 → 1334 words. The no-write half is text: no hook
+tells a browser read from a write. Live BA session on the new role: chưa đo.
+
+**Quick Builder declines what is not its pane's** (owner: "cái gì cũng nhận làm là không đúng"). A deploy,
+server work or a discussion is answered in one sentence naming whose it is (Thomas or the owner; the BA; a
+ticket), then it stops. Live: chưa đo.
+
+**Thomas is the owner's deputy, not a router** (owner: "nó có kiến thức và góc nhìn của anh"). The role file
+and the agent description say he stands in for the owner, answers him and the team from the owner's
+knowledge and view, and leaves the owner's decisions with the owner. No rule of the frontier, claim,
+dispatch or merge changed; `thomas.md` stays at 2050 words.
+
+**The `thomas` and `shaper` agent files no longer name skills the payload does not ship** (triage,
+wayfinder, to-questionnaire, ask-matt). Sessions that tried to call one: chưa đo.
+
+Codex lane: the BA, Quick Builder and Thomas contracts under `runtimes/codex/.codex/roles/` carry the same
+rules. The tab count on TURN-END and the `astra-ui` line reach Codex only as the mirrored skill text.
+
+By hand downstream: restart an open BA, Quick Builder or Thomas session to load the new role text. A
+project that keeps its own copy of `ba.md` reconciles it. Nothing else.
+
 # Astragentic 6.1.9
 
 Two fixes from one nizzy report (2026-11-12, Orca): an Orca restart restored both Builder panes without
