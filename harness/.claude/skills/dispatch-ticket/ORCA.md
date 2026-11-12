@@ -81,10 +81,10 @@ The session that ran the `terminal create` owns the pane's record bell: the mod 
 the key at the create, so another root session's poll leaves it (inception 2026-11-10: a Thomas left
 open since 10-30 took 3 of 3 QA bells). `woken_at` says a poll consumed the bell, not who saw it.
 After an Orca restart the pane comes back as a bare `claude --resume <id>` with no `ASTRA_DISPATCH`
-(nizzy 2026-11-12, 2 of 2 Builders: 0 turn ends for 2 handbacks, 5 commits past the commit gate). The
+(nizzy 2026-11-12, 2 of 2 Builders: 0 turn ends for 2 handbacks, 5 commits with no pane gate loaded). The
 mod takes the role and key back from the pane's own record entry (same `ORCA_PANE_KEY` and session
-id), records the new terminal handle, and the turn end comes by the record within the 30 s poll. The
-restarted dispatcher re-reads the record; it does not re-send the brief.
+id), records the new terminal handle, and writes the turn end on the record, where the restarted
+dispatcher's poll rings it (driver; a real restart chưa đo). The brief is not re-sent.
 
 ## Cleanup (CLEANUP.md)
 

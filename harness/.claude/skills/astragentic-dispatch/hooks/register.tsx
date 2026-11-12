@@ -818,7 +818,7 @@ async function whoAmI($: any, root: string | null): Promise<Me | null> {
     // 6.1.9 — Orca restores a pane after its own restart with a bare `claude --resume <id>`: the
     // launch line's ASTRA_DISPATCH is gone, ORCA_PANE_KEY and the session id are the same (nizzy
     // 2026-11-12, 2 of 2 Builders). With no identity the pane ran as a root session: 0 TURN-END
-    // for 2 handbacks, 5 commits past the commit gate, 3 skills off the record. The record entry
+    // for 2 handbacks, 5 commits with no pane gate loaded, 3 skills off the record. The record entry
     // this pane wrote before the restart names it; both the pane key and the session id must
     // match, so a fresh `claude` typed into a dead Builder's pane stays a root session.
     if (!m && tab && pane && root) {

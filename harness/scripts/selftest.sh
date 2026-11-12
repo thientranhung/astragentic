@@ -2046,7 +2046,16 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     // 6.1.7 — a lane key the shell has not expanded yet is refused at the create (nizzy 2026-11-11: a loop claimed `$t`)
     const claimLoop = (await cmdOf('for t in AB-11 AB-12; do orca terminal create --title "ticket:$t" --command "cd /w && ASTRA_DISPATCH=ticket:$t claude"; done')).slice(0, 9)
     const claimLoopNoEntry = !('$t' in JSON.parse(fs.readFileSync(recPath, 'utf8')))
-    console.log(JSON.stringify({ closeSubst, closeBacktick, closeLiteral, closeLiteralReaped, orphanLiveKept, disconnectedReaped, createClaim, claimLoop, claimLoopNoEntry }))
+    // 6.1.9 — the dispatcher restarted with Orca too: the entry a restored pane wrote names the old
+    // dispatcher's socket, which is gone; this session's poll rings it once and keeps the entry
+    const rung = []; $.prompt.submit = async p => { rung.push(String(p.text).split('\n')[0]) }
+    selfSock = path.join(root, 'self.sock')
+    fs.writeFileSync(recPath, JSON.stringify({ 'AB-7': { role: 'builder', host: 'orca', pane_id: 'tab7:leaf7', tab_id: 'tab7', terminal: 'term_7', session_id: 's7', dispatcher: `uds:${root}/gone.sock`, last_brief_received_at: 1, last_turn_end_at: 2, last_turn_reason: 'answer', turn_end_pending: { at: 2, reason: 'the pane was resumed without its launch environment (a host restart); its dispatcher address went with the old process', text: '[astragentic-dispatch] TURN-END key=AB-7 pane=tab7:leaf7 reason=answer\nhandback' } } }))
+    await every(); await every()
+    const after7 = JSON.parse(fs.readFileSync(recPath, 'utf8'))['AB-7']
+    const restartBell = `${rung.filter(b => b.includes('builder AB-7 ended its turn (answer)')).length}:${Boolean(after7?.turn_end_pending?.woken_at)}:${after7?.pane_id === 'tab7:leaf7'}`
+    selfSock = undefined
+    console.log(JSON.stringify({ closeSubst, closeBacktick, closeLiteral, closeLiteralReaped, orphanLiveKept, disconnectedReaped, createClaim, claimLoop, claimLoopNoEntry, restartBell }))
     return
   }
   if (isPane) {
@@ -2893,8 +2902,8 @@ EOS
     bad "mod orca pane" "$out"
   fi
   out="$(mod_drive "$MOD" orcadisp)"
-  if says "$out" '"closeSubst":"deny:held:literal","closeBacktick":"deny:held:literal","closeLiteral":"pass:ran:-","closeLiteralReaped":true,"orphanLiveKept":true,"disconnectedReaped":true,"createClaim":"true,true","claimLoop":"deny:held","claimLoopNoEntry":true'; then
-    ok "orca dispatcher (6.1.1): a terminal close with a substituted --terminal is refused and told to pass the literal handle; a literal close on an entry whose worktree is gone removes the entry; at git worktree remove an orphaned-but-connected terminal keeps its entry and a disconnected one goes; the session that creates a pane claims its entry as dispatcher"
+  if says "$out" '"closeSubst":"deny:held:literal","closeBacktick":"deny:held:literal","closeLiteral":"pass:ran:-","closeLiteralReaped":true,"orphanLiveKept":true,"disconnectedReaped":true,"createClaim":"true,true","claimLoop":"deny:held","claimLoopNoEntry":true,"restartBell":"1:true:true"'; then
+    ok "orca dispatcher (6.1.1): a terminal close with a substituted --terminal is refused and told to pass the literal handle; a literal close on an entry whose worktree is gone removes the entry; at git worktree remove an orphaned-but-connected terminal keeps its entry and a disconnected one goes; the session that creates a pane claims its entry as dispatcher; a pending turn end whose dispatcher socket is gone (both restarted, 6.1.9) rings once here and the entry stays"
   else
     bad "mod orca close" "$out"
   fi
