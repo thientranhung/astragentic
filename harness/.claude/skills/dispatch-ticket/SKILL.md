@@ -162,7 +162,7 @@ goes to the cutter as a ticket. Measured downstream, 2026-10-27 to 11-12: 5 merg
 from the root, where you merge. Give the word only when your local base equals origin's and no
 merge of yours waits unpushed; otherwise finish that merge and its write-back first. **The
 pane is not a lane**: it has no TURN-END bell, no watchdog and no
-`refused-in-dispatched-panes` list, and only the git guard bounds it. A pane that has said
+refused-commands list of the project, and only the git guard bounds it. A pane that has said
 nothing since your send is read (`herdr agent read`, `orca terminal read`), not waited on; close
 it by the tab id or the literal handle its create returned.
 
