@@ -1,3 +1,43 @@
+# Astragentic 6.1.9
+
+Two fixes from one nizzy report (2026-11-12, Orca): an Orca restart restored both Builder panes without
+their identity. Batch file: `docs/audit/2026-11-12-618-field-incidents.md` (I-1, I-2).
+
+| số đo | nguồn |
+|---|---|
+| Builders Orca restored as a bare `claude … --resume <id>`: 2 of 2; `ASTRA_DISPATCH` in their environment: 0 of 2; `ORCA_PANE_KEY` and the session id equal to the record's: 2 of 2 | `ps eww` on the two processes; nizzy `dispatch-record.json` |
+| turn ends on the record for 2 handbacks: 0; found by reading the panes ~70 min later | record, two Builder transcripts; the report |
+| commits after the resume made with no pane gate loaded: 5 (how many a gate would have refused: chưa đo); Skill calls missing from `skills_log`: 3 of 3 | Builder transcripts against the record |
+| "is mid-turn" refusals after both Builders had handed back: 3 (1 `orca terminal close`, 2 `git worktree remove`; the terminal `connected: false` at 1, `connected: true` with 0 claude processes at 1, 1 chưa đo); 1 brief refused at builder-target; the record edited by hand on the owner's yes | nizzy Thomas transcript |
+| Orca issues on restore dropping the launch environment: 1 related, open (stablyai/orca#24752) | `gh issue list`, 2026-11-12 |
+
+**A pane Orca restored without `ASTRA_DISPATCH` takes its role and key from its own record entry.** Orca
+rebuilds the command at restore, so the launch line's variable is gone and the mod read the pane as a root
+session: no TURN-END, no pane gate, no skill record. The mod now matches the record entry whose `pane_id` is
+this pane's `ORCA_PANE_KEY` and whose `session_id` is this session's id; both must match, so a new `claude`
+typed into a dead Builder's pane stays a root session. The new terminal handle is recorded at session start,
+as before. The old dispatcher address died with the old process, so the turn end goes on the record and the
+restarted dispatcher's 30 s poll rings it. Driver (stub): the released mod passes the pane gate and writes no
+turn end; the patched one refuses, records `term_5` over `term_old` and writes the turn end; another session id
+and a pane with no entry stay root; planted, a match on the pane key alone gives the other session the role.
+Dispatcher side, driver: a pending turn end whose `dispatcher` socket is gone rings 1 time and the entry stays;
+planted, a poll that skips every foreign owner rings 0. Live, one fixture pane in Orca (Claude Code 2.1.322):
+launched with the variable, exited, resumed bare: identity back, staled handle rewritten, turn end on the
+record, 1 of 1.
+
+**A mid-turn Orca entry whose terminal shows `connected: false` no longer blocks its own cleanup.**
+`orca terminal close` and `git worktree remove` refuse a pane that is mid-turn; a pane that died before
+writing its turn end stayed mid-turn for good, and its lane kept counting against builder-target. Only
+Orca's own `connected: false` lifts the refusal: a stale handle or a failed `orca terminal show` stays
+refused. builder-target is unchanged. Driver: released mod `deny,deny,deny:kept,deny:kept`, patched
+`pass,deny,pass:removed,deny:kept` (gone close, connected close, gone remove, connected remove). Live: chưa đo.
+
+Not covered, chưa đo: a real Orca restart with this release; a Codex pane after an Orca restart
+(`runtimes/codex` does not read `ASTRA_DISPATCH`; this release changes nothing on the Codex lane); a Herdr
+restart; a terminal still `connected: true` whose agent has exited.
+
+By hand downstream: nothing. A Builder pane restored before the upgrade keeps its gaps in `skills_log`.
+
 # Astragentic 6.1.8
 
 Six fixes from the 2026-11-11 audit of the hook log, the ticket stamp and the git guard.
