@@ -42,3 +42,26 @@ Not covered, chưa đo:
   lets any root session of the project ring.
 
 By hand downstream: none after the upgrade.
+
+## I-2 — a pane that never wrote its turn end blocks its own cleanup: "mid-turn" with the terminal gone
+
+Reported 2026-11-12 by nizzy Thomas, cross-session message from `etsy-fulfillment-thanh-e0` (same
+report file, items 3 and 4). A consequence of I-1, and a dead end of its own for any pane that dies
+before its turn end is written.
+
+| số đo | nguồn |
+|---|---|
+| "is mid-turn" refusals after both Builders had handed back: 3 (`orca terminal close` 02:18:20Z; `git worktree remove` 02:24:30Z and 02:26:43Z) | nizzy Thomas transcript `acd20170…` |
+| terminal state at those refusals: `connected: false`, `processId: None` 6 s before the third; `connected: true` with 0 claude processes 31 s before the second; the first chưa đo | same transcript, `orca terminal show` and `ps` calls at 02:26:37Z and 02:23:59Z |
+| brief refused at builder-target with the two merged lanes counted live: 1 (TRA-1402, 02:26:24Z; live = TRA-1406, TRA-1405, TRA-1407) | same transcript |
+| recovery used: `last_turn_end_at` written by hand on 2 entries, on the owner's yes | the message |
+| released mod in the driver, mid-turn entry on a `connected: false` terminal: close and remove both refused (`deny,deny,deny:kept,deny:kept`) | `mod-drive.cjs orcadisp` against `HEAD:register.tsx` |
+| patched mod: gone pane closed and its worktree removed, the same entry on a connected terminal refused twice (`pass,deny,pass:removed,deny:kept`) | selftest `orca dispatcher`, `goneMidTurn` |
+
+Layer: upstream harness. Fix (6.1.9): at `orca terminal close` and `git worktree remove`, a mid-turn Orca
+entry whose terminal shows `connected: false` is not refused. A stale handle or a failed `orca terminal
+show` stays refused. builder-target is unchanged: the count fell once the worktrees could be removed.
+
+Not covered, chưa đo: a terminal still `connected: true` whose agent has exited (the shell remains; 1 of the
+3 refusals) — after I-1's fix that pane writes its turn end, so the entry is not mid-turn; Herdr (no
+field case); live run of this guard in an Orca pane (driver only).

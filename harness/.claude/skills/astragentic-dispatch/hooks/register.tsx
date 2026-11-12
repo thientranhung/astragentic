@@ -802,6 +802,17 @@ async function orcaJson($: any, args: string[]): Promise<any | null> {
   }
 }
 
+// 6.1.9 — a pane that is gone cannot be mid-turn. nizzy 2026-11-12: two Builders lost their
+// identity at an Orca restart and never wrote a turn end; after they exited, `git worktree remove`
+// was refused "mid-turn" with the terminal at `connected: false` (1 of 3 refusals), and the lanes
+// kept counting against builder-target until the owner had the record edited by hand. Only Orca's
+// own `connected: false` counts: a stale handle or a failed call answers null and stays refused.
+async function isOrcaPaneGone($: any, entry: Entry): Promise<boolean> {
+  if (entry?.host !== 'orca' || typeof entry.terminal !== 'string') return false
+  const shown = await orcaJson($, ['terminal', 'show', '--terminal', entry.terminal])
+  return shown?.result?.terminal?.connected === false
+}
+
 async function whoAmI($: any, root: string | null): Promise<Me | null> {
   const host = await hostOf($)
   if (host === 'orca') {
@@ -2395,7 +2406,7 @@ export const register: Register = on => {
         isLive(entry) && (isMidTurn(entry) || entry.role === 'resident') &&
         (kind === 'tab' ? entry.tab_id === id : kind === 'pane' ? entry.pane_id === id : kind === 'terminal' ? entry.terminal === id : String(entry.tab_id).startsWith(`${id}:`)),
       )
-      if (hit) {
+      if (hit && !(hit[1].role !== 'resident' && await isOrcaPaneGone($, hit[1]))) {
         const [key, entry] = hit
         return {
           deny: entry.role === 'resident'
@@ -2452,7 +2463,7 @@ export const register: Register = on => {
       const hit = Object.entries(rec).find(([, entry]) => typeof entry?.worktree === 'string' && entry.worktree === target)
       if (hit && (await exists($, target))) {
         const [key, entry] = hit
-        if (isMidTurn(entry)) {
+        if (isMidTurn(entry) && !(await isOrcaPaneGone($, entry))) {
           return { deny: `astragentic-dispatch: ${entry.role} ${key} is mid-turn in ${target}. Removing its worktree destroys work in progress. Wait for its TURN-END.` }
         }
         const isClean = isForced || (await run($, ['git', '-C', target, 'status', '--short'])).out === ''

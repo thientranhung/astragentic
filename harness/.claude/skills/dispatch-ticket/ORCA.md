@@ -96,7 +96,9 @@ orca terminal show --terminal term_… --json         # alive? `connected: false
 orca terminal close --terminal term_… --tab --json
 ```
 
-The mod refuses the close while the pane is mid-turn, as it does `herdr tab close`, and only when it
+The mod refuses the close while the pane is mid-turn, as it does `herdr tab close`, unless the
+terminal shows `connected: false` (6.1.9: a pane that is gone is not mid-turn, at the close and at
+`git worktree remove`), and only when it
 can read the handle literally: a substituted handle matched no entry, so the guard and the record
 both missed (inception, 2026-11-09: 7 of 8 closes, six entries left behind). Orca closes the tab with
 its last pane; `show` on a closed handle still exits 0, with `connected: false`, which the mod reads as
