@@ -24,3 +24,18 @@ browser tab you opened before the report. `builder.md` is left alone: the senten
 words, under the 100-word margin, and the staleness audit exited 1. qa.md 1837 → 1850 of 2000. A Builder that
 opens a browser on a ticket with no `astra-ui` step is not covered. Text only: whether panes follow it is chưa đo; the same count after the
 upgrade is the measurement. No checker added.
+
+Owner ruling 2026-11-12: the tab's life belongs to the workflow that opens it (the harness), not to the
+OmniLogin skill, which is operating mechanics. So the harness also checks it: the dispatch mod counts a
+dispatched pane's own `agent-browser … tab new` and `tab close` commands that ran, and a TURN-END with tabs
+left carries `Browser tabs open: n`, so the dispatcher's steer is one line.
+
+| số đo | nguồn |
+|---|---|
+| released mod in the driver: 2 `tab new` (one command), 1 failed `tab new`, 1 `tab close`, turn end: no line | `mod-drive.cjs pane` against `HEAD:register.tsx`, `tabsNamed none:gone` |
+| patched mod: the same turn end says `Browser tabs open: 1`; after the second `tab close` the line is gone | selftest pane side, `tabsNamed 1:gone` |
+
+Limits: the count is in the pane's memory, so a resumed pane starts at 0; a tab opened by `open` with no
+`tab new`, or by another tool, is not seen; root sessions (2 of 2 leaked) have no TURN-END and are not
+covered; the mod names `agent-browser`, the one tool both projects use. Claude lane only: a Codex pane has
+no mod. Live: chưa đo.

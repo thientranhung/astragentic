@@ -1348,6 +1348,8 @@ export const register: Register = on => {
   let isNoticeTurn = false
   // A codex-companion review launched --background and not yet read by `result`/`cancel` (6.1.7).
   let armJobOpen = false
+  // Browser tabs this pane opened with `agent-browser … tab new` and has not closed (6.1.10).
+  let tabsOpen = 0
   // The dispatched pane's own red line: set when a TURN-END send fails, cleared by the next
   // one that lands. The footer status alone was missed for ten minutes (measured downstream).
   let undelivered = ''
@@ -1729,6 +1731,7 @@ export const register: Register = on => {
       const ran = Object.keys(entry.skills_run ?? {})
       flow = `Skills run: ${ran.length ? ran.join(', ') : 'none'}\n${await agentLine($, grace)}\n`
       if (armJobOpen) flow += `Arm job open: a codex-companion review was launched --background and no \`result\` or \`cancel\` read it. No bell comes for a companion job; this pane is parked, not waiting. Steer it to \`status <job-id> --wait --timeout-ms 480000\` in the foreground, then \`result\` (codex-arm § Waiting).\n`
+      if (tabsOpen > 0) flow += `Browser tabs open: ${tabsOpen} — this pane ran \`agent-browser … tab new\` and has not closed ${tabsOpen === 1 ? 'it' : 'them'}. The browser is shared: steer the pane to \`tab close\` its own tab(s) before its lane is cleaned up.\n`
     }
     const text = `${MARK} TURN-END key=${me.key} pane=${me.pane} reason=${e.reason}\n${flow}${answer}`
     const sent = await $.session.send({ to: dispatcher, text })
@@ -2115,7 +2118,16 @@ export const register: Register = on => {
     const cmd = runnable(e.command)
     if (/(?:codex-companion(?:\.mjs)?|\$\{?CC\}?)['"]?\s+(?:adversarial-review|review)\b[^\n]*--background\b/.test(cmd)) armJobOpen = true
     else if (/(?:codex-companion(?:\.mjs)?|\$\{?CC\}?)['"]?\s+(?:result|cancel)\b/.test(cmd)) armJobOpen = false
-    return next(e)
+    // The pane that opens a browser tab closes it (owner, 2026-11-12). The browser is one shared
+    // OmniLogin window; in 10 days on two projects panes ran 172 `tab new` and 148 `tab close`,
+    // 23 of 82 lanes leaving at least one, and the owner closed them by hand. Counted here from the
+    // pane's own commands that ran; the TURN-END names what is left, so the steer is one line.
+    const opened = (cmd.match(/agent-browser\b[^\n;|&]*\btab\s+new\b/g) ?? []).length
+    const closed = (cmd.match(/agent-browser\b[^\n;|&]*\btab\s+close\b/g) ?? []).length
+    if (opened === 0 && closed === 0) return next(e)
+    const ran = await next(e)
+    if (ran?.deny === undefined && !ran?.isError) tabsOpen = Math.max(0, tabsOpen + opened - closed)
+    return ran
   })
 
   // A harness role is a session, never an in-process agent (6.1.6). nizzy 2026-11-10: an Orca Thomas
