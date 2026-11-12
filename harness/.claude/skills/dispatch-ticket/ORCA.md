@@ -80,6 +80,11 @@ command (`orca --help`, 1.4.254), so there is no desktop alert on Orca: read the
 The session that ran the `terminal create` owns the pane's record bell: the mod stamps `dispatcher` on
 the key at the create, so another root session's poll leaves it (inception 2026-11-10: a Thomas left
 open since 10-30 took 3 of 3 QA bells). `woken_at` says a poll consumed the bell, not who saw it.
+After an Orca restart the pane comes back as a bare `claude --resume <id>` with no `ASTRA_DISPATCH`
+(nizzy 2026-11-12, 2 of 2 Builders: 0 turn ends for 2 handbacks, 5 commits past the commit gate). The
+mod takes the role and key back from the pane's own record entry (same `ORCA_PANE_KEY` and session
+id), records the new terminal handle, and the turn end comes by the record within the 30 s poll. The
+restarted dispatcher re-reads the record; it does not re-send the brief.
 
 ## Cleanup (CLEANUP.md)
 
@@ -103,7 +108,7 @@ PTY (§ The pane), and a closed terminal shows it too. No workspace to close.
 What has run on Orca (6.1.0 fixtures, 2026-11-09): C1, the mod loading in an Orca pane and
 writing its record entry, PASS 1 of 1; C4 for the commit gate, a planted violation refused, PASS 1 of 1.
 The merge gate and git guard in an Orca pane are driver-only (selftest), live chưa đo; so are a QA gate
-pane on Orca (C5), a pane dying or an Orca restart with a live dispatch (C6), and `HERDR_*` inherited
+pane on Orca (C5), a pane dying (C6; a restored Claude pane after a restart: fixture PASS 1 of 1, 6.1.9; a Codex pane chưa đo), and `HERDR_*` inherited
 inside Orca. A session started in Orca dispatches its Claude Builders by this file (one host per
 session); report each anomaly upstream with its handle. A Builder is a pane, never
 `Agent(subagent_type: builder)`: the mod refuses that spawn (6.1.6).

@@ -1893,7 +1893,8 @@ const fs = require('fs'), path = require('path'), Module = require('module')
 const [,, modDir, root, tsPath, mode] = process.argv
 const isPane = mode === 'pane' || mode === 'qapane' || mode === 'orcapane'
 const isOrca = mode === 'orcapane'
-const isOrcaHost = isOrca || mode === 'orcadisp'  // 6.1.1: a dispatcher at the root of an Orca-hosted session
+const isOrcaResume = String(mode).startsWith('orcaresume')  // 6.1.9: a pane Orca restored with a bare `claude --resume`
+const isOrcaHost = isOrca || mode === 'orcadisp' || isOrcaResume  // 6.1.1: a dispatcher at the root of an Orca-hosted session
 const ts = require(tsPath)
 const src = fs.readFileSync(path.join(modDir, 'hooks/register.tsx'), 'utf8')
 const js = ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React, jsxFactory: 'h', jsxFragmentFactory: 'Fragment' } }).outputText
@@ -1988,6 +1989,22 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const docNamedOrca = await cmdOf('cat docs/codex/ORCA-DESIGN.md && ls orca-notes')
     const herdrCallsAtStart = herdrCalls.length
     console.log(JSON.stringify({ orcaRegistered, herdrInOrca, herdrWhy: herdrWhy.slice(0, 60), orcaInOrca, docNamedOrca, herdrCallsAtStart }))
+    return
+  }
+  if (isOrcaResume) {
+    // 6.1.9 — Orca restarted and restored the pane with `claude --resume <id>`: ORCA_PANE_KEY and
+    // the session id are the old ones, ASTRA_DISPATCH is gone, the terminal handle is new (nizzy
+    // 2026-11-12, 2 of 2 Builders ran as root sessions: no TURN-END, no gate). The pane takes its
+    // role and key back from its own record entry; another session id or no entry stays root.
+    const recPath = path.join(root, '.astraler/state/dispatch-record.json')
+    const seed = { role: 'builder', host: 'orca', pane_id: 'tab5:leaf5', tab_id: 'tab5', terminal: 'term_old', session_id: mode === 'orcaresume-sid' ? 'someone-else' : 'disp', branch: 'x', start_sha: 'abc', registered_at: 1, last_brief_received_at: 1, dispatcher: 'uds:/tmp/gone.sock' }
+    fs.writeFileSync(recPath, JSON.stringify(mode === 'orcaresume-none' ? {} : { 'AB-7': seed }))
+    await fire('session.start', { cwd: root }, async () => ({}))
+    let ran = false
+    const r = await fire('tool.call', { tool: 'ScheduleWakeup', delaySeconds: 300 }, async () => { ran = true; return {} })
+    await fire('turn.complete', { reason: 'answer', answer: 'handback', turnId: 'r1' }, async () => ({}))
+    const e7 = JSON.parse(fs.readFileSync(recPath, 'utf8'))['AB-7'] ?? {}
+    console.log(JSON.stringify({ resumeGate: `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}`, resumeTerminal: e7.terminal ?? null, resumeTurnEnd: Boolean(e7.last_turn_end_at), resumePending: /TURN-END key=AB-7 pane=tab5:leaf5 reason=answer/.test(String(e7.turn_end_pending?.text ?? '')), resumeWhy: /host restart/.test(String(e7.turn_end_pending?.reason ?? '')) }))
     return
   }
   if (mode === 'orcadisp') {
@@ -2880,6 +2897,18 @@ EOS
     ok "orca dispatcher (6.1.1): a terminal close with a substituted --terminal is refused and told to pass the literal handle; a literal close on an entry whose worktree is gone removes the entry; at git worktree remove an orphaned-but-connected terminal keeps its entry and a disconnected one goes; the session that creates a pane claims its entry as dispatcher"
   else
     bad "mod orca close" "$out"
+  fi
+  # 6.1.9 — a pane Orca restored after its own restart (bare `claude --resume`, no ASTRA_DISPATCH)
+  rm -rf "$TMP/mod-anysid"; cp -R "$MOD" "$TMP/mod-anysid"
+  sed -i.bak 's/ && sid && entry.session_id === sid / /' "$TMP/mod-anysid/hooks/register.tsx" && rm -f "$TMP/mod-anysid/hooks/register.tsx.bak"
+  out="$(mod_drive "$MOD" orcaresume)"; out_sid="$(mod_drive "$MOD" orcaresume-sid)"; out_none="$(mod_drive "$MOD" orcaresume-none)"; out_planted="$(mod_drive "$TMP/mod-anysid" orcaresume-sid)"
+  if says "$out" '"resumeGate":"deny:held","resumeTerminal":"term_5","resumeTurnEnd":true,"resumePending":true,"resumeWhy":true' \
+     && says "$out_sid" '"resumeGate":"pass:ran","resumeTerminal":"term_old","resumeTurnEnd":false,"resumePending":false' \
+     && says "$out_none" '"resumeGate":"pass:ran","resumeTerminal":null,"resumeTurnEnd":false' \
+     && says "$out_planted" '"resumeGate":"deny:held"'; then
+    ok "orca resume (6.1.9): a pane Orca restored without ASTRA_DISPATCH takes its role and key from its own record entry (same pane key and session id) — a pane gate refuses, the new terminal handle is recorded, the turn end goes on the record for the dispatcher's poll; another session in that pane and a pane with no entry stay root sessions; planted, a mod that matches on the pane key alone gives the other session the Builder's role"
+  else
+    bad "mod orca resume" "resumed=$out other-session=$out_sid no-entry=$out_none planted=$out_planted"
   fi
   out="$(mod_drive "$MOD" qapane)"
   if says "$out" '"qaRecordPath":true,"qaNoBypassHint":true,"qaNotRed":true,"wakeupQa":"deny:held"'; then

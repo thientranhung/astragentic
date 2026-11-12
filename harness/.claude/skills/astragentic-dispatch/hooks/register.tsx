@@ -732,7 +732,7 @@ function printable(text: string, max = 300): string {
 
 
 type Host = 'herdr' | 'orca'
-type Me = { role: string; key: string; tab: string; pane: string; host: Host; terminal?: string }
+type Me = { role: string; key: string; tab: string; pane: string; host: Host; terminal?: string; resumed?: boolean }
 type Envelope = { from: string; fromName: string; inner: string }
 
 // A session name as the dispatcher must type it when two sessions share a prefix: SendMessage
@@ -802,7 +802,7 @@ async function orcaJson($: any, args: string[]): Promise<any | null> {
   }
 }
 
-async function whoAmI($: any): Promise<Me | null> {
+async function whoAmI($: any, root: string | null): Promise<Me | null> {
   const host = await hostOf($)
   if (host === 'orca') {
     // Orca rewrites a tab's title while the agent runs ("." became the brief's first words, with a
@@ -814,7 +814,22 @@ async function whoAmI($: any): Promise<Me | null> {
     const role = ROLE_BY_PREFIX[m?.[1] ?? '']
     const key = m?.[2] ? (role === 'qa' ? `qa:${m[2]}` : m[2]) : undefined
     const terminal = await $.env.get('ORCA_TERMINAL_HANDLE')
-    return role && key && tab && pane ? { role, key, tab, pane, host, terminal } : null
+    if (role && key && tab && pane) return { role, key, tab, pane, host, terminal }
+    // 6.1.9 — Orca restores a pane after its own restart with a bare `claude --resume <id>`: the
+    // launch line's ASTRA_DISPATCH is gone, ORCA_PANE_KEY and the session id are the same (nizzy
+    // 2026-11-12, 2 of 2 Builders). With no identity the pane ran as a root session: 0 TURN-END
+    // for 2 handbacks, 5 commits past the commit gate, 3 skills off the record. The record entry
+    // this pane wrote before the restart names it; both the pane key and the session id must
+    // match, so a fresh `claude` typed into a dead Builder's pane stays a root session.
+    if (!m && tab && pane && root) {
+      const sid = await $.session.id().catch(() => null)
+      for (const [k, entry] of Object.entries((await readRecord($, root)) ?? {})) {
+        if (entry?.host === 'orca' && entry.pane_id === pane && sid && entry.session_id === sid && typeof entry.role === 'string') {
+          return { role: entry.role, key: k, tab, pane, host, terminal, resumed: true }
+        }
+      }
+    }
+    return null
   }
   const tab = await $.env.get('HERDR_TAB_ID')
   const pane = await $.env.get('HERDR_PANE_ID')
@@ -1332,7 +1347,7 @@ export const register: Register = on => {
 
   on('session.start', async ($, e, next) => {
     root = await repoRoot($)
-    me = await whoAmI($)
+    me = await whoAmI($, root)
     if (root) { try { appliedVersion = (await $.fs.read(`${root}/.astraler/state/applied-version`)).trim() } catch {} }
     if (!me && root && appliedVersion) {
       void latestRelease($).then(async latest => {
@@ -1680,7 +1695,7 @@ export const register: Register = on => {
       // address; the dispatcher's poll wakes from it.
       if (root && me.role !== 'resident') {
         await patchRecord($, root, me.key, { last_turn_end_at: await $.clock.now(), last_turn_reason: e.reason, last_turn_error: lastErr,
-          turn_end_pending: { at: await $.clock.now(), reason: me.role === 'qa' ? 'QA pane: the brief arrived by herdr agent prompt, and the record is a gate pane\'s turn-end path (GATE.md § 3)' : 'no dispatcher address (brief did not arrive through the mod)', text: `${MARK} TURN-END key=${me.key} pane=${me.pane} reason=${e.reason}\n${e.answer.slice(-1500)}` } })
+          turn_end_pending: { at: await $.clock.now(), reason: me.role === 'qa' ? 'QA pane: the brief arrived by herdr agent prompt, and the record is a gate pane\'s turn-end path (GATE.md § 3)' : me.resumed ? 'the pane was resumed without its launch environment (a host restart); its dispatcher address went with the old process' : 'no dispatcher address (brief did not arrive through the mod)', text: `${MARK} TURN-END key=${me.key} pane=${me.pane} reason=${e.reason}\n${e.answer.slice(-1500)}` } })
         await refreshFlow($, root, me.key)
       }
       return
