@@ -14,6 +14,7 @@ reproduced upstream. Nothing here is planned until its `chưa đo` is replaced.
 | L-5 | gate failures from box load: DB-connect timeouts and swap when a QA stack starts beside a gate run; `box-pressure-check` runs once at start | chưa đo | upstream gate or project stack |
 | L-6 | a Builder committed evidence PNGs showing buyer names and cities from a prod-seeded dashboard; caught by its own review, by no gate | chưa đo | upstream guard or project data |
 | L-7 | PostToolUse "masked run" notice on `cmd > file; echo rc=$?` at every gate rerun | chưa đo | upstream (recorder) |
+| L-8 | `check-reachability.py` in the adapted project: 16 `[FAIL 10]` "ledger asserts a live binding to <path> which does not exist" | reproduced: nizzy at 6.1.12, exit 1, 16 findings (prompts/ADAPT-HARNESS.md 6, thomas.md 4, builder.md 2, builder-claude.md, check-requirements.sh, dispatch-ticket/CLEANUP.md, .agents/roles/rin.md 1 each); upstream repo exit 0, 0 findings; a fresh unadapted 6.1.12 install exit 1 with 4 findings (FAIL 1 ×1, FAIL 5 ×3); known since 6.0.6 as `pkg_root` = the project's parent in project layout, never fixed; who calls the checker downstream: chưa đo | upstream (checker) |
 | K-2 | carried from the 6.1.11 batch: 45 type warnings from `claude plugin validate` 2.1.323; `BoardRow` lacks `'dead'` | measured there | upstream (mod) |
 
 Owed from 6.1.12: the refusal in a live Orca session (asked nizzy to report the refusal text after it upgrades).
