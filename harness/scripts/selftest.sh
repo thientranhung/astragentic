@@ -481,6 +481,14 @@ PIPED_OUT="$(printf '{"tool_input":{"command":"pnpm test | tail -5"},"tool_respo
 KEPT_OUT="$(printf '{"tool_input":{"command":"cd apps && go test ./... > log 2>&1"},"tool_response":{"status":2},"cwd":"%s"}' "$RT" | python3 "$S/hook-test-run.py")"
 printf '{"tool_input":{"command":"go test ./... -run '"'"'TestA|TestB'"'"'"},"tool_response":{"status":2},"cwd":"%s"}' "$RT" | python3 "$S/hook-test-run.py"
 printf '{"tool_input":{"command":"pnpm test\\n"},"tool_response":{"status":1},"cwd":"%s"}' "$RT" | python3 "$S/hook-test-run.py"
+# 6.1.13 — `; echo <label>=$?` right after the test prints the test's own code: logged as that
+# code with no notice (nizzy 2026-11-13: 17 masked notices on `cmd > file; echo rc=$?`); the
+# same command with no code on stdout stays masked (the first case above)
+ECHOED_OUT="$(printf '{"tool_input":{"command":"go test ./... > log 2>&1; echo rc=$?; grep -n FAIL log"},"tool_response":{"status":0,"stdout":"rc=1\\nlog:3: FAIL"},"cwd":"%s"}' "$RT" | python3 "$S/hook-test-run.py")"
+[ "$(tail -1 "$RTLOG" | cut -f2)" = "1" ] && [ -z "$ECHOED_OUT" ] \
+  && ok "a test followed by echo <label>=\$? is logged with the code it printed, and the pane gets no masked notice (6.1.13)" \
+  || bad "hook-test-run echoed code" "log: $(tail -1 "$RTLOG" 2>/dev/null) | out: $ECHOED_OUT"
+sed -i.bak '$d' "$RTLOG" && rm -f "$RTLOG.bak"
 if [ "$(cut -f2 "$RTLOG" 2>/dev/null | tr '\n' ',')" = "masked,masked,2,2,1," ] \
    && says "$MASKED_OUT" '"additionalContext"' && says "$MASKED_OUT" 'run the test command alone' && says "$PIPED_OUT" 'masked' && [ -z "$KEPT_OUT" ]; then
   ok "a test followed by ; or | is logged masked and the pane is told; && , redirections, a quoted | and a trailing newline keep the code (4.5.3)"
@@ -1563,6 +1571,23 @@ out="$(python3 "$S/check-reachability.py" "$PRJ" 2>&1)"
 says "$out" "project layout" && says "$out" "All reachability checks passed" \
   && ok "check 3 reads the staged release's ADAPT-HARNESS.md in a project layout" \
   || bad "check 3 project prompt" "a skill the adaptation prompt names is reported unreached in a project: $(printf '%s' "$out" | grep FAIL | head -3)"
+# 6.1.13 — check 10 in a project reads the project and its applied release, never the folder
+# above it (nizzy at 6.1.12: exit 1, 16 findings, `thomas.md` among them while it sat in
+# `.agents/roles/`; the walk started at the project's parent, which could not be listed). The
+# parent here is unlistable: the ledger's own shorthand and package citations still resolve, and
+# a binding to a file that exists nowhere is still named.
+PAR="$TMP/rxpar"; chmod 755 "$PAR" 2>/dev/null; rm -rf "$PAR"; mkdir -p "$PAR"; cp -R "$PRJ" "$PAR/proj"
+printf '\n## AST-998 fixture\n\nBound: `thomas.md`, `prompts/ADAPT-HARNESS.md`.\n' >> "$PAR/proj/.agents/memory/recurring-failure-modes.md"
+chmod 111 "$PAR"
+out="$(cd "$PAR/proj" && python3 "$S/check-reachability.py" 2>&1)"; rc=$?
+printf '\nBound: `no-such-binding-file.md`.\n' >> "$PAR/proj/.agents/memory/recurring-failure-modes.md"
+out2="$(cd "$PAR/proj" && python3 "$S/check-reachability.py" 2>&1)"; rc2=$?
+chmod 755 "$PAR"
+if [ "$rc" -eq 0 ] && [ "$rc2" -eq 1 ] && says "$out2" "live binding to no-such-binding-file.md" && [ "$(printf '%s' "$out2" | grep -c 'FAIL 10')" -eq 1 ]; then
+  ok "check 10 in a project resolves the ledger against the project and its applied release with the parent folder unlistable, and still names a binding that exists nowhere (6.1.13)"
+else
+  bad "check 10 project layout" "exit $rc then $rc2: $(printf '%s' "$out" | grep -c 'FAIL 10') and $(printf '%s' "$out2" | grep -c 'FAIL 10') findings"
+fi
 rm "$PRJ/.astraler/releases/9.9.9/ADAPT-HARNESS.md"
 out="$(python3 "$S/check-reachability.py" "$PRJ" 2>&1)"
 says "$out" "skill '$PS' is reached by nothing" \
@@ -2660,6 +2685,27 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   // the dispatcher learns every off scope: it runs the marker check at merge
   const composed = await fire('prompt.compose', {}, async () => ({ sections: [] }))
   const armOffDispatcher = (composed?.sections ?? []).some(s => /ARM: off at ticket[\s\S]*arm\(ticket\)/.test(String(s.text)))
+  // 6.1.13 — the write-back is owed once the work is on origin's base, not at the local merge
+  // (nizzy 2026-11-13: 65 notes and 2 briefs refused while merges waited on their gate, the merge
+  // undone twice to get a brief out). A merged, unstamped ticket: local only, the prompt carries
+  // no note and a brief goes; the merge's own result still names it; on origin, both refuse.
+  const owedWhen = await (async () => {
+    const recFile = path.join(root, '.astraler/state/dispatch-record.json'); const keep = fs.readFileSync(recFile, 'utf8')
+    const cur = gitq('rev-parse', '--abbrev-ref', 'HEAD').stdout.trim(); const start = gitq('rev-parse', 'HEAD').stdout.trim()
+    gitq('update-ref', `refs/remotes/origin/${cur}`, start); gitq('symbolic-ref', 'refs/remotes/origin/HEAD', `refs/remotes/origin/${cur}`)
+    gitq('checkout', '-q', '-b', 'builder/AB-30'); gitq('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '--allow-empty', '-m', 'feat: AB-30')
+    gitq('checkout', '-q', cur); gitq('-c', 'user.name=t', '-c', 'user.email=t@t', 'merge', '-q', '--no-ff', 'builder/AB-30', '-m', 'merge AB-30')
+    fs.writeFileSync(recFile, JSON.stringify({ 'AB-30': { role: 'builder', branch: 'builder/AB-30', start_sha: start, last_brief_received_at: 1, last_turn_end_at: 2 } }))
+    const noteOf = async () => { const r = await fire('prompt.submit', { text: 'hello', origin: { kind: 'composer' } }, async ev => ev); return /AB-30 reached the base/.test(JSON.stringify(r?.context ?? [])) }
+    const briefOf = async () => { const r = await fire('session.send', { to: 'builder-ab-31', text: '/astra-implement-with-tdd AB-31\nQA: none — no surface', origin: { kind: 'model' } }, async () => ({ isDelivered: true })); return /AB-30 reached the base/.test(String(r?.reason ?? '')) }
+    const mergeNote = await fire('tool.call', { tool: 'Bash', command: 'git merge --no-ff builder/AB-30 -m x' }, async () => ({}))
+    const out = { localNote: await noteOf(), localBriefRefused: await briefOf(), mergeResult: /AB-30 reached the base[\s\S]*Gate the merge first/.test(JSON.stringify(mergeNote?.context ?? [])) }
+    gitq('update-ref', `refs/remotes/origin/${cur}`, 'HEAD')
+    Object.assign(out, { pushedNote: await noteOf(), pushedBriefRefused: await briefOf() })
+    gitq('reset', '-q', '--hard', start); gitq('branch', '-q', '-D', 'builder/AB-30'); gitq('update-ref', '-d', `refs/remotes/origin/${cur}`); gitq('symbolic-ref', '-d', 'refs/remotes/origin/HEAD')
+    fs.writeFileSync(recFile, keep)
+    return out
+  })()
   // 4.1.0 — four gates a 30-day field audit saw fire 0 times, each driven here with its defect planted
   const sendBrief = async text => { const r = await fire('session.send', { to: 'builder-ab-9', text, origin: { kind: 'model' } }, async () => ({ isDelivered: true })); return r?.isDelivered === false ? `refused:${String(r.reason ?? '').slice(0, 140)}` : 'sent' }
   const recPath = path.join(root, '.astraler/state/dispatch-record.json')
@@ -2791,7 +2837,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   const agentBuilder = await agentOf({ subagent_type: 'builder', prompt: 'build TRA-1', description: 'b' })
   const agentPlugin = await agentOf({ subagent_type: 'astragentic:shaper', prompt: 'x', description: 'b' })
   const agentExplore = await agentOf({ subagent_type: 'Explore', prompt: 'x', description: 'b' })
-  console.log(JSON.stringify({ agentBuilder, agentPlugin, agentExplore, orcaInHerdr, orcaDocInHerdr, deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, deadTurnBellHeld, deadTurnBellRerung, deadTurnNoDouble, staleBells, staleRow, ownerBells, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeUi, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiStd, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
+  console.log(JSON.stringify({ owedWhen, agentBuilder, agentPlugin, agentExplore, orcaInHerdr, orcaDocInHerdr, deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, deadTurnBellHeld, deadTurnBellRerung, deadTurnNoDouble, staleBells, staleRow, ownerBells, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeUi, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiStd, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
@@ -2855,6 +2901,11 @@ DRVEOS
   # 5.0.9 — a dead lane (one project, 2026-10-30: three panes lost auth together, the owner found
   # out 36 h later) reads red on the board and its bell says redispatch; the launch guard refuses
   # an argv that repeats the executable --kind supplies (same project, 2026-11-01, one launch)
+  if says "$out" '"owedWhen":{"localNote":false,"localBriefRefused":false,"mergeResult":true,"pushedNote":true,"pushedBriefRefused":true}'; then
+    ok "the tracker write-back is owed once the work is on origin's base (6.1.13): a local merge waiting on its gate puts no note on the prompt and refuses no brief, the merge's own result names it, and on origin both refuse"
+  else
+    bad "mod owed write-back" "$(printf '%s' "$out" | grep -o '"owedWhen":{[^}]*}')"
+  fi
   if says "$out" '"agentBuilder":"deny:held","agentPlugin":"deny:held","agentExplore":"pass:ran"'; then
     ok "mod (6.1.6): Agent(subagent_type: builder) and a plugin-namespaced role are refused at the spawn; an Explore fork passes"
   else

@@ -1009,9 +1009,24 @@ async function baseBranch($: any, root: string): Promise<string> {
 // A Builder ticket whose work reached the base and has no ticket-done stamp: the tracker
 // write-back is owed. Merged is either seen locally (branch tip is an ancestor of the base) or
 // recorded when the mod watched a merge command succeed (a `gh pr merge` lands remotely).
-async function owedTickets($: any, root: string): Promise<string[]> {
+// THE BASE THAT COUNTS IS ORIGIN'S (6.1.13). thomas.md § Merge says commit the merge, then gate on
+// the committed SHA, so between the local merge and a green gate the ticket is not done and its
+// tracker cannot be closed. Counting the local base, the note below rode every prompt and the
+// brief check refused the one brief that fixes a red gate: nizzy, one Thomas session 2026-11-13
+// to 11-14, 65 notes, 2 briefs not sent, and `git reset --keep origin/main` twice to undo the
+// merge and get the brief out. With a remote-tracking base the ticket is owed once its work is on
+// it; the push guard still refuses the push of an unstamped merge commit, and what it misses (a
+// fast-forward, a hold pushed later) is owed here from the push on. A checkout with no
+// `origin/<base>` keeps the local base. `isLocalCounted` is for the merge's own result, which
+// names what the merge just made owed.
+async function hasPushedBase($: any, root: string): Promise<boolean> {
+  return (await run($, ['git', '-C', root, 'rev-parse', '--verify', '--quiet', `refs/remotes/origin/${await baseBranch($, root)}`])).code === 0
+}
+
+async function owedTickets($: any, root: string, isLocalCounted = false): Promise<string[]> {
   const rec = (await readRecord($, root)) ?? {}
-  const base = await baseBranch($, root)
+  const local = await baseBranch($, root)
+  const base = !isLocalCounted && await hasPushedBase($, root) ? `refs/remotes/origin/${local}` : local
   const stamps = `${await stampRoot($)}/harness-ticket-done`
   const owed: string[] = []
   for (const [key, entry] of Object.entries(rec)) {
@@ -2730,9 +2745,13 @@ export const register: Register = on => {
         }
       }
     }
-    const owed = await owedTickets($, root)
+    const owed = await owedTickets($, root, true)
     await refreshBoard($, root, sends)
-    if (owed.length > 0) notes.push(`${MARK} ${owedText(owed)} The next brief will not be sent until this is done.`)
+    if (owed.length > 0) {
+      notes.push(await hasPushedBase($, root)
+        ? `${MARK} ${owedText(owed)} Gate the merge first (thomas.md § Merge); this is owed once the gate is green and before the push. Briefs go out meanwhile, and are refused once the work is on origin without it.`
+        : `${MARK} ${owedText(owed)} The next brief will not be sent until this is done.`)
+    }
     if (notes.length === 0) return ran
     return { ...ran, context: [...(ran.context ?? []), ...notes] }
   })

@@ -1,3 +1,41 @@
+# Astragentic 6.1.13
+
+Three fixes from nizzy's report of 2026-11-14 (one Thomas session on 6.1.11, Orca). Batch file:
+`docs/audit/2026-11-14-6112-field-incidents.md` (L-2, L-7, L-8, K-2).
+
+| số đo | nguồn |
+|---|---|
+| "no ticket-done evidence" on prompts while merges waited on their gate: 65; briefs not sent: 2; `git reset --keep origin/main` to get a brief out: 2 | nizzy root transcript `99caf986`, 2026-11-13 to 11-14 |
+| "masked run" notices on `cmd > file; echo rc=$?`: 17 | same |
+| `check-reachability.py` in the adapted project at 6.1.12: exit 1, 16 `[FAIL 10]`; upstream exit 0 | read-only run in nizzy's checkout |
+| `claude plugin validate` (2.1.323) type warnings on the dispatch mod: 45, now 43 | validator run |
+
+**The tracker write-back is owed once the work is on origin's base.** `thomas.md` § Merge says commit the
+merge, then gate on the committed SHA; the mod counted the local base, so the note rode every prompt and
+the one brief that fixes a red gate was refused. Now a local merge waiting on its gate carries no note and
+refuses no brief; the merge's own result still names the ticket and says to gate first; once the work is on
+`origin/<base>` without a stamp, the note and the refusal are back. A checkout with no `origin/<base>`
+keeps the local base. The push guard is unchanged.
+
+**A test followed by `echo <label>=$?` is logged with the code it printed.** No `masked` line and no
+notice when stdout carries the code; without it the run stays `masked`.
+
+**`check-reachability.py` check 10 in a project reads the project and its applied release**, not the
+folder above the project.
+
+`BoardRow` gains `'dead'` (a type only).
+
+Stub: each fix is planted in `selftest.sh` and is red on the 6.1.12 file, green on this one (table in the
+batch file). Live: chưa đo in a downstream session.
+
+Not covered: L-2 and L-7 are Claude lane only (Codex has no mod and no recorder hook). Still open from the
+same report: a base-form Orca pane that read `orphaned: true` (1 of 2, awaiting nizzy's count); held-stale
+bells (4 in a day: the agents listed as running had ended 19 to 20 min earlier, children of a review
+sub-agent that ended first; Claude Code's agent list, chưa đo what an entry carries). Returned to the
+project as its own: gate failures from box load, PII in evidence images.
+
+By hand downstream: restart an open Thomas session to load the new mod. Nothing else.
+
 # Astragentic 6.1.12
 
 One field incident (nizzy, 2026-11-13), a recurrence of I-5 from 6.1.1. Batch file:

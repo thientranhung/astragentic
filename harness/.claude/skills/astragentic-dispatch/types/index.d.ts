@@ -1,7 +1,7 @@
 export type BoardRow = {
   key: string
   role: string
-  state: 'registered' | 'sent' | 'received' | 'working' | 'ended' | 'merged'
+  state: 'registered' | 'sent' | 'received' | 'working' | 'ended' | 'merged' | 'dead'
   since: number
   note?: string
 }

@@ -100,6 +100,16 @@ def main():
         status = "background"
     elif masked:
         status = "masked"
+        # THE PANE PRINTED THE TEST'S OWN CODE (6.1.13). `cmd > log; echo rc=$?` is how a gate is
+        # read without a pipe, and the code is on stdout: nizzy, one Thomas session 2026-11-13,
+        # 17 masked notices on gate reruns of that form. When the first command after the test
+        # is `echo <label>=$?` and stdout carries `<label>=<n>`, that number is the test's.
+        first = re.search(r"[;|\n]", tail)
+        label = re.search(r";\s*echo\s+[\"']?([A-Za-z_]+)[=:]\$\?", cmd[hit.end():])
+        if first and label and re.match(r";\s*echo\b", tail[first.start():]) and isinstance(resp, dict):
+            printed = re.findall(r"\b%s[=:](\d+)\b" % re.escape(label.group(1)), str(resp.get("stdout") or resp.get("output") or ""))
+            if printed:
+                status = int(printed[0]); masked = False
     d = "/tmp/harness-test-runs"
     os.makedirs(d, exist_ok=True)
     name = re.sub(r"[^A-Za-z0-9]+", "_", top).strip("_")

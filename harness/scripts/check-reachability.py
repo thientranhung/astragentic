@@ -909,14 +909,28 @@ if LAYOUT == "project":
 # to ship. Measured 2026-09-16; the case that caught it is `staged installer` in selftest.sh.
 _SKIP_ROOTS = tuple(os.path.normpath(os.path.join(pkg_root, d)) for d in (
     "node_modules", ".git", "dist", os.path.join(".astraler", "releases"), "site"))
+# IN A PROJECT THE TREE UNDER TEST IS THE PROJECT, PLUS THE RELEASE IT APPLIED (6.1.13). There
+# `pkg_root` is the project's PARENT, so this walk read the sibling repositories, and where that
+# folder cannot be listed it read nothing: nizzy at 6.1.12, exit 1 with 16 findings, `thomas.md`
+# and `builder.md` among them while both sat in its `.agents/roles/`. The package's own files
+# (`prompts/ADAPT-HARNESS.md`, `check-requirements.sh`) live in a project only under
+# `.astraler/releases/<applied>/`, which the skip list excludes for the package's sake.
+_WALK_ROOTS = [pkg_root]
+if LAYOUT == "project":
+    _applied = read(os.path.join(ROOT, ".astraler", "state", "applied-version")).strip() \
+        if os.path.isfile(os.path.join(ROOT, ".astraler", "state", "applied-version")) else ""
+    _SKIP_ROOTS = tuple(os.path.normpath(os.path.join(ROOT, d)) for d in (
+        "node_modules", ".git", "dist", os.path.join(".astraler", "releases"), "site"))
+    _WALK_ROOTS = [ROOT] + ([os.path.join(ROOT, ".astraler", "releases", _applied)] if _applied else [])
 PAYLOAD_BASENAMES = set()
-for _base, _dirs, _files in os.walk(pkg_root):
-    _n = os.path.normpath(_base)
-    if any(_n == r or _n.startswith(r + os.sep) for r in _SKIP_ROOTS):
-        _dirs[:] = []
-        continue
-    _dirs[:] = [d for d in _dirs if d not in ("node_modules", ".git")]
-    PAYLOAD_BASENAMES.update(_files)
+for _root in _WALK_ROOTS:
+    for _base, _dirs, _files in os.walk(_root):
+        _n = os.path.normpath(_base)
+        if _base != _root and any(_n == r or _n.startswith(r + os.sep) for r in _SKIP_ROOTS):
+            _dirs[:] = []
+            continue
+        _dirs[:] = [d for d in _dirs if d not in ("node_modules", ".git")]
+        PAYLOAD_BASENAMES.update(_files)
 ASSERTS = re.compile(r"(?:^|\s)(Bound:|Wired\b|Enforced by:?)", re.M)
 # `*` IS IN THE CLASS BECAUSE ITS ABSENCE EXCUSED A WHOLE CITATION SHAPE. The pattern requires
 # both backticks, so `harness/.codex/profiles/*.config.toml` matched nothing at all: not a
