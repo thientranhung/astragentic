@@ -26,6 +26,9 @@ to a later round. Each round of answers reshapes the tree; recompute, ask the ne
 Word each question so that **"yes" accepts the recommendation**. Open questions beat trees of
 multiple choice: "tell me how X works today" before "A, B or C?". Infer-and-confirm ("I take it
 X works like Y, right?") is fine; do not pick the owner's wedge, MVP cut or phasing for them.
+A decision between real alternatives names them beside the recommendation: a round of
+"confirm mine" is you deciding alone. **A yes to the whole round settles nothing**: each
+question is settled by its own answer, and one that was not weighed stays open.
 
 **Brain dump first.** Before the first round, ask for everything the owner already has in mind
 and every input they want read (brief, prior spec, research, transcript). One "anything else?".

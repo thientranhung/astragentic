@@ -1,3 +1,35 @@
+# Astragentic 6.1.15
+
+Three rules taken from upstream skills, on the owner's word (2026-11-14). Batch file:
+`docs/audit/2026-11-14-6114-field-incidents.md`. Skill text only; no mod, guard or checker change.
+
+| số đo | nguồn |
+|---|---|
+| `astra-grill-with-docs` briefs since 2026-10-29: 18; `astra-to-spec` runs: 12 Skill calls, 12 briefs | nizzy and inception transcripts |
+| lines in those two skills that keep an inference from being written as the owner's: 0 | payload at v6.1.14 |
+| a spec or round of ours where that happened | chưa đo |
+
+**A yes to a whole grill round settles nothing** (`astra-grill-with-docs`). A decision between real
+alternatives names them beside the recommendation; each question is settled by its own answer. The skill's
+"yes accepts the recommendation" sentence is reported upstream to pull rounds toward yes-only questions
+(Matt Pocock #1424); the balancing rule is BMAD's `bmad-facilitate`.
+
+**A spec holds nothing as the owner's that he did not say or accept** (`astra-to-spec`). What the Shaper
+inferred goes under Open questions as an assumption, and the hand-back names the three decisions it is
+least sure of.
+
+`prompts/ADAPT-HARNESS.md`: the stated size of this file corrected (97k words, 205 headings).
+
+Static only: skill mirrors byte-identical, staleness and reachability exit 0, selftest and tests/codex from
+a clean clone. Live: chưa đo.
+
+Codex lane: `codex-astra-to-spec` gains the hand-back clause. It already forbids filling a choice from
+assumption, and `codex-astra-grill-with-docs` has no yes-accepts sentence, so the round rule is not added.
+
+Not done: `RELEASE-NOTES.md` is not split. Downstream agents read it whole 0 times in 30 days.
+
+By hand downstream: none. A Shaper reads the skills at its next Align or Spec phase.
+
 # Astragentic 6.1.14
 
 One fix, carried from nizzy's report of 2026-11-14 (L-4). Batch file:

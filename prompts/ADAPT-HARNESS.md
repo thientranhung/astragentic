@@ -15,8 +15,8 @@ Keep its `.agents` and `.claude` copies identical when installing the payload.
 
 1. Read `.astraler/CANDIDATE` — call its value `<candidate>`.
 2. Read `.astraler/releases/<candidate>/RELEASE-NOTES.md` **first — but only this release's
-   section**: the file is ~34k words and 111 version headings, and reading it whole costs
-   ~50k tokens of history that no role contract ever reads. `awk '/^# Astragentic <candidate>$/{f=1} f&&/^# Astragentic /&&!/<candidate>/{exit} f'`
+   section**: the file is ~97k words and 205 version headings, and reading it whole costs
+   ~150k tokens of history that no role contract ever reads. `awk '/^# Astragentic <candidate>$/{f=1} f&&/^# Astragentic /&&!/<candidate>/{exit} f'`
    gets the section that owns this release's semantic intent, breaking changes and migration
    guidance — headings are LEVEL ONE (`# Astragentic 2.7.0`), which an earlier `## ` recipe
    here matched zero times, handing the agent an empty section and sending it back to the whole

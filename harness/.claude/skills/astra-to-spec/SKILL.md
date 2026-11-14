@@ -73,11 +73,13 @@ Rules the template cannot carry:
   not written here.
 - A decision made in Align is written as a decision, with what it traded away. "Balances"
   everything is a sign nothing was decided.
+- **Nothing is written as the owner's that was not said or accepted in Align.** What you
+  inferred to fill a gap goes under Open questions as an assumption, with what rests on it.
 
 ## 4. Publish and stop
 
 Publish to the project's tracker through its `*-issue-tracker` skill at **`needs-triage`**,
 never `ready-for-agent`: the spec arm has not run and Thomas promotes after he classifies it.
-Then hand back the spec id, the seams as agreed, and the open questions with their reasons,
-and **stop** (`shaper.md` § STOP after Spec). The arm, `test-design` and `astra-to-tickets`
+Then hand back the spec id, the seams as agreed, the open questions with their reasons, and
+the three decisions you are least sure of, and **stop** (`shaper.md` § STOP after Spec). The arm, `test-design` and `astra-to-tickets`
 read the spec as committed.

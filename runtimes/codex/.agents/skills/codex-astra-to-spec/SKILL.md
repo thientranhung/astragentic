@@ -19,6 +19,6 @@ when publication is authorized. Published specs start needs-triage, not claimabl
 
 Use `codex-cross-vendor-review` for the configured spec policy. Unconfigured needs
 an owner decision; report it as blocked, never off or passed. Then hand Thomas the exact revision,
-findings and open questions. Stop before codex-test-design/tickets. Release must name this
+findings, open questions and the three decisions you are least sure of. Stop before codex-test-design/tickets. Release must name this
 revision; a revised spec needs a renewed release. Only an owner decision can accept
 an unresolved blocker. Invocation of this skill, queue delivery is not release.
