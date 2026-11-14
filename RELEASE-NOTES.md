@@ -1,3 +1,33 @@
+# Astragentic 6.1.12
+
+One field incident (nizzy, 2026-11-13), a recurrence of I-5 from 6.1.1. Batch file:
+`docs/audit/2026-11-14-6111-field-incidents.md` (K-1). Dispatch mod only; no role or skill text changed.
+
+| số đo | nguồn |
+|---|---|
+| one nizzy Thomas session: `orca terminal create` named the base checkout 28 of 28 times, compacted at 19:20:49Z, then named the ticket or gate checkout 15 of 15 times (9 Builder, 6 QA); the owner could not see those panes | root transcript `99caf986`, Bash tool calls |
+| `orca worktree activate` on ticket checkouts: 1 command | same |
+| the base-form recipe was installed the whole time | nizzy `dispatch-ticket/ORCA.md` lines 28 and 46, applied-version 6.1.11 |
+| inception since 6.1.1: 0 creates off the base; Codex rollouts 2026-11-10 to 11-14: 0 found in 2 creates parsed | root transcripts; `~/.codex/sessions` (parser coverage chưa đo) |
+
+**An Orca pane is opened from the base checkout, and the mod refuses the other form.** On the dispatcher's
+Bash call, `orca terminal create` or `orca worktree activate` whose `--worktree` value lies under
+`.claude/worktrees/` is refused; a `$VAR` set in the same command is read in its place. The refusal prints
+the base form with the session's own root: `--worktree "path:<root>"` and `cd <ticket checkout> &&` inside
+`--command`. A refused create claims no record entry.
+
+Stub and replay: planted in `selftest.sh` (`orcadisp`), 3 wrong forms run on the 6.1.11 mod and are refused
+on this one, the base form runs on both. The real commands through the transpiled mod: the 15 creates and
+the activate refused 16 of 16 (6.1.11: 0 of 16); of 219 base-form commands from both projects, 211 run and
+the same 8 are refused on both mods by older guards. selftest 250/0 from a clean clone, tests/codex 72 OK.
+Live: chưa đo in an Orca session.
+
+Not covered: the Codex lane has no mod, so `DISPATCH.md` § Orca stays prose. A variable set by an unquoted
+command substitution with a space in it (`W=$(git rev-parse --show-toplevel)/…`) is not resolved and
+passes. A pane already created from a ticket checkout cannot be reattached; it stays unseen until it closes.
+
+By hand downstream: restart an open Thomas session on Orca to load the new mod. Nothing else.
+
 # Astragentic 6.1.11
 
 One owner ruling (2026-11-12): a change of a few lines was cut as a ticket and run as a lane. Batch file:
