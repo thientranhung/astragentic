@@ -2360,6 +2360,30 @@ export const register: Register = on => {
     const rec = (await readRecord($, root)) ?? {}
     const cmd = runnable(e.command)
 
+    // -- an Orca pane is opened from the base checkout's workspace (6.1.12) ------------------
+    // Orca lists the base checkout in its sidebar and has no workspace for a git worktree, so a
+    // pane created with `--worktree path:<ticket checkout>` runs with no UI pane to host it
+    // (`orphaned: true, connected: true`): the lane works and the owner cannot see it. ORCA.md
+    // has carried the base form since 6.1.1 and it was installed when this happened: nizzy,
+    // 2026-11-13, one Thomas session named the base in 28 of 28 creates, compacted at 19:20:49Z,
+    // and named the ticket checkout in 15 of 15 creates after it, then ran `worktree activate` on
+    // the checkouts, which opens a shell about 15 s later and shows nothing. Only the value of
+    // --worktree is read, with a `$VAR` set in the same command put in its place: every correct
+    // command also carries the checkout path, in its `cd` and in a `W=` of its own. Refused above
+    // the claim below, so a pane that never opens leaves no entry.
+    const flat = cmd.replace(/\\\n/g, ' ')
+    const setIn = (name: string) => flat.match(new RegExp(String.raw`(?:^|[\s;&|(])${name}=("[^"]*"|'[^']*'|[^\s;&|]+)`))?.[1] ?? ''
+    const expanded = (text: string) => text.replace(/\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?/g, (whole: string, name: string) => setIn(name) || whole)
+    for (const m of flat.matchAll(new RegExp(AT_COMMAND + String.raw`(?:(?:do|then|else)\s+)*(?:\S*/)?orca\s+(terminal\s+create|worktree\s+activate)\b([^\n]*)`, 'g'))) {
+      const own = (m[2] ?? '').replace(/--command[\s=]+(?:"(?:[^"\\]|\\.)*"|'[^']*')/, ' ').split(/[;&|]/)[0] ?? ''
+      const named = expanded(expanded(own.match(/--worktree[\s=]+("[^"]*"|'[^']*'|\S+)/)?.[1] ?? ''))
+      if (!/\.claude\/worktrees\//.test(named)) continue
+      if (/^terminal/.test(m[1] ?? '')) {
+        return { deny: `astragentic-dispatch: --worktree names a ticket checkout (${named.replace(/^["']|["']$/g, '')}). Orca has no sidebar workspace for a git worktree, so this pane would run where the owner cannot see it (orphaned: true). Open it from the base checkout and reach the checkout inside the command: \`orca terminal create --worktree "path:${root}" --title "<tab>" --json --command "cd <ticket checkout> && ASTRA_DISPATCH=<tab> claude …"\` (dispatch-ticket/ORCA.md).` }
+      }
+      return { deny: `astragentic-dispatch: \`orca worktree activate\` on a ticket checkout opens a shell there about 15 s later and does not show its pane. A pane already created from the ticket checkout stays unseen until it is closed: read it with \`orca terminal read\`, and open the next one with \`--worktree "path:${root}"\` (dispatch-ticket/ORCA.md).` }
+    }
+
     // -- the session that opens a pane owns its record-path bells (6.1.1) -------------------
     // A gate pane briefed by file never sends a dispatcher message, so its entry carried no
     // `dispatcher` and EVERY root session's poll could ring it: inception, 2026-11-10, a Thomas

@@ -2046,6 +2046,21 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     // 6.1.7 — a lane key the shell has not expanded yet is refused at the create (nizzy 2026-11-11: a loop claimed `$t`)
     const claimLoop = (await cmdOf('for t in AB-11 AB-12; do orca terminal create --title "ticket:$t" --command "cd /w && ASTRA_DISPATCH=ticket:$t claude"; done')).slice(0, 9)
     const claimLoopNoEntry = !('$t' in JSON.parse(fs.readFileSync(recPath, 'utf8')))
+    // 6.1.12 — a pane is opened from the base checkout's workspace, never from the ticket's
+    // (nizzy 2026-11-13: 28 of 28 creates named the base before a compaction, 15 of 15 named the
+    // ticket checkout after it, every one a pane the owner could not see); a refused create
+    // claims no entry; `worktree activate` on a ticket checkout is refused; the base form runs
+    // even though its --command carries the checkout path and a `--worktree` of claude's own
+    selfSock = path.join(root, 'self.sock')
+    const paneHome = [
+      await cmdOf('W=/p/.claude/worktrees/builder-AB-20; orca terminal create --worktree "path:$W" --title ticket:AB-20 --json --command "cd $W && ASTRA_DISPATCH=ticket:AB-20 claude"'),
+      await cmdOf('W=$(pwd)/.claude/worktrees/gate-AB-21\norca terminal create --worktree "path:$W" --title "qa:AB-21" --json \\\n  --command "cd $W && ASTRA_DISPATCH=qa:AB-21 claude --agent qa"'),
+      await cmdOf('for n in 22 23; do orca worktree activate --worktree "path:/p/.claude/worktrees/builder-AB-$n" --json; done'),
+      await cmdOf('R=/p; W=$R/.claude/worktrees/builder-AB-24; orca terminal create --worktree "path:$R" --title ticket:AB-24 --json --command "cd $W && ASTRA_DISPATCH=ticket:AB-24 claude --worktree .claude/worktrees/x"'),
+    ].map(s => s.split(':').slice(0, 2).join(':')).join(',')
+    const afterHome = JSON.parse(fs.readFileSync(recPath, 'utf8'))
+    const paneHomeNoClaim = !('AB-20' in afterHome) && !('qa:AB-21' in afterHome) && 'AB-24' in afterHome
+    selfSock = undefined
     // 6.1.9 — a mid-turn entry whose Orca terminal shows `connected: false` is a pane that is gone:
     // its worktree is removed and its terminal closed; the same entry on a connected terminal is refused
     const wtGone = wtOf('wt-gone'), wtBusy = wtOf('wt-busy')
@@ -2068,7 +2083,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const after7 = JSON.parse(fs.readFileSync(recPath, 'utf8'))['AB-7']
     const restartBell = `${rung.filter(b => b.includes('builder AB-7 ended its turn (answer)')).length}:${Boolean(after7?.turn_end_pending?.woken_at)}:${after7?.pane_id === 'tab7:leaf7'}`
     selfSock = undefined
-    console.log(JSON.stringify({ closeSubst, closeBacktick, closeLiteral, closeLiteralReaped, orphanLiveKept, disconnectedReaped, createClaim, claimLoop, claimLoopNoEntry, restartBell, goneMidTurn }))
+    console.log(JSON.stringify({ closeSubst, closeBacktick, closeLiteral, closeLiteralReaped, orphanLiveKept, disconnectedReaped, createClaim, claimLoop, claimLoopNoEntry, paneHome, paneHomeNoClaim, restartBell, goneMidTurn }))
     return
   }
   if (isPane) {
@@ -2927,8 +2942,8 @@ EOS
     bad "mod orca pane" "$out"
   fi
   out="$(mod_drive "$MOD" orcadisp)"
-  if says "$out" '"closeSubst":"deny:held:literal","closeBacktick":"deny:held:literal","closeLiteral":"pass:ran:-","closeLiteralReaped":true,"orphanLiveKept":true,"disconnectedReaped":true,"createClaim":"true,true","claimLoop":"deny:held","claimLoopNoEntry":true,"restartBell":"1:true:true","goneMidTurn":"pass,deny,pass:removed,deny:kept"'; then
-    ok "orca dispatcher (6.1.1): a terminal close with a substituted --terminal is refused and told to pass the literal handle; a literal close on an entry whose worktree is gone removes the entry; at git worktree remove an orphaned-but-connected terminal keeps its entry and a disconnected one goes; the session that creates a pane claims its entry as dispatcher; a pending turn end whose dispatcher socket is gone (both restarted, 6.1.9) rings once here and the entry stays; a mid-turn entry whose terminal shows connected: false is closed and its worktree removed, a connected one is refused"
+  if says "$out" '"closeSubst":"deny:held:literal","closeBacktick":"deny:held:literal","closeLiteral":"pass:ran:-","closeLiteralReaped":true,"orphanLiveKept":true,"disconnectedReaped":true,"createClaim":"true,true","claimLoop":"deny:held","claimLoopNoEntry":true,"paneHome":"deny:held,deny:held,deny:held,pass:ran","paneHomeNoClaim":true,"restartBell":"1:true:true","goneMidTurn":"pass,deny,pass:removed,deny:kept"'; then
+    ok "orca dispatcher (6.1.1): a terminal close with a substituted --terminal is refused and told to pass the literal handle; a literal close on an entry whose worktree is gone removes the entry; at git worktree remove an orphaned-but-connected terminal keeps its entry and a disconnected one goes; the session that creates a pane claims its entry as dispatcher; a create or a worktree activate that names a ticket checkout is refused and claims nothing, the base form runs (6.1.12); a pending turn end whose dispatcher socket is gone (both restarted, 6.1.9) rings once here and the entry stays; a mid-turn entry whose terminal shows connected: false is closed and its worktree removed, a connected one is refused"
   else
     bad "mod orca close" "$out"
   fi
