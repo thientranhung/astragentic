@@ -48,3 +48,23 @@ Nothing here is planned until it has a number from nizzy or inception.
 | #1377 | the orchestrator implemented tickets itself and compacted 3 times | 6.1.11 § Not a ticket | 1 ticket in 30 days (TRA-1428) |
 | #1412, #1399 | research and implement runs leave servers, branches, labels behind | tab lifecycle (6.1.10), `release-worktree-resources.sh`, `ticket-done.sh` | covered for lanes; research runs chưa đo |
 | PR #807, PR #1368 | flatten `skills/` to meet Agent Plugins 1.0 by layout; publish to npm so a factory can pin a version | get.sh pins by tag | no action |
+
+## Leads from BMAD-METHOD (read 2026-11-14: main 29 commits past the distilled commit `61e01f8`, 75 open issues, 24 open PRs)
+
+No release since v6.12.4 (2026-10-14); v7.0.0-alpha.1 is an open changelog PR (#3191), ETA mid-November by
+the repo's own docs. TEA went v3.4.0 to v4.0.1 (14 commits). Another project's reports; nothing is planned
+until it has a number of ours.
+
+| upstream item | what it says | in the payload today | our number |
+|---|---|---|---|
+| PR #3090 (open) | `bmad-build` reproduces a bug before fixing it and runs the plan's verification commands itself before review | 0 lines ask what a red failed on (same lead as Matt Pocock PR #1221: two upstreams, one rule) | chưa đo: first reds that were compile or import errors |
+| PR #3069 (open) | a fifth review lens for security: untrusted input, access control, secrets, CI and dependency surface | `astra-review` has 3 axes, 0 security lens lines | chưa đo: security findings reaching QA or production |
+| #3179 | headless agents derived the project root wrong in 13 of 121 invocations (11%); 8 pointed at the main checkout instead of the worktree | briefs carry `Worktree:` literally; L-8 (6.1.13) was the same class in a checker | L-8 |
+| #3189 | a review lens that cannot read its input reports "no gaps found" | `astra-review`: "a lens that fails is reported as failed, never as clean" | covered |
+| #2760 | build and code-review run 3 identical review layers on one diff | review once (4.5.0) | covered |
+| #2649 | discoveries during implementation change intent with no human-gated record | `astra-review` routes `decision_needed` to the handback; whether the spec is updated after | chưa đo |
+| main: `bmad-prd`, `bmad-prfaq`, `bmad-product-brief` retired into `bmad-facilitate` (paced templates, a rubric, an id check script) | the source of `astra-to-spec` no longer exists upstream | `astra-to-spec` | re-read after v7 |
+| main: advanced elicitation rebuilt (71 methods to 48, each push by an independent reader that sees only a brief, one revision per round) | — | 0 payload files use elicitation; the distilled note is unused | no action |
+| main: new `bmad-shard-pro`, `bmad-ingest`, `bmad-facilitate`, `bmad-founder-agent-advisor`; skills grouped one folder per module | — | — | no action |
+| TEA v4.0.0 | ATDD and CI skills retired into `automate` and `framework`; trace gates epics on the requirement spine | our QA chain was distilled with ATDD already folded (README table) | no action |
+| plugin, hook or mod files in the repo | 0; install is `npx skills add` | — | — |
