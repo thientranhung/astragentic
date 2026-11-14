@@ -1,5 +1,7 @@
 # Matt Pocock skills — distilled
 
+> Checked against 1.3.2 (2026-10-29) and main at 2026-11-13: the source commit already held all but 7
+> commits of 1.3.2; the one idea taken since is foreground review sub-agents (`astra-review`, 6.1.14).
 > Distilled from **mattpocock-skills** 1.3.1 (marketplace commit b0618bc, 2026-10-08), Copyright (c)
 > 2026 Matt Pocock, MIT. Upstream: <https://github.com/mattpocock/skills> · <https://www.aihero.dev>.
 > Same treatment as `docs/bmad-distilled/`: install machinery stripped (`setup-matt-pocock-skills`,

@@ -18,7 +18,9 @@ Skip anything a linter already enforces.
 ## 2. Three lenses, launched together before any result is read
 
 - **Correctness**: `Skill(skill: "code-review")`, the built-in, on the staged diff. It hunts
-  bugs without the intent, which is the point: what is missing, not only what is wrong.
+  bugs without the intent, which is the point: what is missing, not only what is wrong. Call
+  it yourself, never inside a sub-agent: its angle agents outlive the wrapper, are listed as
+  running after they end, and hold your turn end (one project, one day: 4 holds of 20 min).
 - **Intent** (sub-agent, read-only, given the intent and the diff, nothing else): per
   criterion, the test that proves it and whether it ran; criteria missing or partial;
   behaviour nobody asked for; criteria that look met but are met at the wrong surface (the
@@ -31,8 +33,10 @@ Skip anything a linter already enforces.
   violations citing file and rule; baseline smells, named, hunk quoted; hard violations
   separated from judgement calls. A documented standard that endorses a smell silences it.
 
-Each sub-agent prompt ends: inspect only, no edits, no test runs, no skills, no sub-agents,
-findings as text under 400 words. A lens that fails is reported as failed, never as clean.
+The two sub-agents run in the foreground, in one message with the Skill call; what each
+returns is its report. Each prompt ends: inspect only, no edits, no test runs, no skills, no
+sub-agents, findings as text under 400 words. A lens that fails is reported as failed, never
+as clean.
 
 Smell baseline (each "what → fix"): Mysterious Name → rename · Duplicated Code → extract the
 shape · Feature Envy → move the method to the data · Data Clumps → one type · Primitive

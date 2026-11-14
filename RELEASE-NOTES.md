@@ -1,3 +1,27 @@
+# Astragentic 6.1.14
+
+One fix, carried from nizzy's report of 2026-11-14 (L-4). Batch file:
+`docs/audit/2026-11-14-6113-field-incidents.md`. Skill text only; no mod, guard or checker change.
+
+| số đo | nguồn |
+|---|---|
+| held-stale bells of 20 min in one day: 4, on 3 Builders | nizzy root transcript `99caf986` |
+| on all 3 tickets the built-in review ran inside a `general-purpose` background sub-agent that ended before the angle agents it started; those agents, ended 19 to 20 min earlier, are the ones each bell lists as running | Builder sub-agent transcripts and `.meta.json` |
+| lines in `astra-review` saying who calls the built-in review: 0 | payload at v6.1.13 |
+
+**The Builder calls the built-in review itself, and review sub-agents run in the foreground**
+(`astra-review` § 2). A review wrapped in a sub-agent leaves its angle agents behind when the wrapper
+ends; Claude Code keeps listing them as running and the turn end is held on them. The foreground form is
+Matt Pocock's 1.3.2 change to his `code-review` (#1073).
+
+Static only: skill mirrors byte-identical, staleness and reachability exit 0, selftest and tests/codex
+from a clean clone. Live: chưa đo. Not explained: 1 of the 4 bells (simplify angles with no wrapper).
+
+Live receipts for earlier releases (nizzy, 2026-11-14): the 6.1.12 refusal fired in an Orca session, 1 of
+1, no pane created; base-form creates read `orphaned: false` 2 of 2 so far.
+
+By hand downstream: none. A Builder reads the skill at its next review.
+
 # Astragentic 6.1.13
 
 Three fixes from nizzy's report of 2026-11-14 (one Thomas session on 6.1.11, Orca). Batch file:
