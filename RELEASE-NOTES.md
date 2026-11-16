@@ -1,3 +1,31 @@
+# Astragentic 6.1.16
+
+Two QA rules from nizzy's report of 2026-11-16 (`.scratch/harness-issues/report-to-astragentic-2026-11-16-qa-walk-lens.md`).
+Batch file: `docs/audit/2026-11-16-6115-field-incidents.md`. Role and skill text only; no mod, guard or checker change.
+
+| số đo | nguồn |
+|---|---|
+| walk reports that mention nizzy's Design Library upload surface, 10-15 to 11-16: 19; carrying a re-drop or filename-collision case: 0 | nizzy `.scratch/qa/*.md` |
+| the first walk with a misuse list in its brief (E1–E13): 1 P1 (one colliding filename in a second drop discards every pending tile), 2 P2 | `.scratch/qa/edge-upload-1116-walk-81ec792dd.md` |
+| edge walks that reported a failing P0 as CONCERNS: 1 of 1; nizzy re-judged it FAIL (`496f84177`, `ff88970b2`) | same report, nizzy git log |
+
+**A surface that writes data gets misuse cases** (`test-design`, `codex-test-design`). Add, remove, replace
+and re-add the input; a second action in flight or from a second tab; reload or leave mid-action; too few,
+too many, duplicate names, wrong type, empty; a role that may not write; the screen after the write without
+a reload. They join the cases of the ticket that changes the surface, with the mutations each needs named
+so the brief can authorize them. They do not ride on every incremental walk: the edge run covered 5 of 13
+cases, 4 partial, 4 not run for time.
+
+**No reading overrides the QA verdict rule** (`qa.md`, both runtimes). A workaround goes in the finding's
+severity; a failing P0 still reads FAIL.
+
+Not built: nizzy's required `Lens:` brief line with a mod refusal and a per-lens counter. The P1 came from
+the cases in the brief, not from a label; chưa đo. nizzy is counting misuse cases over its next 5 plans.
+
+By hand downstream: nothing. A project's own per-surface edge checklist stays in its plan.
+
+Static only: skill mirrors byte-identical, selftest and tests/codex from a clean clone. Live: chưa đo.
+
 # Astragentic 6.1.15
 
 Three rules taken from upstream skills, on the owner's word (2026-11-14). Batch file:
