@@ -8,4 +8,6 @@
 
 Field after ad250b7 (nizzy, 2026-11-16): M-2 re-judged to FAIL, commits `496f84177` (report) and `ff88970b2` (marker); no merge rested on the old verdict, F-E3 is TRA-1504. M-3 count open in nizzy `.scratch/harness-issues/misuse-case-count.md`: plan 1 of 5, 1 write surface, 1 with misuse cases, result pending.
 
+nizzy on 6.1.16 (2026-11-16): `applied-version` 6.1.16, commit `d7db60e61`, 3 files taken, 0 conflicts, reachability exit 0; read upstream from its checkout: the misuse rule is in both test-design copies, the verdict sentence in `.agents/roles/qa.md`. Owed: per plan, whether a Shaper plan under 6.1.16 carries misuse cases unasked (5-plan total).
+
 Not covered: live chưa đo (text only). Cost per firing: the edge run covered 5 of 13 cases, 4 partial, 4 not run for budget, so the misuse set rides on the ticket that changes the surface, not on every incremental walk.
