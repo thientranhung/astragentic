@@ -40,6 +40,14 @@ halts the skill. Name what is missing and hand back.
    exploratory.
 5. **Decompose into atomic cases, one level each.** End to end, API, integration or unit. Never the
    same behaviour at two levels without a stated reason.
+   **A surface that writes data** (upload, submit, map, setup) also gets its misuse cases, named
+   for that surface: add, remove, replace and re-add the input; a second action while the first
+   is in flight, or from a second tab; reload or leave mid-action; too few, too many, duplicate
+   names, wrong type, empty; a role that may not write; the screen after the write, without a
+   reload. They join the cases of the ticket that changes the surface, ranked like any other,
+   with the mutations each needs named so the brief can authorize them. Measured: 19 walks on
+   one upload surface ran none of these; the first run that did found a P1 (one colliding
+   filename in a second drop discarded every pending tile).
 6. **Attach the mandatory checks per mode.** These are required, not optional (see below).
 7. **Thresholds are measured or unknown.** Take a number from the spec, never from a guess. A
    missing threshold goes to Open questions as UNKNOWN.

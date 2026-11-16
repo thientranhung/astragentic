@@ -53,7 +53,8 @@ with reproduction details, environment artifacts, gaps and a verified-clean list
 FAIL if any P0 is uncovered/failing, any P1 fails, or fewer than 80% of P1 items are
 fully covered. CONCERNS if P1 coverage is at least 80% but below 90%, or a mandatory
 check has a gap. Otherwise PASS. If no P1 items exist, evaluate P0 and mandatory gaps
-without dividing by zero. Report raw counts alongside percentages.
+without dividing by zero. Report raw counts alongside percentages. No reading overrides
+the rule: a workaround goes in the finding's severity, and a failing P0 still reads FAIL.
 
 Save the report and clean list at the dispatch's durable paths outside disposable
 checkouts; Thomas preserves them at the project report destination. Return paths,

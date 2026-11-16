@@ -159,6 +159,10 @@ result.
   COVERAGE GAP.
 - **PASS**: everything else.
 
+No reading overrides it. A workaround, or harm confined to unsaved state, goes in the finding's
+severity and its note; a failing P0 item still reads FAIL (one edge walk, 2026-11-16, reported a
+failing P0 as CONCERNS and its P1 read as non-blocking).
+
 **Then findings, in the order seen**, each with a severity and reproduction detail.
 Separate broken from inconsistent, since they schedule differently. Separate a defect from an
 environment artifact, and say which you believe it is.

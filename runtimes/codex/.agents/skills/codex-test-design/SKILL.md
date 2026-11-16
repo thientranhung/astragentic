@@ -15,7 +15,11 @@ concept. Assign walk/probe/verify modes. Identify technical/security/performance
 business/operational risks; score probability 1–3 times impact 1–3. Scores at least
 six need mitigation and timing. Rank P0 core high-risk/no workaround, P1 critical,
 P2 secondary and P3 exploratory. Choose one suitable test level per atomic case;
-duplicate levels only with a stated reason. Thresholds come from the spec or remain
+duplicate levels only with a stated reason. A surface that writes data also gets misuse
+cases named for it: add/remove/replace/re-add input; a second action in flight or from a
+second tab; reload or leave mid-action; too few/many, duplicate names, wrong type, empty; a
+role that may not write; the screen after the write without reload. They join the cases of
+the ticket that changes the surface, with the mutations each needs named. Thresholds come from the spec or remain
 UNKNOWN. Optional astragentic_astra_test_architect advice stays read-only and requires available,
 authorized delegation.
 
