@@ -90,3 +90,47 @@ Measurement before any default is written (owner's yes 2026-11-21, Codex Sol and
   `astra-review` §3 rule, inception spot-checking a sample; cost in tokens and minutes; overlap between
   the two lenses (heavy overlap means ship one).
 - **Spend.** Projected from the pilot before the batch; any rate-limit error stops the Codex cells.
+
+## Results, 2026-11-21 (recall and cost; precision not yet verified)
+
+72 runs: pilot IN-474 x 9 cells x 2, then 6 tickets x 9 cells x 1. 40 Claude runs, 32 Codex runs
+(`codex exec`, read-only, output schema): 72 of 72 exit 0 with schema-valid JSON, 0 rate-limit errors.
+Raw outputs `/tmp/upstream-check/rmeas/out/`, tally `recall.txt`.
+
+Recall against the 11 recorded slice findings on these tickets (IN-474 #4 #5, IN-447 F2 F3, IN-453 F5,
+IN-462 F1 F7, IN-476 #1 #3, IN-479 #2, IN-487 #6); one run per cell per ticket (pilot run 1); a finding
+naming the same defect by another route counts 0.5.
+
+| cell | recall /11 | tokens per run (avg) | seconds (avg) |
+|---|---|---|---|
+| Claude adversarial, Sonnet 5.5 | 5.0 | 90k | ~55 |
+| Claude adversarial, Opus 5.5 | 4.5 | 109k | ~120 |
+| control: slice-reviewer method, Sonnet | 4.5 | 96k | ~70 |
+| Claude edge, Sonnet | 3.0 | 89k | ~55 |
+| Claude edge, Opus | 3.0 | 114k | ~110 |
+| Codex adversarial, gpt-6.2-sol | 4.5 | 102k | 95 |
+| Codex adversarial, gpt-6.2-astra | 2.5 | 70k | 80 |
+| Codex edge, gpt-6.2-sol | 2.5 | 124k | 132 |
+| Codex edge, gpt-6.2-astra | 2.0 | 79k | 100 |
+
+Noise: on the pilot the same cell changed between its two runs (Claude adversarial Sonnet named #4 in
+run 1, not in run 2), so a gap of 1 or less is a tie.
+
+What the numbers say:
+- **Vendors are complementary, not interchangeable.** IN-474's verified defect (a), a mid-group session
+  error discarding fetched days, was named by Codex in 8 of 8 pilot runs and by Claude in 1 of 10. The
+  slice findings #4, #2 and #6 were named only by Claude. Union of all Claude cells: 8 of 11; union of all
+  Codex cells: 5 of 11, all inside the Claude union, plus (a).
+- **Adversarial beats edge on both vendors** (Claude 5.0 / 4.5 vs 3.0 / 3.0; Codex 4.5 / 2.5 vs 2.5 / 2.0).
+  The edge lens added no recorded finding the adversarial cells missed. Its distinct output was test-
+  harness and docs drift, precision unverified.
+- **Opus does not beat Sonnet on this lens** (4.5 vs 5.0, inside the noise) at about 1.2x the tokens and
+  about 2x the time.
+- **Sol beats Astra on Codex adversarial** (4.5 vs 2.5, outside the noise) at about 1.45x the tokens.
+- **The new adversarial lens ties the existing slice-reviewer method** at ticket scope (5.0 vs 4.5).
+- Missed by every cell: IN-474 #5 (queued jobs keep 25 attempts), IN-447 F3 (no MaxAttempts), IN-462 F7
+  (ceiling-skipped chunk writes no rows). Each needs a fact outside the diff (queued state, a default in a
+  library, a later ticket's behaviour).
+
+Owed before any default is written: precision (real over reported) on a deduped, source-stripped list
+per ticket, verified at the line, inception spot-checking a sample.
