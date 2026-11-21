@@ -1,3 +1,32 @@
+# Astragentic 6.1.19
+
+The arm no longer needs the Codex plugin: spec and slice use the same direct, read-only `codex exec`
+call as the ticket arm. Owner's word 2026-11-21 ("đưa hết về skill và agent review của astragentic";
+plugin disabled globally on his machine, re-enabled per project where wanted).
+
+| số đo | nguồn |
+|---|---|
+| payload callers of the companion before this release: `codex-arm` only (plus the mod's inert job tracking) | grep over roles and skills |
+| `codex exec review --base` with a prompt: still refused on codex-cli 0.171 (exit 2) | run 2026-11-21 |
+| the shipped block with the Codex quota out: `exit=1`, `cross-vendor arm: NOT RUN — ... usage limit ...`, nothing counted as pass | scratch worktree run, 2026-11-21 |
+| `codex-arm` 2,893 words to 1,553 | wc |
+
+**`codex-arm`, every scope direct.** Ticket and slice read with `edge-lens.md`, spec with
+`astra-adversarial-lens.md` and a spec note; the prompt carries the owner intent. gpt-6.2-astra at
+medium, set on the call. The companion sections (background jobs, waiting, hang, broker cache,
+Responses API, focus-text quoting) are removed. The detached checkout at spec and slice, the head
+check, and the release script before removal stay.
+
+**Quota and failover.** A `usage limit` or any missing schema-valid output is NOT RUN with its reason;
+at ticket scope the Builder then runs `astra-review`'s Opus adversarial lens, recorded as same-vendor
+and advisory (`astra-review` §2 now also fires on a failed arm).
+
+By hand downstream: nothing. A project that wants the Codex plugin for other uses enables
+`codex@openai-codex` in its own `.claude/settings.json`; the harness no longer needs it.
+
+Not measured: the lens at spec and slice scope (chưa đo; the Codex quota ran out on 2026-11-21 until
+11-28). Static: selftest and tests/codex from a clean clone. Live downstream: chưa đo.
+
 # Astragentic 6.1.18
 
 The ticket arm reads with a measured lens through a direct `codex exec` call on gpt-6.2-astra, and a

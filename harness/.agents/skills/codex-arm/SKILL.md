@@ -1,6 +1,6 @@
 ---
 name: codex-arm
-description: Invocation mechanics for the cross-vendor arm on a Claude root — the Codex pass fired over a completed artifact. Covers the runtime invocation, argv and quoting gotchas, intent-loaded focus text, failover, and where the outcome is recorded. The BUILDER fires the ticket arm from its own worktree, the SHAPER fires the spec arm, and Thomas fires the slice arm from the base checkout. Cadence lives in thomas.md and builder.md.
+description: Invocation mechanics for the cross-vendor arm on a Claude root — the Codex pass fired over a completed artifact by a direct, read-only `codex exec` with an Astragentic lens (no plugin). Covers the call, the lens per scope, the verdict rules, quota and failover, and where the outcome is recorded. The BUILDER fires the ticket arm from its own worktree, the SHAPER fires the spec arm, and Thomas fires the slice arm from the base checkout. Cadence lives in thomas.md and builder.md.
 ---
 
 # The cross-vendor arm on a Claude root
@@ -10,11 +10,11 @@ passes **per gate invocation**. Do not restate the cadence in this file; this sk
 
 **Who fires it depends on the scope**: the one who owns the artifact at that scope.
 
-| Scope | Fired by | Standing in |
-|---|---|---|
-| `arm: spec` | **the Shaper**, before it cuts tickets | a detached checkout at the spec commit |
-| `arm: ticket` | **the Builder**, inside its own closed loop | its own worktree, which holds the reviewed commits |
-| `arm: slice` | Thomas | a detached checkout at the slice head |
+| Scope | Fired by | Standing in | Lens |
+|---|---|---|---|
+| `arm: ticket` | **the Builder**, inside its own closed loop | its own worktree, which holds the reviewed commits | `edge-lens.md` |
+| `arm: spec` | **the Shaper**, before it cuts tickets | a detached checkout at the spec commit | `astra-adversarial-lens.md` |
+| `arm: slice` | Thomas | a detached checkout at the slice head | `edge-lens.md` |
 
 Whoever fires it records which vendor actually ran.
 
@@ -25,273 +25,101 @@ lines across 31 files against 1,238 for one ticket, and three hollow tests survi
 in a single day. Pass 2 earns its cost the same way — on one ticket it found a real 40P01
 deadlock inside the code pass 1's fix had just added.
 
-## Invocation
+**Why a direct call with our own lens (6.1.18, 6.1.19).** Seven merged tickets were replayed at their
+merge trees and 336 findings verified blind (upstream, 2026-11-21). Codex reading with the edge
+lens found 21 of the 34 real high/medium defects, the most of any single cell, at 0.77 precision and
+about 79k tokens, and 32 of 32 direct runs exited 0 with schema-valid JSON. The spec and slice lenses
+were not measured at those scopes (chưa đo): the Codex quota ran out before they could be. The
+Codex plugin is not used: it allowed no effort setting, no lens of ours, leaked a broker per pass
+(AST-100) and exited 0 on a configuration failure (AST-095). `codex exec review --base` still refuses
+a prompt beside `--base` (codex-cli 0.171, exit 2), so the lens goes through plain `codex exec`.
 
-Use the plugin runtime. Raw `codex exec review` is not a drop-in fallback: on codex-cli 0.155.1
-it **refuses a focus text beside a range** — `the argument '--base <BRANCH>' cannot be used with
-'[PROMPT]'`, and `-` counts as that positional — so an arm written that way exits 2 before any
-review starts and leaves no output file, which looks exactly like never having fired. Piping the
-focus without `-` is worse: accepted, discarded, and the run exits 0 having reviewed a generic
-prompt. The plugin path has no such conflict, taking the focus as a positional beside `--base`,
-and that is the concrete reason it is primary here.
+## Model
 
-**Define the log before anything runs.** `$OUT` is the arm's output file, on both runtimes:
+**Every arm pass uses gpt-6.2-astra at medium effort, explicitly** (owner, 2026-11-21: Astra found 18
+to 21 real defects per run against Sol's 16 to 20, at 70 to 79k tokens against 102 to 124k). Never
+inherit the Codex default model, never substitute another one: changing the model is the owner's
+decision.
 
-```bash
-OUT="<artifact-worktree>/.scratch/gates/arm-<key>-<scope>-pass<N>.md"
-mkdir -p "$(dirname "$OUT")"
-```
+## Stand on the reviewed head
 
-`<artifact-worktree>` is the worktree whose branch carries the artifact: the ticket worktree at
-ticket scope, the base checkout at slice, the Shaper's worktree at spec. **Never the gate worktree** — it is removed,
-and the log goes with it. Use a `.md` extension and check `git check-ignore -v "$OUT"`: a
-project's ignore rules often track `.md` under `.scratch/` and drop `.log`. Print the range
-header and run the review in ONE brace group piped to `tee`, so the header cannot be skipped and
-nothing is copied out afterwards. Four logs were lost to a separate "copy it out first" step,
-across two Builders, each under handback pressure; removing the step beat reinforcing it.
-Commit the log before the `arm(ticket):` receipt, which names it on `Output:`.
-
-**On a Claude root**, use the plugin runtime (`COMMIT_COUNT` and `FILE_COUNT` come from the
-range header below):
+**Ticket**: the Builder's cwd is the worktree holding the reviewed commits, so `HEAD` is the head
+under review. **Spec and slice**: resolve the head yourself and stand in a detached checkout at it.
+A run that reads the wrong head reads nothing and comes back clean, a gate that cannot fail
+(measured twice in two days, AST-103):
 
 ```bash
-CC="$CLAUDE_PLUGIN_ROOT/scripts/codex-companion.mjs"
-{ echo "arm range: $COMMIT_COUNT commits, $FILE_COUNT files changed ($BASE..HEAD)"
-  node "$CC" adversarial-review --background --model gpt-6.2-astra --base "$BASE" <focus words>   # prints a job id
-} | tee "$OUT"
-```
-
-**Model policy (owner-selected 2026-11-21, Astra since the review measurement): every arm pass uses Astra 6.2 (model ID gpt-6.2-astra)
-at medium effort, explicitly**, at spec, ticket and slice scope, including a second pass and any
-permitted raw fallback. Do not inherit the Codex default model or silently substitute another
-model when Astra 6.2 is at capacity or unavailable. Record `cross-vendor arm: NOT RUN — Astra 6.2 unavailable`
-with the actual error; changing the selected model requires an explicit owner decision.
-Companion 1.0.6 accepts `--model` for both review commands even though its help omits
-that option. Its review parser does not accept `--effort`; do not borrow that flag
-from the separate `task` command: the effort is `model_reasoning_effort` in the Codex config
-(`medium`). If using plain `review` without focus, also pass `--model gpt-6.2-astra`. Record the requested model in the arm log; only claim the
-actual model verified when session metadata or runtime evidence confirms it.
-
-### Ticket scope: the direct call, edge lens (6.1.18)
-
-**`arm: ticket` does not use the companion.** The Builder calls `codex exec` itself, read-only, with
-the edge lens that ships beside this file. Spec and slice keep the companion command above.
-Measured before the switch (upstream, 2026-11-21): seven merged tickets
-were replayed at their merge trees and the findings were verified blind. Codex reading with
-this lens found 21 of the 34 real high/medium defects, the most of any single cell, at a precision of
-0.77 and about 79k tokens. 32 of 32 direct runs exited 0 with schema-valid JSON. Run it with the Bash
-tool's `timeout: 600000`: runs took 75 to 158 s, and a call that drops to the background ends the
-Builder's turn with the arm open (6.1.7).
-
-```bash
-ARM="$(git rev-parse --show-toplevel)/.claude/skills/codex-arm"
-D="$(mktemp -d)"; git diff "$BASE"...HEAD > "$D/diff.patch"; git log --format=%B "$BASE"..HEAD > "$D/claims.txt"
-[ -s "$D/diff.patch" ] || { echo "STOP: $BASE...HEAD is empty"; exit 1; }
-{ echo "arm range: $COMMIT_COUNT commits, $FILE_COUNT files changed ($BASE..HEAD) head=$(git rev-parse HEAD) model=gpt-6.2-astra lens=edge"
-  perl -e 'alarm 540; exec @ARGV' -- env -u ORCA_PANE_KEY codex exec --cd "$PWD" --sandbox read-only \
-    --skip-git-repo-check --model gpt-6.2-astra -c 'model_reasoning_effort="medium"' -c 'notify=[]' \
-    --output-schema "$ARM/lens-schema.json" -o "$D/arm.json" \
-    "Your instructions are in $ARM/edge-lens.md: read it first and follow it. The staged diff is $D/diff.patch; the repository is the current directory. The claims file (open it only at step 4) is $D/claims.txt. Read only: no edits, no test runs, no builds, no network. Return only the JSON object the instructions name." \
-    < /dev/null > "$D/codex.log" 2>&1
-  echo "exit=$?"
-  python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(json.dumps(d, indent=1)); print("findings=%d" % len(d["findings"]))' "$D/arm.json" \
-    || echo "cross-vendor arm: NOT RUN — no schema-valid output ($(tail -3 "$D/codex.log" | tr '\n' ' '))"
-} 2>&1 | tee "$OUT"
-```
-
-**The lens gives findings, not a verdict, so the verdict is yours and it fails closed.** Two rules:
-- **No output is not a pass.** No `findings=` line in `$OUT` means `cross-vendor arm: NOT RUN` with
-  the exit code and the tail of `codex.log`, never a clean arm.
-- **Every finding gets a disposition in `$OUT`.** Verify it at its line by the `astra-review` §3 rule,
-  then record fixed (high or medium), low (with what you did), by design (cite where), false
-  (evidence), or deferred (why). A finding with no line is an unread finding.
-
-Pass 2 is owed when pass 1 left any fixed finding, over the full range again. The blind check put about 0.7
-of this lens's findings at real, so most tickets will run pass 2. That is about 160k Codex tokens per
-ticket. The receipt is `arm(ticket):` as before, with `Vendor: codex gpt-6.2-astra (direct, edge lens)`.
-
-Plugin root: `~/.claude/plugins/cache/openai-codex/codex/<version>`. Plain `review --background
---base "$BASE"` takes no focus text.
-
-**Waiting (6.1.7): no bell comes for a companion job, ever, so the turn never ends with one open.**
-Wait in the foreground, in the same turn, with the companion's own wait:
-`node "$CC" status <job-id> --wait --timeout-ms 480000 --json` (returns when the job finishes, or
-`waitTimedOut: true` after 8 min, under the Bash call's 10-min ceiling); repeat until it is
-finished, then `result`. Measured 2 of 2 Builders that ended the turn on a `--background` launch
-("Agents: 0 running") sat parked until steered; the mod names an open job in the TURN-END. A
-broker that died also never notifies, and a stall caught in minutes costs minutes (one job sat
-dead for about 44 of 47 minutes).
-
-**A hang is a job now, not a verdict** (plugin >= 1.0.6; `codex-companion.mjs --help` lists what
-the installed copy has):
-
-```bash
-node "$CC" status --all --json    # running[], latestFinished, recent[], needsReview
-node "$CC" result <job-id> | tee -a "$OUT"   # the finished review's stored final output
-node "$CC" cancel <job-id> --json # a hang is cancelled, not abandoned
-```
-
-This retires "treat a hang as NOT RUN". `result` is the verdict as an ARTIFACT, and appending it
-to `$OUT` puts the range header, the job id and the verdict in the one file `Output:` names.
-
-The arm needs the OpenAI Responses API: routed through an OpenAI-compatible Chat Completions proxy,
-`adversarial-review` returned JSON with `status` and no `verdict` (field, 1 of 1, 2026-11-11); direct
-to a Responses endpoint it returned the verdict. A missing `verdict` is NOT RUN, never approve.
-
-**Take the verdict only from `result`, with a `Verdict:` header.** A broker that dies mid-review
-leaves partial `{"verdict":"approve"}` lines in the streaming log while the job sits in
-`verifying` with `Elapsed:` still rising, so grepping the log fails OPEN, with text that reads
-like a candid reviewer. No finished job and no header means no verdict. **Liveness is `status`
-ADVANCING, not RESPONDING**: take two observations and compare; the same last command twice, or
-a log mtime that has not moved, is a dead job, and `Elapsed:` counts up whether or not a process
-exists. Never reuse a gate-worktree path after a dead run (`-p2` to `-p3`).
-
-The findings have a declared shape in the plugin's `schemas/review-output.schema.json` —
-`verdict`, `summary`, `findings[]` of `severity / title / body / file / line_start / line_end /
-confidence / recommendation` — so fold by field rather than by parsing prose.
-
-Where the plugin is genuinely unavailable, use plain `codex exec --model gpt-6.2-astra -c model_reasoning_effort="medium"`
-with the exact reviewed base/head and owner intent in the prompt, not `codex exec review`.
-Keep the same range header and `tee "$OUT"` log. Use the project-approved permission
-mode and require a completed final verdict tied to the reviewed artifact. This transport
-fallback must not change the model or bypass an Astra 6.2 capacity/access error.
-
-### Bind it to the reviewed head, and fail closed
-
-**The companion resolves `HEAD` from the checkout it runs in, and `--base` alone does not say
-which head.** Where the two disagree, the run compares the base branch to itself, reads nothing,
-and returns **clean** — a mandatory gate that cannot fail. Measured twice in two days, both
-caught by the operator rather than the gate (AST-103).
-
-Which apparatus you need depends on **where you are standing**, and the two cases are not
-symmetric.
-
-#### At TICKET scope — you are already standing in the reviewed tree
-
-The Builder fires this one, in its own pane, whose cwd **is** the worktree holding the reviewed
-commits. `HEAD` resolves to the head under review because there is nowhere else it could
-resolve to. **No gate worktree, no broker to kill, no container to stop, no path disambiguator**
-— none of the apparatus below applies, because none of it is needed to make the range correct.
-
-Keep the range header, which costs one command and is the thing a reader glances at:
-
-```bash
-COMMIT_COUNT=$(git rev-list --count <base>..HEAD)
-FILE_COUNT=$(git diff --name-only <base>...HEAD | wc -l | tr -d ' ')
-[ "$COMMIT_COUNT" -gt 0 ] || { echo "STOP: range <base>..HEAD has 0 commits — reviewing nothing"; exit 1; }
-echo "arm range: $COMMIT_COUNT commits, $FILE_COUNT files changed (<base>..HEAD)"
-```
-
-#### At SPEC and SLICE scope — fired from a detached checkout (the Shaper at spec, Thomas at slice)
-
-Here the two can disagree, so resolve the head yourself and review from a detached checkout at
-that SHA:
-
-```bash
-set -euo pipefail
 git worktree prune                         # clear stale registrations BEFORE add (AST-096)
 git worktree add --detach <repo-root>/.claude/worktrees/gate-arm-<key> <head-sha>
 cd <that worktree>
 [ "$(git rev-parse HEAD)" = "<head-sha>" ] || { echo "STOP: HEAD mismatch"; exit 1; }
-COMMIT_COUNT=$(git rev-list --count <base>..<head-sha>)
-FILE_COUNT=$(git diff --name-only <base>...<head-sha> | wc -l | tr -d ' ')
-[ "$COMMIT_COUNT" -gt 0 ] || { echo "STOP: range <base>..<head-sha> has 0 commits — reviewing nothing"; exit 1; }
-echo "arm range: $COMMIT_COUNT commits, $FILE_COUNT files changed (<base>..<head-sha>)"
 ```
 
-**The first line of arm output must state the range.** A review of 0 commits and a review
-of 40 commits look identical once the verdict line prints — the header is what makes the
-silent-empty-range failure visible to a reader who glances at the top. Two incidents in two
-days were caught by the operator, not the gate, because nothing in the output distinguished
-a real review from a vacuous one.
+Before removing that checkout, run `scripts/release-worktree-resources.sh "<that worktree>"`: it
+reaps what the checkout holds and stamps the path, and `hook-git-guard.py` refuses the removal of an
+unstamped one. It never removes the Builder's worktree.
 
-**Everything from here to the end of the cleanup rules is SPEC/SLICE apparatus.** A Builder
-running the ticket arm has no gate worktree and skips all of it.
+## The call
 
-**Never reuse a gate worktree path across dispatches.** The companion caches state keyed to
-the workspace root; deleting and recreating the directory at the same path inherits stale
-configuration that causes a silent failure — exit 0, no review started (AST-095). Append a
-disambiguator (`-p2`, a counter, a short token) when a previous gate used that path in this
-session.
+`$OUT` is the arm's log, on the worktree whose branch carries the artifact (the ticket worktree, the
+base checkout at slice, the Shaper's worktree at spec), **never the gate checkout**, which is removed
+with the log in it. Use `.md` and check `git check-ignore -v "$OUT"`. Header and run go in ONE brace
+group piped to `tee`: four logs were lost to a separate "copy it out first" step. Commit the log
+before the receipt that names it on `Output:`. Run it with the Bash tool's `timeout: 600000`: runs
+took 36 to 158 s, and a call that drops to the background ends the turn with the arm open (6.1.7).
 
-**Every gate worktree removal must kill its broker first** — not only the final
-cleanup, but also the mid-ticket removal between pass 1 and pass 2. Removing
-the pass-1 worktree to create the `-p2` worktree orphans the pass-1 broker
-(AST-100, measured: every two-pass ticket leaked one process this way).
+```bash
+OUT="<artifact-worktree>/.scratch/gates/arm-<key>-<scope>-pass<N>.md"; mkdir -p "$(dirname "$OUT")"
+SK="$(git rev-parse --show-toplevel)/.claude/skills"
+LENS="$SK/codex-arm/edge-lens.md"        # spec: $SK/astragentic-dispatch/agents/astra-adversarial-lens.md
+NOTE=""   # spec: "This change is a specification: check each requirement and each claim about existing behaviour against the code it names."
+          # slice: "This change is a whole slice of several tickets: also look for contradictions between them."
+INTENT="<the owner's goals and must-not-break lines, plain words, no quotes, no dollar signs, no backticks>"
+D="$(mktemp -d)"; git diff "$BASE"...HEAD > "$D/diff.patch"; git log --format=%B "$BASE"..HEAD > "$D/claims.txt"
+[ -s "$D/diff.patch" ] || { echo "STOP: $BASE...HEAD is empty"; exit 1; }
+{ echo "arm range: $(git rev-list --count "$BASE"..HEAD) commits, $(git diff --name-only "$BASE"...HEAD | wc -l | tr -d ' ') files changed ($BASE..HEAD) head=$(git rev-parse HEAD) model=gpt-6.2-astra lens=$(basename "$LENS")"
+  perl -e 'alarm 540; exec @ARGV' -- env -u ORCA_PANE_KEY codex exec --cd "$PWD" --sandbox read-only \
+    --skip-git-repo-check --model gpt-6.2-astra -c 'model_reasoning_effort="medium"' -c 'notify=[]' \
+    --output-schema "$SK/codex-arm/lens-schema.json" -o "$D/arm.json" \
+    "Your instructions are in $LENS: read it first and follow it (ignore any YAML header). The staged diff is $D/diff.patch; the repository is the current directory. The change's own description (claims) is $D/claims.txt; if your instructions say when to open it, open it then. $NOTE Owner intent: $INTENT. Read only: no edits, no test runs, no builds, no network. Return only the JSON object the instructions name." \
+    < /dev/null > "$D/codex.log" 2>&1
+  echo "exit=$?"
+  python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(json.dumps(d, indent=1)); print("findings=%d" % len(d["findings"]))' "$D/arm.json" \
+    || echo "cross-vendor arm: NOT RUN — no schema-valid output ($(grep -m1 -i -E 'usage limit|error' "$D/codex.log" || tail -1 "$D/codex.log"))"
+} 2>&1 | tee "$OUT"
+```
 
-**The `WorktreeRemove` hook in `.claude/settings.json` calls `scripts/release-worktree-resources.sh`
-for you, but field testing (2.3.0) showed the event does not fire on `git worktree remove` or
-`ExitWorktree` — confirmed by A/B test with control (SubagentStop fires from the same file, same
-minute). Until a probe proves it live, make the call yourself, on ALL runtimes, before every gate
-worktree removal — including the mid-ticket removal between pass 1 and pass 2, which orphaned one
-broker per two-pass ticket when it was skipped (AST-100).**
+**The intent is what makes the pass worth running.** An intent-blind pass finds internal
+inconsistencies; an intent-loaded pass finds betrayals of what the owner wants (a production-database
+wipe surfaced only once intent was packed in). Measured at ticket scope, without: the shipped proof
+named a planted defect in 39 s, left the tree untouched under an AGENTS.md that said "fix and
+commit", gave exit 1 and NOT RUN on an unknown model, and stopped an empty range before launch.
 
-In this order, every time you remove a gate worktree:
+## The verdict is yours, and it fails closed
 
-1. Release what the worktree holds — one call, before the directory is gone:
-   ```bash
-   scripts/release-worktree-resources.sh "$GATE_WORKTREE"
-   ```
-   A clean run stamps the path; `hook-git-guard.py` refuses step 2 for an unstamped path, so
-   this is enforced, not remembered.
-   It reaps every process rooted in the worktree by REAL cwd — the companion's broker
-   included, which is why a hand-typed `ps | grep -- '--cwd …'` is not a substitute: that grep
-   reported nothing while a live broker had run three hours — and then runs the project's own
-   plug, `.astraler/project/cleanup-worktree.sh`, for whatever this project's worktrees
-   allocate beyond git. **Never `pkill -f` by name** — it kills every project's brokers on the
-   machine (34 were live the night this was measured, including other projects').
+- **No output is not a pass.** No `findings=` line in `$OUT` is `cross-vendor arm: NOT RUN` with the
+  exit code and the reason, never a clean arm.
+- **Every finding gets a disposition in `$OUT`.** Verify it at its line by the `astra-review` §3 rule,
+  then record fixed (high or medium), low (with what you did), by design (cite where), false
+  (evidence), or deferred (why). A finding with no line is an unread finding.
+- **Pass 2** is owed when pass 1 left any fixed finding, over the full range again, under the rule
+  in `thomas.md` (§The cross-vendor arm). About 0.7 of the edge lens's findings were real in the blind
+  check, so most tickets run pass 2: about 160k Codex tokens per ticket.
 
-   **The plug must scope to THIS worktree and never delegate to a project-level target.**
-   Measured 2026-08-19: a documented project teardown target resolved correctly, ran
-   correctly, and stopped the project's SHARED test-database container — the one every live
-   Builder was standing on, because the project had that day moved to one shared server
-   across worktrees. A Builder mid-ticket survived on timing alone (AST-115). When scoping is
-   uncertain, release NOTHING — that is the correct direction to fail in; the project-level
-   form failed the other way, uncertain about scope and stopping everything it could name.
+## Quota and failover
 
-   **Three outcomes, all spoken, none silent**: released (named by the plug), nothing
-   declared (the script's `NOTE:` line — an empty socket, which is not a clean one), or a
-   failure (`WARN:`). Do not `|| true` any of them.
+Codex unavailable, out of quota (`usage limit` in the log; on 2026-11-21 the whole account stopped
+until a date a week out), or the model refused → **the arm DID NOT RUN.** Record
+`cross-vendor arm: NOT RUN — <reason>`; only the OWNER may accept proceeding without it, on the terms
+`thomas.md` sets. At ticket scope, still read adversarially: run `astra-review`'s adversarial lens on
+Opus as when the arm row is `no`, and record it as same-vendor and advisory. A same-vendor lens never
+completes the arm, so the recorded vendor is always the one that actually ran.
 
-   Measured earlier: three surviving database containers took a machine to seven instances;
-   a gate returned `signal: killed` on four packages with `FAIL = 0` — resource exhaustion
-   wearing the costume of a test failure. Releasing one turned the same command into
-   `EXIT=0, 40 ok`.
-2. Remove the worktree: `git worktree remove --force <path>`.
-
-The arm never removes the Builder's worktree.
-
-Gotchas, each of which has cost us a run:
-
-- Flags and focus are **separate argv tokens** — one quoted blob fails.
-- Focus text is unquoted, word by word, so **avoid every shell/glob-special character**, not
-  a specific list of them — apostrophes and semicolons split or unterminate the command;
-  parentheses, brackets, `*` and `?` are zsh glob syntax and fail with `no matches found`
-  before the command even runs (measured: a focus word `option (a)` never reached node —
-  no process started, no output file created, nothing to read). Naturally-written focus text
-  reaches for `(a)`, `(inert)` and similar constantly, so this is not a rare edge case. No
-  literal `--flag` either (the parser consumes it).
-- **A missing output file is NOT RUN, the same as an output file with zero `Verdict:`
-  lines** — check for the file's existence before trusting its content, not only the content
-  once it exists. A shell parse error from the gotcha above kills the whole command before
-  node starts: no crash surfaces where you are watching, no file is written, and the ONLY way
-  to catch it is to have checked that a file exists at all. This is the exact silent-non-run
-  failure mode the rest of this section exists to prevent, from a cause outside Codex itself.
-- **The companion exits 0 on configuration failure** (AST-095). `failed to load
-  configuration` prints and the process ends clean. Never branch on the companion's exit
-  code; the output file is the ONLY trustworthy signal.
-- **Focus goes to `adversarial-review` only.** Plain `review` takes no focus, so pack the
-  intent into the adversarial pass.
-- Commit first and scope with `--base <ref>`. Focus text steers the prompt; it is advisory,
-  and it filters nothing.
-
-## Focus text carries the OWNER INTENT
-
-The pass is only as good as this. An intent-blind pass finds internal inconsistencies; an
-intent-loaded pass finds betrayals of what the owner actually wants — a
-production-database-wipe critical surfaced only once intent was packed in. Structure it as:
-(1) the owner's goals in plain words, (2) the safety floors and must-not-break list, (3) the
-instruction to attack the diff AGAINST THAT INTENT.
+Record the outcome once. **At ticket scope the `arm(ticket):` record IS the receipt**, with
+`Vendor: codex gpt-6.2-astra (direct, <lens>)`; its shape and its `Tests:` field are in
+`dispatch-ticket/MARKERS.md`. At spec and slice scope the merge decision trail carries the date, the
+findings and their dispositions, the vendor that ran, and a `Tests:` line read the same way. **You
+classify which findings are real** — the arm advises. Escalate to the owner on a genuine fork.
 
 ## Other runtime: a ticket built by the other vendor (6.1.6)
 
@@ -304,22 +132,3 @@ alone; it runs the Codex payload's cross-vendor pass with Claude as the reviewer
 Codex payload installed, record `cross-vendor arm: NOT RUN — no Claude pass installed` and ask the
 owner. Field 2026-11-10: two Codex-built tickets under arm `no` read `markers=0` at a Claude
 station's `--marker 'arm(ticket)'`. No handover arm has run yet.
-
-## Failover and recording
-
-Codex unavailable or out of quota → **the arm DID NOT RUN.** A same-vendor lens is
-advisory and never completes it: record `cross-vendor arm: NOT RUN — <reason>`, and only the
-OWNER may accept proceeding without it, on the terms `thomas.md` sets for the artifact under
-review. Single-provider mode is legal. A
-same-vendor
-lens silently counted as the arm is the thing this rule exists to prevent, so the recorded
-vendor is always the one that actually ran.
-
-Record the outcome once. **At ticket scope the `arm(ticket):` record IS the receipt**; its
-shape and what its `Tests:` field attests are in `dispatch-ticket/MARKERS.md`, and are not
-restated here. At spec and slice scope the merge decision trail carries the date, the verdict,
-the per-finding resolution, the vendor that ran, and a `Tests:` line read the same way.
-**You classify which findings
-are real** — the arm advises. Where pass 1 returned a blocking finding, **run pass 2 under the rule in `thomas.md`** (§The cross-vendor arm) —
-that contract owns when it is required and what it must cover, and this file does not restate
-it in weaker words. Escalate to the owner on a genuine fork.

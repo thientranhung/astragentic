@@ -56,7 +56,7 @@ from this table — read the entry.
 | `AST-110` | A protocol change is an edit plus a sweep, and doc drift has at least three shapes | promoted | 417 | docs-staleness-audit.sh |
 | `AST-112` | SendMessage is not a user turn, so the brief's slash command never fires | promoted | 443 | register.tsx |
 | `AST-113` | An audit that always screams is an audit nobody reads | promoted | 290 | docs-staleness-audit.sh |
-| `AST-115` | Two correct changes composed into a live one, and the repair is what armed it | promoted | 447 | codex-arm,hook-git-guard.py,register.tsx,release-worktree-resources.sh |
+| `AST-115` | Two correct changes composed into a live one, and the repair is what armed it | promoted | 447 | hook-git-guard.py,register.tsx,release-worktree-resources.sh |
 | `AST-116` | A local fix that never goes upstream is a defect every fresh install re-buys | promoted | 335 | check-reachability.py,docs-staleness-audit.sh |
 | `AST-118` | A fallback that changes what the verdict MEANS, while keeping the same exit code | promoted | 373 | check-reachability.py |
 | `AST-119` | A fork inside a Builder can message the dispatcher, and nothing marks it as not the Builder | promoted | 677 | hook-git-guard.py |
