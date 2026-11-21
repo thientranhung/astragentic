@@ -1,3 +1,35 @@
+# Astragentic 6.1.18
+
+The ticket arm reads with a measured lens through a direct `codex exec` call on gpt-6.2-astra, and a
+Claude adversarial lens on Opus reads when the arm is off. Owner's word 2026-11-21 (Astra for the arm,
+release). Measurement: `docs/audit/2026-11-21-review-dispatch-design.md`.
+
+| số đo | nguồn |
+|---|---|
+| 7 merged inception tickets replayed at their merge trees, 72 runs, 336 findings verified blind (Opus, grouped and judged at the line); inception spot-checked 12: 10 of 11 agree, the miss under-called a real defect | design doc §Results, §Precision |
+| real high/medium defects per run: Codex edge Astra 21 (precision 0.77, ~79k tokens), Codex adversarial Astra 18, Sol 16-20 at 102-124k tokens; Claude adversarial Opus 13 (0.71), Sonnet 7 (0.46) | same |
+| 34 real defects in all: Codex cells together 29, Claude cells 17; the 3 Builder lenses that ran on these tickets had named none of the slice findings | same; Builder transcripts |
+| direct `codex exec`: 32 of 32 replay runs exit 0 with schema-valid JSON; live proof of the shipped block: planted defect named in 39 s, a hostile AGENTS.md ("fix and commit") left the tree untouched, an unknown model gives exit 1 and NOT RUN, an empty range stops before launch | `/tmp` scratch fixtures, 2026-11-21 |
+
+**Every arm pass uses gpt-6.2-astra** (`codex-arm`): ticket, spec and slice. The Codex config default and
+the Codex lane's role rows stay gpt-6.2-sol (6.1.17).
+
+**Ticket arm: direct call, edge lens** (`codex-arm` § Ticket scope). The Builder runs `codex exec`
+read-only with `codex-arm/edge-lens.md` and `lens-schema.json`, foreground (Bash `timeout: 600000`).
+No schema-valid output is NOT RUN; every finding gets a recorded disposition; pass 2 runs when pass 1
+left a fixed finding. About 160k Codex tokens per ticket with pass 2. Spec and slice keep the companion:
+the lens was not measured on a spec or a whole slice (chưa đo).
+
+**Arm off: an adversarial lens on Opus** (`astra-review` §2, agent `astra-adversarial-lens`). Called with
+`model: "opus"`; about 109k tokens per ticket. Not an arm and no arm receipt (6.1.7 ruling stands).
+Whether the agent's `model: opus` frontmatter alone is honoured is chưa đo.
+
+By hand downstream: nothing. The Codex plugin stays enabled: spec and slice arms still use it.
+
+Not covered: the Codex lane's own arm (`codex-cross-vendor-review`, Claude reading Codex) is unchanged.
+Static: selftest and tests/codex from a clean clone. Live in a downstream session: chưa đo; after ~10
+tickets per project, an arm or lens that finds no real defect is proposed for removal.
+
 # Astragentic 6.1.17
 
 Codex runs on Sol at medium effort, on the owner's word (2026-11-21). Text and template only; no mod,

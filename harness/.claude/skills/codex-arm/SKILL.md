@@ -72,6 +72,44 @@ from the separate `task` command: the effort is `model_reasoning_effort` in the 
 (`medium`). If using plain `review` without focus, also pass `--model gpt-6.2-astra`. Record the requested model in the arm log; only claim the
 actual model verified when session metadata or runtime evidence confirms it.
 
+### Ticket scope: the direct call, edge lens (6.1.18)
+
+**`arm: ticket` does not use the companion.** The Builder calls `codex exec` itself, read-only, with
+the edge lens that ships beside this file. Spec and slice keep the companion command above.
+Measured before the switch (upstream, 2026-11-21): seven merged tickets
+were replayed at their merge trees and the findings were verified blind. Codex reading with
+this lens found 21 of the 34 real high/medium defects, the most of any single cell, at a precision of
+0.77 and about 79k tokens. 32 of 32 direct runs exited 0 with schema-valid JSON. Run it with the Bash
+tool's `timeout: 600000`: runs took 75 to 158 s, and a call that drops to the background ends the
+Builder's turn with the arm open (6.1.7).
+
+```bash
+ARM="$(git rev-parse --show-toplevel)/.claude/skills/codex-arm"
+D="$(mktemp -d)"; git diff "$BASE"...HEAD > "$D/diff.patch"; git log --format=%B "$BASE"..HEAD > "$D/claims.txt"
+[ -s "$D/diff.patch" ] || { echo "STOP: $BASE...HEAD is empty"; exit 1; }
+{ echo "arm range: $COMMIT_COUNT commits, $FILE_COUNT files changed ($BASE..HEAD) head=$(git rev-parse HEAD) model=gpt-6.2-astra lens=edge"
+  perl -e 'alarm 540; exec @ARGV' -- env -u ORCA_PANE_KEY codex exec --cd "$PWD" --sandbox read-only \
+    --skip-git-repo-check --model gpt-6.2-astra -c 'model_reasoning_effort="medium"' -c 'notify=[]' \
+    --output-schema "$ARM/lens-schema.json" -o "$D/arm.json" \
+    "Your instructions are in $ARM/edge-lens.md: read it first and follow it. The staged diff is $D/diff.patch; the repository is the current directory. The claims file (open it only at step 4) is $D/claims.txt. Read only: no edits, no test runs, no builds, no network. Return only the JSON object the instructions name." \
+    < /dev/null > "$D/codex.log" 2>&1
+  echo "exit=$?"
+  python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(json.dumps(d, indent=1)); print("findings=%d" % len(d["findings"]))' "$D/arm.json" \
+    || echo "cross-vendor arm: NOT RUN — no schema-valid output ($(tail -3 "$D/codex.log" | tr '\n' ' '))"
+} 2>&1 | tee "$OUT"
+```
+
+**The lens gives findings, not a verdict, so the verdict is yours and it fails closed.** Two rules:
+- **No output is not a pass.** No `findings=` line in `$OUT` means `cross-vendor arm: NOT RUN` with
+  the exit code and the tail of `codex.log`, never a clean arm.
+- **Every finding gets a disposition in `$OUT`.** Verify it at its line by the `astra-review` §3 rule,
+  then record fixed (high or medium), low (with what you did), by design (cite where), false
+  (evidence), or deferred (why). A finding with no line is an unread finding.
+
+Pass 2 is owed when pass 1 left any fixed finding, over the full range again. The blind check put about 0.7
+of this lens's findings at real, so most tickets will run pass 2. That is about 160k Codex tokens per
+ticket. The receipt is `arm(ticket):` as before, with `Vendor: codex gpt-6.2-astra (direct, edge lens)`.
+
 Plugin root: `~/.claude/plugins/cache/openai-codex/codex/<version>`. Plain `review --background
 --base "$BASE"` takes no focus text.
 

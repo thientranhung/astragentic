@@ -15,7 +15,7 @@ that documents how code is written here (`CODING_STANDARDS.md`, `CONTRIBUTING.md
 `AGENTS.md`/`CLAUDE.md` at root and in touched directories) plus the smell baseline below.
 Skip anything a linter already enforces.
 
-## 2. Three lenses, launched together before any result is read
+## 2. Three lenses (four with the arm off), launched together before any result is read
 
 - **Correctness**: `Skill(skill: "code-review")`, the built-in, on the staged diff. It hunts
   bugs without the intent, which is the point: what is missing, not only what is wrong. Call
@@ -32,10 +32,15 @@ Skip anything a linter already enforces.
 - **Standards** (sub-agent, read-only, given the standards and the diff): documented-standard
   violations citing file and rule; baseline smells, named, hunk quoted; hard violations
   separated from judgement calls. A documented standard that endorses a smell silences it.
+- **Adversarial**, only when `orchestrator.md`'s arm row `ticket` is `no`:
+  `Agent(subagent_type: "astragentic-dispatch:astra-adversarial-lens", model: "opus")`, given the
+  intent and the diff. It is what still reads adversarially when Codex does not; it is not an arm
+  and writes no arm receipt. Opus, not Sonnet: blind-verified on seven replayed tickets, Opus 13
+  real high/medium defects at 0.71 precision, Sonnet 7 at 0.46; about 109k tokens per ticket.
 
-The two sub-agents run in the foreground, in one message with the Skill call; what each
+The sub-agents run in the foreground, in one message with the Skill call; what each
 returns is its report. Each prompt ends: inspect only, no edits, no test runs, no skills, no
-sub-agents, findings as text under 400 words. A lens that fails is reported as failed, never
+sub-agents, findings as text under 400 words (the adversarial lens returns its own JSON). A lens that fails is reported as failed, never
 as clean.
 
 Smell baseline (each "what → fix"): Mysterious Name → rename · Duplicated Code → extract the
