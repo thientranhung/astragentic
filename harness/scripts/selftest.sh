@@ -2464,7 +2464,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const armSent = []
     $.session.send = async (m) => { armSent.push(String(m?.text ?? '')); return { isDelivered: true } }
     await fire('turn.start', { text: '', turnId: 'ta1' }, async () => ({}))
-    await toolOf({ tool: 'Bash', command: 'node "$CC" adversarial-review --background --model gpt-6-astra --base main focus' })
+    await toolOf({ tool: 'Bash', command: 'node "$CC" adversarial-review --background --model gpt-6.2-sol --base main focus' })
     await fire('turn.complete', { reason: 'answer', answer: 'waiting for the completion notification', turnId: 'ta1' }, async () => ({}))
     await fire('turn.start', { text: '', turnId: 'ta2' }, async () => ({}))
     await toolOf({ tool: 'Bash', command: 'node "$CC" result job-1 | tee -a "$OUT"' })

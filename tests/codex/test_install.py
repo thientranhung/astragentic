@@ -49,8 +49,8 @@ class InstallTests(unittest.TestCase):
         self.assertIn('.codex/astragentic/arm-schema.json', owned)
         self.assertEqual(sorted(json.loads(schema.read_text())['required']), ['coverage', 'findings', 'verdict'])
         config = self.project / '.agents/orchestrator-for-codex.md'
-        config.write_text(config.read_text().replace('| thomas | gpt-6-astra | medium |',
-                                                   '| thomas | gpt-6-astra | high |'))
+        config.write_text(config.read_text().replace('| thomas | gpt-6.2-sol | medium |',
+                                                   '| thomas | gpt-6.2-sol | high |'))
         operate(self.project, 'install', True)
         self.assertEqual(operate(self.project, 'doctor')['status'], 'files-intact')
         result = subprocess.run([sys.executable, str(self.project / '.codex/astragentic/launch.py'),

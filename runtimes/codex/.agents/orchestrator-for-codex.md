@@ -9,20 +9,20 @@ are generated from the same table at installation. Values apply to new sessions.
 
 | Role | Model | Effort |
 |---|---|---|
-| thomas | gpt-6-astra | medium |
-| ba | gpt-6-astra | high |
-| shaper | gpt-6-astra | high |
-| builder | gpt-6-astra | medium |
-| builder-quick | gpt-6-astra | low |
-| quick-builder | gpt-6-astra | low |
-| qa | gpt-6-astra | medium |
-| junior | gpt-6-astra | high |
-| reviewer | gpt-6-astra | high |
-| simplify | gpt-6-astra | medium |
-| astra-slice-reviewer | gpt-6-astra | high |
-| astra-test-architect | gpt-6-astra | high |
-| astra-ui-lens | gpt-6-astra | medium |
-| explorer | gpt-6-astra | high |
+| thomas | gpt-6.2-sol | medium |
+| ba | gpt-6.2-sol | medium |
+| shaper | gpt-6.2-sol | medium |
+| builder | gpt-6.2-sol | medium |
+| builder-quick | gpt-6.2-sol | medium |
+| quick-builder | gpt-6.2-sol | medium |
+| qa | gpt-6.2-sol | medium |
+| junior | gpt-6.2-sol | medium |
+| reviewer | gpt-6.2-sol | medium |
+| simplify | gpt-6.2-sol | medium |
+| astra-slice-reviewer | gpt-6.2-sol | medium |
+| astra-test-architect | gpt-6.2-sol | medium |
+| astra-ui-lens | gpt-6.2-sol | medium |
+| explorer | gpt-6.2-sol | medium |
 
 ## Selection and execution rules
 
@@ -69,5 +69,5 @@ home. This table is not read by `launch.py`; the roles read it.
 Chosen against codex-cli 0.166.0 catalog from codex debug models; all 14 model/effort pairs validated against that output.
 Catalog presence is not a completed inference/access test for each model. Workload quality and cost on Astragentic are not measured yet.
 Guidance: https://developers.openai.com/api/docs/guides/model-selection
-Owner decision 2026-11-08: every role runs gpt-6-astra; the earlier Astra/Sol/Luna/Terra split was an unmeasured starting point and is retired. Efforts are unchanged.
+Owner decision 2026-11-21: every role runs gpt-6.2-sol at medium effort (2026-11-08 had gpt-6-astra with per-role efforts; gpt-6-sol is a legacy model, not an alias of the latest Sol).
 The allocation is an engineering starting point, not a benchmark claim.

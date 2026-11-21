@@ -51,7 +51,7 @@ class LauncherTests(unittest.TestCase):
     def test_owner_models_and_no_config_or_permission_overrides(self):
         with tempfile.TemporaryDirectory(prefix='astra project ') as d:
             subprocess.run(['git','init','-q',d], check=True)
-            for role,model,effort in [('thomas','gpt-6-astra','medium'),('ba','gpt-6-astra','high'),('quick-builder','gpt-6-astra','low')]:
+            for role,model,effort in [('thomas','gpt-6.2-sol','medium'),('ba','gpt-6.2-sol','medium'),('quick-builder','gpt-6.2-sol','medium')]:
                 result=self.run_cli(role,'--project',d,'--dry-run')
                 self.assertEqual(result.returncode,0,result.stderr)
                 data=json.loads(result.stdout); argv=data['argv']
@@ -148,7 +148,7 @@ class LauncherTests(unittest.TestCase):
                 self.assertEqual(tomllib.loads(values[3]), {'permissions': {'astragentic-local': {
                     'extends': ':workspace', 'network': {'enabled': True, 'unix_sockets': {
                         str(sock_path): 'allow'}}}}})
-                self.assertEqual(argv[argv.index('--model') + 1], 'gpt-6-astra')
+                self.assertEqual(argv[argv.index('--model') + 1], 'gpt-6.2-sol')
                 self.assertNotIn('--sandbox', argv)
                 self.assertEqual(before, sorted(str(p.relative_to(project)) for p in project.rglob('*')))
                 self.assertTrue(sock_path.is_socket())
@@ -285,10 +285,10 @@ class LauncherTests(unittest.TestCase):
             project = Path(d) / 'project'
             subprocess.run(['git', 'init', '-q', str(project)], check=True)
             cfg = Path(d) / 'custom.md'
-            cfg.write_text('## Model assignments\n| Role | Model | Effort |\n|---|---|---|\n| thomas | gpt-6.1-sol | medium |\n')
+            cfg.write_text('## Model assignments\n| Role | Model | Effort |\n|---|---|---|\n| thomas | gpt-6-luna | medium |\n')
             result = self.run_cli('thomas', '--project', str(project), '--orchestrator', str(cfg), '--dry-run')
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn('gpt-6.1-sol', json.loads(result.stdout)['argv'])
+            self.assertIn('gpt-6-luna', json.loads(result.stdout)['argv'])
 
     def test_missing_project_rejected(self):
         self.assertNotEqual(self.run_cli('ba','--project','/nonexistent-astra-probe','--dry-run').returncode,0)
@@ -416,13 +416,13 @@ class LauncherTests(unittest.TestCase):
                             '--project', str(project), '--apply'], check=True, capture_output=True)
             cfg = Path(d) / 'custom.md'
             config = (project / '.agents/orchestrator-for-codex.md').read_text()
-            cfg.write_text(config.replace('| thomas | gpt-6-astra | medium |',
-                                          '| thomas | gpt-6.1-sol | medium |'))
+            cfg.write_text(config.replace('| thomas | gpt-6.2-sol | medium |',
+                                          '| thomas | gpt-6-astra | medium |'))
             args = ('thomas', '--project', str(project), '--orchestrator', str(cfg), '--dry-run')
             self.assertEqual(self.run_cli(*args).returncode, 0)
             profiles = {p: p.read_bytes() for p in (project / '.codex/agents').glob('*.toml')}
-            cfg.write_text(cfg.read_text().replace('| reviewer | gpt-6-astra | high |',
-                                                   '| reviewer | gpt-6.1-sol | high |'))
+            cfg.write_text(cfg.read_text().replace('| reviewer | gpt-6.2-sol | medium |',
+                                                   '| reviewer | gpt-6.2-sol | high |'))
             rejected = self.run_cli(*args)
             self.assertNotEqual(rejected.returncode, 0)
             self.assertIn('helpers do not match selected orchestrator', rejected.stderr)

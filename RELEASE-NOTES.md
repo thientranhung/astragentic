@@ -1,3 +1,29 @@
+# Astragentic 6.1.17
+
+Codex runs on Sol at medium effort, on the owner's word (2026-11-21). Text and template only; no mod,
+guard or checker change.
+
+| số đo | nguồn |
+|---|---|
+| arm passes downstream 11-10 to 11-17: 51 of 51 named `--model gpt-6-astra`; companion reviews send no effort, so they ran at the config's `medium` | Claude transcripts; companion 1.0.6 `codex-companion.mjs` 411-417 |
+| a Codex call after the machine config change: `model: gpt-6.2-sol`, `reasoning effort: medium` | `codex exec` header, 2026-11-21 |
+| `codex debug models` (codex-cli 0.169.0): `gpt-6.2-sol` current, `gpt-6.1-sol` previous generation, `gpt-6-sol` legacy; `--model gpt-6-sol` runs `gpt-6-sol`, not the latest | same day |
+
+**The arm uses Sol** (`codex-arm`, both mirrors): `--model gpt-6.2-sol` on every pass and fallback; the
+effort is the Codex config's `model_reasoning_effort`, `medium`. Sol unavailable is `NOT RUN — Sol
+unavailable`, never another model.
+
+**Codex roles use Sol medium** (`runtimes/codex/.agents/orchestrator-for-codex.md`): all 14 rows
+`gpt-6.2-sol | medium`, replacing gpt-6-astra with per-role efforts. `tests/codex` follows the template.
+
+By hand downstream:
+- A project with its own `.agents/orchestrator-for-codex.md` keeps its rows on upgrade (owner file):
+  set them to `gpt-6.2-sol | medium` and run the Codex `install` to regenerate the helper profiles.
+- The machine's `~/.codex/config.toml` is not payload; on this machine it now reads
+  `model = "gpt-6.2-sol"`, `model_reasoning_effort = "medium"`, `default_subagent_model = "gpt-6.2-sol"`.
+
+Static: selftest and tests/codex from a clean clone. Live arm on Sol: chưa đo.
+
 # Astragentic 6.1.16
 
 Two QA rules from nizzy's report of 2026-11-16 (`.scratch/harness-issues/report-to-astragentic-2026-11-16-qa-walk-lens.md`).
