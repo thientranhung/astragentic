@@ -134,3 +134,37 @@ What the numbers say:
 
 Owed before any default is written: precision (real over reported) on a deduped, source-stripped list
 per ticket, verified at the line, inception spot-checking a sample.
+
+## Precision, 2026-11-21 (blind verification)
+
+The 336 findings of the 63 run-1 outputs, shuffled per ticket with their source removed, were grouped
+and judged at the line by one Opus verifier per ticket (`astra-review` §3 verdicts plus `by-design`).
+Result: 135 groups — high 1, medium 33, low 45, by-design 31, maybe-false 10, false 15; 0 ids
+unassigned. Files: `/tmp/upstream-check/rmeas/prec/`. The verifier is a Claude model; a 12-item spot-check
+went to inception (8 medium, 1 false, 3 by-design, including IN-479 #2, which the blind verifier called
+by-design and inception's slice gate filed as a fix).
+
+| cell | findings | real high/medium | real incl. low | false | precision (h/m/l) | distinct high/medium defects |
+|---|---|---|---|---|---|---|
+| Codex edge, gpt-6.2-astra | 61 | 22 | 47 | 3 | 0.77 | 21 |
+| Codex edge, gpt-6.2-sol | 53 | 20 | 38 | 2 | 0.72 | 20 |
+| Codex adversarial, gpt-6.2-astra | 35 | 18 | 24 | 1 | 0.69 | 18 |
+| Codex adversarial, gpt-6.2-sol | 32 | 16 | 21 | 1 | 0.66 | 16 |
+| Claude adversarial, Opus | 21 | 13 | 15 | 0 | 0.71 | 13 |
+| Claude edge, Opus | 33 | 10 | 22 | 2 | 0.67 | 10 |
+| control, Sonnet | 40 | 9 | 24 | 6 | 0.60 | 9 |
+| Claude edge, Sonnet | 35 | 8 | 15 | 7 | 0.43 | 8 |
+| Claude adversarial, Sonnet | 26 | 7 | 12 | 2 | 0.46 | 7 |
+
+34 distinct high/medium defects in all: Codex cells together 29, Claude cells together 17; Codex-only 16
+(9 of them tests that cannot fail when the behaviour breaks), Claude-only 5, both 13. Best pair: Claude
+adversarial Opus + Codex edge Astra, 26 of 34. Lens overlap: Claude adversarial and edge 11 shared of 17;
+Codex 17 shared of 29, edge-only 9.
+
+This overturns three readings of the recall table above, which rested on 11 targets:
+- **Codex is the stronger reader**, not a complement: 29 of 34 against 17 of 34.
+- **Sonnet is not enough on the Claude side**: precision 0.43 to 0.46 and 7 to 8 defects, against Opus
+  0.67 to 0.71 and 10 to 13.
+- **Astra is not worse than Sol**: 18 vs 16 (adversarial), 21 vs 20 (edge), at 70k vs 102k and 79k vs
+  124k tokens. Whether a token costs the same quota on both is chưa đo.
+- **The edge lens earns its place on Codex** (9 defects no Codex adversarial run found), less on Claude (3).
