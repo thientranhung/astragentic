@@ -168,3 +168,11 @@ This overturns three readings of the recall table above, which rested on 11 targ
 - **Astra is not worse than Sol**: 18 vs 16 (adversarial), 21 vs 20 (edge), at 70k vs 102k and 79k vs
   124k tokens. Whether a token costs the same quota on both is chưa đo.
 - **The edge lens earns its place on Codex** (9 defects no Codex adversarial run found), less on Claude (3).
+
+Spot-check by inception (read against master 45d8a7fa1, 2026-11-21): of 12 verdicts, 10 agree (two of
+them true at the merge and fixed by later tickets: IN-478 for #2, IN-474 for #8), 1 disagree, 1 not
+checked (code moved). The disagreement is IN-479 #2: the verifier called it by-design, inception holds it
+a defect (slice-1121 #2, fix before switch-on). Agreement 10 of 11 checked; the one miss under-counts a
+real defect, so the precision figures above lean low, not high. Inception also withdrew its earlier
+"(e) empty scope reads collected": a market reaches that loop only with at least one keyword
+(handler_search_ads_worklist.go:154), so (e) is false; the pilot tally's "e" hits are misses.
