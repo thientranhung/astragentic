@@ -1,3 +1,44 @@
+# Astragentic 6.1.20
+
+A Herdr gate pane's turn-end bell rings in the Thomas that launched it, not in whichever root
+session polls first. Owner's word 2026-11-22 ("Đồng ý release 6.1.20 vì quan trọng"). Field
+batch: `docs/audit/2026-11-22-6120-field-incidents.md`.
+
+| số đo | nguồn |
+|---|---|
+| one project, 2026-11-10..22: 16 of 41 gate bells with a known launcher rang in another Thomas session; the reported gate ended its turn at 07:00:33Z and rang 18 s later in a Thomas open since the day before, while the launcher sat idle | project report; its transcripts (launcher and receiver session ids in the batch file) |
+| 6.1.1 claimed a lane's `dispatcher` at `orca terminal create` only; a Herdr gate entry had none, so every root session's 30 s poll could take its bell | `register.tsx` poll and claim |
+| qa tab labels in that project since 11-10: 48 of 48 literal | its transcripts |
+| planted: without the claim the selftest reads `herdrClaim` "false,true,1,0" (another session rang, the launcher did not); with it "true,true,0,1" | `selftest.sh` |
+
+**The mod claims a Herdr lane at `herdr tab create --label <lane>:<key>`** (`ticket`, `spec`, `qa`,
+`resident`), as it already did at `orca terminal create`: the entry's `dispatcher` is the creating
+session, and only that session's poll rings the entry's record-path bells. A label the shell has
+not expanded (`ticket:$t`) claims nothing.
+
+**The QA brief carries `Goal:` and `Exit:`** (`dispatch-qa-walk`, both mirrors, and
+`codex-dispatch-qa-walk`): what the run proves for the user, and which verdict lets the next step
+go. Owner's word, quoted in the batch file.
+
+**`check-requirements.sh` no longer warns about the Codex plugin**, which no arm scope has needed
+since 6.1.19 (planted HOME: 2 plugin lines before, 0 after). **README and README.vn** drop
+mattpocock-skills as a prerequisite; README.vn is re-synced with README.md.
+
+By hand downstream:
+- Until you upgrade, keep one Thomas session open at the project root: a second one can take
+  the gate bells.
+- A project whose gates start a compose stack removes that stack's named volumes in its own
+  `.astraler/project/cleanup-worktree.sh` (one `docker volume rm` per volume of that worktree,
+  never prune). The harness does not name a project's containers or volumes.
+- The `Goal:`/`Exit:` lines are now upstream; a project overlay that carried them can drop them.
+
+Not covered: the Codex lane has no record poll, so the claim is Claude-only. An Orca-only machine
+still reads `[MISS] herdr` from `check-requirements.sh` (open). Agent-browser sessions left by BA
+walks (`ba-*`, `omni-*`; 0 from QA) are open, pending whether closing an `omni-*` session stops
+its OmniLogin profile. Static: selftest 253/0 and tests/codex 72 OK before the version bump;
+the clean-clone run is below. Live: chưa đo, closes on the project's gate bells per session
+after it upgrades.
+
 # Astragentic 6.1.19
 
 The arm no longer needs the Codex plugin: spec and slice use the same direct, read-only `codex exec`

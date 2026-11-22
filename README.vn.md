@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-6.1.19-blue" alt="version"></a>
+  <a href="RELEASE-NOTES.md"><img src="https://img.shields.io/badge/version-6.1.20-blue" alt="version"></a>
   <img src="https://img.shields.io/badge/runtime-Claude_Code_%2B_Codex-green" alt="runtime">
   <a href="harness/.agents/memory/recurring-failure-modes.md"><img src="https://img.shields.io/badge/failure_modes-67_measured-red" alt="failure modes"></a>
   <a href="https://astragentic.thisistool.com/vi/"><img src="https://img.shields.io/badge/docs-astragentic.thisistool.com-E53625" alt="documentation"></a>
@@ -15,7 +15,8 @@
   <a href="https://astragentic.thisistool.com/vi/"><strong>Website</strong></a> ·
   <a href="RELEASE-NOTES.md">Release notes</a> ·
   <a href="https://astragentic.thisistool.com/vi/kinh-nghiem/">Kinh nghiệm chạy nhiều agent</a> ·
-  <a href="docs/bmad-distilled/">BMAD role kit</a>
+  <a href="docs/bmad-distilled-latest/">BMAD, distilled</a> ·
+  <a href="docs/matt-pocock-distilled/">Matt Pocock, distilled</a>
 </p>
 
 <p align="center">
@@ -42,18 +43,18 @@ nhau, review xong trong một vòng, và artifact chứng minh được điều 
 # 1. Đứng ở gốc project, stage bản mới nhất (không ghi file nào của project)
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
-#    …hoặc ghim một bản:  | bash -s -- 6.1.19
+#    …hoặc ghim một bản:  | bash -s -- 6.1.20
 
 # 2. Kiểm máy đã đủ thứ cần chưa
-bash .astraler/releases/6.1.19/check-requirements.sh
+bash .astraler/releases/6.1.20/check-requirements.sh
 #    Về sau, ngay trong project: bản đang cài, bản mới nhất, có gì thay đổi, nâng cấp thế nào
 .astraler/astragentic.sh update
 
-# 3. Chạy bộ cài thích nghi trong Claude Code
+# 3. Đưa dòng hướng dẫn setup vừa in ra cho agent hiện tại của bạn
 # In your current agent (Claude Code or Codex):
-# Read .astraler/releases/6.0.9/ADAPT-RUNTIME.md completely and execute it.
+# Read .astraler/releases/6.1.20/ADAPT-RUNTIME.md completely and execute it.
 
-# 4. Mở router
+# 4. Claude Code: mở router (Codex: xem docs/codex/OPERATIONS.md)
 claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable
 ```
 
@@ -64,8 +65,7 @@ mỗi máy ở lần đầu.
 
 > **Cần có trước:** [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code),
 > Git (có worktree),
-> [herdr](https://github.com/herdrdev/herdr) >= 0.8.0 (hoặc Orca),
-> python3, và một tracker (GitHub Issues, Jira hoặc Linear)
+> [herdr](https://github.com/herdrdev/herdr) >= 0.8.0
 
 ---
 
@@ -134,9 +134,12 @@ flowchart LR
 ```
 
 Công việc đi vào qua hai cửa tuỳ phạm vi. Cả hai nhập vào cùng một pipeline:
-**spec → ticket → implement → review**. Phương pháp phát triển đến từ
-[skill của Matt Pocock](https://github.com/mattpocock/skills) — Astragentic bọc điều phối
-quanh nó và mở rộng sang brownfield.
+**spec → arm → test-design → ticket → implement → review → QA**. Phương pháp phát triển là bộ
+skill `astra-*` của riêng harness (5.0.0), được chưng cất từ
+[skill của Matt Pocock](https://github.com/mattpocock/skills) và
+[BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD)
+(cả hai đều MIT; bản chưng cất và ghi nguồn nằm dưới `docs/`), bọc điều phối quanh nó và thêm
+các gate cho brownfield.
 
 ### Cấu trúc điều phối
 
@@ -211,22 +214,23 @@ glossary không ai xác nhận, sẽ thành lore nghe rất chắc chắn mà c�
 
 ---
 
-## Một role kit, đứng cạnh phương pháp
+## Phương pháp, và nó được chưng cất từ đâu
 
-`mattpocock-skills` là **phương pháp**: nó được gắn vào contract của từng role, và mọi ticket
-đều đi qua nó. [`docs/bmad-distilled/`](docs/bmad-distilled/) là thứ khác — một **role kit**
-cho những session đứng ngoài đường chính, lúc chưa có ticket nào để dispatch và bạn muốn một
-chuyên gia thay vì một trợ lý chung.
+Từ 5.0.0, phương pháp là bảy skill của chính payload: `astra-grill-with-docs` (bước Align của
+Shaper), `astra-ux` (hành trình và actor được lấy từ owner vào PRD, trước khi viết spec),
+`astra-to-spec`, `astra-to-tickets` (ticket tracer-bullet; ticket UI mang Glance, States và
+Criteria), `astra-implement-with-tdd` (brief của Builder, red trước green), `astra-ui` (một lượt
+kiểm trên một bề mặt đã render, đối chiếu `DESIGN.md` và ticket) và `astra-review` (ba trục,
+`code-review` built-in nằm bên trong, một lượt triage). Ba persona chỉ-đọc đứng sau chúng:
+`astragentic-dispatch:astra-ui-lens`, `astra-slice-reviewer`, `astra-test-architect`.
 
-Đó là [BMAD](https://bmadcode.com) chưng xuống còn markdown: một file `roster.md` khai tám
-role, và `capabilities/` chứa 44 file, mỗi workflow một file. Persona được trích nguyên văn từ
-bản gốc; python resolver, `config.yaml` và toàn bộ máy móc cài đặt đã bị bỏ đi. Không còn gì
-để cài, và agent nạp một role cộng một tới hai capability chứ không nạp cả bộ.
-
-```
-Đóng vai Winston trong docs/bmad-distilled/roster.md, theo
-docs/bmad-distilled/capabilities/architecture.md. Thiết kế kiến trúc cho: …
-```
+Chúng được viết từ hai nguồn, giữ dưới `docs/` cùng phần ghi nguồn và không bao giờ ship:
+[`docs/matt-pocock-distilled/`](docs/matt-pocock-distilled/) (skill của Matt Pocock 1.3.1, MIT:
+seam, vertical slice, frontier của grilling, review hai trục) và
+[`docs/bmad-distilled-latest/`](docs/bmad-distilled-latest/) (BMAD Method tại 2026-10-18, MIT:
+hành trình được lấy chứ không tự viết, FR id, tiêu chí là luật có đường thất bại, đánh giá
+diff, verdict kèm bằng chứng). Chỗ hai nguồn mâu thuẫn thì harness chọn, và ghi chú thiết kế
+trong `docs/audit/2026-10-29-astragentic-5.0.0-design.md` nói chọn bên nào và vì sao.
 
 **Giới hạn, nói thẳng.** Một role kit là mức prompt, không phải mức contract. Không hook nào,
 không gate nào bắt agent đi đúng file nó vừa đọc. Nó cải thiện hình dạng của câu trả lời; nó
@@ -247,9 +251,9 @@ Gõ những câu dưới đây vào tab `thomas`, theo thứ tự. Mỗi bước
 > the project id is set. There is no code in this repo — infer nothing from it.
 
 **2. Đưa ý tưởng vào**
-> The idea: `<3-5 sentences>`. If it is bigger than one session and still foggy, run
-> `/mattpocock-skills:wayfinder`. If the destination is clear, dispatch a Shaper whose brief
-> opens with `/mattpocock-skills:grill-with-docs`.
+> The idea: `<3-5 sentences>`. If it changes a surface someone looks at, run `astra-ux` with
+> me first so the PRD carries the journeys. Then dispatch a Shaper whose brief opens with
+> `/astra-grill-with-docs`.
 
 **3. Trả lời phần grill.** Đây là bước tốn kém nhất, và là bước không bỏ được. Repo rỗng làm
 **bạn thành nguồn duy nhất** — mọi câu Shaper không hỏi sẽ thành một thứ nó tự bịa ra.
@@ -299,7 +303,7 @@ và merge hook đều là của bản release ấy.
 ```bash
 cd /path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash                      # bản mới nhất, chỉ stage
-curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 6.1.19         # ghim một bản
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- 6.1.20         # ghim một bản
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --plan  # xem --apply sẽ ghi gì
 curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash -s -- latest --apply # ghi payload vào
 ```
@@ -320,7 +324,7 @@ Từ một checkout của package này, hai bước đó là `./install.sh <targ
 
 ### Pha 2 — Thích nghi
 
-Mở Claude Code trong repo đích:
+Mở agent hiện tại của bạn (Claude Code hoặc Codex) trong repo đích:
 
 ```
 Read .astraler/releases/<version>/ADAPT-RUNTIME.md completely and execute it.
@@ -351,6 +355,16 @@ Sửa `.agents/orchestrator.md` — file của bạn, không bao giờ bị bả
 Rồi: `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable`
 
 ---
+
+## Cài và cập nhật từ agent của bạn
+
+Sau khi cài bản release này, hãy nói với agent hiện tại của bạn: “Astragentic có bản mới rồi,
+kiểm tra phiên bản và cập nhật project này.” Skill dùng chung `astragentic-update-install`
+kiểm tra release, dùng bộ cài stage-first sẵn có, rồi hoàn tất bước adaptation cho runtime đã
+chọn. Claude Code và Codex dùng chung một yêu cầu của owner; contract riêng của từng runtime
+vẫn tách biệt. Runtime khác cần có adapter được ship và khả năng tự tìm skill gốc thì mới được
+hỗ trợ. Điểm vào staged dùng chung là `ADAPT-RUNTIME.md`; owner không cần truyền flag runtime.
+Về thiết lập runtime và giới hạn kiểm chứng, xem [Codex operations](docs/codex/OPERATIONS.md).
 
 ## Version và release
 
@@ -413,7 +427,7 @@ harness/
   .agents/
     roles/            bốn contract role + junior tuỳ chọn
     orchestrator.md   role -> runtime/model/effort (file của bạn)
-    skills/           12 skill — dispatch, QA, test design, tracker (cái bạn gọi tên, hoặc cả ba), arm, BMAD
+    skills/           18 skill — bảy skill phương pháp astra-*, dispatch, QA, test design, tracker (cái bạn gọi tên, hoặc cả ba), arm
     memory/
       recurring-failure-modes.md
   .claude/
@@ -506,12 +520,3 @@ các ngày không ai cần thì không thuộc về chỗ đó.**
 | **frontier** | Tập ticket mà agent đang có thể claim |
 | **gate** | Một chốt kiểm — QA walk sản phẩm đang chạy, hoặc gate slice khi đóng slice |
 | **arm** | Lượt review chéo hãng (Codex đọc lại việc của Claude) |
-
-## Cài và cập nhật bằng agent
-
-Sau khi cài bản có skill `astragentic-update-install`, anh chỉ cần nói với agent:
-“Astragentic có bản mới rồi, kiểm tra phiên bản và cập nhật project này.”
-Skill dùng bộ cài/update chung, stage release rồi tự thực hiện adaptation phù hợp
-với phiên Claude Code hoặc Codex hiện tại. Không cần chủ dự án nhớ flag runtime.
-Runtime khác cần adapter và khả năng tải skill tương ứng; chưa mặc định được hỗ trợ.
-Hướng dẫn Codex: [OPERATIONS.md](docs/codex/OPERATIONS.md).
