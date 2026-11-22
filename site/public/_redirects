@@ -23,6 +23,14 @@
 /vi/bang-chung          /vi/loi/                  301
 
 /en/skills/:slug        /skills/:slug/            301
+/roles/rin/             /roles/builder/           301
+/en/roles/rin/          /roles/builder/           301
+/vi/role/rin/           /vi/role/builder/         301
+/vai/rin/               /vi/role/builder/         301
+/vi/vai/rin/            /vi/role/builder/         301
+/skills/review-with-rin/     /skills/             301
+/en/skills/review-with-rin/  /skills/             301
+/vi/skills/review-with-rin/  /vi/skills/          301
 /roles/rin              /roles/builder/           301
 /en/roles/rin           /roles/builder/           301
 /vi/role/rin            /vi/role/builder/         301
@@ -37,14 +45,74 @@
 
 # The standalone diagram pages are now static files at /diagrams/<slug>.<lang>.html; the
 # old /explore/ addresses were linked from outside, so they keep a real 301.
-/explore/five-roles/    /diagrams/six-roles.en.html   301
-/explore/vi/five-roles/ /diagrams/six-roles.vi.html   301
-/explore/hook-:slug/    /diagrams/hooks.en.html       301
-/explore/vi/hook-:slug/ /diagrams/hooks.vi.html       301
-/explore/vi/:slug.html  /diagrams/:slug.vi.html   301
-/explore/vi/:slug/      /diagrams/:slug.vi.html   301
-/explore/:slug.html     /diagrams/:slug.en.html   301
-/explore/:slug/         /diagrams/:slug.en.html   301
+/explore/client-studio/                      /diagrams/client-studio.en   301
+/explore/client-studio.html                  /diagrams/client-studio.en   301
+/explore/vi/client-studio/                   /diagrams/client-studio.vi   301
+/explore/vi/client-studio.html               /diagrams/client-studio.vi   301
+/explore/cross-vendor-arm/                   /diagrams/cross-vendor-arm.en   301
+/explore/cross-vendor-arm.html               /diagrams/cross-vendor-arm.en   301
+/explore/vi/cross-vendor-arm/                /diagrams/cross-vendor-arm.vi   301
+/explore/vi/cross-vendor-arm.html            /diagrams/cross-vendor-arm.vi   301
+/explore/frontier-query/                     /diagrams/frontier-query.en   301
+/explore/frontier-query.html                 /diagrams/frontier-query.en   301
+/explore/vi/frontier-query/                  /diagrams/frontier-query.vi   301
+/explore/vi/frontier-query.html              /diagrams/frontier-query.vi   301
+/explore/hooks/                              /diagrams/hooks.en   301
+/explore/hooks.html                          /diagrams/hooks.en   301
+/explore/vi/hooks/                           /diagrams/hooks.vi   301
+/explore/vi/hooks.html                       /diagrams/hooks.vi   301
+/explore/layer-map/                          /diagrams/layer-map.en   301
+/explore/layer-map.html                      /diagrams/layer-map.en   301
+/explore/vi/layer-map/                       /diagrams/layer-map.vi   301
+/explore/vi/layer-map.html                   /diagrams/layer-map.vi   301
+/explore/parallel-lanes/                     /diagrams/parallel-lanes.en   301
+/explore/parallel-lanes.html                 /diagrams/parallel-lanes.en   301
+/explore/vi/parallel-lanes/                  /diagrams/parallel-lanes.vi   301
+/explore/vi/parallel-lanes.html              /diagrams/parallel-lanes.vi   301
+/explore/skill-routing/                      /diagrams/skill-routing.en   301
+/explore/skill-routing.html                  /diagrams/skill-routing.en   301
+/explore/vi/skill-routing/                   /diagrams/skill-routing.vi   301
+/explore/vi/skill-routing.html               /diagrams/skill-routing.vi   301
+/explore/structure/                          /diagrams/structure.en   301
+/explore/structure.html                      /diagrams/structure.en   301
+/explore/vi/structure/                       /diagrams/structure.vi   301
+/explore/vi/structure.html                   /diagrams/structure.vi   301
+/explore/ticket-lifecycle/                   /diagrams/ticket-lifecycle.en   301
+/explore/ticket-lifecycle.html               /diagrams/ticket-lifecycle.en   301
+/explore/vi/ticket-lifecycle/                /diagrams/ticket-lifecycle.vi   301
+/explore/vi/ticket-lifecycle.html            /diagrams/ticket-lifecycle.vi   301
+/explore/ticket-states/                      /diagrams/ticket-states.en   301
+/explore/ticket-states.html                  /diagrams/ticket-states.en   301
+/explore/vi/ticket-states/                   /diagrams/ticket-states.vi   301
+/explore/vi/ticket-states.html               /diagrams/ticket-states.vi   301
+/explore/five-roles/                         /diagrams/six-roles.en   301
+/explore/five-roles.html                     /diagrams/six-roles.en   301
+/explore/vi/five-roles/                      /diagrams/six-roles.vi   301
+/explore/vi/five-roles.html                  /diagrams/six-roles.vi   301
+/explore/hook-pre-tool-use/                  /diagrams/hooks.en   301
+/explore/hook-pre-tool-use.html              /diagrams/hooks.en   301
+/explore/vi/hook-pre-tool-use/               /diagrams/hooks.vi   301
+/explore/vi/hook-pre-tool-use.html           /diagrams/hooks.vi   301
+/explore/hook-session-start/                 /diagrams/hooks.en   301
+/explore/hook-session-start.html             /diagrams/hooks.en   301
+/explore/vi/hook-session-start/              /diagrams/hooks.vi   301
+/explore/vi/hook-session-start.html          /diagrams/hooks.vi   301
+/explore/hook-subagent-stop/                 /diagrams/hooks.en   301
+/explore/hook-subagent-stop.html             /diagrams/hooks.en   301
+/explore/vi/hook-subagent-stop/              /diagrams/hooks.vi   301
+/explore/vi/hook-subagent-stop.html          /diagrams/hooks.vi   301
+/explore/hook-worktree-remove/               /diagrams/hooks.en   301
+/explore/hook-worktree-remove.html           /diagrams/hooks.en   301
+/explore/vi/hook-worktree-remove/            /diagrams/hooks.vi   301
+/explore/vi/hook-worktree-remove.html        /diagrams/hooks.vi   301
+/explore/customize-loop/                     /customize/   301
+/explore/customize-loop.html                 /customize/   301
+/explore/vi/customize-loop/                  /vi/tuy-bien/   301
+/explore/vi/customize-loop.html              /vi/tuy-bien/   301
+/explore/hub-and-spokes/                     /why/   301
+/explore/hub-and-spokes.html                 /why/   301
+/explore/vi/hub-and-spokes/                  /vi/cach-tiep-can/   301
+/explore/vi/hub-and-spokes.html              /vi/cach-tiep-can/   301
 
 # Install became Customize on 2026-09-14: the page always covered both, and the menu
 # now says the half that matters. Both old addresses shipped and are linked from
