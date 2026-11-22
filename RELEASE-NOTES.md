@@ -1,3 +1,34 @@
+# Astragentic 6.1.21
+
+Two items the 6.1.20 note left open, plus the browser move. Owner's word 2026-11-22 ("em cứ
+release đi"). Field batch: `docs/audit/2026-11-22-6120-field-incidents.md` rows 2c and 6.
+
+| số đo | nguồn |
+|---|---|
+| planted: a stub `orca` on PATH and no herdr: the old `check-requirements.sh` printed 2 `[MISS] herdr` lines, the new one 0 and `[OK] orca … as the terminal host`; with neither host it prints `[MISS] no terminal host` | `selftest.sh` section 6.1.21 |
+| one project, 2026-11-22: 7 agent-browser sessions alive, every leftover a BA's (`ba-*`) or `omni-*`, 0 from QA | `agent-browser session list`; the project's reply |
+| `agent-browser close` on a session attached to a running profile ends the CLI session only: CDP still answers and every tab stays (OmniLogin, measured earlier; ShardX, 2026-11-22) | OmniLogin skill; ShardX trial: `/json/list` after close |
+
+**`check-requirements.sh` accepts Orca alone as the terminal host.** Herdr stays the default;
+the Herdr skill check runs only when herdr is the host.
+
+**The BA ends its browser session** after closing its tabs: `agent-browser close --session
+<yours>` (Claude and Codex roles). On a session attached to a running ShardX profile it only
+detaches; the profile keeps running.
+
+**The browser profile is ShardX.** The owner moved all browser work off OmniLogin on
+2026-11-22; the BA role text and a mod comment say so. The harness owns no browser bring-up
+(0 lines in roles and skills): the profile is opened by the machine's rules and the project's
+own browser skill.
+
+By hand downstream:
+- A project whose own files pin OmniLogin (CLAUDE.md, AGENTS.md, a browser-test skill, tools)
+  moves them to ShardX itself, on the owner's yes in its pane. A production service that uses
+  its own OmniLogin profile is product infrastructure and is not part of this move.
+
+Not covered: real anti-bot pages, proxies and a dispatched pane on ShardX are chưa đo. Static:
+selftest 254/0 and tests/codex 72 OK before the version bump; the clean-clone run is below.
+
 # Astragentic 6.1.20
 
 A Herdr gate pane's turn-end bell rings in the Thomas that launched it, not in whichever root
