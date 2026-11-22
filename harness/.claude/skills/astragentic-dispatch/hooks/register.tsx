@@ -2134,7 +2134,7 @@ export const register: Register = on => {
     if (/(?:codex-companion(?:\.mjs)?|\$\{?CC\}?)['"]?\s+(?:adversarial-review|review)\b[^\n]*--background\b/.test(cmd)) armJobOpen = true
     else if (/(?:codex-companion(?:\.mjs)?|\$\{?CC\}?)['"]?\s+(?:result|cancel)\b/.test(cmd)) armJobOpen = false
     // The pane that opens a browser tab closes it (owner, 2026-11-12). The browser is one shared
-    // OmniLogin window; in 10 days on two projects panes ran 172 `tab new` and 148 `tab close`,
+    // profile window (OmniLogin then, ShardX since 2026-11-22); in 10 days on two projects panes ran 172 `tab new` and 148 `tab close`,
     // 23 of 82 lanes leaving at least one, and the owner closed them by hand. Counted here from the
     // pane's own commands that ran; the TURN-END names what is left, so the steer is one line.
     const opened = (cmd.match(/agent-browser\b[^\n;|&]*\btab\s+new\b/g) ?? []).length
