@@ -3166,6 +3166,21 @@ EOS
 fi
 
 # ---------------------------------------------------------------------------------------------
+echo "check-requirements — Orca alone is a host (6.1.21)"
+# An Orca-only machine read [MISS] herdr twice and exited 1, though Orca is a host since 6.1.0.
+if [ -f "$ROOT/check-requirements.sh" ]; then
+  CRB="$TMP/cr-bin"; CRH="$TMP/cr-home"; mkdir -p "$CRB" "$CRH"
+  printf '#!/bin/sh\necho 1.4.269\n' > "$CRB/orca"; chmod +x "$CRB/orca"
+  orcaOnly="$(cd "$TMP" && HOME="$CRH" PATH="$CRB:/usr/bin:/bin" bash "$ROOT/check-requirements.sh" 2>&1 || true)"
+  noHost="$(cd "$TMP" && HOME="$CRH" PATH="/usr/bin:/bin" bash "$ROOT/check-requirements.sh" 2>&1 || true)"
+  if says "$orcaOnly" "as the terminal host" && ! says "$orcaOnly" "[MISS] herdr" && says "$noHost" "[MISS] no terminal host"; then
+    ok "an Orca-only machine passes the host check with no herdr MISS; a machine with neither host is a MISS"
+  else
+    bad "check-requirements host" "orca-only: $(printf '%s' "$orcaOnly" | grep -iE 'herdr|orca|host' | head -3) / no host: $(printf '%s' "$noHost" | grep -i host | head -1)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------------------------
 echo
 if [ "$FAIL" -eq 0 ]; then
   echo "selftest: $PASS passed, 0 failed ($LAYOUT layout, $SKIPPED package-only section(s) skipped)."

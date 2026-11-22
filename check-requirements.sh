@@ -150,13 +150,19 @@ if command -v herdr >/dev/null 2>&1; then
     miss "herdr lacks the required agent API" \
       "upgrade herdr; dispatch requires agent prompt, wait, read, and start"
   fi
+elif command -v orca >/dev/null 2>&1; then
+  # 6.1.21 — Orca is a host since 6.1.0 (one host per session), so a machine that runs only Orca
+  # has a host; it used to read [MISS] herdr and exit 1.
+  ok "orca $(orca --version 2>/dev/null | head -1) as the terminal host (herdr not installed; one host per session)"
 else
-  miss "herdr not on PATH" \
-    "install herdr (terminal multiplexer for coding agents), e.g. brew install herdr"
+  miss "no terminal host: neither herdr nor orca on PATH" \
+    "install herdr (terminal multiplexer for coding agents, e.g. brew install herdr) or Orca"
 fi
 
-# 5. herdr skill — agents drive herdr through this skill.
-if [ -d "$HOME/.agents/skills/herdr" ]; then
+# 5. herdr skill — agents drive herdr through this skill. Asked only where herdr is the host.
+if ! command -v herdr >/dev/null 2>&1 && command -v orca >/dev/null 2>&1; then
+  :
+elif [ -d "$HOME/.agents/skills/herdr" ]; then
   ok "herdr skill (~/.agents/skills/herdr)"
 else
   miss "herdr skill missing" "install the herdr skill into ~/.agents/skills/herdr"
