@@ -11,3 +11,11 @@
 | 4 | `check-requirements.sh` warned "Codex plugin not installed — the arm needs it" after 6.1.19 removed the need | planted HOME: 2 plugin lines before, 0 after | commit d4f784d | upstream | fixed (unreleased) |
 | 5 | README / README.vn listed mattpocock-skills as required | 1 row each | commit d4f784d | upstream | fixed; README.vn lines ~138/216/251 still describe the plugin method (open) |
 | 6 | An Orca-only machine gets `[MISS] herdr` from `check-requirements.sh` | planted: stub `orca`, no herdr: old script 2 herdr MISS lines, new 0 and `[OK] orca … as the terminal host`; neither host is `[MISS] no terminal host` | `check-requirements.sh`; selftest case 6.1.21 | upstream | fixed for 6.1.21 |
+
+## Field after 6.1.21 (2026-11-22)
+
+| # | số đo | nguồn | state |
+|---|---|---|---|
+| 1 | nizzy: 0 gate bells since the upgrade (no gate yet); before it, the 6.1.20 batch1122 QA gate rang only in its launching Thomas, 2/2 turn ends | nizzy Thomas reply 2026-11-22 | open: closes on the next gate's bells per session |
+| 2c | nizzy: 12 agent-browser sessions alive before any 6.1.21 BA walk (6 `ba-*`, 4 `omni-*`, `default`, `bay`) | nizzy reply | open: recount after one batch |
+| ShardX | inception: first run PASS (temp headless + agent-browser; webdriver false; stop deletes the temp profile). nizzy: first walk PASS on `thien nizzy` (app-opened, no CDP; stopped and restarted with CDP on the owner's instruction, 52922 in ~4 s); close detached only | inception 1f37e4a61, nizzy 53c40649a | measured; login wall and a dispatched QA pane chưa đo |
