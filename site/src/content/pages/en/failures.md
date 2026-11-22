@@ -1,4 +1,5 @@
 ---
+harness: v6.1.19
 title: "Six lessons I measured"
 description: "Six real dated incidents, ordered by the stage they fell out of. Each one with the fix I chose and what that fix costs."
 ---
@@ -17,8 +18,10 @@ how many Builders are working.
 I fixed it by giving the frontier query a target rather than only a trigger: after every merge
 the router has to ask how many more tickets it should claim, not only which ones are claimable.
 
-**Trade-off.** A busier router that sometimes over-claims. I take that trade, because an idle slot
-produces no signal at all.
+The default target is 4 Builders, and `.agents/orchestrator.md` carries the owner's override.
+
+**Trade-off.** Every merge, handback and report to the owner now carries a pane count. I take that
+trade, because an idle slot produces no signal at all.
 
 ## AST-097
 
@@ -28,23 +31,28 @@ builder had finished. I came close to reporting that ticket abandoned while the 
 twenty minutes into honest work.
 
 What saved this was not the protocol but the artifact contradicting itself: the modified file
-contained one added comment and nothing else. I dropped my trust in pane status entirely after
-that, and every `done` now has to read the diff before concluding anything.
+contained one added comment and nothing else, which is not what an abandoning Builder leaves.
 
-**Trade-off.** One extra pass every time a ticket closes.
+I fixed `dispatch-ticket`'s branch table: `done` no longer means finished. Before concluding, check
+for background processes in the worktree; if they have exited and there are no new commits since
+the last instruction, read the pane, and only new commits lead on to artifact verification. The
+git guard refuses `git worktree remove` while a process is still alive in the worktree.
+
+**Trade-off.** Every `done` costs one extra check of background processes and commits.
 
 ## AST-092
 
 The same word again, and this time it cost more. A Builder wrote the code and stopped before
 committing, the pane settled to `done`, and cleanup ran `git worktree remove` over the top of
-it. Five instances across three sessions, 93 to 433 lines each time, none recovered.
+it. Five instances across three sessions, 93 to 433 uncommitted lines each time. All five were caught
+before the loss, by Thomas's habit of running `git status`, which was not yet in the contract.
 
-I put the guard at the dangerous step rather than relying on Builders to commit more carefully.
-Cleanup reads `git status` on the worktree before removing it; anything dirty stops and goes
-back to a person.
+I put the guard at the dangerous step rather than relying on that habit. Cleanup reads
+`git status --short` on the worktree before removing it; anything dirty stops and is reported to
+the owner. The Builder's handback also became three explicit actions: commit, push, then return.
 
-**Trade-off.** Orphaned worktrees piling up and the occasional manual sweep. Next to losing a day of
-work, that price is cheap.
+**Trade-off.** Every dirty worktree blocks cleanup until someone deals with it. Next to losing a day
+of work, that price is cheap.
 
 ## AST-015
 
@@ -67,7 +75,8 @@ artifact recorded the omission.
 No tracker-only check catches this, because a wrong state is perfectly consistent with itself.
 The tracker has to be reconciled against Git after every merge instead of confirming itself.
 
-**Trade-off.** A reconcile step nobody enjoys running, and most of the time it finds nothing.
+**Trade-off.** One more read after every merge and at session start. `reconcile-tracker` is
+read-only, so every fix is still applied by Thomas by hand.
 
 ## AST-056
 
@@ -77,8 +86,9 @@ before that merge, produced two conflict blocks, and a merge in the wrong direct
 reverted reviewed work with no signal.
 
 One worktree per Builder solves the checkout collision and nothing else. It relocates the
-collision to the merge, where it is found late and by hand. Tickets now declare a write-set, and
-two tickets whose write-sets overlap are serialised even when nothing orders them.
+collision to the merge, where it is found late and by hand. The write-set is now a required field of every concurrent dispatch: the brief carries an
+`Owned elsewhere:` line listing the files other tickets hold, so a merge conflict becomes a handback
+note.
 
-**Trade-off.** Fewer tickets running at once, which is the exact thing this whole system exists to
-increase.
+**Trade-off.** Each dispatch with another ticket live has to derive a write-set from the ticket body
+plus the repo's docs-sync rule, and record it in the dispatch record.

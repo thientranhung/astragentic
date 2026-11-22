@@ -5,17 +5,18 @@ order: 5
 related: [tracker, frontier, worktree]
 diagram: ticket-states
 updated: 2026-11-22
+harness: v6.1.19
 ---
 
 **The claim is assigning a ticket to an agent on the tracker, and it happens before that ticket's worktree is created.**
 
-Thomas's role contract states the ordering directly: "assigning a ticket is the claim, and it happens before its worktree exists." That ordering is what makes concurrency work at all — two sessions picking off the same [frontier](/dictionary/frontier/) see each other's claims on the tracker itself, rather than discovering a collision only after both have started writing code. `dispatch-ticket/SKILL.md` puts the whole chain as one identity: ticket → assignee (the claim) → pane → worktree → branch → PR, each link one-to-one. The claim isn't the whole safety mechanism, though — Thomas's contract also notes a blocking edge expresses order, not exclusion, so two unordered tickets can still be unsafe to run together; the write-set collected during dispatch is what actually makes concurrency safe rather than merely parallel.
+Thomas's role contract states the ordering directly: "assigning a ticket is the claim, and it happens before its worktree exists." That ordering is what lets concurrent sessions coexist — two sessions picking off the same [frontier](/dictionary/frontier/) see each other's claims on the tracker itself, rather than discovering a collision only after both have started writing code. `dispatch-ticket/SKILL.md` puts the whole chain as one identity: ticket → assignee (the claim) → pane → worktree → branch → PR, each link one-to-one. The claim isn't the whole safety mechanism, though — Thomas's contract also notes a blocking edge expresses order, not exclusion, so two unordered tickets can still be unsafe to run together; the write-set collected during dispatch is what actually makes concurrency safe rather than merely parallel.
 
-A claim can also go stale: the tracker shows an assignee with no branch behind it, which looks identical to a Builder mid-ticket. `reconcile-tracker` catches that gap by measuring the tracker against git rather than against itself. Every tracker adapter has its own weak point here too — no tracker's assignee field was built to hold a value like `builder/<ticket-id>`, and RELEASE-NOTES.md records GitHub Issues claiming "Requirement 3 is met natively" while its assign command silently dropped the field.
+A claim can also go stale: the tracker shows an assignee with no branch behind it, which looks identical to a Builder mid-ticket. `reconcile-tracker` catches that gap by measuring the tracker against git rather than against itself. Every tracker adapter has its own weak point here too — no tracker's assignee field can hold a value like `builder/<ticket-id>`, and RELEASE-NOTES.md records GitHub Issues claiming "Requirement 3 is met natively" while its only assign command writes `@me`, one login for every dispatcher. Thomas's contract therefore calls the claim one atomic interlock plus an advisory readback, and says branch creation decides: `git worktree add -b` refuses an existing branch, so a same-second race that the readback passes for both dispatchers still has one loser.
 
 ## Why it matters here
 
-Claiming before the worktree exists costs an extra tracker write on every dispatch, and it only works if every session actually reads the ticket back afterward to confirm the assignee shown is its own — Thomas's contract calls this out explicitly, since a readback interlock can't otherwise tell whose claim it's looking at. The payoff is that several Builders can work the frontier at once without a lock file, a queue, or a central dispatcher deciding who goes first — the tracker itself is the lock.
+Claiming before the worktree exists costs an extra tracker write on every dispatch, and it only works if every session actually reads the ticket back afterward to confirm the assignee shown is its own — Thomas's contract calls this out explicitly, since a readback interlock can't otherwise tell whose claim it's looking at. The payoff is that several Builders can work the frontier at once with no separate lock file: the assignee on the tracker marks the work as taken, and atomic branch creation settles a tie.
 
 ## Seen in:
 

@@ -1,7 +1,8 @@
 ---
 title: "Kinh nghiệm chạy nhiều agent"
 description: "Năm kỹ thuật vận hành nhiều agent: git worktree, pnpm, portless, QA walk bằng browser thật, và runtime riêng cho mỗi worktree."
-source: README.md, harness/.agents/roles/qa.md, harness/.claude/skills/dispatch-ticket-claude/SKILL.md, harness/scripts/release-worktree-resources.sh
+source: README.md, harness/.agents/roles/qa.md, harness/.claude/skills/dispatch-ticket-claude/SKILL.md, harness/.claude/skills/dispatch-qa-walk/SKILL.md, harness/scripts/release-worktree-resources.sh
+harness: v6.1.19
 ---
 
 Astragentic dựng sự song song ở tầng điều phối: Thomas dispatch nhiều ticket, nhiều Builder cùng
@@ -31,9 +32,9 @@ lần fetch, và ba nơi để remote đi lệch nhau.
 checkout một branch riêng, có `HEAD` riêng và index riêng, nhưng **dùng chung một object database**.
 
 ```bash
-git worktree add ../app-tra-142 -b builder/TRA-142   # thư mục mới, branch mới
+git worktree add ../app-abc-142 -b builder/ABC-142   # thư mục mới, branch mới
 git worktree list                                     # ai đang ở đâu, trên branch nào
-git worktree remove ../app-tra-142                    # trả lại khi xong
+git worktree remove ../app-abc-142                    # trả lại khi xong
 ```
 
 Ba tính chất khiến nó khác hẳn việc clone nhiều lần, và đây là phần nhiều người chưa dùng sẽ thấy
@@ -84,7 +85,7 @@ Ba tính chất, xếp theo mức liên quan tới nhiều worktree:
 
 - **Disk.** npm copy, ba worktree là ba lần dung lượng thật. pnpm hardlink, ba checkout cùng đọc
   một store.
-- **`node_modules` không phẳng.** pnpm không hoist, nên một package chỉ import được thứ nó khai. Với
+- **`node_modules` không phẳng.** pnpm không hoist lên thư mục gốc, nên một package chỉ import được thứ nó khai. Với
   nhiều worktree ở nhiều commit khác nhau, điều này chặn cả một class lỗi "chạy ở worktree này, hỏng
   ở worktree kia" do dependency graph khác nhau chứ không do code.
 - **Install script tắt mặc định.** Muốn chạy thì phải khai tên, nên việc cấp phát `node_modules`
@@ -110,7 +111,7 @@ người quên.
 không nhớ nổi, không bookmark được, không dán vào ticket được. Mà một URL không gõ được thì không
 có browser evidence nào.
 
-**Kỹ thuật.** [portless](https://portless.sh) là một proxy chạy nền giữ port 443
+**Kỹ thuật.** [portless](https://github.com/vercel-labs/portless) là một proxy chạy nền giữ port 443
 cho cả máy và map tên `https://<tên>.localhost` sang một port localhost. Nó thay thế port hardcode
 và việc phải nhớ số port.
 
@@ -148,9 +149,8 @@ người khỏi địa chỉ cho agent.
 **Đánh đổi.** Một daemon toàn máy giữ port 443. Mọi thao tác vòng đời của nó cần sudo, tức cần TTY,
 nên một agent chạy nền không làm được và phải nhờ người. Đó là ràng buộc vận hành thật.
 
-**Bốn chỗ hỏng đã biết.** `502` là triệu chứng duy nhất khi port lệch, không có lỗi rõ ràng nào
-khác — cách kiểm là đối chiếu port trong `portless list` với port framework in ra, mỗi lần. Proxy
-lồng proxy cho `508 Loop Detected` trừ khi bên trong đặt `changeOrigin: true`. Route trùng tên báo
+**Ba chỗ hỏng đã biết.** `502` là triệu chứng duy nhất khi port lệch, không có lỗi rõ ràng nào
+khác — cách kiểm là đối chiếu port trong `portless list` với port framework in ra, mỗi lần. Route trùng tên báo
 "already registered by a running process" nghĩa là tiến trình cũ còn sống, hãy dọn trước chứ đừng
 vội `--force`. Và giết tiến trình cha của portless không giết dev server con, nên tiến trình mồ côi
 vẫn giữ route.
@@ -179,13 +179,13 @@ Công cụ chia làm hai, và **cách chia vai mới là phần quan trọng**.
 
 ### OmniLogin giữ trạng thái
 
-**[OmniLogin](https://omnilogin.net)** là một browser giữ profile: cookie, localStorage, extension
+**OmniLogin** là một browser giữ profile: cookie, localStorage, extension
 đã cài, fingerprint, proxy. Một Chrome sạch khởi chạy mỗi lượt thì không giữ được gì trong số đó,
 nên mọi hành trình đứng sau màn đăng nhập đều không đi được.
 
 Nó phơi ra một HTTP API cục bộ để tìm profile theo tên, hỏi profile đã mở chưa, và mở nó. Khi mở,
-nó trả về **port CDP thật** của lần mở đó. Port ấy **đổi theo mỗi lần mở** — nhớ số port cũ là một
-lỗi, phải đọc lại từ phản hồi.
+nó trả về **port CDP thật** của lần mở đó. Không có port mặc định: port đọc từ `remote_debug_address` trong phản hồi của `/open`, và nhớ số
+port của lần trước là một lỗi.
 
 Ba thứ nó mua, xếp theo mức khó thay thế:
 
@@ -204,7 +204,7 @@ Ba thứ nó mua, xếp theo mức khó thay thế:
 
 ### agent-browser điều khiển
 
-**[`agent-browser`](https://agent-browser.dev)** là một CLI kết nối vào browser
+**`agent-browser`** là một CLI kết nối vào browser
 đang chạy qua CDP và điều khiển nó. Trong mô hình này nó **không bao giờ được tự khởi chạy
 browser**: ngay khi nó làm thế, đó là một Chrome mới không có login nào, và mọi quan sát qua nó
 đều không có giá trị.
@@ -261,46 +261,35 @@ agent-browser --help | grep -- --pin-tab || { echo "STOP: binary quá cũ"; exit
 # 1-3. Trình duyệt còn sống không, profile đã mở chưa, và CỔNG THẬT của lần mở này là bao nhiêu.
 #      Không bao giờ dùng lại số port của lần trước.
 
-# 4. CDP có thật không, và user agent ở tầng browser là gì. Ghi lại để so ở bước 6.
+# 4. CDP có thật không. Cổng này đến từ OmniLogin, không phải từ trí nhớ.
 curl -fsS "http://127.0.0.1:<port>/json/version"
 
-# 5. Nối vào. `connect`, mỗi agent một --session, kèm --pin-tab.
-agent-browser --session <ticket> --pin-tab connect <port>
+# 5. Nối vào bằng --cdp, mỗi agent một --session và một --namespace, kèm --pin-tab,
+#    và nhận một tab mới của riêng mình thay vì dùng lại tab người dùng để mở sẵn.
+agent-browser --session <ticket> --namespace <tên> --pin-tab --cdp <port> tab new
 
-# 6. Ba bằng chứng. Trượt một cái là dừng và huỷ mọi quan sát trước đó.
-agent-browser --session <ticket> eval "navigator.userAgent + ' webdriver=' + navigator.webdriver"
-#    (1) khớp UA ở bước 4   (2) không chứa Headless   (3) webdriver=false
+# 6-7. Đi tới stack của chính worktree mình. Mọi lệnh sau mang cùng giá trị --cdp.
+agent-browser --session <ticket> --namespace <tên> --cdp <port> open "https://myapp-<branch>.localhost/<đường-dẫn>"
 
-# 7-8. Nhận tab của mình, rồi đi tới stack của chính worktree mình.
-agent-browser --session <ticket> tab new
-agent-browser --session <ticket> open "https://myapp-<branch>.localhost/<đường-dẫn>"
+# 8-9. Đọc cây accessibility có ref, hành động lên ref, rồi đọc lại.
+agent-browser --session <ticket> --namespace <tên> --cdp <port> snapshot -i
+agent-browser --session <ticket> --namespace <tên> --cdp <port> click @ref
 
-# 9-10. Đọc cây accessibility có ref, hành động lên ref, rồi đọc lại.
-agent-browser --session <ticket> snapshot -i
-agent-browser --session <ticket> click @ref
-
-# 11. Khẳng định ngữ nghĩa, không phải "trang có tải".
-agent-browser --session <ticket> screenshot <đường-dẫn>.png
+# 10. Khẳng định ngữ nghĩa, không phải "trang có tải".
+agent-browser --session <ticket> --namespace <tên> --cdp <port> screenshot <đường-dẫn>.png
 ```
 
 **Bước 0 phải chạy trước bước 1** vì một binary sai làm mọi bước sau vô nghĩa mà không báo gì.
 
-**Bước 6 không bỏ được kể cả khi bước 4 đã xanh**, vì hai bước hỏi hai câu khác nhau: "tôi định nối
-vào đâu" và "trang thật sự đang chạy ở đâu".
-
-**Ref hết hạn sau mỗi lần điều hướng**, kể cả chuyển trang trong SPA hay mở đóng modal. Phải chụp
-lại cây accessibility, đừng dùng ref cũ.
-
-**Một bẫy với React:** `click @ref` ở tầng CDP không kích hoạt `onClick` của React, và `fill ""`
-không kích hoạt `onChange`. Click thật thì gọi `eval` để chạy `.click()` trên phần tử; xoá ô nhập
-thì dùng phím, `Control+a` rồi `Delete`.
+**Chụp lại snapshot sau mỗi lần điều hướng.** Ref cũ chỉ còn dùng được khi phần tử thay thế khớp
+duy nhất theo role và name; mơ hồ thì lệnh fail và phải chụp lại.
 
 ### Năm kiểu hỏng, và chỉ một kiểu không có triệu chứng
 
 | Chết cái gì | Triệu chứng |
 |---|---|
 | Browser đóng hoặc đăng xuất | API cục bộ không trả lời. Dừng, và **không bao giờ chuyển sang browser khác**. |
-| Profile bị đóng nhưng app còn sống | Hỏi trạng thái trả về "chưa mở". Mở lại sẽ ra port mới, phải đọc lại. |
+| Profile bị đóng nhưng app còn sống | Hỏi trạng thái trả về "chưa mở", nhưng `/active` có lúc sai: kiểm bằng `/json/version`. Mở lại sẽ ra port mới, phải đọc lại. |
 | Daemon `agent-browser` dừng | Lệnh kế tiếp tự dựng lại. Nhưng ràng buộc tab là state của session, nên phải kiểm lại tab. |
 | Tab bị người khác đóng | Lỗi `tab_gone`. Đây là kiểu hỏng **đáng giá nhất** — nó thay một thao tác âm thầm lên nhầm trang bằng một lỗi tường minh. Ràng buộc lại, đừng retry mù. |
 | Attach nhầm browser | **Không có triệu chứng nào.** Lệnh chạy, trang tải, kết quả trông hợp lý. |
@@ -314,22 +303,20 @@ CLI khác phiên bản, bản cũ resolve trước trong shell. Kiểm flag trư
 
 ### Bằng chứng, và một luật chung
 
-Thứ để lại là **một file commit trên branch**: ảnh chụp, đường dẫn đã đi, chuỗi chữ đã thấy, kèm số
-port CDP và user agent để trạm sau biết bằng chứng đến từ browser nào. Không phải một câu khẳng
-định trong pane, vì một câu khẳng định thì trạm sau không kiểm lại được.
+Thứ để lại là **một file report**: QA ghi nó vào `$GATE_FILE`, một đường dẫn tuyệt đối ngoài mọi
+checkout, và Thomas commit nó. Report mở bằng kế hoạch rồi đến một trace matrix, mỗi dòng kế hoạch
+một kết quả và một cột Evidence. Nó chỉ chứa văn xuôi và đường dẫn screenshot, không dán transcript
+của console, network hay DOM. Không phải một câu khẳng định trong pane, vì một câu khẳng định thì
+trạm sau không kiểm lại được.
 
 **Và đây là chỗ mục cuối bắt đầu cần thiết.** Browser evidence đòi mỗi người một
-stack đang chạy. Nếu dựng stack còn tốn kém thì bước này sẽ bị bỏ, và lý do bỏ nghe rất hợp lý. Đo
-được một lần, nguyên văn lời một Builder:
-
-> no local stack was running in this worktree; standing one up is a multi-step job
-
-Đó chính xác là chi phí mà mục tiếp theo xoá bỏ.
+stack đang chạy. Nếu dựng stack còn tốn kém thì bước này sẽ bị bỏ, và lý do bỏ nghe rất hợp lý. Đó chính xác là
+chi phí mà mục tiếp theo xoá bỏ.
 
 **Một luật chung.** Một luật mà người vận hành cẩn thận vẫn quên trong vòng một giờ thì cần
-một ô bắt buộc chặn việc khởi chạy, không phải một câu văn nằm ở chỗ khác. Ở đây nó là một trường
-bắt buộc trong brief dispatch, không có dạng để trống: hoặc khai rõ ticket này cần bằng chứng trình
-duyệt và phải đi qua hành trình nào, hoặc khai rõ là không cần và vì sao.
+một ô bắt buộc chặn việc khởi chạy, không phải một câu văn nằm ở chỗ khác. Ở đây nó là hai thứ mà mod bắt
+buộc trong brief dispatch: dòng `QA:` và dòng `QA plan:`. Consent để điều khiển một session đăng
+nhập thật cũng là trường bắt buộc; thiếu nó thì QA từ chối chạy và ghi một COVERAGE GAP.
 
 **Ai không cần.** Sản phẩm không có bề mặt người dùng. Đội đã có visual regression tự động đủ dày.
 Và đội không chấp nhận được việc agent điều khiển một session đăng nhập thật — đó là lo ngại chính
@@ -377,7 +364,7 @@ container, network và volume — nên chỉ một cái tên khác nhau là bố
 
 | Runtime | Cấp cho mỗi worktree | Share phần nào |
 |---|---|---|
-| Database | Một Postgres container riêng, volume riêng. Không phải schema riêng trên một server chung. | Cụm test thì ngược lại: một container cho cả máy, cô lập bên trong bằng template theo hash của migration set. |
+| Database | Một Postgres container riêng, volume riêng. Không phải schema riêng trên một server chung. | — |
 | `node_modules` | Hai bản: bản host do `pnpm install` trong chính worktree, và bản trong container là named volume shadow lên bind mount. | pnpm store, build cache, module cache — khai `external: true`. |
 | Port FE/BE | Không ai chọn port. Compose chỉ khai port trong container, Docker cấp port ngoài. | — |
 
@@ -388,7 +375,7 @@ DEV_SLUG := $(if $(filter head,$(DEV_SLUG)),$(shell git rev-parse --short HEAD),
 DEV_PROJECT := myapp-dev-$(DEV_SLUG)
 ```
 
-`builder/TRA-686` thành `builder-tra-686`, còn detached HEAD rơi về short SHA để tên vẫn ổn định
+`builder/ABC-686` thành `builder-abc-686`, còn detached HEAD rơi về short SHA để tên vẫn ổn định
 cho đúng checkout đó.
 
 ### Hai phương án khác, và vì sao không chọn
@@ -422,17 +409,15 @@ DEV_GIT_DIR    := $(if $(filter $(DEV_GIT_COMMON),$(DEV_GIT_REAL)),/gitcommon,/g
 `--git-dir` khác `--git-common-dir` là cách git tự phân biệt checkout gốc với linked worktree. Dùng
 phép so sánh đó, đừng đoán hình dạng của path.
 
-**Đánh đổi.** Constraint thật không phải disk mà là RAM. Disk thì mỗi worktree tốn khoảng 540–650 MB
-volume, phần share cho cả máy khoảng 2 GB — với ổ cứng hôm nay thì đó không phải giới hạn. RAM mới
-là giới hạn: chạy hai bộ test đầy đủ có `-race` cùng lúc có thể làm cả hai cùng fail. Ai định dùng
-mô hình này phải trả lời trước một câu: RAM của máy chịu được bao nhiêu stack song song. Một
-advisory lock dạng token, `take` thì exit khác 0 khi người khác đang giữ, là đủ để xếp hàng đúng chỗ
-cần xếp.
+**Đánh đổi.** Mỗi worktree thêm một bộ container và volume, nên giới hạn là RAM và disk của máy.
+Tôi chưa đo con số cho một stack cụ thể (`chưa đo`). Ai định dùng mô hình này phải trả lời trước một
+câu: máy chịu được bao nhiêu stack song song.
 
-**Một chỗ leak đã biết.** Bước cleanup chỉ remove volume khi còn container để remove. Một Builder
-lịch sự tắt stack trước khi handback sẽ để lại 0 container, điều kiện sai, `down -v` bị bỏ qua, và
-volume mồ côi trong khi stamp cleanup vẫn ghi là sạch. Nếu bạn dựng lại mô hình này, hãy cho bước
-cleanup remove volume theo **tên project** chứ đừng theo sự tồn tại của container.
+**Một chỗ leak đã biết.** `release-worktree-resources.sh` nhận ra stack của một worktree qua label
+Docker của container (`com.docker.compose.project.working_dir`). Một stack mà container đã mất
+trước khi script chạy thì không được thấy, và script không xoá container, volume hay image: việc xoá là của plug
+`.astraler/project/cleanup-worktree.sh` do project khai. Nếu bạn dựng lại mô hình này, hãy cho plug
+remove volume theo **tên project** chứ đừng theo sự tồn tại của container.
 
 **Ai không cần.** Team một người, một branch tại một thời điểm: toàn bộ cơ chế này mua đúng một thứ
 là tính đồng thời. Team mà dev environment không chứa state khả biến cũng không cần — chỉ cần port

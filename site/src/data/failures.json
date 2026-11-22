@@ -22,7 +22,7 @@
   {
     "id": "AST-092",
     "stage": "build",
-    "costLine": "measured five times, three Builder sessions — 93 to 433 lines lost each time, never recovered."
+    "costLine": "measured five times, three Builder sessions — 93 to 433 lines sat uncommitted each time; caught by a manual `git status` before cleanup removed them."
   },
   {
     "id": "AST-015",

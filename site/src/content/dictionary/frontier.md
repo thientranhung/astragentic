@@ -5,13 +5,14 @@ order: 4
 related: [tracker, claim, blocking-edge]
 diagram: frontier-query
 updated: 2026-11-22
+harness: v6.1.19
 ---
 
 **The frontier is every ticket whose blockers are all done and whose assignee is empty — the answer to "what's ready to work on right now."**
 
 Thomas's role contract defines it in exactly those terms, and runs the query at session start and again whenever a ticket closes. It isn't something a Builder or the owner computes ad hoc from memory; it's a live read over the [tracker](/dictionary/tracker/), driven by [blocking-edge](/dictionary/blocking-edge/) state, and Thomas's contract is explicit that the frontier is one of the three things (alongside the [claim](/dictionary/claim/) and merge) that isn't packaged as a skill — it's a judgement he applies every session, because the raw edge-based rule alone is over-inclusive. A live project measured this directly: computing the frontier purely from blocking edges surfaced epics, a phase whose parent hadn't started, and a ticket explicitly marked deferred, all as "ready." Parent/child sequencing carries information a blocking-edge rule can't see on its own.
 
-The other half of the concept is that a frontier only computed and never written down is invisible to the person who can't run the query themselves — the owner. So Thomas writes the answer back to the tracker's claimable-and-unclaimed state after every computation, rather than holding it in his head. RELEASE-NOTES.md names this failure directly: `thomas.md` originally defined the frontier as a query and never said to write the answer back, which is exactly the gap `tracker-frontier-audit` now checks for.
+The other half of the concept is that a frontier only computed and never written down is invisible to the person who can't run the query themselves — the owner. So Thomas writes the answer back to the tracker's claimable-and-unclaimed state after every computation, rather than holding it in his head. RELEASE-NOTES.md names this failure directly: `thomas.md` originally defined the frontier as a query and never said to write the answer back. The contract now makes it a merge step: merge is not complete until Thomas re-runs the query, promotes every ticket the merge unblocked, and reports which moved (`none` is a valid report).
 
 ## Why it matters here
 
@@ -21,7 +22,8 @@ Querying the frontier fresh every time instead of trusting a cached "ready" labe
 
 - `harness/.agents/roles/thomas.md` — "## The frontier"
 - `harness/.agents/skills/reconcile-tracker/SKILL.md` — the over-inclusive-promotion finding
-- `RELEASE-NOTES.md` — "A frontier that is only computed is invisible to the person who cannot compute it," `tracker-frontier-audit`
+- `harness/.agents/roles/thomas.md` — "Merge is not complete until the frontier write-back is done"
+- `RELEASE-NOTES.md` — "A frontier that is only computed is invisible to the person who cannot compute it"
 
 ## Usage:
 

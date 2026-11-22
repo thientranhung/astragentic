@@ -1,5 +1,6 @@
 ---
-source: "harness/.claude/skills/, harness/.claude/skills/codex-arm/, harness/.agents/roles/, RELEASE-NOTES.md 5.0.0, 6.1.18, 6.1.19"
+source: "harness/.claude/skills/, harness/.claude/skills/codex-arm/, harness/.agents/roles/, RELEASE-NOTES.md 5.0.0, 6.1.18, 6.1.19, harness/.agents/memory/recurring-failure-modes.md, harness/.agents/skills/github-issue-tracker/, harness/.agents/roles/builder-claude.md"
+harness: v6.1.19
 title: "Approach"
 description: "The approach behind Astragentic: the orchestrator-agent model, an issue tracker that holds state, why orchestration does not belong in subagents, cross-review between two AI vendors, and a self-repairing scaffold."
 ---
@@ -33,18 +34,18 @@ Astragentic removes that relay with two mechanisms.
 
 Thomas holds the project context and stands between you and the agents:
 
-- **Reads the artifacts** the agents return, instead of pushing raw logs on to you.
-- **Evaluates options** and the proposed tech stack.
-- **Answers technical questions** on the spot.
-- **Escalates to you** what belongs to your authority: product direction, user experience,
-  priorities.
+- **Verifies by artifact.** Thomas checks a merge by artifact, never by an agent's handback.
+- **Answers the Shaper's questions** from the owner's knowledge, with a source; the rest goes to
+  the owner in one round.
+- **Escalates to you** a design-level blocker, as a dated decision in Thomas's own pane. The
+  decision stays yours.
 
 You work as the client of a development shop: set requirements, follow progress, and step in when
 you see the team drift.
 
 ### A team that operates in the open
 
-Each agent is a named session with its own pane in herdr, and its work history stays in that
+Each agent is a named session with its own pane in Herdr or Orca, and its work history stays in that
 session. You can observe what each agent does. Thomas can trace back when something goes wrong. How
 the agents coordinate becomes data you can use to improve the scaffold itself.
 
@@ -52,8 +53,8 @@ Subagents and agent teams inside a runtime run hidden in the parent process. The
 look at.
 
 **Trade-off.** One more toolset to install, understand and upgrade, and every upgrade is an event
-the project has to absorb. So far I have only proven that each tool runs correctly; the whole loop
-from dispatch to merge with every gate on real work is still being measured.
+the project has to absorb: `.astraler/astragentic.sh update` reports the installed version, the
+latest, and how to upgrade.
 
 ## why-tracker
 
@@ -73,12 +74,7 @@ open the file to read.
 | Machine operation | Free-form text edits | Official CLI and MCP |
 | Approve or request changes | A message somewhere else | A comment right on the ticket |
 | Several people give input | Edit one shared file, contend with each other | One comment each, named and ordered |
-| The agent asks back | No place to ask | Ask right in the ticket, anyone can answer, then the agent continues |
 | When the session closes | State is lost with the context | The board stays intact |
-
-The two rows about comments are where the way of working changes most visibly. The agent no longer
-waits for exactly one person: it asks on the ticket, whoever on the team can answer does, and it
-carries on. The AI works like a member of the team rather than a tool you have to sit and watch.
 
 One easily missed detail: the list of work that can be done now, called the frontier, must be
 written down. If it is only computed in the agent's context, you do not see it when you open the
@@ -95,8 +91,8 @@ the tracker holds state rather than being a passive record, it can drift from re
 ## why-not-subagents
 
 Claude Code has subagents and agent teams. Both work well inside one session, and Astragentic still
-uses them: Builder spawns subagents for reading and reporting, and Thomas uses both when it needs to
-survey or plan.
+uses them: the `astra-review` lenses are read-only subagents inside the Builder's session, and Thomas
+runs `astra-slice-reviewer` in a worktree of its own.
 
 The common question is: with those two already there, why one more orchestrator.
 
@@ -112,14 +108,13 @@ missing in the same way: when something goes wrong, no signal is raised.
   agents pull each other's HEAD around. I caught a read-only reviewer doing `git switch` on
   someone else's checkout.
 - **Shared context.** A fork inherits the parent's whole context, including what no one meant to
-  hand over. Once a fork inherited the parent's model, so work that should have run on a cheap model
-  ran on the most expensive one. Another time, a fork inside a Builder sent the end-of-work report,
+  hand over. A fork inside a Builder sent the end-of-work report,
   called a handback, to the dispatcher below under the Builder's own name, and the Builder never saw
-  it. And one fork signed a `simplify(increment):` marker on code it had just committed itself, in
+  it. Another fork signed a `simplify(increment):` marker on code it had just committed itself, in
   exactly the permitted form.
 - **No tracker holding state.** A subagent's state lives in the parent session's context, is lost
   when the session compacts, and while it exists you cannot read it.
-- **No pane to look at.** Once a dispatch was only narrated in words and never actually invoked. A
+- **No pane to look at.** A
   pane in Herdr or Orca is something you can count; a subagent inside a process is not.
 
 And one more thing: Claude's subagents are still Claude, so there is no cross-review from another
@@ -129,8 +124,7 @@ So Astragentic lets subagents do exactly their job, inside one session, with one
 have `isolation: "worktree"` and must not message the dispatcher.
 
 **Trade-off.** You have to install a terminal host (Herdr or Orca) and configure a tracker, two
-dependencies a subagent does not need. Each Builder costs a worktree on disk and a few seconds of
-setup. Each dispatch costs one write and one read on the tracker. The process is longer, with more
+dependencies a subagent does not need. Each Builder costs a worktree on disk. Each dispatch costs one write and one read on the tracker. The process is longer, with more
 names to remember. I chose to pay that price because a silent failure costs far more.
 
 ## why-astra-skills
@@ -215,12 +209,12 @@ person at least remembers vaguely.
 
 The mechanism is a ledger, and a path from the ledger into the contract.
 
-**The ledger.** Each incident is one line in an append-only file with a fixed code: `AST-136` is
+**The ledger.** Each incident is one entry in an append-only file with a fixed code: `AST-136` is
 still `AST-136` after a hundred more entries. Never renumbered, never deleted, even after the bug
-has been fixed. Old entries move to an archive file instead of being deleted; the open ledger
+has been fixed. Entries nobody cites move to the source repository's `docs/ledger-archive/` instead of being deleted; the open ledger
 currently holds {{meta.total}} entries.
 
-**The path.** A line that yields a rule does not leave that rule sitting in the ledger. It is
+**The path.** An entry that yields a rule does not leave that rule sitting in the ledger. It is
 written into a file the agent actually reads: a role's contract, a skill, or a hook. The ledger is
 the evidence; the contract is where the evidence takes effect.
 
@@ -229,13 +223,13 @@ commit carries a `Ledger:` line saying what was just written to the ledger. `Led
 omitting the line entirely is not: "this round taught nothing" is a conclusion, while no line at all
 is a skipped step, and from outside the two look identical unless declaring is mandatory.
 
-**No build step, and nobody has to reload.** Each role's system prompt is only a few lines, and one
+**No build step, and nobody has to reload.** Each role's system prompt is a short file (1.2 to 2.0 KB), and one
 of them is the command to read its own contract. The next session that opens already carries the new
 rule. A hook handles the rest: after a session is compacted, the contract is reloaded, because what
 sits outside the system prompt is what compaction summarizes away first.
 
-**An entry goes into the ledger only after it has happened more than once.** `AST-136` was written
-after three occurrences of the same mistake in three different shells: one wrong escape that made a
+**One entry can gather several occurrences.** `AST-136` records
+three occurrences of the same mistake in three different shells: one wrong escape that made a
 script report STOP for the wrong reason, one read of 23 markers as 193, one that made a marker that
 really existed report as never written. Those three were many releases apart, and could be seen only
 because all three were in the ledger.

@@ -3,7 +3,10 @@ title: "Vibe coding gives you speed. Vibe engineering keeps it."
 description: "What happened when I stopped running one AI coding agent and started running three, and what it took to make that actually work."
 date: 2026-09-04
 readingMinutes: 10
+harness: v6.1.19
 ---
+
+> **Note, 2026-11-22.** This essay is kept as written on 2026-09-04. Since then the harness changed in four places. The roles are now six: Thomas, BA, Shaper, Builder, QA and Quick Builder. Rin was removed in 3.0.0, and QA walks the running product before merge (marker `qa(walk)`). The method skills the essay names were replaced by the harness's own `astra-*` skills in 5.0.0. Review per ticket is `astra-review` (three lenses at once), one simplify pass at the end, then the cross-vendor arm; Thomas runs a slice gate when a slice closes. Overlapping write-sets are no longer sequenced: the brief carries an `Owned elsewhere:` line, so a conflict becomes a handback note. Current facts are on the Structure and Review pages.
 
 The first time I used a coding agent that was actually good, the distance between an idea and working software just collapsed.
 

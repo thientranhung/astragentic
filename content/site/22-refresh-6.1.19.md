@@ -65,10 +65,6 @@ chép các luật này vào, vì subagent không thừa hưởng memory.
 | skill-routing | vẽ lại theo `astra-*` |
 | frontier-query, hub-and-spokes, customize-loop | đối chiếu fact sheet, còn đúng thì vẽ lại, không thì bỏ |
 
-## PRD: chủ site sửa `09-prd.md` (agent không sửa)
+## PRD
 
-Đề xuất đổi: §2.3 role → Thomas, BA, Shaper, Builder, QA, Quick Builder (bỏ Rin); §2.5 bỏ câu
-mattpocock-skills vs Superpowers, thay bằng vì sao skill riêng `astra-*`; §2.6 tech stack →
-Claude Code (mod, hook, agent, skill, subagent, advisor), Codex, Herdr, Orca, git worktree,
-tracker adapters, diagram-design cho chính site (bỏ OpenCode, archify); §3 ngôi → "tôi/bạn"
-(đã chốt 2026-09-05); thêm §: mỗi bài mang version harness lúc viết.
+Đã gộp vào `09-prd.md` ngày 2026-11-22 theo lời chủ site (giữ, cập nhật §2, §3, §4, §5, thêm §8).

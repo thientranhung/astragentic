@@ -8,6 +8,7 @@ source: harness/.claude/skills/reconcile-tracker/SKILL.md
 rented: false
 lang: en
 updated: 2026-11-22
+harness: v6.1.19
 ---
 
 ## What it does
@@ -15,10 +16,11 @@ updated: 2026-11-22
 `reconcile-tracker` pulls two independent facts and compares them: what the tracker says a
 ticket's state is, and what git actually shows happened to that ticket.
 
-The git half comes from `scripts/ticket-git-facts.sh` (pure shell, no network, no tracker call).
+The git half comes from `harness/scripts/ticket-git-facts.sh` (pure shell, no network, no tracker call).
 That script counts commits on the base branch whose subject matches a ticket id, finds the local
 branch if one still exists, and reports the unmerged count. The tracker half comes from whatever
-read tool the project's tracker exposes.
+read tool the project's tracker exposes, or from the project's plug `.astraler/project/tracker-state.sh <id>`,
+the same plug `scripts/ticket-done.sh` asks at merge. When the plug prints `unreachable -`, this half stays the agent's.
 
 Thomas joins the two rows by hand, because the join needs judgement a script cannot supply, and
 reports four drift classes:
@@ -77,9 +79,9 @@ stale-claim class is checking for. Which tracker adapter is in play (`github-iss
   <!-- source: harness/.agents/memory/recurring-failure-modes.md -->
 - **The doc's own example was wrong.** The runnable example in this skill's own doc called `ticket-git-facts.sh` without
   `TICKET_PREFIX` and labelled it "ALWAYS this form," eight lines above the sentence saying the
-  variable is required, a command the script itself refuses. Fixed 2026-08-20. An earlier note
+  variable is required, a command the script itself refuses. Fixed 2026-08-20 (2.3.24). An earlier note
   blaming an adapted project for copying the bad example was itself wrong and was corrected in
-  the same entry. <!-- source: harness/.agents/memory/recurring-failure-modes.md -->
+  a later release. <!-- source: RELEASE-NOTES.md (2.3.24 and the AST-127 correction) -->
 
 ## It's working if
 

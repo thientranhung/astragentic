@@ -1,4 +1,5 @@
 ---
+harness: v6.1.19
 title: "Sáu bài học tôi đo được"
 description: "Sáu sự cố thật, có ngày, xếp theo stage mà nó rơi ra. Mỗi sự cố kèm cách chữa và cái giá của cách chữa đó."
 ---
@@ -17,8 +18,10 @@ bước nào hỏi có bao nhiêu Builder đang chạy.
 Tôi sửa bằng cách cho frontier query một mục tiêu chứ không chỉ một trigger: sau mỗi lần
 merge, router phải hỏi nên claim thêm bao nhiêu ticket, không chỉ hỏi ticket nào claim được.
 
-**Đánh đổi.** Router bận hơn và thỉnh thoảng claim quá tay. Tôi chấp nhận đánh đổi đó, vì một slot
-ngồi không thì không phát ra tín hiệu nào.
+Mục tiêu mặc định là 4 Builder, và `.agents/orchestrator.md` mang override của owner.
+
+**Đánh đổi.** Mỗi merge, handback và báo cáo cho owner đều kèm một lượt đếm pane. Tôi chấp nhận đánh
+đổi đó, vì một slot ngồi không thì không phát ra tín hiệu nào.
 
 ## AST-097
 
@@ -27,23 +30,28 @@ watcher báo `TERMINAL:done`, và bảng nhánh trong `dispatch-ticket` nói bui
 suýt báo ticket đó bỏ dở, trong khi Builder đang ở phút thứ hai mươi của một việc tử tế.
 
 Thứ cứu được tình huống này không phải protocol, mà là artifact tự mâu thuẫn: file bị sửa chỉ
-có thêm đúng một dòng comment. Từ đó tôi bỏ hoàn toàn niềm tin vào trạng thái pane, và mỗi
-chữ `done` phải đọc diff trước khi kết luận.
+có thêm đúng một dòng comment, không phải thứ một Builder bỏ dở để lại.
 
-**Đánh đổi.** Mỗi lần đóng ticket tốn thêm một vòng đọc.
+Tôi sửa bảng nhánh của `dispatch-ticket`: `done` không còn nghĩa là xong. Trước khi kết luận,
+kiểm tiến trình nền trong worktree; nếu chúng đã thoát và không có commit mới kể từ chỉ thị cuối
+cùng thì đọc pane, còn có commit mới thì mới sang bước kiểm artifact. Git guard từ chối
+`git worktree remove` khi còn tiến trình sống trong worktree.
+
+**Đánh đổi.** Mỗi lần pane báo `done` tốn thêm một lượt kiểm tiến trình nền và commit.
 
 ## AST-092
 
 Vẫn là chữ đó, và lần này hậu quả nặng hơn. Builder viết xong code rồi dừng trước khi commit,
 pane vẫn về `done`, và bước cleanup chạy `git worktree remove` đè lên. Năm lần trên ba
-session, mỗi lần 93 tới 433 dòng, không lần nào lấy lại được.
+session, mỗi lần 93 tới 433 dòng nằm chưa commit. Cả năm lần được bắt trước khi mất, nhờ thói
+quen chạy `git status` của Thomas, một thói quen chưa nằm trong contract.
 
-Tôi đặt chốt chặn ngay tại bước nguy hiểm thay vì trông vào việc Builder commit cẩn thận hơn.
-Cleanup phải đọc `git status` của worktree trước khi xoá; thấy dirty là dừng và đưa lại cho
-người.
+Tôi đặt chốt chặn ngay tại bước nguy hiểm thay vì trông vào thói quen đó. Cleanup phải đọc
+`git status --short` của worktree trước khi xoá; thấy dirty là dừng và báo owner. Handback của
+Builder cũng thành ba hành động tường minh: commit, push, rồi trả việc.
 
-**Đánh đổi.** Worktree mồ côi tồn đọng và thỉnh thoảng phải dọn tay. So với mất một ngày làm việc
-thì giá đó rẻ.
+**Đánh đổi.** Mỗi worktree dirty chặn cleanup cho tới khi có người xử lý. So với mất một ngày làm
+việc thì giá đó rẻ.
 
 ## AST-015
 
@@ -67,8 +75,8 @@ Không check nào chỉ nhìn tracker mà bắt được lỗi này, vì một t
 chính nó. Tracker phải được đối chiếu với Git sau mỗi lần merge, thay vì tự xác nhận chính
 nó.
 
-**Đánh đổi.** Thêm một bước reconcile không ai vui khi chạy, và phần lớn thời gian nó không tìm ra
-gì.
+**Đánh đổi.** Thêm một lượt đọc sau mỗi merge và lúc đầu session. `reconcile-tracker` chỉ đọc, nên
+mọi bản vá vẫn do Thomas làm tay.
 
 ## AST-056
 
@@ -78,8 +86,9 @@ dòng của một file. Ticket thứ nhất merge trước. Ticket thứ hai d�
 ra tín hiệu nào.
 
 Một worktree cho mỗi Builder chỉ giải quyết va chạm ở checkout. Nó dời va chạm xuống merge,
-chỗ tìm ra muộn và phải xử tay. Vì vậy ticket phải khai write-set, và những ticket có
-write-set giao nhau bị xếp tuần tự kể cả khi không có gì buộc chúng theo thứ tự.
+chỗ tìm ra muộn và phải xử tay. Vì vậy write-set là một trường bắt buộc của mỗi dispatch song song: brief mang dòng
+`Owned elsewhere:` liệt kê file mà ticket khác đang giữ, nên một conflict ở merge thành một ghi chú
+handback.
 
-**Đánh đổi.** Số ticket chạy song song giảm xuống, đúng thứ mà cả hệ thống này tồn tại để tăng
-lên.
+**Đánh đổi.** Mỗi dispatch khi còn ticket khác đang chạy phải tính write-set từ body ticket cộng quy
+tắc docs-sync của repo, rồi ghi vào dispatch record.

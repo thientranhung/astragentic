@@ -8,6 +8,7 @@ source: harness/.claude/skills/astragentic-dispatch/hooks/register.tsx
 rented: false
 lang: vi
 updated: 2026-11-22
+harness: v6.1.19
 ---
 
 ## Nó làm gì

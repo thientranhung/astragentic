@@ -1,7 +1,8 @@
 ---
 title: "Tips for running several agents"
 description: "Five techniques for running several agents: git worktree, pnpm, portless, a QA walk in a real browser, and a runtime of its own for each worktree."
-source: README.md, harness/.agents/roles/qa.md, harness/.claude/skills/dispatch-ticket-claude/SKILL.md, harness/scripts/release-worktree-resources.sh
+source: README.md, harness/.agents/roles/qa.md, harness/.claude/skills/dispatch-ticket-claude/SKILL.md, harness/.claude/skills/dispatch-qa-walk/SKILL.md, harness/scripts/release-worktree-resources.sh
+harness: v6.1.19
 ---
 
 Astragentic builds the parallelism at the coordination layer: Thomas dispatches several tickets and
@@ -33,9 +34,9 @@ Each checks out its own branch with its own `HEAD` and its own index, while **sh
 database**.
 
 ```bash
-git worktree add ../app-tra-142 -b builder/TRA-142   # new directory, new branch
+git worktree add ../app-abc-142 -b builder/ABC-142   # new directory, new branch
 git worktree list                                     # who is where, on which branch
-git worktree remove ../app-tra-142                    # hand it back when done
+git worktree remove ../app-abc-142                    # hand it back when done
 ```
 
 Three properties set it apart from cloning repeatedly, and they are the part that surprises people
@@ -87,7 +88,7 @@ Three properties, ordered by how much they bear on several worktrees:
 
 - **Disk.** npm copies, so three worktrees cost three times the real space. pnpm hardlinks, and
   three checkouts read from one store.
-- **`node_modules` is not flat.** pnpm does not hoist, so a package can only import what it
+- **`node_modules` is not flat.** pnpm does not hoist into the root, so a package can only import what it
   declares. Across worktrees sitting on different commits, that blocks a whole class of "works in
   this worktree, breaks in that one" caused by differing dependency graphs rather than by code.
 - **Install scripts are off by default.** Running one means naming it, which makes allocating
@@ -114,7 +115,7 @@ Letting the runtime assign random ports ends the collisions but hands you an add
 type: not memorable, not bookmarkable, not pasteable into a ticket. And a URL you cannot type
 yields no browser evidence at all.
 
-**The technique.** [portless](https://portless.sh) is a background proxy that
+**The technique.** [portless](https://github.com/vercel-labs/portless) is a background proxy that
 holds port 443 for the machine and maps the name `https://<name>.localhost` onto a localhost port.
 It replaces hardcoded ports and the job of remembering port numbers.
 
@@ -153,10 +154,9 @@ detail, but it separates the address for a human from the address for an agent.
 which means a TTY, which a background agent does not have — so it has to ask a person. That is a
 real operational constraint.
 
-**Four known failures.** `502` is the only symptom when the port drifts, with no clearer error —
+**Three known failures.** `502` is the only symptom when the port drifts, with no clearer error —
 the check is to compare the port in `portless list` against the one the framework prints, every
-time. A proxy inside a proxy gives `508 Loop Detected` unless the inner one sets `changeOrigin:
-true`. A duplicate route reporting "already registered by a running process" means an old process
+time. A duplicate route reporting "already registered by a running process" means an old process
 is still alive, so clear it rather than reaching for `--force`. And killing portless's parent
 process does not kill the child dev server, so an orphan keeps holding the route.
 
@@ -186,13 +186,13 @@ The tooling splits in two, and **how the roles are split is the part that matter
 
 ### OmniLogin holds the state
 
-**[OmniLogin](https://omnilogin.net)** is a browser that keeps a profile: cookies, localStorage, installed extensions,
+**OmniLogin** is a browser that keeps a profile: cookies, localStorage, installed extensions,
 fingerprint, proxy. A clean Chrome launched fresh each run holds none of that, so every journey
 behind a login screen is unreachable.
 
 It exposes a local HTTP API to find a profile by name, ask whether it is already open, and open it.
-On opening, it returns the **real CDP port** for that launch. That port **changes with every
-launch** — remembering the old number is a bug; read it back from the response.
+On opening, it returns the **real CDP port** for that launch. There is no default port: it
+comes from `remote_debug_address` in the `/open` response, and remembering the previous number is a bug.
 
 Three things it buys, hardest to replace first:
 
@@ -210,7 +210,7 @@ Three things it buys, hardest to replace first:
 
 ### agent-browser only drives
 
-**[`agent-browser`](https://agent-browser.dev)** is a CLI that attaches to a running browser over CDP and drives it. In this
+**`agent-browser`** is a CLI that attaches to a running browser over CDP and drives it. In this
 model it must **never launch a browser of its own**: the moment it does, that is a fresh Chrome with
 no login, and every observation made through it is fiction.
 
@@ -267,47 +267,37 @@ agent-browser --help | grep -- --pin-tab || { echo "STOP: binary too old"; exit 
 # 1-3. Is the browser alive, is the profile open, and what is the REAL port for this launch.
 #      Never reuse the port number from last time.
 
-# 4. Is CDP real, and what is the user agent at the browser layer. Note it for step 6.
+# 4. Is CDP real. The port comes from OmniLogin, not from memory.
 curl -fsS "http://127.0.0.1:<port>/json/version"
 
-# 5. Attach. `connect`, one --session per agent, with --pin-tab.
-agent-browser --session <ticket> --pin-tab connect <port>
+# 5. Attach with --cdp, one --session and one --namespace per agent, with --pin-tab,
+#    and take a new tab of your own instead of reusing one the user left open.
+agent-browser --session <ticket> --namespace <name> --pin-tab --cdp <port> tab new
 
-# 6. Three proofs. Failing one means stopping and discarding every earlier observation.
-agent-browser --session <ticket> eval "navigator.userAgent + ' webdriver=' + navigator.webdriver"
-#    (1) matches the UA from step 4   (2) contains no Headless   (3) webdriver=false
+# 6-7. Go to your own worktree's stack. Every later command carries the same --cdp value.
+agent-browser --session <ticket> --namespace <name> --cdp <port> open "https://myapp-<branch>.localhost/<route>"
 
-# 7-8. Take a tab of your own, then go to your own worktree's stack.
-agent-browser --session <ticket> tab new
-agent-browser --session <ticket> open "https://myapp-<branch>.localhost/<route>"
+# 8-9. Read the accessibility tree with refs, act on a ref, then read again.
+agent-browser --session <ticket> --namespace <name> --cdp <port> snapshot -i
+agent-browser --session <ticket> --namespace <name> --cdp <port> click @ref
 
-# 9-10. Read the accessibility tree with refs, act on a ref, then read again.
-agent-browser --session <ticket> snapshot -i
-agent-browser --session <ticket> click @ref
-
-# 11. Assert something semantic, not "the page loaded".
-agent-browser --session <ticket> screenshot <path>.png
+# 10. Assert something semantic, not "the page loaded".
+agent-browser --session <ticket> --namespace <name> --cdp <port> screenshot <path>.png
 ```
 
 **Step 0 comes before step 1** because the wrong binary makes every later step meaningless without
 saying so.
 
-**Step 6 cannot be skipped even when step 4 came back green**, because the two ask different
-questions: "where do I intend to connect" and "where is the page actually running".
-
-**Refs expire on every navigation**, including an SPA route change or opening and closing a modal.
-Take the snapshot again; do not reuse an old ref.
-
-**A React trap:** a CDP-level `click @ref` does not fire React's `onClick`, and `fill ""` does not
-fire `onChange`. For a real click, `eval` a `.click()` on the element; to clear an input, use keys —
-`Control+a` then `Delete`.
+**Take the snapshot again after every navigation.** An old ref still works only when the
+replacement element matches exactly one element by role and name; if it is ambiguous the command
+fails and you snapshot again.
 
 ### Five ways it breaks, and only one to fear
 
 | What died | Symptom |
 |---|---|
 | Browser closed or signed out | The local API does not answer. Stop, and **never fall back to another browser**. |
-| The profile closed but the app is alive | The status query says "not open". Reopening gives a new port, which has to be read back. |
+| The profile closed but the app is alive | The status query says "not open", though `/active` is sometimes wrong: check `/json/version`. Reopening gives a new port, which has to be read back. |
 | The `agent-browser` daemon died | The next command rebuilds it. But the tab binding is session state, so check the tab again. |
 | Somebody else closed your tab | A `tab_gone` error. This is the **most valuable** failure here — it replaces a quiet action on the wrong page with a loud error. Rebind; never retry blind. |
 | Attached to the wrong browser | **No symptom at all.** The commands run, the page loads, the result looks reasonable. |
@@ -323,23 +313,21 @@ flag at the start of every session, on every machine.
 
 ### The evidence, and one rule worth copying
 
-What it leaves behind is **a file committed on the branch**: screenshots, the path walked, the exact
-strings seen, and the CDP port and user agent so the next station knows which browser the evidence
-came from. Not an assertion in a pane, because an assertion is not something the next station can
-check.
+What it leaves behind is **a report file**: QA writes it to `$GATE_FILE`, an absolute path outside
+every checkout, and Thomas commits it. The report opens with the plan and then a trace matrix, one
+result per plan item with an Evidence column. It holds prose and screenshot paths only, no pasted
+console, network or DOM transcript. Not an assertion in a pane, because an assertion is not
+something the next station can check.
 
 **And this is where the last section starts to be necessary.** Browser evidence
 demands a running stack per person. While standing one up is expensive, the step gets skipped, and
-the reason for skipping sounds entirely reasonable. Measured once, in a Builder's own words:
-
-> no local stack was running in this worktree; standing one up is a multi-step job
-
-That is precisely the cost the next section removes.
+the reason for skipping sounds entirely reasonable. That is precisely the cost the next section
+removes.
 
 **One rule worth copying.** A rule a careful operator still forgets within an hour needs a required
-field blocking the launch, not a sentence living somewhere else. Here it is a required field in the
-dispatch brief with no blank form: either this ticket needs browser evidence and here is the
-journey to walk, or it explicitly does not and here is why.
+field blocking the launch, not a sentence living somewhere else. Here it is two things the mod requires
+in the dispatch brief: a `QA:` line and a `QA plan:` line. Consent to drive a real logged-in session
+is also a required field; without it QA declines to run and records a COVERAGE GAP.
 
 **Who does not need it.** A product with no user-facing surface. A team with automated visual
 regression already dense enough. And a team that cannot accept an agent driving a real logged-in
@@ -388,7 +376,7 @@ once:
 
 | Runtime | Per worktree | Shared |
 |---|---|---|
-| Database | Its own Postgres container and volume. Not a schema on a shared server. | The test cluster is the opposite: one container for the machine, isolated inside by templates keyed to the migration set hash. |
+| Database | Its own Postgres container and volume. Not a schema on a shared server. | — |
 | `node_modules` | Two copies: the host one from `pnpm install` in the worktree, and the in-container one as a named volume shadowing the bind mount. | The pnpm store, build cache and module cache, declared `external: true`. |
 | FE/BE ports | Nobody picks a port. Compose declares only the in-container port; Docker assigns the outside one. | — |
 
@@ -399,7 +387,7 @@ DEV_SLUG := $(if $(filter head,$(DEV_SLUG)),$(shell git rev-parse --short HEAD),
 DEV_PROJECT := myapp-dev-$(DEV_SLUG)
 ```
 
-`builder/TRA-686` becomes `builder-tra-686`, and a detached HEAD falls back to the short SHA so the
+`builder/ABC-686` becomes `builder-abc-686`, and a detached HEAD falls back to the short SHA so the
 name stays stable for that checkout.
 
 ### Two other answers, and why not
@@ -433,18 +421,16 @@ DEV_GIT_DIR    := $(if $(filter $(DEV_GIT_COMMON),$(DEV_GIT_REAL)),/gitcommon,/g
 `--git-dir` differing from `--git-common-dir` is how git itself tells a main checkout from a linked
 worktree. Use that comparison; do not guess at the shape of the path.
 
-**Trade-off.** The real constraint is not disk, it is RAM. On disk each worktree costs roughly
-540–650 MB of volumes, with about 2 GB shared across the machine — not a limit on any modern drive.
-RAM is: running two full `-race` test suites at once can make both fail. Anyone adopting this model
-has to answer one question first — how many parallel stacks the machine's memory can carry. An
-advisory token lock whose `take` exits non-zero while somebody else holds it is enough to queue the
-one thing that needs queueing.
+**Trade-off.** Each worktree adds a set of containers and volumes, so the limit is the machine's RAM
+and disk. I have not measured the figures for any particular stack (not measured). Anyone adopting
+this model has to answer one question first: how many parallel stacks the machine can carry.
 
-**A known leak.** Cleanup only removes volumes when there are containers left to remove. A Builder
-who politely stops its stack before handing back leaves zero containers, the condition reads false,
-`down -v` is skipped, and the volumes are orphaned while the cleanup stamp still records success. If
-you rebuild this model, have cleanup remove volumes **by project name** rather than by the presence
-of a container.
+**A known leak.** `release-worktree-resources.sh` recognises a worktree's stack by the Docker label
+on its containers (`com.docker.compose.project.working_dir`). A stack whose containers were already
+gone before the script ran is not seen, and the script removes no container, volume or image: that
+is the job of the plug `.astraler/project/cleanup-worktree.sh`, which the project declares. If you
+rebuild this model, have the plug remove volumes **by project name** rather than by the presence of
+a container.
 
 **Who does not need it.** A team of one on one branch at a time: this whole mechanism buys exactly
 one thing, concurrency, and without concurrency it is only cost. A team whose dev environment holds

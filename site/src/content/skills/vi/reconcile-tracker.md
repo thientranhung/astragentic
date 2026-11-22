@@ -8,6 +8,7 @@ source: harness/.claude/skills/reconcile-tracker/SKILL.md
 rented: false
 lang: vi
 updated: 2026-11-22
+harness: v6.1.19
 ---
 
 ## Nó làm gì
@@ -15,10 +16,11 @@ updated: 2026-11-22
 `reconcile-tracker` kéo về hai sự thật độc lập rồi so chúng: tracker nói trạng thái một ticket là
 gì, và git thật sự cho thấy chuyện gì đã xảy ra với ticket đó.
 
-Nửa phần git đến từ `scripts/ticket-git-facts.sh` (shell thuần, không mạng, không gọi tracker).
+Nửa phần git đến từ `harness/scripts/ticket-git-facts.sh` (shell thuần, không mạng, không gọi tracker).
 Script này đếm số commit trên base branch có subject khớp một ticket id, tìm branch local nếu
 còn, và báo số commit chưa merge. Nửa phần tracker đến từ công cụ đọc mà tracker của project đó
-cung cấp.
+cung cấp, hoặc từ plug `.astraler/project/tracker-state.sh <id>` của project, cùng plug mà
+`scripts/ticket-done.sh` hỏi lúc merge. Plug in `unreachable -` thì nửa này vẫn do agent đọc.
 
 Thomas nối hai hàng bằng tay, vì cú nối đó cần phán đoán mà script không cấp được, rồi báo bốn loại
 lệch:
@@ -76,10 +78,10 @@ hay `linear-issue-tracker`) quyết định cách đọc nửa phần tracker, n
   done dựa trên một khoá nối mờ. <!-- source: harness/.agents/memory/recurring-failure-modes.md -->
 - **Ví dụ trong chính tài liệu lại sai.** Ví dụ chạy được ngay trong chính tài liệu của skill này gọi `ticket-git-facts.sh`
   mà không có `TICKET_PREFIX` rồi dán nhãn "LUÔN dùng dạng này", nằm tám dòng phía trên câu nói
-  rằng biến đó là bắt buộc, tức một lệnh mà chính script sẽ từ chối. Đã sửa 2026-08-20. Một ghi
+  rằng biến đó là bắt buộc, tức một lệnh mà chính script sẽ từ chối. Đã sửa 2026-08-20 (2.3.24). Một ghi
   chú trước đó đổ lỗi cho một project đi mượn vì đã chép lại ví dụ hỏng thì bản thân nó cũng sai,
-  và đã được đính chính ngay trong cùng mục đó.
-  <!-- source: harness/.agents/memory/recurring-failure-modes.md -->
+  và đã được đính chính ở bản sau.
+  <!-- source: RELEASE-NOTES.md (2.3.24 và phần đính chính AST-127) -->
 
 ## Đang chạy đúng nếu
 

@@ -1,5 +1,6 @@
 ---
-source: "harness/.claude/skills/, harness/.claude/skills/codex-arm/, harness/.agents/roles/, RELEASE-NOTES.md 5.0.0, 6.1.18, 6.1.19"
+source: "harness/.claude/skills/, harness/.claude/skills/codex-arm/, harness/.agents/roles/, RELEASE-NOTES.md 5.0.0, 6.1.18, 6.1.19, harness/.agents/memory/recurring-failure-modes.md, harness/.agents/skills/github-issue-tracker/, harness/.agents/roles/builder-claude.md"
+harness: v6.1.19
 title: "Cách tiếp cận"
 description: "Cách tiếp cận đứng sau Astragentic: mô hình orchestrator agent, issue tracker giữ trạng thái, vì sao không đặt điều phối vào subagent, review chéo giữa hai hãng AI, và một bộ khung tự sửa chữa."
 ---
@@ -32,26 +33,25 @@ Astragentic bỏ khâu trung chuyển đó bằng hai cơ chế.
 
 Thomas nắm ngữ cảnh dự án và đứng giữa bạn với các agent:
 
-- **Đọc artifact** các agent trả về, thay vì đẩy nguyên log sang cho bạn.
-- **Đánh giá phương án** và tech stack được đề xuất.
-- **Trả lời câu hỏi kỹ thuật** ngay tại chỗ.
-- **Chuyển lên bạn** những gì thuộc thẩm quyền của bạn: hướng sản phẩm, trải nghiệm người dùng,
-  thứ tự ưu tiên.
+- **Xác nhận bằng artifact.** Thomas kiểm một merge bằng artifact, không bằng handback của agent.
+- **Trả lời câu hỏi của Shaper** từ kiến thức của owner, kèm nguồn; phần còn lại gom thành một lượt
+  hỏi owner.
+- **Chuyển lên bạn** blocker cấp thiết kế, dưới dạng một quyết định có ngày, ngay trong pane của
+  Thomas. Quyết định vẫn là của bạn.
 
 Bạn làm việc như khách hàng của một đơn vị phát triển: đặt yêu cầu, theo dõi tiến độ, và can thiệp
 khi thấy team đi lệch.
 
 ### Một team vận hành công khai
 
-Mỗi agent là một session có tên, có pane riêng trong herdr, và lịch sử làm việc ở lại trong session
+Mỗi agent là một session có tên, có pane riêng trong Herdr hoặc Orca, và lịch sử làm việc ở lại trong session
 đó. Bạn quan sát được từng agent làm gì. Thomas truy vết được khi có sự cố. Cách các agent phối hợp
 trở thành dữ liệu để bạn cải tiến chính bộ khung.
 
 Subagent và agent team bên trong một runtime chạy ẩn trong tiến trình cha. Không có gì để nhìn.
 
 **Đánh đổi.** Thêm một bộ công cụ phải cài, hiểu và nâng cấp, và mỗi bản nâng cấp là một sự kiện dự
-án phải hấp thụ. Tới nay tôi mới chứng minh được từng công cụ chạy đúng; cả vòng từ dispatch tới
-merge với đủ gate trên việc thật vẫn đang được đo.
+án phải hấp thụ: `.astraler/astragentic.sh update` báo bản đã cài, bản mới nhất và cách nâng.
 
 ## why-tracker
 
@@ -70,12 +70,7 @@ Cách làm phổ biến trước đó là để AI cắt việc thành file mark
 | Máy thao tác | Sửa văn bản tự do | CLI và MCP chính thức |
 | Duyệt hoặc yêu cầu sửa | Nhắn ở một chỗ khác | Comment ngay trên ticket |
 | Nhiều người cùng góp ý | Sửa chung một file, giẫm lên nhau | Mỗi người một comment, có tên, có thứ tự |
-| Agent hỏi lại | Không có chỗ để hỏi | Đặt câu hỏi ngay trong ticket, ai trả lời cũng được, rồi agent làm tiếp |
 | Khi session đóng | Trạng thái mất theo context | Board vẫn còn nguyên |
-
-Hai dòng về comment là chỗ thay đổi cách làm việc rõ nhất. Agent không còn phải chờ đúng một
-người: nó đặt câu hỏi trên ticket, ai trong team trả lời được thì trả lời, rồi nó chạy tiếp. AI
-làm việc như một thành viên trong nhóm chứ không phải một công cụ bạn phải ngồi canh.
 
 Một chi tiết dễ bỏ sót: danh sách việc làm được ngay, gọi là frontier, phải được ghi lại. Nếu nó
 chỉ được tính trong context của agent thì bạn mở board ra không thấy, và ticket đã hết blocker vẫn
@@ -90,8 +85,8 @@ chứ không phải bản ghi thụ động, nó lệch được với thực t�
 ## why-not-subagents
 
 Claude Code có subagent và agent team. Cả hai chạy tốt bên trong một session, và Astragentic vẫn
-dùng chúng: Builder spawn subagent cho việc đọc và báo cáo, còn Thomas dùng cả hai khi cần khảo
-sát hay lên plan.
+dùng chúng: các lens của `astra-review` là subagent chỉ đọc trong session của Builder, và Thomas
+chạy `astra-slice-reviewer` trong một worktree riêng.
 
 Câu hỏi hay gặp là: đã có hai thứ đó thì cần gì thêm một bộ điều phối nữa.
 
@@ -106,14 +101,12 @@ có lỗi, không có tín hiệu nào báo ra.
 - **Checkout dùng chung.** Subagent chạy trong cùng worktree với session cha, nên nhiều agent kéo
   HEAD của nhau đi. Tôi bắt được một reviewer chỉ đọc đã `git switch` checkout của người khác.
 - **Context dùng chung.** Một fork thừa kế nguyên context của cha, kèm cả những gì không ai định
-  trao. Có lần fork thừa kế cả model của cha, nên việc đáng chạy bằng model rẻ lại chạy bằng model
-  đắt nhất. Lần khác, một fork bên trong Builder gửi báo cáo kết thúc việc, gọi là handback, cho
-  dispatcher dưới đúng tên Builder, và Builder không hề thấy. Và một fork ký marker
+  trao. Một fork bên trong Builder gửi báo cáo kết thúc việc, gọi là handback, cho
+  dispatcher dưới đúng tên Builder, và Builder không hề thấy. Một fork khác ký marker
   `simplify(increment):` lên code do chính nó vừa commit, đúng form được phép.
 - **Không có tracker giữ trạng thái.** Trạng thái của subagent nằm trong context của session cha,
   mất đi khi session compact, và trong lúc tồn tại thì bạn không đọc được.
-- **Không có pane để nhìn.** Có lần một lượt dispatch chỉ được kể ra bằng chữ mà chưa từng được
-  gọi. Một pane trong Herdr hoặc Orca là thứ đếm được; một subagent trong tiến trình thì không.
+- **Không có pane để nhìn.** Một pane trong Herdr hoặc Orca là thứ đếm được; một subagent trong tiến trình thì không.
 
 Và còn một điều nữa: subagent của Claude vẫn là Claude, nên không có lượt review chéo từ một hãng
 khác.
@@ -122,7 +115,7 @@ Vì vậy Astragentic để subagent làm đúng việc của nó, bên trong m�
 phải có `isolation: "worktree"` và không được nhắn cho dispatcher.
 
 **Đánh đổi.** Bạn phải cài một host terminal (Herdr hoặc Orca) và cấu hình một tracker, hai dependency mà subagent không cần.
-Mỗi Builder tốn một worktree trên disk và vài giây setup. Mỗi lần dispatch tốn một lượt ghi và một
+Mỗi Builder tốn một worktree trên disk. Mỗi lần dispatch tốn một lượt ghi và một
 lượt đọc trên tracker. Quy trình dài hơn, nhiều tên hơn phải nhớ. Tôi chọn trả giá đó vì lỗi im
 lặng đắt hơn nhiều.
 
@@ -204,11 +197,11 @@ sau, vì không có "nó" nào đi tiếp. Người thì ít nhất còn nhớ m
 
 Cơ chế là một cuốn sổ, và một đường đi từ sổ vào contract.
 
-**Sổ.** Mỗi sự cố là một dòng trong một file chỉ thêm, mang mã cố định — `AST-136` hôm nay vẫn là
-`AST-136` sau một trăm mục nữa. Không đánh số lại, không xoá, kể cả sau khi lỗi đã được sửa. Mục cũ
-được chuyển sang file lưu trữ chứ không bị xoá; sổ đang mở hiện có {{meta.total}} mục.
+**Sổ.** Mỗi sự cố là một mục trong một file chỉ thêm, mang mã cố định — `AST-136` hôm nay vẫn là
+`AST-136` sau một trăm mục nữa. Không đánh số lại, không xoá, kể cả sau khi lỗi đã được sửa. Mục không còn
+ai trích dẫn được chuyển sang `docs/ledger-archive/` của repo nguồn chứ không bị xoá; sổ đang mở hiện có {{meta.total}} mục.
 
-**Đường đi.** Dòng nào rút ra được luật thì luật đó không nằm lại trong sổ. Nó được viết vào một
+**Đường đi.** Mục nào rút ra được luật thì luật đó không nằm lại trong sổ. Nó được viết vào một
 file mà agent thật sự đọc: contract của một role, một skill, hoặc một hook. Sổ là bằng chứng;
 contract là chỗ bằng chứng có hiệu lực.
 
@@ -217,12 +210,12 @@ mang một dòng `Ledger:` nói rõ cái gì vừa được ghi vào sổ. `Ledg
 đó thì không — "lượt này không học được gì" là một kết luận, còn không có dòng nào là một bước bị bỏ
 qua, và nhìn từ ngoài hai thứ giống hệt nhau nếu không bắt buộc khai báo.
 
-**Không có bước build, và không ai phải nạp lại.** System prompt của mỗi role chỉ có vài dòng, và
+**Không có bước build, và không ai phải nạp lại.** System prompt của mỗi role là một file ngắn (1,2–2,0 KB), và
 một trong số đó là lệnh đọc contract của chính nó. Session kế tiếp mở lên là đã mang luật mới. Một
 hook lo phần còn lại: sau khi session bị compact, contract được nạp lại, vì thứ nằm ngoài system
 prompt là thứ compaction tóm tắt đi trước tiên.
 
-**Một mục chỉ vào sổ khi nó đã xảy ra nhiều lần.** `AST-136` được ghi sau ba lần cùng một sai lầm
+**Một mục có thể gom nhiều lần xảy ra.** `AST-136` ghi ba lần cùng một sai lầm
 đội ba lớp vỏ khác nhau: một lần escape sai khiến script báo STOP với nguyên nhân sai, một lần đọc
 23 marker thành 193, một lần làm một marker có thật báo là chưa từng được ghi. Ba lần đó cách nhau
 nhiều release, và chỉ nhìn ra được vì cả ba đều nằm trong sổ.

@@ -170,7 +170,7 @@ shots:
       webm: /shots/hero.webm
       poster: /shots/hero.jpg
   sendmessage:
-    caption: "Một lượt dispatch TRA-142: bạn nói với Thomas, Thomas gọi Builder theo tên session bằng cross-session messaging, tự trả lời câu hỏi kỹ thuật, và đưa quyết định UX về cho bạn."
+    caption: "Một lượt dispatch: bạn nói với Thomas, Thomas gọi Builder theo tên session bằng cross-session messaging, tự trả lời câu hỏi kỹ thuật, và đưa quyết định UX về cho bạn."
     video:
       mp4: /shots/dispatch.mp4
       webm: /shots/dispatch.webm
