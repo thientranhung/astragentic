@@ -89,7 +89,6 @@ fi
 # the project turns it off in its own .claude/settings.json (ADAPT-HARNESS § 3); never uninstall
 # machine-wide, another project may still run on it (owner, 2026-10-29).
 
-PLUGINS_JSON="$HOME/.claude/plugins/installed_plugins.json"   # read by the Codex plugin check below
 
 # 2b. Bundled skills reachable by the model. The Builder's simplify pass is a Claude Code
 # built-in skill it invokes itself. Three switches take that reach away, and all three fail
@@ -183,7 +182,7 @@ sys.exit(0 if rows and all(rows.get(s, "yes").lower() == "no" for s in ("ticket"
 PY
 then ARM_ALL_OFF=1; fi
 if [ "$ARM_ALL_OFF" -eq 1 ]; then
-  ok "codex CLI and plugin: not required — every arm scope is 'no' in $ARM_ORCH"
+  ok "codex CLI: not required — every arm scope is 'no' in $ARM_ORCH"
 elif command -v codex >/dev/null 2>&1; then
   ok "codex CLI ($(command -v codex))"
 else
@@ -191,15 +190,7 @@ else
     "the cross-vendor arm needs it; install the OpenAI Codex CLI, e.g. brew install codex, or set every scope to 'no' under Cross-vendor arm in .agents/orchestrator.md. Until then the arm is recorded 'NOT RUN — <reason>' for the OWNER to accept"
 fi
 
-# Codex plugin inside Claude Code (provides the companion runtime the arm invokes).
-if [ "$ARM_ALL_OFF" -eq 1 ]; then
-  :
-elif [ -f "$PLUGINS_JSON" ] && grep -q '"codex@' "$PLUGINS_JSON"; then
-  ok "Codex plugin in Claude Code (codex@… in installed_plugins.json)"
-else
-  warn "Codex plugin not installed in Claude Code" \
-    "the cross-vendor arm needs it; in an interactive claude session: /plugin → install 'codex' (marketplace: openai-codex)"
-fi
+# No Codex plugin check: since 6.1.19 every arm scope calls `codex exec` directly.
 
 # `.agents/orchestrator.md` is the single owner of role → runtime/model/effort/advisor.
 # A named target owns the answer: its table is the one its dispatches read. Only with no

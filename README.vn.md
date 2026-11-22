@@ -64,8 +64,8 @@ mỗi máy ở lần đầu.
 
 > **Cần có trước:** [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code),
 > Git (có worktree),
-> [herdr](https://github.com/herdrdev/herdr) >= 0.8.0,
-> plugin [mattpocock-skills](https://github.com/mattpocock/skills) >= 1.3.1
+> [herdr](https://github.com/herdrdev/herdr) >= 0.8.0 (hoặc Orca),
+> python3, và một tracker (GitHub Issues, Jira hoặc Linear)
 
 ---
 
@@ -279,7 +279,6 @@ không phải Thomas ngồi không.
 | [**Claude Code CLI**](https://docs.anthropic.com/en/docs/claude-code) | Runtime nền — mọi role đều chạy được ở đây |
 | **Git** (có worktree) | Ranh giới cô lập — mỗi Builder một worktree |
 | [**herdr**](https://github.com/herdrdev/herdr) >= 0.8.0 | Quản lý workspace terminal — pane cho agent, prompt/wait/read |
-| [**mattpocock-skills**](https://github.com/mattpocock/skills) >= 1.3.1 | Phương pháp — wayfinder, grill, spec, tickets, implement, review |
 
 ### Tuỳ chọn
 

@@ -280,7 +280,6 @@ telling the truth, not Thomas idling.
 | [**Claude Code CLI**](https://docs.anthropic.com/en/docs/claude-code) | Root runtime — every role can run here |
 | **Git** (worktree support) | Isolation boundary — one worktree per Builder |
 | [**herdr**](https://github.com/herdrdev/herdr) >= 0.8.0 | Terminal workspace manager — agent panes, prompt/wait/read |
-| [**mattpocock-skills**](https://github.com/mattpocock/skills) >= 1.3.1 | Engineering method — wayfinder, grill, spec, tickets, implement, review |
 
 ### Optional
 
