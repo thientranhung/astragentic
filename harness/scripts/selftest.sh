@@ -2591,6 +2591,22 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify({ 'AB-6': held(`uds:${otherSock}`), 'AB-7': held(`uds:${selfSock}`), 'AB-8': held(`uds:${root}/gone.sock`) }))
   await every()
   const ownerBells = ['AB-6', 'AB-7', 'AB-8'].map(k => bells.filter(b => b.includes(` ${k} has held`)).length).join('')
+  // 6.1.20 — a Herdr gate lane is claimed by the session that creates its tab, so another root
+  // session's poll leaves its record-path bell alone (one project 2026-11-22: a gate bell rang in a
+  // day-old Thomas, 16 of 41 gate bells since 11-10); an unexpanded label claims nothing
+  fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), '{}'); fs.writeFileSync(selfSock, '')
+  await fire('tool.call', { tool: 'Bash', command: 'herdr tab create --workspace w1 --label "qa:AB-30" --cwd /p/.claude/worktrees/gate-AB-30 --no-focus' }, async () => ({}))
+  await fire('tool.call', { tool: 'Bash', command: 'for t in AB-31; do herdr tab create --workspace w1 --label "ticket:$t" --no-focus; done' }, async () => ({}))
+  const recH = JSON.parse(fs.readFileSync(path.join(root, '.astraler/state/dispatch-record.json'), 'utf8'))
+  const pend = { at: Date.now(), reason: 'QA pane', text: '[astragentic-dispatch] TURN-END key=qa:AB-30 pane=p30 reason=answer\nFAIL' }
+  fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify({ 'qa:AB-30': { ...recH['qa:AB-30'], pane_id: 'p30', tab_id: 't30', last_brief_received_at: Date.now(), turn_end_pending: pend } }))
+  const mySock = selfSock; selfSock = otherSock; bells.length = 0
+  await every()
+  const gateBellOther = bells.filter(b => b.includes('qa:AB-30 ended its turn')).length
+  selfSock = mySock; bells.length = 0
+  await every()
+  const gateBellOwner = bells.filter(b => b.includes('qa:AB-30 ended its turn')).length
+  const herdrClaim = [recH['qa:AB-30']?.dispatcher === `uds:${mySock}` && recH['qa:AB-30']?.role === 'qa', !('$t' in recH) && !('AB-31' in recH), gateBellOther, gateBellOwner].join(',')
   selfSock = undefined
   // a subagent's turn.start (Claude Code 2.1.299 fires it with agentId) must not hold bells
   bells.length = 0
@@ -2837,7 +2853,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   const agentBuilder = await agentOf({ subagent_type: 'builder', prompt: 'build TRA-1', description: 'b' })
   const agentPlugin = await agentOf({ subagent_type: 'astragentic:shaper', prompt: 'x', description: 'b' })
   const agentExplore = await agentOf({ subagent_type: 'Explore', prompt: 'x', description: 'b' })
-  console.log(JSON.stringify({ owedWhen, agentBuilder, agentPlugin, agentExplore, orcaInHerdr, orcaDocInHerdr, deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, deadTurnBellHeld, deadTurnBellRerung, deadTurnNoDouble, staleBells, staleRow, ownerBells, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeUi, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiStd, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
+  console.log(JSON.stringify({ owedWhen, agentBuilder, agentPlugin, agentExplore, orcaInHerdr, orcaDocInHerdr, deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, deadTurnBellHeld, deadTurnBellRerung, deadTurnNoDouble, staleBells, staleRow, ownerBells, herdrClaim, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeUi, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiStd, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
@@ -2867,7 +2883,7 @@ DRVEOS
   else
     bad "mod hook log path" "suite log REFUSED lines before=$modlog_before after=$modlog_after after-planted=$modlog_planted; planted mod's default file=$modlog_home; untimestamped lines in the suite log=$(grep -cvE '^[0-9]{4}-[0-9]{2}-[0-9]{2}T' "$HARNESS_HOOK_LOG" 2>/dev/null)"
   fi
-  if says "$out" '"afterSend":"AB-1:sent:"' && says "$out" '"afterAck":"AB-1:registered:no brief yet"' && says "$out" '"afterRetire":""' && says "$out" '"stubBells":0,"stubLeft":0,"deadTurnBellHeld":true,"deadTurnBellRerung":true,"deadTurnNoDouble":true,"staleBells":1,"staleRow":true,"ownerBells":"011","subagentHeld":false,"heldCleared":true,"latestChip":"0.0.2"'; then
+  if says "$out" '"afterSend":"AB-1:sent:"' && says "$out" '"afterAck":"AB-1:registered:no brief yet"' && says "$out" '"afterRetire":""' && says "$out" '"stubBells":0,"stubLeft":0,"deadTurnBellHeld":true,"deadTurnBellRerung":true,"deadTurnNoDouble":true,"staleBells":1,"staleRow":true,"ownerBells":"011","herdrClaim":"true,true,0,1","subagentHeld":false,"heldCleared":true,"latestChip":"0.0.2"'; then
     ok "the ack from the bare name clears the send keyed by \"name [ref]\"; a retired lane's send goes with its entry; a stub entry rings no bell; a hold past the ceiling rings once as held-stale, only in the session that briefed the lane unless that session is gone; a subagent's turn.start holds nothing; a bell held in the dispatcher's turn clears its status line when flushed; a newer tag at the remote reaches the band"
   else
     bad "mod send/ack keys" "$out"

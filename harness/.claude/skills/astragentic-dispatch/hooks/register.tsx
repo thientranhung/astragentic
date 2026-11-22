@@ -2420,6 +2420,18 @@ export const register: Register = on => {
       const key = role === 'qa' ? `qa:${claim[2]}` : claim[2]
       if (sock && role) await patchRecord($, root, key, { role, dispatcher: `uds:${sock}`, claimed_at: await $.clock.now() })
     }
+    // 6.1.20 — the same claim on Herdr, at `herdr tab create --label <lane>`. Only Orca claimed it,
+    // so a Herdr gate pane's entry had no dispatcher and any root session's poll rang its bell:
+    // nizzy, 2026-11-10..22, 16 of 41 gate bells with a known launcher rang in another Thomas
+    // session (a gate bell at 07:00:51Z went to a Thomas open since the day before; the owner saw
+    // the pipeline stall). A label the shell has not expanded yet (`ticket:$t`) claims nothing.
+    const herdrClaim = cmd.match(new RegExp(AT_COMMAND + String.raw`(?:\S*/)?herdr\s+tab\s+create\b[^\n]*?--label[\s=]+['"]?(ticket|spec|qa|resident):([^\s'"&;|$\x60]+)(?=['"\s;&|]|$)`))
+    if (herdrClaim) {
+      const sock = await $.env.get('CLAUDE_CODE_MESSAGING_SOCKET')
+      const role = ROLE_BY_PREFIX[herdrClaim[1]]
+      const key = role === 'qa' ? `qa:${herdrClaim[2]}` : herdrClaim[2]
+      if (sock && role) await patchRecord($, root, key, { role, dispatcher: `uds:${sock}`, claimed_at: await $.clock.now() })
+    }
 
     // -- a launch whose argv repeats the executable that --kind supplies (5.0.9) ----------------
     // `herdr agent start --kind claude -- …` prepends `claude` itself. A launcher row pasted with

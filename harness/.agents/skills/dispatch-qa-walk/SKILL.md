@@ -56,6 +56,10 @@ batch head SHA rather than one per merge, and scope the brief to the union of th
   the oracle. Where there is none, say so and QA derives the journeys from the source at lower
   confidence.
 - **The mode**: walk, probe or verify.
+- **`Goal:` and `Exit:` lines.** `Goal:` is what this run proves for the user, one sentence;
+  `Exit:` is which verdict lets the next step go (e.g. `PASS, or CONCERNS with no blocking finding
+  → merge`). A run with no goal judges "clean", never "right" (owner 2026-11-22: "mỗi lần walk vậy
+  phải có goal chứ").
 - **The depth**: incremental by default before a PR or a merge, full at a release or a slice
   close. `qa.md` owns what each covers.
 - **Persona and data state.** Who QA acts as, and what the data looks like. A run on empty data

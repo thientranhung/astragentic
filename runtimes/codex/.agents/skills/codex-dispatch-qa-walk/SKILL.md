@@ -6,7 +6,8 @@ description: "Prepare and dispatch Astragentic product QA in walk, probe or veri
 # QA dispatch
 
 Require a pushed target SHA,
-plan path, mode, depth, scope, persona, environment/data provenance,
+plan path, mode, a `Goal:` line (what the run proves for the user) and an `Exit:` line
+(which verdict lets the next step go), depth, scope, persona, environment/data provenance,
 consent for the specified session, authorized mutations and durable report/clean-list
 paths. Walk covers screens, probe endpoints, verify jobs/data. Dispatch one run per
 applicable mode. Missing plan or consent blocks the corresponding operation.
