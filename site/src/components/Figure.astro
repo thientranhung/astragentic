@@ -57,9 +57,11 @@ const open = { vi: 'Mở bản đầy đủ', en: 'Open full size' }[lang];
   .fig { margin: 0 auto; max-width: var(--fig-max, var(--diagram)); }
   /* On the landing a figure takes the whole diagram band (.band, global.css), not the text column. */
   .fig.band {
+    --fig-band: 960px;
     max-width: none;
+    width: min(var(--fig-band), 100vw - 2rem);
     margin-right: 0;
-    margin-left: calc((100% - min(var(--diagram), 100vw - 2rem)) / 2);
+    margin-left: calc((100% - min(var(--fig-band), 100vw - 2rem)) / 2);
   }
   .fig-scroll { overflow-x: auto; }
   .fig-scroll :global(svg) { display: block; width: 100%; height: auto; min-width: 800px; }
