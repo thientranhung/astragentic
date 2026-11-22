@@ -256,7 +256,7 @@ const RUNTIME_CARD = 'runtime';
             <CodeFrame lines={ACTIVE_TABLE} lang={lang} label={ORCHESTRATOR_FILE} class="role-models-table" />
           </div>
         )}
-        <Figure slug="six-roles" lang={lang} hrefMap={roleMap} maxWidth={1040} />
+        <Figure slug="six-roles" lang={lang} hrefMap={roleMap} class="band" />
         {EX.roles.figureNote && <p class="figure-note" set:html={hl(EX.roles.figureNote)} />}
       </div>
     </section>
@@ -286,7 +286,7 @@ const RUNTIME_CARD = 'runtime';
       {/* Drawn from the owner's sketch: the tracker sits at the centre of the team and
           every edge passes through it. It stands here rather than in the hero because
           the reader has just met the five roles and can now name every box in it. */}
-      <Figure slug="client-studio" lang={lang} hrefMap={studioMap} maxWidth={1040} />
+      <Figure slug="client-studio" lang={lang} hrefMap={studioMap} class="band" />
     </div>
   </section>
 
@@ -360,7 +360,7 @@ const RUNTIME_CARD = 'runtime';
         )}
         {/* Three inputs answer the query together; the answer lands on the board; Thomas,
             the owner and a Builder read it; the Builder's new ticket comes back round. */}
-        <Figure slug="frontier-query" lang={lang} hrefMap={trackerMap} maxWidth={1040} />
+        <Figure slug="frontier-query" lang={lang} hrefMap={trackerMap} class="band" />
         {EX.tracker.more && (
           <a class="more-link" href={EX.tracker.more.href}>{EX.tracker.more.label}</a>
         )}
@@ -376,7 +376,7 @@ const RUNTIME_CARD = 'runtime';
       <p class="sub">{copy.sections.lifecycle.sub}</p>
     </div>
     <div class="column">
-      <Figure slug="ticket-lifecycle" lang={lang} hrefMap={lifecycleMap} maxWidth={1040} />
+      <Figure slug="ticket-lifecycle" lang={lang} hrefMap={lifecycleMap} class="band" />
       <ol class="steps band">
         {
           perStage.map(({ stage, number, caption, hits }) => (
@@ -425,7 +425,7 @@ const RUNTIME_CARD = 'runtime';
         </dl>
         {/* Which skill a ticket goes to once Thomas has classified it; every node opens
             the page of the role that runs that skill. */}
-        <Figure slug="skill-routing" lang={lang} hrefMap={skillRoutingMap} maxWidth={860} />
+        <Figure slug="skill-routing" lang={lang} hrefMap={skillRoutingMap} class="band" />
         {EX.method.more && (
           <a class="more-link" href={EX.method.more.href}>{EX.method.more.label}</a>
         )}

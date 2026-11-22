@@ -25,6 +25,6 @@ const hasFigure = (await import('node:fs')).existsSync(`${process.cwd()}/public/
   alternate={ROUTES.review}
   harness={entry.data.harness}
 >
-  {hasFigure && <div class="figure" data-toc-skip><Figure slug="ticket-lifecycle" lang={lang} maxWidth={960} /></div>}
+  {hasFigure && <div class="figure" data-toc-skip><Figure slug="ticket-lifecycle" lang={lang} /></div>}
   <div class="read-body read-body--sections body prose"><Content /></div>
 </DocsLayout>

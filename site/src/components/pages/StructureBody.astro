@@ -53,7 +53,7 @@ const heading = lang === 'vi' ? 'Astragentic gồm bốn lớp' : 'Astragentic i
   {page.intro && <Prose slot="lede" html={page.intro} class="lede" />}
 
   <div class="figure" data-toc-skip>
-    <Figure slug="structure" lang={lang} hrefMap={structureMap} maxWidth={860} />
+    <Figure slug="structure" lang={lang} hrefMap={structureMap} />
     <p class="hint mono">{UI.diagramHint[lang]}</p>
   </div>
 
@@ -82,7 +82,7 @@ const heading = lang === 'vi' ? 'Astragentic gồm bốn lớp' : 'Astragentic i
             <p>{part.line[lang]}</p>
             {part.id === 'cross-vendor-arm' && (
               <div class="part-figure">
-                <Figure slug="cross-vendor-arm" lang={lang} maxWidth={780} />
+                <Figure slug="cross-vendor-arm" lang={lang} />
               </div>
             )}
             {part.id === 'ledger' && (

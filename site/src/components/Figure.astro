@@ -55,6 +55,12 @@ const open = { vi: 'Mở bản đầy đủ', en: 'Open full size' }[lang];
 
 <style>
   .fig { margin: 0 auto; max-width: var(--fig-max, var(--diagram)); }
+  /* On the landing a figure takes the whole diagram band (.band, global.css), not the text column. */
+  .fig.band {
+    max-width: none;
+    margin-right: 0;
+    margin-left: calc((100% - min(var(--diagram), 100vw - 2rem)) / 2);
+  }
   .fig-scroll { overflow-x: auto; }
   .fig-scroll :global(svg) { display: block; width: 100%; height: auto; min-width: 800px; }
   .fig-scroll :global(svg text) { font-family: var(--font-sans); }
