@@ -1,111 +1,98 @@
 ---
 title: "Hooks"
-description: "Four hooks, three scripts. One blocks dangerous git, one re-arms the contract after compaction, one writes a log, and one I measured as dormant."
+description: "Six Claude Code hook event types, seven commands, plus one mod. The hooks block wrong git commands, record test runs, reload the contract after compaction, inject tracker status at session start, log subagents and release worktree resources."
+harness: v6.1.19
+source: harness/.claude/settings.json, harness/scripts/hook-git-guard.py, harness/scripts/hook-test-run.py, harness/scripts/hook-contract-reload.py, harness/scripts/hook-tracker-status.py, harness/scripts/release-worktree-resources.sh, harness/.claude/skills/astragentic-dispatch/hooks/register.tsx
 ---
 
-Four hooks are registered in `harness/.claude/settings.json`. The principle behind all four is that the hook always
-comes after and the contract always comes first. A rule that matters has to live in the contract,
-because the contract is read in every session, while a hook can be disabled, can be untrusted,
-and can be bolted to an execution path nobody walks through.
+`harness/.claude/settings.json` registers 6 Claude Code hook event types, 7 commands in total. The `astragentic-dispatch` mod registers its own events on top.
 
-That last case is not hypothetical. One of the four below is dormant, I measured it, and I am
-leaving it here rather than quietly removing it.
+A hook always comes after the contract. A rule that matters has to live in the contract, because a hook can be disabled or untrusted. Each command below is a file you can run by hand, and the command in `settings.json` only calls that file.
 
 ## pre-tool-use
 
-It fires before an agent runs the `Bash` tool, in Claude Code, and it runs
-`scripts/hook-git-guard.py`.
+One command runs `scripts/hook-git-guard.py` before every `Bash` tool call. The script denies a git command that could destroy someone else's work, or says nothing.
 
-The script reads the command about to run and does exactly one of two things: deny, naming the
-exact command to run instead, or say nothing. It never acts itself. The first version ran `git
-worktree prune` and killed brokers from inside the hook, and that was wrong in principle. A
-`PreToolUse` hook runs while permission is still being decided, so anything it changes is a side
-effect of a command that may yet be refused.
+It denies with the exact command to run instead, and it never acts. `PreToolUse` runs while permission is still being decided, so anything it changed would be a side effect of a command that may yet be refused.
 
-The script tokenises and inspects argv rather than matching regexes against the raw command
-string. A cross-vendor pass proved the regex version was bypassable and over-broad in the same
-breath: `/usr/bin/git add -A` and `git -c k=v add -A` slipped through, while `printf '%s' "rm
--rf .claude/worktrees/x"` was denied for containing the words. A guard that misses the real case
-and blocks the harmless one teaches its own operator to route around it, which is worse than no
-guard.
+- **Staging.** `git add -A` and `git add .` without a pathspec are denied, with the list of changed files so the next attempt stages by path.
+- **Worktree.** `git worktree add` needs an absolute path. `git worktree remove` is denied while the worktree has uncommitted changes, while its resources are not released, or while a process still has its real cwd inside it.
+- **Read-only role.** A BA pane runs no command that writes to the repository. A Quick Builder pane is limited to an `ops/<slug>` branch, a `--ff-only` merge and the push of that branch.
+- **Push.** A push that lands merges with no `ticket-done` evidence or no `Ledger:` line is denied. The same rule also lives in `scripts/pre-push-ticket-done.sh`, which runs as git's `pre-push` hook.
 
-**Limit.** This is an accidental-misuse lint, not a boundary. Three adversarial gates each found
-a fresh way through, and the third concluded the matcher was not converging. The answer was to
-shrink its claim rather than grow its rules. It now recognises one shape, simple commands
-separated by unquoted operators, and stays silent on anything containing a substitution,
-heredoc, comment, reserved word, wrapper or interpreter. Silence there is the design, not a gap:
-a coverage claim that is not true is worse than no claim.
+The script tokenises and inspects argv instead of matching a regex on the raw command string. The first regex version let `/usr/bin/git add -A` through and blocked a `printf` that merely contained those words.
 
-There is also a reason it is a `.py` file rather than a shell line crammed into `settings.json`.
-The old version was exactly that line: unreadable, unrunnable by hand, untestable, and it sat
-dormant across releases while looking installed. This one runs standalone, which means
-it can be tested.
+**Measurement.** On one day's log, 84 of 319 commands (26%) held a heredoc, a `$(...)` or a `( ... )` and were not read. After ignoring a `(` inside a quoted string, 13 of the 20 base pushes that had gone unjudged carried only that character in an `echo`. For staging, 71 of 167 refusals were followed by the identical command retyped, so since 4.1.0 a refusal lists the paths.
 
-## worktree-remove
+**Cost.** This is a lint against accidents, not a boundary. Three adversarial gates each found a way through. The script accepts one shape, simple commands separated by unquoted operators, and stays silent on a heredoc, substitution, comment, wrapper or interpreter. A junior pane on another runtime sends a different tool name, so the hook never sees its commands.
 
-It fires when a worktree is removed through the `EnterWorktree` / `ExitWorktree` tool path, and
-it runs `scripts/release-worktree-resources.sh` with `$WORKTREE_PATH`.
+## post-tool-use
 
-The script releases what a worktree allocated, in order. First the harness's own part: processes
-whose real cwd is inside the worktree, reaped by `reap-worktree-processes.sh`. Then the part the
-project declares, through the plug at `.astraler/project/cleanup-worktree.sh`. That order is
-load-bearing. Resources bound to a directory, by cwd or by a label derived from the path or by a
-name the project computed from it, cannot be matched once the directory is gone, so this has to
-run before `git worktree remove` and never after.
+Two commands run `scripts/hook-test-run.py`: one on `PostToolUse` and one on `PostToolUseFailure`, both with matcher `Bash`. The script appends every test run to `/tmp/harness-test-runs/<git toplevel>.log`, one line each with the time, the exit status and the first 200 characters of the command.
 
-**How I know.** This hook is dormant, confirmed from the logs: worktrees were removed, one of
-them by a plain `git worktree remove`, and not one `WorktreeRemove` event was recorded, while
-another hook in the same file kept logging normally over the same window. I confirmed it a second, independent way: the shared test container was still `Up
-(healthy)` after the removal, which a live hook would have stopped.
+It exists because the commit gate needs to know whether a test went red before the first content commit. A skill call is only a line in a record, while a red run is what TDD demands. The mod cannot see a tool's result because its events fire before the call, so the hook writes the status and the mod reads the file.
 
-The cause is not that the hook is broken, it is that the hook is never reached. `WorktreeRemove`
-hangs off the `EnterWorktree` / `ExitWorktree` tool path, and Thomas removes worktrees with `git
-worktree remove` in a Bash call. That is ordinary git, with nothing standing between the command
-and the repo, so no event exists to fire. A hook bolted to an execution path nobody walks
-through fires exactly as often as a broken one, and from the outside the two are
-indistinguishable.
+Two statuses are never counted as 0:
 
-So manual cleanup remains required on every runtime, and the hook's command has to be kept safe
-against the day it wakes. The lesson outlives this particular hook: when a mechanism
-does not fire, ask whether the trigger was reached before concluding the mechanism is broken.
+- **`background`.** A command launched in the background has no exit code yet. The hook tells the pane to run the test in the foreground before the first commit.
+- **`masked`.** The test is followed by `;`, `|`, `||` or a newline, so the exit code the tool reports belongs to the next command. The hook tells the pane to run the test alone.
+
+What counts as a test is set by `.astraler/project/test-command-pattern`, or by a default list covering `go test`, `pytest`, `vitest`, `jest`, `cargo test`, `npm test` and other common runners.
+
+**Measurement.** In 14 days to 2026-10-26, 61 of 161 downstream tickets wrote code first and called the tdd skill afterwards, and 15 never called it. Release 4.5.2 registered only `PostToolUse`, but a command that exits non-zero goes to `PostToolUseFailure`, so no red run was ever logged and every honest Builder was refused at its first commit. 4.5.3 registers both events.
+
+**Cost.** The hook recognises only runners that match the pattern. A project with another runner adds one line to the plug.
 
 ## session-start
 
-It fires immediately after a Claude Code session compacts, with `source: compact`, and it runs
-`scripts/hook-contract-reload.py`.
+Two commands fire on `SessionStart`, one with matcher `compact` and one with no matcher.
 
-The script re-arms exactly one thing: the path to the contract of the role the agent is running,
-delivered through `hookSpecificOutput.additionalContext`, reaching the agent before it acts.
+`scripts/hook-contract-reload.py` fires after a session compacts, with `source: compact`. It re-arms the path of the role's contract through `hookSpecificOutput.additionalContext`, before the agent acts.
 
-The failure behind it, in one line: an instruction with no moment
-attached measures zero. The system prompt already says "Read `.agents/roles/<role>.md` now", and
-that line comes through compaction untouched because it is the system prompt. What does not come
-through is the word "now". A compacted agent reads its own summary, sees work underway,
-concludes it is mid-session, and never re-reads. The instruction is present and inert.
+The contract lives in `.agents/roles/<role>.md` and enters the conversation as a Read tool result, which compaction summarises first. What survives is the system prompt, with its four rules. The line "read the contract now" in the system prompt survives, but the word "now" does not: the agent reads a summary that reports work in progress and concludes it is mid-session.
 
-Two details are deliberate. It fires on `compact` and not on `clear`, because after `/clear` an
-agent faces an empty context and reads its contract unprompted, while after compaction it faces
-a summary insisting work is underway and does not. That asymmetry is the entire defect. And it
-is Claude Code's own event, so it fires nowhere else.
+The hook fires on `compact` and not on `clear`. After `/clear` the agent faces an empty context and reads the contract itself. Every exit path of the script prints valid JSON or nothing, because a traceback on stderr makes the runtime treat the hook as broken.
 
-Every exit path in the script is either valid JSON on stdout or nothing at all, and none of them
-raise. A traceback on stderr would be read by the runtime as a broken hook and disabled, and the
-operator would carry on shipping a harness that looks armed.
+`scripts/hook-tracker-status.py` fires at the start of every session. It runs the project's `.astraler/project/tracker-status.sh` plug, or `scripts/tracker.sh counts` for a project that declares a `jira <KEY>` tracker, and puts the counts in context. With the counts already in context, reporting status costs nothing and leaving it out is visible. A missing plug produces one note, and output is cut at 4,000 characters with a statement that it was cut.
+
+**Measurement.** In one long session that compacted once, the four rules in the system prompt were obeyed all session and every rule outside it was violated.
+
+**Cost.** The hook only works on Claude Code. The tracker hook only reads; if a mirror needs a push, the role's contract says so.
 
 ## subagent-stop
 
-It fires every time a subagent ends. There is no script of its own: the hook reads JSON from
-stdin and appends a line to `/tmp/harness-hook-events.log`.
+The hook fires every time a subagent finishes. The command is inline in `settings.json`: it reads JSON from stdin and appends one line to `~/.local/state/astragentic/harness-hook-events.log` with `agent_type`, `agent_id`, `session_id` and the payload size. `HARNESS_HOOK_LOG` changes the path.
 
-It records `agent_type`, `agent_id`, `session_id` and the payload size. That is all, and it
-blocks nothing. The first version read the environment variables `$AGENT_NAME` and `$SESSION_ID`
-and got empty strings back. The current one reads stdin and takes the right fields.
+It blocks nothing. The log is shared by the whole machine: the git guard, both `SessionStart` hooks, `tracker.sh` and the mod all write to it. Since 6.1.8 it lives outside `/tmp`, because `/tmp` is emptied at boot and the log's counts began at the last restart.
 
-It is the cheapest of the four, and it returned the most value in a place nobody designed for.
-It was the control group. The 27 events it logged in that window are what turned "nothing was
-observed" into evidence that `WorktreeRemove` was dormant. Without them the same observation
-would have been indistinguishable from "hooks are off entirely", and the first conclusion, that
-the hook was broken, was reached without any control group at all.
+**Measurement.** The number of `SubagentStop` events per day is not measured (chưa đo).
 
-Beyond that, it records the moment a Builder dies, which without a log shows up only as a silent
-pane.
+**Cost.** It is the cheapest of the seven commands, and it only records. It says a subagent stopped, not whether the work was right.
+
+## worktree-remove
+
+The hook runs `scripts/release-worktree-resources.sh` with `$WORKTREE_PATH` when Claude Code removes a worktree, and writes a line to the hook log.
+
+The script releases what a worktree allocated, in order. First comes what the harness knows: processes whose real cwd is inside the worktree, reaped by `reap-worktree-processes.sh`. Then comes what the project declares, through the `.astraler/project/cleanup-worktree.sh` plug.
+
+The order is load-bearing. A resource bound to a directory by cwd or by a name derived from its path cannot be matched once the directory is gone, so this runs before `git worktree remove`. The plug must scope to that worktree only. A missing plug is reported as empty, because a silent no-op is indistinguishable from a successful release.
+
+Thomas removes worktrees with `git worktree remove` in a Bash command. That path has two backstops: the git guard refuses while resources are unreleased, and the mod runs this script first on a recorded, clean worktree whose agent is not mid-turn.
+
+**Measurement.** Before the harness had a plug, one downstream night left 43 orphaned processes, 3,405 databases (25 GB), a load average of 123, and the OS killed one Builder.
+
+**Cost.** Whether the `WorktreeRemove` event fires when a worktree is removed with a bare `git worktree remove` is not measured (chưa đo). The two backstops above stay for that reason.
+
+## mod
+
+The `astragentic-dispatch` mod (v1.0.3) is a Claude Code plugin at `harness/.claude/skills/astragentic-dispatch/hooks/register.tsx`. It replaces three dispatch steps that a dispatcher kept forgetting with something the panes do themselves.
+
+- **Record.** A pane whose tab label is `ticket:`, `spec:`, `qa:` or `resident:` writes its own tab and pane ids into `.astraler/state/dispatch-record.json` at session start.
+- **Brief.** A message from the dispatcher becomes a real user turn: a first line starting with `/` runs through `$.command.run`, anything else through `$.prompt.submit`. The pane answers `RECEIVED` at once.
+- **TURN-END.** When the turn the dispatcher started ends, the pane sends `TURN-END` with its last words, and the dispatcher's copy of the mod wakes the dispatcher.
+
+The mod registers the events `session.start`, `turn.start`, `turn.complete`, `prompt.compose`, `prompt.submit`, `session.send`, `session.receive`, `skill.prompt`, `tool.call` and `ui.render`, and two commands, `dispatch-board` and `tracker-refresh`. Since 4.6.1 it refuses `ScheduleWakeup` in a dispatched pane, and it refuses an `herdr` command in an Orca session and an `orca` command in a Herdr session.
+
+**Measurement.** From turn end to dispatcher wake is under 1 second, against the 67-second gap of polling pane state.
+
+**Cost.** TURN-END is a bell, not proof. It says a turn ended, not that the work is right, so Thomas still verifies by artifact. The mod dies with its pane, so it cannot report a pane that died.

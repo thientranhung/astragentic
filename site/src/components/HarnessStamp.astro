@@ -1,0 +1,31 @@
+---
+// "Written against v6.1.19", linking to that tag. Renders nothing without a stamp.
+import { harnessHref } from '../lib/stamp';
+import { UI, type Lang } from '../lib/site';
+interface Props {
+  harness?: string;
+  lang: Lang;
+}
+const { harness, lang } = Astro.props;
+---
+
+{
+  harness && (
+    <p class="harness-stamp mono" data-toc-skip>
+      <a href={harnessHref(harness)} target="_blank" rel="noreferrer">
+        {UI.writtenAgainst[lang]} {harness}
+      </a>
+    </p>
+  )
+}
+
+<style>
+  .harness-stamp {
+    margin: 0 0 1rem;
+    font-size: var(--text-micro);
+    color: var(--ink-muted);
+  }
+  .harness-stamp a {
+    color: inherit;
+  }
+</style>

@@ -4,7 +4,7 @@ oneLiner: "Assigning a ticket on the tracker before its worktree exists — the 
 order: 5
 related: [tracker, frontier, worktree]
 diagram: ticket-states
-updated: 2026-09-04
+updated: 2026-11-22
 ---
 
 **The claim is assigning a ticket to an agent on the tracker, and it happens before that ticket's worktree is created.**

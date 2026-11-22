@@ -4,10 +4,11 @@ oneLiner: "Chạy GitHub Issues làm tracker của harness, với trạng thái 
 group: adapter
 order: 4
 runtimes: [claude]
-source: harness/.agents/skills/github-issue-tracker/SKILL.md
+source: harness/.claude/skills/github-issue-tracker/SKILL.md
 rented: false
 lang: vi
-updated: 2026-09-04
+updated: 2026-11-22
+harness: v6.1.19
 ---
 
 ## Nó làm gì
@@ -107,3 +108,9 @@ truy vấn → `dispatch-ticket` claim ticket thắng cuộc bằng `--add-assig
 và ghi `todo` cho ticket nó vừa mở khoá, trong cùng một lượt → `reconcile-tracker` đem kết quả ra đo
 với git. Hai adapter cùng nhóm là `jira-issue-tracker` và `linear-issue-tracker`, và
 `.agents/tracker-contract.md` áp dụng cho cả ba.
+
+## Hai điểm cần nói rõ
+
+- **GitHub không có trường priority.** Mức khẩn nằm trong body và trong thứ tự của router; label không ai sắp theo chỉ là nhiễu.
+- **Blocker không có bản tương ứng trên GitHub là đã thoả, không phải thiếu**, khi project chuyển từ tracker khác sang và chỉ việc đang chạy được mang theo. Giữ dòng `**Blocked by:** <ids>` trong body cho blocker không link native được.
+<!-- source: harness/.claude/skills/github-issue-tracker/SKILL.md -->

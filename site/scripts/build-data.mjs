@@ -249,8 +249,8 @@ function buildAdopt() {
       }
       return { name, version, href };
     });
-    if (prerequisites.length !== 4) {
-      warn(`README.md: expected 4 prerequisites, found ${prerequisites.length}`);
+    if (prerequisites.length !== 3) {
+      warn(`README.md: expected 3 prerequisites, found ${prerequisites.length}`);
     }
   }
 

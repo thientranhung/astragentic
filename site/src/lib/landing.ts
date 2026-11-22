@@ -24,8 +24,8 @@ export interface TeamCaption extends Caption {
   pointsLabel?: string;
   points?: { title: string; body: string }[];
 }
-/** One card in the feature grid (home v2 §Section 2). `crop` names the nodes the
- *  thumbnail is cut down to; see src/lib/diagram.ts. A card with no `diagram` is copy
+/** One card in the feature grid (home v2 §Section 2). `diagram` names a figure in
+ *  public/diagrams (Figure.astro); `crop` is no longer read. A card with no `diagram` is copy
  *  only, and HomeBody decides what stands in for the picture. */
 export interface Feature {
   id: string;
@@ -196,7 +196,7 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
         points: [
           {
             title: 'Thomas điều phối team.',
-            body: 'Thomas mở session Shaper khi cần shape, dispatch ticket cho Builder theo capacity, gọi Rin gate ở mỗi milestone và QA walk trước khi merge. Bạn không phải tự gọi từng agent.',
+            body: 'Thomas mở session Shaper khi cần shape, dispatch ticket cho Builder theo capacity, gọi QA walk trước khi merge, chạy slice gate khi một slice đóng, và mở Quick Builder cho việc nhỏ. Bạn không phải tự gọi từng agent.',
           },
           {
             title: 'Thomas đọc báo cáo thay bạn.',
@@ -218,12 +218,12 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
         sub: 'Ticket nào sẵn sàng là kết quả một truy vấn trên board.',
       },
       skills: {
-        headline: 'Mười sáu skill trong harness',
-        sub: 'Mười sáu skill, xếp theo lúc bạn cần dùng chúng.',
+        headline: 'Mười chín skill trong harness',
+        sub: 'Mười chín skill, xếp theo lúc bạn cần dùng chúng.',
         cta: 'Cả catalog',
       },
       hooks: {
-        headline: 'Bốn hook chạy ở bốn thời điểm cố định',
+        headline: 'Hook ở sáu sự kiện của Claude Code, cộng một mod',
         sub: 'Mỗi hook bắn ở một thời điểm và chỉ làm đúng một việc.',
       },
       why: {
@@ -239,7 +239,7 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
       claim: 'Assignee ghi rồi đọc lại.',
       brief: 'Dispatch vào pane, tại Base.',
       build: 'Builder làm trong worktree riêng.',
-      'code-review': 'Rin đọc lại artifact và dấu vết.',
+      'code-review': 'astra-review: ba lens, mỗi finding kiểm tại dòng.',
       simplify: 'Dọn marker, cắt phần thừa.',
       arm: 'Codex đọc lại, receipt buộc vào SHA.',
       merge: 'Ledger ghi một dòng, assignee gỡ.',
@@ -248,7 +248,6 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
       thomas: 'Thomas thường trú, giữ board và pane.',
       shaper: 'Shaper grill tới khi spec đứng được.',
       builder: 'Một ticket, một worktree, một session.',
-      rin: 'Đọc lại artifact và dấu vết.',
       qa: 'Chạy sản phẩm thật, không đọc code.',
     },
     ...cards('vi'),
@@ -289,7 +288,7 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
         points: [
           {
             title: 'Thomas runs the team.',
-            body: 'Thomas opens a Shaper session when something needs shaping, dispatches tickets to Builders up to capacity, calls Rin’s gate at every milestone and QA’s walk before a merge. You never summon an agent yourself.',
+            body: 'Thomas opens a Shaper session when something needs shaping, dispatches tickets to Builders up to capacity, calls QA’s walk before a merge, runs the slice gate when a slice closes, and opens a Quick Builder for small changes. You never summon an agent yourself.',
           },
           {
             title: 'Thomas reads the reports for you.',
@@ -311,12 +310,12 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
         sub: 'Which ticket is ready is the result of a query against the board.',
       },
       skills: {
-        headline: 'Sixteen skills in the harness',
-        sub: 'Sixteen skills, grouped by the moment you need one.',
+        headline: 'Nineteen skills in the harness',
+        sub: 'Nineteen skills, grouped by the moment you need one.',
         cta: 'The whole catalog',
       },
       hooks: {
-        headline: 'Four hooks fire at four fixed moments',
+        headline: 'Hooks on six Claude Code events, plus one mod',
         sub: 'Each hook fires at one moment and does exactly one thing.',
       },
       why: {
@@ -332,7 +331,7 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
       claim: 'Assignee written, then read back.',
       brief: 'Dispatched into a pane, at Base.',
       build: 'The Builder works in its own worktree.',
-      'code-review': 'Rin re-reads the artifact and the traces.',
+      'code-review': 'astra-review: three lenses, every finding checked at its line.',
       simplify: 'Markers cleared, the surplus cut.',
       arm: 'Codex re-reads; the receipt is bound to a SHA.',
       merge: 'One Ledger line written, assignee cleared.',
@@ -341,7 +340,6 @@ const FALLBACK: Record<Lang, Omit<Landing, 'missing'>> = {
       thomas: 'Thomas is resident, holding the board and the panes.',
       shaper: 'The Shaper grills until the spec stands up.',
       builder: 'One ticket, one worktree, one session.',
-      rin: 'Re-reads the artifact and the traces.',
       qa: 'Runs the real product, never reads the code.',
     },
     ...cards('en'),

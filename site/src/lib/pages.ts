@@ -16,6 +16,7 @@ export interface PageContent {
   /** H2 slug (`act-1`, `ast-016`, `orphan`, `brownfield`) → the HTML under it. */
   sections: Record<string, string>;
   missing: boolean;
+  harness?: string;
 }
 
 /** Why split rendered HTML rather than the markdown source:
@@ -78,7 +79,7 @@ export function fillMeta(text: string): string {
 
 export async function getPage(lang: Lang, slug: string): Promise<PageContent> {
   const entry = (await getEntry('pages', `${lang}/${slug}`)) as
-    | { data: { title: string; description: string; acts?: Act[] }; body?: string; rendered?: { html?: string } }
+    | { data: { title: string; description: string; harness?: string; acts?: Act[] }; body?: string; rendered?: { html?: string } }
     | undefined;
 
   if (!entry) {
@@ -104,6 +105,7 @@ export async function getPage(lang: Lang, slug: string): Promise<PageContent> {
     intro,
     sections,
     missing: false,
+    harness: entry.data.harness,
   };
 }
 

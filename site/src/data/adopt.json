@@ -14,17 +14,12 @@
       "name": "herdr",
       "version": ">= 0.8.0",
       "href": "https://github.com/herdrdev/herdr"
-    },
-    {
-      "name": "mattpocock-skills plugin",
-      "version": ">= 1.3.1",
-      "href": "https://github.com/mattpocock/skills"
     }
   ],
   "commands": [
-    "cd /path/to/your-repo\ncurl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash\n#    …or pin a version:  | bash -s -- 4.0.4",
-    "bash .astraler/releases/4.0.4/check-requirements.sh\n#    Later, from inside the project: what is installed, what is newest, what changed, how to upgrade\n.astraler/astragentic.sh update",
-    "claude \"Read .astraler/releases/4.0.4/ADAPT-HARNESS.md completely and execute it.\"",
+    "cd /path/to/your-repo\ncurl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash\n#    …or pin a version:  | bash -s -- 6.1.19",
+    "bash .astraler/releases/6.1.19/check-requirements.sh\n#    Later, from inside the project: what is installed, what is newest, what changed, how to upgrade\n.astraler/astragentic.sh update",
+    "# In your current agent (Claude Code or Codex):\n# Read .astraler/releases/6.1.19/ADAPT-RUNTIME.md completely and execute it.",
     "claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable"
   ]
 }

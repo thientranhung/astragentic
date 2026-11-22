@@ -111,10 +111,6 @@ const VERB: Record<string, Record<Lang, string>> = {
     vi: 'Đẩy QA đi một vòng trên sản phẩm đang chạy.',
     en: 'Dispatch QA on a walk through the running product.',
   },
-  'review-with-rin': {
-    vi: 'Chạy gate milestone của Rin trong một pane quan sát được.',
-    en: "Run Rin's milestone gate as an observable pane.",
-  },
   'github-issue-tracker': {
     vi: 'Vận hành tracker khi board là GitHub Issues.',
     en: 'Operate the tracker when the board is GitHub Issues.',

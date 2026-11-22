@@ -1,35 +1,21 @@
 ---
-// /customize · /vi/tuy-bien — install it, then the four skills for a repo that already exists.
+// /customize · /vi/tuy-bien — install it, then change it.
 // Read mode (design spec 5 §2).
 import DocsLayout from '../../layouts/DocsLayout.astro';
-import AdoptBlock from '../AdoptBlock.astro';
 import Prose from '../Prose.astro';
 import { getPage } from '../../lib/pages';
 import { meta } from '../../lib/data';
 import { UI, type Lang } from '../../lib/site';
-import { getSkillCards } from '../../lib/skills';
-import catalog from '../../data/skill-catalog.json';
 
 interface Props {
   lang: Lang;
 }
 const { lang } = Astro.props;
 const page = await getPage(lang, 'customize');
-
-// Which four skills these are comes from the catalog, so the list cannot drift from the
-// harness. What each one says comes from the locale's own skill page — the catalog's
-// oneLiner is English, and reading it straight put four English paragraphs on the
-// Vietnamese page, next to the same four already translated above them.
-const names = new Set(
-  (catalog as { name: string; kind: string; group: string }[])
-    .filter((item) => item.kind === 'skill')
-    .filter((item) => item.group === 'brownfield' || item.group === 'entry')
-    .map((item) => item.name),
-);
-const brownfield = (await getSkillCards(lang)).filter((card) => names.has(card.name));
 ---
 
 <DocsLayout
+  harness={page.harness}
   title={page.title}
   description={page.description}
   lang={lang}
@@ -41,9 +27,6 @@ const brownfield = (await getSkillCards(lang)).filter((card) => names.has(card.n
   <section class="read-section" id="install">
     <h2>{UI.quickstart[lang]}</h2>
     {page.sections['install'] && <Prose html={page.sections['install']} class="read-body read-body--sections" />}
-    <div class="install" data-toc-skip>
-      <AdoptBlock lang={lang} />
-    </div>
   </section>
 
   {
@@ -54,56 +37,4 @@ const brownfield = (await getSkillCards(lang)).filter((card) => names.has(card.n
       </section>
     ))
   }
-
-  <section class="read-section" id="brownfield">
-    <h2>{UI.brownfield[lang]}</h2>
-    <Prose html={page.sections['brownfield'] ?? ''} class="read-body" />
-    <ul class="skills">
-      {
-        brownfield.map((item) => (
-          <li>
-            <p class="name mono" lang="en">{item.name}</p>
-            <p class="one" lang={item.fallback ? 'en' : undefined}>{item.line}</p>
-          </li>
-        ))
-      }
-    </ul>
-  </section>
 </DocsLayout>
-
-<style>
-  .install {
-    margin-top: 1.25rem;
-  }
-  .skills {
-    list-style: none;
-    margin: 1.25rem 0 0;
-    padding: 0;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1px;
-    background: var(--rule);
-    border: 1px solid var(--rule);
-  }
-  .skills li {
-    margin: 0;
-    padding: 1rem 1.1rem;
-    background: var(--surface);
-  }
-  .name {
-    font-size: var(--text-mono);
-    letter-spacing: 0.04em;
-    margin: 0 0 0.4rem;
-  }
-  .one {
-    font-size: var(--text-ui);
-    line-height: 1.45;
-    color: var(--ink-muted);
-    margin: 0;
-  }
-  @media (max-width: 700px) {
-    .skills {
-      grid-template-columns: minmax(0, 1fr);
-    }
-  }
-</style>

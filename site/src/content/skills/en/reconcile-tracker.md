@@ -4,10 +4,10 @@ oneLiner: "Measure the tracker against git and report the four drift classes bet
 group: upkeep
 order: 1
 runtimes: [claude]
-source: harness/.agents/skills/reconcile-tracker/SKILL.md
+source: harness/.claude/skills/reconcile-tracker/SKILL.md
 rented: false
 lang: en
-updated: 2026-09-04
+updated: 2026-11-22
 ---
 
 ## What it does
@@ -29,7 +29,7 @@ reports four drift classes:
 - **Unclaimed in-progress.** A ticket stuck in the working state with no one holding it.
 
 This skill never writes to the tracker, it only reports.
-<!-- source: harness/.agents/skills/reconcile-tracker/SKILL.md -->
+<!-- source: harness/.claude/skills/reconcile-tracker/SKILL.md -->
 
 The failure this skill is built against is specific: a tracker checked only against itself.
 In-progress with a live assignee looks exactly the same whether the ticket is genuinely in
@@ -42,7 +42,7 @@ expected value has to live outside the code it is checking.
 The skill exists because a live project measured this directly: four tickets sat in-progress with
 a live assignee after their code had already merged, the oldest by a full day, and nothing in the
 pipeline ever errored to say so.
-<!-- source: harness/.agents/skills/reconcile-tracker/SKILL.md -->
+<!-- source: harness/.claude/skills/reconcile-tracker/SKILL.md -->
 
 ## When Thomas reaches for it
 
@@ -51,7 +51,7 @@ pipeline ever errored to say so.
 | A merge just landed | Run it immediately, because this is where drift is born, and the merge step already requires re-running the frontier and reporting what moved |
 | A new session is starting | Run it to catch whatever the previous session left mid-dispatch |
 | The owner asks "is the tracker accurate?" | Run it. The answer has to be measured, never recalled |
-<!-- source: harness/.agents/skills/reconcile-tracker/SKILL.md -->
+<!-- source: harness/.claude/skills/reconcile-tracker/SKILL.md -->
 
 ## Prerequisites
 
@@ -65,7 +65,7 @@ stale-claim class is checking for. Which tracker adapter is in play (`github-iss
 `jira-issue-tracker`, or `linear-issue-tracker`) decides how the tracker half gets read, but
 `reconcile-tracker` itself is tracker-agnostic, because it only needs `id`, `status` and
 `assignee`.
-<!-- source: harness/.agents/skills/reconcile-tracker/SKILL.md -->
+<!-- source: harness/.claude/skills/reconcile-tracker/SKILL.md -->
 
 ## Known failures
 
@@ -91,7 +91,7 @@ stale-claim class is checking for. Which tracker adapter is in play (`github-iss
   flagged as drift.
 - Nothing gets written to the tracker as a result of this skill's own run. Every fix is a
   separate, later action Thomas takes by hand.
-<!-- source: harness/.agents/skills/reconcile-tracker/SKILL.md -->
+<!-- source: harness/.claude/skills/reconcile-tracker/SKILL.md -->
 
 ## Where it fits
 

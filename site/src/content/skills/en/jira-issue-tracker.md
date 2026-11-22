@@ -4,10 +4,11 @@ oneLiner: "Drive Jira as the harness tracker, where a status is a numbered trans
 group: adapter
 order: 5
 runtimes: [claude]
-source: harness/.agents/skills/jira-issue-tracker/SKILL.md
+source: harness/.claude/skills/jira-issue-tracker/SKILL.md
 rented: false
 lang: en
-updated: 2026-09-04
+updated: 2026-11-22
+harness: v6.1.19
 ---
 
 ## What it does
@@ -20,7 +21,7 @@ stays in the project: the site, the `cloudId`, the project key and the transitio
 in that project's `docs/agents/issue-tracker.md`. I reach Jira through the Atlassian MCP tools.
 Everything here was measured on a live team-managed project that moved from Linear to Jira on
 2026-08-21.
-<!-- source: harness/.agents/skills/jira-issue-tracker/SKILL.md -->
+<!-- source: harness/.claude/skills/jira-issue-tracker/SKILL.md -->
 
 The single biggest difference from every other tracker is that **you do not assign a status, you
 take a transition.** Transitions are identified by numeric ids that are project-specific,
@@ -32,7 +33,20 @@ guard, and it costs less than the class of bug it prevents.
 
 In exchange, Jira's advantage is real: `Blocks` is expressible in one JQL query, so the frontier
 is one call rather than the N+1 loop GitHub forces.
-<!-- source: harness/.agents/skills/jira-issue-tracker/SKILL.md -->
+<!-- source: harness/.claude/skills/jira-issue-tracker/SKILL.md -->
+
+## The shell route: `twg` (4.4.0)
+
+**Jira is readable from a shell through `twg`, using the login it keeps per machine (`~/.config/twg`).** Declare `jira <PROJECT-KEY>` in `.astraler/project/tracker` and `scripts/tracker.sh` does the reading for `ticket-done.sh`, the session-start counts and the dispatch mod. Delete the old plugs that print `unreachable -`, because a plug wins over the declaration.
+
+- **`twg jira workitem get <KEY-n>`**: 1.5 s, native, no credit.
+- **`twg jira workitem query --jql '<jql>' --limit 500`**: 5.4 s for 22 tickets, native, no credit.
+- **Anything marked `[Enriched]` and `twg rovo …`** spends Rovo credits: ask the owner first.
+- **The state is the status category, never the name.** Names carry spaces (`To Do`) and break `<state> <assignee>`; `status.statusCategory.key` is one word (`new`, `indeterminate`, `done`), and `done` is what `ticket-done.sh` accepts.
+
+**Cost.** The 5.4 s count exceeds the band's 5 s plug budget, so the mod reads it on events only and `status-line.sh` must not call `twg`.
+
+<!-- source: harness/.claude/skills/jira-issue-tracker/SKILL.md -->
 
 ## When Thomas reaches for it
 
@@ -44,7 +58,7 @@ is one call rather than the N+1 loop GitHub forces.
 | A state the project does not have | Stop. Adding one is an owner action in the Jira UI, and the MCP tools cannot touch a workflow |
 | A duplicate | A `Duplicate` link plus the cancelled state, never a status of its own |
 
-<!-- source: harness/.agents/skills/jira-issue-tracker/SKILL.md -->
+<!-- source: harness/.claude/skills/jira-issue-tracker/SKILL.md -->
 
 ## Prerequisites
 
@@ -67,7 +81,7 @@ is one call rather than the N+1 loop GitHub forces.
 | The blocking graph | Native issue links, whose rendered wording is the thing to read back |
 | Migration provenance | A provenance label and a first description line pointing back, neither of which is ever stripped |
 
-<!-- source: harness/.agents/skills/jira-issue-tracker/SKILL.md -->
+<!-- source: harness/.claude/skills/jira-issue-tracker/SKILL.md -->
 
 ## Known failures
 
@@ -100,7 +114,7 @@ Pulled from `harness/.agents/memory/recurring-failure-modes.md`. Both are marked
 - A blocker that is not an issue was given an issue. A decision ticket is first-class, is never
   dispatched to an agent, and closes when the owner answers.
 
-<!-- source: harness/.agents/skills/jira-issue-tracker/SKILL.md -->
+<!-- source: harness/.claude/skills/jira-issue-tracker/SKILL.md -->
 
 ## Where it fits
 

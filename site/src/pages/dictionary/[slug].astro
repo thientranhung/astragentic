@@ -1,7 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import ProseLayout from '../../layouts/ProseLayout.astro';
-import Diagram from '../../components/Diagram.astro';
+import Figure from '../../components/Figure.astro';
 import { termAlternate } from '../../lib/terms';
 
 export async function getStaticPaths() {
@@ -22,11 +22,12 @@ const alternate = termAlternate(entry.id);
   description={entry.data.oneLiner}
   eyebrow="DICTIONARY"
   updated={entry.data.updated}
+  harness={entry.data.harness}
   switchTo={alternate}
 >
   {
     entry.data.diagram && (
-      <Diagram slug={entry.data.diagram} lang="en" frame={720} title={entry.data.term} />
+      <Figure slug={entry.data.diagram} lang="en" maxWidth={760} />
     )
   }
   <Content />

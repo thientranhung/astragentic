@@ -1,6 +1,8 @@
 ---
 title: "Customise the scaffold to the way you work"
 description: "Astragentic is a scaffold, not a product: install it into a repo, then change it to fit how you work — and the one doing the changing can be an agent."
+harness: v6.1.19
+source: README.md, harness/.agents/orchestrator.md, harness/.agents/roles/thomas.md, harness/.claude/settings.json
 ---
 
 Astragentic is not a product you use as delivered. It is a **scaffold**: a frame built to be
@@ -12,9 +14,27 @@ everyone. This page is two things: getting the scaffold into a repo, and then ma
 
 ## install
 
-The installer deliberately **does not edit your project**. `./install.sh` stages an immutable
-release into `.astraler/releases/<version>` and stops there. Integration is done by an agent running
-inside your repo, after it has read the real build command, agent config and Git state.
+The installer deliberately **does not edit your project**. `get.sh` stages an immutable release
+into `.astraler/releases/<version>` and stops there. Integration is done by an agent running inside
+your repo, after it has read `ADAPT-RUNTIME.md`, the real build command, agent config and Git state.
+
+```bash
+# 1. In your project's root, stage the latest release (no project file is written)
+cd /path/to/your-repo
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
+#    …or pin a version:  | bash -s -- 6.1.19
+
+# 2. Verify the machine has what is needed
+bash .astraler/releases/6.1.19/check-requirements.sh
+
+# 3. Give this to your current agent (Claude Code or Codex)
+#    Read .astraler/releases/6.1.19/ADAPT-RUNTIME.md completely and execute it.
+
+# 4. Claude Code: start the router
+claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable
+```
+
+Afterwards, `.astraler/astragentic.sh update` prints the installed release, the newest release, what changed between them and how to upgrade. The machine needs the Claude Code CLI, Git with worktree support and Herdr 0.8.0 or later (README).
 
 I split it in two because an installer that copies over things will always copy over the wrong
 thing. It cannot tell what belongs to the harness, what belongs to the project, and what belongs to
@@ -31,7 +51,7 @@ repo, then release and reinstall. The path is always one way: checkout → relea
 ```bash
 # in your Astragentic checkout
 vim .agents/roles/builder.md          # edit a role's contract
-echo "2.9.0" > VERSION                # mark a new release
+echo "<version>" > VERSION            # mark a new release
 vim RELEASE-NOTES.md                  # record what you changed
 ./install.sh /path/to/project         # stage the new release into a project
 ```
@@ -44,7 +64,7 @@ Three depths of change, lightest first:
 
 - **Change the infrastructure.** Swap the tracker, swap the runtime, add a review step of your own.
   One line in `orchestrator.md` or a different tracker adapter; no role is touched.
-- **Change the shape of the team.** Five roles is the default, not a rule. Cut it to two agents —
+- **Change the shape of the team.** Six roles are the default, not a rule. Cut it to two agents —
   one representative and one builder — if the full SDLC loop is more than your work needs.
 - **Change the method.** A skill is a folder holding a procedure written in prose. Rewriting one
   changes how the team does that job, and it takes effect at the next dispatch.
@@ -120,10 +140,3 @@ record is more honest than a ledger containing only the things already solved.
 
 **Trade-off.** The ledger grows and never shrinks. It is not meant to be read end to end — it is
 what you consult when a rule in a contract makes you wonder *why is this here*.
-
-## brownfield
-
-The four skills below exist because real repositories are rarely clean.
-
-
-**Trade-off.** Common to all four: this is work that has to finish before the first ticket can run.

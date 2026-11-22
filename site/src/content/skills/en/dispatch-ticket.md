@@ -1,127 +1,132 @@
 ---
 title: dispatch-ticket
-oneLiner: "Hand one ready ticket to one Builder in its own worktree."
+oneLiner: "Hand one claimed ticket to one Builder in a visible pane on Herdr or Orca, with its own worktree and branch."
 group: main-flow
-order: 1
+order: 10
 runtimes: [claude]
-source: harness/.agents/skills/dispatch-ticket/SKILL.md
+source: harness/.claude/skills/dispatch-ticket/SKILL.md
 rented: false
 diagram: ticket-lifecycle
 lang: en
-updated: 2026-09-04
+updated: 2026-11-22
+harness: v6.1.19
 ---
 
 ## What it does
 
-`dispatch-ticket` is the sequence Thomas runs every time a ticket goes from "claimable" to "a
-Builder is actually working on it." Nine steps, always in that order:
+**`dispatch-ticket` is the shared protocol Thomas follows to take a ticket from "claimed" to "a Builder is working".** Each ticket gets one Builder, one worktree, one branch and one pane. The launcher, the mod and the pre-dispatch check live in `dispatch-ticket-claude`; read both skills.
+
+Eight steps, in a fixed order:
 
 - **Preflight** on the session's first dispatch: watchdog running, payload committed.
-- **Resolve the orchestrator row**: runtime, model, effort, and the write-set.
-- **Claim the ticket, then cut the branch and worktree**, in that order.
-- **Open a Herdr tab and pane**, gated on `foreground_cwd`.
-- **Print the resolved dispatch**, then launch through `dispatch-ticket-claude`.
-- **Hand over the brief**, its first line the phase's slash command.
-- **Arm the watcher right after submitting**: those are one action, not two.
-- **Branch on the watcher's exit status**, never on pane status alone.
+- **Resolve the role row** in `orchestrator.md`: runtime, model, effort; collect the write-set.
+- **Claim, then create the branch and worktree.**
+- **Resolve the workspace**, create the tab and pane, pass the cwd gate.
+- **Print the resolved dispatch**, launch, read the record back.
+- **Send the brief**: its first line is the phase's slash command.
+- **Branch on the turn end**: `TURN-END` for a mod pane, the watcher's exit for a gate or junior pane.
 - **Verify by artifact**, then clean up.
 
-A step nobody checks is a step that gets skipped silently, and this harness runs several of these
-sequences in parallel, so silently here means a Builder idle in a pane nobody is watching.
-<!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
+The binding identity is `ticket → assignee (claim) → pane → worktree → branch → PR`, each link one-to-one. The claim precedes the worktree, so two Thomas sessions cannot pick the same ticket.
 
-What is different about it is where the boundary sits: **the claim happens before the worktree
-exists.** A ticket gets assigned on the tracker first, so two Thomas sessions picking off the same
-frontier see each other's claims instead of racing to create the same branch. The problem behind
-this rule was two sessions sharing one checkout and silently losing commits to a concurrent
-`git switch`. One worktree per session is the fix, and that isolation covers every command that
-writes to disk, not only git. <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
+**Measurement.** A small ticket (20 non-test lines or fewer) through a Builder pane cost a median 114 model calls and 8 minutes of pane time; 5 such tickets merged between 2026-10-27 and 11-12. That number is why the Quick Builder exists.
+
+**Cost.** Every dispatch needs a committed payload, a workspace, a tab, a pane and a record. Work too small for that goes to the Quick Builder (below).
+<!-- source: harness/.claude/skills/dispatch-ticket/SKILL.md -->
+
+## Host: Herdr or Orca, one host per session
+
+**`ORCA_PANE_KEY` set means Orca; otherwise `HERDR_ENV=1` means Herdr.** The pane, watching and cleanup steps take their Orca form from `ORCA.md`, and no `herdr` command runs in an Orca session. Since 6.1.0 the mod refuses a `herdr` command in an Orca session and an `orca` command in a Herdr session.
+
+| Situation | Rule |
+|---|---|
+| Session started in Herdr | `herdr` only; tab `ticket:<id>`, pane `builder:<id>` |
+| Session started in Orca | `orca` only; handles per `ORCA.md` |
+| A command of the other host | Refused by the mod |
+
+<!-- source: harness/.claude/skills/dispatch-ticket/SKILL.md; harness/.claude/skills/dispatch-ticket-claude/SKILL.md -->
 
 ## When Thomas reaches for it
 
 | What is in front of you | Reach for |
 |---|---|
-| A ticket on the frontier with an empty assignee | `dispatch-ticket` (claim, then worktree) |
-| The dispatch itself, once claimed | `dispatch-ticket` + `dispatch-ticket-claude` |
-| A Shaper, QA or Rin needs a pane, not just a Builder | Same skill, same mechanics; only the tab and pane label prefix changes |
-| A pane went idle or blocked mid-turn | `WATCHING.md` (companion reference, not a separate skill) |
-| The Builder handed back and it is time to remove the worktree | `CLEANUP.md` (companion reference) |
+| A ticket on the frontier with no assignee | `dispatch-ticket` (claim first, worktree after) |
+| The dispatch itself, after the claim | `dispatch-ticket` plus `dispatch-ticket-claude` |
+| A pane for a Shaper or QA | Same skill; only the tab prefix differs (`spec:`, `qa:`) |
+| A small change the owner judges by eye | A Quick Builder pane, no ticket |
+| A pane that sits still or stalls mid-turn | `WATCHING.md` (accompanying document) |
+| The Builder has handed back; time to remove the worktree | `CLEANUP.md` (accompanying document) |
 
-<!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
+<!-- source: harness/.claude/skills/dispatch-ticket/SKILL.md -->
 
 ## Prerequisites
 
-- The workspace watchdog is running for this project. A dispatch with no watchdog is a hard
-  stop, not a warning (`exit 1`, not an `echo`).
-  <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
-- The harness payload is committed, not just allow-listed past `.gitignore`. A worktree only
-  contains tracked content, so an untracked `.agents/roles/builder.md` means the Builder starts
-  with no contract at all. <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
-- `.agents/orchestrator.md` has a real row (runtime, model, effort) for the role being
-  dispatched. A row reading `<set-me>` is undecided, and undecided is a stop at dispatch time.
-  <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
-- Read the contract for the dispatched role first (`builder.md` for a Builder), since this skill
-  only carries the mechanics, not what the role is supposed to do with them.
-  <!-- source: harness/.agents/roles/builder.md -->
+- **A running watchdog** for the workspace, confirmed on the session's first dispatch (`WATCHING.md`).
+- **A committed, un-ignored payload.** A worktree holds tracked content only; `PAYLOAD NOT VISIBLE` is a stop.
+- **A real row for the role in `orchestrator.md`.** `<set-me>`, a missing row or an ambiguous one is a stop; never borrow another role's model.
+- **A current base**: `git rev-parse <base>` equals `origin/<base>` before the worktree exists.
+- **The ticket's write-set**, and the write-set of every other live ticket while any other dispatch is live.
+- **For a UI brief**: the `design-spine` and `anti-slop-skills` plugs under `.astraler/project/` (5.1.0).
+
+<!-- source: harness/.claude/skills/dispatch-ticket/SKILL.md -->
+
+## The brief
+
+**The first line of the brief is the phase's slash command**: `/astra-implement-with-tdd <ticket>` for a Builder, `/astra-grill-with-docs` or `/astra-to-tickets <spec-id>` for a Shaper. The flow skills are `disable-model-invocation: true`, so only text arriving as a user turn reaches them.
+
+- **`FLOW:`** lists the Skill calls in order: the project's anti-slop skill then `astra-ui` (UI ticket), `astra-review`, `simplify`, the arm. TDD sits inside `astra-implement-with-tdd`.
+- **`quick` / `full`** is the ticket's tracker label (4.6.0), never a brief line. The mod reads it at the send and writes `kind` on the record. A quick ticket runs the built-in `code-review` only and owes no markers.
+- **`QA: walk|probe|verify|none`** and `QA plan: docs/qa/plan-<slug>.md`: the mod refuses a brief without the plan.
+- **A UI brief pastes the ticket's `## Glance`, `## States` and `## Criteria` verbatim** (5.0.0). With any of the three missing, the brief is not sent.
+- **A Shaper brief carries a `UX:` line** (5.0.9): `UX: docs/prd.md — UJ-1, UJ-2`, or `UX: n/a — <why>`. The PRD must be committed on the base.
+- **`Owned elsewhere:`** turns a merge conflict into a handback note; **`ADDRESSED TO:`** is the second line so a fork does not take the role.
+
+**Measurement.** Before the design plugs, a prose rule asking the Builder to read the anti-slop skill ran on 1 of 14 UI merges (2026-10-28 to 11-01).
+<!-- source: harness/.claude/skills/dispatch-ticket/SKILL.md -->
+
+## The Quick Builder: work that is not a ticket
+
+A change the owner judges by looking at the result (`thomas.md`: Not a ticket) goes to a Quick Builder pane: no issue, no claim, no record entry, no marker at merge. The pane makes its own `ops/<slug>` worktree and fast-forwards into main; the git guard holds it to that shape. Model and effort come from the `builder-quick` row.
+
+Thomas sends the owner's words in one SendMessage; the pane answers with a before/after. Work that needs tests or review becomes a ticket on the owner's word. The pane is not a lane: it has no TURN-END bell and no watchdog, so a silent pane is read, not waited on.
+
+**Cost.** Thomas's word is a turn on the root checkout, so his local base must equal origin and no merge may wait unpushed before he gives it.
+<!-- source: harness/.claude/skills/dispatch-ticket/SKILL.md -->
 
 ## What it leaves behind
 
 | What happened | Where it lands |
 |---|---|
-| The claim | The tracker's assignee field: `builder/<ticket-id>` |
-| The dispatch itself | `.astraler/state/dispatch-record.json`, keyed by ticket id: branch, worktree, workspace, tab, pane, runtime, write-set |
-| The worktree and branch | `<repo-root>/.claude/worktrees/<branch-slug>`, gitignored, removed at cleanup |
-| The brief | Sent as the first line, a plugin-qualified slash command (`/mattpocock-skills:implement <ticket>`) |
-| The Builder's own work | Commits on the ticket branch, pushed before handback |
+| The claim | The tracker assignee, or `identity` in the record when the assignee cannot hold `builder/<id>` |
+| The dispatch | `.astraler/state/dispatch-record.json`, keyed by ticket: branch, worktree, workspace, tab, pane, runtime, write-set, `kind` |
+| Worktree and branch | `<repo-root>/.claude/worktrees/<branch-slug>`, gitignored, removed at cleanup |
+| Which flow the pane ran | `skills_run` in the record; `TURN-END` carries a `Skills run:` line |
+| The Builder's work | Commits on the ticket branch, pushed before handback |
 
-<!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
+Cleanup closes the tab named by `tab_id`, and deletes the entry once the worktree and branch are gone.
+
+<!-- source: harness/.claude/skills/dispatch-ticket/SKILL.md -->
 
 ## Known failures
 
-Pulled from `harness/.agents/memory/recurring-failure-modes.md`. Everything below is marked
-`promoted`: fixed and already in the contract this page describes.
+From `harness/.agents/memory/recurring-failure-modes.md`; all three are `promoted`.
 
-- **Shared checkout lost commits.** Two root sessions sharing one checkout silently lost commits to a
-  concurrent `git switch`. Fixed: one worktree per session, no exceptions.
-- **Uncommitted allow-list was invisible.** A harness allow-listed but not committed is invisible inside every Builder
-  worktree. Fixed: a commit check before the first dispatch.
-- **Pasted brief never submitted.** A multi-line brief pastes into the composer without submitting, and the
-  pane reports `idle` while it sits unsent. Fixed: an explicit Enter after the paste, plus
-  requiring the watcher to observe `working` before believing the turn began.
-- **"Done" only meant the turn ended.** `TERMINAL:done` means the turn ended, not that the work finished; a Builder
-  parked on background work reads as done. Fixed: check OS processes and the runtime status line
-  before concluding it finished — the verdict is the markers, checked with
-  `scripts/check-simplify-markers.sh`.
-- **`agent prompt` fused onto a stale, unsent brief instead of replacing it.** Re-sending after `NO_START` appended the
-  new text to whatever was already sitting in the composer and submitted both as one turn,
-  reporting success (AST-154). Fixed: read the composer first; clear it with `esc esc` —
-  `ctrl-c` and `ctrl-u` were measured to leave the text in place.
-- **The watcher never re-armed.** The per-turn watcher covers one turn and exits; nothing re-arms it, and the
-  re-arm is the step skipped right after a long task. Fixed: every new turn gets a new watcher.
-- **Work stopped before commit.** A Builder that stops before committing leaves work that only exists on disk;
-  `git worktree remove` deletes it silently. Fixed: "commit, push, then return" as three
-  separate actions.
+- **AST-097.** `TERMINAL:done` means the turn ended, not that the work finished. Hence `TURN-END` is a bell, and verification is by artifact.
+- **AST-107.** A long `herdr agent wait` can go deaf and never fire. A mod pane replaces the watcher with `TURN-END`.
+- **AST-154.** Re-sending a brief after `NO_START` appends to the unsent composer and submits both. Read the composer first; clear it with `esc esc`.
 
 <!-- source: harness/.agents/memory/recurring-failure-modes.md -->
 
 ## It's working if
 
-- The watchdog was confirmed running before the first dispatch of the session, not assumed.
-- `.astraler/state/dispatch-record.json` has an entry for every live ticket, with a write-set.
-- Every submitted brief has a watcher armed against it within the same action, not as a separate
-  step done afterwards.
-- A pane's tab and pane labels match the role dispatched (`builder:<id>` versus `spec:<id>`,
-  `qa:<id>`, `rin:<id>`), because a wrong prefix is invisible to the watchdog.
-- Cleanup only removes a worktree after `git status --short` is empty and
-  `check-simplify-markers.sh` is green.
+- Every open ticket has an entry in `dispatch-record.json`, with its write-set.
+- Tab and pane carry the role prefix (`ticket:`, `spec:`, `qa:`); a prefix outside the watchdog's `TITLE_PREFIXES` dispatches unmonitored, with no error.
+- The record read back has a `pane_id` equal to the pane just created.
+- A UI brief has Glance, States and Criteria, and the project declared both plugs.
+- Cleanup removes the worktree only after `git status --short` is empty.
 
-<!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md, CLEANUP.md -->
+<!-- source: harness/.claude/skills/dispatch-ticket/SKILL.md -->
 
 ## Where it fits
 
-The frontier query (in `thomas.md`) decides which ticket is next → `dispatch-ticket` claims it
-and puts a `builder` role into a pane → the Builder runs its own closed loop (`implement` →
-review → simplify → `/skills/codex-arm`) and hands back → `dispatch-ticket`'s `CLEANUP.md`
-retires the worktree once the artifact is verified → a milestone gate goes through
-`/skills/review-with-rin` before merge. `thomas` and `builder` are the two role contracts this
-skill sits between.
+Frontier query → claim → **`dispatch-ticket`** (+ `dispatch-ticket-claude`) → Builder runs `astra-implement-with-tdd` → `astra-ui` → `astra-review` → simplify → arm (`codex-arm`) → handback → `dispatch-qa-walk` → merge → `CLEANUP.md`. The role contracts are `thomas.md` and `builder.md`.

@@ -2,110 +2,67 @@
 title: dispatch-qa-walk
 oneLiner: "Khởi động app trong worktree riêng và để QA dùng nó như một người dùng, trước PR, merge hoặc phát hành."
 group: gate
-order: 2
+order: 3
 runtimes: [claude]
-source: harness/.agents/skills/dispatch-qa-walk/SKILL.md
+source: harness/.claude/skills/dispatch-qa-walk/SKILL.md
 rented: false
 lang: vi
-updated: 2026-09-04
+updated: 2026-11-22
+harness: v6.1.19
 ---
 
 ## Nó làm gì
 
-Skill này dispatch lượt đi bộ sản phẩm của QA: gate phán hệ thống đang chạy thay vì phán cái
-diff. Nó dựa trên phần gate-file và dạng pane của `review-with-rin` chứ không chép lại, và thêm
-đúng một thứ mà một lượt đi bộ cần còn các gate khác thì không: một môi trường.
+`dispatch-qa-walk` là recipe để Thomas dispatch QA, gate phán hệ thống đang chạy thay vì phán cái diff. Nó chọn mode theo surface của ticket, dựng target tại SHA đang review trong worktree riêng, đóng gói plan và brief, thu report rồi commit.
 
-Thomas tạo một gate worktree tại SHA đang review, khởi động app ở đó bằng đúng lệnh của project,
-rồi đóng gói một bản brief gồm:
+Đọc diff và dùng sản phẩm là hai hành vi khác nhau, và suite xanh không chứng minh được hành vi nào. QA chạy trong một gate pane trên cả hai host, Herdr hoặc Orca; cơ chế gate nằm ở `dispatch-ticket/GATE.md`.
 
-- **Persona và trạng thái dữ liệu.**
-- **Mọi bề mặt đang hiển thị cùng một khái niệm**, không chỉ các bề mặt đã đổi.
-- **Design guidelines.**
-- **Đồng ý dùng trình duyệt và mọi thao tác ghi được cho phép.**
-- **Danh sách verified-clean của lượt trước.**
+| Ticket thay đổi | Mode | QA làm |
+|---|---|---|
+| màn hình, journey, link | walk | dùng UI: journey, số liệu giữa các màn, deeplink |
+| một endpoint hoặc hợp đồng service | probe | gọi API: hợp đồng, status code, đường lỗi và bị từ chối |
+| một job, pipeline hoặc luồng dữ liệu | verify | kiểm job đã chạy, dữ liệu đã tới, log sạch |
 
-Từ đó nó dispatch QA như một pane gate, thu báo cáo, rồi tắt app và xác nhận port đã trống trước
-khi gỡ worktree.
+**Số đo.** Từng có một agent đi bộ bằng trình duyệt được ship qua nhiều bản phát hành mà chưa chạy lần nào, và một nửa ngày có chín vòng fold cùng một merge mà QA chưa hề được dispatch. Vì vậy skill mang bộ đếm: quá 10 merge chạm surface người dùng thấy hoặc endpoint công khai kể từ lần chạy gần nhất là STOP. "Không merge nào chạm surface" là câu trả lời hợp lệ; "chưa đếm" thì không.
 
-Vấn đề nó xử lý là: đọc một cái diff và dùng một sản phẩm là hai hành vi khác nhau, và một bộ test
-xanh không chứng minh được hành vi nào. Test khẳng định thứ ai đó đã nghĩ ra để khẳng định; còn
-thứ đang thiếu, sai thứ tự, không đọc nổi hay không với tới được trên màn hình thật thì đúng là
-thứ không ai viết assertion cho.
+**Cái giá.** Một lượt walk khởi động app là thao tác tốn tài nguyên nhất của harness. Cleanup theo thứ tự: dừng app, xác nhận port trống, giải phóng tài nguyên của worktree, rồi `git worktree remove --force`.
 
-Khoảng trống này không phải giả định. Một phiên bản harness trước từng ship một agent đi bộ bằng
-trình duyệt qua vài bản phát hành mà nó chưa chạy lần nào; một project khác ghi nhận chín vòng fold
-cộng một cú merge trong nửa ngày mà QA chưa hề được dispatch. Nên skill này mang theo bộ đếm của
-riêng nó: quá mười cú merge chạm vào bề mặt người dùng thấy được kể từ lượt đi bộ gần nhất là một
-STOP, và "không cú nào chạm bề mặt" là câu trả lời hợp lệ, còn "chưa đếm" thì không.
-<!-- source: harness/.agents/skills/dispatch-qa-walk/SKILL.md -->
+## Khi nào Thomas dùng nó
 
-## Khi nào Thomas gọi nó
-
-| Tình huống trước mặt bạn | Gọi cái nào |
+| Trước mặt bạn là | Dùng |
 |---|---|
-| Một PR hay merge chạm vào bề mặt người dùng thấy được hoặc một endpoint công khai | `dispatch-qa-walk`, độ sâu incremental |
-| Một bản phát hành hoặc một slice đang khép lại | `dispatch-qa-walk`, độ sâu full |
-| Quá 10 cú merge đã chạm bề mặt kể từ lượt đi bộ gần nhất | `dispatch-qa-walk`, đây là STOP, không phải chuyện cân nhắc |
-| Vài ticket cùng về một PR hoặc một bản phát hành | Một lượt đi bộ tại SHA đầu của lô, phạm vi là hợp của chúng |
-| Thay đổi chỉ nằm ở backend, không bề mặt nào người dùng gặp | Không phải skill này. Ghi rằng lượt đi bộ không áp dụng, rồi dừng |
-<!-- source: harness/.agents/skills/dispatch-qa-walk/SKILL.md -->
+| PR hoặc merge chạm surface hay endpoint công khai | `dispatch-qa-walk`, độ sâu incremental |
+| Một release hoặc một slice đang đóng | `dispatch-qa-walk`, độ sâu full |
+| Quá 10 merge chạm surface kể từ lần chạy gần nhất | `dispatch-qa-walk`; đây là STOP |
+| Nhiều ticket cùng về một PR | một lượt tại SHA đầu của lô, phạm vi là hợp các surface |
+| Không có surface, endpoint hay job nào | Không dùng; ghi rằng nó không áp dụng |
 
 ## Cần sẵn gì
 
-- Bạn là Thomas: công thức này chỉ dành cho Thomas, cùng điều kiện với `review-with-rin`.
-- Project có một đường render được ghi trong tài liệu cửa ngõ của nó. Chỗ nào không có thì lượt đi
-  bộ không chạy được, và chính điều đó là một phát hiện gửi chủ project.
-- Đồng ý dùng trình duyệt và mọi thao tác ghi được cho phép phải được gọi tên chính xác trong bản
-  dispatch. Thiếu chúng thì QA từ chối và ghi lại một COVERAGE GAP.
-- Danh sách verified-clean của lượt trước, nếu có, lấy từ `.astraler/state/qa-verified-clean.md`.
-  Chỗ nào không có thì QA chạy full thay vì đoán xem lượt trước đã phủ tới đâu.
-<!-- source: harness/.agents/skills/dispatch-qa-walk/SKILL.md -->
+- **Chỉ Thomas.** Recipe thuộc về station, không thuộc về Builder.
+- **Một cách chạy project.** Repo không có thì không walk được, và đó là phát hiện gửi owner.
+- **Consent và mọi thao tác ghi được phép, gọi tên chính xác.** Thiếu chúng thì QA từ chối và ghi COVERAGE GAP.
+- **Plan** `docs/qa/plan-<slug>.md` làm oracle; không có thì QA suy journey từ source với độ tin cậy thấp hơn.
 
 ## Nó để lại gì
 
-| Kết quả | Nơi nó nằm lại |
+| Chuyện gì xảy ra | Nơi nó nằm lại |
 |---|---|
-| Báo cáo đi bộ đầy đủ của QA | `$GATE_FILE` → `.astraler/state/gate-history/walk-<artifact-key>-<short-sha>.md` |
-| Danh sách verified-clean | `$VERIFIED_CLEAN_FILE` → `.astraler/state/qa-verified-clean.md` |
-| Dấu vết rằng lượt đi bộ đã xảy ra | Một commit rỗng `qa(walk): <artifact-key> — <verdict>` tại head đã đi bộ |
-| Các COVERAGE GAP mà QA từ chối khép | Thân báo cáo; Thomas phân loại chúng như mọi phát hiện khác |
-| Một bất đồng về sản phẩm ở mức thiết kế | `to-questionnaire`, định tuyến lên chủ project |
-<!-- source: harness/.agents/skills/dispatch-qa-walk/SKILL.md -->
+| Report của QA | `.scratch/qa/<key>-<mode>-<sha>.md`, commit riêng, hoặc đường dẫn của plug `qa-report-path.sh` |
+| Trace matrix và verdict | trong report: PASS, CONCERNS hoặc FAIL, rồi COVERAGE GAPS |
+| Lượt chạy đã xảy ra | commit rỗng `qa(walk): <key> — <verdict>` kèm `Mode:`, `Scope:`, `Verdict:`, `Report:` |
+| Danh sách verified-clean | `.astraler/state/qa-verified-clean.md`, chép trước khi cleanup |
 
-## Lỗi đã biết
-
-- **Ship xong nhưng không đấu dây với ai.** Một agent đi bộ bằng trình duyệt được ship qua vài bản phát hành mà chưa chạy lần nào;
-  không hợp đồng nào sở hữu nó, không dispatcher nào gọi tên nó. Promoted, sửa bằng phần đấu dây
-  (hợp đồng, dispatcher, kiểm tra reachability), không phải bằng chính cái file còn thiếu.
-- **Hàng đợi của chính mình vô hình với chính mình.** Hàng đợi dispatch của chính bên kiểm chứng thì vô hình với chính nó, nên điểm chạy phải
-  bám theo artifact thay vì theo lịch. Promoted, được skill này và `thomas.md` trích dẫn.
-- **Dời chữ nhưng để lại tên cũ.** Khi dời phần cơ chế của lượt đi bộ ra khỏi `review-with-rin`, ba dòng cũ vẫn đi theo,
-  vẫn gọi người đi bộ là "Rin" và gọi lượt đi bộ là "một mode". Promoted, chữ đã dời thì chưa về
-  nhà mới cho tới khi được đọc lại trong ngữ cảnh mới.
-- **Teardown lỡ tay dừng luôn container dùng chung.** Một app đang chạy leak tiến trình broker và container database
-  sau mỗi lượt đi bộ; một lần teardown đặt sai phạm vi từng dừng luôn container test dùng chung mà
-  mọi Builder đang chạy đều phụ thuộc vào đó. Promoted, cleanup chạy theo thứ tự: giết app, xác nhận
-  port, teardown có giới hạn phạm vi, rồi mới `--force` cái worktree.
-<!-- source: harness/.agents/memory/recurring-failure-modes.md -->
+Một loại marker phủ cả ba mode. Lượt chạy chỉ để lại report thì không để lại gì mà merge gate đếm được.
 
 ## Đang chạy đúng nếu
 
-- App chạy trong worktree riêng của nó tại SHA đang review, không bao giờ trong checkout của Builder.
-- Cả `$GATE_FILE` lẫn `$VERIFIED_CLEAN_FILE` đều tồn tại, không rỗng, và đã được chép vào
-  `.astraler/state/` trước khi gate worktree bị gỡ.
-- Bản brief gọi tên mọi bề mặt đang hiển thị khái niệm đã đổi, không chỉ những bề mặt trong diff.
-- App đã bị giết và port được xác nhận trống trước khi `git worktree remove --force` chạy.
-- Có một marker `qa(walk):` nằm tại head đã đi bộ, để lượt đi bộ để lại dấu vết mà cửa merge đếm được.
-<!-- source: harness/.agents/skills/dispatch-qa-walk/SKILL.md -->
+- App chạy trong worktree riêng tại SHA đang review, không bao giờ trong checkout của Builder.
+- Cả `$GATE_FILE` và `$VERIFIED_CLEAN_FILE` tồn tại, không rỗng và đã được chép ra trước khi gỡ worktree.
+- Brief gọi tên mọi surface hiển thị khái niệm đã đổi, không chỉ các surface đã đổi.
+- App đã bị dừng và port xác nhận trống trước khi gỡ.
+- Có marker `qa(walk):` tại head đã walk.
 
 ## Nó nằm ở đâu trong chuỗi
 
-Một ticket đóng lại qua `/skills/dispatch-ticket`, `/skills/review-with-rin` đọc diff và kiểm xem
-quy trình có để lại dấu vết không, còn `dispatch-qa-walk` là gate bên cạnh, gate không đọc gì
-cả. Nó thao tác trên sản phẩm đang chạy, vì một cái diff mạch lạc và một sản phẩm mạch lạc là hai lời khẳng
-định khác nhau. Phát hiện từ cả hai cửa đi cùng một đường: `qa` khuyến nghị, Thomas phân loại,
-Builder sửa, và một quyết định sản phẩm thật sự thì lên chủ project. Lượt đi bộ chạy bên trong một
-[gate](/dictionary/gate/) và một [worktree](/vi/role/builder/) mà nó force-remove lúc cleanup, đó chính là lý do
-danh sách verified-clean phải được ghi ra ngoài worktree đó trước.
-<!-- source: harness/.agents/skills/dispatch-qa-walk/SKILL.md -->
+`dispatch-ticket` → Builder handback → `dispatch-qa-walk` → marker `qa(walk):` → merge. QA khuyến nghị, Thomas phân loại, Builder sửa, và quyết định sản phẩm lên owner.

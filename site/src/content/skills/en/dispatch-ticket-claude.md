@@ -1,127 +1,123 @@
 ---
 title: dispatch-ticket-claude
-oneLiner: "Launch, brief and watch a Claude Code pane, in the one order that cannot fake a finished turn."
+oneLiner: "The Claude Code launcher, the dispatch mod's behaviour and the pre-dispatch checks for a dispatched pane."
 group: adapter
 order: 1
 runtimes: [claude]
-source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md
+source: harness/.claude/skills/dispatch-ticket-claude/SKILL.md
 rented: false
 lang: en
-updated: 2026-09-04
+updated: 2026-11-22
+harness: v6.1.19
 ---
 
 ## What it does
 
-`dispatch-ticket-claude` is the Claude Code half of `dispatch-ticket`. The shared skill owns:
+**`dispatch-ticket-claude` is the Claude Code half of `dispatch-ticket`: the launcher, and the mod that does the steps a dispatcher kept skipping.** The shared protocol (identity, worktree law, brief format, cleanup) lives in `dispatch-ticket`. The `astragentic-dispatch` mod ships in the payload, and every Claude session in the project loads it with no flag and no setup.
 
-- **Binding identity and input resolution.**
-- **The worktree law.**
-- **The brief format, submission and watching.**
-- **Simplify and cleanup.**
+The mod replaces these manual steps:
 
-This one adds the launcher matrix, the pre-dispatch check, the submission order and the measured
-runtime facts for Claude. It is an adapter, not a second protocol. Read `dispatch-ticket` first,
-because everything not stated here comes from there.
-<!-- source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md -->
+- **Record the pane's tab and pane ids** at session start, from the host's environment (Herdr's tab label, or Orca's `ORCA_*` plus `ASTRA_DISPATCH`, 6.1.0).
+- **Deliver the slash command in one SendMessage**: the pane runs the first line as a real command and answers `RECEIVED`.
+- **Report `TURN-END`** when a turn ends with none of its agents still running, and wake the dispatcher.
+- **Protect a working pane**: closing a tab, pane or terminal that is mid-turn is refused; a command of the other host is refused outright (one host per session).
+- **Refuse `ScheduleWakeup`** in a dispatched pane (4.6.1).
+- **Show a band** of step chips: Builder implement · tdd · ui · review · simplify · arm; Shaper align · spec · arm:spec · test-design · tickets; QA the role chip only.
 
-The spine of the file is four actions in one fixed order:
+**Measurement.** From a turn ending to the dispatcher waking: under one second, against the 67 s gap of polling pane state (AST-097, AST-107).
 
-- **The body** via `SendMessage`.
-- **The bare slash command** typed into the pane.
-- **Confirm it echoed.**
-- **Arm the Monitor.**
-
-Getting them out of order produces a false terminal state that every downstream check reads as
-healthy.
-
-That order comes from two separate defects landing on the same four steps. A peer message is not
-a user turn, so the slash command never fired. And a body-only `SendMessage` still
-produces a turn, so a watch armed too early sees *that* turn end and reports idle on a Builder
-that has not started. The order is now stated at the point of use rather than left to
-inference.
-<!-- source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md -->
+**Cost.** The mod is a bell, not proof: `TURN-END` says a turn ended. It cannot see a pane whose process died (the workspace watchdog does), and it does not cover a gate pane or a junior pane, which run no mod.
+<!-- source: harness/.claude/skills/dispatch-ticket-claude/SKILL.md; harness/.claude/skills/astragentic-dispatch/hooks/register.tsx -->
 
 ## When Thomas reaches for it
 
 | What is in front of you | Reach for |
 |---|---|
-| A claimed ticket, and `orchestrator.md` says the agent in this role runs on Claude | `dispatch-ticket` + `dispatch-ticket-claude` |
-| A QA gate pane or a junior pane, which run no mod | the watcher protocol in `dispatch-ticket`, and `dispatch-junior` for the junior |
-| A Builder or Shaper, that is, a write role | Launch with `--dangerously-skip-permissions` |
-| Rin or QA, that is, a review role | Launch without it; Rin has no fallback row |
-| Monitor reported `blocked` | Read the pane, answer via `SendMessage`, arm a **new** Monitor |
+| A claimed ticket, role runs on Claude | `dispatch-ticket` plus `dispatch-ticket-claude` |
+| A QA gate pane or a junior pane | The watcher script in `dispatch-ticket`; a junior pane adds `dispatch-junior` |
+| A write role (Builder, Shaper) | Launch with `--dangerously-skip-permissions --allowedTools Grep,Glob` |
+| QA | Launch without `--dangerously-skip-permissions`: a gate runs under permissions |
+| A ticket labelled `quick` | The `builder-quick` launcher row |
 
-<!-- source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md -->
+<!-- source: harness/.claude/skills/dispatch-ticket-claude/SKILL.md -->
 
 ## Prerequisites
 
-- **The role adapter exists in the worktree**: `test -f <worktree-path>/.claude/agents/<role>.md`.
-  A miss means the payload was not committed or was gitignored, and it is the exact file
-  `claude --agent <role>` will try to load.
-- **The `orchestrator.md` row for this role is decided**, with a model and, only where the row
-  sets one, an effort. Model and effort come from the row, never from memory.
-- **The Builder's session name is discoverable** via `ListAgents`, because `SendMessage`
-  addresses a session by name.
-- **`herdr-watch-terminal.sh` is what goes inside the Monitor.** Monitor is the delivery
-  channel; the script is the watch.
+- **Claude Code 2.1.294 or later.** `check-requirements.sh` refuses older versions; below the floor the mod does not load.
+- **The tab label is set before launch**: the mod reads `ticket:`, `spec:`, `qa:` from the tab at session start.
+- **The mod is committed on the branch** the worktree checks out.
+- **Two files exist in the worktree**: `.claude/agents/<role>.md` and `.claude/skills/astragentic-dispatch/hooks/register.tsx`.
 
-## What it leaves behind
+After launch, read the record back: `.astraler/state/dispatch-record.json` must carry the ticket's key with a `pane_id` equal to the pane just created. If not, a precondition failed; stop, because a pane the mod does not know about is unwatched.
+<!-- source: harness/.claude/skills/dispatch-ticket-claude/SKILL.md -->
 
-| What happened | Where it lands |
+## The launcher, by role
+
+Each row is the argv after `--`; `herdr agent start --kind claude` supplies the `claude` executable itself.
+
+| Role | Flags |
 |---|---|
-| The brief body | The Builder's session, delivered by `SendMessage` |
-| The phase invocation | A real user turn in the pane: one plugin-qualified slash command plus Enter |
-| Proof it arrived | The command echoed in the pane, read back before anything else happens |
-| The watch | One Monitor per pane, `description: "builder-<ticket-id> status"`, `timeout_ms` and `persistent` both explicit |
-| The verdict line | `TERMINAL:done` / `blocked` / `idle`, `TIMEOUT`, or `NO_START`, each naming its pane |
+| builder, shaper | `--dangerously-skip-permissions --allowedTools Grep,Glob --agent <role> --model <Model> --autocompact 300000` |
+| qa | `--agent qa --model <Model> --autocompact 300000` |
+| builder, ticket `quick` | the `builder-quick` row if `orchestrator.md` has one, else the `builder` row |
 
-<!-- source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md -->
+`--effort` and `--advisor` are added only when the role's row sets a value. Model and effort come from `orchestrator.md`, never from memory.
 
-## Known failures
+- **`--allowedTools Grep,Glob` travels with `--dangerously-skip-permissions`.** The bypass flag alone drops the `Grep` and `Glob` tools from the pane (Claude Code 2.1.318, measured 2026-11-04).
+- **`--autocompact 300000` is the context ceiling, and it is not optional.** The engine's window is 1M and a pane runs its whole flow in one context. One project's Builders ran a median 400–550k tokens of context per call. The mod also compacts a pane that ends a turn over the ceiling (`ASTRAGENTIC_CONTEXT_CEILING` changes it).
+- **Pasting `claude` in front of a row** launches `claude claude --agent …`; the mod refuses that launch.
 
-Pulled from `harness/.agents/memory/recurring-failure-modes.md`. All are marked `promoted`.
+<!-- source: harness/.claude/skills/dispatch-ticket-claude/SKILL.md -->
 
-- **The brief and slash command merged into one `SendMessage`.** The skill told Thomas to send the whole brief, slash command included, with one
-  `SendMessage`, on the stated ground that it arrives as a user turn. That sentence was false,
-  and it shipped for four releases. Fixed: the body travels by `SendMessage`, the command is
-  typed.
-- **A contract gap between two panes.** The same defect in the same round produced a loud refusal in the Builder pane and
-  a silent substitute in the Shaper pane, because one contract carried "the failure IS the
-  finding" and its counterpart did not. Both carry it now, and this is why the echo check is
-  positive evidence rather than a courtesy.
-- **The watch armed against the wrong step.** Splitting submission into two steps left the watch armed against the wrong one.
-  Fixed: arm after the echo, never after the body.
-- **A bare wait hung without reporting.** A bare `herdr agent wait` inside a Monitor stayed alive and went deaf. It was
-  measured sitting 10m25s against a pane that was already idle, while an identical wait in the
-  same minute returned in 0s. Fixed: the Monitor wraps the watcher script, which slices the wait
-  and takes every verdict from a fresh `herdr agent get`.
-- **A missing `timeout_ms` cut the watch short.** A Monitor with no `timeout_ms` caps an hour-long watch at five minutes, so the
-  bigger the ticket the likelier the watch is already gone. Fixed: both fields explicit in every
-  template, and a `Monitor timed out` notification means re-arm, not noise.
-- **Reading `TERMINAL:done` as work finished.** `TERMINAL:done` means the turn ended, not that the work finished.
-- **`success: true` from `SendMessage` means transported, not read.** The receiving session can hold the body for
-  approval; a held Builder has already run its slash command and improvises from it, which reads
-  as `working`. Fixed: after the echo check, read the pane for a phrase only the brief could
-  supply — `working` is not delivery (AST-153).
-- **Worktrees don't carry untracked files.** A worktree carries tracked content only, which is what the adapter check above
-  exists to catch.
+## The brief and what comes back
 
-<!-- source: harness/.agents/memory/recurring-failure-modes.md -->
+The brief goes in one `SendMessage` to the session name from `ListAgents`; its first line is the slash command. Do not arm a Monitor, type into the pane or write tab and pane ids by hand: each is a second copy of what the mod does.
+
+- **`RECEIVED`** is consumed silently. Absent for 90 s, the line turns red.
+- **`TURN-END`** arrives as a prompt with the pane's last words and `Skills run:`. Read that line before trusting the handback.
+- **A turn that ends while the pane's own sub-agents still run is held**; the ceiling is 20 minutes, then a `reason=held-stale` bell and a red row.
+- **`reason=command-failed`**: the pane refused the first line, usually an unknown command name.
+- **A QA pane's TURN-END always arrives from the record** within 30 s, because it runs under permissions (measured 2026-10-27: 6 of 6).
+- **`/dispatch-board`** opens a list of every live dispatch.
+- **`AskUserQuestion` is refused** in a dispatched pane.
+
+<!-- source: harness/.claude/skills/dispatch-ticket-claude/SKILL.md -->
+
+## Steps that are refused, not noted
+
+| What is blocked | Until |
+|---|---|
+| The Builder's first content commit | A test file is staged and a test run has gone RED after the brief (4.5.2) |
+| The arm (`codex-arm`) | The built-in `code-review` is in the record |
+| A Builder brief with no `QA plan:` | A committed `docs/qa/plan-<slug>.md` exists |
+| A Shaper brief with no `UX:` | The PRD is committed on the base with a `### UJ-n` heading per id (5.0.9) |
+| A brief for a ticket the tracker reports unclaimed | The ticket is claimed |
+| Every brief, while a merge has no ticket-done stamp | `scripts/ticket-done.sh <id>` runs |
+| Every brief, while the payload is edited but uncommitted | Commit, or an `Uncommitted-payload: <why>` line |
+| A Bash wait keyed on a process name (`until ! pgrep -f …`) or a loop with no sleep | Use `cmd & pid=$!; while kill -0 $pid …; wait $pid` |
+
+The exemption belongs to the dispatcher and travels in the brief: `TDD: n/a`, `REVIEW: n/a`, `SIMPLIFY: n/a`, `UX: n/a`, each with a reason. A ticket labelled `quick` is exempt from tdd, `astra-review`, simplify and the ui pass as a whole; the built-in review stays owed at the arm and at merge. The mod reads exemptions from the brief it delivers, never from the handback.
+
+A project adds refusals in `.astraler/project/refused-in-dispatched-panes`: one regex per line, and a `# reason:` line directly above is the refusal's text.
+<!-- source: harness/.claude/skills/dispatch-ticket-claude/SKILL.md -->
+
+## Cleanup and overlays
+
+`git worktree remove <path>` on a recorded worktree runs `release-worktree-resources.sh <path>` first: it reaps processes rooted there, runs the project's teardown plug and stamps the path. The path must be literal; one with `$`, a backtick or `~` is refused. The record entry goes once the worktree and the tab are both gone.
+
+`.astraler/project/overlays/` belongs to the project and no release writes into it: `overlays/<role>.md` is appended to that role's system prompt on every render, `overlays/thomas.md` does the same in the dispatcher's session, and `overlays/dispatch-brief.md` is appended to every brief. An overlay adds to the contract and never overrides it; a rule that must refuse belongs in a plug script, because prose instructs and only a hook stops.
+<!-- source: harness/.claude/skills/dispatch-ticket-claude/SKILL.md -->
 
 ## It's working if
 
-- The four actions happened in order, and the echo was read before the Monitor was armed.
-- Three Builders in flight means three Monitors, one per pane, each with its own description.
-- Review roles were launched without `--dangerously-skip-permissions`, and write roles with it.
-- Every notification was re-checked with `herdr agent get <pane-id>` before anyone acted on it.
-- No `idle` was believed until the start guard had first observed `working`. An empty Claude
-  composer matches the idle rule, so an unsent brief reads as a Builder who finished instantly.
+- The record read back carries a `pane_id` that matches the pane just created.
+- The launch has no stray `claude` and includes `--autocompact 300000`.
+- `TURN-END` carries `Skills run:` and a merge names no missing step.
+- Every refused gate leaves a trace in the entry's `refusals` and in `~/.local/state/astragentic/harness-hook-events.log`.
+- A QA pane runs without `--dangerously-skip-permissions`.
 
-<!-- source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md -->
+<!-- source: harness/.claude/skills/dispatch-ticket-claude/SKILL.md -->
 
 ## Where it fits
 
-`dispatch-ticket` claims the ticket and builds the worktree, tab and pane → `dispatch-ticket-claude`
-launches the runtime, delivers the brief and arms the watch → the Builder runs its own closed
-loop and hands back → the shared skill's `WATCHING.md` and `CLEANUP.md` own what happens on each
-verdict line.
+`dispatch-ticket` (shared protocol) → **`dispatch-ticket-claude`** (launcher, mod, pre-checks) → Builder pane → `TURN-END`. The mod is the `astragentic-dispatch` plugin, which has its own page. Gate and junior panes sit outside the mod.

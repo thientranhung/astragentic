@@ -23,16 +23,28 @@
 /vi/bang-chung          /vi/loi/                  301
 
 /en/skills/:slug        /skills/:slug/            301
+/roles/rin              /roles/builder/           301
+/en/roles/rin           /roles/builder/           301
+/vi/role/rin            /vi/role/builder/         301
+/vai/rin                /vi/role/builder/         301
+/vi/vai/rin             /vi/role/builder/         301
+/skills/review-with-rin     /skills/              301
+/en/skills/review-with-rin  /skills/              301
+/vi/skills/review-with-rin  /vi/skills/           301
 /en/roles/:id           /roles/:id/               301
 /vai/:id                /vi/role/:id/             301
 /vi/vai/:id             /vi/role/:id/             301
 
-# The standalone diagram pages moved from `explore/<slug>.html` to a directory, so the
-# address is `/explore/<slug>/` like every other page. The old file address has been
-# linked for months and is the one a bookmark holds, so it keeps a real 301 rather than
-# a 404. The extensionless form needs no rule: Cloudflare resolves it to the directory.
-/explore/:slug.html     /explore/:slug/           301
-/explore/vi/:slug.html  /explore/vi/:slug/        301
+# The standalone diagram pages are now static files at /diagrams/<slug>.<lang>.html; the
+# old /explore/ addresses were linked from outside, so they keep a real 301.
+/explore/five-roles/    /diagrams/six-roles.en.html   301
+/explore/vi/five-roles/ /diagrams/six-roles.vi.html   301
+/explore/hook-:slug/    /diagrams/hooks.en.html       301
+/explore/vi/hook-:slug/ /diagrams/hooks.vi.html       301
+/explore/vi/:slug.html  /diagrams/:slug.vi.html   301
+/explore/vi/:slug/      /diagrams/:slug.vi.html   301
+/explore/:slug.html     /diagrams/:slug.en.html   301
+/explore/:slug/         /diagrams/:slug.en.html   301
 
 # Install became Customize on 2026-09-14: the page always covered both, and the menu
 # now says the half that matters. Both old addresses shipped and are linked from

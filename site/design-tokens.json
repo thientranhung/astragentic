@@ -179,7 +179,7 @@
       }
     },
     "role": {
-      "$description": "Five people, five hues, spent at stroke and dot size only.",
+      "$description": "One hue per role, spent at stroke and dot size only.",
       "thomas": {
         "$value": "#2F5DA8",
         "$extensions": {
@@ -204,12 +204,11 @@
           }
         }
       },
-      "rin": {
-        "$value": "#0E7C86",
-        "$description": "Teal, not the old red: Rin used to sit one hue away from the brand red and read as an error.",
+      "ba": {
+        "$value": "#B0467A",
         "$extensions": {
           "site": {
-            "cssVar": "--role-rin"
+            "cssVar": "--role-ba"
           }
         }
       },
@@ -218,6 +217,14 @@
         "$extensions": {
           "site": {
             "cssVar": "--role-qa"
+          }
+        }
+      },
+      "quick-builder": {
+        "$value": "#4F6F8F",
+        "$extensions": {
+          "site": {
+            "cssVar": "--role-quick-builder"
           }
         }
       }
@@ -249,7 +256,7 @@
         }
       },
       "gate": {
-        "$value": "{color.role.rin}",
+        "$value": "#0E7C86",
         "$extensions": {
           "site": {
             "cssVar": "--group-gate"

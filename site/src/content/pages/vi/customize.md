@@ -1,6 +1,8 @@
 ---
 title: "Tuỳ biến bộ khung theo cách bạn làm việc"
 description: "Astragentic là scaffold, không phải sản phẩm: cài vào repo, rồi sửa nó cho khớp cách bạn làm việc — và người sửa có thể là một agent."
+harness: v6.1.19
+source: README.md, harness/.agents/orchestrator.md, harness/.agents/roles/thomas.md, harness/.claude/settings.json
 ---
 
 Astragentic không phải một sản phẩm bạn dùng như nó được giao. Nó là **scaffold**: một bộ khung
@@ -12,9 +14,27 @@ và không có phần nào phải giữ nguyên để phần còn lại chạy �
 
 ## install
 
-Bộ cài cố tình **không tự sửa project của bạn**. `./install.sh` chỉ stage một release bất biến vào
+Bộ cài cố tình **không tự sửa project của bạn**. `get.sh` chỉ stage một release bất biến vào
 `.astraler/releases/<version>` rồi dừng. Phần tích hợp do một agent chạy ngay trong repo của bạn
-thực hiện, sau khi nó đọc build command, agent config và trạng thái Git thật.
+thực hiện, sau khi nó đọc `ADAPT-RUNTIME.md`, build command, agent config và trạng thái Git thật.
+
+```bash
+# 1. Ở gốc project, stage release mới nhất (không ghi file nào của project)
+cd /path/to/your-repo
+curl -fsSL https://raw.githubusercontent.com/thientranhung/astragentic/main/get.sh | bash
+#    …hoặc ghim một bản:  | bash -s -- 6.1.19
+
+# 2. Kiểm tra máy có đủ thứ cần thiết
+bash .astraler/releases/6.1.19/check-requirements.sh
+
+# 3. Đưa dòng này cho agent hiện tại (Claude Code hoặc Codex)
+#    Read .astraler/releases/6.1.19/ADAPT-RUNTIME.md completely and execute it.
+
+# 4. Claude Code: khởi động router
+claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable
+```
+
+Về sau, `.astraler/astragentic.sh update` in bản đã cài, bản mới nhất và các thay đổi giữa hai bản, kèm cách nâng cấp. Máy cần Claude Code CLI, Git có worktree và Herdr từ 0.8.0 (README).
 
 Tôi tách hai bước vì một bộ cài chép đè sẽ luôn đè nhầm file. Nó không phân biệt được thứ thuộc về
 harness, thứ thuộc về project và thứ do bạn sở hữu.
@@ -31,7 +51,7 @@ project.
 ```bash
 # trong bản checkout Astragentic của bạn
 vim .agents/roles/builder.md          # sửa contract của một role
-echo "2.9.0" > VERSION                # đánh dấu bản mới
+echo "<version>" > VERSION            # đánh dấu bản mới
 vim RELEASE-NOTES.md                  # ghi bạn đã đổi gì
 ./install.sh /path/to/project         # stage bản mới vào project
 ```
@@ -43,7 +63,7 @@ Ba mức tuỳ biến, từ nhẹ tới nặng:
 
 - **Đổi hạ tầng.** Đổi tracker, đổi runtime, thêm một bước review riêng. Sửa một dòng trong
   `orchestrator.md` hoặc đổi adapter tracker; không đụng tới role nào.
-- **Đổi hình dạng team.** Năm role là mặc định, không phải luật. Bỏ bớt xuống hai agent — một người
+- **Đổi hình dạng team.** Sáu role là mặc định, không phải luật. Bỏ bớt xuống hai agent — một người
   đại diện và một người thi công — nếu vòng SDLC đầy đủ là thừa với bạn.
 - **Đổi phương pháp.** Skill là thư mục chứa quy trình viết bằng chữ. Viết lại một skill là đổi
   cách team làm một việc, và nó có hiệu lực ở lần dispatch kế tiếp.
@@ -115,10 +135,3 @@ thực hơn một cuốn sổ chỉ chứa những lần đã giải quyết xon
 
 **Đánh đổi.** Cuốn sổ dài ra và không bao giờ ngắn lại. Nó không phải thứ để đọc từ đầu tới cuối —
 nó là thứ để tra khi một luật trong contract khiến bạn thắc mắc *vì sao lại có luật này*.
-
-## brownfield
-
-Bốn skill dưới đây có mặt vì repo thật hiếm khi sạch.
-
-
-**Đánh đổi.** Chung cho cả bốn: đây là việc phải làm xong trước khi ticket đầu tiên chạy được.

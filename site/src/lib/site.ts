@@ -7,6 +7,7 @@ export type PageKey =
   | 'structure'
   | 'roles'
   | 'skills'
+  | 'review'
   | 'hooks'
   | 'why'
   | 'stack'
@@ -31,6 +32,7 @@ export const ROUTES: Record<PageKey, Record<Lang, string>> = {
   structure: { vi: '/vi/cau-truc/', en: '/structure/' },
   roles: { vi: '/vi/role/thomas/', en: '/roles/thomas/' },
   skills: { vi: '/vi/skills/', en: '/skills/' },
+  review: { vi: '/vi/review/', en: '/review/' },
   hooks: { vi: '/vi/hooks/', en: '/hooks/' },
   why: { vi: '/vi/cach-tiep-can/', en: '/why/' },
   stack: { vi: '/vi/tech-stack/', en: '/tech-stack/' },
@@ -47,6 +49,7 @@ export const NAV: { key: PageKey; label: Record<Lang, string> }[] = [
   { key: 'structure', label: { vi: 'Cấu trúc', en: 'Structure' } },
   { key: 'roles', label: { vi: 'Role', en: 'Roles' } },
   { key: 'skills', label: { vi: 'Skills', en: 'Skills' } },
+  { key: 'review', label: { vi: 'Review', en: 'Review' } },
   { key: 'hooks', label: { vi: 'Hooks', en: 'Hooks' } },
   { key: 'stack', label: { vi: 'Tech stack', en: 'Tech stack' } },
   { key: 'tips', label: { vi: 'Kinh nghiệm', en: 'Tips' } },

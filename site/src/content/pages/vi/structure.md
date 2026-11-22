@@ -1,12 +1,13 @@
 ---
 title: "Cấu trúc"
 description: "Bốn lớp: runtime chạy agent, harness chứa role và luật, coordination giữ trạng thái, dưới cùng là repo của bạn. Astragentic chỉ nằm ở giữa."
+harness: v6.1.19
+source: "harness/.claude/agents/, harness/.claude/skills/, harness/.claude/settings.json, harness/.agents/roles/, runtimes/codex/"
 ---
 
 Astragentic không phải một runtime, cũng không phải một method. Nó nằm giữa hai thứ đó:
-bên dưới là Claude Code đang chạy model, bên trên là repo thật của bạn,
-còn phương pháp thì dùng `mattpocock-skills`. Phần Astragentic tự viết là phần điều phối, và chỉ
-phần đó.
+bên dưới là Claude Code (hoặc Codex) đang chạy model, bên trên là repo thật của bạn. Phần
+Astragentic viết là phần điều phối và các skill `astra-*` mà từng role dùng, và chỉ phần đó.
 
 Tôi chia làm bốn lớp vì mỗi lớp trả lời một câu hỏi khác nhau, và câu hỏi đó quyết định ai sở
 hữu file nào. Lớp runtime trả lời "agent này chạy bằng gì". Lớp harness trả lời "nó được phép
@@ -15,13 +16,18 @@ và đó là phần Astragentic không bao giờ được trả lời thay bạn
 
 ## runtime
 
-Một runtime, và model cùng effort của từng role là một dòng trong `.agents/orchestrator.md`,
-file của bạn, upgrade không bao giờ đè lên. Claude Code là runtime: agent của mọi role đều chạy ở
-đây. Builder có thể giao phần gõ code cho một pane junior trên runtime khác (Grok trước), đặt theo
-project trong cùng file đó; review, simplify và handback vẫn là việc của Builder.
+Hai runtime, và model cùng effort của từng role là một dòng trong `.agents/orchestrator.md`,
+file của bạn, upgrade không bao giờ đè lên.
 
-Codex không phải runtime của role nào. Nó có mặt để làm nhân chứng: cross-vendor arm cần một model
-của vendor khác đọc lại diff, nên thiếu nó thì arm đó không tồn tại.
+- **Claude Code là runtime tham chiếu.** Mọi role chạy ở đây dưới dạng custom agent, với hook,
+  skill, subagent và mod `astragentic-dispatch`. Luật của runtime khác được đối chiếu với lane
+  Claude trước khi đổi.
+- **Codex là runtime thứ hai.** Một overlay riêng trong `runtimes/codex/`: vai riêng, 20 entrypoint
+  `codex-*`, host guard và Stop hook riêng. Nó không thay payload Claude.
+- **Codex cũng là nhân chứng.** Trên lane Claude, cross-vendor arm gọi `codex exec` chỉ đọc để một
+  model của vendor khác đọc lại artifact.
+- **Junior.** Builder có thể giao phần gõ code cho một pane junior trên runtime khác (Grok trước),
+  đặt theo project; review, simplify và handback vẫn là việc của Builder.
 
 **Đánh đổi.** Một runtime giữ enforcement đồng đều cho mọi role, nhưng pane junior trên runtime
 khác nằm ngoài nó. Dispatch mod và `hook-git-guard.py` đọc tên tool của Claude, nên ranh giới của
@@ -31,43 +37,46 @@ không phải hàng rào.
 
 ## harness
 
-`install.sh` mang vào repo của bạn năm role, mười sáu skill, bốn hook, và ledger lỗi. Role không
+Bản release mang vào repo của bạn sáu role, 19 skill (một trong số đó là mod dispatch), hook cho sáu sự kiện của Claude Code cùng
+một mod, và ledger lỗi. Role không
 chia theo chức danh mà chia theo tuổi thọ session, vì tuổi thọ session quyết định agent ở role đó
 còn nhớ được gì.
 
 - **Thomas.** Session chạy thường trực.
+- **BA.** Owner tự mở khi cần, chỉ đọc.
 - **Shaper.** Đúng một session không đứt quãng.
 - **Builder.** Một session cho mỗi ticket.
-- **Rin.** Một session cho mỗi milestone.
 - **QA.** Một session cho mỗi lượt walk.
+- **Quick Builder.** Một session cho mỗi việc nhỏ, không ticket.
 
 Mỗi role có hai file, và chỗ đặt luật quan trọng hơn nội dung luật. `.claude/agents/<role>.md`
-là system prompt, chỉ mang bốn dòng. `.agents/roles/<role>.md` là contract đầy đủ, vào session
+là system prompt, chỉ mang ba tới năm luật "survives compaction". `.agents/roles/<role>.md` là contract đầy đủ, vào session
 qua tool Read nên nó nằm trong context như một tool result.
 
 Khác biệt này quyết định luật nào còn hiệu lực sau compact: thứ nằm trong system prompt thì còn,
 thứ nằm ngoài thì không, và agent không hề biết mình vừa mất luật. Đó không phải chuyện agent lơ
-đãng, đó là budget context hoạt động đúng như thiết kế. Vì vậy bốn dòng đó cố định ở bốn, và phần
-còn lại được nạp lại bằng hook chứ không bằng lời nhắc.
+đãng, đó là budget context hoạt động đúng như thiết kế. Vì vậy danh sách đó giữ ngắn, và phần còn
+lại được nạp lại bằng hook `SessionStart` (matcher `compact`) chứ không bằng lời nhắc.
 
 ## coordination
 
-Ba thứ giữ cho nhiều agent chạy cùng lúc mà không va nhau: tracker, pane của herdr, và git
-worktree. Điểm chung của cả ba là chúng nằm ngoài context của agent. Thứ gì chỉ tồn tại trong
+Ba thứ giữ cho nhiều agent chạy cùng lúc mà không tranh chấp: tracker, pane của host terminal
+(Herdr hoặc Orca), và git worktree. Điểm chung của cả ba là chúng nằm ngoài context của agent. Thứ gì chỉ tồn tại trong
 context của một session sẽ biến mất lúc session đó compact, và không ai biết nó đã biến mất.
 
 - **Tracker giữ trạng thái công việc.** Astragentic không ship tracker riêng; nó ship adapter cho
   GitHub Issues, Jira và Linear, nên bạn dùng tiếp board đang có. Trạng thái nằm ở đó nghĩa là câu
   "ticket nào đang sẵn sàng" là một truy vấn, không phải một trí nhớ.
-- **herdr giữ pane.** Mỗi Builder có một pane nhìn thấy được, và đây không phải chuyện thẩm mỹ:
-  Tôi đo được một lần dispatch chỉ được kể ra bằng chữ chứ chưa từng chạy, không có tín hiệu
+- **Host giữ pane.** Herdr là host mặc định, Orca chạy song song từ 6.1.0, mỗi session đúng một
+  host: lệnh của host kia bị từ chối. Mỗi Builder có một pane nhìn thấy được, và đây không phải
+  chuyện thẩm mỹ: tôi đo được một lần dispatch chỉ được kể ra bằng chữ chứ chưa từng chạy, không có tín hiệu
   nào để phân biệt. Một pane là thứ đếm được.
 - **git worktree giữ ranh giới ghi.** Mỗi ticket một checkout, và Builder là người ghi duy nhất
   trong đó. Lần khác tôi đo được điều ngược lại: nhiều agent chung một checkout thì HEAD của người này
   bị người kia kéo đi, và kể cả một reviewer chỉ đọc cũng `git switch` được checkout của người
   khác.
 
-**Đánh đổi.** Ba dependency ngoài: một tracker phải cấu hình, một herdr phải cài, và disk cho mỗi
+**Đánh đổi.** Ba dependency ngoài: một tracker phải cấu hình, một host terminal phải cài, và disk cho mỗi
 worktree.
 
 ## project
@@ -127,6 +136,6 @@ không cần lock file hay dispatcher trung tâm nào.
 
 ### Review chạy đúng một vòng
 
-Mỗi ticket đi qua ba tầng đúng một lượt: `code-review` trên hai trục Standards và Spec, rồi
-simplify pass, rồi lượt đọc chéo của hãng khác. Ba tầng có biên rõ, nên độ chặt giữ nguyên mà số
-vòng không tự nhân lên.
+Mỗi ticket full đi qua ba tầng đúng một lượt: `astra-review` với ba lens song song (correctness,
+intent, standards), rồi `simplify` một lần, rồi lượt đọc chéo của hãng khác. Ba tầng có biên rõ,
+nên độ chặt giữ nguyên mà số vòng không tự nhân lên. Chi tiết ở trang [review](/vi/review/).

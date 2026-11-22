@@ -1,166 +1,98 @@
 ---
 title: "Tech stack"
-description: "Eight components in the stack, and why each one rather than something else. Each with the place it has already caused a failure."
+description: "Eight components in the stack: Claude Code, the Claude Code techniques in use, Codex, Herdr, Orca, git worktree, tracker adapters and diagram-design. Each states what it is, why I chose it, the mechanism and the cost."
+harness: v6.1.19
+source: README.md, harness/.claude/settings.json, harness/.claude/agents/, harness/.claude/skills/astragentic-dispatch/hooks/register.tsx, harness/.claude/skills/dispatch-ticket-claude/SKILL.md, harness/.claude/skills/codex-arm/SKILL.md, harness/.claude/skills/astra-review/SKILL.md, harness/.agents/orchestrator.md, harness/scripts/herdr-watch-terminal.sh, runtimes/codex/README.md
 ---
 
-This list is deliberately short. Every component on it has to answer "what breaks if you take it
-out," and any component that only causes minor inconvenience when removed is already gone. The
-first two are the two CLIs, the middle three are mechanisms, and the last three are what I wrote
-myself or picked to build this site.
+Each component here has to answer "what breaks if I remove it". A component whose removal causes only a small inconvenience I left out. The first two are the main runtime, the next two are the second runtime and the terminal hosts, and the rest are shared mechanisms.
 
 ## claude-code
 
-The runtime. Agents in every role run here, and `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium` is the line that opens a
-session. If you install exactly one CLI, make it this one.
+Claude Code is the runtime for all six roles. Each role is a custom agent in `harness/.claude/agents/`, and the router starts with `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable`.
 
-It is required because two mechanisms only exist here:
+I chose it because three mechanisms need runtime support:
 
-- **System prompt split from contract.** `.claude/agents/<role>.md` is the system prompt and
-  survives compaction, while `.agents/roles/<role>.md` enters the session as a tool result and is
-  the first thing compaction summarises away.
-- **Compaction itself.** `hook-contract-reload.py` is registered on Claude Code for the compaction event, and no other
-  runtime in the harness has one.
+- **Custom agent.** `.claude/agents/<role>.md` is the role's system prompt and survives compaction. The full contract in `.agents/roles/<role>.md` enters the session as a tool result.
+- **Hook.** 6 event types, 7 commands in `settings.json`: git guard, test-run record, contract reload after compaction, tracker status, subagent log, worktree release. Details are on the hooks page.
+- **Mod.** The `astragentic-dispatch` plugin (v1.0.3) does the dispatch steps a dispatcher kept forgetting: it writes the record, turns a brief into a user turn, sends `TURN-END`, and checks the tracker before a brief.
+
+**Cost.** Hooks and the mod only work on Claude Code. Another runtime receives the contract through its own overlay, as Codex does in the section below, and does not receive this lane's hook mechanism.
+
+## claude-techniques
+
+The Claude Code features below are used in the harness, and each has a place in the payload.
+
+- **Subagent review.** The plugin has 4 subagents: the adversarial lens, the slice reviewer, the test architect and the UI lens. `astra-review` runs three lenses at once, each in its own context: correctness through the built-in `code-review`, intent through a subagent that reads the ticket and criteria, standards through a subagent that reads the repository's coding standards.
+- **Built-in `code-review` and `simplify`.** The harness does not rewrite these two steps. Simplify runs once, after the last content commit.
+- **Advisor.** The Advisor column in `.agents/orchestrator.md` sets the `--advisor` flag: an Opus row takes `fable`, a Sonnet row takes `opus`, blank means none. The advisor must rank at or above the main model.
+- **`--effort`.** Added only when the orchestrator row sets a `low|medium|high|xhigh|max` value.
+- **Auto-compact window.** `CLAUDE_CODE_AUTO_COMPACT_WINDOW` sets the context ceiling for a dispatched pane, and `dispatch-ticket-claude` passes the same value through `--autocompact 300000`.
+- **SendMessage and ListAgents.** Sessions talk to each other across sessions, and the mod turns a dispatcher's message into a real user turn.
+- **Monitor.** The Herdr lane's watcher wraps `herdr agent wait` in a Monitor. The Claude lane drops that step because the mod sends `TURN-END`.
+
+**Measurement.** Simplify ran 2 to 5 times in 57 of 244 Builder sessions, about $335 over 14 days, so it now runs once at the end. One downstream project's Builders held a median 400–550k tokens of context per call, and the 300k ceiling makes a pane compact after about 170 calls instead of letting context grow.
+
+**Cost.** I only use features that exist in the payload. A new Claude Code feature that has not entered the harness does not count. Code Mode is off and is not part of the stack.
 
 ## codex
 
-The Codex CLI, here for the cross-vendor arm and for nothing else. No role runs on it. Without a
-second vendor that arm does not exist, and the arm has the highest measured defect yield in this
-system.
+Codex CLI is the second runtime in two different ways. The first is the cross-vendor arm: one direct, read-only `codex exec` with no Codex plugin, on model `gpt-6.2-astra` at medium effort. The second is the Codex v6 overlay, where the whole set of roles runs on Codex.
 
-The Builder fires it from its own worktree through the Codex plugin (`codex-arm`), and Thomas
-fires it at spec and slice scope. If Codex is unavailable or out of quota the arm did not run, and
-the record says so.
+The arm uses a second vendor because a model re-reading its own diff re-reads its own assumptions. Ticket and slice read with `edge-lens.md`, and spec reads with the adversarial lens. The Codex plugin is no longer used as of 6.1.19 because it allowed no effort setting or lens of ours, leaked a broker per pass and exited 0 on a configuration failure.
 
-## git-worktree
+The Codex overlay lives in `runtimes/codex/` and does not replace the Claude payload. It has its own roles in `.codex/roles/`, 20 `codex-*` entrypoints, a host guard, a coordinator Stop hook and a TURN-END bell. The Claude lane is the reference: a Codex rule is diffed against Claude before it changes.
 
-This is the real isolation boundary, and it is git rather than a house rule. One checkout per
-ticket at `.claude/worktrees/<branch-slug>`, an absolute path inside the repo, created with `git
-worktree add -b <ticket-branch> <worktree-path> <base>`. The Builder is the sole writer in
-there. Thomas, Rin and another Builder all read, and none of them write.
+**Measurement.** A blind measurement over 7 replayed tickets and 336 findings: Codex with the edge lens found 21 real defects per run at 0.77 precision and about 79k tokens. Codex found 29 of 34 real defects and Claude 17. The arm shrank from 2,893 to 1,553 words in 6.1.19.
 
-The part that is easy to get wrong is what a worktree actually holds. It holds tracked git
-content and nothing else:
-
-- **A database container.** Not isolated.
-- **A background process.** Not isolated.
-- **A fixed path outside the checkout.** Anything a tool writes there is not isolated either.
-
-Removal is `git worktree remove`, never `rm -rf`. A raw delete leaves the registration behind in
-`.git/worktrees/`, and the next `add` at that path refuses.
+**Cost.** When the quota runs out or the output fails the schema, the arm reports `NOT RUN` with the reason, never counts as a pass, and the ticket falls back to the Opus adversarial lens. The spec and slice lenses are not measured (chưa đo), because the Codex quota is out until 2026-11-28.
 
 ## herdr
 
-The terminal workspace manager, floor `>= 0.8.0`. It gives every agent a pane you can open and
-look at, and it lets you prompt, wait on and read each one. This is what turns dispatch from
-something narrated into something countable.
+Herdr is the default terminal host, minimum version 0.8.0. Each agent gets a visible pane, and Thomas nudges, waits on and reads each pane. Work in flight becomes something you count instead of guess.
 
-**And it is the one channel that does not care which vendor you are on.** Two Claude Code
-sessions already have cross-session messaging, but that channel exists only inside one vendor.
-When a Builder opens a junior on another runtime beside it, two processes from two
-vendors share no protocol at all. herdr does: the pane is the address, `herdr pane run` is send,
-`herdr pane read` is receive. The Builder drives a junior with the same commands it uses for
-any pane — which is what keeps "one process, several runtimes" from being a slogan.
+The `herdr-watch-terminal.sh` watcher waits in slices and takes the verdict from a fresh `herdr agent get` on each slice. A long `herdr agent wait` was once alive and deaf (AST-107), so the wait is reduced to an interruptible sleep. `herdr-watchdog.sh` runs in the background and polls every 300 seconds by default, and the preflight of `dispatch-ticket` at the session's first dispatch requires the watchdog to be running.
 
-**One measured trap when reading a pane:** the read is truncated and says nothing about it. When
-you need a long output verbatim, do not trust the pane read — have the agent write a file and
-read the file. A short read looks exactly like a complete one.
+**Measurement.** Polling pane state left a 67-second gap between a pane going idle and the dispatcher knowing. The mod's bell cuts it to under 1 second.
 
-`dispatch-ticket` refuses to dispatch unless `herdr-watchdog.sh` is running, and it checks at the
-first dispatch. The limit I had to learn twice: `herdr agent wait` cannot be
-trusted for the verdict. Now `herdr-watch-terminal.sh` waits in 60-second slices and takes the
-verdict from a fresh `herdr agent get` on every slice, with the wait demoted to an interruptible
-sleep. Worst-case detection lag is 60 seconds rather than the whole session.
+**Cost.** Status is a bell, not proof, so Thomas still verifies by artifact. One host per session: an `orca` command in a Herdr session is refused.
 
-**The watchdog, and the question that is harder than it looks: is it alive.** Measured on a live
-project, one instance did all three at once: it was in `ps`, its own pid file had been deleted
-while it kept running, and a permanent child process made "has a child" true whether the loop was
-working or wedged. **None of those three can go false when the loop hangs.** What can is a
-timestamp that only advances when the loop **completes a pass** — that is the heartbeat file.
-Check its `mtime`, not its presence.
+## orca
 
-**And do not wrap it in anything.** Launch it as `nohup … &` with nothing else in the pipeline.
-Isolating it into its own process group protects it from a signal sent to the caller's group; it
-does nothing against a signal sent straight to its PID, which is exactly what a wrapper with a
-timeout does when that timeout fires. Measured: a watchdog launched from inside a tool call that
-later timed out exited within the same second — **cleanly, and with nothing in the log to say
-why**, because from the log alone a clean exit and a kill look identical. After launching,
-confirm with `ps -o ppid= -p <pid>` reading `1`; a live PID with no error printed is **not** the
-same claim as "detached and still running".
+Orca is the second terminal host, from 6.1.0. A session opened in Orca dispatches only through Orca, and an `herdr` command in that session is refused. A pane writes its record from the `ORCA_*` environment and `ASTRA_DISPATCH` in the launch command.
 
-**`/loop` — the cadence that means nobody has to sit and watch.** The watchdog catches a dead
-pane. There is one state it cannot catch, because from outside it looks perfectly healthy:
-**nothing is happening at all** — the last ticket merged, no pane failed, and nobody picked up
-anything new. Claude Code's `/loop` puts a fixed cadence on Thomas's own session, and each tick
-is a real model pass rather than a shell cron:
+The mod recognises the host from the pane's environment: `ORCA_PANE_KEY` present means Orca. The record, the brief and the `TURN-END` bell work the same way as on Herdr. `orca terminal close` on a pane that is mid-turn is refused.
 
-```
-/loop 12m Thomas: are the agents still active? Make sure monitoring and watching remain
-healthy. When the tickets run out, proactively pick a new ticket and continue. Only stop
-when there are no tickets left to pick up AND no pane is running AND nothing is waiting
-to be merged. If Thomas's context is above 80%, proactively compact it.
-```
+**Cost.** The mod refuses cross-host commands. An Orca terminal that shows `connected: false` is treated as gone, while `orphaned: true` alone is a live PTY with no UI pane.
 
-Three things worth knowing before setting a cadence. **The floor is 60 seconds** — `15s` is
-rounded up to `1m`. Below `5m` most ticks produce no meaningful change while still spending a
-full model pass, and dead panes are already caught by `herdr-watchdog.sh` on its own 300-second
-interval — the two watch different failures, so do not make one carry the other's job. And **in
-cron mode Thomas cannot stop by itself**: if you want it to stop for real, the stop condition has
-to come with an instruction to remove the cron job.
+## git-worktree
 
-## mattpocock-skills
+A worktree is the real isolation boundary, and it is git rather than a house rule. Each ticket gets its own checkout, created with `git worktree add -b <ticket-branch> <worktree-path> <base>` and an absolute path. The Builder is the only writer in it.
 
-The entire craft part comes from here, minimum version `>= 1.3.1`, installed as a plugin.
+A worktree holds the tracked git content and nothing else:
 
-- **User-invoked steps.** `wayfinder`, `grill-with-docs`, `to-spec`, `to-tickets`, `implement`,
-  `code-review`.
-- **Craft the model reaches for on its own.** `grilling`, `tdd`, `codebase-design`,
-  `domain-modeling`, `research`, `prototype`, `diagnosing-bugs`, `wizard`, `pr`.
+- **Database containers.** Not isolated.
+- **Background processes.** Not isolated.
+- **Fixed paths outside the checkout.** Not isolated.
 
-The benefit of installing it once is that the whole team gets the craft, because model-invoked
-skills need no wiring.
+What is not isolated is the job of the `WorktreeRemove` hook and the project's `cleanup-worktree.sh` plug. Remove with `git worktree remove`, never `rm -rf`, and the git guard refuses `rm -rf` on a worktree path.
 
-**Trade-off.** `check-requirements.sh` fails hard without it, and the address
-`/mattpocock-skills:<name>` is spread across every contract. Changing method means rewriting
-contracts, not editing one config line.
+**Measurement.** One night without a release step left 43 orphaned processes, 3,405 databases (25 GB) and a load average of 123.
+
+**Cost.** Each worktree is a full checkout, so disk and runtime have to be handled separately. The tips page describes how.
 
 ## trackers
 
-Astragentic ships no tracker. It ships three adapters, `github-issue-tracker`,
-`jira-issue-tracker` and `linear-issue-tracker`, each describing how to drive exactly one
-backend: how status is represented, where the claim is written, how a blocking edge is
-expressed.
+Astragentic does not ship a tracker. It ships three adapters, `github-issue-tracker`, `jira-issue-tracker` and `linear-issue-tracker`, and each describes how to operate exactly one backend: how status is represented, where the claim is written, how a blocking edge is expressed.
 
-What is fixed is not the adapter but `.agents/tracker-contract.md`: the five things the pipeline
-needs of any tracker. So Thomas reads `docs/agents/issue-tracker.md`, learns which adapter this
-project uses, and drives it identically regardless of backend.
+What stays fixed is not an adapter but `.agents/tracker-contract.md`: what the pipeline needs from any tracker. Thomas reads `docs/agents/issue-tracker.md`, learns which adapter the project uses, and then acts the same way regardless of backend. The tracker is the shared memory: what is ready to do is a query.
 
-**Trade-off.** Stated on the why page: every backend brings its own traps, and GitHub Issues has no
-real status field, so status has to live in a label.
+**Cost.** Each backend carries its own trap. GitHub Issues has no real status field, so status lives in a label.
 
-## scripts
+## diagram-design
 
-The Python and Bash I wrote myself. Three scripts stand for three kinds:
+The site's own figures are drawn with the `diagram-design` plugin. The Vietnamese serif font is Newsreader, because the plugin's default Instrument Serif has no Vietnamese diacritics. Each figure is one HTML file with embedded SVG, with a `vi` version and an `en` version.
 
-- **`hook-git-guard.py`.** Blocks while permission is still being decided.
-- **`herdr-watchdog.sh`.** Runs in the background all session and has to be alive before any
-  dispatch.
-- **`ledger-index.sh`.** Runs after the payload changes, not after work happens.
+The site is bilingual, so only labels are translated. Role names, skill names, commands and file names stay as they are.
 
-The rule I took from it: every script needs a calling moment and an owner. A script missing
-either one is a script nobody runs until something has already gone wrong.
-
-**Trade-off.** Release 2.5.0 is the evidence against: it shipped adapters naming another project's
-real ticket ids, a stale index, and two contracts over their word budget. Three classes of
-defect, none of them visible by reading, all introduced by careful work an hour earlier. Release
-2.5.1 is exactly those three fixes and nothing else.
-
-## archify
-
-Every diagram on this site is built with `archify`. The source is JSON at
-`content/site/diagrams/<slug>.<type>.json`, and the output is standalone HTML with inline SVG,
-so one diagram is both clickable in the page and readable outside it.
-
-Diagrams are described as data rather than drawn by hand, because this site is bilingual. Each
-diagram has a translation at `content/site/diagrams/vi/` covering the title, labels, edge
-labels, lane names and notes, while role names, skill names, commands, AST ids and filenames
-stay as they are. Drawn by hand twice, the two copies diverge on the third edit.
+**Cost.** The figure pipeline is still moving to this plugin. The number of figures already redrawn is not measured (chưa đo).

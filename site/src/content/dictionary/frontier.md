@@ -4,7 +4,7 @@ oneLiner: "Every ticket whose blockers are all done and whose assignee is empty 
 order: 4
 related: [tracker, claim, blocking-edge]
 diagram: frontier-query
-updated: 2026-09-04
+updated: 2026-11-22
 ---
 
 **The frontier is every ticket whose blockers are all done and whose assignee is empty — the answer to "what's ready to work on right now."**

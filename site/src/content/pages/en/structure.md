@@ -1,138 +1,146 @@
 ---
 title: "Structure"
-description: "Four layers: the runtime that runs the agent, the harness holding roles and rules, the coordination that holds state, and your own repo underneath. Astragentic is the middle."
+description: "Four layers: the runtime runs the agents, the harness holds roles and rules, coordination holds state, and at the bottom is your repo. Astragentic sits only in the middle."
+harness: v6.1.19
+source: "harness/.claude/agents/, harness/.claude/skills/, harness/.claude/settings.json, harness/.agents/roles/, runtimes/codex/"
 ---
 
-Astragentic is not a runtime and it is not a method. It sits between the two: underneath it,
-Claude Code running a model; above it, your real repository; and the method
-comes from `mattpocock-skills`. What Astragentic writes itself is the coordination, and only
-that.
+Astragentic is not a runtime, and it is not a method. It sits between the two: below it is Claude
+Code (or Codex) running the model, above it is your real repo. What Astragentic writes is the
+orchestration and the `astra-*` skills each role uses, and only that.
 
-I split it into four layers because each one answers a different question, and the question
-decides who owns which file. The runtime layer answers "what is this agent running on." The
-harness layer answers "what is it allowed to do." The coordination layer answers "where is every
-agent." The last one answers "what is this project actually," and that is the part Astragentic
-must never answer on your behalf.
+I split it into four layers because each layer answers a different question, and that question
+decides who owns which file. The runtime layer answers "what does this agent run on". The harness
+layer answers "what is it allowed to do". The coordination layer answers "where are the agents".
+The last layer answers "what is this project", and that is the part Astragentic must never answer
+for you.
 
 ## runtime
 
-One runtime, and the model and effort each role runs at is a row in
-`.agents/orchestrator.md`, your own file, never overwritten by an upgrade. Claude Code is the
-runtime: agents in every role run here. A Builder may hand the typing to a junior pane on another
-runtime (Grok first), set per project in the same file; review, simplify and the handback stay the
-Builder's.
+Two runtimes, and each role's model and effort are one line in `.agents/orchestrator.md`, your
+file, which an upgrade never overwrites.
 
-Codex is not a runtime for any role. It is there to be a witness: the cross-vendor arm needs a
-model from a different vendor to read the diff back, so without it that arm does not exist.
+- **Claude Code is the reference runtime.** Every role runs here as a custom agent, with hooks,
+  skills, subagents and the `astragentic-dispatch` mod. A rule for another runtime is checked
+  against the Claude lane before it changes.
+- **Codex is the second runtime.** A separate overlay in `runtimes/codex/`: its own roles, 20
+  `codex-*` entrypoints, its own host guard and Stop hook. It does not replace the Claude payload.
+- **Codex is also the witness.** On the Claude lane, the cross-vendor arm calls a read-only
+  `codex exec` so a model from another vendor re-reads the artifact.
+- **Junior.** Builder can hand the typing of code to a junior pane on another runtime (Grok first),
+  set per project; review, simplify and handback remain Builder's work.
 
-**Trade-off.** One runtime keeps enforcement even for every role, but a junior pane on another
-runtime sits outside it. The dispatch mod and `hook-git-guard.py` read a Claude tool name, so a
-junior's boundaries are its own to keep, and the Builder checks the log. Claude itself may also be
-running with hooks disabled. So the cleanup-ordering rule has to live in the contract first and in
-the hook second. The hook comes after, not a fence.
+**Trade-off.** One runtime keeps enforcement uniform across all roles, but a junior pane on another
+runtime sits outside it. The dispatch mod and `hook-git-guard.py` read Claude's tool names, so the
+junior's boundary is its own job, and Builder checks it from the log. Claude itself can also run
+with hooks off. So the rule on cleanup order must live in the contract first and in a hook second.
+The hook stands behind it; it is not the fence.
 
 ## harness
 
-`install.sh` brings into your repo five roles, sixteen skills, four hooks, and the failure
-ledger. Roles are split by session lifetime rather than by seniority, because session lifetime
-decides what a role can still remember.
+The release brings six roles, 19 skills (one of them the dispatch mod), hooks for six Claude Code events plus one mod, and the
+failure ledger into your repo. Roles are not split by title but by session lifetime, because session
+lifetime decides what the agent in that role can still remember.
 
-- **Thomas.** Resident.
+- **Thomas.** The session that runs resident.
+- **BA.** Opened by the owner when needed, read-only.
 - **Shaper.** Exactly one unbroken session.
 - **Builder.** One session per ticket.
-- **Rin.** One session per milestone.
 - **QA.** One session per walk.
+- **Quick Builder.** One session per small task, no ticket.
 
-Each role has two files, and where a rule sits matters more than what it says.
-`.claude/agents/<role>.md` is the system prompt and carries four lines. `.agents/roles/<role>.md`
-is the full contract, and it enters the session through the Read tool, so it lives in context as
-a tool result.
+Each role has two files, and where a rule lives matters more than what it says.
+`.claude/agents/<role>.md` is the system prompt and carries only three to five "survives
+compaction" rules. `.agents/roles/<role>.md` is the full contract, entering the session through the
+Read tool, so it sits in context as a tool result.
 
-That difference decides which rules survive a compaction: what sits in the system prompt does,
-what sits outside it does not, and the agent has no way of knowing it just lost a rule. That is not
-an attention failure, it is the context budget behaving exactly as built. So those four lines stay
-fixed at four, and the rest is re-armed by a hook rather than by a reminder.
+This difference decides which rules still hold after a compact: what is in the system prompt
+survives, what is outside does not, and the agent has no idea it just lost the rules. This is not an
+inattentive agent; it is the context budget working as designed. So that list is kept short, and the
+rest is reloaded by the `SessionStart` hook (matcher `compact`) rather than by a reminder.
 
 ## coordination
 
-Three things keep several agents running at once without a collision: the tracker, herdr's
-panes, and git worktrees. What they have in common is that all three sit outside an agent's
-context. Anything that exists only in one session's context disappears when that session
-compacts, and nobody finds out that it went.
+Three things keep many agents running at once without contention: the tracker, the panes of the
+terminal host (Herdr or Orca), and git worktrees. What they share is that they sit outside the
+agent's context. Anything that exists only in one session's context disappears when that session
+compacts, and no one knows it is gone.
 
-- **The tracker holds work state.** Astragentic ships no tracker of its own; it ships adapters
-  for GitHub Issues, Jira and Linear, so you keep the board you already run. State living there
-  means "which ticket is ready" is a query rather than a memory.
-- **herdr holds the pane.** Each Builder gets a visible pane, and that is not cosmetic: I
-  measured a dispatch that was narrated in text and never actually called, with no liveness
-  signal to tell the two apart. A pane is something you can count.
-- **git worktrees hold the write boundary.** One checkout per ticket, and the Builder is the
-  sole writer in it. Another measurement showed the opposite: agents sharing one checkout move HEAD under
-  each other, and even a read-only reviewer managed to `git switch` somebody else's checkout.
+- **The tracker holds work state.** Astragentic ships no tracker of its own; it ships adapters for
+  GitHub Issues, Jira and Linear, so you keep the board you already use. With state living there,
+  "which ticket is ready" is a query, not a memory.
+- **The host holds the panes.** Herdr is the default host, Orca runs alongside since 6.1.0, and each
+  session uses exactly one host: the other host's commands are refused. Every Builder has a visible
+  pane, and this is not cosmetic: I measured a dispatch that was only narrated in words and never
+  ran, with no signal to tell the two apart. A pane is something you can count.
+- **git worktree holds the write boundary.** One checkout per ticket, and Builder is the only
+  writer in it. Another time I measured the opposite: with several agents sharing one checkout, one
+  agent's HEAD gets moved by another, and even a read-only reviewer can `git switch` someone else's
+  checkout.
 
-**Trade-off.** Three external dependencies: a tracker you have to configure, herdr you have to
-install, and disk for every worktree.
+**Trade-off.** Three outside dependencies: a tracker to configure, a terminal host to install, and
+disk for each worktree.
 
 ## project
 
-The bottom layer is your repository, and the rule here is that Astragentic knows nothing about
-it beyond what you declare.
+The bottom layer is your repo, and the rule here is that Astragentic knows nothing about it beyond
+what you declare yourself.
 
-- **Tracker.** `docs/agents/issue-tracker.md` names which tracker.
-- **Runtime and model.** `.agents/orchestrator.md` names which runtime and model the agent in
-  each role runs on.
+- **Tracker.** Which tracker you use is in `docs/agents/issue-tracker.md`.
+- **Runtime and model.** Which runtime and which model each role's agent uses is in
+  `.agents/orchestrator.md`.
 - **Domain vocabulary.** `GLOSSARY.md` holds the shared domain vocabulary.
-- **Settled decisions.** The ADRs hold the decisions already settled.
+- **Settled decisions.** ADRs hold the decisions already made.
 
-No release overwrites any of them.
+No release overwrites any of those files.
 
-The most expensive place I learned this boundary was worktree cleanup. The harness knows exactly
-one thing every worktree can allocate: processes rooted in it. Everything else belongs to the
-project: a database, a port registration, a container, a broker, a lease on a shared cluster. The
-harness cannot name any of those without naming one project's stack.
+I learned this boundary where it cost the most: cleaning up a worktree. The harness knows exactly
+one thing every worktree allocates, which is the processes whose cwd is inside it. Everything else
+belongs to the project: databases, registered ports, containers, brokers, leases on a shared
+cluster. The harness cannot name any of those without naming the stack of exactly one project.
 
-The concrete risk: a cleanup step hardwired to one project's stack reads as correct on another
-one and releases nothing. Orphaned processes and leftover databases then pile up quietly until the
-machine runs out of room.
+The concrete risk: a cleanup step hard-coded to one project's stack reads correctly but frees
+nothing on a project using a different stack. Orphaned processes and spare databases then pile up
+silently until the machine runs out of resources.
 
-So the project now declares its own release step as an executable plug at
-`.astraler/project/cleanup-worktree.sh`, and `release-worktree-resources.sh` calls it after the
-reap. A project that allocates nothing beyond git still has to write a file saying so, because a
-silent no-op is indistinguishable from a successful release.
+So now the project declares its own cleanup step as a runnable plug at
+`.astraler/project/cleanup-worktree.sh`, and `release-worktree-resources.sh` calls it after it has
+reaped the processes. A project that allocates nothing beyond git must still write a file that
+says exactly that, because a silent no-op cannot be told apart from a successful release.
 
 ## good-parts
 
-### The defect ledger: how the harness learns
+### The failure ledger: the harness's self-learning mechanism
 
-Every time something breaks, the incident is written as one line in an append-only file, with a
-fixed id, never renumbered and never deleted. A line that yields a rule puts that rule into a file
-agents actually read, so the whole team behaves differently next time. A line that yields nothing
-yet stays in the table rather than being filtered out.
+Each time something breaks, the incident is written as one line in an append-only file with a fixed
+code, never renumbered or deleted. When a line yields a rule, that rule goes into a file the agents
+actually read, so next time the whole team does it differently. A line that has yielded nothing yet
+stays where it is rather than being filtered out.
 
-This is where the harness learns from its own failures: a failure does not fade with memory, it
-becomes either a rule or an open record.
+This is where the harness learns from its own failures: a failure does not vanish with memory, it
+becomes a rule or a pending record.
 
-### The cross-vendor arm binds to one SHA
+### The cross-vendor arm locks on the exact SHA
 
-After Claude finishes, a model from a different vendor reads the diff back and leaves a receipt
-bound to the exact SHA it read. The reason is not variety for its own sake: a model re-reading
-its own diff re-reads its own assumptions along with it, and a model from another vendor does
-not carry those assumptions.
+After Claude finishes writing, a model from another vendor re-reads the diff and leaves a receipt
+bound to the exact SHA it read. The reason is not diversity for its own sake: a model re-reading its
+own diff also re-reads its own assumptions, and a model from another vendor does not carry them.
 
-### The tracker is the state substrate
+### The tracker is the substrate holding state
 
-Work state lives on the project's own tracker, not in a plan file inside a branch. The
-difference is checkable: a plan file cannot answer "which ticket is ready right now," and a
-query over blocking edges and assignees can.
+Work state is stored on the project's own tracker, not in a plan file on a branch. The difference is
+verifiable: a plan file cannot answer "which ticket is ready right now", while a query over blocking
+edges and assignees can.
 
-### The claim runs before the worktree
+### The claim runs before the worktree is created
 
-The order is: write the assignee on the tracker, read it back, and only then `git worktree add
--b`. That is how two sessions see each other on the tracker itself instead of discovering the
-collision after both have written code, and it needs no lock file and no central dispatcher.
+The order is: write the assignee on the tracker, read it back, then `git worktree add -b`. That way
+two sessions see each other on the tracker itself instead of discovering a collision after both have
+written code, with no lock file or central dispatcher needed.
 
 ### Review runs exactly one round
 
-Every ticket passes three layers exactly once: `code-review` on both axes, Standards and Spec;
-then the simplify pass; then the cross-vendor read. Three bounded passes keep the rigour without
-letting the number of rounds multiply.
+Every full ticket passes three tiers exactly once: `astra-review` with three parallel lenses
+(correctness, intent, standards), then `simplify` once, then the cross-read by another vendor. The
+three tiers have clear edges, so rigor stays the same while the number of rounds does not multiply
+by itself. Details are on the [review](/review/) page.

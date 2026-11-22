@@ -6,7 +6,7 @@
 // Design spec 5 §2: Read mode, with the facts about the skill in a sticky card beside
 // the prose instead of a strip above it. On a phone the card comes first.
 import DocsLayout from '../../layouts/DocsLayout.astro';
-import Diagram from '../Diagram.astro';
+import Figure from '../Figure.astro';
 import GroupBadge from '../GroupBadge.astro';
 import { catalogLine, skillHref, type GroupId } from '../../lib/skills';
 import { hasLesson, ledger, lessonOf } from '../../lib/data';
@@ -41,10 +41,11 @@ const failuresRoute = ROUTES.failures[lang];
   heading={name}
   monoTitle
   lede={line}
+  harness={data.harness}
 >
   <div class="skill-grid">
     <div class="skill-main">
-      {data.diagram && <Diagram slug={data.diagram} lang={lang} frame={640} title={name} />}
+      {data.diagram && <Figure slug={data.diagram} lang={lang} maxWidth={760} />}
       {
         Content ? (
           <article class="prose read-body">

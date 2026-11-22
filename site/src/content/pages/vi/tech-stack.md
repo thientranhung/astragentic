@@ -1,160 +1,98 @@
 ---
 title: "Tech stack"
-description: "Tám thành phần của stack, và vì sao là thành phần đó chứ không phải thứ khác. Mỗi thành phần kèm chỗ nó đã gây lỗi."
+description: "Tám thành phần của stack: Claude Code, các kỹ thuật Claude Code dùng thật, Codex, Herdr, Orca, git worktree, tracker adapter và diagram-design. Mỗi thành phần nêu nó là gì, vì sao chọn nó, cơ chế và cái giá."
+harness: v6.1.19
+source: README.md, harness/.claude/settings.json, harness/.claude/agents/, harness/.claude/skills/astragentic-dispatch/hooks/register.tsx, harness/.claude/skills/dispatch-ticket-claude/SKILL.md, harness/.claude/skills/codex-arm/SKILL.md, harness/.claude/skills/astra-review/SKILL.md, harness/.agents/orchestrator.md, harness/scripts/herdr-watch-terminal.sh, runtimes/codex/README.md
 ---
 
-Danh sách này ngắn có chủ đích. Mỗi thành phần ở đây phải trả lời được câu "bỏ nó ra thì cái gì
-gãy", và thành phần nào chỉ gây bất tiện nhỏ khi bỏ đi thì tôi đã bỏ. Hai thành phần đầu là
-hai CLI, ba thành phần giữa là cơ chế, ba thành phần cuối là thứ tôi tự viết hoặc tự chọn để
-dựng chính trang này.
+Mỗi thành phần ở đây phải trả lời được câu "bỏ nó ra thì cái gì gãy". Thành phần nào chỉ gây bất tiện nhỏ khi bỏ đi thì tôi đã bỏ. Hai thành phần đầu là runtime chính, hai thành phần tiếp theo là runtime phụ và host terminal, phần còn lại là cơ chế dùng chung.
 
 ## claude-code
 
-Runtime. Agent của mọi role đều chạy ở đây, và `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium` là câu lệnh mở đầu một
-session. Nếu bạn chỉ cài đúng một CLI thì phải là CLI này.
+Claude Code là runtime của cả sáu role. Mỗi role là một custom agent trong `harness/.claude/agents/`, và router mở bằng `claude --dangerously-skip-permissions --agent thomas --model claude-opus-5 --effort medium --advisor fable`.
 
-Nó bắt buộc vì hai cơ chế sau chỉ tồn tại ở đây:
+Tôi chọn nó vì ba cơ chế cần runtime hỗ trợ sẵn:
 
-- **System prompt tách khỏi contract.** `.claude/agents/<role>.md` là system prompt và sống sót
-  qua compaction, còn `.agents/roles/<role>.md` vào session như một tool result và bị compaction
-  tóm tắt đi trước tiên.
-- **Compaction.** `hook-contract-reload.py` đăng ký ở Claude Code cho sự kiện compaction, và không runtime
-  nào khác trong harness có sự kiện đó.
+- **Custom agent.** `.claude/agents/<role>.md` là system prompt của role và sống sót qua compaction. Contract đầy đủ ở `.agents/roles/<role>.md` vào session như một tool result.
+- **Hook.** 6 loại sự kiện, 7 lệnh trong `settings.json`: git guard, ghi lần chạy test, nạp lại contract sau compact, trạng thái tracker, log subagent, giải phóng worktree. Chi tiết ở trang hook.
+- **Mod.** Plugin `astragentic-dispatch` (v1.0.3) làm các bước dispatch mà dispatcher hay quên: ghi record, chuyển brief thành một lượt user, báo `TURN-END`, kiểm tracker trước brief.
+
+**Cái giá.** Hook và mod chỉ có hiệu lực trên Claude Code. Một runtime khác nhận contract bằng overlay riêng, như Codex ở mục dưới, và không nhận cơ chế hook của lane này.
+
+## claude-techniques
+
+Các tính năng Claude Code dưới đây được harness dùng thật. Mỗi mục có vị trí trong payload.
+
+- **Subagent review.** Plugin có 4 subagent: adversarial lens, slice reviewer, test architect và UI lens. `astra-review` chạy ba lens cùng lúc, mỗi lens một context: correctness bằng built-in `code-review`, intent bằng subagent đọc ticket và criteria, standards bằng subagent đọc coding standards của repo.
+- **Built-in `code-review` và `simplify`.** Harness không viết lại hai bước này. Simplify chạy một lần, sau commit nội dung cuối.
+- **Advisor.** Cột Advisor trong `.agents/orchestrator.md` quyết định cờ `--advisor`: dòng Opus nhận `fable`, dòng Sonnet nhận `opus`, để trống là không có. Advisor phải xếp ngang hoặc cao hơn model chính.
+- **`--effort`.** Chỉ thêm khi dòng orchestrator đặt giá trị `low|medium|high|xhigh|max`.
+- **Auto-compact window.** `CLAUDE_CODE_AUTO_COMPACT_WINDOW` đặt trần context cho pane được dispatch, và `dispatch-ticket-claude` truyền cùng giá trị qua cờ `--autocompact 300000`.
+- **SendMessage và ListAgents.** Hai session nói chuyện xuyên session, và mod biến tin nhắn của dispatcher thành lượt user thật.
+- **Monitor.** Watcher của lane Herdr bọc `herdr agent wait` trong một Monitor. Lane Claude bỏ bước đó vì mod gửi `TURN-END`.
+
+**Số đo.** Simplify từng chạy 2–5 lần trong 57 của 244 session Builder, khoảng $335 trong 14 ngày, nên nó chạy một lần ở cuối. Builder của một project downstream giữ trung vị 400–550k token context mỗi lần gọi, và trần 300k làm pane compact sau khoảng 170 lần gọi thay vì để context phình.
+
+**Cái giá.** Tôi chỉ dùng tính năng có trong payload. Một tính năng mới của Claude Code chưa vào harness thì chưa tính. Code Mode đang tắt và không thuộc stack.
 
 ## codex
 
-Codex CLI, có mặt vì cross-vendor arm và không vì gì khác. Không role nào chạy trên nó. Không có
-vendor thứ hai thì arm đó không tồn tại, và arm là cơ chế có sản lượng bắt lỗi cao nhất trong hệ này.
+Codex CLI là runtime thứ hai theo hai cách khác nhau. Cách đầu là cross-vendor arm: một lần `codex exec` trực tiếp, read-only, không cần plugin Codex, model `gpt-6.2-astra` effort medium. Cách sau là overlay Codex v6, nơi cả bộ role chạy trên Codex.
 
-Builder chạy nó từ worktree của mình qua plugin Codex (`codex-arm`), còn Thomas chạy ở phạm vi
-spec và slice. Nếu Codex không dùng được hoặc hết quota thì arm chưa chạy, và biên nhận ghi đúng
-như vậy.
+Arm dùng vendor thứ hai vì model đọc lại diff của chính nó đọc lại luôn giả định của nó. Ticket và slice đọc bằng `edge-lens.md`, spec đọc bằng adversarial lens. Plugin Codex không còn được dùng ở 6.1.19 vì nó không cho đặt effort hay lens, để rò một broker mỗi lượt và thoát 0 khi cấu hình sai.
 
-## git-worktree
+Overlay Codex nằm ở `runtimes/codex/`, không thay payload Claude. Nó có vai riêng trong `.codex/roles/`, 20 entrypoint `codex-*`, host guard, Stop hook của coordinator và bell TURN-END. Lane Claude là chuẩn tham chiếu: một rule Codex được diff với Claude trước khi đổi.
 
-Đây là ranh giới isolation thật, và nó là git chứ không phải nội quy. Mỗi ticket một checkout
-riêng tại `.claude/worktrees/<branch-slug>`, đường dẫn tuyệt đối và nằm trong repo, tạo bằng
-`git worktree add -b <ticket-branch> <worktree-path> <base>`. Builder là người ghi duy nhất
-trong đó. Thomas, Rin và Builder khác đều chỉ đọc, không ai ghi.
+**Số đo.** Đo blind trên 7 ticket replay, 336 finding: Codex với edge lens tìm 21 defect thật mỗi lượt, precision 0.77, khoảng 79k token. Codex tìm 29 của 34 defect thật, Claude 17. Arm rút từ 2.893 xuống 1.553 từ ở 6.1.19.
 
-Chỗ dễ hiểu nhầm là worktree giữ cái gì. Nó giữ nội dung git được track và không giữ gì khác:
-
-- **Database container.** Không bị cô lập.
-- **Tiến trình nền.** Không bị cô lập.
-- **Đường dẫn cố định ngoài checkout.** Bất cứ gì một công cụ ghi ra đó cũng không bị cô lập.
-
-Xoá thì phải bằng `git worktree remove`, không bao giờ bằng `rm -rf`. Xoá thô để lại đăng ký
-trong `.git/worktrees/`, rồi lần `add` sau ở đúng đường dẫn đó sẽ bị từ chối.
+**Cái giá.** Hết quota hoặc đầu ra sai schema thì arm báo `NOT RUN` kèm lý do, không bao giờ tính là pass, và ticket rơi về lens adversarial Opus. Lens ở scope spec và slice chưa đo, vì quota Codex hết tới 2026-11-28.
 
 ## herdr
 
-Trình quản lý workspace terminal, floor `>= 0.8.0`. Nó cho mỗi agent một pane mở ra nhìn được,
-và cho phép nhắc, chờ, đọc từng pane. Đây là thứ biến dispatch từ một câu kể thành một vật đếm
-được.
+Herdr là host terminal mặc định, phiên bản tối thiểu 0.8.0. Mỗi agent có một pane nhìn được, và Thomas nhắc, chờ, đọc từng pane. Việc đang chạy nhờ vậy là thứ đếm được thay vì đoán.
 
-**Và nó là kênh duy nhất không phân biệt nền tảng.** Giữa hai session Claude Code đã có sẵn
-cross-session messaging, nhưng kênh đó chỉ tồn tại bên trong một hãng. Khi một Builder mở một junior trên runtime khác ngay cạnh mình, hai tiến trình của hai hãng
-không có giao thức chung nào để nói với nhau. herdr có: pane là địa chỉ, `herdr pane run` là gửi, `herdr pane read`
-là đọc. Builder điều một junior bằng đúng những lệnh nó dùng cho mọi pane —
-và đó là lý do "một quy trình, nhiều runtime" không dừng ở khẩu hiệu.
+Watcher `herdr-watch-terminal.sh` chờ theo lát và lấy verdict từ một lệnh `herdr agent get` mới ở mỗi lát. Một lần `herdr agent wait` dài từng sống mà không bắn (AST-107), nên wait bị hạ xuống thành giấc ngủ có thể ngắt. `herdr-watchdog.sh` chạy nền, mặc định poll mỗi 300 giây, và preflight của `dispatch-ticket` ở lần dispatch đầu tiên của session đòi watchdog đang chạy.
 
-**Một bẫy đã đo khi đọc pane:** phần đọc bị cắt bớt mà không báo gì. Khi cần nguyên văn một output
-dài, đừng tin lần đọc pane — bảo agent ghi ra file rồi đọc file. Một lần đọc thiếu trông hệt như
-một lần đọc đủ.
+**Số đo.** Poll trạng thái pane để lại khoảng trễ 67 giây giữa pane idle và dispatcher biết. Bell của mod rút nó xuống dưới 1 giây.
 
-`dispatch-ticket` từ chối dispatch nếu `herdr-watchdog.sh` chưa chạy, và nó kiểm ngay ở lần
-dispatch đầu tiên. Giới hạn tôi phải học lại: `herdr agent wait` không đáng tin
-cho phần verdict. Bây giờ `herdr-watch-terminal.sh` chờ theo lát 60 giây và lấy verdict từ một
-lệnh `herdr agent get` mới tinh ở mỗi lát; wait bị hạ xuống thành giấc ngủ có thể ngắt. Độ trễ
-phát hiện xấu nhất là 60 giây, không phải cả session.
+**Cái giá.** Status là cái chuông, không phải bằng chứng. Thomas vẫn kiểm artifact. Một host cho một session: lệnh `orca` trong session Herdr bị từ chối.
 
-**Watchdog, và câu hỏi khó hơn vẻ ngoài của nó: "nó còn sống không".** Đo trên một dự án thật,
-cùng một instance đồng thời: nằm trong `ps`, bị xoá mất pid file trong khi vẫn đang chạy, và có
-một tiến trình con thường trú khiến "còn con" luôn đúng dù vòng lặp đã treo. **Không cái nào
-trong ba tín hiệu đó có thể thành sai khi vòng lặp treo.** Thứ có thể thành sai là một dấu thời
-gian chỉ nhích lên khi vòng lặp **chạy trọn một lượt** — đó là heartbeat file. Kiểm `mtime` của
-nó, đừng kiểm sự tồn tại của nó.
+## orca
 
-**Và đừng bọc nó trong bất cứ thứ gì.** Khởi chạy bằng `nohup … &`, không thêm gì trong pipeline.
-Tách process group bảo vệ watchdog khỏi tín hiệu gửi cho nhóm của bên gọi, nhưng không bảo vệ được
-khỏi tín hiệu gửi thẳng vào PID của nó — mà đó đúng là việc một wrapper có timeout làm khi timeout
-nổ. Đo được: một watchdog khởi chạy từ bên trong một tool call, tool call đó timeout, watchdog
-thoát trong cùng một giây — **sạch sẽ, và không để lại dòng nào giải thích vì sao**, vì nhìn từ
-log thì một lần thoát sạch và một lần bị giết giống hệt nhau. Sau khi phóng, xác nhận bằng
-`ps -o ppid= -p <pid>` đọc ra `1`; một PID còn sống và không có lỗi in ra **không phải** cùng một
-khẳng định với "đã tách hẳn và vẫn đang chạy".
+Orca là host terminal thứ hai từ 6.1.0. Session mở trong Orca chỉ dispatch bằng Orca, và lệnh `herdr` trong session đó bị từ chối. Pane tự ghi record từ biến môi trường `ORCA_*` và `ASTRA_DISPATCH` trong lệnh khởi động.
 
-**`/loop` — nhịp để không ai phải ngồi canh.** Watchdog phát hiện pane chết. Có một trạng thái nó
-không phát hiện được, vì nhìn từ ngoài nó hoàn toàn bình thường: **không còn ai làm gì cả** —
-ticket cuối đã merge, không pane nào lỗi, và cũng không ai nhặt việc mới. `/loop` của Claude Code
-đặt một nhịp cố định lên chính session Thomas, và mỗi nhịp là một lượt model thật chứ không phải
-một cron shell:
+Mod nhận ra host từ môi trường của pane: có `ORCA_PANE_KEY` là Orca. Record, brief và bell `TURN-END` dùng cùng cách như ở Herdr. `orca terminal close` trên pane đang giữa lượt bị từ chối.
 
-```
-/loop 12m Thomas: agent còn hoạt động không? Đảm bảo monitoring và watching còn khoẻ.
-Hết ticket thì chủ động nhặt ticket mới và làm tiếp. Chỉ dừng khi không còn ticket để
-nhặt VÀ không pane nào đang chạy VÀ không có gì chờ merge. Context của Thomas trên 80%
-thì chủ động compact.
-```
+**Cái giá.** Mod chặn lệnh chéo host. Một terminal Orca có `connected: false` được coi là đã mất, còn `orphaned: true` đơn độc là một PTY còn sống không có pane UI.
 
-Ba điều đáng biết trước khi đặt nhịp. **Sàn là 60 giây** — `15s` bị làm tròn lên `1m`. Dưới `5m`
-thì phần lớn nhịp không tạo ra thay đổi nào có nghĩa nhưng vẫn tiêu một lượt model đầy đủ, mà pane
-chết thì `herdr-watchdog.sh` đã bắt ở nhịp 300 giây rồi — hai thứ này canh hai loại hỏng khác
-nhau, đừng để nhịp này gánh việc của nhịp kia. Và **ở chế độ cron, Thomas không tự dừng được**:
-muốn nó dừng thật thì điều kiện dừng phải kèm một câu bảo nó tự gỡ cron job.
+## git-worktree
 
-## mattpocock-skills
+Worktree là ranh giới isolation thật, và nó là git chứ không phải nội quy. Mỗi ticket một checkout riêng, tạo bằng `git worktree add -b <ticket-branch> <worktree-path> <base>` với đường dẫn tuyệt đối. Builder là người ghi duy nhất trong đó.
 
-Toàn bộ phần craft đến từ đây, phiên bản tối thiểu `>= 1.3.1`, cài dưới dạng plugin.
+Worktree giữ nội dung git được track và không giữ gì khác:
 
-- **Bước có người gọi.** `wayfinder`, `grill-with-docs`, `to-spec`, `to-tickets`, `implement`,
-  `code-review`.
-- **Phần craft model tự gọi khi cần.** `grilling`, `tdd`, `codebase-design`, `domain-modeling`,
-  `research`, `prototype`, `diagnosing-bugs`, `wizard`, `pr`.
+- **Database container.** Không bị cô lập.
+- **Tiến trình nền.** Không bị cô lập.
+- **Đường dẫn cố định ngoài checkout.** Không bị cô lập.
 
-Lợi ích của việc cài một lần là cả team có craft, vì skill model-invoked không cần đấu dây gì
-thêm.
+Phần không được cô lập là việc của hook `WorktreeRemove` và plug `cleanup-worktree.sh` của project. Xóa bằng `git worktree remove`, không bằng `rm -rf`, và git guard từ chối `rm -rf` trên đường dẫn worktree.
 
-**Đánh đổi.** `check-requirements.sh` fail cứng khi thiếu nó, và địa chỉ
-`/mattpocock-skills:<name>` nằm rải khắp các contract. Đổi method là viết lại contract chứ không
-phải sửa một dòng config.
+**Số đo.** Một đêm không có bước giải phóng để lại 43 tiến trình mồ côi, 3.405 database (25 GB) và load average 123.
+
+**Cái giá.** Mỗi worktree là một checkout đầy đủ, nên disk và runtime phải được xử lý riêng. Trang tips mô tả cách.
 
 ## trackers
 
-Astragentic không ship tracker. Nó ship ba adapter là `github-issue-tracker`,
-`jira-issue-tracker` và `linear-issue-tracker`, mỗi adapter mô tả cách vận hành đúng một backend:
-status biểu diễn thế nào, claim ghi ở đâu, blocking edge diễn đạt ra sao.
+Astragentic không ship tracker. Nó ship ba adapter là `github-issue-tracker`, `jira-issue-tracker` và `linear-issue-tracker`, mỗi adapter mô tả cách vận hành đúng một backend: status biểu diễn thế nào, claim ghi ở đâu, blocking edge diễn đạt ra sao.
 
-Thứ cố định không phải adapter mà là `.agents/tracker-contract.md`: năm thứ mà pipeline cần ở
-bất kỳ tracker nào. Nhờ vậy Thomas đọc `docs/agents/issue-tracker.md`, biết dự án này dùng
-adapter nào, rồi thao tác y hệt nhau bất kể backend.
+Thứ cố định không phải adapter mà là `.agents/tracker-contract.md`: những thứ pipeline cần ở bất kỳ tracker nào. Thomas đọc `docs/agents/issue-tracker.md`, biết project dùng adapter nào, rồi thao tác như nhau bất kể backend. Tracker là bộ nhớ chung: cái gì sẵn để làm là một câu truy vấn.
 
-**Đánh đổi.** Đã nêu ở trang vì sao: mỗi backend mang theo cái bẫy riêng, và GitHub Issues không
-có trường status thật nên status phải nằm trong label.
+**Cái giá.** Mỗi backend mang cái bẫy riêng. GitHub Issues không có trường status thật nên status nằm trong label.
 
-## scripts
+## diagram-design
 
-Phần Python và Bash tôi tự viết. Ba script đại diện cho ba loại:
+Các figure của chính site này được vẽ bằng plugin `diagram-design`. Font serif tiếng Việt là Newsreader, vì Instrument Serif mặc định của plugin không có dấu tiếng Việt. Mỗi figure là một file HTML có SVG nhúng, với một bản `vi` và một bản `en`.
 
-- **`hook-git-guard.py`.** Chặn trong lúc quyền còn đang được quyết.
-- **`herdr-watchdog.sh`.** Chạy nền suốt session và phải đang chạy trước mọi dispatch.
-- **`ledger-index.sh`.** Chạy sau khi payload đổi, không phải sau khi công việc đổi.
+Site song ngữ, nên chỉ nhãn được dịch. Tên role, tên skill, lệnh và tên file giữ nguyên.
 
-Luật tôi rút ra: mỗi script phải có một khoảnh khắc gọi và một người sở hữu. Script thiếu một
-trong hai là script không ai chạy cho tới khi mọi chuyện đã hỏng.
-
-**Đánh đổi.** Bản 2.5.0 là bằng chứng ngược: nó ship adapter mang id ticket thật của một dự án
-khác, một index đã cũ, và hai contract vượt hạn mức chữ. Ba loại lỗi, không loại nào nhìn thấy
-được bằng cách đọc, tất cả do một giờ làm việc cẩn thận trước đó sinh ra. Bản 2.5.1 là đúng ba
-cái vá đó và không có gì khác.
-
-## archify
-
-Mọi diagram trên trang này được dựng bằng `archify`. Nguồn là JSON ở
-`content/site/diagrams/<slug>.<type>.json`, đầu ra là HTML đứng độc lập cùng SVG nhúng, nên một
-hình vừa bấm được trên trang vừa đọc được ngoài trang.
-
-Diagram được mô tả bằng dữ liệu thay vì vẽ tay, vì trang này song ngữ. Mỗi diagram có
-một bản dịch ở `content/site/diagrams/vi/`, dịch title, label, nhãn edge, tên lane và note, giữ
-nguyên tên role, tên skill, lệnh, mã AST và tên file. Vẽ tay hai lần thì hai bản sẽ lệch nhau ở
-lần sửa thứ ba.
+**Cái giá.** Pipeline figure còn đang chuyển sang plugin này. Số figure đã vẽ lại chưa đo.

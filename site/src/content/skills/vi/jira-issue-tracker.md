@@ -4,10 +4,11 @@ oneLiner: "Chạy Jira làm tracker của harness, với trạng thái là trans
 group: adapter
 order: 5
 runtimes: [claude]
-source: harness/.agents/skills/jira-issue-tracker/SKILL.md
+source: harness/.claude/skills/jira-issue-tracker/SKILL.md
 rented: false
 lang: vi
-updated: 2026-09-04
+updated: 2026-11-22
+harness: v6.1.19
 ---
 
 ## Nó làm gì
@@ -20,7 +21,7 @@ Phần thuộc dự án ở lại trong dự án: site, `cloudId`, project key v
 trong `docs/agents/issue-tracker.md` của dự án đó. Tôi truy cập Jira qua bộ công cụ MCP của
 Atlassian. Mọi thứ ở đây đo trên một dự án thật, team-managed, chuyển từ Linear sang Jira
 ngày 2026-08-21.
-<!-- source: harness/.agents/skills/jira-issue-tracker/SKILL.md -->
+<!-- source: harness/.claude/skills/jira-issue-tracker/SKILL.md -->
 
 Khác biệt lớn nhất so với mọi tracker khác là **bạn không gán một trạng thái, bạn lấy một
 transition.** Transition được định danh bằng số, riêng theo từng dự án, không liên tục và không
@@ -32,7 +33,20 @@ lần, vì chính cú gọi thêm đó *là* cái chốt, và nó rẻ hơn nhó
 
 Đổi lại, lợi thế của Jira là thật: `Blocks` biểu diễn được trong một truy vấn JQL, nên frontier là
 một cú gọi thay vì vòng lặp N+1 mà GitHub ép.
-<!-- source: harness/.agents/skills/jira-issue-tracker/SKILL.md -->
+<!-- source: harness/.claude/skills/jira-issue-tracker/SKILL.md -->
+
+## Đường đọc từ shell: `twg` (4.4.0)
+
+**Jira đọc được từ shell qua `twg`, dùng login lưu theo máy (`~/.config/twg`).** Khai `jira <PROJECT-KEY>` trong `.astraler/project/tracker`, và `scripts/tracker.sh` đọc thay cho `ticket-done.sh`, số đếm đầu session và dispatch mod. Xoá các plug cũ in `unreachable -`, vì plug thắng khai báo.
+
+- **`twg jira workitem get <KEY-n>`**: 1,5 giây, native, không tốn credit.
+- **`twg jira workitem query --jql '<jql>' --limit 500`**: 5,4 giây cho 22 ticket, native, không tốn credit.
+- **Lệnh `[Enriched]` và `twg rovo …`** tốn credit Rovo: hỏi owner trước.
+- **State là status category, không bao giờ là tên.** Tên có dấu cách (`To Do`) làm vỡ `<state> <assignee>`; `status.statusCategory.key` là một từ (`new`, `indeterminate`, `done`), và `done` là giá trị `ticket-done.sh` chấp nhận.
+
+**Cái giá.** Phép đếm 5,4 giây dài hơn ngân sách 5 giây của band, nên mod chỉ đọc theo sự kiện và `status-line.sh` không được gọi `twg`.
+
+<!-- source: harness/.claude/skills/jira-issue-tracker/SKILL.md -->
 
 ## Khi nào Thomas gọi nó
 
@@ -44,7 +58,7 @@ một cú gọi thay vì vòng lặp N+1 mà GitHub ép.
 | Một trạng thái dự án chưa có | Dừng lại. Thêm trạng thái là việc của chủ dự án trên giao diện Jira, công cụ MCP không chạm được vào workflow |
 | Một ticket trùng | Một link `Duplicate` cộng trạng thái đã huỷ, không bao giờ là một trạng thái riêng |
 
-<!-- source: harness/.agents/skills/jira-issue-tracker/SKILL.md -->
+<!-- source: harness/.claude/skills/jira-issue-tracker/SKILL.md -->
 
 ## Cần sẵn gì
 
@@ -67,7 +81,7 @@ một cú gọi thay vì vòng lặp N+1 mà GitHub ép.
 | Đồ thị chặn | Issue link gốc của Jira, mà thứ cần đọc lại là dòng chữ nó hiển thị ra |
 | Nguồn gốc di trú | Một label provenance và một dòng đầu description trỏ ngược về, không bao giờ được xoá cái nào |
 
-<!-- source: harness/.agents/skills/jira-issue-tracker/SKILL.md -->
+<!-- source: harness/.claude/skills/jira-issue-tracker/SKILL.md -->
 
 ## Lỗi đã biết
 
@@ -100,7 +114,7 @@ Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Cả hai đều 
 - Một cái chặn không phải issue thì được cấp một issue. Ticket quyết định là ticket hạng nhất,
   không bao giờ giao cho agent, và nó đóng khi chủ dự án trả lời.
 
-<!-- source: harness/.agents/skills/jira-issue-tracker/SKILL.md -->
+<!-- source: harness/.claude/skills/jira-issue-tracker/SKILL.md -->
 
 ## Nó nằm ở đâu trong chuỗi
 

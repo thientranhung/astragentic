@@ -3,7 +3,8 @@ term: Tracker
 oneLiner: "The issue tracker a project already runs, treated as the one place ticket state actually lives."
 order: 3
 related: [frontier, claim, blocking-edge, ledger]
-updated: 2026-09-04
+updated: 2026-11-22
+harness: v6.1.19
 ---
 
 **The tracker is the project's own issue tracker — GitHub Issues, Jira, or Linear — and the harness treats it as the single source of truth for ticket state instead of inventing its own.**
@@ -20,7 +21,7 @@ Adopting the project's existing tracker instead of a purpose-built one means the
 
 - `harness/.agents/skills/github-issue-tracker/SKILL.md`, `jira-issue-tracker/SKILL.md`, `linear-issue-tracker/SKILL.md`
 - `harness/.agents/skills/reconcile-tracker/SKILL.md`
-- `docs/adr/0001-rebuild-the-method-around-matt-pocock-skills.md` — "the tracker is the coordination substrate"
+- `harness/.agents/tracker-contract.md` — the five things the pipeline needs of a tracker
 - `RELEASE-NOTES.md` (2.8.0) — the tracker write-back and `tracker-state.sh` plug
 
 ## Usage:

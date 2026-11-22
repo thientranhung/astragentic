@@ -4,25 +4,28 @@ oneLiner: "A second review from a different vendor's model, because same-vendor 
 order: 11
 related: [gate, pass-marker, worktree, role]
 diagram: cross-vendor-arm
-updated: 2026-09-04
+updated: 2026-11-22
+harness: v6.1.19
 ---
 
-**The cross-vendor arm is a review pass fired from a different vendor's model against a completed artifact — Codex reviewing Claude's diff — so the review isn't reading its own kind of blind spot.**
+**The cross-vendor arm is one direct, read-only `codex exec` call over a completed artifact, so the review is not reading its own vendor's blind spots.**
 
-Who fires it and from where depends on scope: the [Builder](/dictionary/role/) fires `arm: ticket` from inside its own [worktree](/dictionary/worktree/), standing in the tree that holds the reviewed commits, so `HEAD` resolves correctly with no gate worktree or path disambiguator needed. Thomas fires `arm: spec` and `arm: slice` from the base checkout instead, where the two can disagree — so those scopes resolve the head explicitly and review from a detached checkout at that SHA. It runs through the Codex plugin runtime (`codex-companion.mjs`); the raw `codex exec review` form has been observed to hang, so it needs a timeout and a watching dispatcher.
+It needs no plugin. The model is `gpt-6.2-astra` at medium effort, set explicitly. The [Builder](/dictionary/role/) fires `arm: ticket` from its own [worktree](/dictionary/worktree/) with the edge lens, the Shaper fires `arm: spec` with the adversarial lens, and Thomas fires `arm: slice` with the edge lens from a detached checkout at the slice head. At ticket scope the receipt is the `arm(ticket):` [pass-marker](/dictionary/pass-marker/).
 
-The arm wins at internal inconsistency against a project's own stated standard, because the arm reads the repository while the author reads the ticket. One measured case: a slice-scope payload of 6,904 added lines across 31 files passed a same-vendor skim that missed three hollow tests in a day; a ticket-scope pass on a smaller diff caught a real deadlock the fix from pass one had just introduced. Getting the range wrong is a documented failure on its own — if `--base` and resolved `HEAD` disagree, the companion can compare a branch to itself and return clean on zero commits reviewed, so every scope prints a range header before trusting the verdict.
+**Measurement.** Blind verification over 7 replayed tickets, 72 runs and 336 findings: the edge lens found 21 real defects per run at precision 0.77 and about 79k tokens. Codex found 29 of 34 real defects and Claude 17. The spec and slice lenses are `chưa đo`.
+
+When Codex is out of quota or returns no schema-valid output, the arm is `NOT RUN` with the reason, never a pass. At ticket scope `astra-review` then runs its Opus adversarial lens, recorded as same-vendor and advisory. Only the owner may accept proceeding without the arm.
 
 ## Why it matters here
 
-Astragentic pays for a second model's review, rather than running the same model twice, because two vendors catch different defect classes — a downstream measurement found a same-vendor correctness pass let a secrets-in-export defect through that the cross-vendor pass caught as P1. The cost is real invocation friction: quoting and argv differences between runtimes, a direct-exec path that can hang silently, and a range check that has to run before every verdict is trusted, or the gate can pass having reviewed nothing.
+Astragentic pays for a second vendor because the two catch different defect classes. The cost is about 160k Codex tokens per ticket when pass 2 runs, and a rule that a missing output fails closed.
 
 ## Seen in:
 
-- `harness/.agents/skills/codex-arm/SKILL.md`
-- `harness/.agents/memory/INDEX.md` — AST-095, AST-103
-- `RELEASE-NOTES.md` — "the cross-vendor arm fires per ticket, not once at a phase end"
+- `harness/.claude/skills/codex-arm/SKILL.md`
+- `harness/.claude/skills/astra-review/SKILL.md` (the Opus fallback lens)
+- `RELEASE-NOTES.md` — 6.1.18 and 6.1.19
 
 ## Usage:
 
-"Same-vendor review came back clean, ship it?" — "Fire the cross-vendor arm first — it's the one that's caught the P1s the same-vendor pass missed."
+"Same-vendor review came back clean, ship it?" — "Fire the arm first. If it prints NOT RUN, that is not a pass."

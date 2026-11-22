@@ -3,8 +3,7 @@
 // roles diagram sits at the top with this role lit and the other four still clickable,
 // and the key under it says which colour is which (§3).
 import DocsLayout from '../../layouts/DocsLayout.astro';
-import InteractiveDiagram from '../InteractiveDiagram.astro';
-import RoleKey from '../RoleKey.astro';
+import Figure from '../Figure.astro';
 import RoleBadge from '../RoleBadge.astro';
 import DefectCard from '../DefectCard.astro';
 import Prose from '../Prose.astro';
@@ -39,14 +38,14 @@ const sessionTag = `session: ${role.sessionTag.replace(/^session:\s*/i, '')}`;
   alternate={alternate}
   eyebrow={UI.roleEyebrow[lang]}
   lede={role.tagline}
+  harness={role.harness}
 >
   <p class="stamp" data-toc-skip>
     <RoleBadge role={id} note={sessionTag} />
   </p>
 
   <div class="figure" data-toc-skip>
-    <InteractiveDiagram slug="five-roles" lang={lang} hrefMap={hrefMap} activeId={id} maxWidth={860} />
-    <RoleKey lang={lang} />
+    <Figure slug="six-roles" lang={lang} hrefMap={hrefMap} activeId={id} maxWidth={860} />
   </div>
 
   <section class="read-section" id="does">

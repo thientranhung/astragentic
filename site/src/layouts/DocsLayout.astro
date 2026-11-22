@@ -4,6 +4,8 @@
 // and one set of section rules. The landing does not use it.
 import BaseLayout from './BaseLayout.astro';
 import SiteNav from '../components/SiteNav.astro';
+import HarnessStamp from '../components/HarnessStamp.astro';
+import { warnUnstamped } from '../lib/stamp';
 import { UI, type Lang, type PageKey } from '../lib/site';
 
 interface Props {
@@ -21,6 +23,8 @@ interface Props {
   lede?: string;
   /** Title set in mono — a skill name, a hook script. */
   monoTitle?: boolean;
+  /** Harness tag the page was written against, e.g. v6.1.19. */
+  harness?: string;
 }
 const {
   title,
@@ -33,7 +37,9 @@ const {
   heading,
   lede,
   monoTitle = false,
+  harness,
 } = Astro.props;
+await warnUnstamped();
 const path = Astro.url.pathname;
 // An eyebrow that says what the heading already says is a label, not information.
 const shown = (heading ?? title).trim().toLowerCase();
@@ -63,6 +69,7 @@ const label = eyebrow && eyebrow.trim().toLowerCase() !== shown ? eyebrow : unde
         {lede && <p class="lede">{lede}</p>}
         <slot name="lede" />
       </header>
+      <HarnessStamp harness={harness} lang={lang} />
       <slot />
     </div>
 

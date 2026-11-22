@@ -1,9 +1,9 @@
 ---
-// /hooks · /vi/hooks — four hooks, one anchored section each (build spec 4 §3), now in
+// /hooks · /vi/hooks — one anchored section per hook event group (build spec 4 §3), now in
 // Read mode (design spec 5 §2): the four are 3rem apart under one hairline each, not
 // four full screens of alternating ground.
 import DocsLayout from '../../layouts/DocsLayout.astro';
-import Diagram from '../Diagram.astro';
+import Figure from '../Figure.astro';
 import Prose from '../Prose.astro';
 import { getPage } from '../../lib/pages';
 import { HOOKS } from '../../lib/anchors';
@@ -19,8 +19,8 @@ const failuresRoute = ROUTES.failures[lang];
 
 const heading =
   lang === 'vi'
-    ? 'Bốn hook chạy ở bốn thời điểm cố định'
-    : 'Four hooks fire at four fixed moments';
+    ? 'Sáu loại sự kiện hook, bảy lệnh, một mod'
+    : 'Six hook event types, seven commands, one mod';
 const lede =
   lang === 'vi'
     ? 'Hook là phần duy nhất trong harness chạy mà không agent nào phải nhớ gọi nó.'
@@ -28,6 +28,7 @@ const lede =
 ---
 
 <DocsLayout
+  harness={page.harness}
   title={page.missing ? UI.hooksTitle[lang] : page.title}
   description={page.missing ? lede : page.description}
   lang={lang}
@@ -38,9 +39,13 @@ const lede =
 >
   {page.intro && <Prose slot="lede" html={page.intro} class="lede" />}
 
+  <div class="figure" data-toc-skip>
+    <Figure slug="hooks" lang={lang} maxWidth={860} />
+  </div>
+
   {
     HOOKS.map((hook) => {
-      const row = byId.get(hook.ast);
+      const row = hook.ast ? byId.get(hook.ast) : undefined;
       return (
         <section class="read-section" id={hook.id}>
           <p class="event mono" lang="en">{hook.event}</p>
@@ -55,9 +60,6 @@ const lede =
               <dd>{hook.effect[lang]}</dd>
             </div>
           </dl>
-          <div class="figure" data-toc-skip>
-            <Diagram slug={`hook-${hook.id}`} lang={lang} frame={860} />
-          </div>
           {page.sections[hook.id] && <Prose html={page.sections[hook.id]} class="read-body body" />}
           <p class="src mono">
             {hook.script && (
@@ -65,11 +67,16 @@ const lede =
                 {`harness/${hook.script} ↗`}
               </a>
             )}
+            {hook.also && (
+              <a href={`${REPO}/blob/main/harness/${hook.also}`} target="_blank" rel="noreferrer">
+                {`harness/${hook.also} ↗`}
+              </a>
+            )}
             {/* The ledger's filing number used to sit here in front of the lesson. It
                 says nothing to a reader outside the harness, so the lesson itself is
                 the link now (owner, 2026-09-12). */}
             {row &&
-              (hasLesson(hook.ast) ? (
+              (hook.ast && hasLesson(hook.ast) ? (
                 <a class="lesson" lang="en" href={`${failuresRoute}#${hook.ast.toLowerCase()}`}>
                   {lessonOf(row)}
                 </a>

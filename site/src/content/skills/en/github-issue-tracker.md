@@ -4,10 +4,11 @@ oneLiner: "Drive GitHub Issues as the harness tracker, with status in labels and
 group: adapter
 order: 4
 runtimes: [claude]
-source: harness/.agents/skills/github-issue-tracker/SKILL.md
+source: harness/.claude/skills/github-issue-tracker/SKILL.md
 rented: false
 lang: en
-updated: 2026-09-04
+updated: 2026-11-22
+harness: v6.1.19
 ---
 
 ## What it does
@@ -105,3 +106,9 @@ language → `dispatch-ticket` claims the winner with `--add-assignee @me` → m
 and writes `todo` on whatever it unblocked, in the same pass → `reconcile-tracker` measures the
 result against git. The two adapters in the same group are `jira-issue-tracker` and
 `linear-issue-tracker`, and `.agents/tracker-contract.md` sits above all three.
+
+## Two omissions worth stating
+
+- **GitHub has no priority field.** Urgency belongs in the body and in the router's ordering; a label nobody sorts by is noise.
+- **A blocker with no counterpart in GitHub is satisfied, not missing**, when the project arrived from another tracker and only active work moved. Keep the `**Blocked by:** <ids>` line in bodies for blockers that cannot be linked natively.
+<!-- source: harness/.claude/skills/github-issue-tracker/SKILL.md -->

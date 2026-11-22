@@ -12,11 +12,12 @@ interface Props {
   sourcePath?: string;
   runtimes?: string[];
   updated?: Date;
+  harness?: string;
   /** The Vietnamese page nearest this term, when it has one — not a translation, so
    *  it drives the language switch only (src/lib/terms.ts). */
   switchTo?: Record<Lang, string>;
 }
-const { title, description, eyebrow, sourcePath, runtimes, updated, switchTo } = Astro.props;
+const { title, description, eyebrow, sourcePath, runtimes, updated, switchTo, harness } = Astro.props;
 const hasMeta = Boolean(sourcePath || (runtimes && runtimes.length) || updated);
 ---
 
@@ -27,6 +28,7 @@ const hasMeta = Boolean(sourcePath || (runtimes && runtimes.length) || updated);
   switchTo={switchTo}
   eyebrow={eyebrow}
   lede={description}
+  harness={harness}
 >
   <div class:list={['term', hasMeta && 'term--meta']}>
     <article class="prose read-body">

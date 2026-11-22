@@ -1,12 +1,13 @@
 ---
+import fs from 'node:fs';
+import path from 'node:path';
 import { hl } from '../../lib/markup';
 // The landing, v2. Five sections in the order the reader asks the questions (home v2
 // spec): why this exists → what it does → how it runs → who it is for → how to start.
 // Everything the page used to carry about layers, hooks, the skill catalog and the
 // stack now lives only on its own page, still in the nav.
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import Diagram from '../Diagram.astro';
-import InteractiveDiagram from '../InteractiveDiagram.astro';
+import Figure from '../Figure.astro';
 import AdoptBlock from '../AdoptBlock.astro';
 import CodeFrame from '../CodeFrame.astro';
 import Shot from '../Shot.astro';
@@ -58,21 +59,21 @@ const commsPanes = panes(EX.comms?.commands);
 /** Photographs of the running system, keyed by slug. Until the owner sends the files,
  *  a dashed frame carrying the caption stands in for each one (home order spec §3). */
 const shots = copy.shots ?? {};
+/** A landing card draws its figure only when a diagram file exists for the slug. */
+const hasFigure = (slug: string) =>
+  fs.existsSync(path.join(process.cwd(), 'public', 'diagrams', `${slug}.en.html`));
 const roleMap = Object.fromEntries(ROLE_IDS.map((id) => [id, roleHref(lang, id)]));
 // §7 method: the skill-routing picture. Each skill opens the role that runs it.
 const skillRoutingMap: Record<string, string> = {
-  ticket: `${structureRoute}#coordination`,
-  update: `${structureRoute}#coordination`,
-  triage: roleHref(lang, 'thomas'),
-  wayfinder: roleHref(lang, 'thomas'),
-  to_questionnaire: roleHref(lang, 'thomas'),
+  tracker: `${structureRoute}#coordination`,
+  dispatch_ticket: roleHref(lang, 'thomas'),
   grill: roleHref(lang, 'shaper'),
   to_spec: roleHref(lang, 'shaper'),
   to_tickets: roleHref(lang, 'shaper'),
-  diagnosing_bugs: roleHref(lang, 'builder'),
   implement: roleHref(lang, 'builder'),
-  code_review: roleHref(lang, 'builder'),
-  simplify: roleHref(lang, 'builder'),
+  review: roleHref(lang, 'builder'),
+  arm: roleHref(lang, 'builder'),
+  qa_walk: roleHref(lang, 'qa'),
 };
 const trackerMap: Record<string, string> = {
   thomas: roleHref(lang, 'thomas'),
@@ -84,16 +85,12 @@ const trackerMap: Record<string, string> = {
     ]),
   ),
 };
-/** What a figure beside the prose occupies inside the 1040 breakout, once the column
- *  gap is taken off. The label floor in src/lib/diagram.ts is measured against it. */
-const SIDE_FRAME = 500;
 
 // §4 team: the client-studio picture. Every box goes somewhere the client would look next.
 const studioMap: Record<string, string> = {
   ...Object.fromEntries(Object.keys(ROLE_META).map((id) => [id, roleHref(lang, id)])),
   client: whyRoute,
   tracker: `${ROUTES.structure[lang]}#coordination`,
-  herdr: `${ROUTES.stack[lang]}#herdr`,
 };
 const lifecycleMap = Object.fromEntries(
   Object.entries(NODE_TO_STAGE).map(([node, stage]) => [node, `${failuresRoute}#${stage}`]),
@@ -116,11 +113,6 @@ const MODEL_CARD = 'models';
 /** Card 4 quotes one row of the same file, because the sentence on it is about the
  *  declaration that file holds. */
 const RUNTIME_CARD = 'runtime';
-/** What a thumbnail's SVG actually occupies inside a card at 1200: the band divided
- *  three ways, less the gaps, the card's hairline and the frame's own padding. The
- *  label floor in src/lib/diagram.ts is measured against this number, so it is measured
- *  off the rendered page rather than guessed. */
-const CARD_FRAME = 330;
 ---
 
 <BaseLayout title={page.title} description={page.description} lang={lang} page="home">
@@ -264,14 +256,7 @@ const CARD_FRAME = 330;
             <CodeFrame lines={ACTIVE_TABLE} lang={lang} label={ORCHESTRATOR_FILE} class="role-models-table" />
           </div>
         )}
-        <InteractiveDiagram
-          slug="five-roles"
-          lang={lang}
-          hrefMap={roleMap}
-          class="band"
-          flow
-          flowBack={{ shaper: 'spec + ticket', builder: 'handback + receipt', rin: 'gate verdict', qa: 'walk report' }}
-        />
+        <Figure slug="six-roles" lang={lang} hrefMap={roleMap} maxWidth={1040} />
         {EX.roles.figureNote && <p class="figure-note" set:html={hl(EX.roles.figureNote)} />}
       </div>
     </section>
@@ -301,7 +286,7 @@ const CARD_FRAME = 330;
       {/* Drawn from the owner's sketch: the tracker sits at the centre of the team and
           every edge passes through it. It stands here rather than in the hero because
           the reader has just met the five roles and can now name every box in it. */}
-      <InteractiveDiagram slug="client-studio" lang={lang} hrefMap={studioMap} class="band" flow="sequence" />
+      <Figure slug="client-studio" lang={lang} hrefMap={studioMap} maxWidth={1040} />
     </div>
   </section>
 
@@ -375,7 +360,7 @@ const CARD_FRAME = 330;
         )}
         {/* Three inputs answer the query together; the answer lands on the board; Thomas,
             the owner and a Builder read it; the Builder's new ticket comes back round. */}
-        <InteractiveDiagram slug="frontier-query" lang={lang} hrefMap={trackerMap} class="band" flow="sequence" flowSlots={[[0, 1, 2], [3], [4, 5, 6], [7]]} />
+        <Figure slug="frontier-query" lang={lang} hrefMap={trackerMap} maxWidth={1040} />
         {EX.tracker.more && (
           <a class="more-link" href={EX.tracker.more.href}>{EX.tracker.more.label}</a>
         )}
@@ -391,7 +376,7 @@ const CARD_FRAME = 330;
       <p class="sub">{copy.sections.lifecycle.sub}</p>
     </div>
     <div class="column">
-      <InteractiveDiagram slug="ticket-lifecycle" lang={lang} hrefMap={lifecycleMap} class="band" flow="sequence" />
+      <Figure slug="ticket-lifecycle" lang={lang} hrefMap={lifecycleMap} maxWidth={1040} />
       <ol class="steps band">
         {
           perStage.map(({ stage, number, caption, hits }) => (
@@ -440,14 +425,7 @@ const CARD_FRAME = 330;
         </dl>
         {/* Which skill a ticket goes to once Thomas has classified it; every node opens
             the page of the role that runs that skill. */}
-        <InteractiveDiagram
-          slug="skill-routing"
-          lang={lang}
-          hrefMap={skillRoutingMap}
-          class="band"
-          flow="sequence"
-          flowSlots={[[0], [1, 2, 3, 6, 9], [4, 7, 10], [5, 8], [11, 12, 13, 14]]}
-        />
+        <Figure slug="skill-routing" lang={lang} hrefMap={skillRoutingMap} maxWidth={860} />
         {EX.method.more && (
           <a class="more-link" href={EX.method.more.href}>{EX.method.more.label}</a>
         )}
@@ -509,14 +487,8 @@ const CARD_FRAME = 330;
                       ))}
                     </tbody>
                   </table>
-                ) : feature.diagram ? (
-                  <Diagram
-                    slug={feature.diagram}
-                    lang={lang}
-                    crop={feature.crop}
-                    frame={CARD_FRAME}
-                    caption={false}
-                  />
+                ) : feature.diagram && hasFigure(feature.diagram) ? (
+                  <Figure slug={feature.diagram} lang={lang} caption={false} />
                 ) : null}
               </div>
               <h3>{feature.title}</h3>
@@ -632,9 +604,6 @@ const CARD_FRAME = 330;
         )}
         {EX.customize.paragraphsAfter?.map((line) => <p class="lede" set:html={hl(line)} />)}
       </div>
-      <div class="column">
-        <InteractiveDiagram slug="customize-loop" lang={lang} class="band" flow="sequence" />
-      </div>
     </section>
   )}
 
@@ -734,9 +703,8 @@ const CARD_FRAME = 330;
 
   /* ── the five explain sections (home explain spec §A-§E) ─────────────────
      Every figure here runs the full band and every pane the full breakout. A drawing
-     set beside the prose at half the band renders archify's 11-unit titles at under
-     six pixels, and the growth cap in src/lib/diagram.ts cannot lift them to the 13px
-     floor — so these sections stack instead of splitting. */
+     set beside the prose at half the band renders its labels too small to read, so these
+     sections stack instead of splitting. */
   .explain .lede {
     max-width: 72ch;
     margin: 0 0 1.45rem;
@@ -802,9 +770,6 @@ const CARD_FRAME = 330;
   }
   .has-dot[data-role='builder'] .dot {
     background: var(--role-builder);
-  }
-  .has-dot[data-role='rin'] .dot {
-    background: var(--role-rin);
   }
   .has-dot[data-role='qa'] .dot {
     background: var(--role-qa);
@@ -1036,7 +1001,7 @@ const CARD_FRAME = 330;
     white-space: pre-wrap;
   }
 
-  /* ── role → mattpocock skill ── */
+  /* ── role → astra-* skill ── */
   .method-map {
     margin-block: 1.75rem 0;
     border-top: 1px solid var(--rule);
@@ -1114,16 +1079,21 @@ const CARD_FRAME = 330;
     border-bottom: 1px solid var(--ink-10);
     overflow: hidden;
   }
-  .thumb :global(.diagram) {
+  /* The whole figure, fitted (SVG default xMidYMid meet): a thumbnail is a picture of the
+     mechanism, and the card links to the page that shows it at full size. */
+  .thumb :global(.fig) {
     margin: 0;
     width: 100%;
+    height: 100%;
   }
-  /* The pane's own frame would be a second border inside the card's. */
-  .thumb :global(.diagram-svg) {
-    padding: 0;
-    background: none;
-    border: 0;
-    border-radius: 0;
+  .thumb :global(.fig-scroll) {
+    height: 100%;
+    overflow: hidden;
+  }
+  .thumb :global(.fig-scroll svg) {
+    min-width: 0;
+    width: 100%;
+    height: 100%;
   }
   .feature h3 {
     font-size: var(--text-h3);
@@ -1230,9 +1200,6 @@ const CARD_FRAME = 330;
   }
   .models [data-role='builder'] .dot {
     background: var(--role-builder);
-  }
-  .models [data-role='rin'] .dot {
-    background: var(--role-rin);
   }
   .models [data-role='qa'] .dot {
     background: var(--role-qa);

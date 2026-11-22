@@ -1,0 +1,67 @@
+---
+// A diagram-design figure. The source of truth is the standalone page
+// public/diagrams/<slug>.<lang>.html, drawn with the `astragentic` diagram-design profile
+// (repo root `.diagram-design`); that page is also the full-size view this figure links to.
+// The build inlines its <svg>, so the site fonts render the labels. Nodes that should link
+// carry `data-node="<id>"`; `hrefMap` turns them into links and `activeId` lights one.
+import fs from 'node:fs';
+import path from 'node:path';
+import { type Lang } from '../lib/site';
+
+interface Props {
+  slug: string;
+  lang?: Lang;
+  hrefMap?: Record<string, string>;
+  activeId?: string;
+  maxWidth?: number;
+  caption?: boolean;
+  class?: string;
+}
+const { slug, lang = 'vi', hrefMap = {}, activeId, maxWidth, caption = true, class: extra = '' } = Astro.props;
+
+const dir = path.join(process.cwd(), 'public', 'diagrams');
+let file = `${slug}.${lang}.html`;
+if (!fs.existsSync(path.join(dir, file))) {
+  console.warn(`[figure] ${file} missing; falling back to ${slug}.en.html`);
+  file = `${slug}.en.html`;
+}
+const page = fs.readFileSync(path.join(dir, file), 'utf8');
+const match = /<svg\b[\s\S]*<\/svg>/.exec(page);
+if (!match) throw new Error(`[figure] no <svg> in public/diagrams/${file}`);
+
+// Ids inside the SVG (markers, title, desc) are per file; a page may carry two figures.
+const suffix = `-${slug}-${lang}-${(globalThis.__figN = (globalThis.__figN ?? 0) + 1)}`;
+let svg = match[0]
+  .replace(/\sid="([^"]+)"/g, ` id="$1${suffix}"`)
+  .replace(/url\(#([^)]+)\)/g, `url(#$1${suffix})`)
+  .replace(/aria-labelledby="([^"]+)"/, (_, ids: string) =>
+    `aria-labelledby="${ids.split(/\s+/).map((i) => i + suffix).join(' ')}"`,
+  );
+svg = svg.replace(/<g data-node="([^"]+)">([\s\S]*?)<\/g>/g, (whole, id: string, body: string) => {
+  const active = id === activeId ? ' data-active' : '';
+  const href = hrefMap[id];
+  return href
+    ? `<a href="${href}" class="fig-link"><g data-node="${id}"${active}>${body}</g></a>`
+    : `<g data-node="${id}"${active}>${body}</g>`;
+});
+const full = `/diagrams/${file}`;
+const open = { vi: 'Mở bản đầy đủ', en: 'Open full size' }[lang];
+---
+
+<figure class={`fig ${extra}`} style={maxWidth ? `--fig-max:${maxWidth}px` : undefined}>
+  <div class="fig-scroll" set:html={svg} />
+  {caption && <figcaption><a href={full}>{open}</a></figcaption>}
+</figure>
+
+<style>
+  .fig { margin: 0 auto; max-width: var(--fig-max, var(--diagram)); }
+  .fig-scroll { overflow-x: auto; }
+  .fig-scroll :global(svg) { display: block; width: 100%; height: auto; min-width: 800px; }
+  .fig-scroll :global(svg text) { font-family: var(--font-sans); }
+  .fig-scroll :global(svg text[font-family*='Mono']) { font-family: var(--font-mono); }
+  .fig-scroll :global(.fig-link [data-node]) { cursor: pointer; }
+  .fig-scroll :global(.fig-link:hover [data-node] > rect:nth-of-type(2)),
+  .fig-scroll :global(.fig-link:focus-visible [data-node] > rect:nth-of-type(2)) { stroke-width: 2; }
+  .fig-scroll :global([data-active] > rect:nth-of-type(2)) { stroke: var(--accent); stroke-width: 2; }
+  figcaption { margin-top: 8px; font-family: var(--font-mono); font-size: 12px; color: var(--ink-muted); text-align: right; }
+</style>

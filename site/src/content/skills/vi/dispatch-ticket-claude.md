@@ -1,126 +1,123 @@
 ---
 title: dispatch-ticket-claude
-oneLiner: "Launch, giao brief và canh một pane Claude Code, theo đúng thứ tự không thể giả một lượt đã xong."
+oneLiner: "Launcher Claude Code, hành vi của dispatch mod và bước kiểm trước dispatch cho một pane được giao việc."
 group: adapter
 order: 1
 runtimes: [claude]
-source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md
+source: harness/.claude/skills/dispatch-ticket-claude/SKILL.md
 rented: false
 lang: vi
-updated: 2026-09-04
+updated: 2026-11-22
+harness: v6.1.19
 ---
 
 ## Nó làm gì
 
-`dispatch-ticket-claude` là nửa Claude Code của `dispatch-ticket`. Skill dùng chung giữ:
+**`dispatch-ticket-claude` là nửa Claude Code của `dispatch-ticket`: launcher và mod làm những bước mà dispatcher từng bỏ sót.** Giao thức chung (danh tính, luật worktree, định dạng brief, cleanup) ở `dispatch-ticket`. Mod `astragentic-dispatch` nằm trong payload, và mọi session Claude trong project tự nạp nó, không cần cờ hay setup.
 
-- **Định danh và chốt input.**
-- **Luật worktree.**
-- **Khuôn brief, cách gửi và cách canh.**
-- **Simplify và dọn dẹp.**
+Mod thay cho các bước thủ công sau:
 
-Skill này thêm bảng lệnh launch, bước kiểm trước khi dispatch, thứ tự gửi brief và những sự thật
-đã đo được của runtime Claude. Nó là adapter, không phải một giao thức thứ hai. Hãy đọc
-`dispatch-ticket` trước, vì mọi thứ không viết ở đây đều lấy từ đó.
-<!-- source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md -->
+- **Ghi tab và pane id** của pane vào record lúc session start, từ môi trường của host (nhãn tab Herdr, hoặc `ORCA_*` cộng `ASTRA_DISPATCH`, 6.1.0).
+- **Giao slash command bằng một SendMessage**: pane chạy dòng đầu như lệnh thật; pane trả `RECEIVED`.
+- **Báo `TURN-END`** khi một lượt kết thúc mà không còn agent con nào chạy, và đánh thức dispatcher.
+- **Bảo vệ pane đang chạy**: lệnh đóng tab, pane hoặc terminal trên pane giữa lượt bị từ chối; lệnh của host kia bị từ chối hẳn (một host cho một session).
+- **Chặn `ScheduleWakeup`** trong pane được dispatch (4.6.1).
+- **Hiện band** gồm các chip bước: Builder implement · tdd · ui · review · simplify · arm; Shaper align · spec · arm:spec · test-design · tickets; QA chỉ chip role.
 
-Xương sống của file là bốn hành động theo một thứ tự cố định:
+**Số đo.** Từ lúc một turn kết thúc tới lúc dispatcher được đánh thức: dưới một giây, so với khoảng trễ 67 giây của polling trạng thái pane (AST-097, AST-107).
 
-- **Gửi phần thân brief** bằng `SendMessage`.
-- **Gõ lệnh slash trần** vào pane.
-- **Xác nhận nó đã echo.**
-- **Arm Monitor.**
-
-Làm sai thứ tự sẽ sinh ra một trạng thái kết thúc giả mà mọi lớp kiểm phía sau đều đọc thành khoẻ
-mạnh.
-
-Thứ tự này đến từ hai lỗi riêng biệt rơi vào cùng bốn bước. Tin nhắn giữa hai session không phải
-một lượt của người dùng, nên lệnh slash không bao giờ chạy. Và một `SendMessage` chỉ có
-phần thân vẫn tạo ra một lượt, nên watch arm quá sớm sẽ thấy *lượt đó* kết thúc rồi báo idle cho
-một Builder chưa hề bắt đầu. Giờ thứ tự được ghi ngay tại chỗ dùng, không để người đọc tự
-suy.
-<!-- source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md -->
+**Cái giá.** Mod là chuông, không phải bằng chứng: `TURN-END` chỉ nói một lượt đã xong. Nó không thấy pane có process đã chết (watchdog của workspace thấy), và không phủ pane gate hay pane junior, vì hai loại này không chạy mod.
+<!-- source: harness/.claude/skills/dispatch-ticket-claude/SKILL.md; harness/.claude/skills/astragentic-dispatch/hooks/register.tsx -->
 
 ## Khi nào Thomas gọi nó
 
-| Tình huống trước mặt bạn | Gọi cái nào |
+| Trước mặt bạn là | Dùng |
 |---|---|
-| Một ticket đã claim, và `orchestrator.md` ghi agent ở role này chạy trên Claude | `dispatch-ticket` + `dispatch-ticket-claude` |
-| Pane QA gate hoặc pane junior, không chạy mod | giao thức watcher trong `dispatch-ticket`, và `dispatch-junior` cho junior |
-| Builder hoặc Shaper, tức role có ghi | Launch kèm `--dangerously-skip-permissions` |
-| Rin hoặc QA, tức role review | Launch không kèm; Rin không có dòng dự phòng nào |
-| Monitor báo `blocked` | Đọc pane, trả lời bằng `SendMessage`, arm một Monitor **mới** |
+| Ticket đã claim, role chạy trên Claude | `dispatch-ticket` cộng `dispatch-ticket-claude` |
+| Pane QA gate hoặc pane junior | Watcher script trong `dispatch-ticket`; pane junior thêm `dispatch-junior` |
+| Role ghi (Builder, Shaper) | Launch với `--dangerously-skip-permissions --allowedTools Grep,Glob` |
+| QA | Launch không có `--dangerously-skip-permissions`: gate chạy dưới permission |
+| Ticket label `quick` | Dòng launcher `builder-quick` |
 
-<!-- source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md -->
+<!-- source: harness/.claude/skills/dispatch-ticket-claude/SKILL.md -->
 
-## Cần sẵn gì
+## Điều kiện cần có
 
-- **Adapter của role có mặt trong worktree**: `test -f <worktree-path>/.claude/agents/<role>.md`.
-  Thiếu nghĩa là payload chưa được commit hoặc đã bị gitignore, và đây đúng là file mà
-  `claude --agent <role>` sẽ nạp.
-- **Dòng `orchestrator.md` của role này đã chốt**, có model và, chỉ khi dòng đó đặt, có effort.
-  Model và effort lấy từ dòng đó, không lấy từ trí nhớ.
-- **Tên session của Builder tra được** bằng `ListAgents`, vì `SendMessage` gọi session theo tên.
-- **Thứ đặt trong Monitor là `herdr-watch-terminal.sh`.** Monitor là kênh chuyển tin; script
-  mới là cái canh.
+- **Claude Code 2.1.294 trở lên.** `check-requirements.sh` từ chối bản cũ hơn; dưới ngưỡng này mod không nạp.
+- **Nhãn tab đặt trước khi launch**: mod đọc `ticket:`, `spec:`, `qa:` từ tab lúc session start.
+- **Mod đã commit trên branch** mà worktree checkout.
+- **Hai file có trong worktree**: `.claude/agents/<role>.md` và `.claude/skills/astragentic-dispatch/hooks/register.tsx`.
 
-## Nó để lại gì
+Sau launch, đọc record ngược lại: `.astraler/state/dispatch-record.json` phải có key của ticket với `pane_id` bằng pane vừa tạo. Không có thì một điều kiện đã hỏng; dừng, vì pane mod không biết là pane không ai giám sát.
+<!-- source: harness/.claude/skills/dispatch-ticket-claude/SKILL.md -->
 
-| Kết quả | Nơi nó nằm lại |
+## Launcher theo role
+
+Mỗi dòng là argv sau `--`; `herdr agent start --kind claude` tự cấp executable `claude`.
+
+| Role | Cờ |
 |---|---|
-| Phần thân brief | Session của Builder, gửi bằng `SendMessage` |
-| Lệnh gọi phase | Một lượt người dùng thật trong pane: một lệnh slash có tiền tố plugin, kèm Enter |
-| Bằng chứng nó đã tới | Lệnh echo trong pane, đọc lại trước khi làm bất cứ việc gì khác |
-| Cái canh | Mỗi pane một Monitor, `description: "builder-<ticket-id> status"`, `timeout_ms` và `persistent` đều ghi tường minh |
-| Dòng phán quyết | `TERMINAL:done` / `blocked` / `idle`, `TIMEOUT`, hoặc `NO_START`, mỗi dòng đều nêu pane của nó |
+| builder, shaper | `--dangerously-skip-permissions --allowedTools Grep,Glob --agent <role> --model <Model> --autocompact 300000` |
+| qa | `--agent qa --model <Model> --autocompact 300000` |
+| builder, ticket `quick` | dòng `builder-quick` nếu `orchestrator.md` có, ngược lại dòng `builder` |
 
-<!-- source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md -->
+`--effort` và `--advisor` chỉ thêm khi dòng role đặt giá trị. Model và effort lấy từ `orchestrator.md`, không lấy từ trí nhớ.
 
-## Lỗi đã biết
+- **`--allowedTools Grep,Glob` đi cùng `--dangerously-skip-permissions`.** Chỉ cờ bypass thì pane mất tool `Grep` và `Glob` (Claude Code 2.1.318, đo 2026-11-04).
+- **`--autocompact 300000` là trần context, không tuỳ chọn.** Cửa sổ của engine là 1M và pane chạy cả flow trong một context. Một project có Builder chạy trung vị 400–550k token context mỗi lượt gọi. Mod cũng compact pane kết thúc lượt trên trần này (`ASTRAGENTIC_CONTEXT_CEILING` đổi nó).
+- **Dán cả chữ `claude` vào đầu dòng** sẽ chạy `claude claude --agent …`; mod từ chối launch đó.
 
-Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Tất cả đều `promoted`.
+<!-- source: harness/.claude/skills/dispatch-ticket-claude/SKILL.md -->
 
-- **Brief và lệnh slash gộp vào một `SendMessage`.** Skill từng bảo Thomas gửi cả brief, kèm luôn lệnh slash, bằng một `SendMessage`,
-  với lý do rằng nó tới nơi như một lượt người dùng. Câu đó sai, và nó tồn tại qua bốn bản phát
-  hành. Đã sửa: phần thân đi bằng `SendMessage`, lệnh thì gõ.
-- **Một khoảng trống hợp đồng giữa hai pane.** Cùng một lỗi trong cùng một vòng cho ra một cú từ chối ồn ào ở pane Builder và
-  một cú thay thế im lặng ở pane Shaper, vì một hợp đồng có câu "chính cú fail là phát hiện" còn
-  hợp đồng song song thì không. Giờ cả hai đều có, và đó là lý do bước kiểm echo là bằng chứng
-  dương chứ không phải phép lịch sự.
-- **Watch bị arm nhầm bước.** Tách bước gửi thành hai bước làm cái watch arm nhầm vào bước còn lại. Đã sửa: arm
-  sau khi echo, không bao giờ arm sau phần thân.
-- **Một wait trần bị treo mà không báo lỗi.** Một `herdr agent wait` trần đặt trong Monitor vẫn chạy nhưng không phản hồi. Đo được nó
-  ngồi 10 phút 25 giây trước một pane vốn đã idle, trong khi một lệnh wait y hệt phát ra cùng
-  phút đó trả về sau 0 giây. Đã sửa: Monitor bọc script canh, script cắt lệnh wait thành lát và
-  lấy mọi phán quyết từ một `herdr agent get` mới.
-- **Thiếu `timeout_ms` cắt ngắn ca canh.** Một Monitor không đặt `timeout_ms` cắt một ca canh dài một tiếng xuống năm phút,
-  nên ticket càng lớn thì khả năng cái watch đã biến mất càng cao. Đã sửa: cả hai trường đều
-  tường minh trong mọi template, và thông báo `Monitor timed out` nghĩa là arm lại, không phải
-  nhiễu.
-- **Đọc nhầm `TERMINAL:done` là việc đã xong.** `TERMINAL:done` nghĩa là lượt đó đã kết thúc, không phải công việc đã xong.
-- **`success: true` từ `SendMessage` chỉ có nghĩa đã chuyển tới, không phải đã đọc.** Session nhận có thể giữ lại phần
-  thân chờ duyệt; một Builder bị giữ đã chạy xong lệnh slash của nó và tự ứng biến tiếp, đọc ra
-  giống hệt `working`. Đã sửa: sau bước kiểm echo, đọc pane tìm một câu chỉ brief mới có thể đưa
-  vào — `working` không phải là đã giao (AST-153).
-- **Worktree không mang file chưa tracked.** Một worktree chỉ mang nội dung đã tracked, đúng thứ mà bước kiểm adapter ở trên
-  sinh ra để bắt.
+## Brief và những gì quay về
 
-<!-- source: harness/.agents/memory/recurring-failure-modes.md -->
+Brief đi bằng một `SendMessage` tới tên session lấy từ `ListAgents`; dòng đầu là slash command. Đừng arm Monitor, gõ vào pane hay ghi tab và pane id bằng tay: mỗi việc đó là bản sao thứ mod đã làm.
+
+- **`RECEIVED`** bị tiêu thụ im lặng. Không thấy trong 90 giây thì dòng chuyển đỏ.
+- **`TURN-END`** đến như một prompt kèm lời cuối của pane và `Skills run:`. Đọc dòng này trước khi tin handback.
+- **Lượt kết thúc khi sub-agent của pane còn chạy thì bị giữ**; trần là 20 phút, sau đó chuông `reason=held-stale` và dòng chuyển đỏ.
+- **`reason=command-failed`**: pane từ chối dòng đầu, thường do tên lệnh sai.
+- **Pane QA luôn nhận TURN-END từ record** trong 30 giây, vì nó chạy dưới permission (đo 2026-10-27: 6 trên 6).
+- **`/dispatch-board`** mở danh sách mọi dispatch đang sống.
+- **`AskUserQuestion` bị từ chối** trong pane được dispatch.
+
+<!-- source: harness/.claude/skills/dispatch-ticket-claude/SKILL.md -->
+
+## Các bước bị từ chối, không chỉ ghi chú
+
+| Điều bị chặn | Cho tới khi |
+|---|---|
+| Commit nội dung đầu tiên của Builder | Có file test và một lần chạy test RED sau brief (4.5.2) |
+| Arm (`codex-arm`) | Built-in `code-review` đã có trong record |
+| Brief Builder không có `QA plan:` | Có `docs/qa/plan-<slug>.md` đã commit |
+| Brief Shaper không có `UX:` | Có PRD đã commit trên base và heading `### UJ-n` cho từng id (5.0.9) |
+| Brief cho ticket tracker báo chưa claim | Ticket được claim |
+| Mọi brief, khi một merge chưa có stamp ticket-done | `scripts/ticket-done.sh <id>` chạy |
+| Mọi brief, khi payload sửa mà chưa commit | Commit, hoặc dòng `Uncommitted-payload: <lý do>` |
+| Lệnh Bash chờ theo tên process (`until ! pgrep -f …`) hoặc vòng không có sleep | Dùng `cmd & pid=$!; while kill -0 $pid …; wait $pid` |
+
+Miễn trừ thuộc về dispatcher và đi trong brief: `TDD: n/a`, `REVIEW: n/a`, `SIMPLIFY: n/a`, `UX: n/a`, cùng lý do. Ticket label `quick` được miễn toàn bộ tdd, `astra-review`, simplify và ui; built-in review vẫn nợ ở arm và lúc merge. Mod đọc miễn trừ từ brief nó giao, không từ handback.
+
+Project thêm luật từ chối qua `.astraler/project/refused-in-dispatched-panes`: một regex mỗi dòng, dòng `# reason:` ngay trên là lời của lần từ chối.
+<!-- source: harness/.claude/skills/dispatch-ticket-claude/SKILL.md -->
+
+## Cleanup và overlay
+
+`git worktree remove <path>` trên worktree đã ghi record chạy `release-worktree-resources.sh <path>` trước: nó dọn process gốc ở đó, chạy teardown plug của project và đóng dấu đường dẫn. Đường dẫn phải là literal; đường dẫn có `$`, backtick hoặc `~` bị từ chối. Entry record bị xoá khi worktree và tab đều đã mất.
+
+`.astraler/project/overlays/` là của project, release không ghi vào: `overlays/<role>.md` nối vào system prompt của role mỗi lần render, `overlays/thomas.md` làm vậy trong session dispatcher, `overlays/dispatch-brief.md` nối vào mọi brief. Overlay bổ sung hợp đồng, không ghi đè; luật phải từ chối thì thuộc về plug script, vì văn bản chỉ dặn, chỉ hook mới chặn.
+<!-- source: harness/.claude/skills/dispatch-ticket-claude/SKILL.md -->
 
 ## Đang chạy đúng nếu
 
-- Bốn hành động diễn ra đúng thứ tự, và echo được đọc trước khi arm Monitor.
-- Ba Builder đang chạy nghĩa là ba Monitor, mỗi pane một cái, mỗi cái một description riêng.
-- Agent ở role review launch không kèm `--dangerously-skip-permissions`, agent ở role ghi thì có kèm.
-- Mọi thông báo đều được kiểm lại bằng `herdr agent get <pane-id>` trước khi ai đó hành động.
-- Không tin bất kỳ `idle` nào cho tới khi bộ chặn khởi động đã thấy `working` trước. Ô soạn thảo
-  Claude trống khớp luật idle, nên một brief chưa gửi đọc ra thành một Builder xong tức thì.
+- Record đọc lại có `pane_id` khớp pane vừa tạo.
+- Launch không có chữ `claude` thừa và có `--autocompact 300000`.
+- `TURN-END` có dòng `Skills run:` và merge không báo thiếu bước nào.
+- Mọi lần từ chối gate để lại dấu trong `refusals` của entry record và trong `~/.local/state/astragentic/harness-hook-events.log`.
+- Pane QA chạy không có `--dangerously-skip-permissions`.
 
-<!-- source: harness/.agents/skills/dispatch-ticket-claude/SKILL.md -->
+<!-- source: harness/.claude/skills/dispatch-ticket-claude/SKILL.md -->
 
 ## Nó nằm ở đâu trong chuỗi
 
-`dispatch-ticket` claim ticket rồi dựng worktree, tab và pane → `dispatch-ticket-claude` khởi
-chạy runtime, giao brief và arm cái watch → Builder chạy vòng khép kín của nó rồi handback →
-`WATCHING.md` và `CLEANUP.md` của skill dùng chung quyết định chuyện gì xảy ra ở mỗi dòng phán
-quyết.
+`dispatch-ticket` (giao thức chung) → **`dispatch-ticket-claude`** (launcher, mod, kiểm trước) → pane Builder → `TURN-END`. Mod là plugin `astragentic-dispatch`, có trang riêng. Pane gate và pane junior ở ngoài phạm vi của mod.

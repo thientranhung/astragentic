@@ -4,7 +4,7 @@ import type { Lang } from './site';
  *  per page). Nothing here may stay English on a Vietnamese page.
  *
  *  What is deliberately NOT translated, in either direction: role names (Thomas,
- *  Shaper, Builder, Rin, QA), skill names, shell commands, file paths, AST ids, and
+ *  Shaper, Builder, BA, QA, Quick Builder), skill names, shell commands, file paths, AST ids, and
  *  verbatim quotes lifted out of the ledger or the release notes. Those are proper
  *  nouns of the harness; a quote wearing a `verbatim` label is a third case and keeps
  *  `lang="en"` so a screen reader switches voice. */
@@ -66,15 +66,6 @@ export const UI = {
   close: { vi: 'Đóng', en: 'Close' },
 
   /* ── diagrams ── */
-  explore: { vi: 'Xem sơ đồ đầy đủ ↗', en: 'Open the full diagram ↗' },
-  /** The explore pages are archify's own standalone build and open in a new tab. The
-   *  note used to add that their chrome is English; the owner cut that as noise. */
-  exploreNote: {
-    vi: 'mở tab mới',
-    en: 'opens in a new tab',
-  },
-  /** Replaces archify's `aria-label="Focus …"` on a node that navigates. */
-  nodeOpens: { vi: 'mở trang', en: 'open page' },
   diagramHint: {
     vi: 'Bấm vào một ô để sang trang của nó.',
     en: 'Click a box to open its page.',
@@ -120,6 +111,7 @@ export const UI = {
   brownfield: { vi: 'Bốn skill cho repo có sẵn', en: 'Four Skills for an Existing Repo' },
 
   /* ── roles ── */
+  writtenAgainst: { vi: 'Viết theo', en: 'Written against' },
   roleEyebrow: { vi: 'ROLE', en: 'ROLE' },
   roleDoes: { vi: 'Nó làm gì mỗi lượt', en: 'What it does each turn' },
   roleRights: { vi: 'Nó được phép và không được phép', en: 'What it may and may not do' },
@@ -161,7 +153,7 @@ export const UI = {
   hookWhen: { vi: 'Bắn khi', en: 'Fires when' },
   hookScript: { vi: 'Script', en: 'Script' },
   hookEffect: { vi: 'Chặn hay ghi', en: 'Blocks or logs' },
-  hooksAll: { vi: 'Khám phá bốn hook →', en: 'Explore all four hooks →' },
+  hooksAll: { vi: 'Khám phá các hook →', en: 'Explore the hooks →' },
 
   /* ── why ── */
   whyTitle: { vi: 'Cách tiếp cận', en: 'Approach' },
@@ -185,7 +177,6 @@ export const UI = {
   /** The phone-width disclosure that holds the seven destinations. */
   menu: { vi: 'Menu', en: 'Menu' },
   /** Under a diagram too wide for the screen it is being read on. */
-  swipeDiagram: { vi: 'Vuốt ngang để xem hết sơ đồ', en: 'Scroll sideways for the whole diagram' },
   /** Under a screen capture on a phone, where the text inside it is too small to read. */
   shotZoom: { vi: 'Mở toàn màn hình để đọc rõ chữ', en: 'Open fullscreen to read the text' },
   /** On the button that does it. */

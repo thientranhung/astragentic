@@ -4,10 +4,11 @@ oneLiner: "Chạy Linear làm tracker của harness, và kiểm trần issue c�
 group: adapter
 order: 6
 runtimes: [claude]
-source: harness/.agents/skills/linear-issue-tracker/SKILL.md
+source: harness/.claude/skills/linear-issue-tracker/SKILL.md
 rented: false
 lang: vi
-updated: 2026-09-04
+updated: 2026-11-22
+harness: v6.1.19
 ---
 
 ## Nó làm gì

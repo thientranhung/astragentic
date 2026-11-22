@@ -1,0 +1,30 @@
+---
+// /review · /vi/review — how a change is reviewed, from the Builder's three lenses to the
+// slice gate. The whole page is the writer's markdown in src/content/pages/<lang>/review.md.
+import { getEntry, render } from 'astro:content';
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import Figure from '../Figure.astro';
+import { ROUTES, type Lang } from '../../lib/site';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const entry = await getEntry('pages', `${lang}/review`);
+if (!entry) throw new Error(`pages/${lang}/review.md missing`);
+const { Content } = await render(entry);
+const hasFigure = (await import('node:fs')).existsSync(`${process.cwd()}/public/diagrams/ticket-lifecycle.${lang}.html`);
+---
+
+<DocsLayout
+  title={entry.data.title}
+  description={entry.data.description}
+  lang={lang}
+  page="review"
+  eyebrow="Review"
+  alternate={ROUTES.review}
+  harness={entry.data.harness}
+>
+  {hasFigure && <div class="figure" data-toc-skip><Figure slug="ticket-lifecycle" lang={lang} maxWidth={960} /></div>}
+  <div class="read-body read-body--sections body prose"><Content /></div>
+</DocsLayout>

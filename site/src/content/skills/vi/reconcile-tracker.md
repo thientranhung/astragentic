@@ -4,10 +4,10 @@ oneLiner: "Đo tracker đối chiếu với git rồi báo ra bốn loại lệc
 group: upkeep
 order: 1
 runtimes: [claude]
-source: harness/.agents/skills/reconcile-tracker/SKILL.md
+source: harness/.claude/skills/reconcile-tracker/SKILL.md
 rented: false
 lang: vi
-updated: 2026-09-04
+updated: 2026-11-22
 ---
 
 ## Nó làm gì
@@ -29,7 +29,7 @@ lệch:
 - **Unclaimed in-progress.** Ticket kẹt ở trạng thái đang làm mà không ai giữ.
 
 Skill này không bao giờ ghi vào tracker, nó chỉ báo cáo.
-<!-- source: harness/.agents/skills/reconcile-tracker/SKILL.md -->
+<!-- source: harness/.claude/skills/reconcile-tracker/SKILL.md -->
 
 Kiểu hỏng mà skill này được dựng lên để chống rất cụ thể: một tracker chỉ được kiểm đối chiếu với
 chính nó. In-progress kèm một assignee vẫn còn trông y hệt nhau, dù ticket thật sự đang chạy hay
@@ -42,7 +42,7 @@ cái test phải nằm ngoài đoạn code mà nó kiểm.
 Skill này tồn tại vì một project thật đã đo trực tiếp: bốn ticket nằm in-progress với assignee vẫn
 còn sau khi code của chúng đã merge, cái cũ nhất trễ tròn một ngày, và không có gì trong đường ống
 báo lỗi để nói ra chuyện đó.
-<!-- source: harness/.agents/skills/reconcile-tracker/SKILL.md -->
+<!-- source: harness/.claude/skills/reconcile-tracker/SKILL.md -->
 
 ## Khi nào Thomas gọi nó
 
@@ -51,7 +51,7 @@ báo lỗi để nói ra chuyện đó.
 | Một cú merge vừa vào | Chạy ngay, vì đây chính là chỗ độ lệch sinh ra, và bước merge vốn đã bắt chạy lại frontier và báo cái gì đã đổi |
 | Một session mới đang bắt đầu | Chạy nó để bắt bất cứ thứ gì session trước bỏ dở giữa chừng lúc dispatch |
 | Chủ project hỏi "tracker có đúng không?" | Chạy nó. Câu trả lời phải được đo, không bao giờ được nhớ lại |
-<!-- source: harness/.agents/skills/reconcile-tracker/SKILL.md -->
+<!-- source: harness/.claude/skills/reconcile-tracker/SKILL.md -->
 
 ## Cần sẵn gì
 
@@ -64,7 +64,7 @@ ticket chưa từng merge sẽ không xuất hiện, mà đúng những ticket �
 stale-claim cần kiểm. Adapter tracker đang dùng (`github-issue-tracker`, `jira-issue-tracker`,
 hay `linear-issue-tracker`) quyết định cách đọc nửa phần tracker, nhưng bản thân
 `reconcile-tracker` không phụ thuộc tracker, vì nó chỉ cần `id`, `status` và `assignee`.
-<!-- source: harness/.agents/skills/reconcile-tracker/SKILL.md -->
+<!-- source: harness/.claude/skills/reconcile-tracker/SKILL.md -->
 
 ## Lỗi đã biết
 
@@ -91,7 +91,7 @@ hay `linear-issue-tracker`) quyết định cách đọc nửa phần tracker, n
   bao giờ bị gắn cờ là lệch.
 - Không có gì được ghi vào tracker như hệ quả của chính lượt chạy này. Mọi bản vá là một hành động
   riêng, làm sau, do Thomas làm tay.
-<!-- source: harness/.agents/skills/reconcile-tracker/SKILL.md -->
+<!-- source: harness/.claude/skills/reconcile-tracker/SKILL.md -->
 
 ## Nó nằm ở đâu trong chuỗi
 

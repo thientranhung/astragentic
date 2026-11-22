@@ -1,127 +1,132 @@
 ---
 title: dispatch-ticket
-oneLiner: "Giao một ticket đã sẵn sàng cho một Builder, trong worktree riêng của nó."
+oneLiner: "Giao một ticket đã claim cho một Builder trong pane nhìn thấy được, trên Herdr hoặc Orca, với worktree và branch riêng."
 group: main-flow
-order: 1
+order: 10
 runtimes: [claude]
-source: harness/.agents/skills/dispatch-ticket/SKILL.md
+source: harness/.claude/skills/dispatch-ticket/SKILL.md
 rented: false
 diagram: ticket-lifecycle
 lang: vi
-updated: 2026-09-04
+updated: 2026-11-22
+harness: v6.1.19
 ---
 
 ## Nó làm gì
 
-`dispatch-ticket` là chuỗi thao tác Thomas chạy mỗi lần một ticket đi từ "claim được" sang "đang
-có Builder làm thật". Chín bước, luôn theo đúng thứ tự đó:
+**`dispatch-ticket` là giao thức chung để Thomas đưa một ticket từ "đã claim" sang "có Builder đang làm".** Mỗi ticket có đúng một Builder, một worktree, một branch và một pane. Launcher, mod và bước kiểm trước dispatch nằm ở `dispatch-ticket-claude`; đọc cả hai skill.
 
-- **Preflight** ở lần dispatch đầu của session: watchdog đang chạy, payload đã commit.
-- **Resolve dòng orchestrator**: runtime, model, effort, và write-set.
-- **Claim ticket, rồi cắt branch và worktree**, theo đúng thứ tự đó.
-- **Mở tab kèm pane** trong Herdr, gate trên `foreground_cwd`.
-- **In ra bản dispatch đã resolve**, rồi launch bằng `dispatch-ticket-claude`.
-- **Giao brief**, dòng đầu là slash command của pha đó.
-- **Arm watcher ngay sau khi submit**: hai việc này là một, không phải hai.
-- **Rẽ nhánh theo exit status của watcher**, không bao giờ theo mỗi pane status.
-- **Nghiệm thu bằng artifact**, rồi cleanup.
+Tám bước, theo thứ tự cố định:
 
-Bước nào không ai kiểm là bước bị bỏ trong im lặng, và harness này chạy song song vài chuỗi như
-vậy cùng lúc, nên im lặng ở đây nghĩa là một Builder ngồi không trong một pane không ai nhìn.
-<!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
+- **Preflight** ở lần dispatch đầu của session: watchdog chạy, payload đã commit.
+- **Resolve dòng role** trong `orchestrator.md`: runtime, model, effort; thu write-set.
+- **Claim, rồi mới tạo branch và worktree.**
+- **Resolve workspace**, tạo tab và pane, qua cwd gate.
+- **In bản dispatch đã resolve**, launch, đọc record ngược lại.
+- **Gửi brief**: dòng đầu là slash command của pha.
+- **Rẽ nhánh theo turn end**: `TURN-END` với pane có mod, exit của watcher với pane gate hoặc junior.
+- **Verify bằng artifact**, rồi cleanup.
 
-Điểm khác của nó nằm ở chỗ đặt ranh giới: **claim xảy ra trước khi worktree tồn tại.** Ticket được
-gán trên tracker trước, nên hai session Thomas cùng nhặt trên frontier sẽ thấy claim của nhau thay vì
-đua nhau tạo cùng một branch. Vấn đề sinh ra luật này là hai session dùng chung một checkout và mất
-commit trong im lặng vì một lệnh `git switch` chạy song song. Mỗi session một worktree là cách chữa,
-và sự cô lập đó phủ mọi lệnh có ghi xuống disk, không riêng git.
-<!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
+Chuỗi nhận danh tính là `ticket → assignee (claim) → pane → worktree → branch → PR`, mỗi mắt xích một-một. Claim có trước worktree, nên hai session Thomas không cùng nhặt một ticket.
+
+**Số đo.** Một ticket nhỏ (≤ 20 dòng không phải test) đi qua Builder pane tốn trung vị 114 lượt gọi model và 8 phút pane; 5 ticket như vậy đã merge giữa 2026-10-27 và 11-12. Con số này là lý do Quick Builder tồn tại.
+
+**Cái giá.** Mỗi dispatch cần payload đã commit, workspace, tab, pane và record. Việc quá nhỏ không đáng chi phí này đi sang Quick Builder (mục dưới).
+<!-- source: harness/.claude/skills/dispatch-ticket/SKILL.md -->
+
+## Host: Herdr hoặc Orca, một host cho một session
+
+**Biến `ORCA_PANE_KEY` có nghĩa là Orca; ngược lại `HERDR_ENV=1` là Herdr.** Pane, watching và cleanup lấy dạng Orca từ `ORCA.md`, và không lệnh `herdr` nào chạy trong session Orca. Từ 6.1.0, mod từ chối lệnh `herdr` trong session Orca và lệnh `orca` trong session Herdr.
+
+| Tình huống | Quy tắc |
+|---|---|
+| Session khởi động trong Herdr | Chỉ dùng `herdr`; tab `ticket:<id>`, pane `builder:<id>` |
+| Session khởi động trong Orca | Chỉ dùng `orca`; xử lý handle theo `ORCA.md` |
+| Lệnh của host kia | Mod từ chối |
+
+<!-- source: harness/.claude/skills/dispatch-ticket/SKILL.md; harness/.claude/skills/dispatch-ticket-claude/SKILL.md -->
 
 ## Khi nào Thomas gọi nó
 
 | Tình huống trước mặt bạn | Gọi cái nào |
 |---|---|
-| Một ticket trên frontier, ô assignee còn trống | `dispatch-ticket` (claim trước, worktree sau) |
-| Chính cú dispatch, sau khi đã claim | `dispatch-ticket` cộng `dispatch-ticket-claude` |
-| Shaper, QA hay Rin cần pane chứ không chỉ Builder | Vẫn skill đó, vẫn cơ chế đó; chỉ khác tiền tố nhãn tab và pane |
-| Một pane đứng im hoặc kẹt giữa lượt | `WATCHING.md` (tài liệu đi kèm, không phải skill riêng) |
+| Một ticket trên frontier, assignee còn trống | `dispatch-ticket` (claim trước, worktree sau) |
+| Cú dispatch sau khi đã claim | `dispatch-ticket` cộng `dispatch-ticket-claude` |
+| Cần pane cho Shaper hoặc QA | Cùng skill; chỉ khác tiền tố tab (`spec:`, `qa:`) |
+| Việc nhỏ owner phán bằng mắt | Quick Builder pane, không ticket |
+| Pane đứng im hoặc kẹt giữa lượt | `WATCHING.md` (tài liệu đi kèm) |
 | Builder đã handback, tới lúc gỡ worktree | `CLEANUP.md` (tài liệu đi kèm) |
 
-<!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
+<!-- source: harness/.claude/skills/dispatch-ticket/SKILL.md -->
 
 ## Cần sẵn gì
 
-- Watchdog của workspace đang chạy cho project này. Dispatch mà không có watchdog là dừng hẳn,
-  không phải cảnh báo (`exit 1`, không phải `echo`).
-  <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
-- Payload harness đã được commit, không phải chỉ được allow-list qua mặt `.gitignore`. Worktree
-  chỉ chứa nội dung đã tracked, nên một file `.agents/roles/builder.md` còn untracked nghĩa là
-  Builder khởi động mà không có hợp đồng nào.
-  <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
-- `.agents/orchestrator.md` có một dòng thật (runtime, model, effort) cho role sắp dispatch. Một
-  dòng ghi `<set-me>` nghĩa là chưa quyết, và chưa quyết là dừng ngay tại lúc dispatch.
-  <!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
-- Đọc hợp đồng của role sắp dispatch trước (`builder.md` cho một Builder), vì skill này chỉ mang
-  phần cơ chế, không nói role đó phải làm gì với cơ chế ấy.
-  <!-- source: harness/.agents/roles/builder.md -->
+- **Watchdog chạy** cho workspace, xác nhận ở lần dispatch đầu của session (`WATCHING.md`).
+- **Payload đã commit**, không bị gitignore. Worktree chỉ chứa nội dung đã tracked; `PAYLOAD NOT VISIBLE` là dừng.
+- **Dòng của role trong `orchestrator.md` có giá trị thật.** `<set-me>`, dòng thiếu hoặc mơ hồ là dừng; không bao giờ mượn model của role khác.
+- **Base đã cập nhật**: `git rev-parse <base>` bằng `origin/<base>` trước khi tạo worktree.
+- **Write-set** của ticket, và write-set của mọi ticket đang chạy khác, khi còn dispatch nào đang sống.
+- **Với brief UI**: hai plug `design-spine` và `anti-slop-skills` trong `.astraler/project/` (5.1.0).
+
+<!-- source: harness/.claude/skills/dispatch-ticket/SKILL.md -->
+
+## Brief
+
+**Dòng đầu của brief là slash command của pha**: `/astra-implement-with-tdd <ticket>` cho Builder, `/astra-grill-with-docs` hoặc `/astra-to-tickets <spec-id>` cho Shaper. Các skill flow có `disable-model-invocation: true`, nên chỉ văn bản đến như lượt user mới tới được chúng.
+
+- **`FLOW:`** liệt kê các lệnh Skill theo thứ tự: skill anti-slop của project rồi `astra-ui` (ticket UI), `astra-review`, `simplify`, arm. TDD nằm bên trong `astra-implement-with-tdd`.
+- **`quick` / `full`** là label của ticket trên tracker (4.6.0), không bao giờ là dòng trong brief. Mod đọc label lúc gửi và ghi `kind` vào record. Ticket quick chỉ chạy built-in `code-review` và không nợ marker.
+- **`QA: walk|probe|verify|none`** và `QA plan: docs/qa/plan-<slug>.md`: mod từ chối brief thiếu plan.
+- **Brief UI dán nguyên `## Glance`, `## States`, `## Criteria`** của ticket (5.0.0). Thiếu một mục, brief không được gửi.
+- **Brief Shaper có dòng `UX:`** (5.0.9): `UX: docs/prd.md — UJ-1, UJ-2`, hoặc `UX: n/a — <lý do>`. PRD phải đã commit trên base.
+- **`Owned elsewhere:`** biến xung đột merge thành ghi chú handback; **`ADDRESSED TO:`** là dòng thứ hai để fork không nhận nhầm vai.
+
+**Số đo.** Trước khi có plug design, luật bằng văn xuôi đòi Builder đọc skill anti-slop chỉ chạy ở 1 trên 14 merge UI (2026-10-28 → 11-01).
+<!-- source: harness/.claude/skills/dispatch-ticket/SKILL.md -->
+
+## Quick Builder: việc không phải ticket
+
+Thay đổi owner phán bằng cách nhìn kết quả (`thomas.md`: Not a ticket) đi tới Quick Builder pane: không issue, không claim, không record, không marker lúc merge. Pane tự tạo worktree `ops/<slug>` và fast-forward vào main; git guard giữ nó trong hình dạng đó. Model và effort lấy từ dòng `builder-quick`.
+
+Thomas gửi lời owner trong một SendMessage; pane trả before/after. Việc cần test hoặc review thành ticket theo lời owner. Pane không phải lane: không có bell TURN-END và không có watchdog, nên pane im lặng thì đọc nó, không đợi.
+
+**Cái giá.** Lời của Thomas là một lượt trên root checkout, nên base local phải bằng origin và không merge nào còn chưa push trước khi giao.
+<!-- source: harness/.claude/skills/dispatch-ticket/SKILL.md -->
 
 ## Nó để lại gì
 
 | Kết quả | Nơi nó nằm lại |
 |---|---|
-| Cú claim | Ô assignee trên tracker: `builder/<ticket-id>` |
-| Chính bản dispatch | `.astraler/state/dispatch-record.json`, khoá theo ticket id: branch, worktree, workspace, tab, pane, runtime, write-set |
-| Worktree và branch | `<repo-root>/.claude/worktrees/<branch-slug>`, đã gitignore, gỡ lúc cleanup |
-| Bản brief | Gửi đi ở dòng đầu như một slash command, có tiền tố plugin (`/mattpocock-skills:implement <ticket>`) |
-| Phần việc của chính Builder | Commit trên branch của ticket, push trước khi handback |
+| Claim | assignee trên tracker, hoặc `identity` trong record khi assignee không giữ được `builder/<id>` |
+| Bản dispatch | `.astraler/state/dispatch-record.json`, khoá theo ticket: branch, worktree, workspace, tab, pane, runtime, write-set, `kind` |
+| Worktree và branch | `<repo-root>/.claude/worktrees/<branch-slug>`, gitignore, gỡ lúc cleanup |
+| Pane đã chạy flow nào | `skills_run` trong record; `TURN-END` mang dòng `Skills run:` |
+| Công việc của Builder | commit trên branch ticket, push trước handback |
 
-<!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md -->
+Record là thứ cleanup dùng để đóng đúng tab theo `tab_id`; entry bị xoá sau khi worktree và branch đã mất.
+
+<!-- source: harness/.claude/skills/dispatch-ticket/SKILL.md -->
 
 ## Lỗi đã biết
 
-Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Mọi mục dưới đây đều đang ở trạng
-thái `promoted`: đã sửa và đã nằm trong hợp đồng mà trang này mô tả.
+Lấy từ `harness/.agents/memory/recurring-failure-modes.md`; cả ba đều `promoted`.
 
-- **Checkout dùng chung làm mất commit.** Hai session root dùng chung một checkout, mất commit trong im lặng vì
-  một `git switch` chạy song song. Đã sửa: mỗi session một worktree, không ngoại lệ.
-- **Allow-list chưa commit thì vô hình.** Harness được allow-list nhưng chưa commit thì vô hình bên trong mọi worktree của
-  Builder. Đã sửa: kiểm tra commit trước cú dispatch đầu tiên.
-- **Brief dán vào mà chưa gửi.** Một brief nhiều dòng dán vào composer mà không submit, và pane báo
-  `idle` trong lúc nó nằm đó chưa gửi. Đã sửa: bấm Enter tường minh sau khi dán, cộng thêm bắt
-  watcher phải thấy trạng thái `working` rồi mới tin là lượt đã bắt đầu.
-- **"Done" chỉ có nghĩa lượt đã kết thúc.** `TERMINAL:done` nghĩa là lượt đã kết thúc, không phải việc đã xong; một Builder
-  đang đỗ ở background đọc ra thành done. Đã sửa: kiểm tiến trình OS và dòng status của runtime
-  trước khi kết luận là xong — phán quyết nằm ở các marker, kiểm bằng
-  `scripts/check-simplify-markers.sh`.
-- **`agent prompt` gộp vào một brief cũ chưa gửi thay vì thay thế nó.** Gửi lại sau `NO_START` nối văn bản mới vào
-  bất cứ thứ gì đang nằm sẵn trong composer rồi submit cả hai như một lượt, vẫn báo thành công
-  (AST-154). Đã sửa: đọc composer trước; xoá bằng `esc esc` — `ctrl-c` và `ctrl-u` đo được là để
-  nguyên văn bản cũ.
-- **Watcher không tự arm lại.** Watcher theo lượt chỉ phủ một lượt rồi thoát; không có gì arm lại, và cú arm lại
-  chính là bước hay bị bỏ ngay sau một tác vụ dài. Đã sửa: mỗi lượt mới có watcher mới.
-- **Dừng trước khi commit.** Một Builder dừng trước khi commit để lại phần việc chỉ tồn tại trên disk;
-  `git worktree remove` xoá nó không nói gì. Đã sửa: "commit, push, rồi mới trả về" là ba hành
-  động tách bạch.
+- **AST-097.** `TERMINAL:done` chỉ nghĩa là lượt đã kết thúc, không phải việc đã xong. Từ đó `TURN-END` là bell, và verify luôn theo artifact.
+- **AST-107.** `herdr agent wait` kéo dài có thể điếc và không bao giờ bắn. Pane có mod thay watcher bằng `TURN-END`.
+- **AST-154.** Gửi lại brief sau `NO_START` nối vào composer chưa gửi và submit cả hai. Đọc composer trước, xoá bằng `esc esc`.
 
 <!-- source: harness/.agents/memory/recurring-failure-modes.md -->
 
 ## Đang chạy đúng nếu
 
-- Watchdog được xác nhận đang chạy trước cú dispatch đầu tiên của session, không phải mặc định là có.
-- `.astraler/state/dispatch-record.json` có một entry cho mọi ticket đang mở, kèm write-set.
-- Mọi brief đã gửi đều có watcher arm ngay trong cùng hành động đó, không phải một bước riêng
-  làm sau.
-- Nhãn tab và nhãn pane khớp với role đã dispatch (`builder:<id>` so với `spec:<id>`,
-  `qa:<id>`, `rin:<id>`), vì tiền tố sai thì watchdog không nhìn thấy.
-- Cleanup chỉ gỡ worktree sau khi `git status --short` trống và `check-simplify-markers.sh` xanh.
+- Mọi ticket đang mở có entry trong `dispatch-record.json`, kèm write-set.
+- Tab và pane mang đúng tiền tố role (`ticket:`, `spec:`, `qa:`); tiền tố ngoài `TITLE_PREFIXES` của watchdog thì dispatch không được giám sát, không báo lỗi.
+- Record đọc lại có `pane_id` bằng pane vừa tạo.
+- Brief UI có đủ Glance, States, Criteria, và project đã khai hai plug.
+- Cleanup chỉ gỡ worktree sau khi `git status --short` trống.
 
-<!-- source: harness/.agents/skills/dispatch-ticket/SKILL.md, CLEANUP.md -->
+<!-- source: harness/.claude/skills/dispatch-ticket/SKILL.md -->
 
 ## Nó nằm ở đâu trong chuỗi
 
-Câu truy vấn frontier (nằm trong `thomas.md`) quyết định ticket nào tới lượt → `dispatch-ticket`
-claim nó và đặt một role `builder` vào pane → Builder chạy vòng khép kín của riêng nó
-(`implement` → review → simplify → `/skills/codex-arm`) rồi handback → `CLEANUP.md` của
-`dispatch-ticket` thu hồi worktree sau khi artifact đã được kiểm → cửa milestone đi qua
-`/skills/review-with-rin` trước khi merge. `thomas` và `builder` là hai hợp đồng role mà skill
-này nằm ở giữa.
+Frontier query → claim → **`dispatch-ticket`** (+ `dispatch-ticket-claude`) → Builder chạy `astra-implement-with-tdd` → `astra-ui` → `astra-review` → simplify → arm (`codex-arm`) → handback → `dispatch-qa-walk` → merge → `CLEANUP.md`. Hợp đồng role nằm ở `thomas.md` và `builder.md`.

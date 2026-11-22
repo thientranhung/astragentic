@@ -1,133 +1,67 @@
 ---
 title: codex-arm
-oneLiner: "Chạy một lượt Codex trên artifact đã xong, để một vendor khác đọc diff trước khi merge."
+oneLiner: "Một lệnh Codex trực tiếp, chỉ đọc, đọc artifact đã xong bằng lens của Astragentic trước khi merge."
 group: gate
-order: 1
+order: 2
 runtimes: [claude]
-source: harness/.agents/skills/codex-arm/SKILL.md
+source: harness/.claude/skills/codex-arm/SKILL.md
 rented: false
 diagram: cross-vendor-arm
 lang: vi
-updated: 2026-09-04
+updated: 2026-11-22
+harness: v6.1.19
 ---
 
-## Nó làm gì
+## Arm là gì
 
-`codex-arm` là phần cơ chế gọi của cánh tay cross-vendor: lượt review bằng Codex mà Thomas, hoặc
-ở phạm vi ticket là chính Builder, chạy trên một artifact đã hoàn thành trước khi nó được merge.
-Nó bao gồm lệnh gọi (`codex-companion.mjs`, runtime plugin của Codex), các bẫy về argv và quoting, và chỗ ghi lại phán quyết. Nó
-không quyết định *khi nào* chạy. Nhịp đó, cùng với trần hai lượt, thuộc về `thomas.md` và
-`builder.md`. Skill này sở hữu phần cách làm, không phải phần thời điểm.
-<!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
+Cross-vendor arm là một lần gọi `codex exec`, chỉ đọc, chạy trên artifact đã hoàn thành bởi vendor khác với tác giả. Nó không cần plugin Codex. `codex-arm` sở hữu lệnh gọi; `thomas.md` và `builder.md` sở hữu thời điểm chạy.
 
-Lý do nó tồn tại: reviewer cùng vendor và reviewer khác vendor bắt được hai lớp lỗi khác nhau, vì
-người viết đọc theo ticket còn cánh tay đọc theo repository. Điều này đã được đo trực tiếp.
+Tôi thay plugin bằng lệnh trực tiếp ở 6.1.18 và 6.1.19. Plugin không cho đặt effort, không nhận lens của ta, rò một broker mỗi lượt (AST-100) và trả exit 0 khi cấu hình hỏng (AST-095). Skill giảm từ 2.893 xuống 1.553 từ.
 
-Lượt arm theo ticket đầu tiên bắt được một cú reset có tính phá huỷ đang tự cấp quyền ra ngoài
-write transaction của nó, thứ mà chính lượt mutation-testing của tác giả đã bỏ sót. Ngay lượt kế
-tiếp, chạy trên bản vá cho phát hiện đó, lại bắt được một vòng deadlock thật do chính bản vá ấy
-tạo ra. Bỏ qua nó là đã ship một lỗi 500 lên production, đúng trên con đường gỡ kẹt duy nhất mà
-sản phẩm có.
-<!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
+**Số đo.** Bảy ticket đã merge được replay tại merge tree, 72 lượt chạy cho 336 finding, verify blind. Codex với edge lens tìm 21 defect thật mỗi lượt, precision 0,77, khoảng 79k token. Trên 34 defect thật, Codex tìm 29 và Claude 17.
 
-## Khi nào Thomas gọi nó
+**Cái giá.** Pass 2 phát sinh khi pass 1 để lại finding đã fix, nên đa số ticket chạy hai pass: khoảng 160k token Codex mỗi ticket.
 
-| Tình huống trước mặt bạn | Gọi cái nào |
-|---|---|
-| Diff của một ticket đã commit, root là Claude hoặc Builder đang tự chạy arm cho ticket của nó | `codex-arm` |
-| Một spec vừa xong, sắp cắt thành ticket | `codex-arm` ở `arm: spec`, do Thomas chạy từ base checkout |
-| Một slice đang khép lại | `codex-arm` ở `arm: slice`, tương tự như trên |
-| Cần chạy chính gate của Rin | Không phải skill này. Rin không tự chạy cánh tay từ bên trong lượt review của chính nó |
+## Ai chạy, với lens nào
 
-<!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
+| Phạm vi | Người chạy | Đứng ở | Lens |
+|---|---|---|---|
+| `arm: ticket` | Builder | worktree của chính nó | edge lens (`edge-lens.md`) |
+| `arm: spec` | Shaper | checkout detached tại commit của spec | adversarial lens |
+| `arm: slice` | Thomas | checkout detached tại head của slice | edge lens |
 
-## Cần sẵn gì
+**Số đo.** Lens ở ticket đã đo. Lens ở spec và slice là `chưa đo`: quota Codex hết trước khi đo được.
 
-- Artifact đang được review đã commit. Cánh tay đọc một cây git, không phải working
-  directory. <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
-- Ở phạm vi ticket, Builder chạy nó từ worktree của chính nó, nơi `HEAD` đã trỏ đúng các commit
-  đang được review. Ở phạm vi spec hoặc slice, Thomas tự resolve head từ một detached checkout tại
-  SHA đó, vì riêng `--base` không nói được companion đang so với head nào.
-  <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
-- Phần chữ focus phải tránh mọi ký tự đặc biệt của shell hay glob, không phải tránh theo một danh
-  sách cố định. Nó được truyền không quote, tách theo từ, nên một cụm viết tự nhiên như `option (a)`
-  không bao giờ tới được tiến trình; glob expansion của zsh giết lệnh ngay lúc parse.
-  <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
-- **`codex exec review` không mang được cả dải lẫn focus cùng lúc.** Đo trên codex-cli 0.155.1:
-  `codex exec review --base main "<focus>"` từ chối với lỗi *đối số `--base <BRANCH>` không dùng
-  chung được với `[PROMPT]`* (exit 2); `--commit <sha>` từ chối y hệt, và `-` — ký hiệu đọc từ
-  stdin — chính là positional đó, nên cũng bị từ chối. Cách sửa nghe hợp lý lại tệ hơn: pipe focus
-  vào mà không kèm `-` thì được chấp nhận và âm thầm bị bỏ qua — lượt chạy review dải đó dưới một
-  prompt chung chung rồi thoát mã 0 với một review đầy đủ, chứng minh bằng cách pipe một chuỗi
-  đánh dấu và nhận lại một review bình thường, không thấy chuỗi đó xuất hiện lần nào. Nên trên
-  root không phải Claude, cánh tay dùng `codex exec` trần, viết cả dải lẫn ý định thành text
-  prompt bình thường, và `-o`/`--output-last-message` để lấy message cuối ra file riêng của nó.
-  Trên root Claude, đường plugin là chính vì một lý do cụ thể chứ không phải sở thích:
-  `adversarial-review` nhận focus như một positional bình thường bên cạnh `--base`, đúng thứ mà
-  `codex exec review` từ chối.
-  <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
-- **Một lượt treo giờ là một job, không phải một phán quyết** (plugin ≥ 1.0.6). `--background`
-  trả về một job id; `status --all --json` liệt kê những gì đang chạy; `result <job-id> --json`
-  trả về output cuối cùng đã lưu của lượt review như một artifact riêng; `cancel <job-id> --json`
-  huỷ một lượt treo thay vì bỏ mặc nó. Các phát hiện có hình dạng khai báo sẵn trong
-  `schemas/review-output.schema.json` của plugin — `verdict`, `summary`, `findings[]` gồm
-  `severity / title / body / file / line_start / line_end / confidence / recommendation` — nên
-  gộp theo field chứ không phải parse từ văn xuôi.
-  <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
+## Một lệnh, một model
+
+Mọi pass chạy `gpt-6.2-astra` ở effort medium, đặt tường minh, không kế thừa. Đổi model là quyết định của owner.
+
+**Số đo.** Astra tìm 18 đến 21 defect thật mỗi lượt so với 16 đến 20 của Sol, tốn 70 đến 79k token so với 102 đến 124k.
+
+Lệnh truyền diff, commit message làm claim và ý định của owner bằng lời thường. Ý định quan trọng: pass không biết ý định chỉ tìm mâu thuẫn nội tại, pass có ý định tìm được chỗ phản lại điều owner muốn.
+
+## Phán quyết là của bạn và fail closed
+
+- **Không có output không phải là pass.** Lượt không có JSON đúng schema ghi `cross-vendor arm: NOT RUN` kèm lý do, không bao giờ tính là arm sạch.
+- **Mỗi finding có một disposition.** Verify tại dòng được trỏ, rồi ghi fixed, low, by design, false hoặc deferred.
+- **Tên model sai là NOT RUN.** Range rỗng thì dừng trước khi chạy.
+
+**Số đo.** Proof live 2026-11-21: một defect cài sẵn được nêu tên sau 39 giây, `AGENTS.md` thù địch ghi "fix and commit" không làm tree thay đổi, model lạ trả exit 1 và NOT RUN. Các lượt trực tiếp: 32/32 exit 0 với JSON hợp lệ.
+
+## Khi Codex hết quota
+
+Usage limit nghĩa là arm không chạy. Người đã chạy arm ghi `NOT RUN — usage limit`, và chỉ owner được chấp nhận đi tiếp mà không có arm. Ở phạm vi ticket, ticket vẫn được đọc theo hướng adversarial: `astra-review` chạy adversarial lens bằng Opus, ghi là cùng vendor và chỉ mang tính tham khảo. Lens cùng vendor không bao giờ hoàn tất arm.
+
+**Số đo.** Khi quota cạn, lệnh trả exit 1 với `NOT RUN — usage limit`. Trên lens đó, Opus tìm 13 defect thật, precision 0,71; Sonnet 7, precision 0,46.
 
 ## Nó để lại gì
 
-| Kết quả | Nơi nó nằm lại |
+| Chuyện gì xảy ra | Nơi nó nằm lại |
 |---|---|
-| Phán quyết | Vệt quyết định merge: ngày, phán quyết, cách xử lý từng phát hiện, vendor nào đã chạy |
-| Test có chạy hay không | Một dòng `Tests:`: `RAN` hoặc `NOT RUN — <lý do>` |
-| Dải mà cánh tay đọc | Dòng đầu của output: số commit và số file, để một dải 0 commit không lọt qua như một lượt sạch |
-| Codex không dùng được | `cross-vendor arm: NOT RUN — <lý do>`, và chỉ chủ project mới được chấp nhận nó |
-| Tài nguyên của một gate worktree | Giải phóng bằng `release-worktree-resources.sh` trước khi gỡ, không bao giờ sau |
-
-<!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
-
-## Lỗi đã biết
-
-Lấy từ `harness/.agents/memory/recurring-failure-modes.md`. Mọi mục dưới đây đều ở trạng thái
-`promoted`: đã sửa và đã nằm trong hợp đồng mà trang này mô tả.
-
-- **Base lệch checkout, review tự so với chính mình.** Companion resolve `HEAD` từ chính checkout nó đang chạy. Chỗ nào cái đó lệch với
-  `--base` thì lượt chạy đem base branch so với chính nó và trả về sạch. Bị bắt hai lần, bởi người
-  vận hành chứ không phải bởi gate. Đã sửa: in dải commit và file thành dòng output đầu tiên,
-  dừng khi dải có 0 commit.
-- **Thoát mã 0 khi cấu hình lỗi.** Companion thoát mã 0 khi lỗi cấu hình, và cache state khoá theo workspace root. Đã
-  sửa: không bao giờ rẽ nhánh theo exit code, chỉ theo nội dung file output; không bao giờ dùng
-  lại một đường dẫn gate worktree.
-- **Broker mồ côi tích lại qua các lượt review.** Mỗi lần gọi `codex-companion.mjs` lại sinh một tiến trình broker chạy lâu hơn cả
-  lượt review, đo được 92 tiến trình mồ côi (~405 MB) trên hai project. Đã sửa: giết broker theo
-  cwd thật trước khi gỡ gate worktree.
-- **Teardown cấp project giết luôn hạ tầng dùng chung.** Một target teardown ở cấp project bị dùng làm bước release đã dừng luôn container
-  test-database dùng chung mà mọi Builder đang chạy đều phụ thuộc vào đó. Đã sửa: giới hạn release
-  trong đúng worktree này, hoặc không release gì cả.
-- **Reviewer chỉ đọc vẫn dời được HEAD người khác.** Một reviewer chỉ đọc nhưng có shell vẫn dịch được `HEAD` của agent khác bằng
-  `git switch`. Đã sửa: reviewer là một agent đầy
-  đủ, nên cả cánh tay ở phạm vi ticket cũng có detached worktree riêng.
-
-<!-- source: harness/.agents/memory/recurring-failure-modes.md -->
-
-## Đang chạy đúng nếu
-
-- Dòng đầu của mọi lượt arm nêu rõ số commit và số file của dải đang được review.
-- Có mặt một dòng `Tests:`, ghi `RAN` hoặc nêu tên lý do không chạy.
-- Vendor được ghi trong vệt merge khớp với vendor thật sự đã chạy, và không bao giờ tính một lượt
-  cùng vendor thành lượt cross-vendor.
-- Không gate worktree nào tồn tại lâu hơn lượt review của nó. Tài nguyên được giải phóng trước khi gỡ,
-  trên mọi nhánh đường.
-- Một phát hiện blocking ở lượt 1 phải có lượt 2 chạy trên bản vá, không phải một phán đoán cảm
-  tính rằng có thể bỏ qua.
-
-<!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
+| Log của arm và disposition | `.scratch/gates/arm-<key>-<scope>-pass<N>.md` trên branch của artifact |
+| Kết quả ở ticket | receipt `arm(ticket):`, một commit rỗng ghi `Vendor: codex gpt-6.2-astra (direct, <lens>)` |
+| Kết quả ở spec và slice | decision trail của merge; slice gate ghi thêm `arm(slice):` |
 
 ## Nó nằm ở đâu trong chuỗi
 
-Vòng khép kín của một Builder chạy `implement` → review → simplify → `codex-arm` (phạm vi ticket)
-→ receipt `arm(ticket):` → handback, và bước cleanup của `/skills/dispatch-ticket` kiểm receipt
-đó trước khi gỡ worktree. Ở phạm vi spec và slice, Thomas chạy nó từ base checkout trước khi
-thả một `shaper` đang tạm dừng hoặc trước khi khép một slice. Nó không thay được
-`/skills/review-with-rin`, vì đó mới là gate, còn đây là lượt chạy nuôi gate đó.
+`astra-review` → `simplify` → `codex-arm` pass 1 → fold → pass 2 → receipt `arm(ticket):` → handback. Ticket do Codex build rồi merge ở station Claude được Claude arm, không phải file này.

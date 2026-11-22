@@ -3,7 +3,7 @@ import { ledger, type LedgerRow } from './data';
 import { splitSections } from './pages';
 import { REPO, type Lang } from './site';
 
-export const ROLE_IDS = ['thomas', 'shaper', 'builder', 'rin', 'qa'] as const;
+export const ROLE_IDS = ['thomas', 'ba', 'shaper', 'builder', 'qa', 'quick-builder'] as const;
 export type RoleId = (typeof ROLE_IDS)[number];
 
 /** Label, sublabel and session tag are copied verbatim from the `data-node-*` attributes
@@ -21,6 +21,12 @@ export const ROLE_META: Record<
     sessionTag: 'session: resident',
     cites: ['thomas.md', 'dispatch-ticket', 'reconcile-tracker'],
   },
+  ba: {
+    label: 'BA',
+    sublabel: 'sits in the user\'s seat',
+    sessionTag: 'session: owner-opened',
+    cites: ['ba.md'],
+  },
   shaper: {
     label: 'Shaper',
     sublabel: 'grill → spec → tickets',
@@ -33,17 +39,17 @@ export const ROLE_META: Record<
     sessionTag: 'session: per ticket',
     cites: ['builder.md', 'CLEANUP.md', 'MARKERS.md'],
   },
-  rin: {
-    label: 'Rin',
-    sublabel: 'verifies artifact + traces',
-    sessionTag: 'session: per milestone',
-    cites: ['rin.md', 'review-with-rin'],
-  },
   qa: {
     label: 'QA',
     sublabel: 'runs the real product',
     sessionTag: 'session: per walk',
     cites: ['qa.md', 'dispatch-qa-walk'],
+  },
+  'quick-builder': {
+    label: 'Quick Builder',
+    sublabel: 'small owner-asked changes, no ticket',
+    sessionTag: 'session: per task',
+    cites: ['quick-builder.md'],
   },
 };
 
@@ -51,10 +57,11 @@ export const ROLE_META: Record<
  *  page under /skills/ are listed; the contract file link covers the rest. */
 export const ROLE_SKILLS: Record<RoleId, string[]> = {
   thomas: ['dispatch-ticket', 'reconcile-tracker'],
+  ba: [],
   shaper: [],
   builder: [],
-  rin: ['review-with-rin'],
   qa: ['dispatch-qa-walk'],
+  'quick-builder': [],
 };
 
 export function roleHref(lang: Lang, id: string): string {
@@ -79,12 +86,13 @@ export interface RoleContent {
   sections: Record<string, string>;
   intro: string;
   missing: boolean;
+  harness?: string;
 }
 
 export async function getRole(lang: Lang, id: RoleId): Promise<RoleContent> {
   const entry = (await getEntry('roles', `${lang}/${id}`)) as
     | {
-        data: { title: string; tagline?: string; sessionTag?: string };
+        data: { title: string; tagline?: string; sessionTag?: string; harness?: string };
         body?: string;
         rendered?: { html?: string };
       }
@@ -110,5 +118,6 @@ export async function getRole(lang: Lang, id: RoleId): Promise<RoleContent> {
     sections,
     intro,
     missing: false,
+    harness: entry.data.harness,
   };
 }

@@ -1,132 +1,67 @@
 ---
 title: codex-arm
-oneLiner: "Run a Codex pass over a finished artifact so a different vendor reads the diff before it merges."
+oneLiner: "One direct, read-only Codex call that reads a finished artifact with an Astragentic lens before it merges."
 group: gate
-order: 1
+order: 2
 runtimes: [claude]
-source: harness/.agents/skills/codex-arm/SKILL.md
+source: harness/.claude/skills/codex-arm/SKILL.md
 rented: false
 diagram: cross-vendor-arm
 lang: en
-updated: 2026-09-04
+updated: 2026-11-22
+harness: v6.1.19
 ---
 
-## What it does
+## What the arm is
 
-`codex-arm` is the invocation mechanics for the cross-vendor arm: the Codex review that Thomas,
-or at ticket scope the Builder itself, runs over a completed artifact before it can merge. It
-covers the command (`codex-companion.mjs`, the Codex plugin runtime), the argv and quoting traps, and where the verdict gets recorded.
-It does not decide *when* to run. That cadence, and the two-pass cap, belong to `thomas.md` and
-`builder.md`. This skill owns the how, not the when.
-<!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
+The cross-vendor arm is one `codex exec` call, read-only, run over a completed artifact by the author's other vendor. It needs no Codex plugin. `codex-arm` owns the call; `thomas.md` and `builder.md` own when it fires.
 
-The reason it exists: a same-vendor reviewer and a cross-vendor one catch different defect
-classes, because the author reads the ticket and the arm reads the repository. This has been
-measured directly.
+I replaced the plugin with a direct call in 6.1.18 and 6.1.19. The plugin allowed no effort setting and no lens of ours, leaked a broker per pass (AST-100) and exited 0 on a configuration failure (AST-095). The skill shrank from 2,893 to 1,553 words.
 
-The first per-ticket arm run caught a destructive reset authorizing outside its write
-transaction, something the author's own mutation-testing pass had missed. The very next pass,
-over the fix for that finding, caught a real deadlock cycle the fix itself had introduced.
-Skipping it would have shipped a production 500 on the only unstick path the product had.
-<!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
+**Measurement.** Seven merged tickets were replayed at their merge trees and 72 runs produced 336 findings, verified blind. Codex with the edge lens found 21 real defects per run at precision 0.77 and about 79k tokens. Across the 34 real defects, Codex found 29 and Claude 17.
 
-## When Thomas reaches for it
+**Cost.** Pass 2 is owed whenever pass 1 left a fixed finding, so most tickets run two passes: about 160k Codex tokens per ticket.
 
-| What is in front of you | Reach for |
-|---|---|
-| A ticket's diff is committed, or the Builder is running its own ticket arm | `codex-arm` |
-| A spec is finished, about to be cut into tickets | `codex-arm` at `arm: spec`, run by Thomas from the base checkout |
-| A slice is closing | `codex-arm` at `arm: slice`, same as above |
-| Rin's own gate needs to run | Not this skill. Rin never runs the arm from inside its own review |
+## Who fires it, with which lens
 
-<!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
+| Scope | Fired by | Stands in | Lens |
+|---|---|---|---|
+| `arm: ticket` | Builder | its own worktree | edge lens (`edge-lens.md`) |
+| `arm: spec` | Shaper | a detached checkout at the spec commit | adversarial lens |
+| `arm: slice` | Thomas | a detached checkout at the slice head | edge lens |
 
-## Prerequisites
+**Measurement.** The ticket lens is measured. The spec and slice lenses are `chưa đo`: the Codex quota ran out before they could be.
 
-- The artifact under review is already committed. The arm reads a tree, not a working
-  directory. <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
-- At ticket scope, the Builder runs it from its own worktree, where `HEAD` already resolves to
-  the reviewed commits. At spec or slice scope, Thomas resolves the head from a detached checkout
-  at that SHA, because `--base` alone does not say which head the companion compares against.
-  <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
-- Focus text avoids every shell-special and glob-special character, not a fixed list. It is passed
-  unquoted, word by word, so a naturally written phrase like `option (a)` never reaches the
-  process; zsh's glob expansion kills the command at parse time.
-  <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
-- **`codex exec review` cannot carry both a range and a focus.** Measured on codex-cli 0.155.1:
-  `codex exec review --base main "<focus>"` refuses with *the argument `--base <BRANCH>` cannot
-  be used with `[PROMPT]`* (exit 2); `--commit <sha>` refuses the same way, and `-`, the stdin
-  marker, IS that positional, so it is refused too. The repair that suggests itself is worse:
-  piping the focus without `-` is accepted and silently discarded — the run reviews the range
-  under a generic prompt and exits 0 with a full review, proven by piping a marker string and
-  getting an ordinary review back with zero occurrences of it. So on a non-Claude root the arm
-  uses plain `codex exec`, with both the range and the intent written as ordinary prompt text and
-  `-o`/`--output-last-message` capturing the final message to its own file. On a Claude root the
-  plugin path is primary for a concrete reason, not a preference: `adversarial-review` takes the
-  focus as an ordinary positional beside `--base`, which is exactly what `codex exec review`
-  refuses.
-  <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
-- **A hang is a job now, not a verdict** (plugin ≥ 1.0.6). `--background` returns a job id;
-  `status --all --json` lists what's running; `result <job-id> --json` returns the finished
-  review's stored final output as its own artifact; `cancel <job-id> --json` cancels a hang
-  instead of leaving it to rot. Findings have a declared shape in the plugin's
-  `schemas/review-output.schema.json` — `verdict`, `summary`, `findings[]` of `severity / title /
-  body / file / line_start / line_end / confidence / recommendation` — so they fold by field
-  rather than by parsing prose.
-  <!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
+## One call, one model
+
+Every pass runs `gpt-6.2-astra` at medium effort, set explicitly and never inherited. Changing the model is the owner's decision.
+
+**Measurement.** Astra found 18 to 21 real defects per run against 16 to 20 for Sol, at 70 to 79k tokens against 102 to 124k.
+
+The call passes the diff, the commit messages as claims and the owner's intent in plain words. The intent matters: an intent-blind pass finds internal inconsistencies, and an intent-loaded pass finds betrayals of what the owner wants.
+
+## The verdict is yours and fails closed
+
+- **No output is not a pass.** A run with no schema-valid JSON is `cross-vendor arm: NOT RUN` with the reason, never a clean arm.
+- **Every finding gets a disposition.** Verify it at its line, then record fixed, low, by design, false or deferred.
+- **A bad model name is NOT RUN.** An empty range stops before launch.
+
+**Measurement.** Live proof on 2026-11-21: a planted defect was named in 39 s, a hostile `AGENTS.md` saying "fix and commit" left the tree untouched, and an unknown model exited 1 with NOT RUN. Direct runs: 32 of 32 exited 0 with valid JSON.
+
+## When Codex is out of quota
+
+A usage limit means the arm did not run. The one who fired the arm records `NOT RUN — usage limit`, and only the owner may accept proceeding without it. At ticket scope the ticket still gets an adversarial read: `astra-review` runs its Opus adversarial lens, recorded as same-vendor and advisory. A same-vendor lens never completes the arm.
+
+**Measurement.** With the quota exhausted, the call exited 1 with `NOT RUN — usage limit`. On that lens, Opus found 13 real defects at precision 0.71, Sonnet 7 at 0.46.
 
 ## What it leaves behind
 
 | What happened | Where it lands |
 |---|---|
-| The verdict | The merge decision trail: date, verdict, per-finding resolution, the vendor that ran |
-| Whether tests ran | A `Tests:` line: `RAN` or `NOT RUN — <reason>` |
-| The arm range | First line of output: commit and file count, so a 0-commit range cannot pass as clean |
-| Codex unavailable | `cross-vendor arm: NOT RUN — <reason>`, which only the owner may accept |
-| A gate worktree's resources | Released via `release-worktree-resources.sh` before removal, never after |
-
-<!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
-
-## Known failures
-
-Pulled from `harness/.agents/memory/recurring-failure-modes.md`. All entries below are marked
-`promoted`: fixed and already in the contract this page describes.
-
-- **A base mismatched with the checkout compares clean against itself.** The companion resolves `HEAD` from the checkout it runs in. Where that disagrees
-  with `--base`, the run compares the base branch to itself and returns clean. Caught twice by
-  the operator, not by the gate. Fixed: print the commit and file range as the first output line,
-  stop on 0 commits.
-- **Exits 0 on configuration failure.** The companion exits 0 on configuration failure and caches state keyed to the
-  workspace root. Fixed: never branch on exit code, only on the output file's content; never
-  reuse a gate worktree path.
-- **Orphaned brokers piled up across reviews.** Every `codex-companion.mjs` call spawned a broker process that outlived the
-  review, 92 orphans (~405 MB) measured across two projects. Fixed: kill the broker by real cwd
-  before removing the gate worktree.
-- **A project-level teardown killed shared infrastructure.** A project-level teardown target used as the release step stopped the shared
-  test-database container every live Builder was standing on. Fixed: scope release to this
-  worktree alone, or release nothing.
-- **A read-only reviewer still moved another agent's HEAD.** A read-only reviewer with shell access still moved another agent's `HEAD` via
-  `git switch`. Fixed: the reviewer is a full agent, so
-  even the ticket-scope arm gets its own detached worktree.
-
-<!-- source: harness/.agents/memory/recurring-failure-modes.md -->
-
-## It's working if
-
-- The first line of every arm run states the commit and file count of the range under review.
-- A `Tests:` line is present and reads `RAN` or names why not.
-- The recorded vendor in the merge trail matches the vendor that actually executed, and a
-  same-vendor lens is never counted as the cross-vendor pass.
-- No gate worktree survives past its review. Resources are released before removal, on every path.
-- A blocking finding from pass 1 gets a pass 2 over the fix, not a judgement call that it can be
-  skipped.
-
-<!-- source: harness/.agents/skills/codex-arm/SKILL.md -->
+| The arm's log and dispositions | `.scratch/gates/arm-<key>-<scope>-pass<N>.md` on the artifact's branch |
+| Ticket scope outcome | the `arm(ticket):` receipt, an empty commit naming `Vendor: codex gpt-6.2-astra (direct, <lens>)` |
+| Spec and slice outcome | the merge decision trail; the slice gate also writes `arm(slice):` |
 
 ## Where it fits
 
-A Builder's closed loop runs `implement` → review → simplify → `codex-arm` (ticket scope) →
-`arm(ticket):` receipt → handback, and `/skills/dispatch-ticket`'s cleanup checks that receipt
-before removing the worktree. At spec and slice scope, Thomas runs it from the base checkout
-before releasing a paused `shaper` or closing a slice. It does not substitute for `/skills/review-with-rin`, which is
-the gate itself rather than the pass feeding it.
+`astra-review` → `simplify` → `codex-arm` pass 1 → fold → pass 2 → `arm(ticket):` receipt → handback. A ticket built by Codex and merged at a Claude station is armed by Claude, not by this file.

@@ -1,4 +1,5 @@
 ---
+source: "harness/.claude/skills/, harness/.claude/skills/codex-arm/, harness/.agents/roles/, RELEASE-NOTES.md 5.0.0, 6.1.18, 6.1.19"
 title: "Cách tiếp cận"
 description: "Cách tiếp cận đứng sau Astragentic: mô hình orchestrator agent, issue tracker giữ trạng thái, vì sao không đặt điều phối vào subagent, review chéo giữa hai hãng AI, và một bộ khung tự sửa chữa."
 ---
@@ -112,7 +113,7 @@ có lỗi, không có tín hiệu nào báo ra.
 - **Không có tracker giữ trạng thái.** Trạng thái của subagent nằm trong context của session cha,
   mất đi khi session compact, và trong lúc tồn tại thì bạn không đọc được.
 - **Không có pane để nhìn.** Có lần một lượt dispatch chỉ được kể ra bằng chữ mà chưa từng được
-  gọi. Một pane trong herdr là thứ đếm được; một subagent trong tiến trình thì không.
+  gọi. Một pane trong Herdr hoặc Orca là thứ đếm được; một subagent trong tiến trình thì không.
 
 Và còn một điều nữa: subagent của Claude vẫn là Claude, nên không có lượt review chéo từ một hãng
 khác.
@@ -120,37 +121,46 @@ khác.
 Vì vậy Astragentic để subagent làm đúng việc của nó, bên trong một session, với một luật: fork
 phải có `isolation: "worktree"` và không được nhắn cho dispatcher.
 
-**Đánh đổi.** Bạn phải cài herdr và cấu hình một tracker, hai dependency mà subagent không cần.
+**Đánh đổi.** Bạn phải cài một host terminal (Herdr hoặc Orca) và cấu hình một tracker, hai dependency mà subagent không cần.
 Mỗi Builder tốn một worktree trên disk và vài giây setup. Mỗi lần dispatch tốn một lượt ghi và một
 lượt đọc trên tracker. Quy trình dài hơn, nhiều tên hơn phải nhớ. Tôi chọn trả giá đó vì lỗi im
 lặng đắt hơn nhiều.
 
-## why-mattpocock
+## why-astra-skills
 
-Astragentic không viết phương pháp riêng. Phần craft là `mattpocock-skills`: `wayfinder`,
-`grill-with-docs`, `to-spec`, `to-tickets`, `implement`, `code-review`. Astragentic bọc điều phối
-quanh đó.
+Phương pháp phát triển là của chính harness: bảy skill `astra-*`, mỗi skill gắn với đúng role và
+đúng pha dùng nó. Từ 5.0.0, payload không gọi tên plugin phương pháp nào bên ngoài.
+
+| skill | role | pha |
+|---|---|---|
+| `astra-ux` | Thomas, cùng owner | journey và actor, trước spec |
+| `astra-grill-with-docs` | Shaper | hỏi tới khi không còn nhánh mở |
+| `astra-to-spec` | Shaper | spec lên tracker |
+| `astra-to-tickets` | Shaper | ticket tracer-bullet, có cạnh prerequisite |
+| `astra-implement-with-tdd` | Builder | test đỏ trước, code sau |
+| `astra-ui` | Builder, QA | đối chiếu bề mặt với design spine |
+| `astra-review` | Builder | ba lens, một lượt triage |
 
 Lý do nằm ở chỗ vòng lặp được đặt ở đâu.
 
-- **Phương pháp này lặp ở đầu.** `grilling` hỏi cho tới khi không còn câu hỏi mở, nên spec chốt
-  xong mới viết code. Mọi review phía sau là một lượt có biên.
-- **Cách làm thường gặp lặp ở cuối.** Quyết định chưa chốt được đưa vào code, rồi mới chốt ở
-  review. Đó là khâu tốn kém nhất, và số vòng review không có điểm dừng tự nhiên.
+- **Lặp ở đầu.** `astra-grill-with-docs` hỏi cho tới khi không còn câu hỏi mở: agent đi tìm fact,
+  owner ra quyết định, mỗi câu trả lời mang nguồn. Spec chốt xong mới viết code, nên mọi review
+  phía sau là một lượt có biên.
+- **Không lặp ở cuối.** Quyết định chưa chốt mà đưa vào code thì chỉ chốt được ở review, khâu tốn
+  kém nhất, và số vòng review không có điểm dừng tự nhiên.
 
-Khác biệt nằm ở chỗ dừng. Hỏi cho hết ở đầu thì có điểm dừng: hết câu hỏi mở là xong. Chốt ở
-review thì không, vì mỗi vòng lại sinh câu hỏi mới, và vòng sau chủ yếu dọn thứ vòng trước để
-lại.
+Vì sao tự viết thay vì cài một bộ skill có sẵn: mod và gate của harness đọc thẳng tên skill. Brief
+của Builder được nhận ra bằng tên skill (4 regex trong mod), và gate TDD đọc tên skill trong record.
+Tên đó thuộc plugin bên ngoài thì một lần đổi ở upstream làm gate sai mà không báo lỗi. Hai nguồn
+mở, bộ skill của Matt Pocock và BMAD Method (đều MIT), được chưng cất trong repo làm tài liệu
+tham khảo và không được cài vào project: bộ thứ nhất gọn nhưng thiếu actor và state, bộ thứ hai
+đúng triết lý nhưng dài dòng.
 
-**Về Superpowers**, câu hay được hỏi kèm: đó là một hệ tốt và team của tôi có dùng ở dự án khác.
-Nó gói phương pháp và điều phối vào chung một session, trạng thái nằm trong file plan trên branch,
-và không có gì tương đương `to-tickets` sinh ticket kèm blocking edge lên tracker. Chạy cả hai
-trong một repo là hai bộ điều phối cùng quản lý một trạng thái, nên Astragentic không kết hợp.
+**Số đo.** Skill nạp vào một pane Builder full giảm từ 18.2k xuống 14.5k byte, vì Builder chiếm
+95% token của một dự án.
 
-**Đánh đổi.** Đây là phụ thuộc thật. `check-requirements.sh` dừng cứng khi thiếu
-`mattpocock-skills >= 1.3.1`. Tên skill nằm thẳng trong các contract, nên đổi phương pháp là viết
-lại contract. Và Astragentic chỉ vá được đường nối, không vá được plugin: khi một defect nằm bên
-trong `to-tickets`, cách xử lý đúng là để contract tính tới nó thay vì fork một bản vá.
+**Đánh đổi.** Harness tự giữ phương pháp, nên tự trả chi phí bảo trì nó. Mỗi skill có giới hạn
+kích thước và mỗi thay đổi đi qua selftest như mọi luật khác.
 
 ## why-cross-vendor
 
@@ -171,10 +181,17 @@ chính tiêu chuẩn dự án đã khai, điều người viết code khó nhậ
   test rỗng. Lượt đọc phạm vi ticket trên diff nhỏ hơn bắt được một deadlock thật mà bản vá của lượt
   trước vừa tạo ra.
 
-**Đánh đổi.** Ma sát lúc gọi. Cách quote và argv khác nhau giữa các runtime. `codex exec` đã có lần
-treo im lặng, nên cần timeout và một dispatcher theo dõi. Nguy hiểm nhất là phạm vi: nếu `--base` và
-`HEAD` resolve lệch nhau, companion so một branch với chính nó và trả về sạch trên không commit nào.
-Vì vậy mọi lượt đọc phải in ra dòng range trước khi verdict được tin.
+Từ 6.1.18, arm là một lệnh `codex exec` chỉ đọc gọi thẳng, không qua plugin: gpt-6.2-astra ở effort
+medium, edge lens ở ticket và slice, adversarial lens ở spec. Chi tiết và số đo ở trang
+[review](/vi/review/).
+
+**Số đo.** Đo blind trên 7 ticket replay: Codex edge lens tìm 21 defect thật mỗi lượt, precision
+0.77. Trên 34 defect thật, các lượt Codex cộng lại tìm 29, các lượt Claude tìm 17.
+
+**Đánh đổi.** Arm phụ thuộc quota của vendor kia. Hết quota thì arm ghi `NOT RUN` kèm lý do, không
+bao giờ tính là pass, và ticket rơi về lens adversarial của Claude trên Opus. Nguy hiểm nhất vẫn là
+phạm vi: range rỗng thì lệnh dừng trước khi chạy, và mọi lượt đọc in ra dòng range trước khi
+verdict được tin.
 
 ## why-self-repair
 
@@ -188,8 +205,8 @@ sau, vì không có "nó" nào đi tiếp. Người thì ít nhất còn nhớ m
 Cơ chế là một cuốn sổ, và một đường đi từ sổ vào contract.
 
 **Sổ.** Mỗi sự cố là một dòng trong một file chỉ thêm, mang mã cố định — `AST-136` hôm nay vẫn là
-`AST-136` sau một trăm mục nữa. Không đánh số lại, không xoá, kể cả sau khi lỗi đã được sửa. Hiện
-có 136 mục.
+`AST-136` sau một trăm mục nữa. Không đánh số lại, không xoá, kể cả sau khi lỗi đã được sửa. Mục cũ
+được chuyển sang file lưu trữ chứ không bị xoá; sổ đang mở hiện có {{meta.total}} mục.
 
 **Đường đi.** Dòng nào rút ra được luật thì luật đó không nằm lại trong sổ. Nó được viết vào một
 file mà agent thật sự đọc: contract của một role, một skill, hoặc một hook. Sổ là bằng chứng;

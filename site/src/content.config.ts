@@ -26,6 +26,7 @@ const skills = defineCollection({
     rented: z.boolean().default(false),
     diagram: z.string().optional(),
     updated: z.coerce.date().optional(),
+    harness: z.string().regex(/^v\d+\.\d+\.\d+$/).optional(),
   }),
 });
 
@@ -38,6 +39,7 @@ const dictionary = defineCollection({
     related: z.array(z.string()).default([]),
     diagram: z.string().optional(),
     updated: z.coerce.date(),
+    harness: z.string().regex(/^v\d+\.\d+\.\d+$/).optional(),
   }),
 });
 
@@ -48,6 +50,7 @@ const essays = defineCollection({
     description: z.string(),
     date: z.coerce.date(),
     readingMinutes: z.number(),
+    harness: z.string().regex(/^v\d+\.\d+\.\d+$/).optional(),
   }),
 });
 
@@ -60,6 +63,8 @@ const pages = defineCollection({
   schema: z.object({
     title: z.string(),
     description: z.string(),
+    source: z.string().optional(),
+    harness: z.string().regex(/^v\d+\.\d+\.\d+$/).optional(),
     acts: z
       .array(
         z.object({
@@ -83,6 +88,7 @@ const pane = z.object({ label: z.string().optional(), lines: z.array(z.string())
 const landing = defineCollection({
   loader: glob({ pattern: '[^_]*.{yaml,yml}', base: './src/content/landing' }),
   schema: z.object({
+    harness: z.string().regex(/^v\d+\.\d+\.\d+$/).optional(),
     hero: z
       .object({
         eyebrow: z.string().optional(),
@@ -103,8 +109,8 @@ const landing = defineCollection({
       })
       .optional(),
     /** Home v2 §Section 2: six cards, in the writer's order. `diagram` is a slug under
-     *  src/assets/diagrams and `crop` the node ids the card's thumbnail is cut down to;
-     *  a card with neither renders copy only. */
+     *  public/diagrams (diagram-design, see Figure.astro); `crop` is kept for the schema but
+     *  no longer read. A card with no diagram renders copy only. */
     features: z
       .array(
         z.object({
@@ -252,7 +258,6 @@ const landing = defineCollection({
         thomas: z.string().optional(),
         shaper: z.string().optional(),
         builder: z.string().optional(),
-        rin: z.string().optional(),
         qa: z.string().optional(),
       })
       .optional(),
@@ -297,6 +302,7 @@ const roles = defineCollection({
     title: z.string(),
     tagline: z.string().optional(),
     sessionTag: z.string().optional(),
+    harness: z.string().regex(/^v\d+\.\d+\.\d+$/).optional(),
   }),
 });
 

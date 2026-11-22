@@ -1,33 +1,87 @@
 [
   {
-    "name": "codex-arm",
+    "name": "astra-ux",
     "kind": "skill",
-    "oneLiner": "Invocation mechanics for the cross-vendor arm — the Codex pass Thomas fires over a completed artifact.",
+    "oneLiner": "Capture the owner's user journeys UJ-n and actors into the PRD before any spec is written.",
+    "group": "shaping"
+  },
+  {
+    "name": "astra-grill-with-docs",
+    "kind": "skill",
+    "oneLiner": "Stress-test a plan with the owner in rounds of numbered questions until the design tree has no unvisited branch.",
+    "group": "shaping"
+  },
+  {
+    "name": "astra-to-spec",
+    "kind": "skill",
+    "oneLiner": "Turn the answered Align frontier and the code into a spec published to the tracker.",
+    "group": "shaping"
+  },
+  {
+    "name": "astra-to-tickets",
+    "kind": "skill",
+    "oneLiner": "Cut a committed spec into tracer-bullet tickets with prerequisite edges, published in build order.",
+    "group": "shaping"
+  },
+  {
+    "name": "test-design",
+    "kind": "skill",
+    "oneLiner": "Write the risk-ranked QA plan docs/qa/plan-<slug>.md before the tickets are cut.",
+    "group": "shaping"
+  },
+  {
+    "name": "astra-implement-with-tdd",
+    "kind": "skill",
+    "oneLiner": "Build one ticket test-first: one failing test per criterion before the code that passes it.",
     "group": "main-flow"
   },
   {
-    "name": "dispatch-qa-walk",
+    "name": "astra-ui",
     "kind": "skill",
-    "oneLiner": "Thomas-only recipe to dispatch QA's product walk — the gate that uses the running system instead of reading the diff.",
+    "oneLiner": "A UI pass on one rendered surface against DESIGN.md and the ticket's Glance and States: audit, polish or upgrade.",
+    "group": "main-flow"
+  },
+  {
+    "name": "astra-review",
+    "kind": "skill",
+    "oneLiner": "Review a change on three axes in separate contexts, verify each finding at its line, give one verdict, route it.",
+    "group": "gate"
+  },
+  {
+    "name": "codex-arm",
+    "kind": "skill",
+    "oneLiner": "The cross-vendor arm: a direct read-only codex exec with an Astragentic lens over a finished artifact.",
     "group": "gate"
   },
   {
     "name": "dispatch-ticket",
     "kind": "skill",
-    "oneLiner": "Dispatch one claimed ticket as a visible Herdr pane — one Builder, one worktree, one branch, one pane.",
+    "oneLiner": "Dispatch one claimed ticket as a visible pane on Herdr or Orca: one Builder, one worktree, one branch.",
     "group": "main-flow"
   },
   {
     "name": "dispatch-ticket-claude",
     "kind": "skill",
-    "oneLiner": "Claude Code-specific dispatch protocol.",
+    "oneLiner": "Claude Code launcher, dispatch mod behaviour and pre-dispatch checks for a dispatched pane.",
     "group": "main-flow"
+  },
+  {
+    "name": "dispatch-qa-walk",
+    "kind": "skill",
+    "oneLiner": "Thomas-only recipe to dispatch QA's walk of the running product before merge.",
+    "group": "gate"
   },
   {
     "name": "dispatch-junior",
     "kind": "skill",
     "oneLiner": "Builder-only recipe to hand a ticket's implementation to a junior pane on another runtime (Grok first) and take the tree back for review.",
     "group": "main-flow"
+  },
+  {
+    "name": "astragentic-dispatch",
+    "kind": "skill",
+    "oneLiner": "The Claude Code mod: a dispatched pane records itself, runs its brief as a user turn and reports its turn end.",
+    "group": "adapter"
   },
   {
     "name": "github-issue-tracker",
@@ -54,10 +108,10 @@
     "group": "upkeep"
   },
   {
-    "name": "review-with-rin",
+    "name": "astragentic-update-install",
     "kind": "skill",
-    "oneLiner": "Thomas-only recipe to run Rin's milestone gate as an observable Herdr gate pane — brief, dispatch, collect the report, classify.",
-    "group": "gate"
+    "oneLiner": "Check the installed version, or stage and adapt a release in the current project.",
+    "group": "upkeep"
   },
   {
     "name": "builder",
@@ -72,12 +126,6 @@
     "group": "gate"
   },
   {
-    "name": "rin",
-    "kind": "role",
-    "oneLiner": "Milestone reviewer.",
-    "group": "gate"
-  },
-  {
     "name": "shaper",
     "kind": "role",
     "oneLiner": "Shaping session.",
@@ -88,5 +136,17 @@
     "kind": "role",
     "oneLiner": "Router.",
     "group": "entry"
+  },
+  {
+    "name": "ba",
+    "kind": "role",
+    "oneLiner": "Sits in the user's seat, read-only: clarifies the problem, walks the running product, hands off a markdown file or a ticket.",
+    "group": "shaping"
+  },
+  {
+    "name": "quick-builder",
+    "kind": "role",
+    "oneLiner": "Small owner-asked changes on an ops/* branch, no ticket.",
+    "group": "main-flow"
   }
 ]

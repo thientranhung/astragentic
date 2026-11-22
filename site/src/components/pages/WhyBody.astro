@@ -3,8 +3,7 @@
 // Read mode (design spec 5 §2). The list of five that used to open the page is gone:
 // the "On this page" rail is that list, and it stays on screen while you read.
 import DocsLayout from '../../layouts/DocsLayout.astro';
-import Diagram from '../Diagram.astro';
-import RoleKey from '../RoleKey.astro';
+import Figure from '../Figure.astro';
 import Prose from '../Prose.astro';
 import { getPage } from '../../lib/pages';
 import { WHY } from '../../lib/anchors';
@@ -23,18 +22,16 @@ const heading =
  *  reused where the argument needs it (PRD §5: every section carries a picture). */
 const FIGURE: Record<string, string> = {
   'why-astragentic': 'structure',
-  /* why-mattpocock had `layer-map` here. The drawing only restated the sentence above it
+  /* why-astra-skills (was why-mattpocock) had `layer-map` here. The drawing only restated the sentence above it
      and put two alternatives on the page with no relation drawn, so the owner cut it
      (2026-09-11). The same figure still opens the Tech stack page, where it is the subject. */
-  'why-not-subagents': 'hub-and-spokes',
   'why-tracker': 'frontier-query',
   'why-cross-vendor': 'cross-vendor-arm',
 };
-/** The figures that carry roles get the role key under them (design spec 5 §3). */
-const KEYED = new Set(['hub-and-spokes', 'cross-vendor-arm', 'frontier-query', 'structure']);
 ---
 
 <DocsLayout
+  harness={page.harness}
   title={page.missing ? UI.whyTitle[lang] : page.title}
   description={page.description}
   lang={lang}
@@ -57,8 +54,7 @@ const KEYED = new Set(['hub-and-spokes', 'cross-vendor-arm', 'frontier-query', '
         )}
         {FIGURE[why.id] && (
           <div class="figure">
-            <Diagram slug={FIGURE[why.id]} lang={lang} frame={860} />
-            {KEYED.has(FIGURE[why.id]) && <RoleKey lang={lang} />}
+            <Figure slug={FIGURE[why.id]} lang={lang} maxWidth={860} />
           </div>
         )}
       </section>

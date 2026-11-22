@@ -1,112 +1,68 @@
 ---
 title: dispatch-qa-walk
-oneLiner: "Start the app in its own worktree and let QA use it as a user, before a PR, a merge or a release."
+oneLiner: "Start the app in its own worktree and let QA use it as a user would, before a PR, a merge or a release."
 group: gate
-order: 2
+order: 3
 runtimes: [claude]
-source: harness/.agents/skills/dispatch-qa-walk/SKILL.md
+source: harness/.claude/skills/dispatch-qa-walk/SKILL.md
 rented: false
 lang: en
-updated: 2026-09-04
+updated: 2026-11-22
+harness: v6.1.19
 ---
 
 ## What it does
 
-This skill dispatches QA's product walk: the gate that judges the running system instead of the
-diff. It builds on `review-with-rin`'s gate-file setup and pane form rather than restating them,
-and adds the one thing a walk needs that no other gate does: an environment.
+`dispatch-qa-walk` is Thomas's recipe for dispatching QA, the gate that judges the running system instead of the diff. It picks the mode from the ticket's surface, arranges the target at the reviewed SHA in its own worktree, packs the plan and the brief, collects the report and commits it.
 
-Thomas creates a gate worktree at the reviewed SHA, starts the app there with the project's own
-command, then packs a brief with:
+Reading a diff and using a product are different acts, and a green suite proves neither. QA runs in a gate pane on either host, Herdr or Orca, and the gate mechanics live in `dispatch-ticket/GATE.md`.
 
-- **Persona and data state.**
-- **Every surface showing the same concept**, not only the changed ones.
-- **Design guidelines.**
-- **Browser consent and any authorized mutation.**
-- **The previous verified-clean list.**
+| The ticket changes | Mode | QA does |
+|---|---|---|
+| screens, journeys, links | walk | uses the UI: journeys, numbers across screens, deeplinks |
+| an endpoint or a service contract | probe | calls the API: contract, status codes, error and denied paths |
+| a job, a pipeline or data movement | verify | checks the job ran, data landed, logs are clean |
 
-From there it dispatches QA as a gate pane, collects the report, then stops the app and confirms
-the port is free before removing the worktree.
+**Measurement.** A browser walker once shipped across releases and never ran, and one half-day had nine fold rounds with a merge where QA was never dispatched. So the skill carries a counter: more than 10 merges touching a user-visible surface or public endpoint since the last run is a STOP. "None touched a surface" is a valid answer; "not counted" is not.
 
-The problem it handles is that reading a diff and using a product are different acts, and a green
-test suite proves neither. A test asserts what somebody thought to assert; what is missing,
-misordered, unreadable or unreachable on the actual screen is exactly what nobody wrote an
-assertion for.
-
-This gap is not hypothetical. An earlier harness version shipped a browser-walking agent across
-several releases that never ran once; a separate project logged nine fold rounds and a merge in
-half a day with QA never dispatched at all. So this skill carries its own counter: more than ten
-merges touching a user-visible surface since the last walk is a STOP, and "none touched a surface"
-is a valid answer while "not counted" is not.
-<!-- source: harness/.agents/skills/dispatch-qa-walk/SKILL.md -->
+**Cost.** A walk that starts an app is the most resource-bearing operation in the harness. Cleanup is ordered: kill the app, confirm the port is free, release the worktree's resources, then `git worktree remove --force`.
 
 ## When Thomas reaches for it
 
 | What is in front of you | Reach for |
 |---|---|
-| A PR or merge touches a user-visible surface or a public endpoint | `dispatch-qa-walk`, incremental depth |
-| A release or a slice is closing | `dispatch-qa-walk`, full depth |
-| More than 10 merges touched a surface since the last walk | `dispatch-qa-walk`, the STOP, not a judgement call |
-| Several tickets land together toward one PR or release | One walk at the batch head SHA, scoped to their union |
-| The change is backend-only, no surface a user meets | Not this skill. Record that the walk does not apply, then stop |
-<!-- source: harness/.agents/skills/dispatch-qa-walk/SKILL.md -->
+| A PR or merge touching a surface or public endpoint | `dispatch-qa-walk`, incremental depth |
+| A release or a slice closing | `dispatch-qa-walk`, full depth |
+| More than 10 surface merges since the last run | `dispatch-qa-walk`; this is a STOP |
+| Several tickets landing in one PR | one run at the batch head SHA, scoped to the union of surfaces |
+| No user-visible surface, endpoint or job | Nothing; write that it does not apply |
 
 ## Prerequisites
 
-- You are Thomas: this recipe is Thomas-only, the same precondition as `review-with-rin`.
-- The project has a rendering path documented in its entry doc. Where there is none, a walk
-  cannot run, and that itself is a finding for the owner.
-- Browser consent and any authorized mutation are named exactly in the dispatch. Without them
-  QA declines and records a COVERAGE GAP.
-- The previous verified-clean list, if one exists, comes from
-  `.astraler/state/qa-verified-clean.md`. Where there is none, QA runs full instead of
-  guessing what was covered.
-<!-- source: harness/.agents/skills/dispatch-qa-walk/SKILL.md -->
+- **Thomas only.** The recipe belongs to the station, not to a Builder.
+- **A way to run the project.** A repo with none cannot be walked, and that is a finding for the owner.
+- **Consent and every authorized mutation, named exactly.** Without them QA declines and records a COVERAGE GAP.
+- **The plan** `docs/qa/plan-<slug>.md` as the oracle; without it QA derives journeys from the source at lower confidence.
 
 ## What it leaves behind
 
 | What happened | Where it lands |
 |---|---|
-| QA's full walk report | `$GATE_FILE` → `.astraler/state/gate-history/walk-<artifact-key>-<short-sha>.md` |
-| The verified-clean list | `$VERIFIED_CLEAN_FILE` → `.astraler/state/qa-verified-clean.md` |
-| A record that the walk happened | An empty `qa(walk): <artifact-key> — <verdict>` commit at the walked head |
-| COVERAGE GAPS QA declined to close | The report body; Thomas classifies these like any finding |
-| A design-level product disagreement | `to-questionnaire`, routed to the owner |
-<!-- source: harness/.agents/skills/dispatch-qa-walk/SKILL.md -->
+| QA's report | `.scratch/qa/<key>-<mode>-<sha>.md`, committed alone, or the path of the `qa-report-path.sh` plug |
+| The trace matrix and verdict | in the report: PASS, CONCERNS or FAIL, then COVERAGE GAPS |
+| That the run happened | an empty commit `qa(walk): <key> — <verdict>` with `Mode:`, `Scope:`, `Verdict:`, `Report:` |
+| The verified-clean list | `.astraler/state/qa-verified-clean.md`, copied before cleanup |
 
-## Known failures
-
-- **Shipped but wired to nothing.** A browser-walking agent shipped for several releases and never ran once; no
-  contract owned it, no dispatcher named it. Promoted, fixed by wiring (contract, dispatcher,
-  reachability check), not by the missing file itself.
-- **Its own queue was invisible to itself.** The verifier's own dispatch queue was invisible to itself, so the run point had to
-  follow the artifact instead of a schedule. Promoted, cited by this skill and `thomas.md`.
-- **Moved text kept stale names.** Moving the walk's mechanics out of `review-with-rin` carried three stale lines
-  still naming the walker "Rin" and calling the walk "a mode." Promoted, moved text is not
-  re-homed until it is re-read in context.
-- **Teardown once stopped a shared container.** A running app leaks broker processes and database
-  containers per walk; one badly scoped teardown once stopped a shared test container every
-  live Builder stood on. Promoted, cleanup runs in order: kill the app, confirm the port,
-  scoped teardown, then `--force` the worktree.
-<!-- source: harness/.agents/memory/recurring-failure-modes.md -->
+One marker kind covers all three modes. A run that leaves only a report leaves nothing the merge gate can count.
 
 ## It's working if
 
 - The app ran in its own worktree at the reviewed SHA, never in the Builder's checkout.
-- Both `$GATE_FILE` and `$VERIFIED_CLEAN_FILE` exist, are non-empty, and were copied into
-  `.astraler/state/` before the gate worktree was removed.
-- The brief named every surface showing the changed concept, not only those in the diff.
-- The app was killed and the port confirmed free before `git worktree remove --force` ran.
-- A `qa(walk):` marker sits at the walked head, so the walk left a trace the merge gate counts.
-<!-- source: harness/.agents/skills/dispatch-qa-walk/SKILL.md -->
+- Both `$GATE_FILE` and `$VERIFIED_CLEAN_FILE` exist, are non-empty and were copied out before the worktree was removed.
+- The brief names every surface showing the changed concept, not only the changed ones.
+- The app was killed and its port confirmed free before the removal.
+- A `qa(walk):` marker sits at the walked head.
 
 ## Where it fits
 
-A ticket closes through `/skills/dispatch-ticket`, `/skills/review-with-rin` reads the diff and
-checks that the process left its traces, and `dispatch-qa-walk` is the gate beside it that reads
-nothing. It drives the running product instead, because a coherent diff and a coherent product
-are different claims. Findings from both gates route the same way: `qa` advises, Thomas
-classifies, the Builder fixes, and a genuine product decision goes to the owner. The walk runs
-inside a [gate](/dictionary/gate/) and a [worktree](/dictionary/worktree/) it force-removes at cleanup, which is
-why the verified-clean list has to be written outside that worktree first.
-<!-- source: harness/.agents/skills/dispatch-qa-walk/SKILL.md -->
+`dispatch-ticket` → Builder handback → `dispatch-qa-walk` → `qa(walk):` marker → merge. QA advises, Thomas classifies, the Builder fixes, and a product decision goes to the owner.

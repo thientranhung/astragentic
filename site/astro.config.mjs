@@ -50,28 +50,6 @@ function pairFor(pathname) {
 }
 
 // https://astro.build/config
-/* The standalone diagram pages live in public/ as `explore/<slug>/index.html`, which
- * Cloudflare serves at `/explore/<slug>/` like any other directory. Vite's public-dir
- * handler does not resolve a directory index, so in dev that address is a 404 while
- * production serves it — the split this whole arrangement exists to avoid. One line of
- * dev-only middleware appends the index. Nothing here touches the build.
- */
-function exploreDirectoryIndex() {
-  return {
-    name: 'astragentic:explore-directory-index',
-    apply: 'serve',
-    configureServer(server) {
-      server.middlewares.use((req, _res, next) => {
-        const [path, query = ''] = (req.url ?? '').split('?');
-        if (path.startsWith('/explore/') && path.endsWith('/')) {
-          req.url = `${path}index.html${query ? `?${query}` : ''}`;
-        }
-        next();
-      });
-    },
-  };
-}
-
 export default defineConfig({
   site: 'https://astragentic.thisistool.com',
   // The dev toolbar is position:fixed, so it lands in the middle of a full-page
@@ -83,10 +61,7 @@ export default defineConfig({
     // matching path, which only works where the two languages share a slug; ours do not
     // (`/why` ↔ `/vi/cach-tiep-can`), so it silently left those pages unpaired. The
     // pairing is done here instead, from the same table the pages link by.
-    // `/explore/*` is archify's standalone build under public/ and is not part of the
-    // reading site, so it stays out.
     sitemap({
-      filter: (page) => !page.includes('/explore/'),
       serialize: (item) => {
         const pair = pairFor(new URL(item.url).pathname);
         return pair ? { ...item, links: pair } : item;
@@ -142,7 +117,7 @@ export default defineConfig({
     },
   },
   vite: {
-    plugins: [tailwindcss(), exploreDirectoryIndex()],
+    plugins: [tailwindcss()],
   },
   server: {
     port,

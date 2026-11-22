@@ -4,9 +4,7 @@
 // the prose in src/content/pages/<lang>/structure.md, split by `## runtime`,
 // `## harness`, `## coordination`, `## project`, `## good-parts`.
 import DocsLayout from '../../layouts/DocsLayout.astro';
-import InteractiveDiagram from '../InteractiveDiagram.astro';
-import Diagram from '../Diagram.astro';
-import RoleKey from '../RoleKey.astro';
+import Figure from '../Figure.astro';
 import Prose from '../Prose.astro';
 import { getPage } from '../../lib/pages';
 import { GOOD_PARTS, LAYERS } from '../../lib/anchors';
@@ -44,6 +42,7 @@ const heading = lang === 'vi' ? 'Astragentic gồm bốn lớp' : 'Astragentic i
 ---
 
 <DocsLayout
+  harness={page.harness}
   title={title}
   description={page.description}
   lang={lang}
@@ -54,8 +53,7 @@ const heading = lang === 'vi' ? 'Astragentic gồm bốn lớp' : 'Astragentic i
   {page.intro && <Prose slot="lede" html={page.intro} class="lede" />}
 
   <div class="figure" data-toc-skip>
-    <InteractiveDiagram slug="structure" lang={lang} hrefMap={structureMap} explore maxWidth={860} />
-    <RoleKey lang={lang} />
+    <Figure slug="structure" lang={lang} hrefMap={structureMap} maxWidth={860} />
     <p class="hint mono">{UI.diagramHint[lang]}</p>
   </div>
 
@@ -84,8 +82,7 @@ const heading = lang === 'vi' ? 'Astragentic gồm bốn lớp' : 'Astragentic i
             <p>{part.line[lang]}</p>
             {part.id === 'cross-vendor-arm' && (
               <div class="part-figure">
-                <Diagram slug="cross-vendor-arm" lang={lang} frame={780} />
-                <RoleKey lang={lang} />
+                <Figure slug="cross-vendor-arm" lang={lang} maxWidth={780} />
               </div>
             )}
             {part.id === 'ledger' && (

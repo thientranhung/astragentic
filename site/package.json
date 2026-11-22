@@ -7,13 +7,12 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "node scripts/normalise-explore-pages.mjs && astro build",
+    "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
     "data": "node scripts/build-data.mjs",
     "tokens": "node scripts/build-tokens.mjs",
-    "deploy": "node scripts/normalise-explore-pages.mjs && astro build && wrangler deploy",
-    "explore": "node scripts/normalise-explore-pages.mjs"
+    "deploy": "astro build && wrangler deploy"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.0",

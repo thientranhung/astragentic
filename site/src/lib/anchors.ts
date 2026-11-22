@@ -16,12 +16,17 @@ export interface HookCard {
   event: string;
   /** The script the hook shells out to, or null when the body is inline. */
   script: string | null;
+  /** A second script that fires on the same event. */
+  also?: string;
   when: Dict;
   effect: Dict;
-  /** The ledger entry that measured the failure this hook answers. */
-  ast: string;
+  /** The ledger entry that measured the failure this hook answers, when there is one. */
+  ast?: string;
 }
 
+/** Six event types, seven commands in `harness/.claude/settings.json`, plus the
+ *  `astragentic-dispatch` mod. One section per card; `post-tool-use` covers PostToolUse and
+ *  PostToolUseFailure, `session-start` covers both SessionStart commands. */
 export const HOOKS: HookCard[] = [
   {
     id: 'pre-tool-use',
@@ -38,6 +43,44 @@ export const HOOKS: HookCard[] = [
     ast: 'AST-102',
   },
   {
+    id: 'post-tool-use',
+    event: 'PostToolUse · PostToolUseFailure · Bash',
+    script: 'scripts/hook-test-run.py',
+    when: {
+      vi: 'Sau mỗi lệnh Bash, kể cả lệnh thoát non-zero.',
+      en: 'After every Bash command, including one that exits non-zero.',
+    },
+    effect: {
+      vi: 'Ghi lần chạy test và exit status của nó, để commit gate biết một test đã đỏ trước commit đầu tiên hay chưa.',
+      en: 'Records each test run and its exit status, so the commit gate knows whether a test went red before the first commit.',
+    },
+  },
+  {
+    id: 'session-start',
+    event: 'SessionStart · compact, và mọi session',
+    script: 'scripts/hook-contract-reload.py',
+    also: 'scripts/hook-tracker-status.py',
+    when: {
+      vi: 'Ngay sau khi context bị nén, và ở đầu mọi session.',
+      en: 'Right after the context is compacted, and at the start of every session.',
+    },
+    effect: {
+      vi: 'Nạp lại contract của role sau compact, và đưa số đếm của tracker vào context.',
+      en: 'Re-arms the role contract after compaction, and puts the tracker counts into context.',
+    },
+    ast: 'AST-069',
+  },
+  {
+    id: 'subagent-stop',
+    event: 'SubagentStop',
+    script: null,
+    when: { vi: 'Khi một subagent dừng.', en: 'When a subagent stops.' },
+    effect: {
+      vi: 'Ghi loại agent, id và session vào log hook của máy. Không chặn gì cả.',
+      en: 'Logs the agent type, id and session to the machine’s hook log. It blocks nothing.',
+    },
+  },
+  {
     id: 'worktree-remove',
     event: 'WorktreeRemove',
     script: 'scripts/release-worktree-resources.sh',
@@ -49,26 +92,18 @@ export const HOOKS: HookCard[] = [
     ast: 'AST-100',
   },
   {
-    id: 'session-start',
-    event: 'SessionStart · compact',
-    script: 'scripts/hook-contract-reload.py',
-    when: { vi: 'Ngay sau khi context bị nén.', en: 'Right after the context is compacted.' },
-    effect: {
-      vi: 'Nạp lại contract của vai, vì bản đọc bằng Read là thứ bị nén đi trước nhất.',
-      en: 'Re-arms the role contract, because a contract read with the Read tool is what compaction drops first.',
+    id: 'mod',
+    event: 'mod · astragentic-dispatch',
+    script: '.claude/skills/astragentic-dispatch/hooks/register.tsx',
+    when: {
+      vi: 'Ở session.start, turn.start, turn.complete, và quanh mỗi tin nhắn giữa các session.',
+      en: 'At session.start, turn.start, turn.complete, and around every message between sessions.',
     },
-    ast: 'AST-069',
-  },
-  {
-    id: 'subagent-stop',
-    event: 'SubagentStop',
-    script: null,
-    when: { vi: 'Khi một subagent dừng.', en: 'When a subagent stops.' },
     effect: {
-      vi: 'Ghi loại agent, id và session vào /tmp/harness-hook-events.log. Không chặn gì cả.',
-      en: 'Logs the agent type, id and session to /tmp/harness-hook-events.log. It blocks nothing.',
+      vi: 'Pane được dispatch tự ghi record, chạy brief như một lượt user và báo TURN-END; dispatcher được đánh thức.',
+      en: 'A dispatched pane writes its own record, runs the brief as a user turn and sends TURN-END; the dispatcher is woken.',
     },
-    ast: 'AST-102',
+    ast: 'AST-097',
   },
 ];
 
@@ -87,17 +122,44 @@ export const STACK: StackItem[] = [
     id: 'claude-code',
     name: 'Claude Code',
     line: {
-      vi: 'Runtime. Mọi vai chạy ở đây, và gate milestone không có đường lui nào khác.',
-      en: 'The runtime. Every role runs here, and the milestone gate has no fallback.',
+      vi: 'Runtime của cả sáu role: custom agent, hook, và mod astragentic-dispatch.',
+      en: 'The runtime for all six roles: custom agents, hooks, and the astragentic-dispatch mod.',
+    },
+    required: true,
+  },
+  {
+    id: 'claude-techniques',
+    name: 'Claude Code techniques',
+    line: {
+      vi: 'Subagent review, built-in code-review và simplify, advisor, effort, auto-compact window, SendMessage, Monitor.',
+      en: 'Subagent review, built-in code-review and simplify, advisor, effort, auto-compact window, SendMessage, Monitor.',
     },
     required: true,
   },
   {
     id: 'codex',
-    name: 'Codex CLI',
+    name: 'Codex',
     line: {
-      vi: 'Cánh tay cross-vendor: một AI của hãng khác (Codex) đọc lại diff trước khi nó merge.',
-      en: 'The cross-vendor arm: a different vendor re-reads the diff before it merges.',
+      vi: 'Cross-vendor arm bằng một lần codex exec trực tiếp, và runtime thứ hai với overlay riêng.',
+      en: 'The cross-vendor arm as one direct codex exec, and the second runtime with its own overlay.',
+    },
+    required: false,
+  },
+  {
+    id: 'herdr',
+    name: 'Herdr',
+    line: {
+      vi: 'Host terminal mặc định. Việc đang chạy phải nhìn thấy được, không phải đoán.',
+      en: 'The default terminal host. Work in flight has to be visible, not inferred.',
+    },
+    required: true,
+  },
+  {
+    id: 'orca',
+    name: 'Orca',
+    line: {
+      vi: 'Host terminal thứ hai từ 6.1.0. Một host cho một session.',
+      en: 'The second terminal host, since 6.1.0. One host per session.',
     },
     required: false,
   },
@@ -111,24 +173,6 @@ export const STACK: StackItem[] = [
     required: true,
   },
   {
-    id: 'herdr',
-    name: 'herdr',
-    line: {
-      vi: 'Chỗ đứng của các pane. Việc đang chạy phải nhìn thấy được, không phải đoán.',
-      en: 'Where the panes live. Work in flight has to be visible, not inferred.',
-    },
-    required: true,
-  },
-  {
-    id: 'mattpocock-skills',
-    name: 'mattpocock-skills',
-    line: {
-      vi: 'Phương pháp kỹ thuật của dự án: wayfinder, grill, spec, ticket, implement, review.',
-      en: "The project's engineering method: wayfinder, grill, spec, tickets, implement, review.",
-    },
-    required: true,
-  },
-  {
     id: 'trackers',
     name: 'GitHub · Jira · Linear',
     line: {
@@ -138,20 +182,11 @@ export const STACK: StackItem[] = [
     required: true,
   },
   {
-    id: 'scripts',
-    name: 'Python · Bash',
+    id: 'diagram-design',
+    name: 'diagram-design',
     line: {
-      vi: 'Script chạy được bằng tay: git guard, watchdog, ledger-index. Hook nào cũng gọi ra một file đọc được.',
-      en: 'Scripts you can run by hand: the git guard, the watchdog, the ledger index. Every hook shells out to a readable file.',
-    },
-    required: true,
-  },
-  {
-    id: 'archify',
-    name: 'archify',
-    line: {
-      vi: 'Mọi diagram trên site này sinh từ JSON, nên sửa được bằng cách sửa dữ liệu, không vẽ lại tay.',
-      en: 'Every diagram on this site is generated from JSON, so it is corrected by editing data, not redrawn by hand.',
+      vi: 'Plugin vẽ figure của chính site này, với font Newsreader cho tiếng Việt.',
+      en: 'The plugin that draws this site’s own figures, with Newsreader for Vietnamese.',
     },
     required: false,
   },
@@ -203,14 +238,14 @@ export const WHY: WhyCard[] = [
     },
   },
   {
-    id: 'why-mattpocock',
+    id: 'why-astra-skills',
     question: {
-      vi: 'Phương pháp phát triển đến từ mattpocock-skills',
-      en: 'The engineering method comes from mattpocock-skills',
+      vi: 'Phương pháp phát triển là bảy skill astra-* của chính harness',
+      en: 'The engineering method is the harness’s own seven astra-* skills',
     },
     answer: {
-      vi: 'Phương pháp này hỏi cho hết ở đầu quy trình, nên quyết định được chốt trước khi viết code. Astragentic không viết lại phần đó, chỉ bọc điều phối quanh nó.',
-      en: 'This method loops at the start of the process and settles decisions before code is written. Astragentic does not rewrite that part; it wraps coordination around it.',
+      vi: 'Bảy skill hỏi cho hết ở đầu quy trình, nên quyết định được chốt trước khi viết code. Chúng ship cùng release với mod và script merge gọi tên chúng.',
+      en: 'The seven skills loop at the start of the process, so decisions settle before code is written. They ship in the same release as the mod and merge script that name them.',
     },
   },
   {
@@ -264,7 +299,7 @@ export const LAYERS: Layer[] = [
       vi: 'Phần tôi viết: vai, skill, hook, và ledger giữ lại mọi lần hỏng đo được.',
       en: 'The part I wrote: the roles, the skills, the hooks, and the ledger that keeps every measured failure.',
     },
-    parts: 'Roles: 5 · Skills: 16 · Hooks: 4 · Ledger',
+    parts: 'Roles: 6 · Skills: 19 · Hooks: 6 events + 1 mod · Ledger',
   },
   {
     id: 'coordination',
@@ -340,9 +375,8 @@ export const GOOD_PARTS: GoodPart[] = [
 
 /** The five techniques for running several agents on one machine. Ordered by how much
  *  the reader has to hold in their head: git worktree first, because the whole page
- *  rests on it and a reader who has not used it is lost by the second paragraph; then
- *  three that stand on their own; then the one that composes them, which needs the
- *  others to make sense. The rail reads in the same order. */
+ *  rests on it; then three that stand on their own; then the one that composes them.
+ *  The rail reads in the same order. */
 export interface TipItem {
   id: string;
   /** The section head. A Dict, not a bare string: two of the four are tool names that
@@ -401,15 +435,6 @@ export const TIPS: TipItem[] = [
     line: {
       vi: 'Mỗi worktree một stack riêng, và tên stack suy ra từ tên nhánh chứ không ai đặt.',
       en: 'One stack per worktree, its name derived from the branch rather than chosen by anyone.',
-    },
-  },
-  {
-    id: 'bmad-distilled',
-    name: { vi: 'bmad-distilled', en: 'bmad-distilled' },
-    role: { vi: 'Ngữ cảnh · một trục khác', en: 'Context · a different axis' },
-    line: {
-      vi: 'Phương pháp chưng xuống còn markdown: một roster, mỗi capability một file, không còn gì để cài.',
-      en: 'A method distilled to markdown: one roster, one file per capability, nothing left to install.',
     },
   },
 ];
