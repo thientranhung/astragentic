@@ -282,6 +282,12 @@ fi
 tracker_named() { # -> github|jira|linear, or empty when none or several are named
   local doc="$TARGET/docs/agents/issue-tracker.md" named="" n=0 pair
   [ -f "$doc" ] || { echo ""; return; }
+  # 6.1.24: an adapter named by its skill name wins over the words. One project's doc names
+  # `jira-issue-tracker` and says the tracker "moved from Linear to Jira": the words counted two
+  # and the project got all three adapters.
+  named="$(grep -o -E '\b(github|jira|linear)-issue-tracker\b' "$doc" | sort -u)"
+  if [ -n "$named" ] && [ "$(printf '%s\n' "$named" | wc -l | tr -d ' ')" = 1 ]; then echo "${named%-issue-tracker}"; return; fi
+  named=""
   for pair in GitHub:github Jira:jira Linear:linear; do
     if grep -qw "${pair%%:*}" "$doc"; then named="${pair##*:}"; n=$((n+1)); fi
   done

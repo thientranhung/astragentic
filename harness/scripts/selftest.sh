@@ -778,6 +778,17 @@ if bash "$ROOT/install.sh" "$T1" >/dev/null 2>&1 && [ -d "$T1/.astraler/releases
   else
     bad "tracker restage" "a tracker doc written between staging and --apply refused the apply or copied the wrong skills"
   fi
+  # 6.1.24: a doc naming the adapter skill and a former tracker in prose gets the named adapter
+  T8="$TMP/t8"; rm -rf "$T8"; mkdir -p "$T8/docs/agents"
+  ( cd "$T8" && git init -q && git -c user.name=t -c user.email=t@t commit -q --allow-empty -m init ) >/dev/null 2>&1
+  printf '# Issue tracker\nMoved from Linear to Jira.\nLoad the `jira-issue-tracker` adapter.\n' > "$T8/docs/agents/issue-tracker.md"
+  ASTRALER_IN_SELFTEST=1 bash "$ROOT/install.sh" "$T8" --apply >/dev/null 2>&1
+  proj8="$(ls -d "$T8"/.agents/skills/*-issue-tracker 2>/dev/null | wc -l | tr -d ' ')"
+  if [ "$proj8" = "1" ] && [ -d "$T8/.agents/skills/jira-issue-tracker" ]; then
+    ok "a tracker doc naming jira-issue-tracker and mentioning Linear in prose gets the Jira adapter only"
+  else
+    bad "tracker named by skill" "project tracker skills=$proj8 (want 1, jira)"
+  fi
   # 3.3.0: the project's release view lands beside the stamp it reads, executable.
   if [ -x "$T1/.astraler/astragentic.sh" ] && [ "$(cd "$T1" && bash .astraler/astragentic.sh version)" = "$V" ]; then
     ok "--apply writes .astraler/astragentic.sh, and \`version\` reads the stamp"
