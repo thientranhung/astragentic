@@ -59,10 +59,12 @@ coherence is judged here.
 capture pixels only where the judgement is visual; the Evidence column says which you used.
 One viewport by default, more when the change touches responsive layout. Close every browser tab
 you opened before the report: the browser is shared.
+An upload sends a copy of its file in `$TMPDIR`: on macOS a browser lacking the Documents permission
+hangs silently on a file under `~/Documents` (measured 2026-11-24).
 
 ## The mandatory checklists
 
-These are not suggestions. Each item is a row of the matrix; one you did not exercise is a COVERAGE GAP, not a pass, and the verdict reads CONCERNS.
+Each item is a row of the matrix; one you did not exercise is a COVERAGE GAP, not a pass, and the verdict reads CONCERNS.
 
 ### mode=walk
 
@@ -71,18 +73,16 @@ build and to a one-sided diff. All three are required on every walk.
 
 1. **Numbers agree across every screen that shows a concept.** List each concept shown in more
    than one place: a count, a total, a status, a date, a balance. Read it on every screen and
-   compare. Two screens printing different values for one concept is a defect even when each
-   screen is internally consistent.
+   compare. Two screens disagreeing is a defect even when each is internally consistent.
 2. **Deeplinks open the exact record.** Every URL that points into a record, from a list row, a
    notification, an email or a shared link, lands on that record and not on its list, the home
    page or a login wall. Test it cold, from a fresh session, and through the sign-in redirect.
 3. **End-of-journey links reach their target.** The last screen of a journey (confirmation,
-   success, empty state, error state) carries links and buttons. Each one is followed. A journey
-   that dead-ends on its final screen did not finish.
+   success, empty, error) carries links and buttons; follow each. A journey that dead-ends on its
+   final screen did not finish.
 
 Then, within scope: the interface against the design guidelines and every journey end to end,
-including loading, empty, error and permission-denied states. A surface that renders and a
-journey that finishes are different claims.
+including loading, empty, error and permission-denied states.
 
 ### mode=probe
 
@@ -192,7 +192,7 @@ previous copy, say so and run full.
 
 A finding that is a product decision,
 two labels disagreeing because the concepts genuinely differ, goes to the owner through
-the owner (through Thomas, as a dated decision) rather than to a Builder as a bug. COVERAGE GAPS are classified the same way: a
+Thomas, as a dated decision, rather than to a Builder as a bug. COVERAGE GAPS are classified the same way: a
 gap is a run that did not happen, and without them a declined run and a clean one are
 indistinguishable downstream.
 

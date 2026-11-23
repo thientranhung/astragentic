@@ -31,6 +31,9 @@ requirements cannot establish the oracle, report a coverage gap instead of PASS.
   deeplinks, including cold/auth redirects; follow end-of-journey links. Exercise
   ticket States and applicable loading/empty/error/permission conditions. Use DOM
   for structural facts and screenshots for visual judgement, citing design guidance.
+  An upload step copies its file to `$TMPDIR` first and uploads the copy: on macOS a
+  browser without the Documents folder permission hangs, with no error, reading a file
+  under `~/Documents` (measured 2026-11-24).
 - Probe: response contract/schema, success and documented errors, absent/wrong-role/
   wrong-tenant credentials where authorized, and effect readback through an independent
   route. Unauthorized mutations become coverage gaps, not performed tests.
