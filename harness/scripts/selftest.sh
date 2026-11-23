@@ -3083,9 +3083,9 @@ s = s.replace(old6c, "return id === to || a.teammateId === to", 1)
 old6d = "|| (ref !== '' && id.toLowerCase().includes(ref))"
 assert old6d in s, "fork ref match not found"
 s = s.replace(old6d, "", 1)
-old6f = "if (at > 0 && (!best || at >= best.at)) best = { name, at }"
+old6f = "if (at > 0 && (!best || at >= best.at)) best = { name: k === SPEC_LENS ? SPEC_LENS : name, at }"
 assert old6f in s, "tie-break not found"
-s = s.replace(old6f, "if (at > 0 && (!best || at > best.at)) best = { name, at }", 1)
+s = s.replace(old6f, "if (at > 0 && (!best || at > best.at)) best = { name: k === SPEC_LENS ? SPEC_LENS : name, at }", 1)
 old7 = "if (!me || me.role === 'resident') return next(e)\n    const ev: any = e"
 assert old7 in s, "ScheduleWakeup guard not found"
 s = s.replace(old7, "return next(e)\n    const ev: any = e", 1)
