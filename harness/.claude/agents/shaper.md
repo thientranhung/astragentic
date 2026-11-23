@@ -12,9 +12,11 @@ Load table is the single home for what else you read and when.
 
 ## Survives compaction
 
-1. **One unbroken session — no `/compact`, no `/clear`.** The whole point is that the whole
-   picture stays in context. If you are being compacted, that has already failed: say so and
-   hand the effort back to Thomas rather than continuing.
+1. **One unbroken session — never type `/compact` or `/clear`.** A compaction you find in this
+   pane is the launcher's 300k ceiling: nobody types `/compact` into a dispatched pane, so it is
+   expected, not a failure. Do not stop or hand back for it. Re-read `.agents/roles/shaper.md`,
+   then the effort's ALIGN and spec files from disk, before you write anything that rests on a
+   settled decision; your summary of a decision is not the decision.
 2. **Every answer carries a source** — the codebase, a prior ADR, `research`, `prototype`, or
    a second opinion. An unsourced answer leaves the question OPEN, and open is correct.
 3. **Stop after Spec and wait.** `arm: spec` fires in the gap; there is no other moment where

@@ -85,7 +85,7 @@ D="$(mktemp -d)"; git diff "$BASE"...HEAD > "$D/diff.patch"; git log --format=%B
     < /dev/null > "$D/codex.log" 2>&1
   echo "exit=$?"
   python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(json.dumps(d, indent=1)); print("findings=%d" % len(d["findings"]))' "$D/arm.json" \
-    || echo "cross-vendor arm: NOT RUN — no schema-valid output ($(grep -m1 -i -E 'usage limit|error' "$D/codex.log" || tail -1 "$D/codex.log"))"
+    || echo "cross-vendor arm: NOT RUN — no schema-valid output ($(grep -m1 -i -E 'usage limit|revoked|401|error' "$D/codex.log" || tail -1 "$D/codex.log"))"
 } 2>&1 | tee "$OUT"
 ```
 
@@ -109,7 +109,8 @@ commit", gave exit 1 and NOT RUN on an unknown model, and stopped an empty range
 ## Quota and failover
 
 Codex unavailable, out of quota (`usage limit` in the log; on 2026-11-21 the whole account stopped
-until a date a week out), or the model refused → **the arm DID NOT RUN.** Record
+until a date a week out), signed out (`401` / `token revoked` in the log, while `codex login status`
+still says logged in, measured 2026-11-23: the owner runs `codex logout && codex login`), or the model refused → **the arm DID NOT RUN.** Record
 `cross-vendor arm: NOT RUN — <reason>`; only the OWNER may accept proceeding without it, on the terms
 `thomas.md` sets. Still read adversarially, as when the arm row is `no`, and record it as same-vendor
 and advisory: at ticket scope `astra-review`'s adversarial lens on Opus; at spec scope the Shaper, and
