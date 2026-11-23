@@ -1798,6 +1798,17 @@ export const register: Register = on => {
     // session named exactly that, which received it (measured downstream, 2026-10-12). The
     // pane knows its dispatcher's address from the brief's envelope; a send to any other name
     // that no agent of this session carries (a team mate's name still routes) is readdressed.
+    // A SUBAGENT ANSWERS ITS PARENT, NEVER THE DISPATCHER (6.1.24). The overlay's dispatcher line is
+    // session-scoped, so a pane's subagents read it too: a Shaper's background spec lens sent its
+    // findings to the dispatcher's session instead of the Shaper (one downstream spec, 2026-11-23,
+    // 1 of 2 lens passes; the Shaper dug them out of the subagent transcript).
+    if (me && me.role !== 'resident' && dispatcher && e.origin.kind === 'model' && e.agentId !== undefined
+        && (e.to === dispatcher || (dispatcherName !== '' && addressName(e.to) === dispatcherName))) {
+      return {
+        isDelivered: false,
+        reason: `${MARK} not sent. You are a subagent of this pane: the dispatcher line in your context belongs to the pane's main agent. Return your result to the agent that spawned you — your final message, or SendMessage to the parent address your SendMessage tool names ("team-lead" for a teammate, "main" for a background agent).`,
+      }
+    }
     if (me && me.role !== 'resident' && dispatcher && e.origin.kind === 'model' && e.agentId === undefined
         && e.to !== dispatcher && addressName(e.to) !== dispatcherName) {
       const to = addressName(e.to)

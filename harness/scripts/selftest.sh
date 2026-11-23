@@ -2396,6 +2396,10 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     let unknownSeen = null
     const unknownRes = await fire('session.send', { to: 'ffff01', text: 'Report your findings now (final answer)', origin: { kind: 'model' } }, async ev => { unknownSeen = ev.to; return { isDelivered: true } })
     const sendToUnknownRef = unknownSeen === null && unknownRes?.isDelivered === false && /agent ref/.test(String(unknownRes?.reason ?? '')) ? 'refused' : `seen=${unknownSeen} res=${JSON.stringify(unknownRes)}`
+    // 6.1.24 — a SUBAGENT's send to the dispatcher (by name or address) is refused with the way back
+    // to its parent; the pane's own send still goes (one downstream spec lens, 2026-11-23)
+    const subTry = async (to) => { let seen = null; const r = await fire('session.send', { to, text: 'Pass 2: 7 findings', origin: { kind: 'model' }, agentId: 'a-lens-1' }, async ev => { seen = ev.to; return { isDelivered: true } }); return seen === null && r?.isDelivered === false && /subagent of this pane/.test(String(r?.reason ?? '')) ? 'refused' : `seen=${seen}` }
+    const subSend = [await subTry('disp-07'), await subTry('uds:/tmp/d.sock'), await subTry('team-lead')].join(',')
     liveAgents = []
     // 4.3.2 — the band: the step invoked most recently is "…" (running, with the pane's live agent
     // count) until a later step is invoked or a turn ends with nothing live; the step after it
@@ -2583,7 +2587,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const parkedUnavailable = sentTexts.length === 2 && /\nAgents: list unavailable\n/.test(sentTexts[1])
     $.agent.list = async () => liveAgents
     liveAgents = []
-    console.log(JSON.stringify({ parkedHeld, parkedWakeDropped, parkedSent, parkedLine, parkedUnavailable, deadRecorded, deadNotified, deadCleared, quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, wakeup, wakeupStop, armOpenNamed, bypassHint, sendToBareRef, sendToDoneRef, sendToDoneName, sendToDoneId, sendToUnknownRef, bandText, log , tabsNamed}))
+    console.log(JSON.stringify({ parkedHeld, parkedWakeDropped, parkedSent, parkedLine, parkedUnavailable, deadRecorded, deadNotified, deadCleared, quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, wakeup, wakeupStop, armOpenNamed, bypassHint, sendToBareRef, sendToDoneRef, sendToDoneName, sendToDoneId, sendToUnknownRef, bandText, log , tabsNamed, subSend}))
     return
   }
   await fire('session.start', {}, async () => ({}))
@@ -3032,6 +3036,11 @@ EOS
     ok "agent sends (5.0.7/5.0.8): a bare ref of the pane's own LIVE fork goes to it by name; a finished own agent takes no message by ref, name or id; a bare ref no agent carries is refused; none is readdressed to the dispatcher"
   else
     bad "agent sends (5.0.8)" "$(printf '%s' "$out" | grep -o '"sendToBareRef":"[^"]*","sendToDoneRef":"[^"]*","sendToDoneName":"[^"]*","sendToDoneId":"[^"]*","sendToUnknownRef":"[^"]*"' | head -1)"
+  fi
+  if says "$out" '"subSend":"refused,refused,seen=team-lead"'; then
+    ok "a pane's subagent cannot reply to the dispatcher; it is sent back to its parent (6.1.24)"
+  else
+    bad "subagent send to the dispatcher (6.1.24)" "$(printf '%s' "$out" | grep -o '"subSend":"[^"]*"' | head -1)"
   fi
   if says "$out" '"deadRecorded":true,"deadNotified":true,"deadCleared":true'; then
     ok "a turn that ends on an API error writes its first line on the record and shows a desktop notification from the pane itself; the next answered turn clears it (5.0.9)"
