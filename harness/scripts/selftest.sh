@@ -1916,7 +1916,7 @@ else
 // a brief sent to a "name [ref]" address followed by its RECEIVED ack from the bare name.
 const fs = require('fs'), path = require('path'), Module = require('module')
 const [,, modDir, root, tsPath, mode] = process.argv
-const isPane = mode === 'pane' || mode === 'qapane' || mode === 'orcapane'
+const isPane = mode === 'pane' || mode === 'qapane' || mode === 'orcapane' || mode === 'shaperpane'
 const isOrca = mode === 'orcapane'
 const isOrcaResume = String(mode).startsWith('orcaresume')  // 6.1.9: a pane Orca restored with a bare `claude --resume`
 const isOrcaHost = isOrca || mode === 'orcadisp' || isOrcaResume  // 6.1.1: a dispatcher at the root of an Orca-hosted session
@@ -1952,7 +1952,7 @@ const $ = {
   command: { register: () => {}, run: async () => ({}) },
   session: { id: async () => 'disp', send: async () => ({ isDelivered: true }), usage: async () => ({ startedAt: 0, context: { tokens: 1000, window: 1_000_000, percent: 0 } }), compact: async () => ({}) },
   fs: { read: async p => fs.readFileSync(p, 'utf8'), write: async (p, t) => fs.writeFileSync(p, t), exists: async p => fs.existsSync(p) },
-  process: { run: async (argv, o = {}) => { if (argv[0] === 'herdr') { herdrCalls.push(argv) } if (String(argv[0]).endsWith('/orca') || argv[0] === 'orca') { orcaCalls.push(argv); const h = argv[1] === 'terminal' && argv[2] === 'show' ? argv[argv.indexOf('--terminal') + 1] : null; return { exitCode: 0, stdout: h ? `{"ok":true,"result":{"terminal":{"handle":"${h}","orphaned":${h !== 'term_5'},"connected":${h !== 'term_dead'}}}}` : '{"ok":true}', stderr: '' } } if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? (mode === 'qapane' ? '{"result":{"tab":{"label":"qa:AB-5"}}}' : '{"result":{"tab":{"label":"ticket:AB-5"}}}') : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8', env: { ...process.env, ...(o.env ?? {}) } }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
+  process: { run: async (argv, o = {}) => { if (argv[0] === 'herdr') { herdrCalls.push(argv) } if (String(argv[0]).endsWith('/orca') || argv[0] === 'orca') { orcaCalls.push(argv); const h = argv[1] === 'terminal' && argv[2] === 'show' ? argv[argv.indexOf('--terminal') + 1] : null; return { exitCode: 0, stdout: h ? `{"ok":true,"result":{"terminal":{"handle":"${h}","orphaned":${h !== 'term_5'},"connected":${h !== 'term_dead'}}}}` : '{"ok":true}', stderr: '' } } if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? (mode === 'qapane' ? '{"result":{"tab":{"label":"qa:AB-5"}}}' : mode === 'shaperpane' ? '{"result":{"tab":{"label":"spec:AB-5"}}}' : '{"result":{"tab":{"label":"ticket:AB-5"}}}') : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8', env: { ...process.env, ...(o.env ?? {}) } }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
   ui: { status: t => log.push(t), toast: () => {}, open: () => {}, resolve: () => ({ Box: 'Box', Text: 'Text' }) },
   prompt: { submit: async () => {} },
   agent: { list: async () => liveAgents },
@@ -1998,6 +1998,23 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const qaBand = await band()
     const wakeupQa = await (async () => { let ran = false; const r = await fire('tool.call', { tool: 'ScheduleWakeup', delaySeconds: 300 }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` })()
     console.log(JSON.stringify({ qaRecordPath: /by the record/.test(qaBand), qaNoBypassHint: !/shift\+tab/.test(qaBand), qaNotRed: !/not delivered to the dispatcher/.test(qaBand), wakeupQa, qaBand }))
+    return
+  }
+  if (mode === 'shaperpane') {
+    // 6.1.22 — spec arm off: the Shaper is still told to run the adversarial lens over its spec,
+    // and its band shows that step in the arm's place, lit by the Agent call
+    const orch = path.join(root, '.agents/orchestrator.md')
+    fs.writeFileSync(orch, fs.readFileSync(orch, 'utf8').replace('| spec | yes |', '| spec | no |'))
+    await fire('session.start', { cwd: root }, async () => ({}))
+    await fire('session.receive', { text: `<cross-session-message from="uds:/tmp/d.sock" from-name="disp-07">\n/astra-grill-with-docs\nUX: n/a — a cron job\n</cross-session-message>`, origin: { kind: 'plugin' } }, async () => ({}))
+    const composed = await fire('prompt.compose', {}, async () => ({ sections: [] }))
+    const specLensTold = (composed?.sections ?? []).some(s => /astra-adversarial-lens[\s\S]*Spec read: same-vendor/.test(String(s.text)))
+    const before = await band()
+    await fire('tool.call', { tool: 'Agent', input: { subagent_type: 'astragentic-dispatch:astra-adversarial-lens', model: 'opus', prompt: 'read the spec' } }, async () => ({}))
+    await fire('turn.complete', { reason: 'answer', answer: 'spec read', turnId: 's1' }, async () => ({}))
+    const after = await band()
+    const rec = JSON.parse(fs.readFileSync(path.join(root, '.astraler/state/dispatch-record.json'), 'utf8'))
+    console.log(JSON.stringify({ specLensTold, lensPending: /○ lens:spec|→ lens:spec/.test(before) && !/arm:spec/.test(before), lensRecorded: typeof rec['AB-5']?.skills_run?.['astra-adversarial-lens'] === 'number', lensLit: /✓ lens:spec/.test(after), after }))
     return
   }
   if (mode === 'orcapane') {
@@ -3025,6 +3042,12 @@ EOS
     ok "orca resume (6.1.9): a pane Orca restored without ASTRA_DISPATCH takes its role and key from its own record entry (same pane key and session id) — a pane gate refuses, the new terminal handle is recorded, the turn end goes on the record for the dispatcher's poll; another session in that pane and a pane with no entry stay root sessions; planted, a mod that matches on the pane key alone gives the other session the Builder's role"
   else
     bad "mod orca resume" "resumed=$out other-session=$out_sid no-entry=$out_none planted=$out_planted"
+  fi
+  out="$(mod_drive "$MOD" shaperpane)"
+  if says "$out" '"specLensTold":true,"lensPending":true,"lensRecorded":true,"lensLit":true'; then
+    ok "shaper pane (6.1.22): spec arm off — the Shaper is told to run the adversarial lens over its spec, and the band shows lens:spec in the arm's place, lit by the Agent call"
+  else
+    bad "shaper spec lens" "$out"
   fi
   out="$(mod_drive "$MOD" qapane)"
   if says "$out" '"qaRecordPath":true,"qaNoBypassHint":true,"qaNotRed":true,"wakeupQa":"deny:held"'; then

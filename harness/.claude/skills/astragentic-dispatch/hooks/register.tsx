@@ -146,13 +146,13 @@ function latestInvoked(entry: Entry): { name: string; at: number } | null {
   const last: Record<string, unknown> = lastRaw && typeof lastRaw === 'object' && !Array.isArray(lastRaw) ? lastRaw : {}
   let best: { name: string; at: number } | null = null
   for (const [name] of steps) {
-    const keys = name === 'codex-arm' ? ['codex-arm', 'codex-claude-arm'] : [name]
+    const keys = name === 'codex-arm' ? ['codex-arm', 'codex-claude-arm', SPEC_LENS] : [name]
     for (const k of keys) {
       const at = Number(last[k] ?? first[k] ?? 0)
       // `>=`: two steps stamped in the same millisecond (measured downstream, 2026-10-22: the
       // 4.3.2 selftest on a fast box) resolve to the later one in flow order, which is the
       // one called second. A strict `>` left the earlier step lit.
-      if (at > 0 && (!best || at >= best.at)) best = { name, at }
+      if (at > 0 && (!best || at >= best.at)) best = { name: k === SPEC_LENS ? SPEC_LENS : name, at }
     }
   }
   return best
@@ -321,6 +321,9 @@ const flow = atom({ plugin: 'astragentic-dispatch', key: 'flow' } as const, { ra
 // test-run log — the thing the commit gate measures — not from a call.
 type Step = readonly [string, string, boolean?]   // skill name, chip label, optional
 const RED_RUN = 'red-run'
+// 6.1.22: with the spec arm off the Shaper's band shows the same-vendor read in the arm's place;
+// the step lights from the Agent call, recorded in skills_run like a skill.
+const SPEC_LENS = 'astra-adversarial-lens'
 const FLOW_BY_ROLE: Record<string, ReadonlyArray<Step>> = {
   builder: [
     ['astra-implement-with-tdd', 'implement'],
@@ -1477,11 +1480,15 @@ export const register: Register = on => {
     const scope = me ? ARM_SCOPE_BY_ROLE[me.role] : undefined
     if (me && scope && off.has(scope)) {
       text = `${text ? text + '\n\n' : ''}ARM: off — .agents/orchestrator.md § Cross-vendor arm has \`${scope}: no\`. Skip the arm phase at ${scope} scope: no codex-arm call, no \`arm(${scope}):\` receipt, and do not pass --marker 'arm(${scope})' to check-simplify-markers.sh. Write \`Arm: off (orchestrator)\` where the handback would cite the receipt.`
+      // 6.1.22: the spec is still read adversarially with the arm off, as the ticket is by
+      // astra-review's fourth lens (inception 2026-11-23: a big epic went from spec to tickets
+      // with nothing reading it while Codex was out of quota for a week; owner's word).
+      if (scope === 'spec') text += ` Still read the committed spec adversarially before test-design: \`Agent(subagent_type: "astragentic-dispatch:astra-adversarial-lens", model: "opus")\` over the spec commit, verify each finding at its line, fold the confirmed ones, and write \`Spec read: same-vendor (claude opus), advisory, not an arm — <n> returned, <m> confirmed, <k> changed the spec\` in the handback.`
     } else if (!me && off.size > 0) {
       // The dispatcher runs the marker check at merge and fires the slice arm: it has to know
       // every scope that is off, not only its own, or it STOPs a merge for a receipt never owed.
       const scopes = ['ticket', 'spec', 'slice'].filter(s => off.has(s))
-      text = `${text ? text + '\n\n' : ''}ARM: off at ${scopes.join(', ')} — .agents/orchestrator.md § Cross-vendor arm. ${scopes.map(s => `Do not pass --marker 'arm(${s})' at merge and expect no arm(${s}): receipt; the handback says Arm: off (orchestrator)`).join('. ')}${off.has('slice') ? '. Fire no slice arm; the ten-merge count does not apply' : ''}.`
+      text = `${text ? text + '\n\n' : ''}ARM: off at ${scopes.join(', ')} — .agents/orchestrator.md § Cross-vendor arm. ${scopes.map(s => `Do not pass --marker 'arm(${s})' at merge and expect no arm(${s}): receipt; the handback says Arm: off (orchestrator)`).join('. ')}${off.has('slice') ? '. Fire no slice arm; the ten-merge count does not apply. At slice close still run the fan-out and, beside it, `Agent(subagent_type: "astragentic-dispatch:astra-adversarial-lens", model: "opus")` over the slice; record both on the arm(slice): marker as same-vendor (claude opus), advisory, not an arm' : ''}${off.has('spec') ? '. A Shaper with the spec arm off still runs the adversarial lens over its spec and reports n returned, m confirmed, k changed' : ''}.`
     }
     // A QUICK TICKET'S SHAPE REACHES THE PANE AS A SECTION (4.6.0), from the record the gates
     // read, so the Builder and its band agree on what is owed; the dispatcher's copy lists the
@@ -2154,6 +2161,21 @@ export const register: Register = on => {
     if (!root) return next(e)
     const ev: any = e
     const type = String(ev.input?.subagent_type ?? ev.subagent_type ?? '').split(':').pop()!.trim()
+    if (type === SPEC_LENS && me && me.role === 'shaper') {
+      const { key } = me
+      const at = root
+      skillWrites = skillWrites.then(async () => {
+        const entry = ((await readRecord($, at)) ?? {})[key] ?? {}
+        const now = await $.clock.now()
+        const prior = entry.skills_run ?? {}
+        const patch: Entry = { skills_last: { ...(entry.skills_last ?? {}), [SPEC_LENS]: now } }
+        patch.skills_log = [...skillsLog(entry), { skill: SPEC_LENS, at: now }].slice(-400)
+        if (!(SPEC_LENS in prior)) patch.skills_run = { ...prior, [SPEC_LENS]: now }
+        await patchRecord($, at, key, patch)
+        await refreshFlow($, at, key)
+      }).catch(() => {})
+      await skillWrites
+    }
     if (!ROLE_AGENTS.has(type)) return next(e)
     return {
       deny: `astragentic-dispatch: \`${type}\` is a harness role, and a role runs as its own session in a pane, never as an in-process agent: the gates read the session's role, and an agent's sub-agent completions reach the root session, not the agent. Dispatch it with dispatch-ticket (on Orca: ORCA.md § The pane). Report-only forks (review lenses, simplify, Explore) stay agents.`,
@@ -2818,7 +2840,7 @@ export const register: Register = on => {
       if (e.props.hasSurvey) return next(e)
       const armScope = ARM_SCOPE_BY_ROLE[me.role]
       const steps = FLOW_BY_ROLE[me.role] && armScope && (await armOff($, root)).has(armScope)
-        ? FLOW_BY_ROLE[me.role]!.filter(([name]) => name !== 'codex-arm')
+        ? FLOW_BY_ROLE[me.role]!.flatMap((step): Step[] => step[0] !== 'codex-arm' ? [step] : armScope === 'spec' ? [[SPEC_LENS, 'lens:spec']] : [])
         : FLOW_BY_ROLE[me.role]
       const f = steps ? await read($, flow) : null
       if (!undelivered && !f && !appliedVersion) return next(e)

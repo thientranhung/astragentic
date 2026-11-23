@@ -24,7 +24,7 @@ and one session is one agent.
 |---|---|---|
 | Align | `astra-grill-with-docs` | the question frontier is empty and every answer carries a source |
 | Spec | `astra-to-spec` | the spec states what is being built and how it will be known to work |
-| Arm | `codex-arm` (`arm: spec`); skipped when `orchestrator.md` arm row `spec` is `no` | you fired the arm over the finalized spec, its findings are folded and the spec is committed |
+| Arm | `codex-arm` (`arm: spec`); row `spec` `no` or NOT RUN: `astra-adversarial-lens` (Opus) instead, advisory | you fired the arm over the finalized spec, its findings are folded and the spec is committed |
 | Test design | `test-design` | `docs/qa/plan-<slug>.md` names every P0 journey, endpoint and job with a case |
 | Tickets | `astra-to-tickets` | every ticket is independently buildable (a UI ticket with Glance / States / Criteria) and its edges are set |
 

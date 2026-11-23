@@ -1,3 +1,32 @@
+# Astragentic 6.1.22
+
+With the cross-vendor arm off, or Codex out of quota, the spec and the slice are still read
+adversarially by Claude, as the ticket already was. Owner's word 2026-11-23 in one project's pane:
+"báo về astragentic để nó nâng cấp scaffold … vì cái này là cái chung" and "nếu không có codex
+mình vẫn gọi được các claude review gate". Field batch: `docs/audit/2026-11-22-6120-field-incidents.md` row 7.
+
+| số đo | nguồn |
+|---|---|
+| one project, 2026-11-23: a big epic (a new ADR, a new collector on a shared real account) went from spec to test-design with "Arm: off" and nothing reading the spec; the ticket scope had the Opus lens, spec and slice had nothing | that project's Thomas; `shaper.md` Arm row, `codex-arm` § Quota ("At ticket scope" only) |
+| the account's Codex quota is out until 2026-11-28 | that project's orchestrator note |
+| planted: the shaper-pane selftest reads `specLensTold`, `lensPending`, `lensRecorded`, `lensLit` all true; against the 6.1.21 mod all four false | `selftest.sh` shaper pane (6.1.22) |
+
+**Spec scope.** The Shaper, with arm row `spec` `no` or the arm NOT RUN, runs
+`Agent(astragentic-dispatch:astra-adversarial-lens, model: opus)` over the spec commit, verifies
+each finding at its line, folds the confirmed ones and writes `Spec read: same-vendor (claude
+opus), advisory, not an arm — n returned, m confirmed, k changed the spec`. The mod's ARM: off
+section says so, and the Shaper's band shows `lens:spec` in the arm's place, lit by the Agent call.
+
+**Slice scope.** With row `slice` `no` or the arm NOT RUN, Thomas runs the same lens beside the
+`astra-slice-reviewer` fan-out and records both on the `arm(slice):` marker as same-vendor,
+advisory. A same-vendor read never completes an arm.
+
+By hand downstream: nothing. A project that wrote this rule into its own Shaper overlay drops it.
+
+Not covered: the Codex lane, whose arm reviewer is Claude; no Codex-root gap is measured. Whether
+the spec lens finds real defects is chưa đo: the first count comes from the reporting project's
+epic. Static: selftest and tests/codex on the clean clone below.
+
 # Astragentic 6.1.21
 
 Two items the 6.1.20 note left open, plus the browser move. Owner's word 2026-11-22 ("em cứ

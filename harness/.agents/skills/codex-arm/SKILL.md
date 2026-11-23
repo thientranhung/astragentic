@@ -111,8 +111,9 @@ commit", gave exit 1 and NOT RUN on an unknown model, and stopped an empty range
 Codex unavailable, out of quota (`usage limit` in the log; on 2026-11-21 the whole account stopped
 until a date a week out), or the model refused → **the arm DID NOT RUN.** Record
 `cross-vendor arm: NOT RUN — <reason>`; only the OWNER may accept proceeding without it, on the terms
-`thomas.md` sets. At ticket scope, still read adversarially: run `astra-review`'s adversarial lens on
-Opus as when the arm row is `no`, and record it as same-vendor and advisory. A same-vendor lens never
+`thomas.md` sets. Still read adversarially, as when the arm row is `no`, and record it as same-vendor
+and advisory: at ticket scope `astra-review`'s adversarial lens on Opus; at spec scope the Shaper, and
+at slice scope Thomas beside the fan-out, run `astra-adversarial-lens` on Opus (6.1.22). A same-vendor lens never
 completes the arm, so the recorded vendor is always the one that actually ran.
 
 Record the outcome once. **At ticket scope the `arm(ticket):` record IS the receipt**, with
