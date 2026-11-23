@@ -11,11 +11,23 @@ review gate".
 | `check-requirements.sh` already reports "codex CLI: not required" when every scope is `no` | `check-requirements.sh` |
 | measured review yield, 2026-11-21 blind replay: Claude adversarial on Opus found 13 real high/medium defects at 0.71 precision; Codex cells together 29 of 34 | `docs/audit/2026-11-21-review-dispatch-design.md` |
 
+**A Claude lens column** beside Codex turns Claude's adversarial lens (`astra-adversarial-lens`,
+Opus, about 109k tokens a run) off per scope, owner's word the same day: "phần ticket anh muốn tắt
+vì nó đã có nhiều built-in claude review bên trong". `| ticket | no | no |` leaves `astra-review`'s
+three lenses; the spec and slice rows likewise drop only the lens. Absent column means `yes`, so
+every existing table reads as before. Planted: the `lensoff` selftest reads the lens told, the
+lens-off line and the band step as `false,false,false` against the 6.1.22 mod and `true,true,true`
+now.
+
 What this costs, from the same measurement: with Codex off, the defects only Codex found are not
 read (16 of 34 in that replay, 9 of them tests that cannot fail). `yes` on a scope adds the Codex
 arm back on a machine that has it.
 
-By hand downstream: nothing changes for a project that already has the table: `orchestrator.md`
+Measured cost of the lens column at ticket, same replay: on one ticket the three `astra-review` lenses
+and the slice fan-out missed 3 defects the adversarial read found (n=1).
+
+By hand downstream: to turn the ticket lens off, add the column: `| Scope | Codex | Claude lens |`
+and `| ticket | no | no |`. Nothing changes for a project that already has the table: `orchestrator.md`
 is owner-kept on upgrade, and an absent table still means `yes`. A project that wants the new
 default sets its three rows to `no` itself.
 

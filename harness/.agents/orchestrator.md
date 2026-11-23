@@ -68,15 +68,19 @@ misconfigured row, not a new option. Shipped: `grok` (Grok Build; Model e.g. `gr
 
 ## Cross-vendor arm
 
-| Scope | Enabled |
-|---|---|
-| ticket | no |
-| spec | no |
-| slice | no |
+| Scope | Codex | Claude lens |
+|---|---|---|
+| ticket | no | yes |
+| spec | no | yes |
+| slice | no | yes |
 
-`no` (the default since 6.1.23, owner 2026-11-23) turns that scope's Codex arm off: no Codex
+**Codex**: the Codex arm at that scope. **Claude lens**: Claude's adversarial lens
+(`astra-adversarial-lens`, Opus, about 109k tokens a run). `no` turns only that lens off:
+`astra-review`'s three lenses at ticket and the slice fan-out always run. Absent column means `yes`.
+
+Codex `no` (the default since 6.1.23, owner 2026-11-23) turns that scope's Codex arm off: no Codex
 call, no `arm(<scope>):` receipt to ask for at merge, `Arm: off (orchestrator)` in the handback.
-The scope is still read adversarially by Claude: `astra-review`'s Opus lens on the ticket, the
+Unless its Claude lens is `no`, the scope is still read adversarially by Claude: `astra-review`'s Opus lens on the ticket, the
 Shaper's `astra-adversarial-lens` on the spec, and the same lens beside the slice fan-out.
 `yes` adds the Codex arm on a machine that has Codex. Absent row or table means `yes`.
 

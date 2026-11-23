@@ -33,7 +33,7 @@ Skip anything a linter already enforces.
   violations citing file and rule; baseline smells, named, hunk quoted; hard violations
   separated from judgement calls. A documented standard that endorses a smell silences it.
 - **Adversarial**, only when `orchestrator.md`'s arm row `ticket` is `no`, or the arm did not run
-  (`codex-arm` § Quota and failover):
+  (`codex-arm` § Quota and failover), and never when that row's Claude lens column is `no`:
   `Agent(subagent_type: "astragentic-dispatch:astra-adversarial-lens", model: "opus")`, given the
   intent and the diff. It is what still reads adversarially when Codex does not; it is not an arm
   and writes no arm receipt. Opus, not Sonnet: blind-verified on seven replayed tickets, Opus 13

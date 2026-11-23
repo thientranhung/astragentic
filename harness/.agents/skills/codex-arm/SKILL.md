@@ -113,7 +113,8 @@ until a date a week out), or the model refused → **the arm DID NOT RUN.** Reco
 `cross-vendor arm: NOT RUN — <reason>`; only the OWNER may accept proceeding without it, on the terms
 `thomas.md` sets. Still read adversarially, as when the arm row is `no`, and record it as same-vendor
 and advisory: at ticket scope `astra-review`'s adversarial lens on Opus; at spec scope the Shaper, and
-at slice scope Thomas beside the fan-out, run `astra-adversarial-lens` on Opus (6.1.22). A same-vendor lens never
+at slice scope Thomas beside the fan-out, run `astra-adversarial-lens` on Opus (6.1.22), unless
+that scope's Claude lens column in `orchestrator.md` is `no`. A same-vendor lens never
 completes the arm, so the recorded vendor is always the one that actually ran.
 
 Record the outcome once. **At ticket scope the `arm(ticket):` record IS the receipt**, with
