@@ -70,15 +70,15 @@ misconfigured row, not a new option. Shipped: `grok` (Grok Build; Model e.g. `gr
 
 | Scope | Enabled |
 |---|---|
-| ticket | yes |
-| spec | yes |
-| slice | yes |
+| ticket | no |
+| spec | no |
+| slice | no |
 
-`no` turns that scope's arm off for this project: the role skips the phase, commits no
-`arm(<scope>):` receipt, and writes `Arm: off (orchestrator)` in its handback; the merge does
-not ask for the marker. A machine without Codex sets all three; a Builder the owner wants
-faster sets `ticket` only and keeps `slice`, the one read every ten merges that sees across
-tickets. Absent row or table means `yes`.
+`no` (the default since 6.1.23, owner 2026-11-23) turns that scope's Codex arm off: no Codex
+call, no `arm(<scope>):` receipt to ask for at merge, `Arm: off (orchestrator)` in the handback.
+The scope is still read adversarially by Claude: `astra-review`'s Opus lens on the ticket, the
+Shaper's `astra-adversarial-lens` on the spec, and the same lens beside the slice fan-out.
+`yes` adds the Codex arm on a machine that has Codex. Absent row or table means `yes`.
 
 ## How the columns are read
 

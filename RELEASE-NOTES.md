@@ -1,3 +1,27 @@
+# Astragentic 6.1.23
+
+A new project's `orchestrator.md` ships with the Codex arm off at ticket, spec and slice; the Claude
+review gates read every scope. Owner's word 2026-11-23: "tắt hẳn codex lúc default luôn, bật claude
+review gate".
+
+| số đo | nguồn |
+|---|---|
+| the template shipped `ticket`, `spec`, `slice` = `yes`; now `no` at all three | `harness/.agents/orchestrator.md`; selftest "orchestrator template" reads the rows (the 6.1.22 template gives `yes,yes,yes` and fails it) |
+| with every row `no`, each scope still has a Claude adversarial read: `astra-review`'s Opus lens (ticket), the Shaper's `astra-adversarial-lens` (spec, 6.1.22), the same lens beside the slice fan-out (6.1.22) | `astra-review` § 2, the mod's ARM: off section |
+| `check-requirements.sh` already reports "codex CLI: not required" when every scope is `no` | `check-requirements.sh` |
+| measured review yield, 2026-11-21 blind replay: Claude adversarial on Opus found 13 real high/medium defects at 0.71 precision; Codex cells together 29 of 34 | `docs/audit/2026-11-21-review-dispatch-design.md` |
+
+What this costs, from the same measurement: with Codex off, the defects only Codex found are not
+read (16 of 34 in that replay, 9 of them tests that cannot fail). `yes` on a scope adds the Codex
+arm back on a machine that has it.
+
+By hand downstream: nothing changes for a project that already has the table: `orchestrator.md`
+is owner-kept on upgrade, and an absent table still means `yes`. A project that wants the new
+default sets its three rows to `no` itself.
+
+Not covered: the Codex runtime (`orchestrator-for-codex.md`), whose arm reviewer is Claude. Static:
+selftest and tests/codex on the clean clone below.
+
 # Astragentic 6.1.22
 
 With the cross-vendor arm off, or Codex out of quota, the spec and the slice are still read

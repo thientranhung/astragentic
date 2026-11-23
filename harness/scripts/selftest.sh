@@ -3189,6 +3189,16 @@ EOS
 fi
 
 # ---------------------------------------------------------------------------------------------
+echo "orchestrator template — Codex arm off by default, Claude reads every scope (6.1.23)"
+if pkg_only "orchestrator template default"; then
+  armRows="$(awk -F'|' '/^## Cross-vendor arm/{t=1;next} t&&/^## /{t=0} t&&$2~/^ *(ticket|spec|slice) *$/{gsub(/ /,"",$2);gsub(/ /,"",$3);printf "%s=%s,",$2,$3}' "$ROOT/harness/.agents/orchestrator.md")"
+  if [ "$armRows" = "ticket=no,spec=no,slice=no," ]; then
+    ok "a new project's orchestrator.md ships with the Codex arm off at ticket, spec and slice; the Claude lenses read each scope"
+  else
+    bad "orchestrator arm default" "template rows: $armRows (want ticket=no,spec=no,slice=no,)"
+  fi
+fi
+
 echo "check-requirements — Orca alone is a host (6.1.21)"
 # An Orca-only machine read [MISS] herdr twice and exited 1, though Orca is a host since 6.1.0.
 if [ -f "$ROOT/check-requirements.sh" ]; then
