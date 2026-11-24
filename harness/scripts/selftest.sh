@@ -2357,6 +2357,11 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const commitHeredocBare = await cmdOf(`git commit -m $(cat <<'EOF'\n-a\nEOF\n)`)
     const substRefusal = String((await fire('tool.call', { tool: 'Bash', command: 'git commit -m "$(git log -1 --format=%s)"' }, async () => ({})))?.deny ?? '')
     const substFixNamed = substRefusal.includes('git commit -F <file>')
+    // 6.1.24 — a simplify(increment) marker whose Pass: line is malformed is refused at the commit,
+    // with the line to write; a well-formed one and a non-marker commit go (one downstream project,
+    // 2026-11-23..24: 4 of 21 markers refused at the merge instead)
+    const mk = (pass) => `git commit --allow-empty -m "$(cat <<'EOF'\nsimplify(increment): AB-5 — fold\n\n${pass}\nEOF\n)"`
+    const simplifyPass = [await cmdOf(mk('Pass: /simplify (4 cleanup agents)')), await cmdOf(mk('Pass: simplify (altitude lens)')), await cmdOf(mk('Range: a..b')), await cmdOf(mk('Pass: Skill(skill: "simplify") — 4 agents')), await cmdOf('git commit --allow-empty -m "chore: Pass: anything"'), await cmdOf('git commit --allow-empty -m "simplify(increment): AB-5" -m "Pass: Skill(skill: \\"simplify\\") — 4 agents"')].join(',')
     git('reset', '-q', '--hard')
     git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'pending.test.js', 'paths.txt')
     const noScratchLeft = !fs.readdirSync(root).some(n => n.startsWith('.git-tdd-gate'))
@@ -2594,7 +2599,23 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const parkedUnavailable = sentTexts.length === 2 && /\nAgents: list unavailable\n/.test(sentTexts[1])
     $.agent.list = async () => liveAgents
     liveAgents = []
-    console.log(JSON.stringify({ parkedHeld, parkedWakeDropped, parkedSent, parkedLine, parkedUnavailable, deadRecorded, deadNotified, deadCleared, quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, wakeup, wakeupStop, armOpenNamed, bypassHint, sendToBareRef, sendToDoneRef, sendToDoneName, sendToDoneId, sendToUnknownRef, bandText, log , tabsNamed, subSend}))
+    // 6.1.24 — a backgrounded shell job holds the turn end as a live agent does; its
+    // task-notification turn ends the hold, and a persistent Monitor is a watch, never a hold
+    // (one downstream project, 2026-11-24: three Builders rang TURN-END "Agents: 0 running" while
+    // their integration run was still out)
+    liveAgents = []
+    const recB = () => JSON.parse(fs.readFileSync(path.join(root, '.astraler/state/dispatch-record.json'), 'utf8'))['AB-5'] ?? {}
+    await fire('turn.start', { text: '', turnId: 'bg0' }, async () => ({}))
+    await fire('tool.call', { tool: 'Bash', command: 'go test -tags=integration ./...', run_in_background: true }, async () => ({ result: { stdout: '', stderr: '', interrupted: false, backgroundTaskId: 'bsh1' } }))
+    await fire('tool.call', { tool: 'Monitor', description: 'tail the server log', persistent: true }, async () => ({ result: { taskId: 'mon1', timeoutMs: 0, persistent: true } }))
+    await fire('turn.complete', { reason: 'answer', answer: 'waiting for the background run', turnId: 'bg1' }, async () => ({}))
+    const bgHeldW = recB().waiting_on
+    const bgHeld = bgHeldW?.n === 1 && bgHeldW?.what?.[0] === 'shell: go test -tags=integration ./... [running]'
+    await fire('turn.start', { text: '<task-notification>\n<task-id>bsh1</task-id>\n<status>completed</status>\n</task-notification>', turnId: 'bg2' }, async () => ({}))
+    await fire('turn.complete', { reason: 'answer', answer: 'tests green, handing back', turnId: 'bg3' }, async () => ({}))
+    const bgReleased = recB().waiting_on === null
+    const bgShell = `${bgHeld}:${bgReleased}`
+    console.log(JSON.stringify({ parkedHeld, parkedWakeDropped, parkedSent, parkedLine, parkedUnavailable, deadRecorded, deadNotified, deadCleared, quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, wakeup, wakeupStop, armOpenNamed, bypassHint, sendToBareRef, sendToDoneRef, sendToDoneName, sendToDoneId, sendToUnknownRef, bandText, log , tabsNamed, subSend, simplifyPass, bgShell}))
     return
   }
   await fire('session.start', {}, async () => ({}))
@@ -3043,6 +3064,16 @@ EOS
     ok "agent sends (5.0.7/5.0.8): a bare ref of the pane's own LIVE fork goes to it by name; a finished own agent takes no message by ref, name or id; a bare ref no agent carries is refused; none is readdressed to the dispatcher"
   else
     bad "agent sends (5.0.8)" "$(printf '%s' "$out" | grep -o '"sendToBareRef":"[^"]*","sendToDoneRef":"[^"]*","sendToDoneName":"[^"]*","sendToDoneId":"[^"]*","sendToUnknownRef":"[^"]*"' | head -1)"
+  fi
+  if says "$out" '"bgShell":"true:true"'; then
+    ok "a backgrounded shell job holds the pane's TURN-END like a live agent; its task-notification turn releases it; a persistent Monitor is not a hold (6.1.24)"
+  else
+    bad "background shell hold (6.1.24)" "$(printf '%s' "$out" | grep -o '"bgShell":"[^"]*"' | head -1)"
+  fi
+  if says "$out" '"simplifyPass":"deny:held,deny:held,deny:held,pass:ran,pass:ran,pass:ran"'; then
+    ok "a simplify(increment) marker whose Pass: line does not start with the accepted token is refused at the commit; a well-formed one and a non-marker commit go (6.1.24)"
+  else
+    bad "simplify Pass: at the commit (6.1.24)" "$(printf '%s' "$out" | grep -o '"simplifyPass":"[^"]*"' | head -1)"
   fi
   if says "$out" '"subSend":"refused,refused,seen=team-lead"'; then
     ok "a pane's subagent cannot reply to the dispatcher; it is sent back to its parent (6.1.24)"

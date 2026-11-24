@@ -114,9 +114,9 @@ the block and read the log, never the notice's number (`dispatch-ticket/WATCHING
 
 **How to wait is to end the turn.** A fork or sub-agent you launched (a review fork, an audit
 agent, an `Agent(...)` call) keeps your TURN-END held: the mod sends it only when no agent of
-yours is running, and the agent's completion re-invokes you. A backgrounded shell job is not an
-agent — the hold does not see it, so a turn that ends on one reports TURN-END with the work
-still running; that is the PARKED case above, and the cure is the foreground. A `roster`
+yours is running, and the agent's completion re-invokes you. Since 6.1.24 a backgrounded shell
+job (`run_in_background`, a Monitor with a deadline) holds it the same way and its completion
+notice wakes you; a gate that fits the Bash timeout still runs in the foreground. A `roster`
 or idle seat in ListAgents is not work: a finished agent stays listed and never wakes you, so a
 turn that ends unheld has nothing of yours running — continue, do not wait for a notice
 (nizzy 2026-11-01: one Builder parked 374 min on five finished review seats). The one exception

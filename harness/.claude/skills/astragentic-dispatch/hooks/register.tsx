@@ -327,6 +327,8 @@ const RED_RUN = 'red-run'
 // 6.1.22: with the spec arm off the Shaper's band shows the same-vendor read in the arm's place;
 // the step lights from the Agent call, recorded in skills_run like a skill.
 const SPEC_LENS = 'astra-adversarial-lens'
+// The accepted leading tokens of a simplify(increment) marker's Pass: value, as check-simplify-markers.sh KINDS has them.
+const SIMPLIFY_PASS = ['Skill(skill: "simplify")', '$astra-codex-simplify']
 const FLOW_BY_ROLE: Record<string, ReadonlyArray<Step>> = {
   builder: [
     ['astra-implement-with-tdd', 'implement'],
@@ -1396,6 +1398,9 @@ export const register: Register = on => {
   let appliedVersion = ''
   const sends = new Map<string, number>()
   let strayNote = ''
+  // This pane's background shell jobs still out, by task id (6.1.24): a run_in_background Bash or a
+  // Monitor with a deadline. A persistent Monitor is a watch, not a wait, and is not counted.
+  const bgShells = new Map<string, string>()
 
   on('session.start', async ($, e, next) => {
     root = await repoRoot($)
@@ -1463,6 +1468,7 @@ export const register: Register = on => {
     // until the next main turn completed.
     if ((e as any).agentId !== undefined) return next(e)
     isBusy = true
+    for (const m of String((e as any).text ?? '').matchAll(/<task-id>([^<]+)<\/task-id>/g)) bgShells.delete(m[1].trim())
     if (!me) {
       const text = String((e as any).text ?? '')
       currentBell = text.includes(MARK) ? text : submittedBell
@@ -1713,7 +1719,7 @@ export const register: Register = on => {
     // The record notes what is waited on, the board shows it, and the one TURN-END goes when
     // the first turn ends with nothing live. An aborted or errored turn is sent as it is.
     if (e.reason === 'answer' && me.role !== 'resident') {
-      const live = await liveAgents($)
+      const live = [...await liveAgents($), ...[...bgShells.values()].map(c => ({ description: `shell: ${c.slice(0, 80)}`, status: 'running' }))]
       if (live.length > 0) {
         if (root) {
           // The status rides with the description (5.0.8): the one held-stale bell nizzy could
@@ -1721,7 +1727,7 @@ export const register: Register = on => {
           await patchRecord($, root, me.key, { waiting_on: { n: live.length, at: await $.clock.now(), what: live.slice(0, 3).map(a => `${a.description} [${a.status}]`) } })
           await refreshFlow($, root, me.key)
         }
-        $.ui.status(`${live.length} agent(s) still running — TURN-END held until they finish`)
+        $.ui.status(`${live.length} agent(s) or background job(s) still running — TURN-END held until they finish`)
         return res
       }
     }
@@ -2167,7 +2173,7 @@ export const register: Register = on => {
     const ev: any = e
     if (ev.stop === true || ev.input?.stop === true) return next(e)
     return {
-      deny: `astragentic-dispatch: a dispatched pane (${me.role} ${me.key}) does not schedule its own wakeups. To wait on a fork or sub-agent, end the turn: your TURN-END is held while any agent of yours runs, and the agent's completion re-invokes you. A backgrounded shell job is not an agent and does not hold the turn — run gates in the foreground. Nothing here is a /loop.`,
+      deny: `astragentic-dispatch: a dispatched pane (${me.role} ${me.key}) does not schedule its own wakeups. To wait on a fork or sub-agent, end the turn: your TURN-END is held while any agent of yours runs, and the agent's completion re-invokes you. A backgrounded shell job holds the turn end the same way and its completion notice wakes you; a gate that fits the Bash timeout runs in the foreground. Nothing here is a /loop.`,
     }
   })
 
@@ -2259,6 +2265,21 @@ export const register: Register = on => {
     return next(e)
   })
 
+  // A BACKGROUNDED RUN IS A WAIT THE PANE WILL BE WOKEN FROM (6.1.24). The engine re-invokes a
+  // session when a background shell job ends (task-notification), as it does when an agent ends,
+  // but the hold above counted agents only: one downstream project, 2026-11-24, three Builders
+  // (IN-523 three times in a row) backgrounded an integration run, ended the turn "waiting for the
+  // run", and rang TURN-END "Agents: 0 running" each time, a bell for a pane that was not done.
+  on('tool.call', async ($, e, next) => {
+    const res = await next(e)
+    if (!me || me.role === 'resident' || (e as any).agentId !== undefined) return res
+    const r: any = (res as any)?.result
+    if (e.tool === 'Bash' && typeof r?.backgroundTaskId === 'string') bgShells.set(r.backgroundTaskId, String((e as any).command ?? ''))
+    else if (e.tool === 'Monitor' && typeof r?.taskId === 'string' && !r.persistent && r.timeoutMs > 0) bgShells.set(r.taskId, String((e as any).description ?? 'monitor'))
+    else if ((e.tool === 'TaskStop' || e.tool === 'KillShell') && !(res as any)?.deny) bgShells.delete(String((e as any).task_id ?? (e as any).shell_id ?? ''))
+    return res
+  })
+
   on('tool.call', { tool: 'Bash' }, async ($, e, next) => {
     if (me?.role !== 'builder' || !root) return next(e)
     // Every simple command in the call, heredoc bodies included; a commit is a content commit
@@ -2270,6 +2291,19 @@ export const register: Register = on => {
     const commits = worktree
       ? commitsInWorktree(command, worktree)
       : simpleCommands(command).map(gitCommitArgs).filter((c): c is { args: string[]; dir: string | null } => c !== null).map(c => c.args)
+    // A MALFORMED simplify MARKER IS REFUSED WHERE IT IS WRITTEN (6.1.24). check-simplify-markers.sh
+    // reads `Pass:` by prefix at the merge; the pane let any text commit. One downstream project,
+    // 2026-11-23..24: 4 of 21 simplify(increment) markers wrote `Pass: simplify (…`, `Pass: /simplify …`,
+    // and each cost a refused merge, a correction commit and a Builder round-trip.
+    // The message is read from the call as typed: the commit args carry a heredoc message as the
+    // placeholder `heredoc-message` (literalCatHeredocs), and Claude Code commits by heredoc.
+    if (commits.length > 0 && /(?:^|["'\n])simplify\(increment\):/m.test(e.command)) {
+      const val = e.command.match(/(?:^|[\s"'])Pass:[ \t]*([^\n]*)/)?.[1]?.replace(/\\"/g, '"')
+      if (val === undefined || !SIMPLIFY_PASS.some(t => val.startsWith(t))) {
+        await logRefusal($, root, me.key, 'simplify-pass', String(val ?? '(no Pass:)').slice(0, 80))
+        return { deny: `astragentic-dispatch: a simplify(increment) marker's Pass: line must start with ${SIMPLIFY_PASS[0]} (check-simplify-markers.sh refuses it at the merge otherwise); this one ${val === undefined ? 'has no Pass: line' : `starts "${val.slice(0, 40)}"`}. Write it as: Pass: ${SIMPLIFY_PASS[0]} — <what ran>, and commit again. Then run scripts/check-simplify-markers.sh <Base> HEAD and read its exit code.` }
+      }
+    }
     const contentCommits = commits.filter(a => !a.includes('--allow-empty'))
     if (contentCommits.length === 0) return next(e)
     // A QUICK TICKET OWES NO TEST (4.6.0): its kind came from the tracker's label, written on the
