@@ -1461,6 +1461,15 @@ export const register: Register = on => {
     return next(e)
   })
 
+  // A background job that ends while the turn still runs is told to the model as a queued_command
+  // attachment inside that turn, never as a turn start: release it there too (one downstream
+  // project, 2026-11-24: 2 of 2 Builders held their TURN-END 20 min on jobs long finished).
+  on('prompt.attachment', ($, e, next) => {
+    if ((e as any).agentId === undefined)
+      for (const m of String((e as any).text ?? '').matchAll(/<task-id>([^<]+)<\/task-id>/g)) bgShells.delete(m[1].trim())
+    return next(e)
+  })
+
   on('turn.start', ($, e, next) => {
     // Since Claude Code 2.1.299 this hook also hears subagents' and teammates' turns, told
     // apart by `agentId` (absent on the main loop). Only the main loop's turn holds bells: a

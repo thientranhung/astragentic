@@ -2614,7 +2614,15 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     await fire('turn.start', { text: '<task-notification>\n<task-id>bsh1</task-id>\n<status>completed</status>\n</task-notification>', turnId: 'bg2' }, async () => ({}))
     await fire('turn.complete', { reason: 'answer', answer: 'tests green, handing back', turnId: 'bg3' }, async () => ({}))
     const bgReleased = recB().waiting_on === null
-    const bgShell = `${bgHeld}:${bgReleased}`
+    // a job that ends inside a running turn arrives as a queued_command attachment, not a turn start
+    await new Promise(r => setTimeout(r, 300))  // let bg3's grace bell land first: it clears waiting_on
+    await fire('turn.start', { text: 'run the slow suite', turnId: 'bg4' }, async () => ({}))
+    await new Promise(r => setTimeout(r, 100))  // the turn start clears an old hold asynchronously; in a pane seconds pass here
+    await fire('tool.call', { tool: 'Bash', command: 'go test -tags=integration ./internal/...', run_in_background: true }, async () => ({ result: { stdout: '', stderr: '', interrupted: false, backgroundTaskId: 'bsh2' } }))
+    await fire('prompt.attachment', { type: 'queued_command', text: '<task-notification>\n<task-id>bsh2</task-id>\n<status>completed</status>\n</task-notification>', origin: 'engine' }, async () => ({}))
+    await fire('turn.complete', { reason: 'answer', answer: 'suite green, handing back', turnId: 'bg5' }, async () => ({}))
+    const bgMidTurn = recB().waiting_on === null
+    const bgShell = `${bgHeld}:${bgReleased}:${bgMidTurn}`
     console.log(JSON.stringify({ parkedHeld, parkedWakeDropped, parkedSent, parkedLine, parkedUnavailable, deadRecorded, deadNotified, deadCleared, quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, wakeup, wakeupStop, armOpenNamed, bypassHint, sendToBareRef, sendToDoneRef, sendToDoneName, sendToDoneId, sendToUnknownRef, bandText, log , tabsNamed, subSend, simplifyPass, bgShell}))
     return
   }
@@ -3065,7 +3073,7 @@ EOS
   else
     bad "agent sends (5.0.8)" "$(printf '%s' "$out" | grep -o '"sendToBareRef":"[^"]*","sendToDoneRef":"[^"]*","sendToDoneName":"[^"]*","sendToDoneId":"[^"]*","sendToUnknownRef":"[^"]*"' | head -1)"
   fi
-  if says "$out" '"bgShell":"true:true"'; then
+  if says "$out" '"bgShell":"true:true:true"'; then
     ok "a backgrounded shell job holds the pane's TURN-END like a live agent; its task-notification turn releases it; a persistent Monitor is not a hold (6.1.24)"
   else
     bad "background shell hold (6.1.24)" "$(printf '%s' "$out" | grep -o '"bgShell":"[^"]*"' | head -1)"
