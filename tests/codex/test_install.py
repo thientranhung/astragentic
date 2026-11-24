@@ -114,6 +114,22 @@ class InstallTests(unittest.TestCase):
         self.assertEqual(shared.read_bytes(), source.read_bytes())
         self.assertEqual(mirror.read_bytes(), shared.read_bytes())
 
+    def test_tracker_named_by_skill_ships_that_adapter_alone(self):
+        # 6.1.25, the Codex side of 6.1.24 row 8: the doc names one adapter and mentions a former
+        # tracker in prose; the project gets that adapter only. No doc: all three.
+        skills = lambda: sorted(p.name for p in (self.project / '.agents/skills').glob('codex-*-issue-tracker'))
+        operate(self.project, 'install', apply=True)
+        self.assertEqual(skills(), ['codex-github-issue-tracker', 'codex-jira-issue-tracker', 'codex-linear-issue-tracker'])
+        other = Path(tempfile.mkdtemp(prefix='astra tracker '))
+        try:
+            subprocess.run(['git', 'init', '-q', str(other)], check=True)
+            (other / 'docs/agents').mkdir(parents=True)
+            (other / 'docs/agents/issue-tracker.md').write_text('Tracker: Jira (moved from Linear in 2026).\nAdapter: `jira-issue-tracker`.\n')
+            operate(other, 'install', apply=True)
+            self.assertEqual(sorted(p.name for p in (other / '.agents/skills').glob('codex-*-issue-tracker')), ['codex-jira-issue-tracker'])
+        finally:
+            import shutil; shutil.rmtree(other)
+
     def test_dry_run_does_not_create_files(self):
         result = operate(self.project, 'install')
         self.assertFalse(result['apply'])

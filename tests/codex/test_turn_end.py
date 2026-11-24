@@ -92,6 +92,16 @@ class TurnEndBellTests(unittest.TestCase):
         self.assertTrue(calls[0].startswith(f'queue --remote unix:///tmp/app-server-control.sock --thread {THOMAS} '), calls[0])
         self.assertNotIn('--resume', calls[0])
 
+    def test_resume_recipe_carries_the_bell_and_the_worktree(self):
+        # 6.1.25: the bell is a launch flag and a resume does not restore it, so the documented
+        # resume line must pass the same -c "$NOTIFY" and --cd its recorded worktree.
+        text = (ROOT / 'runtimes/codex/.codex/DISPATCH.md').read_text()
+        section = text.split('## Resume permission selection', 1)[1].split('\n## ', 1)[0]
+        lines = [l for l in section.splitlines() if l.startswith('codex resume ')]
+        self.assertTrue(lines, 'no resume command line in § Resume permission selection')
+        for flag in ('-c "$NOTIFY"', '--cd "$WORKTREE"'):
+            self.assertTrue(all(flag in l for l in lines), (flag, lines))
+
     def test_dispatch_argv_in_dispatch_md_is_valid_toml_for_codex(self):
         # Render the documented NOTIFY string with bash and parse it as Codex would (-c key=TOML value).
         text = (ROOT / 'runtimes/codex/.codex/DISPATCH.md').read_text()

@@ -37,6 +37,24 @@ def destination(root, relative):
     return path
 
 
+def tracker_named(root):
+    """github|jira|linear when docs/agents/issue-tracker.md names exactly one, else None.
+
+    The Claude installer's rule (install.sh tracker_named, 6.1.24): one adapter named by its skill
+    name wins over the words, so a doc that names `jira-issue-tracker` and says the tracker "moved
+    from Linear" gets Jira alone; otherwise the one tracker word, or all three adapters."""
+    import re
+    doc = root / 'docs/agents/issue-tracker.md'
+    if not doc.is_file():
+        return None
+    text = doc.read_text(errors='replace')
+    named = set(re.findall(r'\b(github|jira|linear)-issue-tracker\b', text))
+    if len(named) == 1:
+        return named.pop()
+    words = [k for w, k in (('GitHub', 'github'), ('Jira', 'jira'), ('Linear', 'linear')) if re.search(r'\b' + w + r'\b', text)]
+    return words[0] if len(words) == 1 else None
+
+
 def owned_path(relative):
     return (relative.startswith('.agents/skills/codex-') and relative.endswith('/SKILL.md')
             or relative == '.agents/skills/astra-codex-simplify/SKILL.md'
@@ -86,9 +104,14 @@ def operate(project, action, apply=False):
     payload = {}
     config = destination(root, CONFIG)
     if action == 'install':
+        only = tracker_named(root)
         for directory in ('.agents/skills', '.codex/roles'):
             for source in (SOURCE / directory).rglob('*.md'):
-                payload[str(source.relative_to(SOURCE))] = source.read_bytes()
+                relative = str(source.relative_to(SOURCE))
+                other = [k for k in ('github', 'jira', 'linear') if k != only]
+                if only and any(f'/codex-{k}-issue-tracker/' in relative for k in other):
+                    continue  # the project names one tracker: the other two adapters stay in the release
+                payload[relative] = source.read_bytes()
         payload['.codex/DISPATCH.md'] = (SOURCE / '.codex/DISPATCH.md').read_bytes()
         for name in ('launch.py', 'helpers.py', 'transport.py', 'merge.py', 'turn-end.sh', 'skill-map.json',
                      'arm-schema.json', 'coordinator-turn-end.sh', 'coordinator-hooks.json', 'host-guard.py'):

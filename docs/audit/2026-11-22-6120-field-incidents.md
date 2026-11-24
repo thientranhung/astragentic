@@ -45,3 +45,14 @@
 |---|---|---|---|
 | — | both projects applied 6.1.24: inception 830a6b5aa, nizzy apply commit; 0 ACTION lines, 0 conflicts, check-requirements --adapted OK | applied-version 6.1.24 in each | live readings owed |
 | 14 | nizzy TRA-1627 (before the upgrade): a Herdr env switch resumed a Builder in the base checkout, the IN-519 shape; n=2 across projects | nizzy Thomas 2026-11-24 | open: closes on the next resume after 6.1.24 |
+
+## Codex counterparts of 6.1.24 (owner 2026-11-24: Codex is supported in parallel)
+
+| # | Codex lane | số đo | nguồn | state |
+|---|---|---|---|---|
+| 14 | the documented worker resume (`codex resume <uuid>`) passed no `-c notify`, the worker's only TURN-END bell, and named no checkout | DISPATCH.md § Resume permission selection; `codex resume --help` takes `-c` and `--cd` | audit 2026-11-24 | fixed: the recipe rebuilds `-c "$NOTIFY"` and `--cd "$WORKTREE"`; tests/codex `test_resume_recipe_carries_the_bell_and_the_worktree` fails on 6.1.24's text; live resume chưa đo |
+| 8 | `install.py` copied all three `codex-*-issue-tracker` skills whatever the doc named | install.py payload loop | audit 2026-11-24 | fixed with install.sh's rule; `test_tracker_named_by_skill_ships_that_adapter_alone`: 6.1.24 ships 3, now 1 |
+| 10 | Shaper rereads after compaction but not its role file, and never said compaction is expected | shaper.md § Recovery | audit | text: reread the role file; compaction is not a stop |
+| 15 | no commit-time `Pass:` check; the only PreToolUse hook is `host-guard.py` (host commands), and whether worker sessions load `coordinator-hooks.json` is unmeasured | host-guard.py decide(); DISPATCH.md:543 | audit | chưa đo: a live worker session must show the hook firing before a check goes there |
+| 16 | the notify bell rings on every `agent-turn-complete`; whether a backgrounded `exec_command` session outlives the turn is unmeasured | turn-end.sh:33 | audit | chưa đo: one live worker run |
+| 12 | helpers return through `wait_agent`; whether a `spawn_agent` helper's turn end fires the parent's notify is unmeasured | common.md:57,70; turn-end.sh:36-39 | audit | chưa đo |

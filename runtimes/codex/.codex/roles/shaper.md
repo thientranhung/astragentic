@@ -36,7 +36,8 @@ different from an owner Quick Builder session.
 ## Recovery
 
 Persist the frontier, spec revision, review findings and release checkpoint in the
-dispatch artifact directory before waiting. After compaction/resume, reread these
-and the current record. A newer spec invalidates an older release; missing release
+dispatch artifact directory before waiting. A compaction is expected, never a reason to stop
+or hand back: after compaction/resume, reread this role file, these artifacts and the current
+record before writing anything that rests on a settled decision. A newer spec invalidates an older release; missing release
 means remain paused. Do not duplicate tracker creation after ambiguous delivery.
 If the effort exceeds one coherent shaping scope, report a proposed split to Thomas.

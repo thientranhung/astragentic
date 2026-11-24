@@ -687,6 +687,17 @@ thread with the same recorded choice: for yolo use native
 These bare examples are for the local route. For an explicitly bound endpoint,
 include its recorded `--remote <endpoint>` on resume; never move the UUID to a
 different endpoint or resume an owner-paused session implicitly.
+A dispatched worker's TURN-END bell lives only in its launch flags (`-c "$NOTIFY"`, § the
+Herdr launch above), so a resume without it rings nothing; a resume from the base checkout
+writes the bell's state under the wrong `$PWD`. Resume a worker with the bell rebuilt from
+its recorded DISPATCH_ID, THOMAS_UUID and endpoint, in its recorded worktree:
+
+```bash
+codex resume "${PERMISSION_ARGS[@]}" "${ENDPOINT_ARGS[@]}" --cd "$WORKTREE" -c "$NOTIFY" "$THREAD_UUID"
+```
+
+(6.1.25, the Codex side of a Claude-lane field defect: a Builder resumed from the base checkout
+lost its identity and its bell, two projects, 2026-11-24.)
 Do not assume a resumed process restores old CLI flags. If the owner revokes or
 narrows permissions, do not keep passing the old flag; reconcile the active session
 and checkpoint first. Changing argv in a record does not alter an already running
