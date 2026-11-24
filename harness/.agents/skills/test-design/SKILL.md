@@ -32,22 +32,27 @@ halts the skill. Name what is missing and hand back.
    an execution mode for QA: walk, probe or verify.
 2. **Read what already exists.** Scan the repo for tests, fixtures and flaky areas. A case the
    suite already covers at a level is not planned again at another.
-3. **Find the risks before the cases.** Classify each as technical, security, performance, data,
+3. **Find the risks before the cases** (risk-based testing). Classify each as technical, security, performance, data,
    business or operational. Score probability (1 to 3) times impact (1 to 3). Six or more is high
    and needs a mitigation and a timing.
 4. **Rank every journey, endpoint and job P0 to P3.** P0 blocks core use, is high risk and has no
    workaround. P1 covers critical paths with medium or high risk. P2 is secondary. P3 is
    exploratory.
-5. **Decompose into atomic cases, one level each.** End to end, API, integration or unit. Never the
+5. **Decompose into atomic cases, one level each** (test levels, the test pyramid). End to end, API, integration or unit. Never the
    same behaviour at two levels without a stated reason.
-   **A surface that writes data** (upload, submit, map, setup) also gets its misuse cases, named
-   for that surface: add, remove, replace and re-add the input; a second action while the first
-   is in flight, or from a second tab; reload or leave mid-action; too few, too many, duplicate
-   names, wrong type, empty; a role that may not write; the screen after the write, without a
-   reload. They join the cases of the ticket that changes the surface, ranked like any other,
+   **A surface that writes data** (a form, an upload, a submit, a setup step) also gets its
+   misuse cases, named for that surface, one group per standard technique: **state transitions**
+   (add, remove, replace and re-add the input); **concurrency and idempotency** (a second action
+   while the first is in flight, a double submit, a second tab); **interruption** (reload or leave
+   mid-action; on mobile also backgrounding and network loss); **boundary values and equivalence
+   classes** (too few, too many, duplicate names, wrong type, empty); **authorization** (a role
+   that may not write, played from the restricted account the project's entry doc names with how
+   a browser or app signs in as it; none named: the case is a COVERAGE GAP and a finding for the
+   owner, never dropped); **UI–server consistency** (the screen after the write, without a
+   reload). They join the cases of the ticket that changes the surface, ranked like any other,
    with the mutations each needs named so the brief can authorize them. Measured: 19 walks on
-   one upload surface ran none of these; the first run that did found a P1 (one colliding
-   filename in a second drop discarded every pending tile).
+   one upload surface ran none of these; the first run that did found a P1 (a second upload with
+   one colliding filename discarded every pending file).
 6. **Attach the mandatory checks per mode.** These are required, not optional (see below).
 7. **Thresholds are measured or unknown.** Take a number from the spec, never from a guess. A
    missing threshold goes to Open questions as UNKNOWN.

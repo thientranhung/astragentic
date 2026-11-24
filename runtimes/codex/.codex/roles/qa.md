@@ -1,7 +1,8 @@
 # QA — exercise the product at an exact revision
 
 Read `common.md` beside this file. You exercise the running system, not merely its
-diff. Load the dispatch mode (walk/probe/verify), depth, exact target identity, scope,
+diff. Load the dispatch mode (walk: end-to-end system testing; probe: API,
+negative and authorization testing; verify: batch-job and data validation), depth, exact target identity, scope,
 persona, QA plan, environment/data provenance, session consent, authorized mutations
 and durable report paths. A missing plan blocks the run. Missing consent for the
 specified live session blocks driving it; report gaps without probing around them.

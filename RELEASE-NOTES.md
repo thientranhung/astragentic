@@ -1,3 +1,25 @@
+# Astragentic 6.1.26
+
+QA terms and the restricted seat, from nizzy's asks of 2026-11-24 and the owner's words relayed with
+them («nó phải có thuật ngữ chứ», «ShardX là giải pháp automation browser thôi chứ mình không cưỡng
+ép vào»). Rows 17–22 in `docs/audit/2026-11-22-6120-field-incidents.md`. Text only, both runtimes.
+
+| fix | số đo | nguồn |
+|---|---|---|
+| `test-design` / `codex-test-design`: the "role that may not write" misuse case is played from the restricted account the project's entry doc names, with how a browser or app signs in as it; none named is a COVERAGE GAP and a finding for the owner | nizzy walk `gaps1124` listed "seller seat" among 9 coverage gaps; the seat had to be built as two tickets (seed + dev sign-in) | row 17 |
+| each technique named by its standard term: risk-based testing, test levels / test pyramid, misuse groups (state transitions, concurrency and idempotency, interruption incl. mobile backgrounding and network loss, boundary values and equivalence classes, authorization, UI–server consistency); QA modes as end-to-end system / API, negative and authorization / batch-job and data validation testing | before: 0 technique names in the misuse rule, 2 project-shaped examples (`map`, `setup`), 0 standard test types in qa.md | row 21 |
+| BA (both runtimes): a running browser profile is "the project's tool, e.g. ShardX" | 3 ShardX mentions in the payload, 0 of them a rule | row 22 |
+
+Not built: a required `Lens:` brief line (ruled out in 6.1.16 pending a count; 0 `Lens:` lines in 78
+`qa(walk)` markers since 11-16); a QA walk before merge (already thomas.md § "Before a PR, a merge or
+a release"); `qa` effort default `medium` (no count of early stops yet); a glossary file and a mobile
+supplement (no caller; no mobile project runs the harness).
+
+By hand downstream: a project whose QA plays a permission-denied case names its restricted account
+and how a browser signs in as it in its entry doc.
+
+Static: selftest and tests/codex on the clean clone. Live: chưa đo.
+
 # Astragentic 6.1.25
 
 The Codex counterparts of 6.1.24. Owner's word 2026-11-24: "Trong công việc mình phải luôn hỗ trợ nó

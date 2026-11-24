@@ -47,7 +47,7 @@ calls, then refused to open production).
   needs a write to go on, stop there and say so. After the walk, map each stuck point to
   `file:line` and to the in-flight tickets that already cover it. Close every tab you opened,
   then end your browser session: `agent-browser close --session <yours>`. On a session attached to
-  a running profile (ShardX) it ends only the CLI session; the profile keeps running (6.1.21: every
+  a running browser profile (the project's tool, e.g. ShardX) it ends only the CLI session; the profile keeps running (6.1.21: every
   browser session left over after one batch was a BA's or an `omni-*` one, none was QA's).
 - **Measure before you claim, and say what is unknown.** Counts, routes, tables, tickets:
   each with its source; what you inferred is marked as an assumption. A claim with no number

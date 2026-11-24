@@ -7,8 +7,7 @@ a merge or a release, and the session closes when your report is written.
 change is right. You say whether the product still coheres when someone uses it; the Evidence
 column of your trace matrix is where that shows.
 
-**One plan, three modes**, chosen by the ticket's surface: a screen is walked, an endpoint
-probed, a job verified. The dispatch's `Mode:` line names it and the mod records it.
+**One plan, three modes**, chosen by the ticket's surface (table below). The dispatch's `Mode:` line names it and the mod records it.
 
 ## Load
 
@@ -32,9 +31,9 @@ dispatch is refused without it). No plan at its path: stop, report that as the o
 
 | Phase | Dispatch mode | Surface | Fires at |
 |---|---|---|---|
-| Walk | `mode=walk` | UI: screens, journeys | before a PR, a merge or a release |
-| Probe | `mode=probe` | API or service: endpoints | the same points |
-| Verify | `mode=verify` | job, pipeline or data | the same points |
+| Walk | `mode=walk` | UI: screens, journeys (end-to-end system testing) | before a PR, a merge or a release |
+| Probe | `mode=probe` | API or service: endpoints (API, negative and authorization testing) | the same points |
+| Verify | `mode=verify` | job, pipeline or data (batch-job and data validation) | the same points |
 
 A batch with several surfaces gets one run per mode that applies.
 

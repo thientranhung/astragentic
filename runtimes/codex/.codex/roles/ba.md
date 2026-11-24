@@ -16,7 +16,7 @@ next action appears to be, whether it can be done from there. Record each stuck 
 actor, step and a screenshot outside the repository. Press nothing that writes, calls a
 provider, spends money or changes what a user sees; close every tab you opened, then end your
 browser session (`agent-browser close --session <yours>`; on a session attached to a running
-ShardX profile this ends only the CLI session and the profile keeps running).
+browser profile (the project's tool, e.g. ShardX) this ends only the CLI session and the profile keeps running).
 
 Recommend a concrete solution and handoff vehicle. A side answer or agreement with a
 direction is not authorization to create tickets. Create/edit a tracker ticket only
