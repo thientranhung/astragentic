@@ -1,3 +1,33 @@
+# Astragentic 6.1.24
+
+Field batch from both projects, 2026-11-23..24: seven fixes, each reproduced or measured from a
+primary source and planted in the suite (`docs/audit/2026-11-22-6120-field-incidents.md`, rows 8–16).
+
+| fix | số đo | nguồn |
+|---|---|---|
+| a resumed pane takes its identity from the record by session id alone, in any pane, on either host; a resume on another branch gets none, leaves the entry untouched and is told to stop and resume from its own checkout | inception IN-519: a Herdr Builder resumed in Orca from the base checkout kept host=herdr, recorded no Skill call, rang no TURN-END; planted `orcaresume-cross` / `-stray`: 6.1.23 leaves it a root session | row 14 |
+| a simplify(increment) commit whose `Pass:` does not start with `Skill(skill: "simplify")` is refused in the Builder's pane, with the line to write | inception git log 11-23..24: 6 malformed `Pass:` lines among 29 simplify markers (corrections included), each refused only at the merge and costing a correction commit and a round-trip; planted: 6.1.23 lets 6 of 6 through, now 3 refused, 3 go | row 15 |
+| a backgrounded shell job (`run_in_background` Bash, a Monitor with a deadline) holds the pane's TURN-END like a live agent, released by its task-notification or TaskStop | inception: 5 turn ends rang "Agents: 0 running" with the run still out (IN-523 ×3, IN-531, IN-529); planted | row 16 |
+| a pane's subagent cannot reply to the dispatcher; it is sent back to its parent | inception IN-504: 1 of 2 spec-lens passes went to the dispatcher's session (the overlay's dispatcher line is session-scoped); planted | row 12 |
+| the Shaper's system prompt no longer calls the launcher's compaction a failure; after one it re-reads contract, ALIGN and spec from disk | inception IN-504: 3 auto compactions, 2 ended in a stop-and-ask, 1 misread a settled decision | row 10 |
+| `qa.md` (Claude and Codex): an upload sends a copy of its file in `$TMPDIR` | nizzy TRA-1629: a P0 "hang" was macOS TCC; reproduced: `$TMPDIR` reads at once, `~/Documents` never (5 s), with a browser lacking the Documents permission | row 13 |
+| `install.sh`: a tracker doc that names one `<x>-issue-tracker` gets that adapter, even when its prose names a former tracker | inception 6.1.23 apply shipped all three adapters; planted | row 8 |
+| codex-arm: a `401` / `token revoked` log line is the NOT RUN reason, and § Quota names `codex logout && codex login` | nizzy: `codex login status` said logged in, `codex exec` returned 401 | row 11 |
+
+By hand downstream:
+- Nothing is required. `orchestrator.md` is owner-kept: close every `ACTION:` line the apply prints in
+  the integration commit (nizzy's 6.1.23 apply printed one for `orchestrator.md` and it was skipped).
+- A project turning the slice Codex arm back on counts "merges since the last slice read" from its
+  last `arm(slice):` or `gate(slice):` marker, whichever is later.
+- On a Mac, a browser that QA drives needs the Documents folder permission (Files and Folders, on
+  the launcher app) or fixtures under `$TMPDIR`.
+
+Claude lane only: the resume identity, the commit-time `Pass:` refusal, the background hold and the
+subagent send refusal live in the dispatch mod; the Codex lane has no mod (its commit-time check chưa
+đo). Static and stubbed: selftest and tests/codex on the clean clone. Live: chưa đo, each closes on
+a field number after the upgrade (whether the engine's task-notification text reaches the mod's
+turn start as in the stub is the first one).
+
 # Astragentic 6.1.23
 
 A new project's `orchestrator.md` ships with the Codex arm off at ticket, spec and slice; the Claude
