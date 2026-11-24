@@ -738,7 +738,7 @@ function printable(text: string, max = 300): string {
 
 
 type Host = 'herdr' | 'orca'
-type Me = { role: string; key: string; tab: string; pane: string; host: Host; terminal?: string; resumed?: boolean }
+type Me = { role: string; key: string; tab: string; pane: string; host: Host; terminal?: string; resumed?: boolean; stray?: string }
 type Envelope = { from: string; fromName: string; inner: string }
 
 // A session name as the dispatcher must type it when two sessions share a prefix: SendMessage
@@ -838,14 +838,7 @@ async function whoAmI($: any, root: string | null): Promise<Me | null> {
     // for 2 handbacks, 5 commits with no pane gate loaded, 3 skills off the record. The record entry
     // this pane wrote before the restart names it; both the pane key and the session id must
     // match, so a fresh `claude` typed into a dead Builder's pane stays a root session.
-    if (!m && tab && pane && root) {
-      const sid = await $.session.id().catch(() => null)
-      for (const [k, entry] of Object.entries((await readRecord($, root)) ?? {})) {
-        if (entry?.host === 'orca' && entry.pane_id === pane && sid && entry.session_id === sid && typeof entry.role === 'string') {
-          return { role: entry.role, key: k, tab, pane, host, terminal, resumed: true }
-        }
-      }
-    }
+    if (!m && tab && pane) return byRecord($, root, host, tab, pane, terminal)
     return null
   }
   const tab = await $.env.get('HERDR_TAB_ID')
@@ -857,7 +850,31 @@ async function whoAmI($: any, root: string | null): Promise<Me | null> {
   // A QA pane walks a Builder's ticket, so its record entry is keyed `qa:<key>`: the same key as
   // the Builder's would overwrite the Builder's entry (role, pane, skills) at QA's session start.
   const key = m?.[2] ? (role === 'qa' ? `qa:${m[2]}` : m[2]) : undefined
-  return role && key ? { role, key, tab, pane, host: 'herdr' } : null
+  return role && key ? { role, key, tab, pane, host: 'herdr' } : byRecord($, root, 'herdr', tab, pane)
+}
+
+// 6.1.24 — THE SESSION ID ALONE NAMES A RESUMED PANE. 6.1.9 matched a bare `claude --resume <id>`
+// by pane key AND session id, which covers an Orca restart and nothing else: a Builder dispatched
+// on Herdr and resumed by the owner in an Orca pane (one downstream ticket, 2026-11-24) matched
+// neither pane, ran as a root session, put none of its Skill calls on the record and rang no
+// TURN-END, and the merge gate refused for a simplify that had run. A session id is unique and
+// only `--resume <id>` brings one back, so it is enough; a fresh `claude` has a new id and stays
+// a root session. The same resume was made from the base checkout: a branch that is not the
+// entry's is refused an identity, so the pane neither re-keys the entry to the wrong checkout
+// nor works there as the Builder, and its model is told how to resume where it belongs.
+async function byRecord($: any, root: string | null, host: Host, tab: string, pane: string, terminal?: string): Promise<Me | null> {
+  if (!root) return null
+  const sid = await $.session.id().catch(() => null)
+  if (!sid) return null
+  for (const [k, entry] of Object.entries((await readRecord($, root)) ?? {})) {
+    if (entry?.session_id !== sid || typeof entry.role !== 'string' || entry.role === 'resident') continue
+    const branch = (await run($, ['git', 'rev-parse', '--abbrev-ref', 'HEAD'])).out
+    if (typeof entry.branch === 'string' && entry.branch && branch !== entry.branch) {
+      return { role: entry.role, key: k, tab, pane, host, terminal, stray: `This session is the ${entry.role} of ${k} (dispatch record), resumed on branch ${branch || '?'} instead of its own ${entry.branch}${typeof entry.worktree === 'string' ? ` in ${entry.worktree}` : ''}. It has no dispatch identity here: its Skill calls are not recorded and no TURN-END rings. Do no work in this checkout. Tell the owner to exit and resume it from its own checkout: cd ${typeof entry.worktree === 'string' ? entry.worktree : '<its worktree>'} && claude --resume ${sid}` }
+    }
+    return { role: entry.role, key: k, tab, pane, host, terminal, resumed: true }
+  }
+  return null
 }
 
 async function repoRoot($: any): Promise<string | null> {
@@ -1378,10 +1395,12 @@ export const register: Register = on => {
   // owner with several projects and many panes reads it wherever they look (2026-10-10).
   let appliedVersion = ''
   const sends = new Map<string, number>()
+  let strayNote = ''
 
   on('session.start', async ($, e, next) => {
     root = await repoRoot($)
     me = await whoAmI($, root)
+    if (me?.stray) { strayNote = me.stray; me = null; $.ui.toast(strayNote) }
     if (root) { try { appliedVersion = (await $.fs.read(`${root}/.astraler/state/applied-version`)).trim() } catch {} }
     if (!me && root && appliedVersion) {
       void latestRelease($).then(async latest => {
@@ -1478,6 +1497,7 @@ export const register: Register = on => {
   on('prompt.compose', async ($, e, next) => {
     const res = await next(e)
     if (!root) return res
+    if (strayNote) return { sections: [...res.sections, { id: 'astragentic-dispatch:overlay', text: `STOP — ${strayNote}`, scope: 'session' as const }] }
     let text = await overlay($, root, me?.role ?? 'thomas')
     const off = await armOff($, root)
     const scope = me ? ARM_SCOPE_BY_ROLE[me.role] : undefined

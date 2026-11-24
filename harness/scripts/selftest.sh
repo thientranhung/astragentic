@@ -2063,14 +2063,21 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     // 2026-11-12, 2 of 2 Builders ran as root sessions: no TURN-END, no gate). The pane takes its
     // role and key back from its own record entry; another session id or no entry stays root.
     const recPath = path.join(root, '.astraler/state/dispatch-record.json')
-    const seed = { role: 'builder', host: 'orca', pane_id: 'tab5:leaf5', tab_id: 'tab5', terminal: 'term_old', session_id: mode === 'orcaresume-sid' ? 'someone-else' : 'disp', branch: 'x', start_sha: 'abc', registered_at: 1, last_brief_received_at: 1, dispatcher: 'uds:/tmp/gone.sock' }
+    // 6.1.24 — orcaresume-cross: the entry was written on HERDR (another host, another pane) and the
+    // owner resumed the session in Orca (one downstream ticket, 2026-11-24); orcaresume-stray: the
+    // same resume on a branch that is not the entry's (it was made from the base checkout)
+    const here = require('child_process').execSync('git rev-parse --abbrev-ref HEAD', { cwd: root, encoding: 'utf8' }).trim()
+    const cross = mode === 'orcaresume-cross' || mode === 'orcaresume-stray'
+    const seed = { role: 'builder', host: cross ? 'herdr' : 'orca', pane_id: cross ? 'w9:pD' : 'tab5:leaf5', tab_id: cross ? 'w9' : 'tab5', terminal: cross ? null : 'term_old', session_id: mode === 'orcaresume-sid' ? 'someone-else' : 'disp', branch: mode === 'orcaresume-stray' ? 'ticket/other' : here, worktree: '/wt/AB-7', start_sha: 'abc', registered_at: 1, last_brief_received_at: 1, dispatcher: 'uds:/tmp/gone.sock' }
     fs.writeFileSync(recPath, JSON.stringify(mode === 'orcaresume-none' ? {} : { 'AB-7': seed }))
     await fire('session.start', { cwd: root }, async () => ({}))
     let ran = false
     const r = await fire('tool.call', { tool: 'ScheduleWakeup', delaySeconds: 300 }, async () => { ran = true; return {} })
     await fire('turn.complete', { reason: 'answer', answer: 'handback', turnId: 'r1' }, async () => ({}))
     const e7 = JSON.parse(fs.readFileSync(recPath, 'utf8'))['AB-7'] ?? {}
-    console.log(JSON.stringify({ resumeGate: `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}`, resumeTerminal: e7.terminal ?? null, resumeTurnEnd: Boolean(e7.last_turn_end_at), resumePending: /TURN-END key=AB-7 pane=tab5:leaf5 reason=answer/.test(String(e7.turn_end_pending?.text ?? '')), resumeWhy: /host restart/.test(String(e7.turn_end_pending?.reason ?? '')) }))
+    const composedR = await fire('prompt.compose', {}, async () => ({ sections: [] }))
+    const strayTold = (composedR?.sections ?? []).some(x => /^STOP — This session is the builder of AB-7/.test(String(x.text)) && /cd \/wt\/AB-7 && claude --resume disp/.test(String(x.text)))
+    console.log(JSON.stringify({ strayTold, resumeHost: e7.host ?? null, resumeBranchKept: e7.branch === (mode === 'orcaresume-stray' ? 'ticket/other' : here), resumeGate: `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}`, resumeTerminal: e7.terminal ?? null, resumeTurnEnd: Boolean(e7.last_turn_end_at), resumePending: /TURN-END key=AB-7 pane=tab5:leaf5 reason=answer/.test(String(e7.turn_end_pending?.text ?? '')), resumeWhy: /host restart/.test(String(e7.turn_end_pending?.reason ?? '')) }))
     return
   }
   if (mode === 'orcadisp') {
@@ -3066,15 +3073,18 @@ EOS
   fi
   # 6.1.9 — a pane Orca restored after its own restart (bare `claude --resume`, no ASTRA_DISPATCH)
   rm -rf "$TMP/mod-anysid"; cp -R "$MOD" "$TMP/mod-anysid"
-  sed -i.bak 's/ && sid && entry.session_id === sid / /' "$TMP/mod-anysid/hooks/register.tsx" && rm -f "$TMP/mod-anysid/hooks/register.tsx.bak"
+  sed -i.bak 's/entry?.session_id !== sid || //' "$TMP/mod-anysid/hooks/register.tsx" && rm -f "$TMP/mod-anysid/hooks/register.tsx.bak"
   out="$(mod_drive "$MOD" orcaresume)"; out_sid="$(mod_drive "$MOD" orcaresume-sid)"; out_none="$(mod_drive "$MOD" orcaresume-none)"; out_planted="$(mod_drive "$TMP/mod-anysid" orcaresume-sid)"
+  out_cross="$(mod_drive "$MOD" orcaresume-cross)"; out_stray="$(mod_drive "$MOD" orcaresume-stray)"
   if says "$out" '"resumeGate":"deny:held","resumeTerminal":"term_5","resumeTurnEnd":true,"resumePending":true,"resumeWhy":true' \
+     && says "$out_cross" '"strayTold":false,"resumeHost":"orca","resumeBranchKept":true,"resumeGate":"deny:held","resumeTerminal":"term_5","resumeTurnEnd":true' \
+     && says "$out_stray" '"strayTold":true,"resumeHost":"herdr","resumeBranchKept":true,"resumeGate":"pass:ran","resumeTerminal":null,"resumeTurnEnd":false' \
      && says "$out_sid" '"resumeGate":"pass:ran","resumeTerminal":"term_old","resumeTurnEnd":false,"resumePending":false' \
      && says "$out_none" '"resumeGate":"pass:ran","resumeTerminal":null,"resumeTurnEnd":false' \
      && says "$out_planted" '"resumeGate":"deny:held"'; then
-    ok "orca resume (6.1.9): a pane Orca restored without ASTRA_DISPATCH takes its role and key from its own record entry (same pane key and session id) — a pane gate refuses, the new terminal handle is recorded, the turn end goes on the record for the dispatcher's poll; another session in that pane and a pane with no entry stay root sessions; planted, a mod that matches on the pane key alone gives the other session the Builder's role"
+    ok "orca resume (6.1.9): a pane Orca restored without ASTRA_DISPATCH takes its role and key from its own record entry (same pane key and session id) — a pane gate refuses, the new terminal handle is recorded, the turn end goes on the record for the dispatcher's poll; another session in that pane and a pane with no entry stay root sessions; planted, a mod that matches on the pane key alone gives the other session the Builder's role; 6.1.24: a session dispatched on Herdr and resumed in Orca is re-keyed to Orca by its session id alone, and one resumed on another branch gets no identity, keeps the entry as it was, and is told to stop and resume from its own checkout"
   else
-    bad "mod orca resume" "resumed=$out other-session=$out_sid no-entry=$out_none planted=$out_planted"
+    bad "mod orca resume" "resumed=$out other-session=$out_sid no-entry=$out_none planted=$out_planted cross=$out_cross stray=$out_stray"
   fi
   out="$(mod_drive "$MOD" lensoff)"
   if says "$out" '"lensNotTold":true,"lensOffSaid":true,"noLensChip":true'; then

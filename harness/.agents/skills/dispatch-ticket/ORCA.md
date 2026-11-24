@@ -82,8 +82,9 @@ the key at the create, so another root session's poll leaves it (inception 2026-
 open since 10-30 took 3 of 3 QA bells). `woken_at` says a poll consumed the bell, not who saw it.
 After an Orca restart the pane comes back as a bare `claude --resume <id>` with no `ASTRA_DISPATCH`
 (nizzy 2026-11-12, 2 of 2 Builders: 0 turn ends for 2 handbacks, 5 commits with no pane gate loaded). The
-mod takes the role and key back from the pane's own record entry (same `ORCA_PANE_KEY` and session
-id), records the new terminal handle, and writes the turn end on the record, where the restarted
+mod takes the role and key back from the record entry with the same session id (6.1.24: in any pane,
+on either host, so a Herdr Builder resumed in Orca re-keys to Orca; a resume on a branch that is not
+the entry's gets no identity and is told to resume from its own checkout), records the new terminal handle, and writes the turn end on the record, where the restarted
 dispatcher's poll rings it (driver; a real restart chưa đo). The brief is not re-sent.
 
 ## Cleanup (CLEANUP.md)
