@@ -24,8 +24,9 @@ role that may not write, played from the restricted account the project's entry 
 a browser or app signs in as it; none named: a COVERAGE GAP and a finding for the owner, never
 dropped); UI–server consistency (the screen after the write without reload). They join the cases of
 the ticket that changes the surface, with the mutations each needs named. Thresholds come from the spec or remain
-UNKNOWN. Optional astragentic_astra_test_architect advice stays read-only and requires available,
-authorized delegation.
+UNKNOWN. astragentic_astra_test_architect advice stays read-only and requires available,
+authorized delegation; ask it for the gap hunt whenever the spec carries a one-way data migration
+or a money path (on two such specs it found gaps no spec lens saw), optional otherwise.
 
 Write docs/qa/plan-<slug>.md: Surfaces; risk-ranked items with observable expected
 results; per-ticket/spec-section cases; mandatory checks per mode; Open questions.

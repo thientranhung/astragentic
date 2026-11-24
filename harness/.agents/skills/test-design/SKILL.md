@@ -83,8 +83,10 @@ expected result.
 
 ## Full persona method
 
-Spawn `astragentic-dispatch:astra-test-architect` when the session wants the Test Architect's full method:
-risk scoring, level choice and gap hunting beyond the steps above. The spawn is **read-only**.
+Spawn `astragentic-dispatch:astra-test-architect` for its gap hunt (what a plan built from this spec's
+own seams would miss) **whenever the spec carries a one-way data migration or a money path**, and
+when the session wants the full method otherwise. Measured: on two such specs it found 10 and 17
+gaps, 4 of each changing what is built, one blocking, none seen by the spec lens or arm passes. The spawn is **read-only**.
 The persona reads the spec and the repo and returns findings; you write the plan. It never writes
 a file, runs a test or fires a gate.
 
