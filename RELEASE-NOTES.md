@@ -1,3 +1,24 @@
+# Astragentic 6.1.25
+
+The Codex counterparts of 6.1.24. Owner's word 2026-11-24: "Trong công việc mình phải luôn hỗ trợ nó
+song song" (Codex is off for want of an account, not dropped). Rows in
+`docs/audit/2026-11-22-6120-field-incidents.md` § Codex counterparts of 6.1.24.
+
+| fix | số đo | nguồn |
+|---|---|---|
+| `DISPATCH.md`: the worker resume recipe passes `-c "$NOTIFY"` and `--cd "$WORKTREE"`; the old `codex resume <uuid>` dropped the worker's only TURN-END bell and named no checkout (the Codex shape of inception IN-519) | tests/codex `test_resume_recipe_carries_the_bell_and_the_worktree` fails on 6.1.24's text | row 14 |
+| `install.py`: a tracker doc that names one tracker ships that adapter alone, the rule `install.sh` got in 6.1.24 | `test_tracker_named_by_skill_ships_that_adapter_alone`: 6.1.24 ships 3 adapters, now 1 | row 8 |
+| Codex Shaper § Recovery: a compaction is expected, never a stop; after one it rereads its role file and the artifacts | text only; the Claude-side numbers (inception IN-504: 3 compactions, 2 stop-and-ask) | row 10 |
+
+By hand downstream: nothing. A Codex worker resumed from an older recipe keeps ringing no bell until
+it is relaunched with the 6.1.25 recipe.
+
+Not covered on Codex, chưa đo (no Codex account to run a live worker): the commit-time `Pass:`
+refusal (row 15: whether worker sessions load `coordinator-hooks.json`), the background-job hold
+(row 16: whether a backgrounded `exec_command` outlives the turn) and the subagent reply (row 12:
+whether a helper's turn end fires the parent's notify). Each needs one live Codex worker run before
+a check is built. Static: selftest and tests/codex on the clean clone; live: none.
+
 # Astragentic 6.1.24
 
 Field batch from both projects, 2026-11-23..24: seven fixes, each reproduced or measured from a
