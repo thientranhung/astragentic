@@ -41,7 +41,9 @@ Skip anything a linter already enforces.
 
 The sub-agents run in the foreground, in one message with the Skill call; what each
 returns is its report. Each prompt ends: inspect only, no edits, no test runs, no skills, no
-sub-agents, findings as text under 400 words (the adversarial lens returns its own JSON). A lens that fails is reported as failed, never
+sub-agents, findings as text under 400 words (the adversarial lens returns its own JSON),
+then a last line `Findings: n`. For the intent lens, each criterion not fully met, each one met
+at the wrong surface and each verification gap counts one. A lens that fails is reported as failed, never
 as clean.
 
 Smell baseline (each "what → fix"): Mysterious Name → rename · Duplicated Code → extract the
@@ -74,5 +76,6 @@ each other**: report each axis under its own heading.
   line in the handback with what would settle it. **A finding this change caused, with a
   verified verdict, is never deferred.** Nothing is dismissed without a reason on record.
 
-Close with one line per axis: findings, worst verdict within that axis. Zero findings plus a
-failed lens is "may be incomplete", not clean. Then `simplify`, once.
+Close with one line per axis: the lens's `Findings: n`, how many took each route, the worst
+verdict. A route count short of n is not a close: the unrouted findings go back to § 3. Zero
+findings plus a failed lens is "may be incomplete", not clean. Then `simplify`, once.

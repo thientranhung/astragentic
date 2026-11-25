@@ -16,7 +16,9 @@ error and record coverage as incomplete. A local inspection never substitutes fo
 Correctness is the built-in review: its message starts `Use $review-agent to review <base>..<head>`.
 Intent maps every criterion and Must-not-change to actual test and behavior coverage.
 Standards cites applicable project rules, excluding issues already enforced by lint.
-Helpers inspect only: no edits, no test runs, no recursive delegation. If a required
+Helpers inspect only: no edits, no test runs, no recursive delegation. Each lens report ends
+with `Findings: n`; for intent, each criterion not fully met, each one met at the wrong surface
+and each verification gap counts one. If a required
 lens cannot run, report incomplete coverage; do not label the result clean.
 
 ## On Orca: a lens is a child process
@@ -66,5 +68,6 @@ and generated consumers, not only the package that declares the interface.
 Route unambiguous in-scope defects to patch and rerun covering checks; ambiguous owner
 intent to decision_needed; pre-existing or undecidable findings to explicit defer.
 Do not defer a verified defect introduced by this change. Record every disposition.
-Finish with per-axis status and artifact identity, then run astra-codex-simplify. Quick tickets
+Finish with, per axis, the lens's `Findings: n` and how many took each route (a count short of n
+goes back to triage), and artifact identity, then run astra-codex-simplify. Quick tickets
 need correctness review only. A failed lens is not zero findings.

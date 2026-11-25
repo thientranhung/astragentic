@@ -393,6 +393,9 @@ class LauncherTests(unittest.TestCase):
         self.assertIn('under 100 changed non-test lines', arm)
         self.assertNotIn('a later commit invalidates the receipt', arm)
         self.assertNotRegex(review, r'committed-plus-dirty')
+        # Field row 26 (next batch after 6.1.27): 4 of 480 Claude Builders closed intent clean over prose gaps.
+        self.assertIn('Each lens report ends\nwith `Findings: n`', review)
+        self.assertIn('a count short of n\ngoes back to triage', review)
         self.assertNotRegex(junior, r'(?i)commits are not authorized')
 
     def test_shipped_orchestrator_arm_table_is_not_read_as_roles(self):
