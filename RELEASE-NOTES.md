@@ -1,3 +1,26 @@
+# Astragentic 6.1.27
+
+Three field fixes from 2026-11-24/25: nizzy's test-design runs, inception's held bells, nizzy's BA
+session. Rows 16 (second entry), 23, 24 and 25 in `docs/audit/2026-11-22-6120-field-incidents.md`
+§ 6.1.27 batch.
+
+| fix | số đo | nguồn |
+|---|---|---|
+| dispatch mod: a background job that ends while the turn still runs releases the TURN-END hold. The engine reports it as a `queued_command` attachment inside the turn, never as a turn start, and 6.1.24 released only on a turn start | inception IN-537, IN-540: 2 of 2 Builders held 20–21 min on finished jobs, handbacks never reached Thomas; selftest `bgShell` third leg fails on 6.1.26's mod (`true:true:false`), passes now | inception (row 16) |
+| `test-design` / `codex-test-design`: the test-architect gap hunt is required for a spec with a one-way data migration or a money path, optional otherwise | ran in 2 of 46 nizzy test-design sessions; both found what the lens and arm missed (10 and 17 gaps, 4 of each changing what is built, 1 blocking); $3.53 ≈ one lens pass | nizzy (row 23) |
+| BA, both runtimes: explain a defect as the path of one order, with the real case; an invented example is labelled invented | nizzy BA 2026-11-25: jargon first, then an invented example while the spec held the production case; the owner: «giải thích anh khó hiểu quá» | nizzy (row 24) |
+| BA, both runtimes: may reproduce a defect in its own local stack (its own name, synthetic or draft-only providers, scoped tests only, torn down at session end); staging and production stay view-only, `git worktree` stays refused | the limit was prose only: the guard refuses no stack or test (0 denials, 0 attempts in that session); owner in the BA pane: «Được thử nghiệm đo đạt điểm tìm bằng chứng»; selftest pins the allow and the deny | nizzy (row 25) |
+
+By hand downstream: none in the harness. A Builder pane held on 6.1.24–6.1.26 is released by any
+message into it. A project that keeps a stack per checkout must let the BA name its own (nizzy:
+`DEV_SLUG`).
+
+Not covered on Codex: the background hold (the Codex lane has none; row 16 there is chưa đo).
+Not built: a box-pressure check before the BA's stack (no upstream mechanism to call).
+
+Static: selftest and tests/codex on the clean clone; the hold fix planted under the stub. Live:
+chưa đo (inception's next held Builder, nizzy's first BA stack).
+
 # Astragentic 6.1.26
 
 QA terms and the restricted seat, from nizzy's asks of 2026-11-24 and the owner's words relayed with
