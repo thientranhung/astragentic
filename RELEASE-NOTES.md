@@ -1,3 +1,21 @@
+# Astragentic 6.1.28
+
+One field fix, found in a scan of Builder transcripts on 2026-11-25. It is row 26 in
+`docs/audit/2026-11-22-6120-field-incidents.md`. Text only, both runtimes.
+
+| fix | số đo | nguồn |
+|---|---|---|
+| `astra-review` / `codex-astra-review`: each lens report ends with `Findings: n`. For intent, each criterion not fully met, each one met at the wrong surface, and each verification gap counts one. The close line carries that n and the count taken by each route, and a shortfall goes back to triage | 4 of 480 Builder tickets since 11-01 (5 findings) closed the intent axis "no findings" over gaps the lens had written as prose ("partially met", "wrong surface"). Replay on 6 lens bundles with fresh Opus Builders: the old text left findings unrouted on 1 of the 4 drop tickets, the new text on 0; the 2 controls were the same in both arms. `tests/codex` fails on the 6.1.27 text | nizzy TRA-1607, TRA-1571, TRA-1558; inception IN-529 (row 26) |
+
+The worst case, TRA-1607, shipped no product defect: bulk Fulfill ends in the same `reloadOrders()` as
+single Fulfill. This was found by reading the code; nobody walked it.
+
+By hand downstream: none.
+
+Static: selftest and tests/codex on the clean clone. The replay ran under a stub. Live: chưa đo. Fresh
+agents did not reproduce the long-context drop on 3 of the 4 tickets, so count again after 10 Builder
+handbacks per project. Codex drop count: chưa đo, because all 4 drops are Claude transcripts.
+
 # Astragentic 6.1.27
 
 Three field fixes from 2026-11-24/25: nizzy's test-design runs, inception's held bells, nizzy's BA
