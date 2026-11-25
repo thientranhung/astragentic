@@ -185,6 +185,9 @@ guard_role deny  '{"agent_type":"ba"}' 'bash scripts/ticket-done.sh AB-1'
 guard_role deny  '{"agent_type":"ba"}' 'herdr agent start --cwd /x claude'
 guard_role allow '{"agent_type":"ba"}' 'git log --oneline -5'
 guard_role allow '{"agent_type":"ba"}' 'gh issue create --title "AB-9: x" --body-file /tmp/b.md'
+# 6.1.27: the BA reproduces a defect in its own local stack and scoped tests; no worktree for it
+guard_role allow '{"agent_type":"ba"}' 'cd apps/server && make dev-up DEV_SLUG=ba && go test ./internal/fulfillment/ -run TestRekey'
+guard_role deny  '{"agent_type":"ba"}' 'git worktree add /x/.claude/worktrees/ba HEAD'
 guard_role allow '{"agent_type":"builder"}' 'git commit -m "tidy"'    # the gate is the role's, not everyone's
 # the marker path: no agent_type on the call, the SessionStart hook wrote the role for this session
 printf '%s' '{"source":"startup","session_id":"sess-ba-1","agent_type":"ba"}' \
