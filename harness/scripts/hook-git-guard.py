@@ -149,8 +149,8 @@ GIT_PRE = r"\bgit\s+(?:(?:-C|-c)\s+\S+\s+|-[^\s]+\s+)*"
 # Messaging stays open: across 46 BA and Quick sessions in two projects (measured 2026-11-26),
 # one BA sent and checked messages with `orca orchestration send|check`, the Orca SendMessage.
 DISPATCH = (r"\bherdr\s+(?:agent\s+start|pane\s+run|command\s+run)\b"
-            r"|\borca\s+(?:terminal\s+(?:create|split)|worktree\s+create"
-            r"|orchestration\s+(?:dispatch|worker-start|run-create|task-create))\b")
+            r"|\borca\s+(?:terminal\s+(?:create|split|send)|worktree\s+create"
+            r"|orchestration\s+(?:dispatch|worker-start|run-create|task-create))\b(?!\s+(?:--help|-h)\b)")
 READ_ONLY_ROLES = {"ba"}
 READ_ONLY_FORBIDDEN = re.compile(
     GIT_PRE + r"(?:commit|push|merge|rebase|cherry-pick|revert|am|apply|stash|worktree|"
@@ -251,13 +251,38 @@ def quick_gate(cmd):
 # push is refused outright; a Builder reads dev/<slug> from the shared object store.
 DEV_ROLES = {"dev"}
 DEV_BRANCH = re.compile(r"^dev/[A-Za-z0-9._/-]+$")
-DEV_FORBIDDEN = re.compile(
-    r"\bticket-done\.sh\b"
+# Judged per command (argv), not on the whole text: an investigator reads git history and gate
+# scripts, and a text search refused `git merge-base`, `git stash list` and
+# `grep -n ticket-done.sh` (planted 2026-11-26). The text is searched only on a line this guard
+# cannot split, where these words around a git command mean it cannot be judged.
+DEV_UNREADABLE = re.compile(
+    r"(?:^|[;&|(\n]|\$\()\s*(?:(?:ba|z)?sh\s+)?(?:\S*/)?ticket-done\.sh\b"
     r"|" + DISPATCH +
     r"|\bgh\s+pr\s+(?:create|merge|close|edit|ready|review)\b"
     r"|\bgh\s+issue\s+(?:create|edit|close|reopen|comment|delete|transfer)\b"
-    r"|" + GIT_PRE + r"(?:push|merge|rebase|cherry-pick|am|apply|filter-branch|replace|stash)\b"
-    r"|--no-verify\b")
+    r"|" + GIT_PRE + r"(?:commit|push|merge(?![\w-])|rebase|cherry-pick|am|filter-branch|replace|"
+    r"stash(?!\s+(?:list|show)\b))\b")
+_HEREDOC = re.compile(r"(?m)^(?P<line>.*?<<-?\s*(?P<q>['\"]?)(?P<tag>[A-Za-z_][A-Za-z0-9_]*)(?P=q).*)$")
+
+
+def _without_heredoc_bodies(cmd):
+    """The line with every heredoc body dropped, unless a shell reads it: a body fed to
+    python3, cat or a file is data, and a findings file that quotes `git push` is not a push."""
+    out, lines, i = [], cmd.split("\n"), 0
+    while i < len(lines):
+        line = lines[i]
+        out.append(line)
+        m = _HEREDOC.match(line)
+        i += 1
+        if m and not re.search(r"(?:^|[\s;&|(])(?:bash|sh|zsh)\s*(?:-s\s*)?<<", line):
+            while i < len(lines) and lines[i].strip() != m.group("tag"):
+                i += 1
+            i += 1
+    return "\n".join(out)
+DEV_GIT_REFUSED = {"push", "merge", "rebase", "cherry-pick", "am", "apply", "filter-branch", "replace"}
+DEV_HERDR = re.compile(r"^(?:agent\s+start|pane\s+run|command\s+run)\b")
+DEV_ORCA = re.compile(r"^(?:terminal\s+(?:create|split|send)|worktree\s+create|"
+                      r"orchestration\s+(?:dispatch|worker-start|run-create|task-create))\b(?!\s+(?:--help|-h)\b)")
 DEV_GIT_WRITES = {"commit", "reset", "clean", "restore", "checkout", "switch", "revert", "rm", "mv",
                   "add", "branch", "worktree", "tag"}
 DEV_BRANCH_LIST = {"-a", "-r", "-l", "--list", "--all", "--remotes", "-v", "-vv", "--show-current",
@@ -280,16 +305,34 @@ def _dev_lane(d):
 
 def dev_gate(cmd):
     """Deny (and exit) when a dev pane's command leaves its lane; return when it is fine."""
-    hit = DEV_FORBIDDEN.search(cmd)
-    if hit:
-        deny("a dev pane never runs `%s`: it investigates and hands back a findings file. "
-             "No push, merge, dispatch, tracker write or ticket-done.sh; a draft fix stays on "
-             "dev/<slug> in its own worktree, where a Builder can read it." % hit.group(0).strip(), cmd)
+    lane = ("a dev pane investigates and hands back a findings file: no push, merge, rebase, "
+            "stash, pull request, tracker write, ticket-done.sh or dispatch. A draft fix stays on "
+            "dev/<slug> in its own worktree, where a Builder can read it.")
     cmds = simple_commands(cmd)
-    if OUT_OF_SCOPE and QUICK_UNREADABLE.search(cmd):
-        deny("this line holds a heredoc, a substitution or a subshell around a git command, which "
-             "this guard cannot read, and a dev pane is judged on every git command it runs. "
-             "Write the git step as its own plain line (`git commit -F <file>` for a long message).", cmd)
+    if OUT_OF_SCOPE:
+        hit = DEV_UNREADABLE.search(_without_heredoc_bodies(cmd))
+        if hit:
+            deny("this line holds a heredoc, a substitution or a subshell around `%s`, which this "
+                 "guard cannot read, and a dev pane is judged on every such command. Write it as "
+                 "its own plain line (`git commit -F <file>` for a long message)." % hit.group(0).strip(), cmd)
+        return
+    for argv in cmds:
+        exe = posixpath.basename(argv[0]) if argv else ""
+        words = argv[1:]
+        if exe in ("bash", "sh", "zsh") and words and not words[0].startswith("-"):
+            exe, words = posixpath.basename(words[0]), words[1:]
+        rest = " ".join(words)
+        if (exe == "ticket-done.sh"
+                or (exe == "herdr" and DEV_HERDR.match(rest))
+                or (exe == "orca" and DEV_ORCA.match(rest))
+                or (exe == "gh" and re.match(r"^(?:pr\s+(?:create|merge|close|edit|ready|review)"
+                                             r"|issue\s+(?:create|edit|close|reopen|comment|delete|transfer))\b", rest))):
+            deny("a dev pane never runs `%s %s`: %s" % (exe, rest[:40], lane), cmd)
+        args = git_args(argv)
+        if args and (args[0] in DEV_GIT_REFUSED
+                     or (args[0] == "stash" and args[1:2] not in (["list"], ["show"]))
+                     or "--no-verify" in args):
+            deny("a dev pane never runs `git %s`: %s" % (args[0], lane), cmd)
     here = os.getcwd()
     for argv in cmds:
         if not argv:
@@ -313,6 +356,13 @@ def dev_gate(cmd):
                 if (b and not DEV_BRANCH.match(b[0])) or (not b and "--detach" not in rest):
                     deny("a dev pane opens its own worktree: `git worktree add --detach <abs path> <sha>` "
                          "or `git worktree add -b dev/<slug> <abs path> <sha>`.", cmd)
+            elif rest[:1] in (["remove"], ["move"], ["lock"], ["unlock"]):
+                ops = [a for a in rest[1:] if not a.startswith("-")]
+                if ops:
+                    wt = os.path.normpath(os.path.join(d, os.path.expanduser(ops[0])))
+                    if os.path.isdir(wt) and not _dev_lane(wt)[0]:
+                        deny("a dev pane removes or moves only its own worktree (detached or on dev/*); "
+                             "%s is another pane's or the main checkout." % wt, cmd)
             continue
         if sub == "tag":
             if names or any(a in ("-a", "-d", "-s", "-f") for a in rest):

@@ -244,6 +244,28 @@ else bad "dev commit" "guard: $out; dev/x=$(git -C "$DR" log -1 --format=%s dev/
 # planted: a guard with the dev gate removed lets the dev pane push to main
 sed 's/if role in DEV_ROLES:/if False:/' "$S/hook-git-guard.py" > "$TMP/guard-no-dev.py"
 guard_role allow "$(dv "$DX")" 'git push origin main' "$TMP/guard-no-dev.py"
+# an investigator reads history and gate scripts: these are reads, judged per command, not as text
+guard_role allow "$(dv "$DX")" 'git merge-base main HEAD'
+guard_role allow "$(dv "$DX")" 'git stash list'
+guard_role allow "$(dv "$DX")" 'grep -n ticket-done.sh scripts/*'
+guard_role allow "$(dv "$DX")" 'git log --grep "git push" --oneline'
+guard_role allow "$(dv "$DX")" "cat > /tmp/findings.md <<'EOF'
+the Builder never ran git push here
+EOF"                                                   # a heredoc body fed to cat is data
+guard_role deny  "$(dv "$DX")" 'x=$(git push origin main)'
+guard_role deny  "$(dv "$DX")" 'git stash'
+guard_role deny  "$(dv "$DR")" "git worktree remove $DB"              # another pane's worktree
+guard_role deny  "$(dv "$DR")" 'orca terminal send --terminal t --text go'
+# the marker path: no agent_type on the call, SessionStart wrote dev for this session
+printf '%s' '{"source":"startup","session_id":"sess-dev-1","agent_type":"dev"}' \
+  | ASTRAGENTIC_ROLE_MARKER_DIR="$TMP" CLAUDE_PROJECT_DIR="$TMP/stamps" python3 "$S/hook-tracker-status.py" >/dev/null 2>&1
+guard_role deny  "{\"session_id\":\"sess-dev-1\",\"cwd\":\"$DX\"}" 'git push origin dev/x'
+# Orca: messaging stays open for the BA (an inception BA used send|check), dispatch does not;
+# the quick pane's own push from the root is its shape
+guard_role allow '{"agent_type":"ba"}' 'orca orchestration send --to term_x --subject q --body hi'
+guard_role allow '{"agent_type":"ba"}' 'orca orchestration check --terminal term_x'
+guard_role deny  '{"agent_type":"ba"}' 'orca orchestration dispatch --task t1 --to term_x'
+guard_role allow "{\"agent_type\":\"quick-builder\",\"cwd\":\"$DR\"}" "git -C $DR push origin main"
 
 echo "hook-git-guard — the quick pane keeps one git shape, and no write-set (4.3.0, 4.4.0)"
 # Six catalog-data commits in 30 days downstream, each paid for as a full Builder ticket to run
