@@ -1,3 +1,35 @@
+# Astragentic 6.1.29
+
+A new role, `dev`, asked for by nizzy, plus two guard gaps found while building it and one
+test-design clause. Rows 27, 28 and 29 in `docs/audit/2026-11-22-6120-field-incidents.md`.
+
+| fix | số đo | nguồn |
+|---|---|---|
+| New role `dev`, both runtimes. It takes one question from Thomas, the BA or QA to its root cause with evidence, answers the asker and copies Thomas, and hands back a findings file. It writes code only to investigate: a draft on `dev/<slug>` in its own linked worktree. Claude also gets an orchestrator row, a launch section in `dispatch-ticket`, a line each in thomas/ba/qa, and the mod refusing `Agent(subagent_type: dev)` | Thomas's investigation bursts took 672 of 13,117 nizzy tool calls (5.1%), or 3.3% without one 237-call burst. Three dev runs on 11-26 used 231 calls, with 0 commits and 0 pushes; the first (34 calls) found TRA-1655 | nizzy (row 27) |
+| `hook-git-guard`, Claude: a `dev` gate, judged per command. It allows a commit only on `dev/*` in a linked worktree. It refuses push, merge, rebase, stash, `gh pr`, `gh issue` writes, `ticket-done.sh`, dispatch, and removing a worktree that is not the pane's own | before: 7 of 7 git and dispatch lines allowed for `agent_type: dev`. Now 38 selftest plants, 18 of which fail with the gate removed. A replay of 17,185 nizzy Thomas lines as `dev` refused 1 read | nizzy (row 27) |
+| `hook-git-guard`: the BA and Quick gates read `git -C <dir>` and Orca dispatch (`orca terminal create|split|send`, `worktree create`, `orchestration dispatch|worker-start|run-create|task-create`). Messaging (`orchestration send|check`) and `--help` stay open | planted in a BA pane: 3 of 3 `git -C` writes and 2 of 2 Orca dispatch lines allowed before, refused now. Replay of 805 BA, Quick and dev field lines: 0 decisions changed | found building row 27 (row 29) |
+| `test-design` / `codex-test-design`: state transitions include each write against every state its dependent records can be in | 2 occurrences: nizzy F9 in production (a revoke left 16 dependent orders Ready) and SPEC-TRA-1639, caught at spec. `tests/codex` fails without the clause | nizzy (row 28) |
+
+By hand downstream:
+- **A project with its own `.claude/agents/dev.md` (nizzy).** The upgrade reports it as a
+  CONFLICT and does not overwrite it. The installer exits 3 and leaves `applied-version`
+  unstamped. Pick the shipped adapter (it reads `.agents/roles/dev.md`) or keep your own, then
+  stamp the version and delete `.astraler/state/apply-incomplete`. Either way the guard gates
+  any pane started as `dev`. Move project specifics (stack commands, browser profiles) into
+  the project's own docs.
+- **Every project.** `.agents/orchestrator.md` is an owner file, so add the row by hand:
+  `| dev | claude | <model> | <effort> | <advisor> |`. nizzy chose sonnet / medium / opus. Add
+  the tab row `| Dev (owner or Thomas) | \`dev\` | \`dev\` |` too.
+
+Not covered: the guard sees only Bash. It does not see a tracker write through MCP, an Edit or
+Write into another checkout, or a write to staging or production; those rest on the role text.
+Codex has no role hook, for `dev` as for the BA, so the Codex `dev` is prose only and is opened
+by the owner (`launch.py dev`). nizzy's QA framework stays nizzy's: no harness-side number for
+its generators, tiers or invariants yet (nizzy is logging them over 10 runs).
+
+Static: selftest and tests/codex on the clean clone. Gate checks ran under stub payloads; a live
+`dev` pane: chưa đo.
+
 # Astragentic 6.1.28
 
 One field fix, found in a scan of Builder transcripts on 2026-11-25. It is row 26 in
