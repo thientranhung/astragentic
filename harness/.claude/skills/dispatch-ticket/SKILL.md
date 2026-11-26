@@ -158,6 +158,27 @@ goes to the cutter as a ticket. Measured downstream, 2026-10-27 to 11-12: 5 merg
 20 non-test lines or fewer, each a tracker issue plus a Builder pane (median 114 model calls,
 8 minutes of pane time).
 
+## A question, not a ticket
+
+A problem that needs digging before anyone can act on it gets a dev pane (`.agents/roles/dev.md`):
+no tracker issue, no claim, no worktree of yours, no record entry. The pane opens its own
+worktree and hands back a findings file; `scripts/hook-git-guard.py` keeps it off push, merge
+and dispatch. Model, effort and advisor come from the `dev` row.
+
+```bash
+# Herdr: a new tab labelled dev at the repo root, then
+herdr agent start "dev-<slug>" --kind claude --pane <pane-id> --timeout 60000 \
+  -- --dangerously-skip-permissions --allowedTools Grep,Glob --agent dev --model <dev row: Model> <--effort, --advisor when the row sets them>
+# Orca: no ASTRA_DISPATCH, the pane is not a lane
+orca terminal create --worktree "path:<base-checkout>" --title "dev" --json \
+  --command "cd <repo-root> && claude --dangerously-skip-permissions --allowedTools Grep,Glob --agent dev --model <dev row: Model> <--effort, --advisor when the row sets them>"
+```
+
+Send the question in one SendMessage: what is asked, who asked it, the evidence so far, what
+"answered" looks like. The BA and QA may ask the pane directly; it copies you on every answer.
+What the findings say should be done is yours to turn into a ticket. Close the tab when it has
+handed back and removed its worktree.
+
 **Your word is a turn on the root checkout.** The pane fast-forwards the base and pushes it
 from the root, where you merge. Give the word only when your local base equals origin's and no
 merge of yours waits unpushed; otherwise finish that merge and its write-back first. **The

@@ -199,6 +199,51 @@ guard_role allow '{"session_id":"sess-none"}' 'git merge builder/AB-1'   # no ma
 # planted: a guard with the role gate removed lets the BA commit
 sed 's/if role in READ_ONLY_ROLES:/if False:/' "$S/hook-git-guard.py" > "$TMP/guard-no-role.py"
 guard_role allow '{"agent_type":"ba"}' 'git commit -m "tidy"' "$TMP/guard-no-role.py"
+# next batch after 6.1.28: git's -C <dir> before the subcommand, and Orca dispatch (planted
+# 2026-11-26: both allowed in a BA pane while `git push` and `herdr agent start` were refused)
+guard_role deny  '{"agent_type":"ba"}' 'git -C /x push origin main'
+guard_role deny  '{"agent_type":"ba"}' 'orca terminal create --worktree path:/x --command claude'
+guard_role deny  '{"agent_type":"quick-builder"}' 'orca worktree create --repo x --name y'
+
+echo "hook-git-guard — the dev pane investigates in its own worktree, never ships (next batch after 6.1.28)"
+# A downstream project ran an investigator role from prose; this guard allowed it 7 of 7 git and
+# dispatch lines. It commits a draft fix on dev/<slug> in a linked worktree; nothing leaves it.
+DG="$TMP/devgate"; rm -rf "$DG"; mkdir -p "$DG"
+( cd "$DG" && git init -q -b main r && cd r && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init \
+  && git worktree add -q --detach "$DG/r/.claude/worktrees/dev-a" HEAD \
+  && git worktree add -q -b dev/x "$DG/r/.claude/worktrees/dev-x" HEAD \
+  && git worktree add -q -b builder/y "$DG/r/.claude/worktrees/b-y" HEAD ) >/dev/null 2>&1
+dv() { printf '{"agent_type":"dev","cwd":"%s"}' "$1"; }
+DR="$DG/r"; DX="$DG/r/.claude/worktrees/dev-x"; DA="$DG/r/.claude/worktrees/dev-a"; DB="$DG/r/.claude/worktrees/b-y"
+guard_role deny  "$(dv "$DR")" 'git commit -m t'                       # the main checkout is Thomas's
+guard_role deny  "$(dv "$DB")" 'git commit -m t'                       # another pane's worktree
+guard_role deny  "$(dv "$DX")" "cd $DB && git commit -m t"
+guard_role deny  "$(dv "$DX")" "git -C $DR commit -m t"
+guard_role deny  "$(dv "$DA")" 'git commit -m t'                       # detached: switch -c dev/<slug> first
+guard_role deny  "$(dv "$DX")" 'git push origin dev/x'
+guard_role deny  "$(dv "$DR")" 'git merge dev/x'
+guard_role deny  "$(dv "$DR")" 'bash scripts/ticket-done.sh AB-1'
+guard_role deny  "$(dv "$DR")" 'herdr pane run p1 claude'
+guard_role deny  "$(dv "$DR")" 'gh pr create --fill'
+guard_role deny  "$(dv "$DR")" 'gh issue edit 12 --add-label ready'
+guard_role deny  "$(dv "$DA")" 'git checkout -b feature/z'
+guard_role deny  "$(dv "$DR")" "git worktree add -b builder/z $DR/.claude/worktrees/z HEAD"
+guard_role deny  "$(dv "$DR")" 'git reset --hard HEAD~1'
+guard_role allow "$(dv "$DX")" 'git commit -m repro'
+guard_role allow "$(dv "$DR")" "cd $DX && git commit -m repro"
+guard_role allow "$(dv "$DR")" "git worktree add --detach $DR/.claude/worktrees/dev-b HEAD"
+guard_role allow "$(dv "$DA")" 'git switch -c dev/a'
+guard_role allow "$(dv "$DR")" 'git log --oneline -5'
+# the allow path is a real commit: through the whole guard, then git itself
+out="$(printf '%s' "$(dv "$DX")" | python3 -c 'import json,sys; p=json.loads(sys.stdin.read()); p.update({"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit --allow-empty -m repro"}}); print(json.dumps(p))' \
+  | ASTRAGENTIC_ROLE_MARKER_DIR="$TMP" HARNESS_HOOK_LOG="$TMP/hook.log" python3 "$S/hook-git-guard.py" 2>/dev/null)"
+if ! says "$out" '"deny"' && git -C "$DX" -c user.email=t@t -c user.name=t commit -q --allow-empty -m repro \
+   && [ "$(git -C "$DR" log -1 --format=%s dev/x)" = repro ] && [ "$(git -C "$DR" log -1 --format=%s main)" = init ]; then
+  ok "a dev pane's draft commit lands on dev/x and main does not move"
+else bad "dev commit" "guard: $out; dev/x=$(git -C "$DR" log -1 --format=%s dev/x 2>&1)"; fi
+# planted: a guard with the dev gate removed lets the dev pane push to main
+sed 's/if role in DEV_ROLES:/if False:/' "$S/hook-git-guard.py" > "$TMP/guard-no-dev.py"
+guard_role allow "$(dv "$DX")" 'git push origin main' "$TMP/guard-no-dev.py"
 
 echo "hook-git-guard — the quick pane keeps one git shape, and no write-set (4.3.0, 4.4.0)"
 # Six catalog-data commits in 30 days downstream, each paid for as a full Builder ticket to run
@@ -1321,7 +1366,7 @@ echo "one rule, registered where it is loaded"
 # adapted project is where they are actually LOADED, and it is the only place they can drift.
 # The check that proves a rule reached the runtime must run where the runtime is.
 PAY="$ROOT/harness"; [ "$LAYOUT" = project ] && PAY="$ROOT"
-for role in thomas shaper builder qa ba quick-builder; do
+for role in thomas shaper builder qa ba quick-builder dev; do
   cla="$PAY/.claude/agents/$role.md"
   # A project may not run all four roles, and a surface that does not exist there is not a
   # drifted surface. Absent files are reported as scope, never as a failure.
@@ -2937,7 +2982,8 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   const agentBuilder = await agentOf({ subagent_type: 'builder', prompt: 'build TRA-1', description: 'b' })
   const agentPlugin = await agentOf({ subagent_type: 'astragentic:shaper', prompt: 'x', description: 'b' })
   const agentExplore = await agentOf({ subagent_type: 'Explore', prompt: 'x', description: 'b' })
-  console.log(JSON.stringify({ owedWhen, agentBuilder, agentPlugin, agentExplore, orcaInHerdr, orcaDocInHerdr, deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, deadTurnBellHeld, deadTurnBellRerung, deadTurnNoDouble, staleBells, staleRow, ownerBells, herdrClaim, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeUi, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiStd, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
+  const agentDev = await agentOf({ subagent_type: 'dev', prompt: 'why does X fail', description: 'b' })
+  console.log(JSON.stringify({ owedWhen, agentBuilder, agentPlugin, agentExplore, agentDev, orcaInHerdr, orcaDocInHerdr, deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, deadTurnBellHeld, deadTurnBellRerung, deadTurnNoDouble, staleBells, staleRow, ownerBells, herdrClaim, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeUi, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiStd, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
@@ -3006,10 +3052,10 @@ DRVEOS
   else
     bad "mod owed write-back" "$(printf '%s' "$out" | grep -o '"owedWhen":{[^}]*}')"
   fi
-  if says "$out" '"agentBuilder":"deny:held","agentPlugin":"deny:held","agentExplore":"pass:ran"'; then
+  if says "$out" '"agentBuilder":"deny:held","agentPlugin":"deny:held","agentExplore":"pass:ran","agentDev":"deny:held"'; then
     ok "mod (6.1.6): Agent(subagent_type: builder) and a plugin-namespaced role are refused at the spawn; an Explore fork passes"
   else
-    bad "mod role-as-agent refusal" "$(printf '%s' "$out" | grep -o '"agentBuilder":"[^"]*","agentPlugin":"[^"]*","agentExplore":"[^"]*"')"
+    bad "mod role-as-agent refusal" "$(printf '%s' "$out" | grep -o '"agentBuilder":"[^"]*","agentPlugin":"[^"]*","agentExplore":"[^"]*","agentDev":"[^"]*"')"
   fi
   if says "$out" '"orcaInHerdr":"deny:held","orcaDocInHerdr":"pass:ran"'; then
     ok "a Herdr dispatcher (HERDR_ENV=1) is refused an orca command and keeps a command that only names orca in a path (6.1.0)"

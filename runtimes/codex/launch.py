@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parent
 # <project>/.codex/astragentic; contracts remain in the standard project folders.
 if ROOT.name == 'astragentic' and ROOT.parent.name == '.codex':
     ROOT = ROOT.parent.parent
-OWNER_ROLES = ('thomas', 'ba', 'quick-builder')
+OWNER_ROLES = ('thomas', 'ba', 'quick-builder', 'dev')
 EFFORTS = {'low', 'medium', 'high', 'xhigh', 'max', 'ultra'}
 
 

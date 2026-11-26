@@ -2211,7 +2211,7 @@ export const register: Register = on => {
   // ran `Agent(subagent_type: builder)`; the project's fork guard refused its arm(ticket) commit about
   // 20 minutes later, and the Builder's own /code-review completion was delivered to the dispatcher's
   // session, so the Builder idled until Thomas forwarded it by hand. Refused here, at the spawn.
-  const ROLE_AGENTS = new Set(['builder', 'quick-builder', 'shaper', 'qa', 'ba', 'thomas', 'junior'])
+  const ROLE_AGENTS = new Set(['builder', 'quick-builder', 'shaper', 'qa', 'ba', 'thomas', 'junior', 'dev'])
   on('tool.call', { tool: 'Agent' }, async ($, e, next) => {
     if (!root) return next(e)
     const ev: any = e

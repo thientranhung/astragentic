@@ -102,13 +102,14 @@ nhất theo token.
 
 ## Nó hoạt động thế nào
 
-### Sáu role, ranh giới rõ
+### Bảy role, ranh giới rõ
 
 | Role | Session | Làm gì |
 |---|---|---|
 | **Thomas** | thường trực | Điều phối, giữ frontier, dispatch ticket, chạy gate slice |
 | **BA** | chủ dự án tự mở, chỉ đọc (`claude --agent ba`) | Bàn vấn đề với chủ dự án, nêu trade-off và các ticket đang chạy bị quyết định đó làm đổi hướng, bàn giao bằng file markdown, chỉ cắt ticket khi chủ dự án đồng ý; không sửa code, không commit, không dispatch |
 | **Quick Builder** | chủ dự án tự mở (`claude --agent quick-builder`), hoặc Thomas mở cho thay đổi của chủ dự án không cần ticket | Làm việc nhỏ theo lời chủ dự án (dữ liệu do tool sinh ra, plug của chính project, sửa nhỏ) trên branch `ops/*` fast-forward vào main; không ticket, không loop; thay đổi thuộc harness upstream và việc cần test hay review trả về chủ dự án |
+| **Dev** | Thomas hoặc chủ dự án mở (`claude --agent dev`) | Nhận một câu hỏi từ Thomas, BA hoặc QA, đào tới nguyên nhân gốc có bằng chứng, trả lời người hỏi và luôn báo Thomas, nộp file kết luận; chỉ viết code để điều tra (bản nháp trên `dev/*` trong worktree riêng), không bao giờ push, merge hay dispatch |
 | **Shaper** | một session liền mạch | Grill yêu cầu, viết spec, cắt ticket — khi cả bức tranh còn trong context |
 | **Builder** | một session mỗi ticket | Thi công trong worktree riêng — là người ghi duy nhất ở đó |
 | **QA** | một lần mỗi walk | Dùng sản phẩm đang chạy — hành trình UI, hợp đồng API, dữ liệu thật |

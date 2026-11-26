@@ -51,7 +51,7 @@ class LauncherTests(unittest.TestCase):
     def test_owner_models_and_no_config_or_permission_overrides(self):
         with tempfile.TemporaryDirectory(prefix='astra project ') as d:
             subprocess.run(['git','init','-q',d], check=True)
-            for role,model,effort in [('thomas','gpt-6.2-sol','medium'),('ba','gpt-6.2-sol','medium'),('quick-builder','gpt-6.2-sol','medium')]:
+            for role,model,effort in [('thomas','gpt-6.2-sol','medium'),('ba','gpt-6.2-sol','medium'),('quick-builder','gpt-6.2-sol','medium'),('dev','gpt-6.2-sol','medium')]:
                 result=self.run_cli(role,'--project',d,'--dry-run')
                 self.assertEqual(result.returncode,0,result.stderr)
                 data=json.loads(result.stdout); argv=data['argv']
@@ -162,7 +162,7 @@ class LauncherTests(unittest.TestCase):
             binary.write_text('#!' + sys.executable + '\nimport json, sys\nprint(json.dumps(sys.argv[1:]))\n')
             binary.chmod(0o755)
             env = {**os.environ, 'PATH': str(root) + os.pathsep + os.environ['PATH']}
-            for role in ('thomas', 'ba', 'quick-builder'):
+            for role in ('thomas', 'ba', 'quick-builder', 'dev'):
                 result = self.run_cli(role, '--project', str(project), '--yolo', env=env)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 argv = json.loads(result.stdout)
@@ -397,6 +397,9 @@ class LauncherTests(unittest.TestCase):
         self.assertIn('Each lens report ends\nwith `Findings: n`', review)
         self.assertIn('a count short of n\ngoes back to triage', review)
         self.assertNotRegex(junior, r'(?i)commits are not authorized')
+        # Field row 28 (next batch after 6.1.28): a write is planned against its dependents' states
+        design = (ROOT / 'runtimes/codex/.agents/skills/codex-test-design/SKILL.md').read_text()
+        self.assertIn('each write against every state its dependent records can be in', design)
 
     def test_shipped_orchestrator_arm_table_is_not_read_as_roles(self):
         config = ROOT / 'runtimes/codex/.agents/orchestrator-for-codex.md'
@@ -406,7 +409,8 @@ class LauncherTests(unittest.TestCase):
         sys.path.insert(0, str(ROOT / 'runtimes/codex'))
         from launch import assignments
         rows = assignments(config)
-        self.assertEqual(len(rows), 14)
+        self.assertEqual(len(rows), 15)
+        self.assertIn('dev', rows)
         self.assertNotIn('ticket', rows)
         self.assertNotIn('spec', rows)
         self.assertNotIn('slice', rows)

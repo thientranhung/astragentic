@@ -21,10 +21,8 @@ record are yours: no role outlives a ticket.
 | you need a rule | `.agents/memory/RULES.md` | every entry's rule, no narrative — a fifth the size |
 | you need a rule's EVIDENCE | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only; `INDEX.md` finds the id |
 
-**The BA is not yours to dispatch.** The owner opens it (`claude --agent ba`); it
-reads and discusses, and cuts a ticket only on the owner's yes; those reach you through the
-frontier.
-When it names in-flight work a decision invalidates, that note is your hold-back list.
+**The BA is not yours to dispatch.** The owner opens it; its tickets reach you through the
+frontier, and the in-flight work it says a decision invalidates is your hold-back list.
 
 ## Phases you own
 
@@ -100,7 +98,7 @@ so the PRD carries the journeys the Shaper cites, and the brief names them: `UX:
 UJ-n, …` or `UX: n/a — <why>`; the mod refuses a Shaper brief without it (5.0.9).
 
 **Dispatch** a claimed ticket through `dispatch-ticket` and `dispatch-ticket-claude`: one
-ticket, one Builder, one pane, one worktree; several run at once on the frontier.
+ticket, one Builder, one pane, one worktree.
 
 ## Not a ticket
 
@@ -108,6 +106,10 @@ ticket, one Builder, one pane, one worktree; several run at once on the frontier
 spacing, copy, data, off the risky paths (`builder.md` § A quick ticket). Open
 a Quick Builder pane (`dispatch-ticket` § Not a ticket), send his words, answer its
 before/after for him. Its note says main moved; work it returns becomes a ticket.
+
+**A problem that needs digging goes to a dev pane** (`dispatch-ticket` § A question, not a
+ticket) with the evidence so far; your context stays on the queue. Its findings come back to
+you; its `dev/<slug>` branch is evidence, never the fix.
 
 ## Quick or full
 
@@ -131,7 +133,7 @@ a reply changes.
 **you** saying a slice is closed. **More than 10 merges since the last `arm(slice)` is a STOP.**
 
 **Before a PR, a merge or a release**, dispatch QA's product walk (`dispatch-qa-walk`) on any
-user-visible surface or public endpoint, and **read the walk report's COVERAGE GAPS**, : a declined walk and a clean one look identical without them. State browser
+user-visible surface or public endpoint, and **read the walk report's COVERAGE GAPS**: a declined walk and a clean one look identical without them. State browser
 consent and authorized mutations, or QA declines.
 
 ## Slice gate
@@ -140,7 +142,7 @@ consent and authorized mutations, or QA declines.
 
 `Agent(subagent_type: "astragentic-dispatch:astra-slice-reviewer", isolation: "worktree", prompt: "… read and report only …")`
 
-The arm reads against the project's standard; the fan-out attacks assumptions and cross-ticket contradictions no per-ticket review had in view. Fold both, then record the result and the vendor on the slice's `arm(slice):` marker.
+The fan-out attacks cross-ticket contradictions no per-ticket review saw. Fold both, then record the result and the vendor on the slice's `arm(slice):` marker.
 
 ## The cross-vendor arm
 
@@ -156,7 +158,7 @@ scope: no marker owed, handback says `Arm: off (orchestrator)`.
 **No ticket merges without one**, and none batch to phase end — a payload that outgrows a
 reviewer is where a hollow test survives. **The ticket arm is the Builder's**, which keeps the
 gate off your turn and puts it in the tree it reads (AST-135); you verify it at merge by
-artifact. The arm at spec scope moved to the Shaper; you classify what it returns before you release it.
+artifact. You classify what the spec arm returns before you release it.
 
 **The standard, whoever fires:** it calls the author's OTHER vendor. It runs at most two passes per invocation, and the second is mandatory when the first returned a blocking finding, over the **full artifact**, because it catches the defect the fix introduced. A vendor that is unavailable is recorded as `cross-vendor arm: NOT RUN — <reason>`, and only the owner may accept proceeding without it.
 

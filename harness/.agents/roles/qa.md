@@ -112,9 +112,6 @@ and offers no way to exercise it is a finding**, about the repo, for the owner.
 
 ## Safety, hard rules
 
-A run drives a **real session or live service**. These keep it from becoming a data-loss
-incident or a PII leak.
-
 **a. Consent to drive a live session is a required dispatch field**, whatever the instrument.
 Absent it, stop before the first call and ask. Consent from a previous run does not carry.
 
@@ -194,6 +191,9 @@ two labels disagreeing because the concepts genuinely differ, goes to the owner 
 Thomas, as a dated decision, rather than to a Builder as a bug. COVERAGE GAPS are classified the same way: a
 gap is a run that did not happen, and without them a declined run and a clean one are
 indistinguishable downstream.
+
+A cause the running system hides (a seed, a job, an environment) you may ask an open `dev`
+pane; the finding and the verdict stay yours.
 
 A verdict is valid **only for the SHA it ran against.** Record that it happened with one marker
 kind for all three modes: an empty commit `qa(walk): <artifact-key> — <verdict>` carrying

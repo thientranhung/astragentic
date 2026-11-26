@@ -42,7 +42,8 @@ halts the skill. Name what is missing and hand back.
    same behaviour at two levels without a stated reason.
    **A surface that writes data** (a form, an upload, a submit, a setup step) also gets its
    misuse cases, named for that surface, one group per standard technique: **state transitions**
-   (add, remove, replace and re-add the input); **concurrency and idempotency** (a second action
+   (add, remove, replace and re-add the input; and each write against every state the records
+   that depend on it can be in, such as a revoke while dependent records sit ready); **concurrency and idempotency** (a second action
    while the first is in flight, a double submit, a second tab); **interruption** (reload or leave
    mid-action; on mobile also backgrounding and network loss); **boundary values and equivalence
    classes** (too few, too many, duplicate names, wrong type, empty); **authorization** (a role
@@ -52,7 +53,8 @@ halts the skill. Name what is missing and hand back.
    reload). They join the cases of the ticket that changes the surface, ranked like any other,
    with the mutations each needs named so the brief can authorize them. Measured: 19 walks on
    one upload surface ran none of these; the first run that did found a P1 (a second upload with
-   one colliding filename discarded every pending file).
+   one colliding filename discarded every pending file). A revoke planned against its own record
+   only left 16 dependent records ready in production; the same gap was caught once at spec.
 6. **Attach the mandatory checks per mode.** These are required, not optional (see below).
 7. **Thresholds are measured or unknown.** Take a number from the spec, never from a guess. A
    missing threshold goes to Open questions as UNKNOWN.

@@ -75,6 +75,9 @@ calls, then refused to open production).
   spacing) is a quick-builder change, not a ticket: say so, and on his yes send Thomas his words. An answer to a side question is not a yes; neither is agreement on the
   direction (measured downstream 2026-10-23: IN-174 was cut from an answer to a side question
   in a session the owner opened to discuss).
+- **A cause you cannot find by reading and walking** (code, data, an environment) can go to a
+  `dev` pane when Thomas has one open: ask it directly (the name from ListAgents); it answers
+  you and copies Thomas. A question, never a task.
 - **Cut a ticket only on the owner's explicit yes for that ticket**, through the tracker
   adapter, carrying his rulings quoted verbatim, the problem, scope, open points, acceptance
   and sources. Blocking edges only where you verified the blocker exists. An existing

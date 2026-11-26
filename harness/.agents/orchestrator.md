@@ -38,6 +38,7 @@ after every merge, handback and report.
 | QA | `qa:<id>` | `qa:ABC-130` |
 | Owner (BA) | `ba` | `ba` |
 | Quick Builder (owner or Thomas) | `quick-builder` | `quick-builder` |
+| Dev (owner or Thomas) | `dev` | `dev` |
 | Owner (manual) | anything | `deploy` |
 
 **Owner tabs are not yours** — always create a fresh tab rather than splitting, renaming or
@@ -52,6 +53,7 @@ closing one.
 | builder | claude | claude-sonnet-5 | medium | opus |
 | builder-quick | claude | claude-sonnet-5 | low | |
 | qa | claude | claude-sonnet-5 | low | opus |
+| dev | claude | claude-sonnet-5 | medium | opus |
 
 ## Junior
 
@@ -80,8 +82,7 @@ misconfigured row, not a new option. Shipped: `grok` (Grok Build; Model e.g. `gr
 
 Codex `no` (the default since 6.1.23, owner 2026-11-23) turns that scope's Codex arm off: no Codex
 call, no `arm(<scope>):` receipt to ask for at merge, `Arm: off (orchestrator)` in the handback.
-Unless its Claude lens is `no`, the scope is still read adversarially by Claude: `astra-review`'s Opus lens on the ticket, the
-Shaper's `astra-adversarial-lens` on the spec, and the same lens beside the slice fan-out.
+Unless its Claude lens is `no`, Claude still reads the scope adversarially (the lens above).
 `yes` adds the Codex arm on a machine that has Codex. Absent row or table means `yes`.
 
 ## How the columns are read

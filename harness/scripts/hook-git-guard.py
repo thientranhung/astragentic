@@ -140,13 +140,24 @@ def changed_paths(limit=20):
     return " Changed now: git --literal-pathspecs add -- %s%s" % (quoted, more)
 
 
+# Git's global options before the subcommand, `-C <dir>` and `-c k=v` with their argument: a
+# pattern that skipped only dash-words let `git -C /x push origin main` through a BA pane
+# (planted 2026-11-26, 3 of 3 allowed).
+GIT_PRE = r"\bgit\s+(?:(?:-C|-c)\s+\S+\s+|-[^\s]+\s+)*"
+# Opening or driving another pane. Herdr and Orca both: a BA pane was allowed
+# `orca terminal create` and `orca worktree create` (planted 2026-11-26) while herdr was refused.
+# Messaging stays open: across 46 BA and Quick sessions in two projects (measured 2026-11-26),
+# one BA sent and checked messages with `orca orchestration send|check`, the Orca SendMessage.
+DISPATCH = (r"\bherdr\s+(?:agent\s+start|pane\s+run|command\s+run)\b"
+            r"|\borca\s+(?:terminal\s+(?:create|split)|worktree\s+create"
+            r"|orchestration\s+(?:dispatch|worker-start|run-create|task-create))\b")
 READ_ONLY_ROLES = {"ba"}
 READ_ONLY_FORBIDDEN = re.compile(
-    r"\bgit\s+(?:-[^\s]+\s+)*(?:commit|push|merge|rebase|cherry-pick|revert|am|apply|stash|worktree|"
+    GIT_PRE + r"(?:commit|push|merge|rebase|cherry-pick|revert|am|apply|stash|worktree|"
     r"reset|checkout\s+-b|switch\s+-c|branch\s+-[dDm]|tag)\b"
     r"|\bgh\s+pr\s+(?:create|merge|close|edit|ready)\b"
     r"|\bticket-done\.sh\b"
-    r"|\bherdr\s+(?:agent\s+start|pane\s+run|command\s+run)\b")
+    r"|" + DISPATCH)
 ROLE_MARKER_DIR = os.environ.get("ASTRAGENTIC_ROLE_MARKER_DIR", "/tmp")
 
 # THE QUICK BUILDER (4.3.0): an owner-opened pane for a small change on the owner's word, with
@@ -161,11 +172,11 @@ QUICK_ROLES = {"quick", "quick-builder"}
 QUICK_BRANCH = re.compile(r"^ops/[A-Za-z0-9._-]+$")
 QUICK_FORBIDDEN = re.compile(
     r"\bticket-done\.sh\b"
-    r"|\bherdr\s+(?:agent\s+start|pane\s+run|command\s+run)\b"
+    r"|" + DISPATCH +
     r"|\bgh\s+pr\s+(?:merge|create)\b"
-    r"|\bgit\s+(?:-[^\s]+\s+)*(?:rebase|cherry-pick|revert|stash|am|apply|filter-branch|replace)\b"
-    r"|\bgit\s+(?:-[^\s]+\s+)*reset\s+(?:-[^\s]+\s+)*--hard\b"
-    r"|\bgit\s+(?:-[^\s]+\s+)*push\b[^\n;&|]*(?:\s--force\b|\s-f\b|\s--force-with-lease\b|\s--delete\b|\s-d\b|\s--mirror\b)"
+    r"|" + GIT_PRE + r"(?:rebase|cherry-pick|revert|stash|am|apply|filter-branch|replace)\b"
+    r"|" + GIT_PRE + r"reset\s+(?:-[^\s]+\s+)*--hard\b"
+    r"|" + GIT_PRE + r"push\b[^\n;&|]*(?:\s--force\b|\s-f\b|\s--force-with-lease\b|\s--delete\b|\s-d\b|\s--mirror\b)"
     r"|--no-verify\b")
 QUICK_UNREADABLE = re.compile(r"\bgit\s+(?:-[^\s]+\s+)*(?:commit|merge|push|worktree|checkout|switch|branch|add|rm|mv)\b")
 
@@ -229,6 +240,106 @@ def quick_gate(cmd):
                 b = [rest[j + 1] for j, a in enumerate(rest) if a in ("-b", "-B") and j + 1 < len(rest)]
                 if not b or not QUICK_BRANCH.match(b[0]):
                     deny("a quick pane opens its worktree with `git worktree add -b ops/<slug> <path> main`.", cmd)
+
+
+# THE INVESTIGATOR (`dev`, next batch after 6.1.28). A pane Thomas, the BA or QA ask a question
+# of: it digs to the root cause and hands back a findings file. It may write code to
+# investigate (a repro test, a script, a draft fix on dev/<slug> in its own worktree), never to
+# ship. Measured downstream 2026-11-26: a project ran this role from prose alone, and this guard
+# allowed a `dev` pane 7 of 7 git and dispatch lines (commit, push to main, merge, ticket-done.sh,
+# herdr pane run, worktree add, branch). Three runs that day, 231 tool calls: 0 pushes, 0 commits, so a
+# push is refused outright; a Builder reads dev/<slug> from the shared object store.
+DEV_ROLES = {"dev"}
+DEV_BRANCH = re.compile(r"^dev/[A-Za-z0-9._/-]+$")
+DEV_FORBIDDEN = re.compile(
+    r"\bticket-done\.sh\b"
+    r"|" + DISPATCH +
+    r"|\bgh\s+pr\s+(?:create|merge|close|edit|ready|review)\b"
+    r"|\bgh\s+issue\s+(?:create|edit|close|reopen|comment|delete|transfer)\b"
+    r"|" + GIT_PRE + r"(?:push|merge|rebase|cherry-pick|am|apply|filter-branch|replace|stash)\b"
+    r"|--no-verify\b")
+DEV_GIT_WRITES = {"commit", "reset", "clean", "restore", "checkout", "switch", "revert", "rm", "mv",
+                  "add", "branch", "worktree", "tag"}
+DEV_BRANCH_LIST = {"-a", "-r", "-l", "--list", "--all", "--remotes", "-v", "-vv", "--show-current",
+                   "--contains", "--no-contains", "--merged", "--no-merged", "--points-at", "--sort",
+                   "--format", "--column", "--no-column"}
+
+
+def _dev_lane(d):
+    """(own, branch) for the checkout at d: own when it is a linked worktree (never the main
+    checkout, which is Thomas's) whose HEAD is detached or on dev/*."""
+    rc, gd = run(["git", "-C", d, "rev-parse", "--absolute-git-dir"])
+    rc2, cd_ = run(["git", "-C", d, "rev-parse", "--path-format=absolute", "--git-common-dir"])
+    if rc != 0 or rc2 != 0:
+        return False, None
+    rc, br = run(["git", "-C", d, "symbolic-ref", "--quiet", "--short", "HEAD"])
+    branch = br.strip() if rc == 0 else None
+    linked = os.path.realpath(gd.strip()) != os.path.realpath(cd_.strip())
+    return linked and (branch is None or DEV_BRANCH.match(branch) is not None), branch
+
+
+def dev_gate(cmd):
+    """Deny (and exit) when a dev pane's command leaves its lane; return when it is fine."""
+    hit = DEV_FORBIDDEN.search(cmd)
+    if hit:
+        deny("a dev pane never runs `%s`: it investigates and hands back a findings file. "
+             "No push, merge, dispatch, tracker write or ticket-done.sh; a draft fix stays on "
+             "dev/<slug> in its own worktree, where a Builder can read it." % hit.group(0).strip(), cmd)
+    cmds = simple_commands(cmd)
+    if OUT_OF_SCOPE and QUICK_UNREADABLE.search(cmd):
+        deny("this line holds a heredoc, a substitution or a subshell around a git command, which "
+             "this guard cannot read, and a dev pane is judged on every git command it runs. "
+             "Write the git step as its own plain line (`git commit -F <file>` for a long message).", cmd)
+    here = os.getcwd()
+    for argv in cmds:
+        if not argv:
+            continue
+        if argv[0] == "cd":
+            if len(argv) > 1:
+                here = os.path.normpath(os.path.join(here, os.path.expanduser(argv[1])))
+            continue
+        args = git_args(argv)
+        if not args or args[0] not in DEV_GIT_WRITES:
+            continue
+        d = here
+        for j, a in enumerate(argv[1:len(argv) - len(args)]):
+            if a == "-C" and j + 2 < len(argv):
+                d = os.path.normpath(os.path.join(d, os.path.expanduser(argv[j + 2])))
+        sub, rest = args[0], args[1:]
+        names = [a for a in rest if not a.startswith("-")]
+        if sub == "worktree":
+            if rest[:1] == ["add"]:
+                b = [rest[j + 1] for j, a in enumerate(rest) if a in ("-b", "-B") and j + 1 < len(rest)]
+                if (b and not DEV_BRANCH.match(b[0])) or (not b and "--detach" not in rest):
+                    deny("a dev pane opens its own worktree: `git worktree add --detach <abs path> <sha>` "
+                         "or `git worktree add -b dev/<slug> <abs path> <sha>`.", cmd)
+            continue
+        if sub == "tag":
+            if names or any(a in ("-a", "-d", "-s", "-f") for a in rest):
+                deny("a dev pane never tags.", cmd)
+            continue
+        if sub == "branch":
+            if any(a in DEV_BRANCH_LIST for a in rest) and not any(a in ("-d", "-D", "-m", "-M", "-c", "-C") for a in rest):
+                continue
+            if not names:
+                continue
+            judged = names if any(a in ("-d", "-D", "-m", "-M", "-c", "-C") for a in rest) else names[:1]
+            if not all(DEV_BRANCH.match(n) for n in judged):
+                deny("a dev pane creates, renames and deletes dev/<slug> branches only.", cmd)
+            continue
+        own, branch = _dev_lane(d)
+        create = [rest[j + 1] for j, a in enumerate(rest)
+                  if a in ("-b", "-B", "-c", "-C") and sub in ("checkout", "switch") and j + 1 < len(rest)]
+        if create and not DEV_BRANCH.match(create[0]):
+            deny("a dev pane creates branches named dev/<slug> only.", cmd)
+        if not own:
+            deny("`git %s` here would change a checkout that is not this dev pane's: %s is %s. "
+                 "Work in your own worktree (`git worktree add --detach <abs path> <sha>`), "
+                 "never the main checkout or another pane's." % (
+                     sub, d, "on " + branch if branch else "the main checkout or not a repository"), cmd)
+        if sub == "commit" and not branch:
+            deny("a dev pane commits on dev/<slug> only, and HEAD here is detached: "
+                 "`git switch -c dev/<slug>` first.", cmd)
 
 
 def pane_role(payload):
@@ -696,6 +807,8 @@ def main():
     role = pane_role(payload)
     if role in QUICK_ROLES:
         quick_gate(cmd)
+    if role in DEV_ROLES:
+        dev_gate(cmd)
     if role in READ_ONLY_ROLES:
         hit = READ_ONLY_FORBIDDEN.search(cmd)
         if hit:

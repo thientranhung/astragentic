@@ -17,7 +17,8 @@ six need mitigation and timing. Rank P0 core high-risk/no workaround, P1 critica
 P2 secondary and P3 exploratory. Choose one suitable test level per atomic case (test pyramid);
 duplicate levels only with a stated reason. A surface that writes data also gets misuse
 cases named for it, one group per standard technique: state transitions (add/remove/replace/re-add
-input); concurrency and idempotency (a second action in flight, a double submit, a second tab);
+input, and each write against every state its dependent records can be in: a revoke planned
+against its own record only left 16 dependent records ready in production); concurrency and idempotency (a second action in flight, a double submit, a second tab);
 interruption (reload or leave mid-action; on mobile also backgrounding and network loss); boundary
 values and equivalence classes (too few/many, duplicate names, wrong type, empty); authorization (a
 role that may not write, played from the restricted account the project's entry doc names with how

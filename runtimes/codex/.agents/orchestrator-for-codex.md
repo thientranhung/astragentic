@@ -1,7 +1,7 @@
 # Orchestrator for Codex
 
 Owner-editable model assignments. This file belongs to the Codex runtime overlay.
-The source launcher reads this table for owner sessions (thomas, ba, quick-builder).
+The source launcher reads this table for owner sessions (thomas, ba, quick-builder, dev).
 Thomas reads worker rows when invoking native Herdr/Codex commands. Helper TOMLs
 are generated from the same table at installation. Values apply to new sessions.
 
@@ -15,6 +15,7 @@ are generated from the same table at installation. Values apply to new sessions.
 | builder | gpt-6.2-sol | medium |
 | builder-quick | gpt-6.2-sol | medium |
 | quick-builder | gpt-6.2-sol | medium |
+| dev | gpt-6.2-sol | medium |
 | qa | gpt-6.2-sol | medium |
 | junior | gpt-6.2-sol | medium |
 | reviewer | gpt-6.2-sol | medium |
@@ -66,7 +67,7 @@ home. This table is not read by `launch.py`; the roles read it.
 
 ## Evidence
 
-Chosen against codex-cli 0.166.0 catalog from codex debug models; all 14 model/effort pairs validated against that output.
+Chosen against codex-cli 0.166.0 catalog from codex debug models; all 14 model/effort pairs validated against that output (the dev row, added after 6.1.28, repeats a validated pair).
 Catalog presence is not a completed inference/access test for each model. Workload quality and cost on Astragentic are not measured yet.
 Guidance: https://developers.openai.com/api/docs/guides/model-selection
 Owner decision 2026-11-21: every role runs gpt-6.2-sol at medium effort (2026-11-08 had gpt-6-astra with per-role efforts; gpt-6-sol is a legacy model, not an alias of the latest Sol).
