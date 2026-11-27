@@ -1,3 +1,24 @@
+# Astragentic 7.0.1
+
+Field fixes after the 7.0.0 upgrades of nizzy and inception, and the Builder's own code review back
+under the PR gate (owner 2026-11-27: «builder là một coder thì lúc nào họ chả chạy code review»).
+Rows 38, 40, 41, 43, 47 in `docs/audit/2026-11-27-700-field-incidents.md`.
+
+| fix | số đo | nguồn |
+|---|---|---|
+| Under the PR gate the Builder runs the built-in `code-review` once, findings folded, before it opens the PR; the mod allows it in a PR-gate Builder pane and owes it at merge, and the band shows the review chip lit by it. `astra-review`'s three lenses and the ticket arm stay the PR Reviewer's | owner ruling; planted `prNoSelfCheck` (an approve without the built-in on the record is refused) and `reviewInBuilder` (`astra-review` refused, the built-in passes) | this pane |
+| The commit gate reads a backslash-continued line as one command: a `git add \\` path list chained to `git commit` is no longer refused as "a non-git step" | 14 such refusals since 2026-11-20 named a path or `\\` as the step (nizzy TRA-1673: refused, split, re-run 4 s later); planted `commitBackslashAdd` | row 47; hook log |
+| A staged release's own `install.sh` works in a project whose `.gitignore` ignores `.astraler/`: the residue filter runs only when the package is its git's top level | inception: `.astraler/releases/7.0.0/install.sh . --plan` exit 1, `ledger-index.sh` missing (present on disk, emptied from staging); planted: old 1, new 0 | row 43; since 2.20.2 |
+| "DELETED upstream" no longer lists files the Codex overlay's manifest owns (`.codex/agents/astragentic-*.toml`); removing them failed the Codex doctor | nizzy 7.0.0 apply: 2 of 3 deleted-upstream lines; planted in the retired-path fixture | row 40 |
+| The payload-visibility check (`ADAPT-HARNESS.md`, `dispatch-ticket` § Payload committed) is `git cat-file -e HEAD:.agents/roles/builder.md`, not a throwaway `/tmp` worktree the mod refuses to remove in a chained call | nizzy: refused once, 3 calls, ~27 s; the new line exits 128 uncommitted or untracked, 0 committed | row 41 |
+| `check-reachability` finds an owner-launched role's launcher in the applied release's README too, so a role the package adds (`dev`) does not fail an adopted project until its own README names it | nizzy 7.0.0: FAIL 5 until Thomas edited the README; a fresh applied project: old script fails `ba` and `dev`, new none | row 38 |
+
+By hand downstream: nothing required. A project that added its own Dev/PR Reviewer README rows for
+check-reachability may keep them.
+
+Not covered: `get.sh` taking ~140 s per call (row 42, `chưa đo` where the time goes); the Codex lane
+(no PR gate there).
+
 # Astragentic 7.0.0
 
 One review gate, per project. Where `.astraler/project/review-gate` says `pr`, the Builder writes
