@@ -128,8 +128,7 @@ outgrew the label is a relabel to `full` and a fresh brief, never a steer.
 re-firing the gate. Only what neither of you closes reaches the owner. Record any classification
 a reply changes.
 
-**A gate that fires on a sentence starves in silence — count the merges.** `arm(ticket)` and
-`simplify(increment)` have a script that refuses the merge without them; the slice gate fires on
+**A gate that fires on a sentence starves in silence — count the merges.** `arm(ticket)` has a script that refuses the merge without it; the slice gate fires on
 **you** saying a slice is closed. **More than 10 merges since the last `arm(slice)` is a STOP.**
 
 **Before a PR, a merge or a release**, dispatch QA's product walk (`dispatch-qa-walk`) on any

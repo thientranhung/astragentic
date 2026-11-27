@@ -15,7 +15,7 @@ starts; record the exact baseline. Junior commits its implementation when green.
 Use the Codex worker adapter and junior model row. Junior works in the Builder's
 worktree; Builder pauses all writes and checkout-mutating commands there until
 handback, including commits and test commands that regenerate files. Do not put another ticket
-in this session. Junior cannot push, merge, review, astra-codex-simplify or produce gate receipts.
+in this session. Junior cannot push, merge, review or produce gate receipts.
 
 Read back the actual diff, attribution and test results; rerun criteria from Builder.
 A JUNIOR-DONE line alone does not prove completion. After two unsuccessful briefs or

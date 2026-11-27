@@ -194,7 +194,7 @@ Builder, `/astra-grill-with-docs` or `/astra-to-tickets <spec-id>` for a Shaper.
 skills are `disable-model-invocation: true`, so only text arriving as a user turn reaches
 them; an agent told about the skill in prose starts coding without it. Claude
 Code's own `/compact` and `/clear` keep bare names. A skill the model can call
-(`simplify`) is written `Skill(skill: "simplify")` in a brief, never `/simplify`. <!-- addr-ok: wrong form, cited -->
+(`astra-review`) is written `Skill(skill: "astra-review")` in a brief, never as a slash command.
 
 **A Shaper brief carries a `UX:` line** (5.0.9): `UX: docs/prd.md — UJ-1, UJ-2`, the journeys
 `astra-ux` captured with the owner that the spec realizes, or `UX: n/a — <why>` when no one
@@ -203,9 +203,9 @@ base (the Shaper's worktree is cut from the base, so a file on your disk is not 
 a cited `UJ-n` has no heading in it (`dispatch-ticket-claude` § refused steps).
 
 **The `FLOW:` line** names the build flow as Skill calls, in order: on a UI ticket the
-project's anti-slop skill then `astra-ui`, then `astra-review`, `simplify`, the arm. Tdd is not a step on the line: it is inside
+project's anti-slop skill then `astra-ui`, then `astra-review`, the arm. Tdd is not a step on the line: it is inside
 `astra-implement-with-tdd`, and the gate measures its red run. A step that cannot apply is exempted by
-a `TDD: n/a — <why>`, `REVIEW: n/a — <why>` or `SIMPLIFY: n/a — <why>` brief line, read by the mod
+a `TDD: n/a — <why>` or `REVIEW: n/a — <why>` brief line, read by the mod
 (`dispatch-ticket-claude` § refused steps).
 
 **The kind — `quick` or `full` — is the ticket's label, never a brief line** (4.6.0). The mod
@@ -250,7 +250,7 @@ QA: walk — the ticket changes the orders screen
 QA plan: docs/qa/plan-<slug>.md
 
 FLOW: 1 Skill(astraler-ui-anti-slop) [before UI code; .astraler/project/anti-slop-skills] → 2 Skill(astra-ui) [UI ticket]
-  → 3 Skill(astra-review) [the built-in code-review runs inside it] → 4 Skill(simplify) [once, last content commit] → 5 arm(ticket)
+  → 3 Skill(astra-review) [the built-in code-review runs inside it] → 4 arm(ticket)
 
 Worktree: … · Branch: … · Base: …
 ## Glance
@@ -338,7 +338,6 @@ operational state, not committed.
     "kind": "quick",
     "tdd_na": null,
     "review_na": null,
-    "simplify_na": null,
     "ux_owed": false
   }
 }
@@ -346,7 +345,7 @@ operational state, not committed.
 
 - **`kind` is written by the dispatcher's mod at the send**, from the tracker's label
   (`quick` | `full` | `null` when no reader answered); the exemption lines (`tdd_na`,
-  `review_na`, `simplify_na`, `ux_owed`) by the pane's mod from the delivered brief. The
+  `review_na`, `ux_owed`) by the pane's mod from the delivered brief. The
   gates and the band read these, never the handback.
 
 - **Thomas writes the first block at the claim**, before the brief is submitted. On a Claude

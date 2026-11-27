@@ -59,7 +59,6 @@ const FLOW: ReadonlyArray<readonly [string, string]> = [
   ['astra-implement-with-tdd', 'tdd'],
   ['astra-review', 'astra-review'],
   ['code-review', 'built-in code-review'],
-  ['simplify', 'simplify'],
 ]
 
 // A record is a file anyone can edit; a `skills_run` that is not an object must read as empty,
@@ -312,7 +311,7 @@ const banner = atom({ plugin: 'astragentic-dispatch', key: 'banner' } as const, 
 // The Builder pane's own band: which FLOW steps have run, read from the same record the gates
 // read, so the person watching the pane sees the step the Builder is at without reading the
 // transcript (owner's ask, 2026-10-09).
-const flow = atom({ plugin: 'astragentic-dispatch', key: 'flow' } as const, { ran: [], latest: null, lastTurnEndAt: 0, tddNa: false, reviewNa: false, simplifyNa: false, uxOwed: null, redRun: false, kind: null, refusals: 0, lastRefusal: null, qaMode: null } as Flow)
+const flow = atom({ plugin: 'astragentic-dispatch', key: 'flow' } as const, { ran: [], latest: null, lastTurnEndAt: 0, tddNa: false, reviewNa: false, uxOwed: null, redRun: false, kind: null, refusals: 0, lastRefusal: null, qaMode: null } as Flow)
 
 // One step list per dispatched role, in the order the contract names the phases, each step
 // the skill name the engine reports at `skill.prompt`. Builder's is the gated flow with two
@@ -327,15 +326,12 @@ const RED_RUN = 'red-run'
 // 6.1.22: with the spec arm off the Shaper's band shows the same-vendor read in the arm's place;
 // the step lights from the Agent call, recorded in skills_run like a skill.
 const SPEC_LENS = 'astra-adversarial-lens'
-// The accepted leading tokens of a simplify(increment) marker's Pass: value, as check-simplify-markers.sh KINDS has them.
-const SIMPLIFY_PASS = ['Skill(skill: "simplify")', '$astra-codex-simplify']
 const FLOW_BY_ROLE: Record<string, ReadonlyArray<Step>> = {
   builder: [
     ['astra-implement-with-tdd', 'implement'],
     [RED_RUN, 'tdd'],
     ['astra-ui', 'ui', true],
     ['astra-review', 'review'],
-    ['simplify', 'simplify'],
     ['codex-arm', 'arm'],
   ],
   shaper: [
@@ -367,7 +363,6 @@ async function refreshFlow($: any, root: string, key: string): Promise<void> {
     lastTurnEndAt: Number(entry.last_turn_end_at ?? 0),
     tddNa: Boolean(entry.tdd_na),
     reviewNa: Boolean(entry.review_na),
-    simplifyNa: Boolean(entry.simplify_na),
     kind: entry.kind === 'quick' || entry.kind === 'full' ? entry.kind : null,
     uxOwed: typeof entry.ux_owed === 'boolean' ? entry.ux_owed : null,
     refusals: refusals.length,
@@ -1297,7 +1292,7 @@ let pendingTurnEnd: ReturnType<typeof setTimeout> | null = null
 // (eleven per thousand-call ticket); 300k leaves ~170 (five). Tune with ASTRAGENTIC_CONTEXT_CEILING.
 let compactDue = false
 let contextCeiling = 300_000
-const COMPACT_INSTRUCTIONS = 'Keep, verbatim where short: the ticket id and its brief (acceptance criteria, validation commands, Base, write-set, Owned elsewhere), the phase you are in and which flow steps have run, the current branch and HEAD, open review findings not yet folded, the agent IDs of your subagents still running (after a compaction SendMessage reaches a subagent by ID, not by name — Claude Code 2.1.299), and anything you owe the handback. Drop test output, file contents you can re-read, and finished tool results. After this compaction, before planning any step, run scripts/check-simplify-markers.sh <Base> HEAD and read the branch: a `simplify(increment):` or `arm(ticket):` marker on it means that step is done; never re-run a step whose marker exists.'
+const COMPACT_INSTRUCTIONS = 'Keep, verbatim where short: the ticket id and its brief (acceptance criteria, validation commands, Base, write-set, Owned elsewhere), the phase you are in and which flow steps have run, the current branch and HEAD, open review findings not yet folded, the agent IDs of your subagents still running (after a compaction SendMessage reaches a subagent by ID, not by name — Claude Code 2.1.299), and anything you owe the handback. Drop test output, file contents you can re-read, and finished tool results. After this compaction, before planning any step, read the branch (git log <Base>..HEAD): an `arm(ticket):` receipt on it means the arm is done, and the record (skills_run) says which skills ran; never re-run a step that already ran.'
 
 // Bells that arrived while the dispatcher's own turn was running (a gate pass, a picker
 // waiting on the owner). Each would have become a turn of its own once the session went
@@ -1540,13 +1535,11 @@ export const register: Register = on => {
     if (root) {
       const rec = (await readRecord($, root)) ?? {}
       if (me?.role === 'builder' && rec[me.key]?.kind === 'quick') {
-        text = `${text ? text + '\n\n' : ''}KIND: quick — the tracker labels this ticket quick (builder.md § A quick ticket). Owed: the code, the project's existing tests run green, the built-in code-review (Skill(skill: "code-review"), findings folded), commit, push, handback. Not owed, and the pane's gates are set so: tdd, astra-review, astra-ui, simplify, the arm; write no simplify(increment) or arm(ticket) marker. If the work reaches past the label (a risky path, logic only a test would catch, more files than the project's ceiling), say so in the handback and stop: Thomas relabels it full.`
+        text = `${text ? text + '\n\n' : ''}KIND: quick — the tracker labels this ticket quick (builder.md § A quick ticket). Owed: the code, the project's existing tests run green, the built-in code-review (Skill(skill: "code-review"), findings folded), commit, push, handback. Not owed, and the pane's gates are set so: tdd, astra-review, astra-ui, the arm; write no arm(ticket) marker. If the work reaches past the label (a risky path, logic only a test would catch, more files than the project's ceiling), say so in the handback and stop: Thomas relabels it full.`
       } else if (!me) {
         const live = Object.entries(rec).filter(([, en]) => en?.role === 'builder' && isLive(en) && !en.worktree_removed_at)
         const quick = live.filter(([, en]) => en.kind === 'quick').map(([k]) => k)
-        const noSimplify = live.filter(([, en]) => en.kind !== 'quick' && en.simplify_na).map(([k]) => k)
-        if (quick.length > 0) text = `${text ? text + '\n\n' : ''}QUICK LANES: ${quick.join(', ')} — labelled quick on the tracker. At their merge pass no --marker 'simplify(increment)' and no --marker 'arm(ticket)' to check-simplify-markers.sh; the record's built-in code-review is the gate. A handback that says the work outgrew the label: relabel full and re-brief.`
-        if (noSimplify.length > 0) text = `${text ? text + '\n\n' : ''}SIMPLIFY: n/a LANES: ${noSimplify.join(', ')} — their briefs exempt simplify; at their merge pass no --marker 'simplify(increment)'.`
+        if (quick.length > 0) text = `${text ? text + '\n\n' : ''}QUICK LANES: ${quick.join(', ')} — labelled quick on the tracker. At their merge pass no --marker 'arm(ticket)' to check-simplify-markers.sh; the record's built-in code-review is the gate. A handback that says the work outgrew the label: relabel full and re-brief.`
       }
     }
     if (me && me.role !== 'resident' && dispatcher) {
@@ -1607,8 +1600,6 @@ export const register: Register = on => {
     const unfenced = env.inner.replace(/```[\s\S]*?```/g, '')
     const tddNa = isBriefText ? unfenced.match(/^[ \t]*TDD[ \t]*:[ \t]*n\/a\b[^\n]*/im)?.[0]?.trim() ?? null : undefined
     const reviewNa = isBriefText ? unfenced.match(/^[ \t]*REVIEW[ \t]*:[ \t]*n\/a\b[^\n]*/im)?.[0]?.trim() ?? null : undefined
-    // `SIMPLIFY: n/a — <why>` (4.6.0): the one-pass simplify is not owed; the merge gate reads it.
-    const simplifyNa = isBriefText ? unfenced.match(/^[ \t]*SIMPLIFY[ \t]*:[ \t]*n\/a\b[^\n]*/im)?.[0]?.trim() ?? null : undefined
     // UX IS OWED OR IT IS NOT (4.5.3). The ux step was "optional" and its chip dim `· ux`, which
     // reads as waiting (one downstream ticket, 2026-10-26: the owner asked why the Builder skipped
     // UX on a ticket with no UI). The brief's FLOW line already says: it names `astra-ui` on a UI
@@ -1634,7 +1625,7 @@ export const register: Register = on => {
       const patch: Entry = { dispatcher: env.from, dispatcher_name: env.fromName, last_message_received_at: now }
       if (isBriefText) {
         patch.last_brief_received_at = now
-        patch.tdd_na = tddNa; patch.review_na = reviewNa; patch.ux_owed = uxOwed; patch.simplify_na = simplifyNa
+        patch.tdd_na = tddNa; patch.review_na = reviewNa; patch.ux_owed = uxOwed
         // a new brief starts the tdd question over: the stamp of the previous brief's red run goes too (5.0.0)
         if (me.role === 'builder') { patch.qa_required = qaRequired; patch.qa_plan = qaPlan; patch.first_content_commit_at = null; patch.red_run_at = null }
         if (me.role === 'qa') patch.qa_mode = qaMode
@@ -1664,7 +1655,7 @@ export const register: Register = on => {
   })
 
   // A Builder's skill calls are recorded as the engine expands them, so the flow the brief
-  // names (tdd → ux → both reviews → simplify) is read from what ran, not from what the handback
+  // names (tdd → ux → both reviews) is read from what ran, not from what the handback
   // says ran. Measured downstream before this existed: implement 44/44, tdd 0/44. A fork's
   // call is recorded under the Builder too, which is the same attribution git gives it.
   // Writes are chained: two skills expanding in one turn (a fork's beside the Builder's) would
@@ -2233,7 +2224,7 @@ export const register: Register = on => {
     }
     if (!ROLE_AGENTS.has(type)) return next(e)
     return {
-      deny: `astragentic-dispatch: \`${type}\` is a harness role, and a role runs as its own session in a pane, never as an in-process agent: the gates read the session's role, and an agent's sub-agent completions reach the root session, not the agent. Dispatch it with dispatch-ticket (on Orca: ORCA.md § The pane). Report-only forks (review lenses, simplify, Explore) stay agents.`,
+      deny: `astragentic-dispatch: \`${type}\` is a harness role, and a role runs as its own session in a pane, never as an in-process agent: the gates read the session's role, and an agent's sub-agent completions reach the root session, not the agent. Dispatch it with dispatch-ticket (on Orca: ORCA.md § The pane). Report-only forks (review lenses, Explore) stay agents.`,
     }
   })
 
@@ -2300,19 +2291,6 @@ export const register: Register = on => {
     const commits = worktree
       ? commitsInWorktree(command, worktree)
       : simpleCommands(command).map(gitCommitArgs).filter((c): c is { args: string[]; dir: string | null } => c !== null).map(c => c.args)
-    // A MALFORMED simplify MARKER IS REFUSED WHERE IT IS WRITTEN (6.1.24). check-simplify-markers.sh
-    // reads `Pass:` by prefix at the merge; the pane let any text commit. One downstream project,
-    // 2026-11-23..24: 4 of 21 simplify(increment) markers wrote `Pass: simplify (…`, `Pass: /simplify …`,
-    // and each cost a refused merge, a correction commit and a Builder round-trip.
-    // The message is read from the call as typed: the commit args carry a heredoc message as the
-    // placeholder `heredoc-message` (literalCatHeredocs), and Claude Code commits by heredoc.
-    if (commits.length > 0 && /(?:^|["'\n])simplify\(increment\):/m.test(e.command)) {
-      const val = e.command.match(/(?:^|[\s"'])Pass:[ \t]*([^\n]*)/)?.[1]?.replace(/\\"/g, '"')
-      if (val === undefined || !SIMPLIFY_PASS.some(t => val.startsWith(t))) {
-        await logRefusal($, root, me.key, 'simplify-pass', String(val ?? '(no Pass:)').slice(0, 80))
-        return { deny: `astragentic-dispatch: a simplify(increment) marker's Pass: line must start with ${SIMPLIFY_PASS[0]} (check-simplify-markers.sh refuses it at the merge otherwise); this one ${val === undefined ? 'has no Pass: line' : `starts "${val.slice(0, 40)}"`}. Write it as: Pass: ${SIMPLIFY_PASS[0]} — <what ran>, and commit again. Then run scripts/check-simplify-markers.sh <Base> HEAD and read its exit code.` }
-      }
-    }
     const contentCommits = commits.filter(a => !a.includes('--allow-empty'))
     if (contentCommits.length === 0) return next(e)
     // A QUICK TICKET OWES NO TEST (4.6.0): its kind came from the tracker's label, written on the
@@ -2792,7 +2770,7 @@ export const register: Register = on => {
     const mergeGaps = async (entry: Entry, ref: string): Promise<string[]> => {
       const out: string[] = []
       // A QUICK TICKET (4.6.0, the tracker's label) owes the built-in code-review and nothing
-      // else here; `SIMPLIFY: n/a` on the brief exempts simplify alone.
+      // else here.
       const quick = entry.kind === 'quick'
       // A UI TICKET OWES ITS UI PASS AND ITS ANTI-SLOP READ (5.1.0). `ui_standard` is the list of
       // anti-slop names that resolved when the brief was admitted (session.send, the UI gate);
@@ -2808,7 +2786,6 @@ export const register: Register = on => {
       }
       for (const label of flowGaps(entry)) {
         if (label === 'built-in code-review' && entry.review_na) continue
-        if (label === 'simplify' && (quick || entry.simplify_na)) continue
         if (label === 'astra-review' && quick) continue
         if (label === 'tdd') {
           if (entry.tdd_na || quick) continue
@@ -2856,9 +2833,7 @@ export const register: Register = on => {
           notes.push(`${MARK} ${key} merged owing a QA ${owedQa} (declared on its brief) with no QA turn after the Builder's last. Dispatch it on the merged head (dispatch-qa-walk) or record why not.`)
         }
         if (entry.kind === 'quick') {
-          notes.push(`${MARK} ${key} is a quick ticket (tracker label): no simplify(increment) marker and no arm(ticket) receipt were owed, so do not pass those --marker flags to check-simplify-markers.sh for it.`)
-        } else if (entry.simplify_na) {
-          notes.push(`${MARK} ${key} carried "${String(entry.simplify_na).slice(0, 80)}" on its brief: no simplify(increment) marker was owed, so do not pass --marker 'simplify(increment)' to check-simplify-markers.sh for it.`)
+          notes.push(`${MARK} ${key} is a quick ticket (tracker label): no arm(ticket) receipt was owed, so do not pass --marker 'arm(ticket)' to check-simplify-markers.sh for it.`)
         }
       }
     }
@@ -2946,7 +2921,7 @@ export const register: Register = on => {
       // ticket's exempt steps leave the row — what is shown is what is owed; a full ticket keeps
       // its grey n/a chips as 4.5.3 shipped them.
       const kind = f?.kind ?? null
-      const quickDrop = new Set([RED_RUN, 'astra-ui', 'simplify', 'codex-arm'])
+      const quickDrop = new Set([RED_RUN, 'astra-ui', 'codex-arm'])
       const shown = kind === 'quick' ? (steps ?? []).filter(([name]) => !quickDrop.has(name)) : (steps ?? [])
       return (
         <Box flexDirection="column">
@@ -2977,7 +2952,7 @@ export const register: Register = on => {
                     const isRan = name === RED_RUN ? f.redRun : f.ran.includes(name) || (name === 'codex-arm' && f.ran.includes('codex-claude-arm')) || (name === 'astra-review' && kind === 'quick' && f.ran.includes('code-review'))
                     // an optional step is shown only once the brief has said whether it is owed (4.5.3)
                     if (isOptional && !isRan && f.uxOwed === null) return null
-                    const isNa = (name === RED_RUN && f.tddNa) || (name === 'astra-review' && f.reviewNa) || (name === 'simplify' && f.simplifyNa) || (isOptional && f.uxOwed === false)
+                    const isNa = (name === RED_RUN && f.tddNa) || (name === 'astra-review' && f.reviewNa) || (isOptional && f.uxOwed === false)
                     if (name === running) return <Chip bg="warning" fg="inverseText" label={`… ${label}${live.length ? ` (${live.length} agent${live.length === 1 ? '' : 's'})` : ''}`} />
                     if (isRan) return <Chip bg="success" fg="inverseText" label={`✓ ${label}`} />
                     if (isNa) return <Chip bg="inactive" fg="inverseText" label={`n/a ${label}`} />

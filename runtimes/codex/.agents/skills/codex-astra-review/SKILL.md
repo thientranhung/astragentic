@@ -69,5 +69,5 @@ Route unambiguous in-scope defects to patch and rerun covering checks; ambiguous
 intent to decision_needed; pre-existing or undecidable findings to explicit defer.
 Do not defer a verified defect introduced by this change. Record every disposition.
 Finish with, per axis, the lens's `Findings: n` and how many took each route (a count short of n
-goes back to triage), and artifact identity, then run astra-codex-simplify. Quick tickets
+goes back to triage), and artifact identity. Quick tickets
 need correctness review only. A failed lens is not zero findings.

@@ -31,31 +31,17 @@ the brief's `FLOW:` names `astra-ui`, exempted by `UX: n/a — <why>`, and the b
 (`○ ui` owed, `n/a ui` not; no chip before a brief). If a gate fires on a
 ticket that genuinely has no seam, ask Thomas for the line; do not work around the refusal.
 **A quick ticket** (the tracker's `quick` label, `builder.md` § A quick ticket) is exempt from
-the test-file and tdd-order gates and, at merge, from tdd, `astra-review` and simplify; the arm
+the test-file and tdd-order gates and, at merge, from tdd and `astra-review`; the arm
 gate still asks for the built-in review, and the merge gate still asks the record for it.
-`SIMPLIFY: n/a — <why>` on a full ticket's brief exempts simplify alone (4.6.0).
 
 ## Review — Claude Code invocation
 
-**Invoke `Skill(skill: "astra-review")`** after the UI pass and before simplify. It launches
+**Invoke `Skill(skill: "astra-review")`** after the UI pass. It launches
 `Skill(skill: "code-review")`, Claude Code's built-in bug review, as its correctness lens — not
 `code-review:code-review` (the PR plugin). Both calls land on the record; the merge gate reads
 the built-in's key. A quick ticket invokes the built-in alone.
 
-## Simplify — Claude Code invocation
-
-**Invoke `Skill(skill: "simplify")`** — model-invocable, no plugin prefix.
-`/simplify` <!-- addr-ok: wrong form, cited --> is the human's form, which you cannot type;
-a qualified `<plugin>:simplify` does not exist and the call errors.
-
-**A failed invocation IS the finding.** Report the exact error to Thomas and stop. A
-substitute leaves the same marker, and `Skills run:` on `TURN-END` is what shows it was never invoked.
-
-**Fan-out failure is not invocation failure.** Two measured variants: fork unavailable
-(`Fork is not available inside a forked worker`), and forks returning the coordinator's
-narration (AST-098). In both, run the four corners directly inside that same invocation —
-the skill completing degraded — and name the reason after ` — ` on the `Pass:` line. Only a
-total invocation failure triggers stop-and-report (AST-089).
+## Report-only forks
 
 **Commit first, then fan out — and every report-only fork gets `isolation: "worktree"`.**
 The two halves are one rule and shipping either alone trades one silent failure for another.
@@ -75,29 +61,6 @@ reviewing uncommitted work sees an empty diff and returns a vacuous clean.
 context including Thomas's address, and its `SendMessage` arrives under your name where you
 cannot see it. A fork reporting that it messaged someone is itself the finding: say so to
 Thomas and stop.
-
-**Copy the `Pass:` line exactly** — Thomas verifies mechanically (AST-055, AST-090).
-
-```bash
-# Clean
-git commit -m 'simplify(increment): <what was cleaned>
-
-Pass: Skill(skill: "simplify")'
-
-# Degraded — append reason after " — "
-git commit -m 'simplify(increment): <what was cleaned>
-
-Pass: Skill(skill: "simplify") — fork unavailable, ran four corners directly'
-
-git commit -m 'simplify(increment): <what was cleaned>
-
-Pass: Skill(skill: "simplify") — forks returned narration (AST-098), ran four corners directly'
-
-# Empty (no findings)
-git commit --allow-empty -m 'simplify(increment): no findings on <base>..<head>
-
-Pass: Skill(skill: "simplify")'
-```
 
 ## Advisor
 

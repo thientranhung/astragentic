@@ -518,6 +518,16 @@ esac
                       || bad "advisory line width" "${#out} chars with a resolved SHA"
 
 # ---------------------------------------------------------------------------------------------
+# The Builder's simplify pass is retired (nizzy 2026-10-01..11-27: 1,224 markers in 705 merges, 661
+# empty): the checker has no default kind, so a bare call names what to pass instead of STOPping a
+# branch for a marker nobody owes.
+RB="$TMP/bare-kind"; mkdir -p "$RB"; ( cd "$RB" && git init -q . && git commit -q --allow-empty -m base ) >/dev/null 2>&1
+out="$( cd "$RB" && bash "$S/check-simplify-markers.sh" HEAD HEAD 2>&1 )"; rc=$?
+if [ "$rc" -ne 0 ] && says "$out" "--marker 'arm(ticket)'" && ! says "$out" "STOP"; then
+  ok "a bare check-simplify-markers call has no default kind: it exits non-zero and names --marker, never a simplify STOP"
+else
+  bad "bare checker call" "exit $rc: $out"
+fi
 # check-simplify-markers — rule 5's fold allowance (4.5.0). A fold of up to 100 non-test lines
 # on top of a simplify marker is GREEN with a NOTE; over it, STOP. Test files are outside the
 # count. Planted 2026-10-26 against 4.4.0: the small fold exited 1 (57/244 downstream sessions
@@ -564,6 +574,21 @@ if [ "$(cut -f2 "$RTLOG" 2>/dev/null | tr '\n' ',')" = "masked,masked,2,2,1," ] 
   ok "a test followed by ; or | is logged masked and the pane is told; && , redirections, a quoted | and a trailing newline keep the code (4.5.3)"
 else
   bad "hook-test-run masked" "log: $(cat "$RTLOG" 2>/dev/null || echo 'no log') | masked: $MASKED_OUT | kept: $KEPT_OUT"
+fi
+rm -f "$RTLOG"
+# Row 33 (nizzy 2026-11-26..27): a commit message or a quoted prompt that MENTIONS a test runner
+# is not a run: 76 such Builder commands matched in two days, 75 of them drew a masked notice (12%
+# of all masked notices). A heredoc a shell reads, a bash -c string, and a run after a heredoc count.
+for c in 'git commit -m \"$(cat <<'"'"'EOF'"'"'\nT-1: go test ./... passes\nEOF\n)\"' \
+         "herdr agent prompt b 'run go test ./x and report'" "git commit -m 'run pnpm test first'"; do
+  printf '{"tool_input":{"command":"%s"},"tool_response":{"status":1},"cwd":"%s"}' "$c" "$RT" | python3 "$S/hook-test-run.py"
+done
+printf '{"tool_input":{"command":"cat > x <<'"'"'EOF'"'"'\\ndata\\nEOF\\ngo test ./y"},"tool_response":{"status":1},"cwd":"%s"}' "$RT" | python3 "$S/hook-test-run.py"
+printf '{"tool_input":{"command":"bash <<'"'"'EOF'"'"'\\ngo test ./z\\nEOF"},"tool_response":{"status":1},"cwd":"%s"}' "$RT" | python3 "$S/hook-test-run.py"
+if [ "$(cut -f3 "$RTLOG" 2>/dev/null | grep -c 'go test ./[yz]')" = "2" ] && [ "$(wc -l < "$RTLOG" | tr -d ' ')" = "2" ]; then
+  ok "a commit message (heredoc or quoted) and a quoted prompt that name a test runner are not runs; a run after a heredoc and a heredoc fed to bash are (row 33)"
+else
+  bad "hook-test-run data text" "log: $(cat "$RTLOG" 2>/dev/null || echo 'no log')"
 fi
 rm -f "$RTLOG"
 # 4.5.3 — PostToolUse fires only on success: a failing Bash call goes to PostToolUseFailure,
@@ -2427,11 +2452,6 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const commitHeredocBare = await cmdOf(`git commit -m $(cat <<'EOF'\n-a\nEOF\n)`)
     const substRefusal = String((await fire('tool.call', { tool: 'Bash', command: 'git commit -m "$(git log -1 --format=%s)"' }, async () => ({})))?.deny ?? '')
     const substFixNamed = substRefusal.includes('git commit -F <file>')
-    // 6.1.24 — a simplify(increment) marker whose Pass: line is malformed is refused at the commit,
-    // with the line to write; a well-formed one and a non-marker commit go (one downstream project,
-    // 2026-11-23..24: 4 of 21 markers refused at the merge instead)
-    const mk = (pass) => `git commit --allow-empty -m "$(cat <<'EOF'\nsimplify(increment): AB-5 — fold\n\n${pass}\nEOF\n)"`
-    const simplifyPass = [await cmdOf(mk('Pass: /simplify (4 cleanup agents)')), await cmdOf(mk('Pass: simplify (altitude lens)')), await cmdOf(mk('Range: a..b')), await cmdOf(mk('Pass: Skill(skill: "simplify") — 4 agents')), await cmdOf('git commit --allow-empty -m "chore: Pass: anything"'), await cmdOf('git commit --allow-empty -m "simplify(increment): AB-5" -m "Pass: Skill(skill: \\"simplify\\") — 4 agents"')].join(',')
     git('reset', '-q', '--hard')
     git('reset', '-q', '--hard'); git('clean', '-fdq', '--', 'pending.test.js', 'paths.txt')
     const noScratchLeft = !fs.readdirSync(root).some(n => n.startsWith('.git-tdd-gate'))
@@ -2493,11 +2513,11 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     // downstream ticket, 2026-10-26: the dim `· ux` read as waiting on a ticket with no UI)
     const bandNoFlow = await band()
     const brief = (lines) => fire('session.receive', { text: `<cross-session-message from="uds:/tmp/d.sock" from-name="disp-07">\n/astra-implement-with-tdd AB-5\nQA: none — no surface\n${lines}\n</cross-session-message>`, origin: { kind: 'plugin' } }, async () => ({}))
-    await brief('FLOW: 1 Skill(astra-review) → 2 Skill(simplify) → 3 arm(ticket)')
+    await brief('FLOW: 1 Skill(astra-review) → 2 arm(ticket)')
     const bandUxOff = await band()
     await brief('UX: n/a — gate tooling, no surface\nFLOW: 1 Skill(astra-ui) → 2 Skill(astra-review)')
     const bandUxNa = await band()
-    await brief('## Glance\n- **List:** the seller must see the overdue row first.\n## States\n- empty: …\n## Criteria\n1. **Overdue first** (FR-1)\nFLOW: 1 Skill(astra-ui) [UI ticket] → 2 Skill(astra-review)\n  → 3 Skill(simplify) → 4 arm(ticket)')
+    await brief('## Glance\n- **List:** the seller must see the overdue row first.\n## States\n- empty: …\n## Criteria\n1. **Overdue first** (FR-1)\nFLOW: 1 Skill(astra-ui) [UI ticket] → 2 Skill(astra-review)\n  → 3 arm(ticket)')
     const bandNext = await band()
     await fire('skill.prompt', { skill: 'astra-review' }, async () => ({}))
     liveAgents = [{ id: 'r1', status: 'running', description: 'review' }, { id: 'r2', status: 'running', description: 'review' }, { id: 'r3', status: 'pending', description: 'review' }, { id: 'r4', status: 'running', description: 'review' }]
@@ -2505,8 +2525,6 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const bandHeld = await band()
     liveAgents = []
     await fire('turn.start', { text: '', turnId: 't5' }, async () => ({}))
-    await fire('skill.prompt', { skill: 'simplify' }, async () => ({}))
-    const bandSimplify = await band()
     await fire('turn.complete', { reason: 'answer', answer: 'done', turnId: 't5' }, async () => ({}))
     const bandDone = await band()
     // an agent spawned after that clean turn end (a follow-up brief, no new step) re-lights nothing
@@ -2515,9 +2533,9 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     liveAgents = []
     // two steps stamped in the same millisecond (4.3.2 downstream, 2026-10-22): the later step in
     // flow order is the one running
-    { const r = rec(); const t = Math.max(tick, Date.now()) + 10; r['AB-5'].skills_last = { ...(r['AB-5'].skills_last ?? {}), 'astra-review': t, simplify: t }; fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
-    liveAgents = [{ id: 'x2', status: 'running', description: 'simplify angle' }]
-    await fire('turn.complete', { reason: 'answer', answer: 'simplifying', turnId: 't6' }, async () => ({}))
+    { const r = rec(); const t = Math.max(tick, Date.now()) + 10; r['AB-5'].skills_last = { ...(r['AB-5'].skills_last ?? {}), 'astra-implement-with-tdd': t, 'astra-review': t }; fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    liveAgents = [{ id: 'x2', status: 'running', description: 'arm lens' }]
+    await fire('turn.complete', { reason: 'answer', answer: 'arming', turnId: 't6' }, async () => ({}))
     const bandTie = await band()
     liveAgents = []
     // (the tdd-order block runs after the band reads: its tdd call would otherwise light a chip the band cases expect unlit)
@@ -2560,8 +2578,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const tddOrder = { noCall: tddOrderNoCall, noRed: tddOrderNoRed, greenOnly: tddOrderGreenOnly, masked: tddOrderMasked, ok: tddOrderOk, chip: tddOrderChip, second: tddOrderSecond, steer: tddOrderSteer, log: tddOrderLog }
     // 4.6.0 — a quick ticket: `kind` on the record (the dispatcher wrote it from the tracker's
     // label), the band's first row says so and drops the exempt steps, a content commit with no
-    // test file passes, and the prompt carries the KIND section; `SIMPLIFY: n/a` on a full brief
-    // greys the simplify chip
+    // test file passes, and the prompt carries the KIND section
     const recPath5 = path.join(root, '.astraler/state/dispatch-record.json')
     { const r = rec(); r['AB-5'].kind = 'quick'; fs.writeFileSync(recPath5, JSON.stringify(r)) }
     await brief('FLOW: 1 Skill(code-review)')
@@ -2573,14 +2590,13 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const kindSection = (composedQuick?.sections ?? []).some(s => /KIND: quick/.test(String(s.text)))
     git('reset', '-q'); try { fs.unlinkSync(path.join(root, 'q.js')) } catch {}
     { const r = rec(); r['AB-5'].kind = null; fs.writeFileSync(recPath5, JSON.stringify(r)) }
-    await brief('SIMPLIFY: n/a — docs only\nFLOW: 1 Skill(astra-review)')
+    await brief('FLOW: 1 Skill(astra-review)')
     const bandRebrief = await band()
     // 5.0.0 — a NEW brief starts the tdd question over: the previous brief's red run (stamped on the
     // record at its first content commit, above) no longer lights the chip; the log was cleared
     const rebriefTdd = /○ tdd/.test(bandRebrief) && !/✓ tdd/.test(bandRebrief) && rec()['AB-5']?.red_run_at === null
-    const bandSimplifyNa = Boolean(rec()['AB-5']?.simplify_na) && (await engine.read($, { id: 'astragentic-dispatch.flow', init: {} })).simplifyNa === true
-    const quick = { band: bandQuick, commit: commitQuick, section: kindSection, simplifyNa: bandSimplifyNa, rebriefTdd }
-    const bandText = { bandNoFlow, bandUxOff, bandUxNa, bandNext, bandHeld, bandSimplify, bandDone, bandAfterAgent, bandTie }
+    const quick = { band: bandQuick, commit: commitQuick, section: kindSection, rebriefTdd }
+    const bandText = { bandNoFlow, bandUxOff, bandUxNa, bandNext, bandHeld, bandDone, bandAfterAgent, bandTie }
     // 4.6.1 — a dispatched pane waits by ending its turn: ScheduleWakeup is refused (3 of 4
     // Builder panes reached for it downstream, 2026-10-27); `stop: true` passes so an armed
     // heartbeat can be turned off
@@ -2620,10 +2636,9 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
       uxNa: /○ tdd n\/a ui ○ review/.test(bandUxNa),
       next: /→ implement ○ tdd ○ ui ○ review/.test(bandNext) && !/…/.test(bandNext) && !/· ui/.test(bandNext),
       held: /… review \(4 agents\)/.test(bandHeld) && !/✓ review/.test(bandHeld) && !/→/.test(bandHeld),
-      simplify: /✓ review/.test(bandSimplify) && /… simplify/.test(bandSimplify) && !/→/.test(bandSimplify),
-      done: /✓ simplify/.test(bandDone) && !/…/.test(bandDone) && /→ implement/.test(bandDone),
-      afterAgent: /✓ simplify/.test(bandAfterAgent) && !/…/.test(bandAfterAgent),
-      tie: /… simplify \(1 agent\)/.test(bandTie) && /✓ review/.test(bandTie),
+      done: /✓ review/.test(bandDone) && !/…/.test(bandDone) && /→ implement/.test(bandDone),
+      afterAgent: /✓ review/.test(bandAfterAgent) && !/…/.test(bandAfterAgent),
+      tie: /… review \(1 agent\)/.test(bandTie) && !/… implement/.test(bandTie),
     }
     // 5.0.9 — a turn that ends on an API error writes its first line on the record and shows a
     // desktop notification from the pane itself (one project, 2026-10-30: three panes lost auth
@@ -2693,7 +2708,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     await fire('turn.complete', { reason: 'answer', answer: 'suite green, handing back', turnId: 'bg5' }, async () => ({}))
     const bgMidTurn = recB().waiting_on === null
     const bgShell = `${bgHeld}:${bgReleased}:${bgMidTurn}`
-    console.log(JSON.stringify({ parkedHeld, parkedWakeDropped, parkedSent, parkedLine, parkedUnavailable, deadRecorded, deadNotified, deadCleared, quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, wakeup, wakeupStop, armOpenNamed, bypassHint, sendToBareRef, sendToDoneRef, sendToDoneName, sendToDoneId, sendToUnknownRef, bandText, log , tabsNamed, subSend, simplifyPass, bgShell}))
+    console.log(JSON.stringify({ parkedHeld, parkedWakeDropped, parkedSent, parkedLine, parkedUnavailable, deadRecorded, deadNotified, deadCleared, quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, wakeup, wakeupStop, armOpenNamed, bypassHint, sendToBareRef, sendToDoneRef, sendToDoneName, sendToDoneId, sendToUnknownRef, bandText, log , tabsNamed, subSend, bgShell}))
     return
   }
   await fire('session.start', {}, async () => ({}))
@@ -2774,7 +2789,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   const heldShown = log.some(t => typeof t === 'string' && t.includes('held until this turn ends'))
   await fire('turn.complete', { reason: 'answer', answer: 'ok', turnId: 'main-1' }, async () => ({}))
   const heldCleared = heldShown && bells.length === 1 && log[log.length - 1] === undefined
-  // a merge of a Builder whose pane recorded skills but not simplify is refused before it runs;
+  // a merge of a Builder whose pane recorded skills but not astra-review is refused before it runs;
   // the same merge with the full record goes through; an entry with an empty record is not judged
   const mergeOf = async (skills, extra = {}) => {
     fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify({ 'AB-6': { role: 'builder', pane_id: 'p6', tab_id: 't6', session_id: 's6', branch: 'builder/AB-6', skills_run: skills, ...extra } }))
@@ -2783,8 +2798,8 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const d = r?.deny ? String(r.deny) : ''
     return `${r?.deny ? 'deny' : 'pass'}:${nextRan ? 'ran' : 'held'}${d && /has no record of: [^.]*\btdd\b/.test(d) ? ':tdd' : ''}${/astra-ui \(a UI ticket/.test(d) ? ':ui' : ''}${/anti-slop \(none of x-anti-slop on the record/.test(d) ? ':slop' : ''}`
   }
-  const full = { 'astra-implement-with-tdd': 1, 'astra-review': 1, 'code-review': 1, 'simplify': 1, 'codex-arm': 1 }
-  const mergeGap = await mergeOf({ ...full, simplify: undefined })
+  const full = { 'astra-implement-with-tdd': 1, 'astra-review': 1, 'code-review': 1, 'codex-arm': 1 }
+  const mergeGap = await mergeOf({ ...full, 'astra-review': undefined })
   const mergeFull = await mergeOf(full)
   // 5.1.0 — a UI ticket (ux_owed on the record, from the brief's FLOW) owes astra-ui and one of the
   // project's anti-slop skills on the record; a record from before 5.1.0 (no ux_owed) is not judged
@@ -2835,7 +2850,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const notes = (r?.context ?? []).map(String).join('\n')
     return `${r?.deny ? 'deny' : 'pass'}:${nextRan ? 'ran' : 'held'}:${/AB-6 merged owing a QA walk/.test(notes) ? 'AB-6' : '-'}:${/AB-7 merged/.test(notes) ? 'AB-7' : '-'}`
   }
-  const mergeByShaLiveGapped = await mergeBySha({ ...full, simplify: undefined })
+  const mergeByShaLiveGapped = await mergeBySha({ ...full, 'astra-review': undefined })
   const mergeByShaLiveFull = await mergeBySha(full)
   gitq('branch', '-q', '-D', 'builder/AB-6'); gitq('branch', '-q', '-D', 'builder/AB-7'); gitq('clean', '-fdq', '--', 'feat.js', 'feat.test.js', 'live.js')
   // 5.0.9 — a lane whose last turn died reads `dead`, red, with the error's first line; its bell
@@ -2978,12 +2993,10 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   const kindJira = kindOf('AB-14')
   process.env.PATH = savedPath; fs.unlinkSync(path.join(root, '.astraler/project/tracker'))
   // the merge gate: a quick record with the built-in review alone passes, without it is refused,
-  // and the same record with no kind is refused; `SIMPLIFY: n/a` exempts simplify alone; the
-  // merge of a quick lane carries the no-marker note
+  // and the same record with no kind is refused; the merge of a quick lane carries the no-marker note
   const mergeQuick = await mergeOf({ 'astra-implement-with-tdd': 1, 'code-review': 1 }, { kind: 'quick' })
   const mergeQuickNoReview = await mergeOf({ 'astra-implement-with-tdd': 1 }, { kind: 'quick' })
   const mergeUnkinded = await mergeOf({ 'astra-implement-with-tdd': 1, 'code-review': 1 })
-  const mergeSimplifyNa = await mergeOf({ ...full, simplify: undefined }, { simplify_na: 'SIMPLIFY: n/a — docs only' })
   fs.writeFileSync(recPath, JSON.stringify({ 'AB-6': { role: 'builder', pane_id: 'p6', tab_id: 't6', session_id: 's6', branch: 'builder/AB-6', skills_run: { 'astra-implement-with-tdd': 1, 'code-review': 1 }, kind: 'quick' } }))
   const mergeQuickRan = await fire('tool.call', { tool: 'Bash', command: 'git merge --no-ff builder/AB-6' }, async () => ({}))
   const mergeQuickNote = (mergeQuickRan?.context ?? []).some(t => /AB-6 is a quick ticket/.test(String(t)))
@@ -2995,7 +3008,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   const bandDisp = await band()
   const bandRows = /\d+ lanes?/.test(bandDisp) && /AB-15\s+builder\s+registered/.test(bandDisp) && /↑0\.0\.2/.test(bandDisp) && !/available/.test(bandDisp)
   fs.writeFileSync(recPath, '{}')
-  const kind = { briefQuick, kindQuick, briefUnlabelled: briefUnlabelled.slice(0, 7), kindAfterUnlabelled, briefFull, kindFull, briefJira, kindJira, mergeQuick, mergeQuickNoReview, mergeUnkinded, mergeSimplifyNa, mergeQuickNote, quickLanes, bandRows }
+  const kind = { briefQuick, kindQuick, briefUnlabelled: briefUnlabelled.slice(0, 7), kindAfterUnlabelled, briefFull, kindFull, briefJira, kindJira, mergeQuick, mergeQuickNoReview, mergeUnkinded, mergeQuickNote, quickLanes, bandRows }
   // 6.1.0 — a Herdr dispatcher may not reach into Orca; a doc or path named orca is not a command
   const orcaInHerdr = await (async () => { let ran = false; const r = await fire('tool.call', { tool: 'Bash', command: 'orca terminal create --worktree active --command claude' }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` })()
   const orcaDocInHerdr = await (async () => { let ran = false; const r = await fire('tool.call', { tool: 'Bash', command: 'sed -n 1,5p docs/codex/ORCA-DESIGN.md; echo orca' }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` })()
@@ -3042,7 +3055,7 @@ DRVEOS
   fi
   # 4.0.2 — the record refuses the merge. one downstream ticket (2026-10-16) shipped forged Pass: lines past the marker gate.
   if says "$out" '"mergeGap":"deny:held","mergeFull":"pass:ran","mergeUi":{"mergeUiNeither":"deny:held:ui:slop","mergeUiNoSlop":"deny:held:slop","mergeUiFull":"pass:ran","mergeUiNotOwed":"pass:ran","mergeUiPreStamp":"pass:ran","mergeUiQuick":"pass:ran"},"mergeEmpty":"pass:ran","mergeTddByBranch":"pass:ran","mergeTddNoTest":"deny:held:tdd","armOffDispatcher":true'; then
-    ok "merge gate: a recorded pane missing simplify is refused before the merge runs; a full record passes; an empty record is not judged; tdd is judged by a test file on the branch since dispatch, not by the skill call (one downstream ticket, 2026-10-22); the dispatcher's prompt names the off arm scope and its marker"
+    ok "merge gate: a recorded pane missing astra-review is refused before the merge runs; a full record passes; an empty record is not judged; tdd is judged by a test file on the branch since dispatch, not by the skill call (one downstream ticket, 2026-10-22); the dispatcher's prompt names the off arm scope and its marker"
   else
     bad "mod merge gate" "$out"
   fi
@@ -3091,8 +3104,8 @@ DRVEOS
   fi
   # 4.6.0 — the ticket's kind is the tracker's label (one project measured 15–32% quick-shaped
   # tickets, each paid as a full loop, 2026-10-25); the plug enforces, the package reader informs
-  if says "$out" '"kind":{"briefQuick":"sent","kindQuick":"quick","briefUnlabelled":"refused","kindAfterUnlabelled":"quick","briefFull":"sent","kindFull":"full","briefJira":"sent","kindJira":null,"mergeQuick":"pass:ran","mergeQuickNoReview":"deny:held","mergeUnkinded":"deny:held","mergeSimplifyNa":"pass:ran","mergeQuickNote":true,"quickLanes":true,"bandRows":true}'; then
-    ok "kind (4.6.0): a quick label sets kind before the brief goes; an unlabelled ticket is refused where the plug exists and keeps the last kind; the jira reader informs only; a quick record merges on the built-in review alone and not without it; an unkinded record is refused; SIMPLIFY: n/a exempts simplify; the merge note and the dispatcher's prompt name the quick lane; the band is a header and one row per lane"
+  if says "$out" '"kind":{"briefQuick":"sent","kindQuick":"quick","briefUnlabelled":"refused","kindAfterUnlabelled":"quick","briefFull":"sent","kindFull":"full","briefJira":"sent","kindJira":null,"mergeQuick":"pass:ran","mergeQuickNoReview":"deny:held","mergeUnkinded":"deny:held","mergeQuickNote":true,"quickLanes":true,"bandRows":true}'; then
+    ok "kind (4.6.0): a quick label sets kind before the brief goes; an unlabelled ticket is refused where the plug exists and keeps the last kind; the jira reader informs only; a quick record merges on the built-in review alone and not without it; an unkinded record is refused; the merge note and the dispatcher's prompt name the quick lane; the band is a header and one row per lane"
   else
     bad "kind (4.6.0)" "$(printf '%s' "$out" | grep -o '"kind":{[^}]*}' | head -1)"
   fi
@@ -3129,8 +3142,8 @@ EOS
     ok "planted: a mod that reads the tracker on the tick is caught by the count"
   fi
   out="$(mod_drive "$MOD" pane)"
-  if says "$out" '"quick":{"band":true,"commit":"pass:ran","section":true,"simplifyNa":true,"rebriefTdd":true}'; then
-    ok "quick ticket in the pane (4.6.0): the band's first row says quick and the steps row keeps only implement and the review; a content commit with no test file passes; the prompt carries KIND: quick; SIMPLIFY: n/a greys the simplify chip; a new brief resets the tdd chip (5.0.0)"
+  if says "$out" '"quick":{"band":true,"commit":"pass:ran","section":true,"rebriefTdd":true}'; then
+    ok "quick ticket in the pane (4.6.0): the band's first row says quick and the steps row keeps only implement and the review; a content commit with no test file passes; the prompt carries KIND: quick; a new brief resets the tdd chip (5.0.0)"
   else
     bad "quick ticket in the pane (4.6.0)" "$(printf '%s' "$out" | grep -o '"quick":{[^}]*}' | head -1)"
   fi
@@ -3149,11 +3162,6 @@ EOS
   else
     bad "background shell hold (6.1.24)" "$(printf '%s' "$out" | grep -o '"bgShell":"[^"]*"' | head -1)"
   fi
-  if says "$out" '"simplifyPass":"deny:held,deny:held,deny:held,pass:ran,pass:ran,pass:ran"'; then
-    ok "a simplify(increment) marker whose Pass: line does not start with the accepted token is refused at the commit; a well-formed one and a non-marker commit go (6.1.24)"
-  else
-    bad "simplify Pass: at the commit (6.1.24)" "$(printf '%s' "$out" | grep -o '"simplifyPass":"[^"]*"' | head -1)"
-  fi
   if says "$out" '"subSend":"refused,refused,seen=team-lead"'; then
     ok "a pane's subagent cannot reply to the dispatcher; it is sent back to its parent (6.1.24)"
   else
@@ -3164,7 +3172,7 @@ EOS
   else
     bad "mod dead turn" "$out"
   fi
-  if says "$out" '"parkedHeld":true,"parkedWakeDropped":true,"parkedSent":true,"parkedLine":true,"parkedUnavailable":true' && says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"sendToFork":"code-review [ce2df1]","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"noFlow":true,"uxOff":true,"uxNa":true,"next":true,"held":true,"simplify":true,"done":true,"afterAgent":true,"tie":true},"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","refusedWhy":true,"compacted":1,"commitNoTest":"deny:held","commitWithTest":"pass:ran","commitDeletedTest":"deny:held","commitLaterDeletedTest":"deny:held","commitPathLimited":"deny:held","commitAllDeleted":"deny:held","commitAddThenCommit":"pass:ran","commitRmThenCommit":"deny:held","commitRestageDeleted":"deny:held","commitDashMAttached":"deny:held","commitScopedAddAll":"deny:held","commitPathRestored":"deny:held","commitAfterMv":"deny:held","mvNotReplayed":true,"commitTwice":"deny:held","commitDashCSrc":"deny:held","commitAmendOnly":"deny:held","commitRmAddAll":"deny:held","rmNotReplayed":true,"commitPathspecFile":"deny:held","commitRepeatedC":"deny:held","commitDotUntracked":"deny:held","commitDotStaged":"pass:ran","commitSkippedAdd":"deny:held","commitRmNoCached":"deny:held","fileSurvived":true,"commitOrAdd":"deny:held","commitEchoAdd":"deny:held","commitRmAbsent":"deny:held","commitSubstQuoted":"deny:held","testStillStaged":true,"commitWorkTree":"deny:held","commitConfigOpt":"deny:held","commitSubstApos":"deny:held","commitBacktickDouble":"deny:held","commitSubstLiteral":"pass:ran","commitConfigEnv":"deny:held","commitCommentedAdd":"deny:held","commitAbbrevOpt":"deny:held","commitMessageEq":"pass:ran","commitRedirect":"deny:held","commitFdDup":"pass:ran","ampNamed":true,"commitHeredocMsg":"pass:ran","commitHeredocOpen":"deny:held","commitHeredocExtra":"deny:held","commitHeredocBare":"deny:held","substFixNamed":true,"noScratchLeft":true,"wakeup":"deny:held","wakeupStop":"pass:ran","armOpenNamed":true,"bypassHint":true' && says "$out" '"tabsNamed":"1:gone"'; then
+  if says "$out" '"parkedHeld":true,"parkedWakeDropped":true,"parkedSent":true,"parkedLine":true,"parkedUnavailable":true' && says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"sendToFork":"code-review [ce2df1]","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"noFlow":true,"uxOff":true,"uxNa":true,"next":true,"held":true,"done":true,"afterAgent":true,"tie":true},"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","refusedWhy":true,"compacted":1,"commitNoTest":"deny:held","commitWithTest":"pass:ran","commitDeletedTest":"deny:held","commitLaterDeletedTest":"deny:held","commitPathLimited":"deny:held","commitAllDeleted":"deny:held","commitAddThenCommit":"pass:ran","commitRmThenCommit":"deny:held","commitRestageDeleted":"deny:held","commitDashMAttached":"deny:held","commitScopedAddAll":"deny:held","commitPathRestored":"deny:held","commitAfterMv":"deny:held","mvNotReplayed":true,"commitTwice":"deny:held","commitDashCSrc":"deny:held","commitAmendOnly":"deny:held","commitRmAddAll":"deny:held","rmNotReplayed":true,"commitPathspecFile":"deny:held","commitRepeatedC":"deny:held","commitDotUntracked":"deny:held","commitDotStaged":"pass:ran","commitSkippedAdd":"deny:held","commitRmNoCached":"deny:held","fileSurvived":true,"commitOrAdd":"deny:held","commitEchoAdd":"deny:held","commitRmAbsent":"deny:held","commitSubstQuoted":"deny:held","testStillStaged":true,"commitWorkTree":"deny:held","commitConfigOpt":"deny:held","commitSubstApos":"deny:held","commitBacktickDouble":"deny:held","commitSubstLiteral":"pass:ran","commitConfigEnv":"deny:held","commitCommentedAdd":"deny:held","commitAbbrevOpt":"deny:held","commitMessageEq":"pass:ran","commitRedirect":"deny:held","commitFdDup":"pass:ran","ampNamed":true,"commitHeredocMsg":"pass:ran","commitHeredocOpen":"deny:held","commitHeredocExtra":"deny:held","commitHeredocBare":"deny:held","substFixNamed":true,"noScratchLeft":true,"wakeup":"deny:held","wakeupStop":"pass:ran","armOpenNamed":true,"bypassHint":true' && says "$out" '"tabsNamed":"1:gone"'; then
     ok "pane side: a turn end with a live agent is held, the next turn start ends the hold, the band reads the latest step as … with the pane's agent count until a later step or a clean turn end and the step after it as ○, an arm row at no reaches the Builder's prompt, a command on the project's refused list is refused, a turn over the context ceiling is compacted, ScheduleWakeup is refused except stop, and a bypass-launched pane whose send lost its verdict is told to return to bypass"
   else
     bad "mod pane hold" "$out"
@@ -3340,7 +3348,7 @@ EOS
     bad "mod refusal planted reason" "the reasonless refusal was not caught: $out"
   fi
   out="$(mod_drive "$TMP/mod-stuck" pane)"
-  if says "$out" '"second":true,"steer":false,' && says "$out" '"paneHeld":true,"paneCleared":false,"sendToFork":"uds:/tmp/d.sock","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"noFlow":true,"uxOff":false,"uxNa":false,"next":false,"held":false,"simplify":false,"done":true,"afterAgent":true,"tie":false},"armOffSection":false,"refusedListed":"pass:ran","refusedOther":"pass:ran","refusedWhy":false,"compacted":0' && says "$out" '"wakeup":"pass:ran"' && { qaout="$(mod_drive "$TMP/mod-stuck" qapane)"; says "$qaout" '"qaNoBypassHint":false,"qaNotRed":false'; }; then
+  if says "$out" '"second":true,"steer":false,' && says "$out" '"paneHeld":true,"paneCleared":false,"sendToFork":"uds:/tmp/d.sock","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"noFlow":true,"uxOff":false,"uxNa":false,"next":false,"held":false,"done":true,"afterAgent":true,"tie":false},"armOffSection":false,"refusedListed":"pass:ran","refusedOther":"pass:ran","refusedWhy":false,"compacted":0' && says "$out" '"wakeup":"pass:ran"' && { qaout="$(mod_drive "$TMP/mod-stuck" qapane)"; says "$qaout" '"qaNoBypassHint":false,"qaNotRed":false'; }; then
     ok "planted: a step invoked reads ✓ while the pane's four agents still run; a ScheduleWakeup hook that passes everything is caught; a QA band that still advises bypass is caught; a same-millisecond tie lights the earlier step; a brief nobody reads for ux leaves no ux chip; a steer that stamps the brief mark re-arms the tdd gate; a pane that starts a turn leaves its hold standing; an arm row nobody parses reaches no prompt; a refused list nobody tests refuses nothing; a ceiling nobody reads compacts nothing"
   else
     bad "mod send/ack planted defect" "the driver did not show the stuck chip: $out"

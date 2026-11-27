@@ -14,7 +14,7 @@ Run the brief's test/type/lint commands and record actual results. Stay inside t
 assigned write-set and worktree. Request a revised brief for an out-of-scope change.
 
 Do not add dependencies without permission, create worktrees, change base branches,
-rebase, push, merge, review, astra-codex-simplify or write gate receipts. When green, commit your
+rebase, push, merge, review or write gate receipts. When green, commit your
 implementation on the Builder's branch with `Implemented-by: codex/<actual-model>`. Never invent a SHA or claim a dirty
 tree is committed.
 

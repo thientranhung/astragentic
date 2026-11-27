@@ -10,9 +10,9 @@
 # bash part stays thin and the logic is Python, which does not vary by shell.
 #
 # MARKER KINDS. The harness has more than one marker whose rules are identical, so the kind is
-# data rather than a second script. `--marker` is repeatable; the default is the simplify pass.
+# data rather than a second script. `--marker` is repeatable and required.
 # A kind is a list of the body lines a well-formed marker must carry plus a policy (the KINDS
-# table below). Four ship: `simplify(increment)`, `arm(ticket)`, and the advisory milestone
+# table below). Four ship: `arm(ticket)`, `simplify(increment)` (retired pass, kept for old branches), the advisory milestone
 # markers `arm(slice)` and `qa(walk)`.
 #
 # PROJECT PLUG POINTS. Everything a project would otherwise edit this file for lives in
@@ -393,7 +393,12 @@ while i < len(args):
 if not base:
     sys.exit("usage: check-simplify-markers.sh <base> [head] [--marker <prefix>]...")
 head = head or "HEAD"
-kinds = kinds or ["simplify(increment)"]
+# No default kind (next after 6.1.29): the Builder's simplify pass is retired, and a bare call that
+# checked `simplify(increment)` would STOP every branch for a marker nobody owes any more. The
+# kind stays in KINDS so a branch that still carries such markers validates when it is named.
+# nizzy, 2026-10-01..11-27: 1,224 simplify(increment) commits in 705 merges, 661 of them empty.
+if not kinds:
+    sys.exit("name the receipt kind(s) this ticket owes, e.g. --marker 'arm(ticket)'; there is no default since the simplify pass was retired")
 for k in kinds:
     if k not in KINDS:
         sys.exit(f"unknown marker kind '{k}' — known: {', '.join(KINDS)}")

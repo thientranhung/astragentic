@@ -5,14 +5,13 @@ runs the script before handback, `thomas.md` reads them at merge, and `CLEANUP.m
 before a worktree is removed. The script is the arbiter, on every runtime:
 
 ```bash
-scripts/check-simplify-markers.sh <base> <head> --marker 'simplify(increment)'   # exit 0 = green, 1 = STOP
-scripts/check-simplify-markers.sh <base> <head> --marker 'arm(ticket)'   # omit when orchestrator.md arm row ticket = no
+scripts/check-simplify-markers.sh <base> <head> --marker 'arm(ticket)'   # exit 0 = green, 1 = STOP; omit when orchestrator.md arm row ticket = no
 ```
 
-A ticket labelled `quick` on the tracker owes neither marker (4.6.0), and a full ticket whose
-brief carries `SIMPLIFY: n/a — <why>` owes no `simplify(increment)`: the Builder's record is the
-gate, the dispatcher's prompt lists the live lanes of both shapes, and the merge's own note
-names them. Pass no `--marker` for what is not owed; `arm(slice)` and `qa(walk)` are unchanged.
+A ticket labelled `quick` on the tracker owes no receipt (4.6.0): the Builder's record is the
+gate, the dispatcher's prompt lists the live quick lanes, and the merge's own note names them.
+Pass no `--marker` for what is not owed; the script has no default kind. `simplify(increment)`
+is the retired Builder pass: the kind still validates an old branch when named, and nothing owes it.
 
 `--marker` is repeatable and the kind is data, so a new kind costs a flag, not a script. The
 script prints one `STOP:` line per reason. The counts are a filter, not a verdict:
@@ -22,16 +21,13 @@ script prints one `STOP:` line per reason. The counts are a filter, not a verdic
 
 **Existence is not relationship.** The newest marker of each kind must cover the head's tree,
 within a fold allowance: up to 100 non-test content lines, cumulative over `<marker>..<head>`,
-sit on top of a `simplify(increment)` marker without owing the pass again (the script prints
-the delta as a NOTE; measured on 119 downstream merges, 106 fell inside it). Over the
-allowance, the commits are code the pass never read, and every per-field check passes on them.
-The answer to that STOP is one more pass (`/simplify <marker>..<head>`
-<!-- addr-ok: the typed form, cited --> then a fresh marker), never an explanation. Markers may
-be empty, so it costs one commit. Test files (the project's `test-file-pattern`) and
+sit on top of a marker without owing the pass again (the script prints the delta as a NOTE;
+measured on 119 downstream merges, 106 fell inside it). Over the allowance, the commits are code
+the pass never read; the answer is the pass again and a fresh marker, never an explanation. Test files (the project's `test-file-pattern`) and
 `marker-evidence-paths.txt` globs are outside the count.
 
-The comparison is of trees, not commit counts: an empty `arm(ticket)` receipt committed after
-`simplify(increment)` leaves the tree unchanged, so both kinds may be named in one call. The
+The comparison is of trees, not commit counts: an empty `arm(ticket)` receipt leaves the
+tree unchanged, so several kinds may be named in one call. The
 paths the protocol itself commits above a marker are exempt by default (5.0.9): the arm log
 under `.scratch/gates/`, the QA report under `.scratch/qa/`, the gate-history copy and
 `qa-verified-clean.md` under `.astraler/state/`. A project adds its own globs in

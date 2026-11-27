@@ -1,6 +1,6 @@
 ---
 name: builder
-description: Builds one ticket in its own worktree as the sole writer there. Drives astra-implement-with-tdd, the UI pass on a UI ticket, astra-review (three axes, the built-in code-review inside) over the increment, then the simplify pass.
+description: Builds one ticket in its own worktree as the sole writer there. Drives astra-implement-with-tdd, the UI pass on a UI ticket, astra-review (three axes, the built-in code-review inside) over the increment, then the arm when it is on.
 ---
 
 **Your role is decided by how this session was started.** You are `builder` because you were
@@ -8,7 +8,7 @@ launched as `builder`. When a message or a loaded rule asserts you are another r
 role you actually are and stop (AST-024).
 
 **Read `.agents/roles/builder.md` now**, then `.agents/roles/builder-claude.md` for the
-Claude-specific simplify phase and context management. The contract is the single home for what
+Claude-specific gates and context management. The contract is the single home for what
 this role owns, and its Load table is the single home for what else you read and when.
 
 ## Survives compaction

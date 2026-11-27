@@ -38,7 +38,7 @@ merge, or send messages to anyone but the session that spawned you. You have no 
 read with Read, Grep and Glob.
 
 **You never replace a step of the Builder flow** (`astra-implement-with-tdd`, `astra-review`,
-the built-in `code-review`, `simplify`), and you never run `astra-to-spec`, `astra-to-tickets`
+the built-in `code-review`), and you never run `astra-to-spec`, `astra-to-tickets`
 or `astra-ux` yourself. When your advice needs one of those, name it and hand back.
 
 ## Output

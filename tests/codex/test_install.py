@@ -43,7 +43,7 @@ class InstallTests(unittest.TestCase):
         self.assertEqual(template.read_bytes(), (ROOT/'runtimes/codex/coordinator-hooks.json').read_bytes())
         self.assertFalse((self.project/'.codex/hooks.json').exists())
         mapping = self.project / '.codex/astragentic/skill-map.json'
-        self.assertEqual(len(json.loads(mapping.read_text())), 20)
+        self.assertEqual(len(json.loads(mapping.read_text())), 19)
         schema = self.project / '.codex/astragentic/arm-schema.json'
         self.assertEqual(schema.read_bytes(), (ROOT / 'runtimes/codex/arm-schema.json').read_bytes())
         self.assertIn('.codex/astragentic/arm-schema.json', owned)

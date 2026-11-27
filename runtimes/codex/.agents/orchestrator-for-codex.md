@@ -19,7 +19,6 @@ are generated from the same table at installation. Values apply to new sessions.
 | qa | gpt-6.2-sol | medium |
 | junior | gpt-6.2-sol | medium |
 | reviewer | gpt-6.2-sol | medium |
-| simplify | gpt-6.2-sol | medium |
 | astra-slice-reviewer | gpt-6.2-sol | medium |
 | astra-test-architect | gpt-6.2-sol | medium |
 | astra-ui-lens | gpt-6.2-sol | medium |
@@ -30,7 +29,7 @@ are generated from the same table at installation. Values apply to new sessions.
 - These rows configure model selection, not authorization to spawn helpers or enable junior.
 - A full Builder uses builder; a quick-labelled ticket uses builder-quick. The owner-opened quick-builder is a separate role.
 - QA uses the qa row for walk, probe and verify. astra-ui-lens is visual advice, not the QA verdict.
-- reviewer is a separate correctness review context; simplify remains a pass in the Builder session unless explicitly delegated. The simplify row configures a separately launched pass only.
+- reviewer is a separate correctness review context.
 - Cross-vendor review is separate from reviewer: another OpenAI model does not count as another vendor.
 - No automatic model fallback or mid-session switching. If a selected model cannot run, report the exact failure rather than silently substituting.
 - Do not default to max or ultra. The latter advertises automatic delegation in the current catalog, which must not silently change the role topology.

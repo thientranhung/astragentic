@@ -1,6 +1,6 @@
 ---
 name: astra-review
-description: "Review a Builder's change against three axes, each in its own context: correctness (the built-in code-review), the ticket's intent and criteria, and the repo's coding standards; then verify every finding at its line, give it one verdict with evidence, and route it. Use after the tests and the UI pass, before simplify, on a full ticket. A quick ticket runs the built-in review alone."
+description: "Review a Builder's change against three axes, each in its own context: correctness (the built-in code-review), the ticket's intent and criteria, and the repo's coding standards; then verify every finding at its line, give it one verdict with evidence, and route it. Use after the tests and the UI pass, on a full ticket. A quick ticket runs the built-in review alone."
 ---
 
 # Review, three axes, one triage
@@ -78,4 +78,4 @@ each other**: report each axis under its own heading.
 
 Close with one line per axis: the lens's `Findings: n`, how many took each route, the worst
 verdict. A route count short of n is not a close: the unrouted findings go back to § 3. Zero
-findings plus a failed lens is "may be incomplete", not clean. Then `simplify`, once.
+findings plus a failed lens is "may be incomplete", not clean.

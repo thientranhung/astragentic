@@ -41,6 +41,28 @@ DEFAULT = (r"(^|[\s;&|(])(go\s+test|pytest|py\.test|python3?\s+-m\s+(pytest|unit
            r"mvn\s+test|gradle\w*\s+test|make\s+test\w*|\./gradlew\s+test|swift\s+test|ctest)\b")
 
 
+_HEREDOC = re.compile(r"<<-?\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1[^\n]*\n(.*?)\n[ \t]*\2[ \t]*(?=\n|$)", re.S)
+
+
+def data_blanked(cmd):
+    """The command with what is DATA blanked to spaces, same length so offsets still hold: heredoc
+    bodies not fed to a shell, and quoted strings. A commit message, a file written with
+    `cat > x <<EOF` or a `herdr agent prompt '…'` that mentions `go test` is not a test run;
+    matching the raw text logged 34 such lines downstream in two days, 4 of them as status 1, a
+    RED run the commit gate would accept (nizzy, 2026-11-26..27, row 33)."""
+    def body(m):
+        head = cmd[:m.start()].rsplit("\n", 1)[-1]
+        if re.search(r"(?:^|[\s;&|(])(?:bash|sh|zsh)\s*(?:-s\s*)?$", head):
+            return m.group(0)
+        s, e = m.span(3)
+        return m.group(0)[:s - m.start()] + re.sub(r"[^\n]", " ", m.group(3)) + m.group(0)[e - m.start():]
+    out = _HEREDOC.sub(body, cmd)
+    # a string a shell runs (`bash -c "…"`, nizzy's `go-itest-gated.sh … -- bash -c "go test …"`) is code
+    shell_arg = re.compile(r"(?:^|[\s;&|(])(?:bash|sh|zsh)\s+-\w*c\s*$")
+    return re.sub(r"'[^']*'|\"(?:[^\"\\]|\\.)*\"",
+                  lambda m: m.group(0) if shell_arg.search(out[:m.start()]) else " " * len(m.group(0)), out)
+
+
 def toplevel(cwd):
     try:
         r = subprocess.run(["git", "-C", cwd, "rev-parse", "--show-toplevel"], capture_output=True, text=True, timeout=5)
@@ -68,7 +90,7 @@ def main():
             re.compile(first); pat = first
     except Exception:
         pass
-    hit = re.search(pat, cmd)
+    hit = re.search(pat, data_blanked(cmd))
     if not hit:
         return
     # quoted text is argument (`-run 'TestA|TestB'`), a trailing newline is nothing

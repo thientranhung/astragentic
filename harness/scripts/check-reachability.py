@@ -605,13 +605,8 @@ for path, text in sorted(addr_sources.items()):
 # the marker got wrong. A check that fires inside the skill's own run may live in the SKILL.
 ARTIFACTS = [
     # (artifact, regex, producer, verifiers — each a role contract or a shipped skill)
-    ("simplify(increment): marker", r"simplify\(increment\)", "builder", ["thomas"]),
-    # The marker's subject proves a commit happened, never which pass wrote it. A Builder
-    # whose invocation errored substituted another tool, committed the same subject, and
-    # every check downstream read as satisfied (AST-055). The `Pass:` line in the body is
-    # the half that can disagree with a substitute, so it needs its own producer/verifier
-    # row — a second artifact, not a detail of the first.
-    ("simplify pass provenance", r"`Pass:`|Pass: Skill\(", "builder", ["thomas"]),
+    # The simplify(increment) marker and its `Pass:` provenance rows left with the retired pass
+    # (next after 6.1.29); `arm(ticket)` carries its own registration where the arm is owned.
     ("browser evidence",            r"browser evidence",      "builder", ["thomas"]),
     ("gate file",                   r"GATE_FILE",             "qa",      ["dispatch-qa-walk"]),
     # The merge commit's `Ledger:` line: Thomas writes it and Thomas's merge section is where it is

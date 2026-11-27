@@ -318,9 +318,10 @@ class LauncherTests(unittest.TestCase):
         self.assertRegex(dispatch, r"workspace-write sandbox keeps `\.git` read-only")
         self.assertNotRegex(dispatch + thomas, r'(?i)reviewer (session|context|pane)s?\b')
         self.assertIn('spawn the three `astragentic_reviewer` helpers yourself', builder)
-        self.assertIn('astra-codex-simplify', builder)
-        self.assertTrue((ROOT / 'runtimes/codex/.agents/skills/astra-codex-simplify/SKILL.md').is_file())
-        self.assertFalse((ROOT / 'runtimes/codex/.agents/skills/codex-simplify').exists())
+        # The simplify pass is retired on both lanes (next after 6.1.29): the skill and its map row go.
+        self.assertIn('There is no simplify pass', builder)
+        self.assertFalse((ROOT / 'runtimes/codex/.agents/skills/astra-codex-simplify').exists())
+        self.assertNotIn('simplify', (ROOT / 'runtimes/codex/skill-map.json').read_text())
         self.assertIn('never opens a review session', dispatch)
         # Parity with the Claude lane, each row read from both contracts, 2026-11-09.
         self.assertIn('one run\ncovers a batch', dispatch)
@@ -361,9 +362,7 @@ class LauncherTests(unittest.TestCase):
         for host in ('.claude', '.agents'):
             pane = (ROOT / f'harness/{host}/skills/dispatch-ticket/ORCA.md').read_text()
             self.assertIn('never `orca worktree create`', pane)
-        # The Codex pass has its own Pass: form; the checker accepts it beside the Claude one (6.1.2).
-        simplify = (ROOT / 'runtimes/codex/.agents/skills/astra-codex-simplify/SKILL.md').read_text()
-        self.assertIn('`Pass: $astra-codex-simplify`', simplify)
+        # An old Codex marker still validates: the checker keeps the Codex Pass: form (6.1.2).
         checker = (ROOT / 'harness/scripts/check-simplify-markers.sh').read_text()
         self.assertIn('"$astra-codex-simplify"', checker)
         self.assertNotIn('''"required": ['Pass: Skill(skill: "simplify")']''', checker)
@@ -371,7 +370,6 @@ class LauncherTests(unittest.TestCase):
         self.assertIn('a test failing three times in a row', tdd)
         self.assertIn('Run exactly the commands', tdd)
         self.assertNotIn('Missing command mapping blocks', (ROOT / 'runtimes/codex/.agents/skills/codex-dispatch-ticket/SKILL.md').read_text())
-        self.assertNotIn('needs renewed review', (ROOT / 'runtimes/codex/.agents/skills/astra-codex-simplify/SKILL.md').read_text())
         # Polling path the first review of 6.0.9 found still prescribed (DISPATCH.md:376-379).
         self.assertNotRegex(dispatch, r'Once working has been observed, use\s+bounded `herdr agent wait')
         self.assertIn('`agent wait` loops and repeated\n`agent get` are forbidden while a bell is configured', dispatch)
@@ -409,8 +407,9 @@ class LauncherTests(unittest.TestCase):
         sys.path.insert(0, str(ROOT / 'runtimes/codex'))
         from launch import assignments
         rows = assignments(config)
-        self.assertEqual(len(rows), 15)
+        self.assertEqual(len(rows), 14)
         self.assertIn('dev', rows)
+        self.assertNotIn('simplify', rows)
         self.assertNotIn('ticket', rows)
         self.assertNotIn('spec', rows)
         self.assertNotIn('slice', rows)

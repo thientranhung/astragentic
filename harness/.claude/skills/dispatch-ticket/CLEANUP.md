@@ -5,15 +5,6 @@ worktree, branch, tab or workspace. The stopping is yours, in the order below, o
 runtime. On a Claude root `scripts/hook-git-guard.py` refuses a removal while a dirty tree, a
 live process or a bound broker remains; it releases nothing.
 
-## The simplify pass
-
-Each increment runs one simplify pass over its own diff, after the build is green. The artifact
-is a `simplify(increment):` commit on the ticket branch, real or `--allow-empty` reading
-`no findings on <base>..<head>`. Its body carries the `Pass:` line (`builder-claude.md`). Behaviour
-changes are findings for Thomas, not changes. Thomas verifies by `scripts/check-simplify-markers.sh
-<base> <head>` and never by a hand-rolled `git log --grep`, which matches bodies. The marker
-rules, retraction with `Supersedes:` and the head check are in [`MARKERS.md`](MARKERS.md).
-
 ## Review and cleanup
 
 The Builder pushes and returns the artifact. Thomas reads the real diff and alone decides
@@ -45,16 +36,15 @@ Both must pass; failing either is STOP.
 is work that exists only on disk and that removal deletes silently. Report the file list and
 ticket id to the owner and wait: commit and continue, or discard explicitly.
 
-**Check 2: markers and provenance.**
+**Check 2: the receipts the ticket owes.** When the arm is on for tickets:
 
 ```bash
-<repo-root>/scripts/check-simplify-markers.sh <base> [head]
+<repo-root>/scripts/check-simplify-markers.sh <base> <head> --marker 'arm(ticket)'
 ```
 
-Exit 0 is green. Exit 1 prints one `STOP:` line per reason. A ticket labelled `quick`, or a
-brief carrying `SIMPLIFY: n/a`, owes no marker and is not checked (`MARKERS.md`). Otherwise zero markers is a STOP: send the
-Builder back to run simplify. A superseded marker is green. The counts are a filter, not a
-verdict: read the bodies.
+Exit 0 is green. Exit 1 prints one `STOP:` line per reason. A ticket labelled `quick`, or any
+ticket with the ticket arm off, owes no receipt and is not checked (`MARKERS.md`). A superseded
+receipt is green. The counts are a filter, not a verdict: read the bodies.
 
 ## Release, remove, verify
 

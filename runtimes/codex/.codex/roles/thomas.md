@@ -46,7 +46,7 @@ Markdown dispatch record current; do not introduce a separate orchestration engi
 
 When the owner chooses separate sessions, follow DISPATCH.md's native separate-session
 procedure for Builder and QA. You never open a review session: the Builder's handback
-carries its three review reports, simplify and arm evidence, and you verify them by
+carries its three review reports and arm evidence, and you verify them by
 artifact. Keep per-Builder pending events and
 follow-ups separate. Use queue --resume only for the verified endpoint and eligible
 recipient lifecycle; do not treat idle as permission to resume an owner-paused session.

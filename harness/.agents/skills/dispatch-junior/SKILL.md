@@ -1,6 +1,6 @@
 ---
 name: dispatch-junior
-description: "Builder-only recipe to hand a ticket's implementation to a junior pane on another runtime (Grok first) and take the tree back for review, simplify and the arm. Fires only when the Builder's Junior row in .agents/orchestrator.md names a runtime. Covers the pane, the launcher, the brief, the wait, the read-back and the close."
+description: "Builder-only recipe to hand a ticket's implementation to a junior pane on another runtime (Grok first) and take the tree back for review and the arm. Fires only when the Builder's Junior row in .agents/orchestrator.md names a runtime. Covers the pane, the launcher, the brief, the wait, the read-back and the close."
 ---
 
 # Dispatch to a junior
@@ -14,7 +14,7 @@ supplement the junior reads: `.agents/roles/junior-<runtime>.md`. A runtime with
 file in the worktree is a misconfigured row: STOP and tell Thomas.
 
 **What stays yours:** every phase in `builder.md` except the typing. the red tests of `astra-implement-with-tdd`,
-both reviews, simplify, the arm, the markers, the handback and the push are the Builder's, run
+both reviews, the arm, the markers, the handback and the push are the Builder's, run
 over the junior's commits exactly as over your own. The mod's gates read your pane, not the
 junior's, so nothing about them changes.
 

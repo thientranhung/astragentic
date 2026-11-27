@@ -30,7 +30,7 @@ from this table — read the entry.
 | `AST-051` | An address the caller cannot use produces a substitute, not an error | promoted | 319 | check-reachability.py,docs-staleness-audit.sh |
 | `AST-052` | The word-budget audit ran its loop zero times and reported all clean | promoted | 227 | docs-staleness-audit.sh |
 | `AST-054` | `git add -A` committed two releases nobody ever applied | promoted | 146 | hook-git-guard.py |
-| `AST-055` | A gate that reads the subject cannot see which pass wrote it | promoted | 326 | builder-claude.md,check-reachability.py,register.tsx |
+| `AST-055` | A gate that reads the subject cannot see which pass wrote it | promoted | 326 | check-reachability.py,register.tsx |
 | `AST-057` | A frontier that is only computed is invisible to the one person who cannot compute | promoted | 689 | check-reachability.py,hook-git-guard.py,pre-push-ticket-done.sh,reconcile-tracker,register.tsx,release-worktree-resources.sh,thomas.md,ticket-done.sh |
 | `AST-069` | An instruction with no moment attached measures zero | promoted | 272 | check-reachability.py,hook-contract-reload.py,hook-git-guard.py,hook-tracker-status.py,pre-push-ticket-done.sh,selftest.sh,thomas.md |
 | `AST-070` | A bounded exception nobody asked for is a contradiction carried on speculation | promoted | 275 | ledger-rules.py |
@@ -39,14 +39,14 @@ from this table — read the entry.
 | `AST-076` | AST-072's own fix left a window between acquiring the lock and recording who holds it | promoted | 1427 | herdr-watchdog.sh |
 | `AST-084` | the watchdog trusted a pane title a runtime overwrites after launch | promoted | 326 | herdr-watchdog.sh,register.tsx |
 | `AST-085` | a word budget calibrated against a retired file size passed nothing | promoted | 266 | docs-staleness-audit.sh |
-| `AST-089` | A fork-fallback inside `simplify` read as a substitute because only the `Pass:` line's wordin… | promoted | 366 | builder-claude.md |
-| `AST-090` | The Pass: literal had a two-in-three miss rate among Builders who ran the pass correctly | promoted | 221 | builder-claude.md |
+| `AST-089` | A fork-fallback inside `simplify` read as a substitute because only the `Pass:` line's wordin… | promoted | 366 |   |
+| `AST-090` | The Pass: literal had a two-in-three miss rate among Builders who ran the pass correctly | promoted | 221 |   |
 | `AST-092` | Builder stops after writing code but before committing — pane reads done, cleanup deletes the… | promoted | 308 | builder.md,hook-git-guard.py |
 | `AST-094` | Builder commits and pushes correctly but silently skips the simplify pass | promoted | 426 | builder.md,check-simplify-markers.sh |
 | `AST-095` | The cross-vendor companion exits 0 on configuration failure and caches state that survives a… | promoted | 335 | codex-arm |
 | `AST-096` | rm -rf on a worktree directory leaves git's registration behind; the next add at that path re… | promoted | 297 | codex-arm,hook-git-guard.py,thomas.md |
 | `AST-097` | TERMINAL:done means the turn ended, not that the work finished | promoted | 873 | hook-git-guard.py,register.tsx |
-| `AST-098` | Fork sub-agents return the coordinator's own narration instead of doing their assigned task | promoted | 385 | builder-claude.md |
+| `AST-098` | Fork sub-agents return the coordinator's own narration instead of doing their assigned task | promoted | 385 |   |
 | `AST-099` | Simplify marker exists without skill provenance — the subject is self-applied, only the Pass:… | promoted | 685 | check-simplify-markers.sh |
 | `AST-100` | Codex companion broker leaks one process per arm pass, accumulating silently | promoted | 201 | codex-arm,hook-git-guard.py,register.tsx,release-worktree-resources.sh |
 | `AST-101` | Gate worktree removal leaks database containers, not just broker processes | promoted | 182 | hook-git-guard.py,register.tsx,release-worktree-resources.sh |

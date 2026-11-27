@@ -26,18 +26,3 @@ remove`. A refused brief names what is owed; do that, then send it again.
 The mod does the arming, typing and id-recording from inside the pane
 (`dispatch-ticket-claude` § Submitting).
 
-## Simplify artifact verification
-
-One marker per increment. A `Pass:` line that starts with `Skill(skill: "simplify")` is the
-pass — with or without a fallback suffix. Both of these are valid:
-
-```
-Pass: Skill(skill: "simplify")
-Pass: Skill(skill: "simplify") — fork unavailable, ran four corners directly
-```
-
-The second form means the skill ran but its internal fan-out could not fork. Running the four
-review corners directly inside the invocation is degraded completion, not a substitute. A
-`Pass:` line that does not start with `Skill(skill: "simplify")` is a substitute, and an
-absent one is unverified. Both go back to the Builder. The subject alone cannot tell them
-apart, and a handback describing a pass with no marker on the branch is a substitute too.

@@ -63,7 +63,7 @@ closing one.
 
 `none` means the Builder implements alone. Naming a runtime hands the typing to a junior pane
 the Builder opens beside itself, briefs, waits on and reads back (`dispatch-junior`); review,
-simplify, the arm and the handback stay the Builder's. The runtime names the supplement the
+the arm and the handback stay the Builder's. The runtime names the supplement the
 junior reads, `.agents/roles/junior-<runtime>.md`, so a runtime with no such file is a
 misconfigured row, not a new option. Shipped: `grok` (Grok Build; Model e.g. `grok-4.7`, Effort
 `high`). Per project, per situation; blank it back to `none` to return the typing to the Builder.

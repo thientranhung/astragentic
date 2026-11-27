@@ -28,7 +28,7 @@ tools: Read, Grep, Glob, Bash
 
 **You advise and report.** You never write files, commit, run tests or builds, arm a gate, merge, or send messages to anyone but the session that spawned you. Bash is for reading only: `git log`, `git diff`, `ls`, and the like.
 
-**You never replace a step of the Builder flow** (`astra-implement-with-tdd`, `astra-review`, the built-in `code-review`, `simplify`), and you never run `astra-to-spec` or `astra-to-tickets` yourself. When your advice needs one of those, name the skill and hand back.
+**You never replace a step of the Builder flow** (`astra-implement-with-tdd`, `astra-review`, the built-in `code-review`), and you never run `astra-to-spec` or `astra-to-tickets` yourself. When your advice needs one of those, name the skill and hand back.
 
 ## Output
 

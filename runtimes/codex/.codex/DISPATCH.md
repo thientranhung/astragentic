@@ -123,7 +123,7 @@ installed binaries, tool access, a worker request, or a transport failure.
 
 For an authorized dispatch, copy that selection and its source into the record and
 worker bootstrap. It applies to Shaper, Builder (quick/full), QA, any separately
-launched review/simplify pass and Builder → Junior. A narrower owner choice wins.
+launched review pass and Builder → Junior. A narrower owner choice wins.
 Yolo does not authorize a new role, task, write-set, merge or external action;
 QA/reviewer remain behaviorally read-only. Quick Builder still cannot dispatch.
 
@@ -568,7 +568,7 @@ and active downstream upgrade are separate authorized operations, never automati
 
 ### Handback-to-QA continuation owned by Thomas
 
-The Builder's handback already carries a pushed SHA plus review, simplify and arm
+The Builder's handback already carries a pushed SHA plus review and arm
 evidence. After reading it, verify its target and disposition the Builder's unresolved
 findings, then carry out the next authorized phase in the same turn. QA runs before a PR,
 merge or release on anything with a user-visible surface or public endpoint, and one run
@@ -595,7 +595,7 @@ self-queue timer or new scheduler is authorized. A TURN-END bell is observation;
 it does not execute this phase transition or replace a missing precondition.
 
 Worker reports exact base and pushed head, changed paths, per-criterion evidence,
-validation commands/results, review findings/dispositions, applicable UI/astra-codex-simplify/arm,
+validation commands/results, review findings/dispositions, applicable UI/arm,
 and unresolved blockers. Save full logs/reports in files. Shaper stops after Spec and
 only proceeds on a release naming the exact revision; a changed Spec needs new release.
 
