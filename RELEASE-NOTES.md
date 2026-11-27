@@ -1,3 +1,15 @@
+# Astragentic 7.0.2
+
+Two fixes found on the first PR-gate trial (nizzy TRA-1707), both only on a lane under the PR gate.
+Rows 48–50 in `docs/audit/2026-11-27-700-field-incidents.md`.
+
+| fix | số đo | nguồn |
+|---|---|---|
+| A QA pane briefed by `herdr agent prompt` (GATE.md) writes its verdict onto the ticket's entry; the PR-gate merge also reads it from the QA entry's pending turn end, so a lane whose QA ended under 7.0.1 needs no second walk | nizzy TRA-1707: QA PASS at 12:49Z sat on the QA entry, the ticket entry said `qa_verdict: null`, the merge was refused. Planted `qagate` and `prQaPending`/`prQaPendingOld`/`prQaPendingFail`: 7.0.1 fails, 7.0.2 passes | row 48 |
+| A clean merge of the base into the branch after the approve is judged on the branch's own line (`--first-parent`); 7.0.1 walked the base's own commits and called the merge new code, asking for another review round | nizzy `2c406bd5b`: 31 base commits behind one clean merge. Planted `prBaseMerge` (7.0.1 deny, 7.0.2 pass) and `prSideMerge` (a merge of a non-base branch: deny on both) | row 49 |
+
+By hand downstream: nothing. A project with the PR gate off (no `.astraler/project/review-gate`) sees no change.
+
 # Astragentic 7.0.1
 
 Field fixes after the 7.0.0 upgrades of nizzy and inception, and the Builder's own code review back
