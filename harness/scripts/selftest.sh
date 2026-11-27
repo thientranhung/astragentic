@@ -2573,6 +2573,9 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     // `UX: n/a` → `n/a ui` even when FLOW names it; FLOW with astra-ui → a required `○ ui` (one
     // downstream ticket, 2026-10-26: the dim `· ux` read as waiting on a ticket with no UI)
     const bandNoFlow = await band()
+    // 7.0.0 option B: the PR gate is the project's plug; these band cases read a PR-gate Builder
+    const gatePlug = path.join(root, '.astraler/project/review-gate')
+    fs.mkdirSync(path.dirname(gatePlug), { recursive: true }); fs.writeFileSync(gatePlug, '# trial\npr\n')
     const brief = (lines) => fire('session.receive', { text: `<cross-session-message from="uds:/tmp/d.sock" from-name="disp-07">\n/astra-implement-with-tdd AB-5\nQA: none — no surface\n${lines}\n</cross-session-message>`, origin: { kind: 'plugin' } }, async () => ({}))
     await brief('FLOW: 1 Skill(astra-review) → 2 arm(ticket)')
     const bandUxOff = await band()
@@ -2603,6 +2606,20 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     liveAgents = []
     // 7.0.0: a Builder briefed under the PR gate does not review its own change: astra-review is refused
     const reviewInBuilder = await (async () => { let ran = false; const r = await fire('tool.call', { tool: 'Skill', skill: 'astra-review' }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` })()
+    // the switch both ways: with the plug a brief stamps the PR gate and the prompt says so; without
+    // it the next brief clears the stamp (the record is patched, so null must be written), the
+    // Builder's own astra-review runs, and the prompt carries no REVIEW: pr
+    const gateSwitch = await (async () => {
+      const sec = async () => ((await fire('prompt.compose', {}, async () => ({ sections: [] })))?.sections ?? []).map(s => String(s.text)).join('\n')
+      const rv = async () => { let ran = false; const r = await fire('tool.call', { tool: 'Skill', skill: 'astra-review' }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` }
+      const on = `${rec()['AB-5'].review_gate}:${/^REVIEW: pr/m.test(await sec())}`
+      fs.unlinkSync(gatePlug)
+      await brief('FLOW: 1 Skill(astra-review) → 2 arm(ticket)')
+      const off = `${rec()['AB-5'].review_gate}:${/^REVIEW: pr/m.test(await sec())}:${await rv()}`
+      fs.writeFileSync(gatePlug, 'pr\n')
+      await brief('FLOW: 1 Skill(astra-review) → 2 arm(ticket)')
+      return `${on}|${off}|${rec()['AB-5'].review_gate}`
+    })()
     // (the tdd-order block runs after the band reads: its tdd call would otherwise light a chip the band cases expect unlit)
     // 4.5.2 — the FIRST content commit after a brief needs a RED test run after the brief,
     // besides the test file (one downstream ticket: test file beside the code passed, tdd called
@@ -2696,7 +2713,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     await fire('turn.complete', { reason: 'answer', answer: 'done', turnId: 'tz' }, async () => ({}))
     const bypassHint = /shift\+tab/.test(await band())
     const bandRead = {
-      noFlow: /→ implement ○ tdd$/.test(bandNoFlow) && !/\bui\b/.test(bandNoFlow) && !/review|arm/.test(bandNoFlow),
+      noFlow: /→ implement ○ tdd ○ review( ○ arm)?$/.test(bandNoFlow) && !/\bui\b/.test(bandNoFlow),
       uxOff: /○ tdd n\/a ui$/.test(bandUxOff),
       uxNa: /○ tdd n\/a ui$/.test(bandUxNa),
       next: /→ implement ○ tdd ○ ui$/.test(bandNext) && !/…/.test(bandNext) && !/· ui/.test(bandNext),
@@ -2773,7 +2790,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     await fire('turn.complete', { reason: 'answer', answer: 'suite green, handing back', turnId: 'bg5' }, async () => ({}))
     const bgMidTurn = recB().waiting_on === null
     const bgShell = `${bgHeld}:${bgReleased}:${bgMidTurn}`
-    console.log(JSON.stringify({ parkedHeld, parkedWakeDropped, parkedSent, parkedLine, parkedUnavailable, deadRecorded, deadNotified, deadCleared, quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, wakeup, wakeupStop, armOpenNamed, bypassHint, sendToBareRef, sendToDoneRef, sendToDoneName, sendToDoneId, sendToUnknownRef, bandText, log , tabsNamed, subSend, bgShell, reviewInBuilder}))
+    console.log(JSON.stringify({ parkedHeld, parkedWakeDropped, parkedSent, parkedLine, parkedUnavailable, deadRecorded, deadNotified, deadCleared, quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, wakeup, wakeupStop, armOpenNamed, bypassHint, sendToBareRef, sendToDoneRef, sendToDoneName, sendToDoneId, sendToUnknownRef, bandText, log , tabsNamed, subSend, bgShell, reviewInBuilder, gateSwitch}))
     return
   }
   await fire('session.start', {}, async () => ({}))
@@ -3259,6 +3276,11 @@ EOS
     ok "a Builder briefed under the PR gate is refused astra-review: the review is the PR Reviewer's (7.0.0)"
   else
     bad "review in a PR-gate Builder (7.0.0)" "$(printf '%s' "$out" | grep -o '"reviewInBuilder":"[^"]*"' | head -1)"
+  fi
+  if says "$out" '"gateSwitch":"pr:true|null:false:pass:ran|pr"'; then
+    ok "the PR gate is the project's plug: on, a brief stamps it and the prompt says REVIEW: pr; off, the next brief clears it and the Builder's astra-review runs (7.0.0 option B)"
+  else
+    bad "review-gate plug switch (7.0.0 option B)" "$(printf '%s' "$out" | grep -o '"gateSwitch":"[^"]*"' | head -1)"
   fi
   if says "$out" '"bgShell":"true:true:true"'; then
     ok "a backgrounded shell job holds the pane's TURN-END like a live agent; its task-notification turn releases it; a persistent Monitor is not a hold (6.1.24)"

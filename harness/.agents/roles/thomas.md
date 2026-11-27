@@ -122,7 +122,7 @@ outgrew the label is a relabel to `full` and a fresh brief, never a steer.
 
 ## Review
 
-**Per ticket** the PR Reviewer reviews (§ The PR gate) and you verify by artifact at merge, browser evidence for a UI ticket included; **when a unit of work closes** you run the integration review below. A design-level blocker goes to the owner as a dated decision; everything else is a work order to the artifact's owner (Shaper, Builder, or a follow-up ticket). Record each classification on the ticket; a wontfix is legitimate.
+**Per ticket** the Builder lane reviews (PR gate: the Reviewer) and you verify by artifact at merge, browser evidence for a UI ticket included; **when a unit of work closes** you run the integration review below. A design-level blocker goes to the owner as a dated decision; everything else is a work order to the artifact's owner (Shaper, Builder, or a follow-up ticket). Record each classification on the ticket; a wontfix is legitimate.
 
 **The author gets ONE written reply before you classify** — no second reply, no re-review. Only what neither of you closes reaches the owner. Record any classification
 a reply changes.
@@ -130,17 +130,16 @@ a reply changes.
 **Count the merges.** The integration review fires when **you** say a unit of work closed, so
 **more than 10 merges since the last `arm(integration)` is a STOP.**
 
-**After the Reviewer's approve, before a merge or a release**, dispatch QA's product walk (`dispatch-qa-walk`) on any
+**After the review (PR gate: the approve), before a merge or a release**, dispatch QA's product walk (`dispatch-qa-walk`) on any
 user-visible surface or public endpoint, and **read the walk report's COVERAGE GAPS**. State browser
 consent and authorized mutations, or QA declines.
 
 ## The PR gate
 
-On a Builder's handback, dispatch a `pr-reviewer` pane on its PR (`dispatch-ticket`
-§ The PR Reviewer). `changes`: send the Builder to the PR's comments; when it pushes, the Reviewer
-reads the delta. `approve`: QA on that head; a QA finding goes back the same way, Builder then
-Reviewer, and QA re-walks what changed. Two rounds, a third only when round 2 still blocks; then
-the owner. The merge refuses until the record holds the approve at the branch head and QA after it.
+On when your prompt carries `REVIEW GATE: pr` (`.astraler/project/review-gate`). On a Builder's handback, dispatch a `pr-reviewer` pane on its PR (`dispatch-ticket`
+§ The PR Reviewer). `changes`: the Builder fixes, the Reviewer reads the delta. `approve`: QA on
+that head; a QA fix goes back through Builder and Reviewer. Two rounds, a third only when round 2
+still blocks; then the owner. The merge refuses without the approve at the merged commit and QA after it.
 
 ## Integration review
 
@@ -158,10 +157,10 @@ scope: no marker owed, handback says `Arm: off (orchestrator)`.
 | | When | Over what | Fired by |
 |---|---|---|---|
 | **arm: spec** | the Shaper hands back a spec and **stops**, before cutting tickets | the spec | **the Shaper** |
-| **arm: ticket** | inside the PR Reviewer's round | that PR against the base | **the PR Reviewer** |
+| **arm: ticket** | in the Builder's loop (PR gate: the Reviewer's round) | that ticket's head | **the Builder** (PR gate: **the Reviewer**) |
 | **arm: integration** | **once**, when a unit of work closes | the merged range on the base branch | you |
 
-**No ticket merges without one**, unbatched. **The ticket arm is the PR Reviewer's**, outcome in its verdict (AST-135). You classify what the spec arm returns before you release it.
+**No ticket merges without one**, unbatched. PR gate: the arm's outcome rides the Reviewer's verdict (AST-135). You classify what the spec arm returns before you release it.
 
 **The standard, whoever fires:** it calls the author's OTHER vendor. It runs at most two passes per invocation, and the second is mandatory when the first returned a blocking finding, over the **full artifact**, because it catches the defect the fix introduced. A vendor that is unavailable is recorded as `cross-vendor arm: NOT RUN — <reason>`, and only the owner may accept proceeding without it.
 

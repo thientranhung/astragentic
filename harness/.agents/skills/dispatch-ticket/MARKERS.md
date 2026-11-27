@@ -5,7 +5,7 @@ runs the script before handback, `thomas.md` reads them at merge, and `CLEANUP.m
 before a worktree is removed. The script is the arbiter, on every runtime:
 
 ```bash
-scripts/check-simplify-markers.sh <base> <head> --marker 'arm(ticket)'   # exit 0 = green, 1 = STOP; only a lane briefed before 7.0.0 with the ticket arm on owes it
+scripts/check-simplify-markers.sh <base> <head> --marker 'arm(ticket)'   # exit 0 = green, 1 = STOP; owed by a lane not under the PR gate with the ticket arm on
 ```
 
 A ticket labelled `quick` on the tracker owes no receipt (4.6.0): the Builder's record is the

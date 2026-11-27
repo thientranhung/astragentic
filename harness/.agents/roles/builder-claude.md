@@ -7,8 +7,8 @@ differs on the Claude Code runtime.
 
 **No content commit without a test file; the first content commit after a brief also needs a
 test run that went RED after the brief (5.0.0: no skill call is asked for — the red run is the
-substance, and `astra-implement-with-tdd` is the brief's own expansion); and no arm in this pane: under the PR gate (7.0.0) the
-review and the ticket arm run in the PR Reviewer's pane.** The red run is read from the PostToolUse
+substance, and `astra-implement-with-tdd` is the brief's own expansion); and no arm before the
+built-in `code-review` has run; under the PR gate (7.0.0) no review or arm in this pane at all.** The red run is read from the PostToolUse
 hook's log (`/tmp/harness-test-runs/<toplevel>.log`, written on PostToolUse and on
 PostToolUseFailure — a failing call reaches only the second (4.5.3); every `go test` / `pytest` / `vitest` /
 `jest` / `npm test` / `cargo test` …, or the project's `.astraler/project/test-command-pattern`),
@@ -22,15 +22,25 @@ A project's `.astraler/project/test-command-pattern` names the INVOKER, not only
 logged as a run and its no-match exit 1 passes as red. Run the test in the foreground: a
 background launch is logged `background`, which is no code at all. The mod refuses a content `git commit` (empty marker commits pass) unless a test file is
 staged with it or already committed on this branch since dispatch — measured: 48 refusals of the
-old "skill was called" form were followed by a test edit in 2 — and refuses a `codex-arm` call. A project names its test-file pattern in
+old "skill was called" form were followed by a test edit in 2 — and refuses the `codex-arm` call until its record shows the review ran (under the PR gate it
+refuses `astra-review`, `code-review` and the arm outright). A project names its test-file pattern in
 `.astraler/project/test-file-pattern` (one regex); the default matches `*_test.*`, `*.test.*`,
 `*.spec.*` and `tests/`, `__tests__/`, `spec/` directories. The exemption is the dispatcher's,
-not yours: a brief line `TDD: n/a — <why>`; the ui step is owed when
+not yours: a brief line `TDD: n/a — <why>` or `REVIEW: n/a — <why>`; the ui step is owed when
 the brief's `FLOW:` names `astra-ui`, exempted by `UX: n/a — <why>`, and the band says which
 (`○ ui` owed, `n/a ui` not; no chip before a brief). If a gate fires on a
 ticket that genuinely has no seam, ask Thomas for the line; do not work around the refusal.
 **A quick ticket** (the tracker's `quick` label, `builder.md` § A quick ticket) is exempt from
-the test-file and tdd-order gates and, at merge, from tdd.
+the test-file and tdd-order gates and, at merge, from tdd and `astra-review`; the arm gate still
+asks for the built-in review, and the merge gate still asks the record for it (under the PR gate,
+for the Reviewer's approve).
+
+## Review — Claude Code invocation (without the PR gate)
+
+**Invoke `Skill(skill: "astra-review")`** after the UI pass. It launches
+`Skill(skill: "code-review")`, Claude Code's built-in bug review, as its correctness lens — not
+`code-review:code-review` (the PR plugin). Both calls land on the record; the merge gate reads
+the built-in's key. A quick ticket invokes the built-in alone.
 
 ## Report-only forks
 

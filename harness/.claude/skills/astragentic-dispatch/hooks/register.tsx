@@ -208,6 +208,12 @@ type UiStandard = { spine: string[]; antiSlop: string[]; spineMissing: string[];
 function plugLines(text: string): string[] {
   return text.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'))
 }
+// THE PR GATE IS THE PROJECT'S CHOICE (7.0.0, owner 2026-11-27: option B, a trial before a
+// default). `.astraler/project/review-gate` with a `pr` line turns it on, read from the main
+// checkout (root); without it a Builder reviews its own change as in 6.1.29, minus simplify
+async function reviewGateOn($: any, root: string): Promise<boolean> {
+  return plugLines(await overlayFile($, `${root}/.astraler/project/review-gate`)).includes('pr')
+}
 async function skillResolves($: any, root: string, name: string): Promise<boolean> {
   if (!/^[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(name)) return false
   const home = (await $.env.get('HOME')) ?? ''
@@ -1573,12 +1579,15 @@ export const register: Register = on => {
     // live quick lanes so its merge does not STOP on a marker never owed.
     if (root) {
       const rec = (await readRecord($, root)) ?? {}
+      const prLane = me?.role === 'builder' && rec[me.key]?.review_gate === 'pr'
+      if (prLane) text = `${text ? text + '\n\n' : ''}REVIEW: pr — this project runs the PR gate (.astraler/project/review-gate). No astra-review, code-review or arm in this pane: push, open the PR (gh pr create) and hand back (builder.md § Review); the PR Reviewer's findings come back through Thomas.`
       if (me?.role === 'builder' && rec[me.key]?.kind === 'quick') {
-        text = `${text ? text + '\n\n' : ''}KIND: quick — the tracker labels this ticket quick (builder.md § A quick ticket). Owed: the code, the project's existing tests run green, commit, push, the PR (gh pr create), handback; the PR Reviewer runs the correctness lens alone. Not owed, and the pane's gates are set so: tdd, astra-ui. If the work reaches past the label (a risky path, logic only a test would catch, more files than the project's ceiling), say so in the handback and stop: Thomas relabels it full.`
+        text = `${text ? text + '\n\n' : ''}KIND: quick — the tracker labels this ticket quick (builder.md § A quick ticket). Owed: the code, the project's existing tests run green, ${prLane ? "commit, push, the PR (gh pr create), handback; the PR Reviewer runs the correctness lens alone" : 'the built-in code-review with its findings folded, commit, push, handback'}. Not owed, and the pane's gates are set so: tdd, astra-ui${prLane ? '' : ', astra-review, the arm'}. If the work reaches past the label (a risky path, logic only a test would catch, more files than the project's ceiling), say so in the handback and stop: Thomas relabels it full.`
       } else if (!me) {
         const live = Object.entries(rec).filter(([, en]) => en?.role === 'builder' && isLive(en) && !en.worktree_removed_at)
         const quick = live.filter(([, en]) => en.kind === 'quick').map(([k]) => k)
-        if (quick.length > 0) text = `${text ? text + '\n\n' : ''}QUICK LANES: ${quick.join(', ')} — labelled quick on the tracker. At their merge pass no --marker 'arm(ticket)' to check-simplify-markers.sh; the record's built-in code-review is the gate. A handback that says the work outgrew the label: relabel full and re-brief.`
+        if (quick.length > 0) text = `${text ? text + '\n\n' : ''}QUICK LANES: ${quick.join(', ')} — labelled quick on the tracker. At their merge pass no --marker 'arm(ticket)' to check-simplify-markers.sh; the record is the gate (the built-in code-review, or the PR Reviewer's approve under the PR gate). A handback that says the work outgrew the label: relabel full and re-brief.`
+        if (await reviewGateOn($, root)) text = `${text ? text + '\n\n' : ''}REVIEW GATE: pr — .astraler/project/review-gate turns the PR gate on: a Builder briefed from now opens a PR and does not review; dispatch the PR Reviewer at its handback, QA after the approve (thomas.md § The PR gate). Lanes briefed before keep the rule they were briefed under.`
       }
     }
     if (me && me.role !== 'resident' && dispatcher) {
@@ -1668,7 +1677,7 @@ export const register: Register = on => {
         // a new brief starts the tdd question over: the stamp of the previous brief's red run goes too (5.0.0)
         // 7.0.0: a Builder briefed from here on is judged at merge by the PR Reviewer's verdict; a new
         // brief starts the review over, so the previous verdict goes with the previous brief
-        if (me.role === 'builder') { patch.qa_required = qaRequired; patch.qa_plan = qaPlan; patch.first_content_commit_at = null; patch.red_run_at = null; patch.review_gate = 'pr'; patch.review_verdict = null; patch.review_sha = null; patch.review_at = null; patch.review_round = null; patch.review_round_count = 0; patch.qa_verdict = null; patch.qa_verdict_at = null }
+        if (me.role === 'builder') { patch.qa_required = qaRequired; patch.qa_plan = qaPlan; patch.first_content_commit_at = null; patch.red_run_at = null; patch.review_gate = (await reviewGateOn($, root)) ? 'pr' : null; patch.review_verdict = null; patch.review_sha = null; patch.review_at = null; patch.review_round = null; patch.review_round_count = 0; patch.qa_verdict = null; patch.qa_verdict_at = null }
         if (me.role === 'qa') patch.qa_mode = qaMode
       }
       await patchRecord($, root, me.key, patch)

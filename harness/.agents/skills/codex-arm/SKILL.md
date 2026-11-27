@@ -12,7 +12,7 @@ passes **per gate invocation**. Do not restate the cadence in this file; this sk
 
 | Scope | Fired by | Standing in | Lens |
 |---|---|---|---|
-| `arm: ticket` | **the PR Reviewer**, in its round (a lane briefed before 7.0.0: the Builder) | its detached checkout at the PR head | `edge-lens.md` |
+| `arm: ticket` | **the Builder**, inside its own closed loop; under the PR gate **the PR Reviewer**, in its round | the Builder's worktree, or the Reviewer's detached checkout at the PR head | `edge-lens.md` |
 | `arm: spec` | **the Shaper**, before it cuts tickets | a detached checkout at the spec commit | `astra-adversarial-lens.md` |
 | `arm: integration` | Thomas | a detached checkout at the base head of the merged range | `edge-lens.md` |
 
@@ -43,7 +43,7 @@ decision.
 
 ## Stand on the reviewed head
 
-**Ticket**: the PR Reviewer's cwd is its detached checkout at the PR head (the Builder's worktree on an older lane), so `HEAD` is the head
+**Ticket**: the Builder's cwd is its worktree, and the PR Reviewer's its detached checkout at the PR head, so `HEAD` is the head
 under review. **Spec and integration**: resolve the head yourself and stand in a detached checkout at it.
 A run that reads the wrong head reads nothing and comes back clean, a gate that cannot fail
 (measured twice in two days, AST-103):
@@ -120,7 +120,7 @@ completes the arm, so the recorded vendor is always the one that actually ran.
 
 Record the outcome once. **At ticket scope under the PR gate (7.0.0) it is an `Arm:` line in the
 Reviewer's verdict** (`Arm: codex gpt-6.2-astra (direct, <lens>) — <verdict>, <n> findings`): the
-Reviewer commits nothing, and its log stays outside the checkout. On a lane briefed before 7.0.0
+Reviewer commits nothing, and its log stays outside the checkout. Without the PR gate
 the `arm(ticket):` record IS the receipt, its shape and `Tests:` field in `dispatch-ticket/MARKERS.md`. At spec and integration scope the merge decision trail carries the date, the
 findings and their dispositions, the vendor that ran, and a `Tests:` line read the same way. **You
 classify which findings are real** — the arm advises. Escalate to the owner on a genuine fork.

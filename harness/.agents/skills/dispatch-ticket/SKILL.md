@@ -158,9 +158,9 @@ goes to the cutter as a ticket. Measured downstream, 2026-10-27 to 11-12: 5 merg
 20 non-test lines or fewer, each a tracker issue plus a Builder pane (median 114 model calls,
 8 minutes of pane time).
 
-## The PR Reviewer (7.0.0)
+## The PR Reviewer (7.0.0, when `.astraler/project/review-gate` says `pr`)
 
-A Builder hands back with a PR open. Dispatch a PR Reviewer pane (`.agents/roles/pr-reviewer.md`)
+Under the PR gate a Builder hands back with a PR open. Dispatch a PR Reviewer pane (`.agents/roles/pr-reviewer.md`)
 on it, and again after every fix the Builder pushes. Its tab is `review:<ticket>`, its record
 entry `review:<ticket>`, and its checkout a detached one at the PR head. Model, effort and
 advisor come from the `pr-reviewer` row.
@@ -224,9 +224,9 @@ base (the Shaper's worktree is cut from the base, so a file on your disk is not 
 a cited `UJ-n` has no heading in it (`dispatch-ticket-claude` § refused steps).
 
 **The `FLOW:` line** names the build flow as Skill calls, in order: on a UI ticket the
-project's anti-slop skill then `astra-ui`, then the PR; the review and the ticket arm are the PR Reviewer's (§ The PR Reviewer). Tdd is not a step on the line: it is inside
+project's anti-slop skill then `astra-ui`, then `astra-review` and `codex-arm` (arm row `ticket` on); under the PR gate, the PR instead, the review and the ticket arm being the PR Reviewer's (§ The PR Reviewer). Tdd is not a step on the line: it is inside
 `astra-implement-with-tdd`, and the gate measures its red run. A step that cannot apply is exempted by
-a `TDD: n/a — <why>` brief line, read by the mod
+a `TDD: n/a — <why>` or `REVIEW: n/a — <why>` brief line, read by the mod
 (`dispatch-ticket-claude` § refused steps).
 
 **The kind — `quick` or `full` — is the ticket's label, never a brief line** (4.6.0). The mod
@@ -271,7 +271,8 @@ QA: walk — the ticket changes the orders screen
 QA plan: docs/qa/plan-<slug>.md
 
 FLOW: 1 Skill(astraler-ui-anti-slop) [before UI code; .astraler/project/anti-slop-skills] → 2 Skill(astra-ui) [UI ticket]
-  → 3 push + gh pr create [the PR Reviewer reviews it]
+  → 3 Skill(astra-review) → 4 Skill(codex-arm) [ticket arm on]
+  # under the PR gate, 3 and 4 become: → 3 push + gh pr create [the PR Reviewer reviews it]
 
 Worktree: … · Branch: … · Base: …
 ## Glance
