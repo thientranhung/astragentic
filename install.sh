@@ -262,7 +262,11 @@ cp -R "$PAYLOAD" "$STAGING_DIR/harness"
 # `.claude-plugin/types/` beside the dispatch mod when a session loads it (with its own
 # `.gitignore: *`), cp -R shipped it, and the adopter's installer reported those five files as
 # "ignored by your project" — ignored by the release's own rule, and never meant to ship.
-if git -C "$HARNESS_ROOT" rev-parse --git-dir >/dev/null 2>&1; then
+# 7.0.1: only when the package IS its git's top level. A staged release under a project's
+# .astraler/releases/<v>/ sits inside the PROJECT's git, whose `/.astraler/*` rule marks every
+# payload file ignored, and this filter emptied the staging copy (one project, 2026-11-27:
+# `.astraler/releases/7.0.0/install.sh . --plan` exit 1, ledger-index.sh missing).
+if [ "$(git -C "$HARNESS_ROOT" rev-parse --show-toplevel 2>/dev/null)" = "$(cd "$HARNESS_ROOT" && pwd -P)" ]; then
   git -C "$HARNESS_ROOT" ls-files --others --ignored --exclude-standard -z -- "$PAYLOAD" 2>/dev/null \
     | while IFS= read -r -d '' IGN; do
         REL="${IGN#harness/}"
@@ -674,6 +678,13 @@ PY
   # The union of every staged release older than the candidate is what a project may actually
   # be carrying, and it costs one extra walk of directories already on disk.
   N_GONE=0; GONE=""
+  # 7.0.1: a path the Codex overlay's manifest owns is that installer's, not a leftover of this
+  # payload. `.codex/agents/astragentic-*.toml` left harness/ in 4.0.0 and came back rendered by
+  # runtimes/codex/install.py; reported here as "deleted upstream", and removing it fails the
+  # Codex doctor (one project, 2026-11-27: 2 of 3 deleted-upstream lines were these)
+  CODEX_OWNED=""
+  [ -f "$TARGET/.codex/astragentic/manifest.json" ] && \
+    CODEX_OWNED="$(grep -oE '"[^"]+": *"[0-9a-f]{64}"' "$TARGET/.codex/astragentic/manifest.json" | sed -E 's/^"([^"]+)".*/\1/' || true)"
   BASELINE_DIRS=""
   for _d in "$RELEASES_DIR"/*/harness; do
     [ -d "$_d" ] || continue
@@ -687,6 +698,7 @@ PY
       [ -n "$OLDREL" ] || continue
       [ -e "$RELEASE_DIR/harness/$OLDREL" ] && continue      # still shipped
       [ -e "$TARGET/$OLDREL" ] || continue                    # already gone from the project
+      [ -n "$CODEX_OWNED" ] && printf '%s\n' "$CODEX_OWNED" | grep -qxF -- "$OLDREL" && continue   # the Codex overlay's
       # OWNER PATHS ARE EXCLUDED BECAUSE A PROJECT KEEPS ITS OWN — but that reasoning holds
       # only while the path still means something. A retired owner-kept directory would carry
       # its dead name into every adapted repo without a word, so only the two files that have

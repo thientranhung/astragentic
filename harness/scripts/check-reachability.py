@@ -501,9 +501,18 @@ for jr in sorted(n for n in role_supplements if n == "junior" or n.startswith("j
         fail("5", f"role '{jr}' is read by no pane: dispatch-junior does not name it",
              "the skill's brief must tell the junior which supplement files to read")
 
+# 7.0.1: in an adopted project the README is the project's own file, so a role the package adds
+# (`dev`, 6.1.29) failed here until the project wrote its launcher by hand (one project,
+# 2026-11-27). The applied release's README is the package's written launcher there.
+_launcher_readme = readme or ""
+try:
+    _applied = open(os.path.join(ROOT, ".astraler", "state", "applied-version")).read().strip()
+    _launcher_readme += "\n" + (read(os.path.join(ROOT, ".astraler", "releases", _applied, "README.md")) or "")
+except OSError:
+    pass
 for role in sorted(roles):
     if role in OWNER_LAUNCHED:
-        if not re.search(rf"--agent\s+{re.escape(role)}\b", readme):
+        if not re.search(rf"--agent\s+{re.escape(role)}\b", _launcher_readme):
             fail("5", f"role '{role}' is owner-launched but the README never shows `claude --agent {role}`",
                  "an owner-launched role with no written launcher is a file nothing starts")
         continue

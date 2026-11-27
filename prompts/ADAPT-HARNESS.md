@@ -362,9 +362,9 @@ ignore rules for `.agents/` or `.claude/` patterns that would exclude the payloa
 allow-list entries where needed, and prove the result:
 
 ```bash
-git worktree add --detach /tmp/harness-check HEAD
-test -f /tmp/harness-check/.agents/roles/builder.md && echo OK || echo "PAYLOAD NOT VISIBLE"
-git worktree remove --force /tmp/harness-check
+# A worktree holds exactly HEAD's tree, so "visible in a worktree" is "in HEAD's tree"; no
+# throwaway worktree (on a Claude root the mod refuses a /tmp worktree remove in a chained call)
+git cat-file -e HEAD:.agents/roles/builder.md && echo OK || echo "PAYLOAD NOT VISIBLE"
 
 # Every payload file, not one. A project that ignores `.agents/*` and un-ignores each skill by
 # name swallows a skill the release adds for the first time, silently: it is on disk here and

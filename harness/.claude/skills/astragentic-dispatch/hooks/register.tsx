@@ -577,6 +577,9 @@ function segmentsWithOps(command: string): Array<{ op: string; seg: string }> {
       continue
     }
     if (ch === '&' && (command[i + 1] === '>' || command[i - 1] === '>' || command[i - 1] === '<')) { cur += ch; continue }
+    // a backslash before the newline continues the line (7.0.1: 14 commit refusals since 11-20 read
+    // the next line of a `git add \` path list as a command of its own)
+    if (ch === '\\' && command[i + 1] === '\n') { cur += ' '; i++; continue }
     if (ch === '\n' || ch === ';' || ch === '&' || ch === '|' || ch === '(' || ch === ')' || ch === '`') {
       if (cur.trim()) out.push({ op, seg: cur.trim() })
       cur = ''
@@ -600,6 +603,9 @@ function simpleCommands(command: string): string[] {
     if (q) { cur += ch; if (ch === q) q = null; continue }
     if (ch === '"' || ch === "'") { q = ch; cur += ch; continue }
     if (ch === '&' && (command[i + 1] === '>' || command[i - 1] === '>' || command[i - 1] === '<')) { cur += ch; continue }
+    // a backslash before the newline continues the line (7.0.1: 14 commit refusals since 11-20 read
+    // the next line of a `git add \` path list as a command of its own)
+    if (ch === '\\' && command[i + 1] === '\n') { cur += ' '; i++; continue }
     if (ch === '\n' || ch === ';' || ch === '&' || ch === '|' || ch === '(' || ch === ')' || ch === '`') {
       if (cur.trim()) parts.push(cur.trim())
       cur = ''

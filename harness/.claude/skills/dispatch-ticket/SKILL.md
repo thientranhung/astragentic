@@ -59,9 +59,7 @@ gitignored (allow-list the harness paths), and the payload is committed. Confirm
 session:
 
 ```bash
-git worktree add --detach /tmp/harness-check HEAD
-test -f /tmp/harness-check/.agents/roles/builder.md || { echo "PAYLOAD NOT VISIBLE"; exit 1; }
-git worktree remove --force /tmp/harness-check
+git cat-file -e HEAD:.agents/roles/builder.md || { echo "PAYLOAD NOT VISIBLE"; exit 1; }   # a worktree holds HEAD's tree
 ```
 
 `PAYLOAD NOT VISIBLE` is a STOP. The mod also refuses the brief while a payload file is

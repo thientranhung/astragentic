@@ -858,12 +858,17 @@ if bash "$ROOT/install.sh" "$T1" >/dev/null 2>&1 && [ -d "$T1/.astraler/releases
   printf 'x\n' > "$T4/.codex/profiles/builder.md"
   cp "$T4/.codex/profiles/builder.md" "$T4/.astraler/releases/0.0.1/harness/.codex/profiles/"
   printf '0.0.1\n' > "$T4/.astraler/state/applied-version"
+  # 7.0.1: a path an old release shipped that the Codex overlay's manifest now owns is not reported
+  mkdir -p "$T4/.codex/agents" "$T4/.astraler/releases/0.0.1/harness/.codex/agents" "$T4/.codex/astragentic"
+  printf 'y\n' > "$T4/.codex/agents/astragentic-reviewer.toml"
+  cp "$T4/.codex/agents/astragentic-reviewer.toml" "$T4/.astraler/releases/0.0.1/harness/.codex/agents/"
+  printf '{"schema": 1, "files": {".codex/agents/astragentic-reviewer.toml": "%064d"}}\n' 0 > "$T4/.codex/astragentic/manifest.json"
   # The guard install.sh reads, set deliberately: this run is about the REPORT, and without it
   # it spawns a nested copy of this whole suite as its staging gate.
   ASTRALER_IN_SELFTEST=1 bash "$ROOT/install.sh" "$T4" >/dev/null 2>&1
   out="$(ASTRALER_IN_SELFTEST=1 bash "$ROOT/install.sh" "$T4" --apply 2>&1)"
-  says "$out" "DELETED upstream" && says "$out" ".codex/profiles/builder.md" \
-    && ok "a path an earlier release shipped and this one does not is reported as deleted upstream" \
+  says "$out" "DELETED upstream" && says "$out" ".codex/profiles/builder.md" && ! says "$out" "astragentic-reviewer.toml" \
+    && ok "a path an earlier release shipped and this one does not is reported as deleted upstream; one the Codex overlay's manifest owns is not (7.0.1)" \
     || bad "deleted-upstream report" "the retired file stays in the project and the receipt says clean"
   # --apply must EXIT 0 and stamp, not just print. 2.20.1 printed its whole summary and died
   # on the next line, before the stamp, and this suite passed it on the strings alone.
@@ -911,6 +916,28 @@ if bash "$ROOT/install.sh" "$T1" >/dev/null 2>&1 && [ -d "$T1/.astraler/releases
     ok "a tracker doc naming jira-issue-tracker and mentioning Linear in prose gets the Jira adapter only"
   else
     bad "tracker named by skill" "project tracker skills=$proj8 (want 1, jira)"
+  fi
+  # 7.0.1: the STAGED copy's own install.sh works in a project that ignores .astraler/ (one project,
+  # 2026-11-27: the residue filter asked the project's git, every payload file read as ignored,
+  # the staging copy was emptied and --plan exited 1 on a missing ledger-index.sh)
+  T9="$TMP/t9"; rm -rf "$T9"; mkdir -p "$T9"
+  ( cd "$T9" && git init -q && printf '/.astraler/*\n' > .gitignore && git add .gitignore && git -c user.name=t -c user.email=t@t commit -q -m init ) >/dev/null 2>&1
+  ASTRALER_IN_SELFTEST=1 bash "$ROOT/install.sh" "$T9" >/dev/null 2>&1
+  if [ -f "$T9/.astraler/releases/$V/install.sh" ] && ASTRALER_IN_SELFTEST=1 bash "$T9/.astraler/releases/$V/install.sh" "$T9" --plan >/dev/null 2>&1; then
+    ok "the staged release's own install.sh --plan runs in a project whose .gitignore ignores .astraler/ (7.0.1)"
+  else
+    bad "staged install.sh under an ignored .astraler/" "exit non-zero, or the release was not staged at $T9/.astraler/releases/$V"
+  fi
+  # 7.0.1: an owner-launched role the package adds is launched by the applied release's README, so a
+  # fresh project without its own launcher line is not failed on it (one project, 2026-11-27: `dev`)
+  T10="$TMP/t10"; rm -rf "$T10"; mkdir -p "$T10"
+  ( cd "$T10" && git init -q && git -c user.name=t -c user.email=t@t commit -q --allow-empty -m init ) >/dev/null 2>&1
+  ASTRALER_IN_SELFTEST=1 bash "$ROOT/install.sh" "$T10" --apply >/dev/null 2>&1
+  _r10="$(python3 "$T10/scripts/check-reachability.py" "$T10" 2>&1)"
+  if [ -f "$T10/.astraler/releases/$V/README.md" ] && ! says "$_r10" "is owner-launched but the README never shows"; then
+    ok "check-reachability reads an owner-launched role's launcher from the applied release's README (7.0.1)"
+  else
+    bad "owner-launched launcher in an adopted project" "$(printf '%s' "$_r10" | grep 'owner-launched' | head -2)"
   fi
   # 3.3.0: the project's release view lands beside the stamp it reads, executable.
   if [ -x "$T1/.astraler/astragentic.sh" ] && [ "$(cd "$T1" && bash .astraler/astragentic.sh version)" = "$V" ]; then
@@ -2337,7 +2364,11 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const commitNoTest = await cmdOf('git commit -m "feat: thing"')
     fs.writeFileSync(path.join(root, 'app.test.js'), 'x'); git('add', 'app.test.js')
     const commitWithTest = await cmdOf('git commit -m "feat: thing with its test"')
-    git('reset', '-q'); fs.unlinkSync(path.join(root, 'app.js')); fs.unlinkSync(path.join(root, 'app.test.js'))
+    // 7.0.1 — a backslash-continued `git add` path list is one command, not a line per path
+    // (14 refusals since 2026-11-20 named a path as "a non-git step")
+    git('reset', '-q')
+    const commitBackslashAdd = await cmdOf('git add \\\n  app.js \\\n  app.test.js && git commit -m "feat: thing, staged across lines"')
+    fs.unlinkSync(path.join(root, 'app.js')); fs.unlinkSync(path.join(root, 'app.test.js'))
     // a DELETED test beside a production change is not a test (arm pass 2)
     fs.writeFileSync(path.join(root, 'old.test.js'), 'x'); git('add', 'old.test.js'); git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'old test')
     // the test predates the dispatch: move the record's start_sha to this head
@@ -2791,7 +2822,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     await fire('turn.complete', { reason: 'answer', answer: 'suite green, handing back', turnId: 'bg5' }, async () => ({}))
     const bgMidTurn = recB().waiting_on === null
     const bgShell = `${bgHeld}:${bgReleased}:${bgMidTurn}`
-    console.log(JSON.stringify({ parkedHeld, parkedWakeDropped, parkedSent, parkedLine, parkedUnavailable, deadRecorded, deadNotified, deadCleared, quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, wakeup, wakeupStop, armOpenNamed, bypassHint, sendToBareRef, sendToDoneRef, sendToDoneName, sendToDoneId, sendToUnknownRef, bandText, log , tabsNamed, subSend, bgShell, reviewInBuilder, gateSwitch}))
+    console.log(JSON.stringify({ parkedHeld, parkedWakeDropped, parkedSent, parkedLine, parkedUnavailable, deadRecorded, deadNotified, deadCleared, quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitBackslashAdd, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, wakeup, wakeupStop, armOpenNamed, bypassHint, sendToBareRef, sendToDoneRef, sendToDoneName, sendToDoneId, sendToUnknownRef, bandText, log , tabsNamed, subSend, bgShell, reviewInBuilder, gateSwitch}))
     return
   }
   await fire('session.start', {}, async () => ({}))
@@ -3300,7 +3331,7 @@ EOS
   else
     bad "mod dead turn" "$out"
   fi
-  if says "$out" '"parkedHeld":true,"parkedWakeDropped":true,"parkedSent":true,"parkedLine":true,"parkedUnavailable":true' && says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"sendToFork":"code-review [ce2df1]","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"noFlow":true,"uxOff":true,"uxNa":true,"next":true,"held":true,"done":true,"afterAgent":true,"tie":true},"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","refusedWhy":true,"compacted":1,"commitNoTest":"deny:held","commitWithTest":"pass:ran","commitDeletedTest":"deny:held","commitLaterDeletedTest":"deny:held","commitPathLimited":"deny:held","commitAllDeleted":"deny:held","commitAddThenCommit":"pass:ran","commitRmThenCommit":"deny:held","commitRestageDeleted":"deny:held","commitDashMAttached":"deny:held","commitScopedAddAll":"deny:held","commitPathRestored":"deny:held","commitAfterMv":"deny:held","mvNotReplayed":true,"commitTwice":"deny:held","commitDashCSrc":"deny:held","commitAmendOnly":"deny:held","commitRmAddAll":"deny:held","rmNotReplayed":true,"commitPathspecFile":"deny:held","commitRepeatedC":"deny:held","commitDotUntracked":"deny:held","commitDotStaged":"pass:ran","commitSkippedAdd":"deny:held","commitRmNoCached":"deny:held","fileSurvived":true,"commitOrAdd":"deny:held","commitEchoAdd":"deny:held","commitRmAbsent":"deny:held","commitSubstQuoted":"deny:held","testStillStaged":true,"commitWorkTree":"deny:held","commitConfigOpt":"deny:held","commitSubstApos":"deny:held","commitBacktickDouble":"deny:held","commitSubstLiteral":"pass:ran","commitConfigEnv":"deny:held","commitCommentedAdd":"deny:held","commitAbbrevOpt":"deny:held","commitMessageEq":"pass:ran","commitRedirect":"deny:held","commitFdDup":"pass:ran","ampNamed":true,"commitHeredocMsg":"pass:ran","commitHeredocOpen":"deny:held","commitHeredocExtra":"deny:held","commitHeredocBare":"deny:held","substFixNamed":true,"noScratchLeft":true,"wakeup":"deny:held","wakeupStop":"pass:ran","armOpenNamed":true,"bypassHint":true' && says "$out" '"tabsNamed":"1:gone"'; then
+  if says "$out" '"parkedHeld":true,"parkedWakeDropped":true,"parkedSent":true,"parkedLine":true,"parkedUnavailable":true' && says "$out" '"registered":true,"paneHeld":true,"paneCleared":true,"sendToFork":"code-review [ce2df1]","sendToForkById":"a-7f3-ce2df1","sendToRole":"uds:/tmp/d.sock","bandRead":{"noFlow":true,"uxOff":true,"uxNa":true,"next":true,"held":true,"done":true,"afterAgent":true,"tie":true},"armOffSection":true,"refusedListed":"deny:held","refusedOther":"pass:ran","refusedWhy":true,"compacted":1,"commitNoTest":"deny:held","commitWithTest":"pass:ran","commitBackslashAdd":"pass:ran","commitDeletedTest":"deny:held","commitLaterDeletedTest":"deny:held","commitPathLimited":"deny:held","commitAllDeleted":"deny:held","commitAddThenCommit":"pass:ran","commitRmThenCommit":"deny:held","commitRestageDeleted":"deny:held","commitDashMAttached":"deny:held","commitScopedAddAll":"deny:held","commitPathRestored":"deny:held","commitAfterMv":"deny:held","mvNotReplayed":true,"commitTwice":"deny:held","commitDashCSrc":"deny:held","commitAmendOnly":"deny:held","commitRmAddAll":"deny:held","rmNotReplayed":true,"commitPathspecFile":"deny:held","commitRepeatedC":"deny:held","commitDotUntracked":"deny:held","commitDotStaged":"pass:ran","commitSkippedAdd":"deny:held","commitRmNoCached":"deny:held","fileSurvived":true,"commitOrAdd":"deny:held","commitEchoAdd":"deny:held","commitRmAbsent":"deny:held","commitSubstQuoted":"deny:held","testStillStaged":true,"commitWorkTree":"deny:held","commitConfigOpt":"deny:held","commitSubstApos":"deny:held","commitBacktickDouble":"deny:held","commitSubstLiteral":"pass:ran","commitConfigEnv":"deny:held","commitCommentedAdd":"deny:held","commitAbbrevOpt":"deny:held","commitMessageEq":"pass:ran","commitRedirect":"deny:held","commitFdDup":"pass:ran","ampNamed":true,"commitHeredocMsg":"pass:ran","commitHeredocOpen":"deny:held","commitHeredocExtra":"deny:held","commitHeredocBare":"deny:held","substFixNamed":true,"noScratchLeft":true,"wakeup":"deny:held","wakeupStop":"pass:ran","armOpenNamed":true,"bypassHint":true' && says "$out" '"tabsNamed":"1:gone"'; then
     ok "pane side: a turn end with a live agent is held, the next turn start ends the hold, the band reads the latest step as … with the pane's agent count until a later step or a clean turn end and the step after it as ○, an arm row at no reaches the Builder's prompt, a command on the project's refused list is refused, a turn over the context ceiling is compacted, ScheduleWakeup is refused except stop, and a bypass-launched pane whose send lost its verdict is told to return to bypass"
   else
     bad "mod pane hold" "$out"
