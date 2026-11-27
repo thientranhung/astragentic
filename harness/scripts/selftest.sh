@@ -2856,10 +2856,10 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   const heldCleared = heldShown && bells.length === 1 && log[log.length - 1] === undefined
   // a merge of a Builder whose pane recorded skills but not astra-review is refused before it runs;
   // the same merge with the full record goes through; an entry with an empty record is not judged
-  const mergeOf = async (skills, extra = {}) => {
+  const mergeOf = async (skills, extra = {}, cmd = 'git merge --no-ff builder/AB-6') => {
     fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify({ 'AB-6': { role: 'builder', pane_id: 'p6', tab_id: 't6', session_id: 's6', branch: 'builder/AB-6', skills_run: skills, ...extra } }))
     let nextRan = false
-    const r = await fire('tool.call', { tool: 'Bash', command: 'git merge --no-ff builder/AB-6' }, async () => { nextRan = true; return {} })
+    const r = await fire('tool.call', { tool: 'Bash', command: cmd }, async () => { nextRan = true; return {} })
     const d = r?.deny ? String(r.deny) : ''
     return `${r?.deny ? 'deny' : 'pass'}:${nextRan ? 'ran' : 'held'}${d && /has no record of: [^.]*\btdd\b/.test(d) ? ':tdd' : ''}${/astra-ui \(a UI ticket/.test(d) ? ':ui' : ''}${/anti-slop \(none of x-anti-slop on the record/.test(d) ? ':slop' : ''}`
   }
@@ -2920,9 +2920,12 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   gitq('checkout', '-q', 'builder/AB-6'); fs.mkdirSync(path.join(root, '.scratch/qa'), { recursive: true }); fs.writeFileSync(path.join(root, '.scratch/qa/AB-6.md'), 'report')
   gitq('add', '-f', '.scratch/qa/AB-6.md'); gitq('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'qa report'); gitq('checkout', '-q', '-')
   const prEvidenceAfter = await mergeOf(prSkills, { ...prBase, review_verdict: 'approve', review_sha: prTip2, review_at: 9 })
+  // the commit merged is the one judged: a merge by the sha of a commit before the approve is
+  // refused although the branch tip carries the approve plus evidence
+  const prMergedOlder = await mergeOf(prSkills, { ...prBase, review_verdict: 'approve', review_sha: prTip2, review_at: 9 }, `git merge --no-ff ${prTip}`)
   const prOldLane = await mergeOf(prSkills, { start_sha: baseSha })
   const prEmptyRecord = await mergeOf({}, prBase)
-  const prGate = { prNoVerdict, prChanges, prApproved, prPushedAfter, prQaBefore, prQaFail, prQaAfter, prEvidenceAfter, prOldLane, prEmptyRecord }
+  const prGate = { prNoVerdict, prChanges, prApproved, prPushedAfter, prQaBefore, prQaFail, prQaAfter, prEvidenceAfter, prMergedOlder, prOldLane, prEmptyRecord }
   // 5.0.9 — the merged ticket is the merge's argument, not a word in its message (one project,
   // 2026-10-31: a merge by sha whose -m body routed a station finding to a live lane noted that
   // lane as "merged owing a QA walk"; the same set feeds the refusal, so a gapped live lane
@@ -3149,7 +3152,7 @@ DRVEOS
     bad "mod send/ack keys" "$out"
   fi
   # 4.0.2 — the record refuses the merge. one downstream ticket (2026-10-16) shipped forged Pass: lines past the marker gate.
-  if says "$out" '"mergeGap":"deny:held","mergeFull":"pass:ran","mergeUi":{"mergeUiNeither":"deny:held:ui:slop","mergeUiNoSlop":"deny:held:slop","mergeUiFull":"pass:ran","mergeUiNotOwed":"pass:ran","mergeUiPreStamp":"pass:ran","mergeUiQuick":"pass:ran"},"mergeEmpty":"pass:ran","mergeTddByBranch":"pass:ran","mergeTddNoTest":"deny:held:tdd","prGate":{"prNoVerdict":"deny:held","prChanges":"deny:held","prApproved":"pass:ran","prPushedAfter":"deny:held","prQaBefore":"deny:held","prQaFail":"deny:held","prQaAfter":"pass:ran","prEvidenceAfter":"pass:ran","prOldLane":"deny:held","prEmptyRecord":"deny:held"},"armOffDispatcher":true,"armOffIntegration":true'; then
+  if says "$out" '"mergeGap":"deny:held","mergeFull":"pass:ran","mergeUi":{"mergeUiNeither":"deny:held:ui:slop","mergeUiNoSlop":"deny:held:slop","mergeUiFull":"pass:ran","mergeUiNotOwed":"pass:ran","mergeUiPreStamp":"pass:ran","mergeUiQuick":"pass:ran"},"mergeEmpty":"pass:ran","mergeTddByBranch":"pass:ran","mergeTddNoTest":"deny:held:tdd","prGate":{"prNoVerdict":"deny:held","prChanges":"deny:held","prApproved":"pass:ran","prPushedAfter":"deny:held","prQaBefore":"deny:held","prQaFail":"deny:held","prQaAfter":"pass:ran","prEvidenceAfter":"pass:ran","prMergedOlder":"deny:held","prOldLane":"deny:held","prEmptyRecord":"deny:held"},"armOffDispatcher":true,"armOffIntegration":true'; then
     ok "merge gate: a recorded pane missing astra-review is refused before the merge runs; under the PR gate (7.0.0) only the Reviewer's approve at the branch head and QA after it admit the merge, a commit after the approve is refused, and an unstamped lane keeps the old rule; a full record passes; an empty record is not judged; tdd is judged by a test file on the branch since dispatch, not by the skill call (one downstream ticket, 2026-10-22); the dispatcher's prompt names the off arm scope and its marker"
   else
     bad "mod merge gate" "$out"

@@ -2872,8 +2872,11 @@ export const register: Register = on => {
       // after the approve, QA fixes included). Lanes briefed before carry no stamp and keep the
       // in-Builder rule below.
       if (entry.review_gate === 'pr') {
-        let tip = ''
-        for (const r of [ref, `origin/${ref}`]) {
+        // the commit judged is the one this merge brings in (a merge by sha, or a stale
+        // origin/<branch>), as GitHub's --match-head-commit does; the branch tip only when the
+        // merge names no resolvable commit
+        let tip = mergedSha
+        for (const r of tip ? [] : [ref, `origin/${ref}`]) {
           const t = await run($, ['git', '-C', root, 'rev-parse', '--verify', '--quiet', `${r}^{commit}`])
           if (t.code === 0 && t.out) { tip = t.out; break }
         }
