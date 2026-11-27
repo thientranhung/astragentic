@@ -158,6 +158,27 @@ goes to the cutter as a ticket. Measured downstream, 2026-10-27 to 11-12: 5 merg
 20 non-test lines or fewer, each a tracker issue plus a Builder pane (median 114 model calls,
 8 minutes of pane time).
 
+## The PR Reviewer (7.0.0)
+
+A Builder hands back with a PR open. Dispatch a PR Reviewer pane (`.agents/roles/pr-reviewer.md`)
+on it, and again after every fix the Builder pushes. Its tab is `review:<ticket>`, its record
+entry `review:<ticket>`, and its checkout a detached one at the PR head. Model, effort and
+advisor come from the `pr-reviewer` row.
+
+```bash
+git worktree add --detach .claude/worktrees/review-<ticket> origin/<ticket-branch>
+# Herdr: a new tab labelled review:<ticket> in that checkout, then
+herdr agent start "pr-reviewer-<ticket>" --kind claude --pane <pane-id> --timeout 60000 \
+  -- --dangerously-skip-permissions --allowedTools Grep,Glob --agent pr-reviewer --model <pr-reviewer row: Model> <--effort, --advisor when the row sets them>
+# Orca: the same checkout, ASTRA_DISPATCH=review:<ticket>
+```
+
+The brief: the PR number, the ticket, `Base:`, and `Round: <n>` (round 2 and 3 add the last
+`Reviewed:` SHA). Its TURN-END carries the verdict, which its pane recorded at
+`review:<ticket>` and on the ticket's entry: `changes` goes to the Builder as the PR's comments,
+`approve` goes to QA on that head. The merge gate reads the verdict at the branch head, so a
+push after it needs another round. Remove its checkout and close its tab after each verdict.
+
 ## A question, not a ticket
 
 A problem that needs digging before anyone can act on it gets a dev pane (`.agents/roles/dev.md`):
@@ -203,9 +224,9 @@ base (the Shaper's worktree is cut from the base, so a file on your disk is not 
 a cited `UJ-n` has no heading in it (`dispatch-ticket-claude` § refused steps).
 
 **The `FLOW:` line** names the build flow as Skill calls, in order: on a UI ticket the
-project's anti-slop skill then `astra-ui`, then `astra-review`, the arm. Tdd is not a step on the line: it is inside
+project's anti-slop skill then `astra-ui`, then the PR; the review and the ticket arm are the PR Reviewer's (§ The PR Reviewer). Tdd is not a step on the line: it is inside
 `astra-implement-with-tdd`, and the gate measures its red run. A step that cannot apply is exempted by
-a `TDD: n/a — <why>` or `REVIEW: n/a — <why>` brief line, read by the mod
+a `TDD: n/a — <why>` brief line, read by the mod
 (`dispatch-ticket-claude` § refused steps).
 
 **The kind — `quick` or `full` — is the ticket's label, never a brief line** (4.6.0). The mod
@@ -250,7 +271,7 @@ QA: walk — the ticket changes the orders screen
 QA plan: docs/qa/plan-<slug>.md
 
 FLOW: 1 Skill(astraler-ui-anti-slop) [before UI code; .astraler/project/anti-slop-skills] → 2 Skill(astra-ui) [UI ticket]
-  → 3 Skill(astra-review) [the built-in code-review runs inside it] → 4 arm(ticket)
+  → 3 push + gh pr create [the PR Reviewer reviews it]
 
 Worktree: … · Branch: … · Base: …
 ## Glance

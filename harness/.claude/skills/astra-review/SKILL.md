@@ -1,14 +1,15 @@
 ---
 name: astra-review
-description: "Review a Builder's change against three axes, each in its own context: correctness (the built-in code-review), the ticket's intent and criteria, and the repo's coding standards; then verify every finding at its line, give it one verdict with evidence, and route it. Use after the tests and the UI pass, on a full ticket. A quick ticket runs the built-in review alone."
+description: "Review a Builder's pull request against three axes, each in its own context: correctness (the built-in code-review), the ticket's intent and criteria, and the repo's coding standards; then verify every finding at its line, give it one verdict with evidence, and route it as a PR comment. Run by the PR Reviewer on a full ticket's PR; a quick ticket's PR gets the built-in review alone."
 ---
 
 # Review, three axes, one triage
 
 ## 1. Pin the change
 
-The fixed point is the ticket's base (`Base:` in the brief); the diff is `git diff
-<base>...HEAD`, untracked files included, staged to a temp file outside the repo. Empty diff:
+The fixed point is the CURRENT base (`git fetch origin`, then `origin/<Base:>`), and HEAD is the
+PR's head, checked out detached; the diff is `git diff origin/<base>...HEAD`, staged to a temp
+file outside the repo. A later round reads `git diff <last Reviewed>..HEAD`. Empty diff:
 stop. The **intent** is the ticket verbatim: What to build, Criteria, Must not change, and for
 UI Glance and States; plus the spec FRs the criteria cite. The **standards** are every file
 that documents how code is written here (`CODING_STANDARDS.md`, `CONTRIBUTING.md`,
@@ -68,12 +69,13 @@ each other**: report each axis under its own heading.
 
 ## 4. Route, then act
 
-- **patch**: the fix is unambiguous, adds no public surface, guards no undemonstrated state →
-  fix it now, re-run the covering tests, re-stage the diff.
+You never patch: the PR Reviewer edits no code. Each route is a PR comment at the line.
+- **changes**: a verified defect this change caused, with an unambiguous fix → a line comment
+  with the fix in one sentence. One of these makes the verdict `changes`.
 - **decision_needed**: the right fix depends on what the owner meant → options one line each,
-  your recommendation, into the handback. Never guess and patch.
+  your recommendation, in the verdict comment for Thomas. Never guess.
 - **defer**: pre-existing and not caused by this change, or all members maybe false → one
-  line in the handback with what would settle it. **A finding this change caused, with a
+  line in the verdict comment with what would settle it. **A finding this change caused, with a
   verified verdict, is never deferred.** Nothing is dismissed without a reason on record.
 
 Close with one line per axis: the lens's `Findings: n`, how many took each route, the worst

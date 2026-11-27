@@ -16,7 +16,7 @@ record are yours: no role outlives a ticket.
 | session start | `reconcile-tracker` | tracker measured against git |
 | the owner names a new Astragentic release | `astragentic-update-install` | installed vs latest; update on his go |
 | before each dispatch | `dispatch-ticket` + `dispatch-ticket-claude` | dispatch protocol |
-| before each merge | `.agents/roles/thomas-claude.md` | `Pass:` line validation |
+| session start | `.agents/roles/thomas-claude.md` | Claude dispatch routing |
 | every owner report | `scripts/usage-report.py --days 7` | its output goes in the report: calls, median context, cost by role, skills, refusals |
 | you need a rule | `.agents/memory/RULES.md` | every entry's rule, no narrative — a fifth the size |
 | you need a rule's EVIDENCE | `grep -A40 '^### AST-0NN' .agents/memory/recurring-failure-modes.md` | that entry only; `INDEX.md` finds the id |
@@ -122,17 +122,25 @@ outgrew the label is a relabel to `full` and a fresh brief, never a steer.
 
 ## Review
 
-**Per ticket** the Builder lane reviews and you verify by artifact at merge, browser evidence for a UI ticket included; **when a unit of work closes** you run the integration review below. A design-level blocker goes to the owner, in your pane, as a dated decision. Everything else is a work order to the artifact's owner: the paused Shaper for a spec, the Builder for a ticket, a follow-up ticket for a closed unit of work. Record each classification on the ticket; a wontfix is legitimate.
+**Per ticket** the PR Reviewer reviews (§ The PR gate) and you verify by artifact at merge, browser evidence for a UI ticket included; **when a unit of work closes** you run the integration review below. A design-level blocker goes to the owner as a dated decision; everything else is a work order to the artifact's owner (Shaper, Builder, or a follow-up ticket). Record each classification on the ticket; a wontfix is legitimate.
 
 **The author gets ONE written reply before you classify** — no second reply, no re-review. Only what neither of you closes reaches the owner. Record any classification
 a reply changes.
 
-**A gate that fires on a sentence starves in silence — count the merges.** `arm(ticket)` has a script that refuses the merge without it; the integration review fires on
-**you** saying a unit of work is closed. **More than 10 merges since the last `arm(integration)` is a STOP.**
+**Count the merges.** The integration review fires on **you** saying a unit of work is closed, so
+**more than 10 merges since the last `arm(integration)` is a STOP.**
 
-**Before a PR, a merge or a release**, dispatch QA's product walk (`dispatch-qa-walk`) on any
-user-visible surface or public endpoint, and **read the walk report's COVERAGE GAPS** (a declined walk reads clean without them). State browser
+**After the Reviewer's approve, before a merge or a release**, dispatch QA's product walk (`dispatch-qa-walk`) on any
+user-visible surface or public endpoint, and **read the walk report's COVERAGE GAPS**. State browser
 consent and authorized mutations, or QA declines.
+
+## The PR gate
+
+On a Builder's handback, dispatch a `pr-reviewer` pane on its PR (`dispatch-ticket`
+§ The PR Reviewer). `changes`: send the Builder to the PR's comments; when it pushes, the Reviewer
+reads the delta. `approve`: QA on that head; a QA finding goes back the same way, Builder then
+Reviewer, and QA re-walks what changed. Two rounds, a third only when round 2 still blocks; then
+the owner. The merge refuses until the record holds the approve at the branch head and QA after it.
 
 ## Integration review
 
@@ -150,13 +158,10 @@ scope: no marker owed, handback says `Arm: off (orchestrator)`.
 | | When | Over what | Fired by |
 |---|---|---|---|
 | **arm: spec** | the Shaper hands back a spec and **stops**, before cutting tickets | the spec | **the Shaper** |
-| **arm: ticket** | inside the Builder's loop, before it hands back | that ticket's diff | **the Builder** |
+| **arm: ticket** | inside the PR Reviewer's round | that PR against the base | **the PR Reviewer** |
 | **arm: integration** | **once**, when a unit of work closes | the merged range on the base branch | you |
 
-**No ticket merges without one**, and none batch to phase end — a payload that outgrows a
-reviewer is where a hollow test survives. **The ticket arm is the Builder's**, which keeps the
-gate off your turn and puts it in the tree it reads (AST-135); you verify it at merge by
-artifact. You classify what the spec arm returns before you release it.
+**No ticket merges without one**, none batched. **The ticket arm is the PR Reviewer's** (AST-135). You classify what the spec arm returns before you release it.
 
 **The standard, whoever fires:** it calls the author's OTHER vendor. It runs at most two passes per invocation, and the second is mandatory when the first returned a blocking finding, over the **full artifact**, because it catches the defect the fix introduced. A vendor that is unavailable is recorded as `cross-vendor arm: NOT RUN — <reason>`, and only the owner may accept proceeding without it.
 
@@ -172,7 +177,7 @@ explained away: re-run the failing scope alone and merge on a green you observed
 Yours alone, on a clean final SHA, verified **by artifact rather than handback**: run
 `check-simplify-markers.sh <pre-merge tip> <merge sha>` for every receipt a full ticket owes (a
 `quick` ticket owes none, § Quick or full), and **never hand-roll a `git log --grep` beside
-it** — it matches bodies, and 23 real markers once read as 193 (AST-133). The pre-merge tip is
+it** (AST-133). The pre-merge tip is
 `<merge>^1`, never the fork point (`MARKERS.md` § The head check).
 
 **Pass `--marker 'arm(integration)'` and `--marker 'qa(walk)'` too.** Advisory: they print **merges on

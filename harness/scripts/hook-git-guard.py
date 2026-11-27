@@ -151,7 +151,9 @@ GIT_PRE = r"\bgit\s+(?:(?:-C|-c)\s+\S+\s+|-[^\s]+\s+)*"
 DISPATCH = (r"\bherdr\s+(?:agent\s+start|pane\s+run|command\s+run)\b"
             r"|\borca\s+(?:terminal\s+(?:create|split|send)|worktree\s+create"
             r"|orchestration\s+(?:dispatch|worker-start|run-create|task-create))\b(?!\s+(?:--help|-h)\b)")
-READ_ONLY_ROLES = {"ba"}
+# 7.0.0: the PR Reviewer judges a Builder's PR and never writes the repository; `gh pr review`
+# and `gh pr comment` (its verdict and its findings) are not in the forbidden list below.
+READ_ONLY_ROLES = {"ba", "pr-reviewer"}
 READ_ONLY_FORBIDDEN = re.compile(
     GIT_PRE + r"(?:commit|push|merge|rebase|cherry-pick|revert|am|apply|stash|worktree|"
     r"reset|checkout\s+-b|switch\s+-c|branch\s+-[dDm]|tag)\b"
@@ -862,9 +864,10 @@ def main():
     if role in READ_ONLY_ROLES:
         hit = READ_ONLY_FORBIDDEN.search(cmd)
         if hit:
-            deny("a %s pane is read-only on the repository: it never runs `%s`. A proposal goes in "
-                 "the handoff file, or on a ticket the owner said yes to; Thomas dispatches, "
-                 "merges and runs ticket-done.sh." % (role, hit.group(0).strip()), cmd)
+            deny("a %s pane is read-only on the repository: it never runs `%s`. %s Thomas "
+                 "dispatches, merges and runs ticket-done.sh." % (role, hit.group(0).strip(),
+                 "A finding goes on the PR as a comment; the Builder changes the code." if role == "pr-reviewer"
+                 else "A proposal goes in the handoff file, or on a ticket the owner said yes to;"), cmd)
 
     if sweeping_add_anywhere(cmd):
         deny("this line stages with `git add -A|--all` and no pathspec, or `git add .`, which "

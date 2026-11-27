@@ -9,9 +9,8 @@ it alone. Row *values* are yours and survive an upgrade untouched; the table's *
 follows the package, so an upgrade may add rows or columns while carrying your values across.
 Where the shape changes, a release reports the difference and you merge it (AST-041).
 
-**Fill every `<set-me>` with a real id for your account before dispatching.**
-The package ships no model id on purpose: a placeholder that looks real resolves nowhere and
-fails at the first cross-vendor call, looking like the provider being down.
+**Fill every `<set-me>` with a real id for your account before dispatching.** A placeholder that
+looks real resolves nowhere and fails like a provider outage.
 
 ## Workspace identity
 
@@ -36,6 +35,7 @@ after every merge, handback and report.
 | Builder | `ticket:<id>` | `ticket:ABC-129` |
 | Shaper | `spec:<id>` | `spec:ABC-128` |
 | QA | `qa:<id>` | `qa:ABC-130` |
+| PR Reviewer | `review:<id>` | `review:ABC-129` |
 | Owner (BA) | `ba` | `ba` |
 | Quick Builder (owner or Thomas) | `quick-builder` | `quick-builder` |
 | Dev (owner or Thomas) | `dev` | `dev` |
@@ -53,6 +53,7 @@ closing one.
 | builder | claude | claude-sonnet-5 | medium | opus |
 | builder-quick | claude | claude-sonnet-5 | low | |
 | qa | claude | claude-sonnet-5 | low | opus |
+| pr-reviewer | claude | claude-opus-5 | medium | |
 | dev | claude | claude-sonnet-5 | medium | opus |
 
 ## Junior
@@ -80,8 +81,8 @@ misconfigured row, not a new option. Shipped: `grok` (Grok Build; Model e.g. `gr
 (`astra-adversarial-lens`, Opus, about 109k tokens a run). `no` turns only that lens off:
 the ticket review lenses and the integration fan-out always run. An old `slice` row means `integration`. Absent column means `yes`.
 
-Codex `no` (the default since 6.1.23, owner 2026-11-23) turns that scope's Codex arm off: no Codex
-call, no `arm(<scope>):` receipt to ask for at merge, `Arm: off (orchestrator)` in the handback.
+Codex `no` (the default since 6.1.23) turns that scope's Codex arm off: no Codex call, no
+`arm(<scope>):` receipt owed, `Arm: off (orchestrator)` in the handback.
 Unless its Claude lens is `no`, Claude still reads the scope adversarially (the lens above).
 `yes` adds the Codex arm on a machine that has Codex. Absent row or table means `yes`.
 

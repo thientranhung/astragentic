@@ -102,7 +102,7 @@ nhất theo token.
 
 ## Nó hoạt động thế nào
 
-### Bảy role, ranh giới rõ
+### Tám role, ranh giới rõ
 
 | Role | Session | Làm gì |
 |---|---|---|
@@ -111,10 +111,11 @@ nhất theo token.
 | **Quick Builder** | chủ dự án tự mở (`claude --agent quick-builder`), hoặc Thomas mở cho thay đổi của chủ dự án không cần ticket | Làm việc nhỏ theo lời chủ dự án (dữ liệu do tool sinh ra, plug của chính project, sửa nhỏ) trên branch `ops/*` fast-forward vào main; không ticket, không loop; thay đổi thuộc harness upstream và việc cần test hay review trả về chủ dự án |
 | **Dev** | Thomas hoặc chủ dự án mở (`claude --agent dev`) | Nhận một câu hỏi từ Thomas, BA hoặc QA, đào tới nguyên nhân gốc có bằng chứng, trả lời người hỏi và luôn báo Thomas, nộp file kết luận; chỉ viết code để điều tra (bản nháp trên `dev/*` trong worktree riêng), không bao giờ push, merge hay dispatch |
 | **Shaper** | một session liền mạch | Grill yêu cầu, viết spec, cắt ticket — khi cả bức tranh còn trong context |
-| **Builder** | một session mỗi ticket | Thi công trong worktree riêng — là người ghi duy nhất ở đó |
+| **Builder** | một session mỗi ticket | Thi công trong worktree riêng — là người ghi duy nhất ở đó — và mở PR; không tự review thay đổi của mình |
+| **PR Reviewer** | mỗi vòng PR một session, Thomas mở (`claude --agent pr-reviewer`) | Đọc PR của Builder trên nền base mới nhất cùng ticket, spec và QA plan; ghi phát hiện thành comment trên PR và một kết luận, approve hoặc changes, gắn với SHA đầu nhánh; không sửa code |
 | **QA** | một lần mỗi walk | Dùng sản phẩm đang chạy — hành trình UI, hợp đồng API, dữ liệu thật |
 
-Mọi role chạy trên Claude Code. Builder có thể giao phần gõ code cho một pane junior trên runtime khác (Grok trước), đặt theo project trong `orchestrator.md`; review, simplify và handback vẫn là việc của Builder.
+Mọi role chạy trên Claude Code. Builder có thể giao phần gõ code cho một pane junior trên runtime khác (Grok trước), đặt theo project trong `orchestrator.md`; PR và handback vẫn là việc của Builder.
 
 ### Quy trình
 

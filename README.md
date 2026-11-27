@@ -99,7 +99,7 @@ token-unique path.
 
 ## How it works
 
-### Seven roles, clear boundaries
+### Eight roles, clear boundaries
 
 | Role | Session | What it does |
 |---|---|---|
@@ -108,10 +108,11 @@ token-unique path.
 | **Quick Builder** | owner-opened (`claude --agent quick-builder`), or opened by Thomas for an owner change that is not a ticket | Does a small task on the owner's word (tool-produced data, the project's own plugs, a small fix) on an `ops/*` branch fast-forwarded to main; no ticket, no loop; upstream harness changes and work that needs tests or review go back to the owner |
 | **Dev** | opened by Thomas or the owner (`claude --agent dev`) | Takes one question from Thomas, the BA or QA to its root cause with evidence, answers the asker and copies Thomas, hands back a findings file; codes only to investigate (a draft on `dev/*` in its own worktree), never pushes, merges or dispatches |
 | **Shaper** | one unbroken session | Grills requirements, writes specs, cuts tickets — while the whole picture is in context |
-| **Builder** | one per ticket | Implements in its own worktree — sole writer there |
+| **Builder** | one per ticket | Implements in its own worktree — sole writer there — and opens the PR; never reviews its own change |
+| **PR Reviewer** | one per PR round, opened by Thomas (`claude --agent pr-reviewer`) | Reads the Builder's PR against the current base with the ticket, spec and QA plan; posts findings as PR comments and one verdict, approve or changes, bound to the head SHA; never edits code |
 | **QA** | per walk | Exercises the running product — UI journeys, API contracts, real data |
 
-Every role runs on Claude Code. A Builder may hand the typing to a junior pane on another runtime (Grok first), set per project in `orchestrator.md`; review, simplify and the handback stay the Builder's.
+Every role runs on Claude Code. A Builder may hand the typing to a junior pane on another runtime (Grok first), set per project in `orchestrator.md`; the PR and the handback stay the Builder's.
 
 ### The workflow
 

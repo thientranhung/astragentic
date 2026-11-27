@@ -301,7 +301,12 @@ const TICKET = /^[A-Z][A-Z0-9]*-[0-9]+$/
 // no brief and reports no turn end, but it is recorded, shown on the board and protected from
 // a close like any dispatched pane. Measured downstream: resident panes were invisible to the
 // board and the one place a wrong close could not be refused.
-const ROLE_BY_PREFIX: Record<string, string> = { ticket: 'builder', spec: 'shaper', qa: 'qa', resident: 'resident' }
+const ROLE_BY_PREFIX: Record<string, string> = { ticket: 'builder', spec: 'shaper', qa: 'qa', review: 'pr-reviewer', resident: 'resident' }
+// A QA pane and a PR Reviewer pane each work on a Builder's ticket, so their record entries are
+// keyed `qa:<key>` / `review:<key>`: the bare key would overwrite the Builder's own entry.
+function laneKey(role: string, key: string): string {
+  return role === 'qa' ? `qa:${key}` : role === 'pr-reviewer' ? `review:${key}` : key
+}
 
 const board = atom({ plugin: 'astragentic-dispatch', key: 'board' } as const, [] as BoardRow[])
 // The always-on band: branch and worktree of the dispatcher's checkout, plus one line the
@@ -313,7 +318,7 @@ const banner = atom({ plugin: 'astragentic-dispatch', key: 'banner' } as const, 
 // The Builder pane's own band: which FLOW steps have run, read from the same record the gates
 // read, so the person watching the pane sees the step the Builder is at without reading the
 // transcript (owner's ask, 2026-10-09).
-const flow = atom({ plugin: 'astragentic-dispatch', key: 'flow' } as const, { ran: [], latest: null, lastTurnEndAt: 0, tddNa: false, reviewNa: false, uxOwed: null, redRun: false, kind: null, refusals: 0, lastRefusal: null, qaMode: null } as Flow)
+const flow = atom({ plugin: 'astragentic-dispatch', key: 'flow' } as const, { ran: [], latest: null, lastTurnEndAt: 0, tddNa: false, reviewNa: false, reviewGate: false, uxOwed: null, redRun: false, kind: null, refusals: 0, lastRefusal: null, qaMode: null } as Flow)
 
 // One step list per dispatched role, in the order the contract names the phases, each step
 // the skill name the engine reports at `skill.prompt`. Builder's is the gated flow with two
@@ -344,6 +349,7 @@ const FLOW_BY_ROLE: Record<string, ReadonlyArray<Step>> = {
     ['astra-to-tickets', 'tickets'],
   ],
   qa: [],
+  'pr-reviewer': [],
 }
 
 async function refreshFlow($: any, root: string, key: string): Promise<void> {
@@ -365,6 +371,7 @@ async function refreshFlow($: any, root: string, key: string): Promise<void> {
     lastTurnEndAt: Number(entry.last_turn_end_at ?? 0),
     tddNa: Boolean(entry.tdd_na),
     reviewNa: Boolean(entry.review_na),
+    reviewGate: entry.review_gate === 'pr',
     kind: entry.kind === 'quick' || entry.kind === 'full' ? entry.kind : null,
     uxOwed: typeof entry.ux_owed === 'boolean' ? entry.ux_owed : null,
     refusals: refusals.length,
@@ -826,9 +833,9 @@ async function whoAmI($: any, root: string | null): Promise<Me | null> {
     // `ASTRA_DISPATCH=ticket:KEY claude …` (dispatch-ticket § Orca). AST-084 is the same trap.
     const tab = await $.env.get('ORCA_TAB_ID')
     const pane = await $.env.get('ORCA_PANE_KEY')
-    const m = String((await $.env.get('ASTRA_DISPATCH')) ?? '').match(/^(ticket|spec|qa|resident):(.+)$/)
+    const m = String((await $.env.get('ASTRA_DISPATCH')) ?? '').match(/^(ticket|spec|qa|review|resident):(.+)$/)
     const role = ROLE_BY_PREFIX[m?.[1] ?? '']
-    const key = m?.[2] ? (role === 'qa' ? `qa:${m[2]}` : m[2]) : undefined
+    const key = m?.[2] ? (laneKey(role, m[2])) : undefined
     const terminal = await $.env.get('ORCA_TERMINAL_HANDLE')
     if (role && key && tab && pane) return { role, key, tab, pane, host, terminal }
     // 6.1.9 — Orca restores a pane after its own restart with a bare `claude --resume <id>`: the
@@ -844,11 +851,11 @@ async function whoAmI($: any, root: string | null): Promise<Me | null> {
   const pane = await $.env.get('HERDR_PANE_ID')
   if (!tab || !pane) return null
   const got = await herdrJson($, ['tab', 'get', tab])
-  const m = String(got?.result?.tab?.label ?? '').match(/^(ticket|spec|qa|resident):(.+)$/)
+  const m = String(got?.result?.tab?.label ?? '').match(/^(ticket|spec|qa|review|resident):(.+)$/)
   const role = ROLE_BY_PREFIX[m?.[1] ?? '']
   // A QA pane walks a Builder's ticket, so its record entry is keyed `qa:<key>`: the same key as
   // the Builder's would overwrite the Builder's entry (role, pane, skills) at QA's session start.
-  const key = m?.[2] ? (role === 'qa' ? `qa:${m[2]}` : m[2]) : undefined
+  const key = m?.[2] ? (laneKey(role, m[2])) : undefined
   return role && key ? { role, key, tab, pane, host: 'herdr' } : byRecord($, root, 'herdr', tab, pane)
 }
 
@@ -1537,7 +1544,7 @@ export const register: Register = on => {
     if (root) {
       const rec = (await readRecord($, root)) ?? {}
       if (me?.role === 'builder' && rec[me.key]?.kind === 'quick') {
-        text = `${text ? text + '\n\n' : ''}KIND: quick — the tracker labels this ticket quick (builder.md § A quick ticket). Owed: the code, the project's existing tests run green, the built-in code-review (Skill(skill: "code-review"), findings folded), commit, push, handback. Not owed, and the pane's gates are set so: tdd, astra-review, astra-ui, the arm; write no arm(ticket) marker. If the work reaches past the label (a risky path, logic only a test would catch, more files than the project's ceiling), say so in the handback and stop: Thomas relabels it full.`
+        text = `${text ? text + '\n\n' : ''}KIND: quick — the tracker labels this ticket quick (builder.md § A quick ticket). Owed: the code, the project's existing tests run green, commit, push, the PR (gh pr create), handback; the PR Reviewer runs the correctness lens alone. Not owed, and the pane's gates are set so: tdd, astra-ui. If the work reaches past the label (a risky path, logic only a test would catch, more files than the project's ceiling), say so in the handback and stop: Thomas relabels it full.`
       } else if (!me) {
         const live = Object.entries(rec).filter(([, en]) => en?.role === 'builder' && isLive(en) && !en.worktree_removed_at)
         const quick = live.filter(([, en]) => en.kind === 'quick').map(([k]) => k)
@@ -1629,7 +1636,9 @@ export const register: Register = on => {
         patch.last_brief_received_at = now
         patch.tdd_na = tddNa; patch.review_na = reviewNa; patch.ux_owed = uxOwed
         // a new brief starts the tdd question over: the stamp of the previous brief's red run goes too (5.0.0)
-        if (me.role === 'builder') { patch.qa_required = qaRequired; patch.qa_plan = qaPlan; patch.first_content_commit_at = null; patch.red_run_at = null }
+        // 7.0.0: a Builder briefed from here on is judged at merge by the PR Reviewer's verdict; a new
+        // brief starts the review over, so the previous verdict goes with the previous brief
+        if (me.role === 'builder') { patch.qa_required = qaRequired; patch.qa_plan = qaPlan; patch.first_content_commit_at = null; patch.red_run_at = null; patch.review_gate = 'pr'; patch.review_verdict = null; patch.review_sha = null; patch.review_at = null; patch.review_round = null }
         if (me.role === 'qa') patch.qa_mode = qaMode
       }
       await patchRecord($, root, me.key, patch)
@@ -2204,7 +2213,7 @@ export const register: Register = on => {
   // ran `Agent(subagent_type: builder)`; the project's fork guard refused its arm(ticket) commit about
   // 20 minutes later, and the Builder's own /code-review completion was delivered to the dispatcher's
   // session, so the Builder idled until Thomas forwarded it by hand. Refused here, at the spawn.
-  const ROLE_AGENTS = new Set(['builder', 'quick-builder', 'shaper', 'qa', 'ba', 'thomas', 'junior', 'dev'])
+  const ROLE_AGENTS = new Set(['builder', 'quick-builder', 'shaper', 'qa', 'pr-reviewer', 'ba', 'thomas', 'junior', 'dev'])
   on('tool.call', { tool: 'Agent' }, async ($, e, next) => {
     if (!root) return next(e)
     const ev: any = e
@@ -2428,6 +2437,11 @@ export const register: Register = on => {
     if (!/^(codex-arm|codex-claude-arm)$/.test(String(e.skill ?? ''))) return next(e)
     const entry = ((await readRecord($, root)) ?? {})[me.key] ?? {}
     const ran = skillsRun(entry)
+    // 7.0.0: under the PR gate the ticket arm and the lenses run in the PR Reviewer's pane
+    if (entry.review_gate === 'pr') {
+      await logRefusal($, root, me.key, 'arm-gate', `arm in a PR-gate Builder: ${String(e.skill ?? '')}`)
+      return { deny: `astragentic-dispatch: this lane is under the PR gate (7.0.0): the review and the ticket arm run in the PR Reviewer's pane, not the Builder's. Push, open the PR (gh pr create), hand back (builder.md § Handing back).` }
+    }
     if ('code-review' in ran || entry.review_na) return next(e)
     await logRefusal($, root, me.key, 'arm-gate', `arm requested: ${String(e.skill ?? '')}`)
     return {
@@ -2437,6 +2451,36 @@ export const register: Register = on => {
 
   // -- one host per session (6.1.0) --------------------------------------------------------
   // Owner rule, 2026-11-09: a session started in Orca follows Orca's dispatch and never runs
+  // 7.0.0 — THE PR REVIEWER'S VERDICT IS THE PANE'S RECORD, NOT THE PR'S TEXT. One GitHub login
+  // authors every PR (nizzy: 60 of the last 60) and GitHub refuses an author's Approve, so a
+  // verdict on the PR is a comment any pane could type; 4.0.2 measured forged `Pass:` lines doing
+  // exactly that. The record entry this pane writes when its `gh pr review` succeeds is the
+  // verdict the merge gate reads, bound to the head SHA the pane had checked out.
+  on('tool.call', { tool: 'Bash' }, async ($, e, next) => {
+    if (!root || me?.role !== 'pr-reviewer') return next(e)
+    const cmd = runnable(e.command)
+    if (!new RegExp(AT_COMMAND + String.raw`gh\s+pr\s+review\b`).test(cmd)) return next(e)
+    let body = e.command
+    const file = cmd.match(/--body-file[\s=]+(['"]?)([^\s'"]+)\1/)?.[2]
+    if (file) { const r = await run($, ['cat', file]); if (r.code === 0) body = r.out }
+    const verdict = body.match(/^[ \t]*Verdict:[ \t]*(approve|changes)\b/im)?.[1]?.toLowerCase()
+    const sha = body.match(/^[ \t]*Reviewed:[ \t]*([0-9a-f]{40})\b/im)?.[1]
+    const round = Number(body.match(/^[ \t]*Round:[ \t]*(\d+)/im)?.[1] ?? 0)
+    if (!verdict) return next(e)   // a plain comment on the PR, not a verdict
+    const head = (await run($, ['git', 'rev-parse', 'HEAD'])).out
+    if (!sha || sha !== head) {
+      await logRefusal($, root, me.key, 'review-verdict', `Reviewed: ${sha ?? '(none)'} vs HEAD ${head}`)
+      return { deny: `astragentic-dispatch: a verdict names the head you read: \`Reviewed: <full SHA>\` must be this checkout's HEAD (${head}); this one is ${sha ? sha.slice(0, 12) : 'missing'}. Check out the PR's head, read it, and post the verdict again (pr-reviewer.md § How you work).` }
+    }
+    const ran = await next(e)
+    if (ran.deny !== undefined || ran.isError) return ran
+    const at = await $.clock.now()
+    const patch = { review_verdict: verdict, review_sha: sha, review_at: at, review_round: round || null }
+    await patchRecord($, root, me.key, patch)
+    if (me.key.startsWith('review:')) await patchRecord($, root, me.key.slice('review:'.length), patch)
+    return ran
+  })
+
   // `herdr`; one started in Herdr never runs `orca`. Both CLIs work from either pane, so the
   // leak is real: Builders would appear in the other app. The match is the command position
   // plus a subcommand, so a path or a doc named orca is not a command.
@@ -2494,15 +2538,15 @@ export const register: Register = on => {
     // AN UNEXPANDED LANE KEY IS REFUSED (6.1.7): this runs before the shell, so a loop
     // `for t in …; do orca terminal create … ASTRA_DISPATCH=ticket:$t …` claimed a record entry keyed
     // `$t` with the dispatcher stamp, and the real keys had none (nizzy 2026-11-11, repaired by hand).
-    const claimUnexpanded = cmd.match(new RegExp(AT_COMMAND + String.raw`(?:(?:do|then|else)\s+)*(?:\S*/)?orca\s+terminal\s+create\b[^\n]*?\bASTRA_DISPATCH=['"]?(?:ticket|spec|qa|resident):[^\s'"&;|]*[$\x60]`))
+    const claimUnexpanded = cmd.match(new RegExp(AT_COMMAND + String.raw`(?:(?:do|then|else)\s+)*(?:\S*/)?orca\s+terminal\s+create\b[^\n]*?\bASTRA_DISPATCH=['"]?(?:ticket|spec|qa|review|resident):[^\s'"&;|]*[$\x60]`))
     if (claimUnexpanded) {
       return { deny: `astragentic-dispatch: the lane key after ASTRA_DISPATCH= is not literal (\`$\` or a backtick). This hook reads the command before the shell expands it, so the record would be claimed under the variable's name, not the ticket. Write one \`orca terminal create\` per lane with the key written out (ORCA.md § The pane).` }
     }
-    const claim = cmd.match(new RegExp(AT_COMMAND + String.raw`(?:\S*/)?orca\s+terminal\s+create\b[^\n]*?\bASTRA_DISPATCH=['"]?(ticket|spec|qa|resident):([^\s'"&;|]+)`))
+    const claim = cmd.match(new RegExp(AT_COMMAND + String.raw`(?:\S*/)?orca\s+terminal\s+create\b[^\n]*?\bASTRA_DISPATCH=['"]?(ticket|spec|qa|review|resident):([^\s'"&;|]+)`))
     if (claim) {
       const sock = await $.env.get('CLAUDE_CODE_MESSAGING_SOCKET')
       const role = ROLE_BY_PREFIX[claim[1]]
-      const key = role === 'qa' ? `qa:${claim[2]}` : claim[2]
+      const key = laneKey(role, claim[2])
       if (sock && role) await patchRecord($, root, key, { role, dispatcher: `uds:${sock}`, claimed_at: await $.clock.now() })
     }
     // 6.1.20 — the same claim on Herdr, at `herdr tab create --label <lane>`. Only Orca claimed it,
@@ -2510,11 +2554,11 @@ export const register: Register = on => {
     // nizzy, 2026-11-10..22, 16 of 41 gate bells with a known launcher rang in another Thomas
     // session (a gate bell at 07:00:51Z went to a Thomas open since the day before; the owner saw
     // the pipeline stall). A label the shell has not expanded yet (`ticket:$t`) claims nothing.
-    const herdrClaim = cmd.match(new RegExp(AT_COMMAND + String.raw`(?:\S*/)?herdr\s+tab\s+create\b[^\n]*?--label[\s=]+['"]?(ticket|spec|qa|resident):([^\s'"&;|$\x60]+)(?=['"\s;&|]|$)`))
+    const herdrClaim = cmd.match(new RegExp(AT_COMMAND + String.raw`(?:\S*/)?herdr\s+tab\s+create\b[^\n]*?--label[\s=]+['"]?(ticket|spec|qa|review|resident):([^\s'"&;|$\x60]+)(?=['"\s;&|]|$)`))
     if (herdrClaim) {
       const sock = await $.env.get('CLAUDE_CODE_MESSAGING_SOCKET')
       const role = ROLE_BY_PREFIX[herdrClaim[1]]
-      const key = role === 'qa' ? `qa:${herdrClaim[2]}` : herdrClaim[2]
+      const key = laneKey(role, herdrClaim[2])
       if (sock && role) await patchRecord($, root, key, { role, dispatcher: `uds:${sock}`, claimed_at: await $.clock.now() })
     }
 
@@ -2771,6 +2815,23 @@ export const register: Register = on => {
     // question, asked twice: a test file on the branch since the dispatch base, or `TDD: n/a`.
     const mergeGaps = async (entry: Entry, ref: string): Promise<string[]> => {
       const out: string[] = []
+      // 7.0.0 — ONE REVIEW GATE. A lane briefed under 7.0.0 (`review_gate: 'pr'`, stamped at its
+      // brief) merges on the PR Reviewer's approve AT THE BRANCH'S CURRENT HEAD, and on a QA turn
+      // that ended after that approve when the brief declared QA. A commit after the approve moves
+      // the head, so it goes back to the Reviewer by construction (owner, 2026-11-27: every change
+      // after the approve, QA fixes included). Lanes briefed before carry no stamp and keep the
+      // in-Builder rule below.
+      if (entry.review_gate === 'pr') {
+        let tip = ''
+        for (const r of [ref, `origin/${ref}`]) {
+          const t = await run($, ['git', '-C', root, 'rev-parse', '--verify', '--quiet', `${r}^{commit}`])
+          if (t.code === 0 && t.out) { tip = t.out; break }
+        }
+        if (entry.review_verdict !== 'approve') out.push(`the PR Reviewer's approve (record: ${entry.review_verdict ?? 'no verdict yet'}; dispatch or re-dispatch the Reviewer)`)
+        else if (!tip || entry.review_sha !== tip) out.push(`the PR Reviewer's approve at the branch head (approved ${String(entry.review_sha ?? '').slice(0, 9)}, head ${tip.slice(0, 9) || 'unresolved'}): a change after the approve goes back to the Reviewer, delta only`)
+        const qa = typeof entry.qa_required === 'string' ? entry.qa_required : null
+        if (qa && qa !== 'none' && !(Number(entry.qa_last_turn_end_at ?? 0) > Number(entry.review_at ?? 0))) out.push(`a QA ${qa} after the approve (the brief declared it)`)
+      }
       // A QUICK TICKET (4.6.0, the tracker's label) owes the built-in code-review and nothing
       // else here.
       const quick = entry.kind === 'quick'
@@ -2787,6 +2848,8 @@ export const register: Register = on => {
         if (!stamp.some(n => n in run)) out.push(`anti-slop (none of ${stamp.join(', ')} on the record; the names the brief was admitted with, from .astraler/project/anti-slop-skills)`)
       }
       for (const label of flowGaps(entry)) {
+        // under the PR gate both reviews run in the Reviewer's pane, not the Builder's
+        if ((label === 'astra-review' || label === 'built-in code-review') && entry.review_gate === 'pr') continue
         if (label === 'built-in code-review' && entry.review_na) continue
         if (label === 'astra-review' && quick) continue
         if (label === 'tdd') {
@@ -2924,7 +2987,9 @@ export const register: Register = on => {
       // its grey n/a chips as 4.5.3 shipped them.
       const kind = f?.kind ?? null
       const quickDrop = new Set([RED_RUN, 'astra-ui', 'codex-arm'])
-      const shown = kind === 'quick' ? (steps ?? []).filter(([name]) => !quickDrop.has(name)) : (steps ?? [])
+      // 7.0.0: a PR-gate Builder's review and arm are the Reviewer's, so they leave its row
+      const prDrop = new Set(['astra-review', 'codex-arm'])
+      const shown = (kind === 'quick' ? (steps ?? []).filter(([name]) => !quickDrop.has(name)) : (steps ?? [])).filter(([name]) => !(f?.reviewGate && me.role === 'builder' && prDrop.has(name)))
       return (
         <Box flexDirection="column">
           {undelivered && isQa && isMode ? (

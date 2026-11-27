@@ -277,6 +277,9 @@ NOT_A_SKILL = {
     # 4.6.0: the owner's side-door AGENT (`claude --agent quick-builder`, a role, not a skill), the
     # orchestrator row a quick ticket launches from, and the model id that row carries.
     "quick-builder", "builder-quick", "claude-sonnet-5",
+    # 7.0.0: the PR Reviewer AGENT (a role Thomas dispatches into a `review:<id>` pane), and the
+    # model its orchestrator row carries.
+    "pr-reviewer", "claude-opus-5",
     # Triage labels. Skill-shaped, and the vocabulary lives in docs/agents/triage-labels.md.
     "needs-triage", "ready-for-agent",
     # 5.1.0: the two UI-standard plugs under .astraler/project/ (lists, not skills).

@@ -174,6 +174,14 @@ p.update(extra); print(json.dumps(p))' "$extra" \
   if says "$out" '"permissionDecision": "deny"'; then got=deny; else got=allow; fi
   [ "$want" = "$got" ] && ok "guard($extra) $want: $cmd" || bad "guard role $cmd" "expected $want, got $got: $out"
 }
+# 7.0.0 — the PR Reviewer judges a PR and never writes the repository: its verdict and findings
+# (`gh pr review`, `gh pr comment`) and reads pass; a commit, a push or a PR merge do not.
+guard_role deny  '{"agent_type":"pr-reviewer"}' 'git commit -m "fix the finding myself"'
+guard_role deny  '{"agent_type":"pr-reviewer"}' 'git push origin builder/AB-1'
+guard_role deny  '{"agent_type":"pr-reviewer"}' 'gh pr merge 12 --merge'
+guard_role allow '{"agent_type":"pr-reviewer"}' 'gh pr review 12 --comment --body-file /tmp/v.md'
+guard_role allow '{"agent_type":"pr-reviewer"}' 'gh pr comment 12 --body "line 40 drops the error"'
+guard_role allow '{"agent_type":"pr-reviewer"}' 'git fetch origin && git diff origin/main...HEAD'
 guard_role deny  '{"agent_type":"ba"}' 'git commit -m "tidy"'
 guard_role deny  '{"agent_type":"ba"}' 'cd /x && git push origin main'
 guard_role deny  '{"agent_type":"ba"}' 'git commit -m "$(cat <<EOF
@@ -1433,7 +1441,7 @@ echo "one rule, registered where it is loaded"
 # adapted project is where they are actually LOADED, and it is the only place they can drift.
 # The check that proves a rule reached the runtime must run where the runtime is.
 PAY="$ROOT/harness"; [ "$LAYOUT" = project ] && PAY="$ROOT"
-for role in thomas shaper builder qa ba quick-builder dev; do
+for role in thomas shaper builder qa pr-reviewer ba quick-builder dev; do
   cla="$PAY/.claude/agents/$role.md"
   # A project may not run all four roles, and a surface that does not exist there is not a
   # drifted surface. Absent files are reported as scope, never as a failure.
@@ -2042,7 +2050,7 @@ else
 // a brief sent to a "name [ref]" address followed by its RECEIVED ack from the bare name.
 const fs = require('fs'), path = require('path'), Module = require('module')
 const [,, modDir, root, tsPath, mode] = process.argv
-const isPane = mode === 'pane' || mode === 'qapane' || mode === 'orcapane' || mode === 'shaperpane' || mode === 'lensoff'
+const isPane = mode === 'pane' || mode === 'qapane' || mode === 'reviewpane' || mode === 'orcapane' || mode === 'shaperpane' || mode === 'lensoff'
 const isOrca = mode === 'orcapane'
 const isOrcaResume = String(mode).startsWith('orcaresume')  // 6.1.9: a pane Orca restored with a bare `claude --resume`
 const isOrcaHost = isOrca || mode === 'orcadisp' || isOrcaResume  // 6.1.1: a dispatcher at the root of an Orca-hosted session
@@ -2078,7 +2086,7 @@ const $ = {
   command: { register: () => {}, run: async () => ({}) },
   session: { id: async () => 'disp', send: async () => ({ isDelivered: true }), usage: async () => ({ startedAt: 0, context: { tokens: 1000, window: 1_000_000, percent: 0 } }), compact: async () => ({}) },
   fs: { read: async p => fs.readFileSync(p, 'utf8'), write: async (p, t) => fs.writeFileSync(p, t), exists: async p => fs.existsSync(p) },
-  process: { run: async (argv, o = {}) => { if (argv[0] === 'herdr') { herdrCalls.push(argv) } if (String(argv[0]).endsWith('/orca') || argv[0] === 'orca') { orcaCalls.push(argv); const h = argv[1] === 'terminal' && argv[2] === 'show' ? argv[argv.indexOf('--terminal') + 1] : null; return { exitCode: 0, stdout: h ? `{"ok":true,"result":{"terminal":{"handle":"${h}","orphaned":${h !== 'term_5'},"connected":${h !== 'term_dead'}}}}` : '{"ok":true}', stderr: '' } } if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? (mode === 'qapane' ? '{"result":{"tab":{"label":"qa:AB-5"}}}' : (mode === 'shaperpane' || mode === 'lensoff') ? '{"result":{"tab":{"label":"spec:AB-5"}}}' : '{"result":{"tab":{"label":"ticket:AB-5"}}}') : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8', env: { ...process.env, ...(o.env ?? {}) } }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
+  process: { run: async (argv, o = {}) => { if (argv[0] === 'herdr') { herdrCalls.push(argv) } if (String(argv[0]).endsWith('/orca') || argv[0] === 'orca') { orcaCalls.push(argv); const h = argv[1] === 'terminal' && argv[2] === 'show' ? argv[argv.indexOf('--terminal') + 1] : null; return { exitCode: 0, stdout: h ? `{"ok":true,"result":{"terminal":{"handle":"${h}","orphaned":${h !== 'term_5'},"connected":${h !== 'term_dead'}}}}` : '{"ok":true}', stderr: '' } } if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? (mode === 'qapane' ? '{"result":{"tab":{"label":"qa:AB-5"}}}' : mode === 'reviewpane' ? '{"result":{"tab":{"label":"review:AB-5"}}}' : (mode === 'shaperpane' || mode === 'lensoff') ? '{"result":{"tab":{"label":"spec:AB-5"}}}' : '{"result":{"tab":{"label":"ticket:AB-5"}}}') : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8', env: { ...process.env, ...(o.env ?? {}) } }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
   ui: { status: t => log.push(t), toast: () => {}, open: () => {}, resolve: () => ({ Box: 'Box', Text: 'Text' }) },
   prompt: { submit: async () => {} },
   agent: { list: async () => liveAgents },
@@ -2124,6 +2132,26 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const qaBand = await band()
     const wakeupQa = await (async () => { let ran = false; const r = await fire('tool.call', { tool: 'ScheduleWakeup', delaySeconds: 300 }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` })()
     console.log(JSON.stringify({ qaRecordPath: /by the record/.test(qaBand), qaNoBypassHint: !/shift\+tab/.test(qaBand), qaNotRed: !/not delivered to the dispatcher/.test(qaBand), wakeupQa, qaBand }))
+    return
+  }
+  if (mode === 'reviewpane') {
+    // 7.0.0 — a PR Reviewer pane: its verdict is recorded when its `gh pr review` succeeds, bound
+    // to the HEAD it had checked out, on its own entry and the ticket's; a verdict naming another
+    // SHA is refused before it posts; a plain comment records nothing
+    await fire('session.start', { cwd: root }, async () => ({}))
+    await fire('session.receive', { text: `<cross-session-message from="uds:/tmp/d.sock" from-name="disp-07">\n/review AB-5\nPR: 12\nRound: 1\n</cross-session-message>`, origin: { kind: 'plugin' } }, async () => ({}))
+    const head = require('child_process').spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim()
+    const vf = path.join(root, 'verdict.md')
+    const post = async (body, flags = '--comment --body-file verdict.md') => { fs.writeFileSync(vf, body); let ran = false; const r = await fire('tool.call', { tool: 'Bash', command: `gh pr review 12 ${flags}` }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` }
+    const recNow = () => JSON.parse(fs.readFileSync(path.join(root, '.astraler/state/dispatch-record.json'), 'utf8'))
+    const wrongSha = await post(`Verdict: approve\nReviewed: ${'0'.repeat(40)}\nRound: 1\n`)
+    const afterWrong = recNow()['AB-5']?.review_verdict ?? null
+    const plain = await post('line 40 drops the error', '--comment --body "line 40 drops the error"')
+    const approve = await post(`Looks right.\n\nVerdict: approve\nReviewed: ${head}\nRound: 1\n`)
+    const r2 = recNow()
+    const recorded = r2['review:AB-5']?.review_verdict === 'approve' && r2['AB-5']?.review_verdict === 'approve' && r2['AB-5']?.review_sha === head && r2['AB-5']?.review_round === 1
+    fs.unlinkSync(vf)
+    console.log(JSON.stringify({ reviewWrongSha: wrongSha, reviewAfterWrong: afterWrong, reviewPlain: plain, reviewApprove: approve, reviewRecorded: recorded }))
     return
   }
   if (mode === 'lensoff') {
@@ -2539,9 +2567,11 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const bandUxNa = await band()
     await brief('## Glance\n- **List:** the seller must see the overdue row first.\n## States\n- empty: …\n## Criteria\n1. **Overdue first** (FR-1)\nFLOW: 1 Skill(astra-ui) [UI ticket] → 2 Skill(astra-review)\n  → 3 arm(ticket)')
     const bandNext = await band()
-    await fire('skill.prompt', { skill: 'astra-review' }, async () => ({}))
-    liveAgents = [{ id: 'r1', status: 'running', description: 'review' }, { id: 'r2', status: 'running', description: 'review' }, { id: 'r3', status: 'pending', description: 'review' }, { id: 'r4', status: 'running', description: 'review' }]
-    await fire('turn.complete', { reason: 'answer', answer: 'reviewing', turnId: 't4' }, async () => ({}))
+    // 7.0.0: a Builder briefed now is under the PR gate, so its row ends at ui (review and arm are the
+    // Reviewer's); the step-in-progress logic is read on the ui step
+    await fire('skill.prompt', { skill: 'astra-ui' }, async () => ({}))
+    liveAgents = [{ id: 'r1', status: 'running', description: 'ui' }, { id: 'r2', status: 'running', description: 'ui' }, { id: 'r3', status: 'pending', description: 'ui' }, { id: 'r4', status: 'running', description: 'ui' }]
+    await fire('turn.complete', { reason: 'answer', answer: 'auditing', turnId: 't4' }, async () => ({}))
     const bandHeld = await band()
     liveAgents = []
     await fire('turn.start', { text: '', turnId: 't5' }, async () => ({}))
@@ -2553,7 +2583,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     liveAgents = []
     // two steps stamped in the same millisecond (4.3.2 downstream, 2026-10-22): the later step in
     // flow order is the one running
-    { const r = rec(); const t = Math.max(tick, Date.now()) + 10; r['AB-5'].skills_last = { ...(r['AB-5'].skills_last ?? {}), 'astra-implement-with-tdd': t, 'astra-review': t }; fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
+    { const r = rec(); const t = Math.max(tick, Date.now()) + 10; r['AB-5'].skills_last = { ...(r['AB-5'].skills_last ?? {}), 'astra-implement-with-tdd': t, 'astra-ui': t }; fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), JSON.stringify(r)) }
     liveAgents = [{ id: 'x2', status: 'running', description: 'arm lens' }]
     await fire('turn.complete', { reason: 'answer', answer: 'arming', turnId: 't6' }, async () => ({}))
     const bandTie = await band()
@@ -2603,7 +2633,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     { const r = rec(); r['AB-5'].kind = 'quick'; fs.writeFileSync(recPath5, JSON.stringify(r)) }
     await brief('FLOW: 1 Skill(code-review)')
     const bandQuickText = (await band()).replace(/⛔ \S+ refused/, '')   // the last refusal's chip names its gate
-    const bandQuick = /builder AB-5 quick/.test(bandQuickText) && !/\btdd\b/.test(bandQuickText) && !/simplify/.test(bandQuickText) && !/\bui\b/.test(bandQuickText) && /\breview\b/.test(bandQuickText)
+    const bandQuick = /builder AB-5 quick/.test(bandQuickText) && !/\btdd\b/.test(bandQuickText) && !/simplify/.test(bandQuickText) && !/\bui\b/.test(bandQuickText) && !/\breview\b/.test(bandQuickText) && /\bimplement\b/.test(bandQuickText)
     fs.writeFileSync(path.join(root, 'q.js'), 'q'); git('add', 'q.js')
     const commitQuick = await cmdOf('git commit -m "quick: no test file"')
     const composedQuick = await fire('prompt.compose', {}, async () => ({ sections: [] }))
@@ -2651,14 +2681,14 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     await fire('turn.complete', { reason: 'answer', answer: 'done', turnId: 'tz' }, async () => ({}))
     const bypassHint = /shift\+tab/.test(await band())
     const bandRead = {
-      noFlow: /→ implement ○ tdd ○ review/.test(bandNoFlow) && !/\bui\b/.test(bandNoFlow),
-      uxOff: /○ tdd n\/a ui ○ review/.test(bandUxOff),
-      uxNa: /○ tdd n\/a ui ○ review/.test(bandUxNa),
-      next: /→ implement ○ tdd ○ ui ○ review/.test(bandNext) && !/…/.test(bandNext) && !/· ui/.test(bandNext),
-      held: /… review \(4 agents\)/.test(bandHeld) && !/✓ review/.test(bandHeld) && !/→/.test(bandHeld),
-      done: /✓ review/.test(bandDone) && !/…/.test(bandDone) && /→ implement/.test(bandDone),
-      afterAgent: /✓ review/.test(bandAfterAgent) && !/…/.test(bandAfterAgent),
-      tie: /… review \(1 agent\)/.test(bandTie) && !/… implement/.test(bandTie),
+      noFlow: /→ implement ○ tdd$/.test(bandNoFlow) && !/\bui\b/.test(bandNoFlow) && !/review|arm/.test(bandNoFlow),
+      uxOff: /○ tdd n\/a ui$/.test(bandUxOff),
+      uxNa: /○ tdd n\/a ui$/.test(bandUxNa),
+      next: /→ implement ○ tdd ○ ui$/.test(bandNext) && !/…/.test(bandNext) && !/· ui/.test(bandNext),
+      held: /… ui \(4 agents\)/.test(bandHeld) && !/✓ ui/.test(bandHeld) && !/→/.test(bandHeld),
+      done: /✓ ui/.test(bandDone) && !/…/.test(bandDone) && /→ implement/.test(bandDone),
+      afterAgent: /✓ ui/.test(bandAfterAgent) && !/…/.test(bandAfterAgent),
+      tie: /… ui \(1 agent\)/.test(bandTie) && !/… implement/.test(bandTie),
     }
     // 5.0.9 — a turn that ends on an API error writes its first line on the record and shows a
     // desktop notification from the pane itself (one project, 2026-10-30: three panes lost auth
@@ -2851,6 +2881,27 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   fs.writeFileSync(path.join(root, 'feat.js'), 'f2'); gitq('add', 'feat.js'); gitq('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'feat alone')
   gitq('checkout', '-q', '-')
   const mergeTddNoTest = await mergeOf({ ...full, 'astra-implement-with-tdd': undefined }, { start_sha: baseSha })
+  // 7.0.0 — the PR gate: a lane briefed under 7.0.0 merges on the PR Reviewer's approve AT THE
+  // BRANCH HEAD (no in-Builder review asked), a commit after the approve is refused, and QA the
+  // brief declared must end a turn after the approve
+  gitq('branch', '-q', '-D', 'builder/AB-6'); gitq('checkout', '-q', '-b', 'builder/AB-6')
+  fs.writeFileSync(path.join(root, 'feat.js'), 'p1'); fs.writeFileSync(path.join(root, 'feat.test.js'), 'pt1')
+  gitq('add', 'feat.js', 'feat.test.js'); gitq('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'pr feat with test')
+  gitq('checkout', '-q', '-')
+  const prTip = gitq('rev-parse', 'builder/AB-6').stdout.trim()
+  const prSkills = { 'astra-implement-with-tdd': 1 }
+  const prBase = { start_sha: baseSha, review_gate: 'pr' }
+  const prNoVerdict = await mergeOf(prSkills, prBase)
+  const prChanges = await mergeOf(prSkills, { ...prBase, review_verdict: 'changes', review_sha: prTip, review_at: 5 })
+  const prApproved = await mergeOf(prSkills, { ...prBase, review_verdict: 'approve', review_sha: prTip, review_at: 5 })
+  gitq('checkout', '-q', 'builder/AB-6'); fs.writeFileSync(path.join(root, 'feat.js'), 'p2'); gitq('add', 'feat.js')
+  gitq('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'a fix after the approve'); gitq('checkout', '-q', '-')
+  const prPushedAfter = await mergeOf(prSkills, { ...prBase, review_verdict: 'approve', review_sha: prTip, review_at: 5 })
+  const prTip2 = gitq('rev-parse', 'builder/AB-6').stdout.trim()
+  const prQaBefore = await mergeOf(prSkills, { ...prBase, review_verdict: 'approve', review_sha: prTip2, review_at: 9, qa_required: 'walk', qa_last_turn_end_at: 7 })
+  const prQaAfter = await mergeOf(prSkills, { ...prBase, review_verdict: 'approve', review_sha: prTip2, review_at: 9, qa_required: 'walk', qa_last_turn_end_at: 11 })
+  const prOldLane = await mergeOf(prSkills, { start_sha: baseSha })
+  const prGate = { prNoVerdict, prChanges, prApproved, prPushedAfter, prQaBefore, prQaAfter, prOldLane }
   // 5.0.9 — the merged ticket is the merge's argument, not a word in its message (one project,
   // 2026-10-31: a merge by sha whose -m body routed a station finding to a live lane noted that
   // lane as "merged owing a QA walk"; the same set feeds the refusal, so a gapped live lane
@@ -3040,7 +3091,8 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   const agentPlugin = await agentOf({ subagent_type: 'astragentic:shaper', prompt: 'x', description: 'b' })
   const agentExplore = await agentOf({ subagent_type: 'Explore', prompt: 'x', description: 'b' })
   const agentDev = await agentOf({ subagent_type: 'dev', prompt: 'why does X fail', description: 'b' })
-  console.log(JSON.stringify({ owedWhen, agentBuilder, agentPlugin, agentExplore, agentDev, orcaInHerdr, orcaDocInHerdr, deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, deadTurnBellHeld, deadTurnBellRerung, deadTurnNoDouble, staleBells, staleRow, ownerBells, herdrClaim, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeUi, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, armOffIntegration, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiStd, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
+  const agentPr = await agentOf({ subagent_type: 'pr-reviewer', prompt: 'review PR 12', description: 'b' })
+  console.log(JSON.stringify({ owedWhen, agentBuilder, agentPlugin, agentExplore, agentDev, agentPr, orcaInHerdr, orcaDocInHerdr, deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, deadTurnBellHeld, deadTurnBellRerung, deadTurnNoDouble, staleBells, staleRow, ownerBells, herdrClaim, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeUi, mergeEmpty, mergeTddByBranch, mergeTddNoTest, prGate, armOffDispatcher, armOffIntegration, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiStd, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
@@ -3076,8 +3128,8 @@ DRVEOS
     bad "mod send/ack keys" "$out"
   fi
   # 4.0.2 — the record refuses the merge. one downstream ticket (2026-10-16) shipped forged Pass: lines past the marker gate.
-  if says "$out" '"mergeGap":"deny:held","mergeFull":"pass:ran","mergeUi":{"mergeUiNeither":"deny:held:ui:slop","mergeUiNoSlop":"deny:held:slop","mergeUiFull":"pass:ran","mergeUiNotOwed":"pass:ran","mergeUiPreStamp":"pass:ran","mergeUiQuick":"pass:ran"},"mergeEmpty":"pass:ran","mergeTddByBranch":"pass:ran","mergeTddNoTest":"deny:held:tdd","armOffDispatcher":true,"armOffIntegration":true'; then
-    ok "merge gate: a recorded pane missing astra-review is refused before the merge runs; a full record passes; an empty record is not judged; tdd is judged by a test file on the branch since dispatch, not by the skill call (one downstream ticket, 2026-10-22); the dispatcher's prompt names the off arm scope and its marker"
+  if says "$out" '"mergeGap":"deny:held","mergeFull":"pass:ran","mergeUi":{"mergeUiNeither":"deny:held:ui:slop","mergeUiNoSlop":"deny:held:slop","mergeUiFull":"pass:ran","mergeUiNotOwed":"pass:ran","mergeUiPreStamp":"pass:ran","mergeUiQuick":"pass:ran"},"mergeEmpty":"pass:ran","mergeTddByBranch":"pass:ran","mergeTddNoTest":"deny:held:tdd","prGate":{"prNoVerdict":"deny:held","prChanges":"deny:held","prApproved":"pass:ran","prPushedAfter":"deny:held","prQaBefore":"deny:held","prQaAfter":"pass:ran","prOldLane":"deny:held"},"armOffDispatcher":true,"armOffIntegration":true'; then
+    ok "merge gate: a recorded pane missing astra-review is refused before the merge runs; under the PR gate (7.0.0) only the Reviewer's approve at the branch head and QA after it admit the merge, a commit after the approve is refused, and an unstamped lane keeps the old rule; a full record passes; an empty record is not judged; tdd is judged by a test file on the branch since dispatch, not by the skill call (one downstream ticket, 2026-10-22); the dispatcher's prompt names the off arm scope and its marker"
   else
     bad "mod merge gate" "$out"
   fi
@@ -3109,7 +3161,7 @@ DRVEOS
   else
     bad "mod owed write-back" "$(printf '%s' "$out" | grep -o '"owedWhen":{[^}]*}')"
   fi
-  if says "$out" '"agentBuilder":"deny:held","agentPlugin":"deny:held","agentExplore":"pass:ran","agentDev":"deny:held"'; then
+  if says "$out" '"agentBuilder":"deny:held","agentPlugin":"deny:held","agentExplore":"pass:ran","agentDev":"deny:held","agentPr":"deny:held"'; then
     ok "mod (6.1.6): Agent(subagent_type: builder) and a plugin-namespaced role are refused at the spawn; an Explore fork passes"
   else
     bad "mod role-as-agent refusal" "$(printf '%s' "$out" | grep -o '"agentBuilder":"[^"]*","agentPlugin":"[^"]*","agentExplore":"[^"]*","agentDev":"[^"]*"')"
@@ -3165,7 +3217,7 @@ EOS
   fi
   out="$(mod_drive "$MOD" pane)"
   if says "$out" '"quick":{"band":true,"commit":"pass:ran","section":true,"rebriefTdd":true}'; then
-    ok "quick ticket in the pane (4.6.0): the band's first row says quick and the steps row keeps only implement and the review; a content commit with no test file passes; the prompt carries KIND: quick; a new brief resets the tdd chip (5.0.0)"
+    ok "quick ticket in the pane (4.6.0): the band's first row says quick and the steps row keeps only implement (7.0.0: the review is the PR Reviewer's); a content commit with no test file passes; the prompt carries KIND: quick; a new brief resets the tdd chip (5.0.0)"
   else
     bad "quick ticket in the pane (4.6.0)" "$(printf '%s' "$out" | grep -o '"quick":{[^}]*}' | head -1)"
   fi
@@ -3237,6 +3289,12 @@ EOS
     ok "shaper pane (6.1.22): spec arm off — the Shaper is told to run the adversarial lens over its spec, and the band shows lens:spec in the arm's place, lit by the Agent call"
   else
     bad "shaper spec lens" "$out"
+  fi
+  out="$(mod_drive "$MOD" reviewpane)"
+  if says "$out" '"reviewWrongSha":"deny:held","reviewAfterWrong":null,"reviewPlain":"pass:ran","reviewApprove":"pass:ran","reviewRecorded":true'; then
+    ok "a PR Reviewer pane records its verdict when gh pr review succeeds, bound to its HEAD, on its own entry and the ticket's; a verdict naming another SHA is refused; a plain comment records nothing (7.0.0)"
+  else
+    bad "PR Reviewer verdict record" "$out"
   fi
   out="$(mod_drive "$MOD" qapane)"
   if says "$out" '"qaRecordPath":true,"qaNoBypassHint":true,"qaNotRed":true,"wakeupQa":"deny:held"'; then

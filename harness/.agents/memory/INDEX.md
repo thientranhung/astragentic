@@ -17,7 +17,7 @@ from this table — read the entry.
 | `AST-011` | Gate was per-PR only, not per-step | promoted | 49 | ledger-rules.py |
 | `AST-012` | Two review rounds not stated as both-mandatory | promoted | 53 | ledger-rules.py |
 | `AST-016` | Agents sharing one checkout moved HEAD under each other | promoted | 39 | dispatch-junior |
-| `AST-024` | Role rule auto-loads into every session → role-bleed (Worker acted as Thomas) | promoted | 37 | ba.md,builder.md,dev.md,qa.md,quick-builder.md,shaper.md,thomas.md |
+| `AST-024` | Role rule auto-loads into every session → role-bleed (Worker acted as Thomas) | promoted | 37 | ba.md,builder.md,dev.md,pr-reviewer.md,qa.md,quick-builder.md,shaper.md,thomas.md |
 | `AST-028` | Relative worktree path + unverified pane cwd → worktree born in the wrong place, hour-long mi… | promoted | 191 | hook-git-guard.py,selftest.sh |
 | `AST-032` | A signal that cannot fail is not evidence | promoted | 776 | docs-staleness-audit.sh,herdr-watch-terminal.sh,herdr-watchdog.sh |
 | `AST-036` | A git worktree carries TRACKED content only | promoted | 154 | register.tsx |
@@ -42,7 +42,7 @@ from this table — read the entry.
 | `AST-089` | A fork-fallback inside `simplify` read as a substitute because only the `Pass:` line's wordin… | promoted | 366 |   |
 | `AST-090` | The Pass: literal had a two-in-three miss rate among Builders who ran the pass correctly | promoted | 221 |   |
 | `AST-092` | Builder stops after writing code but before committing — pane reads done, cleanup deletes the… | promoted | 308 | builder.md,hook-git-guard.py |
-| `AST-094` | Builder commits and pushes correctly but silently skips the simplify pass | promoted | 426 | builder.md,check-simplify-markers.sh |
+| `AST-094` | Builder commits and pushes correctly but silently skips the simplify pass | promoted | 426 | check-simplify-markers.sh |
 | `AST-095` | The cross-vendor companion exits 0 on configuration failure and caches state that survives a… | promoted | 335 | codex-arm |
 | `AST-096` | rm -rf on a worktree directory leaves git's registration behind; the next add at that path re… | promoted | 297 | codex-arm,hook-git-guard.py,thomas.md |
 | `AST-097` | TERMINAL:done means the turn ended, not that the work finished | promoted | 873 | hook-git-guard.py,register.tsx |
@@ -60,7 +60,7 @@ from this table — read the entry.
 | `AST-116` | A local fix that never goes upstream is a defect every fresh install re-buys | promoted | 335 | check-reachability.py,docs-staleness-audit.sh |
 | `AST-118` | A fallback that changes what the verdict MEANS, while keeping the same exit code | promoted | 373 | check-reachability.py |
 | `AST-119` | A fork inside a Builder can message the dispatcher, and nothing marks it as not the Builder | promoted | 677 | hook-git-guard.py |
-| `AST-122` | Existence is not relationship: a verified pointer that proves nothing about what it points at | promoted | 481 | builder.md,check-payload-drift.sh,check-simplify-markers.sh |
+| `AST-122` | Existence is not relationship: a verified pointer that proves nothing about what it points at | promoted | 481 | check-payload-drift.sh,check-simplify-markers.sh |
 | `AST-123` | The scaffold accumulated the identity of whoever last measured a lesson | promoted | 341 | docs-staleness-audit.sh,reap-worktree-processes.sh |
 | `AST-125` | The alert for the failure existed, and was suppressed by the state that defines the failure | promoted | 396 | herdr-watchdog.sh |
 | `AST-126` | The check was scoped by a variable that means two different things | promoted | 326 | docs-staleness-audit.sh |
