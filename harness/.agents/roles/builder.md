@@ -28,7 +28,7 @@ Claude Code only). They add to this contract, never override it.
 | Build | `astra-implement-with-tdd` | every criterion has a test that went red first and is green now; the diff was judged against the ticket — **then YOU check the criteria**, one by one |
 | Anti-slop read | the skill your FLOW names before `astra-ui`, **before any UI code** | invoked in this pane (the merge gate reads the record); the spine decides |
 | UI pass | `astra-ui audit` for a UI ticket | every changed surface has browser evidence; each Glance and States line was checked against the design spine; findings folded, or the skip named |
-| Review | `astra-review`, **not under the PR gate** | three axes have run once over the increment (the built-in `code-review` inside it), every finding verified and routed |
+| Review | `astra-review`; **under the PR gate the built-in `code-review` alone** | it ran once over the increment; every finding verified and routed |
 | Cross-vendor arm | `codex-arm`, **not under the PR gate**; off when `orchestrator.md` arm row `ticket` = `no` | `arm(ticket):` receipt at head, or `Arm: off (orchestrator)` |
 | Pull request | **under the PR gate only**: push, then `gh pr create` (§ Handing back) | the PR is open against the base with its body filled |
 
@@ -37,14 +37,12 @@ reads the diff, or before the PR opens.
 
 **The PR gate is the project's choice** (7.0.0): `.astraler/project/review-gate` with a `pr`
 line turns it on, and a `REVIEW: pr` section in your prompt says this lane runs under it. Then
-you do not review your own change: a PR Reviewer in its own session reads the PR against the
-current base and posts its findings as PR comments, and the pane refuses `astra-review`,
-`code-review` and the arm. Without that section you review your own change (§ Review).
+your own check is the built-in `code-review`, once, before the PR; the three-lens review and
+the arm are a PR Reviewer's, in its own session, posted as PR comments, and the pane refuses
+`astra-review` and the arm. Without that section you run the full review yourself (§ Review).
 
-**There is no simplify pass.** Tidiness is the review's standards and reuse read;
-cross-ticket duplication is the integration review's (thomas.md § Review). The pass
-was retired after 1,224 `simplify(increment)` commits in 705 merges on one project (661 empty,
-2026-10-01..11-27), the same split Matt Pocock's `implement` makes: tdd, checks, review, commit.
+**There is no simplify pass** (retired in 7.0.0: 661 of 1,224 passes on one project were empty).
+Tidiness is the review's standards read; cross-ticket duplication is the integration review's.
 
 **Commit and push at every phase boundary**, not only at handback — the table above is the
 cadence.
@@ -60,8 +58,8 @@ for (one downstream ticket, 2026-10-30, half its criteria done; a compaction and
 label is read at dispatch and written on the record (`dispatch-ticket` § The kind); the brief is
 the same `astra-implement-with-tdd` brief, the band's first row says `quick`, and a `KIND: quick` section
 arrives in your prompt. Owed: the code, the project's existing tests run green, the built-in
-`code-review` with its findings folded (under the PR gate: the PR, and the Reviewer runs the
-correctness lens alone), commit, push, handback. Not owed: tdd, `astra-ui`, `astra-review`,
+`code-review` with its findings folded (under the PR gate also the PR; the Reviewer runs the
+correctness lens again), commit, push, handback. Not owed: tdd, `astra-ui`, `astra-review`,
 the arm; write no `arm(ticket)` marker and cite none. Measured on the first adopter before this existed: 15–32%
 of its tickets were this shape, each paid as the full loop (median $19.5).
 
@@ -106,7 +104,8 @@ found something, at most two; the receipt is an **empty** `arm(ticket):` commit 
 its shape in `dispatch-ticket/MARKERS.md`. A fold after a receipt is an `Unreviewed-delta:`;
 code from a phase that had not run yet owes a fresh pass.
 
-**Under the PR gate**, findings arrive as the PR Reviewer's comments, routed by Thomas. Fix what
+**Under the PR gate**, run the built-in `code-review` once and fold before the PR (owed at merge);
+the Reviewer's findings then arrive as PR comments, routed by Thomas. Fix what
 is right and push; a finding you dispute gets one written reply on the PR. Every push after an
 approve goes back to the Reviewer, QA fixes included.
 

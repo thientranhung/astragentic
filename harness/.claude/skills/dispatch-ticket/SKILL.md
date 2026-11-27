@@ -224,7 +224,7 @@ base (the Shaper's worktree is cut from the base, so a file on your disk is not 
 a cited `UJ-n` has no heading in it (`dispatch-ticket-claude` § refused steps).
 
 **The `FLOW:` line** names the build flow as Skill calls, in order: on a UI ticket the
-project's anti-slop skill then `astra-ui`, then `astra-review` and `codex-arm` (arm row `ticket` on); under the PR gate, the PR instead, the review and the ticket arm being the PR Reviewer's (§ The PR Reviewer). Tdd is not a step on the line: it is inside
+project's anti-slop skill then `astra-ui`, then `astra-review` and `codex-arm` (arm row `ticket` on); under the PR gate, the built-in `code-review` and then the PR, the three-lens review and the ticket arm being the PR Reviewer's (§ The PR Reviewer). Tdd is not a step on the line: it is inside
 `astra-implement-with-tdd`, and the gate measures its red run. A step that cannot apply is exempted by
 a `TDD: n/a — <why>` or `REVIEW: n/a — <why>` brief line, read by the mod
 (`dispatch-ticket-claude` § refused steps).
@@ -272,7 +272,7 @@ QA plan: docs/qa/plan-<slug>.md
 
 FLOW: 1 Skill(astraler-ui-anti-slop) [before UI code; .astraler/project/anti-slop-skills] → 2 Skill(astra-ui) [UI ticket]
   → 3 Skill(astra-review) → 4 Skill(codex-arm) [ticket arm on]
-  # under the PR gate, 3 and 4 become: → 3 push + gh pr create [the PR Reviewer reviews it]
+  # under the PR gate, 3 and 4 become: → 3 Skill(code-review) → 4 push + gh pr create [the PR Reviewer reviews it]
 
 Worktree: … · Branch: … · Base: …
 ## Glance

@@ -8,7 +8,7 @@ differs on the Claude Code runtime.
 **No content commit without a test file; the first content commit after a brief also needs a
 test run that went RED after the brief (5.0.0: no skill call is asked for — the red run is the
 substance, and `astra-implement-with-tdd` is the brief's own expansion); and no arm before the
-built-in `code-review` has run; under the PR gate (7.0.0) no review or arm in this pane at all.** The red run is read from the PostToolUse
+built-in `code-review` has run; under the PR gate no `astra-review` or arm in this pane, only the built-in.** The red run is read from the PostToolUse
 hook's log (`/tmp/harness-test-runs/<toplevel>.log`, written on PostToolUse and on
 PostToolUseFailure — a failing call reaches only the second (4.5.3); every `go test` / `pytest` / `vitest` /
 `jest` / `npm test` / `cargo test` …, or the project's `.astraler/project/test-command-pattern`),
@@ -23,7 +23,7 @@ logged as a run and its no-match exit 1 passes as red. Run the test in the foreg
 background launch is logged `background`, which is no code at all. The mod refuses a content `git commit` (empty marker commits pass) unless a test file is
 staged with it or already committed on this branch since dispatch — measured: 48 refusals of the
 old "skill was called" form were followed by a test edit in 2 — and refuses the `codex-arm` call until its record shows the review ran (under the PR gate it
-refuses `astra-review`, `code-review` and the arm outright). A project names its test-file pattern in
+refuses `astra-review` and the arm outright, and still owes the built-in at merge). A project names its test-file pattern in
 `.astraler/project/test-file-pattern` (one regex); the default matches `*_test.*`, `*.test.*`,
 `*.spec.*` and `tests/`, `__tests__/`, `spec/` directories. The exemption is the dispatcher's,
 not yours: a brief line `TDD: n/a — <why>` or `REVIEW: n/a — <why>`; the ui step is owed when
@@ -35,9 +35,10 @@ the test-file and tdd-order gates and, at merge, from tdd and `astra-review`; th
 asks for the built-in review, and the merge gate still asks the record for it (under the PR gate,
 for the Reviewer's approve).
 
-## Review — Claude Code invocation (without the PR gate)
+## Review — Claude Code invocation
 
-**Invoke `Skill(skill: "astra-review")`** after the UI pass. It launches
+**Under the PR gate, invoke `Skill(skill: "code-review")`** (the built-in, bare name) once after the
+UI pass, fold what you agree with, then open the PR. **Without it, invoke `Skill(skill: "astra-review")`** after the UI pass. It launches
 `Skill(skill: "code-review")`, Claude Code's built-in bug review, as its correctness lens — not
 `code-review:code-review` (the PR plugin). Both calls land on the record; the merge gate reads
 the built-in's key. A quick ticket invokes the built-in alone.

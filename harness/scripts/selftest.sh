@@ -2605,7 +2605,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const bandTie = await band()
     liveAgents = []
     // 7.0.0: a Builder briefed under the PR gate does not review its own change: astra-review is refused
-    const reviewInBuilder = await (async () => { let ran = false; const r = await fire('tool.call', { tool: 'Skill', skill: 'astra-review' }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` })()
+    const reviewInBuilder = await (async () => { let ran = false; const r = await fire('tool.call', { tool: 'Skill', skill: 'astra-review' }, async () => { ran = true; return {} }); const c = await fire('tool.call', { tool: 'Skill', skill: 'code-review' }, async () => ({})); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}:builtin-${c?.deny ? 'deny' : 'pass'}` })()
     // the switch both ways: with the plug a brief stamps the PR gate and the prompt says so; without
     // it the next brief clears the stamp (the record is patched, so null must be written), the
     // Builder's own astra-review runs, and the prompt carries no REVIEW: pr
@@ -2665,7 +2665,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     { const r = rec(); r['AB-5'].kind = 'quick'; fs.writeFileSync(recPath5, JSON.stringify(r)) }
     await brief('FLOW: 1 Skill(code-review)')
     const bandQuickText = (await band()).replace(/⛔ \S+ refused/, '')   // the last refusal's chip names its gate
-    const bandQuick = /builder AB-5 quick/.test(bandQuickText) && !/\btdd\b/.test(bandQuickText) && !/simplify/.test(bandQuickText) && !/\bui\b/.test(bandQuickText) && !/\breview\b/.test(bandQuickText) && /\bimplement\b/.test(bandQuickText)
+    const bandQuick = /builder AB-5 quick/.test(bandQuickText) && !/\btdd\b/.test(bandQuickText) && !/simplify/.test(bandQuickText) && !/\bui\b/.test(bandQuickText) && /\breview\b/.test(bandQuickText) && /\bimplement\b/.test(bandQuickText)
     fs.writeFileSync(path.join(root, 'q.js'), 'q'); git('add', 'q.js')
     const commitQuick = await cmdOf('git commit -m "quick: no test file"')
     const composedQuick = await fire('prompt.compose', {}, async () => ({ sections: [] }))
@@ -2714,9 +2714,10 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const bypassHint = /shift\+tab/.test(await band())
     const bandRead = {
       noFlow: /→ implement ○ tdd ○ review( ○ arm)?$/.test(bandNoFlow) && !/\bui\b/.test(bandNoFlow),
-      uxOff: /○ tdd n\/a ui$/.test(bandUxOff),
-      uxNa: /○ tdd n\/a ui$/.test(bandUxNa),
-      next: /→ implement ○ tdd ○ ui$/.test(bandNext) && !/…/.test(bandNext) && !/· ui/.test(bandNext),
+      // under the PR gate the review chip is the Builder's built-in check (next batch after 7.0.0)
+      uxOff: /○ tdd n\/a ui ○ review$/.test(bandUxOff),
+      uxNa: /○ tdd n\/a ui ○ review$/.test(bandUxNa),
+      next: /→ implement ○ tdd ○ ui ○ review$/.test(bandNext) && !/…/.test(bandNext) && !/· ui/.test(bandNext),
       held: /… ui \(4 agents\)/.test(bandHeld) && !/✓ ui/.test(bandHeld) && !/→/.test(bandHeld),
       done: /✓ ui/.test(bandDone) && !/…/.test(bandDone) && /→ implement/.test(bandDone),
       afterAgent: /✓ ui/.test(bandAfterAgent) && !/…/.test(bandAfterAgent),
@@ -2921,7 +2922,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   gitq('add', 'feat.js', 'feat.test.js'); gitq('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'pr feat with test')
   gitq('checkout', '-q', '-')
   const prTip = gitq('rev-parse', 'builder/AB-6').stdout.trim()
-  const prSkills = { 'astra-implement-with-tdd': 1 }
+  const prSkills = { 'astra-implement-with-tdd': 1, 'code-review': 1 }
   const prBase = { start_sha: baseSha, review_gate: 'pr' }
   const prNoVerdict = await mergeOf(prSkills, prBase)
   const prChanges = await mergeOf(prSkills, { ...prBase, review_verdict: 'changes', review_sha: prTip, review_at: 5 })
@@ -2940,9 +2941,11 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   // the commit merged is the one judged: a merge by the sha of a commit before the approve is
   // refused although the branch tip carries the approve plus evidence
   const prMergedOlder = await mergeOf(prSkills, { ...prBase, review_verdict: 'approve', review_sha: prTip2, review_at: 9 }, `git merge --no-ff ${prTip}`)
+  // the Builder's own check stays owed under the PR gate: an approve without the built-in on the record is refused
+  const prNoSelfCheck = await mergeOf({ 'astra-implement-with-tdd': 1 }, { ...prBase, review_verdict: 'approve', review_sha: prTip2, review_at: 9 })
   const prOldLane = await mergeOf(prSkills, { start_sha: baseSha })
   const prEmptyRecord = await mergeOf({}, prBase)
-  const prGate = { prNoVerdict, prChanges, prApproved, prPushedAfter, prQaBefore, prQaFail, prQaAfter, prEvidenceAfter, prMergedOlder, prOldLane, prEmptyRecord }
+  const prGate = { prNoVerdict, prChanges, prApproved, prPushedAfter, prQaBefore, prQaFail, prQaAfter, prEvidenceAfter, prMergedOlder, prNoSelfCheck, prOldLane, prEmptyRecord }
   // 5.0.9 — the merged ticket is the merge's argument, not a word in its message (one project,
   // 2026-10-31: a merge by sha whose -m body routed a station finding to a live lane noted that
   // lane as "merged owing a QA walk"; the same set feeds the refusal, so a gapped live lane
@@ -3169,7 +3172,7 @@ DRVEOS
     bad "mod send/ack keys" "$out"
   fi
   # 4.0.2 — the record refuses the merge. one downstream ticket (2026-10-16) shipped forged Pass: lines past the marker gate.
-  if says "$out" '"mergeGap":"deny:held","mergeFull":"pass:ran","mergeUi":{"mergeUiNeither":"deny:held:ui:slop","mergeUiNoSlop":"deny:held:slop","mergeUiFull":"pass:ran","mergeUiNotOwed":"pass:ran","mergeUiPreStamp":"pass:ran","mergeUiQuick":"pass:ran"},"mergeEmpty":"pass:ran","mergeTddByBranch":"pass:ran","mergeTddNoTest":"deny:held:tdd","prGate":{"prNoVerdict":"deny:held","prChanges":"deny:held","prApproved":"pass:ran","prPushedAfter":"deny:held","prQaBefore":"deny:held","prQaFail":"deny:held","prQaAfter":"pass:ran","prEvidenceAfter":"pass:ran","prMergedOlder":"deny:held","prOldLane":"deny:held","prEmptyRecord":"deny:held"},"armOffDispatcher":true,"armOffIntegration":true'; then
+  if says "$out" '"mergeGap":"deny:held","mergeFull":"pass:ran","mergeUi":{"mergeUiNeither":"deny:held:ui:slop","mergeUiNoSlop":"deny:held:slop","mergeUiFull":"pass:ran","mergeUiNotOwed":"pass:ran","mergeUiPreStamp":"pass:ran","mergeUiQuick":"pass:ran"},"mergeEmpty":"pass:ran","mergeTddByBranch":"pass:ran","mergeTddNoTest":"deny:held:tdd","prGate":{"prNoVerdict":"deny:held","prChanges":"deny:held","prApproved":"pass:ran","prPushedAfter":"deny:held","prQaBefore":"deny:held","prQaFail":"deny:held","prQaAfter":"pass:ran","prEvidenceAfter":"pass:ran","prMergedOlder":"deny:held","prNoSelfCheck":"deny:held","prOldLane":"deny:held","prEmptyRecord":"deny:held"},"armOffDispatcher":true,"armOffIntegration":true'; then
     ok "merge gate: a recorded pane missing astra-review is refused before the merge runs; under the PR gate (7.0.0) only the Reviewer's approve at the branch head and QA after it admit the merge, a commit after the approve is refused, and an unstamped lane keeps the old rule; a full record passes; an empty record is not judged; tdd is judged by a test file on the branch since dispatch, not by the skill call (one downstream ticket, 2026-10-22); the dispatcher's prompt names the off arm scope and its marker"
   else
     bad "mod merge gate" "$out"
@@ -3272,7 +3275,7 @@ EOS
   else
     bad "agent sends (5.0.8)" "$(printf '%s' "$out" | grep -o '"sendToBareRef":"[^"]*","sendToDoneRef":"[^"]*","sendToDoneName":"[^"]*","sendToDoneId":"[^"]*","sendToUnknownRef":"[^"]*"' | head -1)"
   fi
-  if says "$out" '"reviewInBuilder":"deny:held"'; then
+  if says "$out" '"reviewInBuilder":"deny:held:builtin-pass"'; then
     ok "a Builder briefed under the PR gate is refused astra-review: the review is the PR Reviewer's (7.0.0)"
   else
     bad "review in a PR-gate Builder (7.0.0)" "$(printf '%s' "$out" | grep -o '"reviewInBuilder":"[^"]*"' | head -1)"

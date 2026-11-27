@@ -1580,14 +1580,14 @@ export const register: Register = on => {
     if (root) {
       const rec = (await readRecord($, root)) ?? {}
       const prLane = me?.role === 'builder' && rec[me.key]?.review_gate === 'pr'
-      if (prLane) text = `${text ? text + '\n\n' : ''}REVIEW: pr — this project runs the PR gate (.astraler/project/review-gate). No astra-review, code-review or arm in this pane: push, open the PR (gh pr create) and hand back (builder.md § Review); the PR Reviewer's findings come back through Thomas.`
+      if (prLane) text = `${text ? text + '\n\n' : ''}REVIEW: pr — this project runs the PR gate (.astraler/project/review-gate). Your own check is the built-in code-review (Skill(skill: "code-review")) once, findings folded, before the PR; no astra-review or arm in this pane. Then push, open the PR (gh pr create) and hand back (builder.md § Review); the PR Reviewer's findings come back through Thomas.`
       if (me?.role === 'builder' && rec[me.key]?.kind === 'quick') {
-        text = `${text ? text + '\n\n' : ''}KIND: quick — the tracker labels this ticket quick (builder.md § A quick ticket). Owed: the code, the project's existing tests run green, ${prLane ? "commit, push, the PR (gh pr create), handback; the PR Reviewer runs the correctness lens alone" : 'the built-in code-review with its findings folded, commit, push, handback'}. Not owed, and the pane's gates are set so: tdd, astra-ui${prLane ? '' : ', astra-review, the arm'}. If the work reaches past the label (a risky path, logic only a test would catch, more files than the project's ceiling), say so in the handback and stop: Thomas relabels it full.`
+        text = `${text ? text + '\n\n' : ''}KIND: quick — the tracker labels this ticket quick (builder.md § A quick ticket). Owed: the code, the project's existing tests run green, the built-in code-review with its findings folded, commit, push, ${prLane ? "the PR (gh pr create), handback; the PR Reviewer runs the correctness lens alone" : 'handback'}. Not owed, and the pane's gates are set so: tdd, astra-ui${prLane ? '' : ', astra-review, the arm'}. If the work reaches past the label (a risky path, logic only a test would catch, more files than the project's ceiling), say so in the handback and stop: Thomas relabels it full.`
       } else if (!me) {
         const live = Object.entries(rec).filter(([, en]) => en?.role === 'builder' && isLive(en) && !en.worktree_removed_at)
         const quick = live.filter(([, en]) => en.kind === 'quick').map(([k]) => k)
         if (quick.length > 0) text = `${text ? text + '\n\n' : ''}QUICK LANES: ${quick.join(', ')} — labelled quick on the tracker. At their merge pass no --marker 'arm(ticket)' to check-simplify-markers.sh; the record is the gate (the built-in code-review, or the PR Reviewer's approve under the PR gate). A handback that says the work outgrew the label: relabel full and re-brief.`
-        if (await reviewGateOn($, root)) text = `${text ? text + '\n\n' : ''}REVIEW GATE: pr — .astraler/project/review-gate turns the PR gate on: a Builder briefed from now opens a PR and does not review; dispatch the PR Reviewer at its handback, QA after the approve (thomas.md § The PR gate). Lanes briefed before keep the rule they were briefed under.`
+        if (await reviewGateOn($, root)) text = `${text ? text + '\n\n' : ''}REVIEW GATE: pr — .astraler/project/review-gate turns the PR gate on: a Builder briefed from now runs the built-in code-review, opens a PR and runs no astra-review or arm; dispatch the PR Reviewer at its handback, QA after the approve (thomas.md § The PR gate). Lanes briefed before keep the rule they were briefed under.`
       }
     }
     if (me && me.role !== 'resident' && dispatcher) {
@@ -2481,9 +2481,12 @@ export const register: Register = on => {
     // 7.0.0: under the PR gate the review, the lenses and the ticket arm run in the PR Reviewer's
     // pane; a Builder reviewing its own change spends the time the gate moved out (owner: «Builder:
     // code + tests only»; review was 25–34% of nizzy Builder active time, BA)
-    if (entry.review_gate === 'pr') {
+    // the next batch after 7.0.0 (owner: «builder là một coder thì lúc nào họ chả chạy code review»):
+    // the author's own check stays, the built-in code-review once before the PR; the three-lens
+    // review and the arm are the Reviewer's
+    if (entry.review_gate === 'pr' && skill !== 'code-review') {
       await logRefusal($, root, me.key, 'review-gate', `${skill} in a PR-gate Builder`)
-      return { deny: `astragentic-dispatch: this lane is under the PR gate (7.0.0): the review and the ticket arm run in the PR Reviewer's pane, not the Builder's. Push, open the PR (gh pr create), hand back (builder.md § Handing back).` }
+      return { deny: `astragentic-dispatch: this lane is under the PR gate: astra-review and the ticket arm run in the PR Reviewer's pane, not the Builder's. Your own check is the built-in code-review (Skill(skill: "code-review")) once before the PR; then push, open the PR (gh pr create), hand back (builder.md § Handing back).` }
     }
     if (!/arm$/.test(skill)) return next(e)
     if ('code-review' in ran || entry.review_na) return next(e)
@@ -2911,8 +2914,9 @@ export const register: Register = on => {
         if (!stamp.some(n => n in run)) out.push(`anti-slop (none of ${stamp.join(', ')} on the record; the names the brief was admitted with, from .astraler/project/anti-slop-skills)`)
       }
       for (const label of flowGaps(entry)) {
-        // under the PR gate both reviews run in the Reviewer's pane, not the Builder's
-        if ((label === 'astra-review' || label === 'built-in code-review') && entry.review_gate === 'pr') continue
+        // under the PR gate the three-lens review runs in the Reviewer's pane; the built-in is the
+        // Builder's own check before the PR, and stays owed
+        if (label === 'astra-review' && entry.review_gate === 'pr') continue
         if (label === 'built-in code-review' && entry.review_na) continue
         if (label === 'astra-review' && quick) continue
         if (label === 'tdd') {
@@ -3053,7 +3057,7 @@ export const register: Register = on => {
       const kind = f?.kind ?? null
       const quickDrop = new Set([RED_RUN, 'astra-ui', 'codex-arm'])
       // 7.0.0: a PR-gate Builder's review and arm are the Reviewer's, so they leave its row
-      const prDrop = new Set(['astra-review', 'codex-arm'])
+      const prDrop = new Set(['codex-arm'])
       const shown = (kind === 'quick' ? (steps ?? []).filter(([name]) => !quickDrop.has(name)) : (steps ?? [])).filter(([name]) => !(f?.reviewGate && me.role === 'builder' && prDrop.has(name)))
       return (
         <Box flexDirection="column">
@@ -3081,7 +3085,7 @@ export const register: Register = on => {
                 <Box flexDirection="row" flexWrap="wrap">
                   {shown.map(([name, label, isOptional]) => {
                     // the tdd chip lights from the RED run; a quick ticket's review chip from the built-in alone (5.0.0)
-                    const isRan = name === RED_RUN ? f.redRun : f.ran.includes(name) || (name === 'codex-arm' && f.ran.includes('codex-claude-arm')) || (name === 'astra-review' && kind === 'quick' && f.ran.includes('code-review'))
+                    const isRan = name === RED_RUN ? f.redRun : f.ran.includes(name) || (name === 'codex-arm' && f.ran.includes('codex-claude-arm')) || (name === 'astra-review' && (kind === 'quick' || f.reviewGate) && f.ran.includes('code-review'))
                     // an optional step is shown only once the brief has said whether it is owed (4.5.3)
                     if (isOptional && !isRan && f.uxOwed === null) return null
                     const isNa = (name === RED_RUN && f.tddNa) || (name === 'astra-review' && f.reviewNa) || (isOptional && f.uxOwed === false)

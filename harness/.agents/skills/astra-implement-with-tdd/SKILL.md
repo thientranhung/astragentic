@@ -76,4 +76,4 @@ throughout, single test files per slice, the **full suite once at the end**.
   criteria do not cover): write the gap as a question, hand back;
 - a criterion and the code disagree in a way only the owner can settle.
 
-Then the FLOW line continues: `astra-ui` [UI] → `astra-review` → the arm; under the PR gate, push and `gh pr create`, the review being the PR Reviewer's.
+Then the FLOW line continues: `astra-ui` [UI] → `astra-review` → the arm; under the PR gate, the built-in `code-review`, then push and `gh pr create`, the full review being the PR Reviewer's.
