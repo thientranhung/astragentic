@@ -211,6 +211,8 @@ function plugLines(text: string): string[] {
 // THE PR GATE IS THE PROJECT'S CHOICE (7.0.0, owner 2026-11-27: option B, a trial before a
 // default). `.astraler/project/review-gate` with a `pr` line turns it on, read from the main
 // checkout (root); without it a Builder reviews its own change as in 6.1.29, minus simplify
+// a QA turn's verdict line, bold or quoted ("**Verdict: PASS**", "> Verdict: CONCERNS")
+const QA_VERDICT = /^[ \t>*]*Verdict:[ \t*]*(PASS|CONCERNS|FAIL)\b/im
 async function reviewGateOn($: any, root: string): Promise<boolean> {
   return plugLines(await overlayFile($, `${root}/.astraler/project/review-gate`)).includes('pr')
 }
@@ -327,7 +329,10 @@ async function onlyEvidenceSince($: any, root: string, from: string, to: string)
   try { globs = globs.concat((await $.fs.read(`${root}/.astraler/project/marker-evidence-paths.txt`)).split('\n').map((l: string) => l.trim()).filter((l: string) => l && !l.startsWith('#'))) } catch {}
   const res = globs.map(globRe)
   const base = `origin/${await baseBranch($, root)}`
-  const list = await run($, ['git', '-C', root, 'rev-list', '--parents', `${from}..${to}`])
+  // the branch's own line only (7.0.2): a clean merge of the base brings the base's commits into
+  // from..to, and walking them judged a base merge as code after the approve (measured
+  // downstream: 31 base commits behind one clean merge, a re-approve asked for no change)
+  const list = await run($, ['git', '-C', root, 'rev-list', '--first-parent', '--parents', `${from}..${to}`])
   if (list.code !== 0) return false
   for (const line of list.out.split('\n').filter(Boolean)) {
     const [c, ...parents] = line.split(' ')
@@ -1814,6 +1819,17 @@ export const register: Register = on => {
         return
       }
     }
+    // A QA pane's entry goes with its worktree at cleanup, so the fact that QA ended a turn is
+    // also written onto the ticket's own entry (`qa:<key>` → `<key>`), where the owed check and
+    // the board read it after the QA pane is gone (found by the 3.0.0 gate). Written before the
+    // no-address branch below (7.0.2): a QA pane briefed by `herdr agent prompt` (GATE.md § 3)
+    // has no dispatcher address, and up to 7.0.1 its verdict never reached the ticket — measured
+    // downstream, one PR-gate merge refused on a QA PASS that sat in the pane's own entry.
+    if (root && me.role === 'qa' && me.key.startsWith('qa:')) {
+      const own = ((await readRecord($, root)) ?? {})[me.key] ?? {}
+      const qaVerdict = e.answer.match(QA_VERDICT)?.[1] ?? null
+      await patchRecord($, root, me.key.slice(3), { qa_last_turn_end_at: await $.clock.now(), qa_last_mode: own.qa_mode ?? null, ...(qaVerdict ? { qa_verdict: qaVerdict, qa_verdict_at: await $.clock.now() } : {}) })
+    }
     if (!dispatcher) {
       // No address: the brief did not come through the mod (a held delivery, a brief typed in
       // by `herdr agent prompt`). Measured downstream: a gate pane in auto mode ended its turn
@@ -1829,14 +1845,6 @@ export const register: Register = on => {
     if (root) {
       await patchRecord($, root, me.key, { last_turn_end_at: await $.clock.now(), last_turn_reason: e.reason, last_turn_error: lastErr, waiting_on: null })
       await refreshFlow($, root, me.key)
-    }
-    // A QA pane's entry goes with its worktree at cleanup, so the fact that QA ended a turn is
-    // also written onto the ticket's own entry (`qa:<key>` → `<key>`), where the owed check and
-    // the board read it after the QA pane is gone (found by the 3.0.0 gate).
-    if (root && me.role === 'qa' && me.key.startsWith('qa:')) {
-      const own = ((await readRecord($, root)) ?? {})[me.key] ?? {}
-      const qaVerdict = e.answer.match(/^[ \t>*]*Verdict:[ \t*]*(PASS|CONCERNS|FAIL)\b/im)?.[1] ?? null
-      await patchRecord($, root, me.key.slice(3), { qa_last_turn_end_at: await $.clock.now(), qa_last_mode: own.qa_mode ?? null, ...(qaVerdict ? { qa_verdict: qaVerdict, qa_verdict_at: await $.clock.now() } : {}) })
     }
     const answer = e.answer.length > 1500 ? `…${e.answer.slice(-1500)}` : e.answer
     let flow = ''
@@ -2881,7 +2889,7 @@ export const register: Register = on => {
     // downstream (one ticket, 2026-10-22): 5 content commits each carrying test files passed the commit
     // gate, then the merge was refused "no record of: tdd" after the whole build cycle. One
     // question, asked twice: a test file on the branch since the dispatch base, or `TDD: n/a`.
-    const mergeGaps = async (entry: Entry, ref: string): Promise<string[]> => {
+    const mergeGaps = async (entry: Entry, ref: string, key: string): Promise<string[]> => {
       const out: string[] = []
       // 7.0.0 — ONE REVIEW GATE. A lane briefed under 7.0.0 (`review_gate: 'pr'`, stamped at its
       // brief) merges on the PR Reviewer's approve AT THE BRANCH'S CURRENT HEAD, and on a QA turn
@@ -2901,8 +2909,14 @@ export const register: Register = on => {
         if (entry.review_verdict !== 'approve') out.push(`the PR Reviewer's approve (record: ${entry.review_verdict ?? 'no verdict yet'}; dispatch or re-dispatch the Reviewer)`)
         else if (!tip || (entry.review_sha !== tip && !(await onlyEvidenceSince($, root, String(entry.review_sha ?? ''), tip)))) out.push(`the PR Reviewer's approve at the branch head (approved ${String(entry.review_sha ?? '').slice(0, 9)}, head ${tip.slice(0, 9) || 'unresolved'}): a change after the approve goes back to the Reviewer, delta only`)
         const qa = typeof entry.qa_required === 'string' ? entry.qa_required : null
-        const qaOk = (entry.qa_verdict === 'PASS' || entry.qa_verdict === 'CONCERNS') && Number(entry.qa_verdict_at ?? 0) > Number(entry.review_at ?? 0)
-        if (qa && qa !== 'none' && !qaOk) out.push(`a QA ${qa} after the approve with a PASS or CONCERNS verdict (record: ${entry.qa_verdict ?? 'none'}${Number(entry.qa_verdict_at ?? 0) > Number(entry.review_at ?? 0) ? '' : ', or before the approve'})`)
+        // a lane whose QA ended under 7.0.1 or earlier by the gate-pane path holds its verdict only
+        // in the QA pane's own pending turn end; read it there while that entry is still on the record
+        let qaV = entry.qa_verdict ?? null, qaAt = Number(entry.qa_verdict_at ?? 0)
+        const pend = rec[`qa:${key}`]?.turn_end_pending
+        const pendV = String(pend?.text ?? '').match(QA_VERDICT)?.[1]
+        if (pendV && Number(pend?.at ?? 0) > qaAt) { qaV = pendV; qaAt = Number(pend.at) }
+        const qaOk = (qaV === 'PASS' || qaV === 'CONCERNS') && qaAt > Number(entry.review_at ?? 0)
+        if (qa && qa !== 'none' && !qaOk) out.push(`a QA ${qa} after the approve with a PASS or CONCERNS verdict (record: ${qaV ?? 'none'}${qaAt > Number(entry.review_at ?? 0) ? '' : ', or before the approve'})`)
       }
       // A QUICK TICKET (4.6.0, the tracker's label) owes the built-in code-review and nothing
       // else here.
@@ -2947,7 +2961,7 @@ export const register: Register = on => {
       // a PR-gate lane is judged even with an empty record: the stamp proves the mod briefed it, and
       // the marker script that backed an empty record is no longer owed
       if (entry?.role !== 'builder' || !entry.session_id || (entry.review_gate !== 'pr' && Object.keys(skillsRun(entry)).length === 0)) continue
-      const gaps = await mergeGaps(entry, refOf(entry))
+      const gaps = await mergeGaps(entry, refOf(entry), key)
       if (gaps.length > 0) {
         await logRefusal($, root, key, 'merge-gate', `no record of: ${gaps.join(', ')}`)
         return {
@@ -2964,7 +2978,7 @@ export const register: Register = on => {
       // Only a pane the mod itself registered (it has a session_id) is judged: a pane without
       // the mod (a junior pane) records nothing here and keeps the marker script as its evidence.
       if (entry?.role === 'builder' && entry.session_id) {
-        const gaps = await mergeGaps(entry, refOf(entry))
+        const gaps = await mergeGaps(entry, refOf(entry), key)
         if (gaps.length > 0) {
           notes.push(`${MARK} ${key} merged with no record of: ${gaps.join(', ')}. A step the handback names n/a with its reason is fine; any other is a step that did not run.`)
         }
