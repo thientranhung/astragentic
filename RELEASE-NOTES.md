@@ -63,7 +63,7 @@ sessions since 2026-11-24); a project whose code host is not GitHub (no `gh pr r
 verdict can be recorded: such a project must leave the plug off); the quick-builder role
 (unchanged by the owner's choice). The guard sees Bash only.
 
-Static: selftest 313/0 and tests/codex 74 OK. The gates ran under stubbed payloads; a live
+Static: selftest 314/0 and tests/codex 74 OK, from a clean clone of the release commit. The gates ran under stubbed payloads; a live
 ticket through Builder → PR Reviewer → QA → merge: chưa đo.
 
 # Astragentic 6.1.29
