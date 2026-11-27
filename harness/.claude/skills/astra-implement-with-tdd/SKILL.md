@@ -30,7 +30,7 @@ Never all tests first, never all code first.
    failing assertion.
 2. **Green.** Only the code that makes that assertion pass. No speculative feature, no second
    criterion's code.
-3. **Commit the slice.** Refactoring is **not** in the loop; tidiness is `astra-review`'s standards axis.
+3. **Commit the slice.** Refactoring is **not** in the loop; tidiness is the PR Reviewer's standards read.
 
 **Checking a red against the tree without your change** (is it yours, or the base's?): the
 stash stack is shared by every worktree of the repo, so a bare `git stash pop` or `drop` takes
@@ -76,4 +76,4 @@ throughout, single test files per slice, the **full suite once at the end**.
   criteria do not cover): write the gap as a question, hand back;
 - a criterion and the code disagree in a way only the owner can settle.
 
-Then the FLOW line continues: `astra-ui` [UI] → `astra-review` → arm.
+Then the FLOW line continues: `astra-ui` [UI] → push and `gh pr create`; the review is the PR Reviewer's.

@@ -2077,6 +2077,7 @@ const orcaCalls = []
 let liveAgents = []
 let tick = 0
 let everyFn = async () => {}
+let ghShows = ''   // what `gh pr view --json reviews` prints in the stub
 let selfSock
 let homeDir
 const every = () => everyFn()
@@ -2086,7 +2087,7 @@ const $ = {
   command: { register: () => {}, run: async () => ({}) },
   session: { id: async () => 'disp', send: async () => ({ isDelivered: true }), usage: async () => ({ startedAt: 0, context: { tokens: 1000, window: 1_000_000, percent: 0 } }), compact: async () => ({}) },
   fs: { read: async p => fs.readFileSync(p, 'utf8'), write: async (p, t) => fs.writeFileSync(p, t), exists: async p => fs.existsSync(p) },
-  process: { run: async (argv, o = {}) => { if (argv[0] === 'herdr') { herdrCalls.push(argv) } if (String(argv[0]).endsWith('/orca') || argv[0] === 'orca') { orcaCalls.push(argv); const h = argv[1] === 'terminal' && argv[2] === 'show' ? argv[argv.indexOf('--terminal') + 1] : null; return { exitCode: 0, stdout: h ? `{"ok":true,"result":{"terminal":{"handle":"${h}","orphaned":${h !== 'term_5'},"connected":${h !== 'term_dead'}}}}` : '{"ok":true}', stderr: '' } } if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? (mode === 'qapane' ? '{"result":{"tab":{"label":"qa:AB-5"}}}' : mode === 'reviewpane' ? '{"result":{"tab":{"label":"review:AB-5"}}}' : (mode === 'shaperpane' || mode === 'lensoff') ? '{"result":{"tab":{"label":"spec:AB-5"}}}' : '{"result":{"tab":{"label":"ticket:AB-5"}}}') : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8', env: { ...process.env, ...(o.env ?? {}) } }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
+  process: { run: async (argv, o = {}) => { if (argv[0] === 'gh') return { exitCode: 0, stdout: ghShows, stderr: '' }; if (argv[0] === 'herdr') { herdrCalls.push(argv) } if (String(argv[0]).endsWith('/orca') || argv[0] === 'orca') { orcaCalls.push(argv); const h = argv[1] === 'terminal' && argv[2] === 'show' ? argv[argv.indexOf('--terminal') + 1] : null; return { exitCode: 0, stdout: h ? `{"ok":true,"result":{"terminal":{"handle":"${h}","orphaned":${h !== 'term_5'},"connected":${h !== 'term_dead'}}}}` : '{"ok":true}', stderr: '' } } if (argv[0] === 'herdr') return { exitCode: 0, stdout: argv[1] === 'tab' ? (mode === 'qapane' ? '{"result":{"tab":{"label":"qa:AB-5"}}}' : mode === 'reviewpane' ? '{"result":{"tab":{"label":"review:AB-5"}}}' : (mode === 'shaperpane' || mode === 'lensoff') ? '{"result":{"tab":{"label":"spec:AB-5"}}}' : '{"result":{"tab":{"label":"ticket:AB-5"}}}') : '{}', stderr: '' }; const r = require('child_process').spawnSync(argv[0], argv.slice(1), { cwd: o.cwd ?? root, encoding: 'utf8', env: { ...process.env, ...(o.env ?? {}) } }); return { exitCode: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } } },
   ui: { status: t => log.push(t), toast: () => {}, open: () => {}, resolve: () => ({ Box: 'Box', Text: 'Text' }) },
   prompt: { submit: async () => {} },
   agent: { list: async () => liveAgents },
@@ -2128,10 +2129,12 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     // the dispatcher's brief gives the pane its address; without it the turn end has nowhere to go
     await fire('session.receive', { text: `<cross-session-message from="uds:/tmp/d.sock" from-name="disp-07">\n/walk AB-5\nMODE: walk\n</cross-session-message>`, origin: { kind: 'plugin' } }, async () => ({}))
     $.session.send = async () => ({ isDelivered: false, reason: 'The server-side auto mode classifier gave no verdict for SendMessage' })
-    await fire('turn.complete', { reason: 'answer', answer: 'walked', turnId: 'q1' }, async () => ({}))
+    await fire('turn.complete', { reason: 'answer', answer: 'walked\nVerdict: PASS\n3 cases, 0 blocking', turnId: 'q1' }, async () => ({}))
     const qaBand = await band()
+    // 7.0.0: the walk's verdict reaches the ticket's own entry, where the PR gate reads it
+    const qaVerdictRecorded = JSON.parse(fs.readFileSync(path.join(root, '.astraler/state/dispatch-record.json'), 'utf8'))['AB-5']?.qa_verdict === 'PASS'
     const wakeupQa = await (async () => { let ran = false; const r = await fire('tool.call', { tool: 'ScheduleWakeup', delaySeconds: 300 }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` })()
-    console.log(JSON.stringify({ qaRecordPath: /by the record/.test(qaBand), qaNoBypassHint: !/shift\+tab/.test(qaBand), qaNotRed: !/not delivered to the dispatcher/.test(qaBand), wakeupQa, qaBand }))
+    console.log(JSON.stringify({ qaRecordPath: /by the record/.test(qaBand), qaNoBypassHint: !/shift\+tab/.test(qaBand), qaNotRed: !/not delivered to the dispatcher/.test(qaBand), wakeupQa, qaVerdictRecorded, qaBand }))
     return
   }
   if (mode === 'reviewpane') {
@@ -2147,11 +2150,21 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     const wrongSha = await post(`Verdict: approve\nReviewed: ${'0'.repeat(40)}\nRound: 1\n`)
     const afterWrong = recNow()['AB-5']?.review_verdict ?? null
     const plain = await post('line 40 drops the error', '--comment --body "line 40 drops the error"')
-    const approve = await post(`Looks right.\n\nVerdict: approve\nReviewed: ${head}\nRound: 1\n`)
+    fs.writeFileSync(vf, `Verdict: approve\nReviewed: ${head}\nRound: 1\n`)
+    const noNumber = await (async () => { let ran = false; const r = await fire('tool.call', { tool: 'Bash', command: 'gh pr review --comment --body-file verdict.md' }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` })()
+    // GitHub did not show it (a refused review): nothing is recorded
+    ghShows = ''
+    await post(`Verdict: approve\nReviewed: ${head}\nRound: 1\n`)
+    const notShown = recNow()['AB-5']?.review_verdict ?? null
+    const body = `Looks right.\n\nVerdict: approve\nReviewed: ${head}\nRound: 1\n`
+    ghShows = body
+    const approve = await post(body)
     const r2 = recNow()
-    const recorded = r2['review:AB-5']?.review_verdict === 'approve' && r2['AB-5']?.review_verdict === 'approve' && r2['AB-5']?.review_sha === head && r2['AB-5']?.review_round === 1
+    const recorded = r2['review:AB-5']?.review_verdict === 'approve' && r2['AB-5']?.review_verdict === 'approve' && r2['AB-5']?.review_sha === head && r2['AB-5']?.review_round_count === 1
+    await post(body); await post(body)
+    const fourth = await post(body)
     fs.unlinkSync(vf)
-    console.log(JSON.stringify({ reviewWrongSha: wrongSha, reviewAfterWrong: afterWrong, reviewPlain: plain, reviewApprove: approve, reviewRecorded: recorded }))
+    console.log(JSON.stringify({ reviewWrongSha: wrongSha, reviewAfterWrong: afterWrong, reviewPlain: plain, reviewNoNumber: noNumber, reviewNotShown: notShown, reviewApprove: approve, reviewRecorded: recorded, reviewFourth: fourth }))
     return
   }
   if (mode === 'lensoff') {
@@ -2588,6 +2601,8 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     await fire('turn.complete', { reason: 'answer', answer: 'arming', turnId: 't6' }, async () => ({}))
     const bandTie = await band()
     liveAgents = []
+    // 7.0.0: a Builder briefed under the PR gate does not review its own change: astra-review is refused
+    const reviewInBuilder = await (async () => { let ran = false; const r = await fire('tool.call', { tool: 'Skill', skill: 'astra-review' }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` })()
     // (the tdd-order block runs after the band reads: its tdd call would otherwise light a chip the band cases expect unlit)
     // 4.5.2 — the FIRST content commit after a brief needs a RED test run after the brief,
     // besides the test file (one downstream ticket: test file beside the code passed, tdd called
@@ -2758,7 +2773,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
     await fire('turn.complete', { reason: 'answer', answer: 'suite green, handing back', turnId: 'bg5' }, async () => ({}))
     const bgMidTurn = recB().waiting_on === null
     const bgShell = `${bgHeld}:${bgReleased}:${bgMidTurn}`
-    console.log(JSON.stringify({ parkedHeld, parkedWakeDropped, parkedSent, parkedLine, parkedUnavailable, deadRecorded, deadNotified, deadCleared, quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, wakeup, wakeupStop, armOpenNamed, bypassHint, sendToBareRef, sendToDoneRef, sendToDoneName, sendToDoneId, sendToUnknownRef, bandText, log , tabsNamed, subSend, bgShell}))
+    console.log(JSON.stringify({ parkedHeld, parkedWakeDropped, parkedSent, parkedLine, parkedUnavailable, deadRecorded, deadNotified, deadCleared, quick, tddOrder, registered, paneHeld, paneCleared, sendToFork, sendToForkById, sendToRole, bandRead, armOffSection, refusedListed, refusedOther, refusedWhy, compacted, commitNoTest, commitWithTest, commitDeletedTest, commitLaterDeletedTest, commitPathLimited, commitAllDeleted, commitAddThenCommit, commitRmThenCommit, commitRestageDeleted, commitDashMAttached, commitScopedAddAll, commitPathRestored, commitAfterMv, mvNotReplayed, commitTwice, commitDashCSrc, commitAmendOnly, commitRmAddAll, rmNotReplayed, commitPathspecFile, commitRepeatedC, commitDotUntracked, commitDotStaged, commitSkippedAdd, commitRmNoCached, fileSurvived, commitOrAdd, commitEchoAdd, commitRmAbsent, commitSubstQuoted, testStillStaged, commitWorkTree, commitConfigOpt, commitSubstApos, commitBacktickDouble, commitSubstLiteral, commitConfigEnv, commitCommentedAdd, commitAbbrevOpt, commitMessageEq, commitRedirect, commitFdDup, ampNamed, commitHeredocMsg, commitHeredocOpen, commitHeredocExtra, commitHeredocBare, substFixNamed, noScratchLeft, wakeup, wakeupStop, armOpenNamed, bypassHint, sendToBareRef, sendToDoneRef, sendToDoneName, sendToDoneId, sendToUnknownRef, bandText, log , tabsNamed, subSend, bgShell, reviewInBuilder}))
     return
   }
   await fire('session.start', {}, async () => ({}))
@@ -2898,10 +2913,16 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   gitq('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'a fix after the approve'); gitq('checkout', '-q', '-')
   const prPushedAfter = await mergeOf(prSkills, { ...prBase, review_verdict: 'approve', review_sha: prTip, review_at: 5 })
   const prTip2 = gitq('rev-parse', 'builder/AB-6').stdout.trim()
-  const prQaBefore = await mergeOf(prSkills, { ...prBase, review_verdict: 'approve', review_sha: prTip2, review_at: 9, qa_required: 'walk', qa_last_turn_end_at: 7 })
-  const prQaAfter = await mergeOf(prSkills, { ...prBase, review_verdict: 'approve', review_sha: prTip2, review_at: 9, qa_required: 'walk', qa_last_turn_end_at: 11 })
+  const prQaBefore = await mergeOf(prSkills, { ...prBase, review_verdict: 'approve', review_sha: prTip2, review_at: 9, qa_required: 'walk', qa_verdict: 'PASS', qa_verdict_at: 7 })
+  const prQaFail = await mergeOf(prSkills, { ...prBase, review_verdict: 'approve', review_sha: prTip2, review_at: 9, qa_required: 'walk', qa_verdict: 'FAIL', qa_verdict_at: 11 })
+  const prQaAfter = await mergeOf(prSkills, { ...prBase, review_verdict: 'approve', review_sha: prTip2, review_at: 9, qa_required: 'walk', qa_verdict: 'PASS', qa_verdict_at: 11 })
+  // the protocol's own evidence on top of an approve (a QA report) does not owe another round
+  gitq('checkout', '-q', 'builder/AB-6'); fs.mkdirSync(path.join(root, '.scratch/qa'), { recursive: true }); fs.writeFileSync(path.join(root, '.scratch/qa/AB-6.md'), 'report')
+  gitq('add', '-f', '.scratch/qa/AB-6.md'); gitq('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'qa report'); gitq('checkout', '-q', '-')
+  const prEvidenceAfter = await mergeOf(prSkills, { ...prBase, review_verdict: 'approve', review_sha: prTip2, review_at: 9 })
   const prOldLane = await mergeOf(prSkills, { start_sha: baseSha })
-  const prGate = { prNoVerdict, prChanges, prApproved, prPushedAfter, prQaBefore, prQaAfter, prOldLane }
+  const prEmptyRecord = await mergeOf({}, prBase)
+  const prGate = { prNoVerdict, prChanges, prApproved, prPushedAfter, prQaBefore, prQaFail, prQaAfter, prEvidenceAfter, prOldLane, prEmptyRecord }
   // 5.0.9 — the merged ticket is the merge's argument, not a word in its message (one project,
   // 2026-10-31: a merge by sha whose -m body routed a station finding to a live lane noted that
   // lane as "merged owing a QA walk"; the same set feeds the refusal, so a gapped live lane
@@ -3128,7 +3149,7 @@ DRVEOS
     bad "mod send/ack keys" "$out"
   fi
   # 4.0.2 — the record refuses the merge. one downstream ticket (2026-10-16) shipped forged Pass: lines past the marker gate.
-  if says "$out" '"mergeGap":"deny:held","mergeFull":"pass:ran","mergeUi":{"mergeUiNeither":"deny:held:ui:slop","mergeUiNoSlop":"deny:held:slop","mergeUiFull":"pass:ran","mergeUiNotOwed":"pass:ran","mergeUiPreStamp":"pass:ran","mergeUiQuick":"pass:ran"},"mergeEmpty":"pass:ran","mergeTddByBranch":"pass:ran","mergeTddNoTest":"deny:held:tdd","prGate":{"prNoVerdict":"deny:held","prChanges":"deny:held","prApproved":"pass:ran","prPushedAfter":"deny:held","prQaBefore":"deny:held","prQaAfter":"pass:ran","prOldLane":"deny:held"},"armOffDispatcher":true,"armOffIntegration":true'; then
+  if says "$out" '"mergeGap":"deny:held","mergeFull":"pass:ran","mergeUi":{"mergeUiNeither":"deny:held:ui:slop","mergeUiNoSlop":"deny:held:slop","mergeUiFull":"pass:ran","mergeUiNotOwed":"pass:ran","mergeUiPreStamp":"pass:ran","mergeUiQuick":"pass:ran"},"mergeEmpty":"pass:ran","mergeTddByBranch":"pass:ran","mergeTddNoTest":"deny:held:tdd","prGate":{"prNoVerdict":"deny:held","prChanges":"deny:held","prApproved":"pass:ran","prPushedAfter":"deny:held","prQaBefore":"deny:held","prQaFail":"deny:held","prQaAfter":"pass:ran","prEvidenceAfter":"pass:ran","prOldLane":"deny:held","prEmptyRecord":"deny:held"},"armOffDispatcher":true,"armOffIntegration":true'; then
     ok "merge gate: a recorded pane missing astra-review is refused before the merge runs; under the PR gate (7.0.0) only the Reviewer's approve at the branch head and QA after it admit the merge, a commit after the approve is refused, and an unstamped lane keeps the old rule; a full record passes; an empty record is not judged; tdd is judged by a test file on the branch since dispatch, not by the skill call (one downstream ticket, 2026-10-22); the dispatcher's prompt names the off arm scope and its marker"
   else
     bad "mod merge gate" "$out"
@@ -3231,6 +3252,11 @@ EOS
   else
     bad "agent sends (5.0.8)" "$(printf '%s' "$out" | grep -o '"sendToBareRef":"[^"]*","sendToDoneRef":"[^"]*","sendToDoneName":"[^"]*","sendToDoneId":"[^"]*","sendToUnknownRef":"[^"]*"' | head -1)"
   fi
+  if says "$out" '"reviewInBuilder":"deny:held"'; then
+    ok "a Builder briefed under the PR gate is refused astra-review: the review is the PR Reviewer's (7.0.0)"
+  else
+    bad "review in a PR-gate Builder (7.0.0)" "$(printf '%s' "$out" | grep -o '"reviewInBuilder":"[^"]*"' | head -1)"
+  fi
   if says "$out" '"bgShell":"true:true:true"'; then
     ok "a backgrounded shell job holds the pane's TURN-END like a live agent; its task-notification turn releases it; a persistent Monitor is not a hold (6.1.24)"
   else
@@ -3291,13 +3317,13 @@ EOS
     bad "shaper spec lens" "$out"
   fi
   out="$(mod_drive "$MOD" reviewpane)"
-  if says "$out" '"reviewWrongSha":"deny:held","reviewAfterWrong":null,"reviewPlain":"pass:ran","reviewApprove":"pass:ran","reviewRecorded":true'; then
-    ok "a PR Reviewer pane records its verdict when gh pr review succeeds, bound to its HEAD, on its own entry and the ticket's; a verdict naming another SHA is refused; a plain comment records nothing (7.0.0)"
+  if says "$out" '"reviewWrongSha":"deny:held","reviewAfterWrong":null,"reviewPlain":"pass:ran","reviewNoNumber":"deny:held","reviewNotShown":null,"reviewApprove":"pass:ran","reviewRecorded":true,"reviewFourth":"deny:held"'; then
+    ok "a PR Reviewer pane records its verdict only when the PR shows it, bound to its HEAD, on its own entry and the ticket's; a verdict naming another SHA or no PR number is refused; a plain comment records nothing; a fourth recorded round is refused (7.0.0)"
   else
     bad "PR Reviewer verdict record" "$out"
   fi
   out="$(mod_drive "$MOD" qapane)"
-  if says "$out" '"qaRecordPath":true,"qaNoBypassHint":true,"qaNotRed":true,"wakeupQa":"deny:held"'; then
+  if says "$out" '"qaRecordPath":true,"qaNoBypassHint":true,"qaNotRed":true,"wakeupQa":"deny:held","qaVerdictRecorded":true'; then
     ok "qa pane (4.6.1): a QA pane runs under permissions, so its TURN-END goes by the record every turn — the band says so, never advises bypass, is not red; ScheduleWakeup is refused there too"
   else
     bad "qa pane record path" "$out"
@@ -3321,7 +3347,7 @@ s = s.replace(old4, "isBusy = true", 1)
 old5 = "if (own?.pane_id === me!.pane && own.waiting_on) {\n          await patchRecord($, root!, me!.key, { waiting_on: null })\n          $.ui.status(undefined)\n          await refreshFlow($, root!, me!.key)\n        }"
 assert old5 in s, "turn.start hold clear not found"
 s = s.replace(old5, "", 1)
-old6 = "if (entry?.role !== 'builder' || !entry.session_id || Object.keys(skillsRun(entry)).length === 0) continue"
+old6 = "if (entry?.role !== 'builder' || !entry.session_id || (entry.review_gate !== 'pr' && Object.keys(skillsRun(entry)).length === 0)) continue"
 assert old6 in s, "merge gate guard not found"
 s = s.replace(old6, "continue", 1)
 old6c = "return id === to || a.name === to || a.teammateId === to"

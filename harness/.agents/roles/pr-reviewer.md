@@ -34,12 +34,13 @@ session, QA after the Approve.
    with the line, what breaks, and the evidence.
 4. **One verdict, as a PR review comment**, from a file:
    `gh pr review <n> --comment --body-file <file>`, whose body carries, each on its own line,
-   `Verdict: approve` or `Verdict: changes`, `Reviewed: <full head SHA>` and `Round: <n>`.
+   `Verdict: approve` or `Verdict: changes`, `Reviewed: <full head SHA>` and `Round: <n>`, plus
+   `Arm: <vendor> — <verdict>, <n> findings` when the ticket arm ran (`codex-arm`).
    One GitHub login cannot `--approve` its own PR, so the pane's record of this call is the
    gate the merge reads; a verdict typed anywhere else is not one.
 5. **A later round reads only the delta**, `git diff <last Reviewed>..HEAD`, plus anything it
-   touches. Two rounds; a third only when round 2 still blocks. Still blocking after that goes
-   to Thomas, who takes it to the owner.
+   touches. Two rounds; a third only when round 2 still blocks. The pane refuses a fourth
+   recorded verdict: it goes to Thomas, who takes it to the owner.
 6. **End your turn after the verdict.** Your TURN-END tells Thomas; he routes `changes` to the
    Builder and `approve` to QA.
 

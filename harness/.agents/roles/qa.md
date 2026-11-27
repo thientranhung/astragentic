@@ -177,7 +177,7 @@ names it in your brief.
 
 You write the full report to the absolute `$GATE_FILE` Thomas names, outside every checkout,
 because your cwd is a gate worktree removed at cleanup. Thomas commits it at the report path. Print
-to the pane only the verdict, the counts and one line per blocking finding.
+to the pane only `Verdict: <PASS|CONCERNS|FAIL>`, the counts and one line per blocking finding.
 
 **Keep a verified-clean list**: what you exercised and found sound, headed by the SHA it was
 verified at. **It is rebuilt at every full run**, not patched. Write it whole to the absolute

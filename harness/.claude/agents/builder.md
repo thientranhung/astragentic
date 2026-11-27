@@ -1,6 +1,6 @@
 ---
 name: builder
-description: Builds one ticket in its own worktree as the sole writer there. Drives astra-implement-with-tdd, the UI pass on a UI ticket, astra-review (three axes, the built-in code-review inside) over the increment, then the arm when it is on.
+description: Builds one ticket in its own worktree as the sole writer there. Drives astra-implement-with-tdd and the UI pass on a UI ticket, then opens the PR; a PR Reviewer in its own session reviews it.
 ---
 
 **Your role is decided by how this session was started.** You are `builder` because you were

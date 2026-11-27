@@ -1,3 +1,63 @@
+# Astragentic 7.0.0
+
+One review gate. The Builder writes code and tests and opens a PR; a PR Reviewer in its own
+session decides whether it goes in; QA walks after the approve; the merge refuses without both.
+The Builder's simplify pass is gone, the slice gate is renamed the integration review, and the
+test-run hook stops counting text as test runs. Asked for by nizzy and ruled by the owner
+(2026-11-27: «tôn trọng các góp ý của Nizzy Project và nâng cấp để giải quyết», and «lên version
+lớn»). Rows 30–37 in `docs/audit/2026-11-27-6130-field-incidents.md`; design in
+`docs/audit/2026-11-27-7.0.0-pr-reviewer-design.md`; how Matt Pocock's skills (main `6f7f783`)
+handle the same problems in `docs/audit/2026-11-27-matt-pocock-latest-vs-nizzy.md`.
+
+| change | số đo | nguồn |
+|---|---|---|
+| New role `pr-reviewer` (Claude): a separate session in a `review:<ticket>` pane, detached at the PR head. It reads the PR against the CURRENT base with the ticket, spec and QA plan (`astra-review`'s three axes plus a reuse and simplification read; the ticket arm or lens runs here), posts findings as PR comments and one verdict, `gh pr review --comment` with `Verdict:`, `Reviewed: <head sha>`, `Round:`. Two rounds, a third only when round 2 still blocks. Read-only in the git guard | review ran in the author's own lane and changed code on ~37% of 649 nizzy tickets (BA); 60 of the last 60 nizzy PRs had no review and merged a median 28 s after opening | nizzy (row 35); `gh pr list` |
+| The verdict is the pane's record, not the PR's text: the mod records it only after `gh pr review` returns and `gh pr view` shows that body, bound to the pane's HEAD; it refuses a verdict naming another SHA or no PR number, and a fourth recorded round (the mod counts rounds since the Builder's brief; "a third only when round 2 still blocks" is the contract's, not enforced). The ticket arm's outcome is an `Arm:` line in the verdict | one GitHub login authors 60/60 nizzy PRs, and GitHub refuses an author's Approve ("Pull request authors cannot approve their own pull requests"); 4.0.2 measured forged `Pass:` lines | docs.github.com; row 35 |
+| Merge gate: a lane briefed under 7.0.0 merges only on the Reviewer's approve AT THE BRANCH HEAD and, when its brief declared QA, a QA verdict PASS or CONCERNS recorded after the approve (QA prints `Verdict:`; the mod reads it at QA's turn end). A commit after the approve is refused unless it only touches the protocol's evidence paths or is a clean merge of the base, so every code change (QA fixes included) goes back to the Reviewer. A PR-gate lane is judged even with an empty record; lanes briefed before keep the in-Builder rule | planted: 10 merge cases; with the gate removed the merge cases and the verdict record fail (2 named failures) | owner ruling via nizzy BA |
+| Builder: no self-review; `astra-review`, the built-in `code-review` and the ticket arm are refused in its pane under the PR gate; it opens the PR at handback with `Closes #n`, what changed, Glance, tests, browser evidence, QA plan. A quick-LABELLED ticket goes through the Reviewer too (correctness lens only): my reading of "one gate into main", not a ruling | owner: «Builder: code + tests only»; review was 25–34% of nizzy Builder active time (BA) | row 35 |
+| Builder simplify pass retired, both runtimes (Codex `astra-codex-simplify` removed). `check-simplify-markers.sh` has no default kind; `simplify(increment)` still validates old branches when named | nizzy: 1,224 simplify commits in 705 merges since 10-01, 661 empty (54%); inception 660 of 5,208 commits, 226 empty. Of 42 empty markers on 11-26..27, 25 were written when the checker already passed | row 34; replay |
+| "Slice gate" → **integration review**; marker `arm(integration)` (either name counts as the last round), arm scope `integration` (a table that still says `slice` means it), agent `astra-integration-reviewer` | owner: «slice gate nó gợi lên chỗ slice ticket sau spec trong shaper». 26 gates since 10-01: median 10.5 merges each, 15 of 26 at 10 or more | rows 36; nizzy `arm(slice)` commits |
+| `hook-test-run` blanks heredoc bodies and quoted text before matching, except a string a shell runs (`bash -c`) | 76 Builder commands since 11-26 matched only through text, 75 of them drew a masked notice (12% of all masked notices). Replay drops no real run over 39,362 nizzy and 122,281 inception Builder commands (360 and 886 dropped, all commit messages, heredocs or quoted text; a first draft dropped 33 `bash -c` runs and was fixed before commit) | row 33 |
+
+Measured, no change: tdd-order refusals cost about 1 minute (10 of 14 keys); masked-run re-runs cost 22 min over 71 Builders (nizzy's upper bound 302 min). Rows 31–32.
+
+By hand downstream:
+- **`.agents/orchestrator.md`** (owner file): add the tab row `| PR Reviewer | \`review:<id>\` | \`review:ABC-129\` |`
+  and the assignment row `| pr-reviewer | claude | <model> | <effort> | |` (the package ships
+  claude-opus-5 / medium). The arm row `slice` may be renamed `integration`; the old name still reads.
+- **Builders open PRs again.** nizzy has opened no real PR since #1436 (2026-11-10). A station
+  script that merges builder branches locally keeps working; the mod reads `git merge` and
+  `gh pr merge` alike and asks the record for the approve.
+- **Project scripts and overlays that pass `--marker 'simplify(increment)'`** now STOP a branch
+  that has no such marker: drop the flag. nizzy: `.astraler/project/overlays/thomas.md`,
+  `.astraler/project/overlays/builder.md`, `tools/check-marker-*.sh`, `tools/git-hooks/commit-msg`;
+  inception: `.astraler/project/overlays/thomas.md`.
+- **Text that names `astra-slice-reviewer`**: rename to `astra-integration-reviewer` (nizzy
+  `AGENTS.md:75`, `overlays/thomas.md:352`; inception `AGENTS.md:39`).
+- **Deleted upstream, left in place by the installer**: `.claude/skills/astragentic-dispatch/agents/astra-slice-reviewer.md`
+  (renamed), `.agents/skills/astra-codex-simplify/` (Codex installs). `SIMPLIFY: n/a` brief lines are now ignored.
+- **nizzy, measured on a clone from 6.1.28**: `install.sh --apply` exits 3 with 2 CONFLICTs, the
+  same two as 6.1.29 (`.claude/agents/dev.md`, `.agents/memory/INDEX.md`: keep yours, add
+  `dev.md` and `pr-reviewer.md` to the AST-024 line), 32 updated, 11 new, `orchestrator.md` kept with
+  an ACTION. Resolve them, stamp `7.0.0`, delete `.astraler/state/apply-incomplete`.
+- **Lanes in flight at the upgrade** finish under the old rule; their next brief puts them under
+  the PR gate.
+- A formal GitHub Approve needs a second GitHub login for the Reviewer: the owner's choice, not
+  required.
+
+Enforced by the mod: the verdict record, the round count, the merge gate, the Builder's refused
+review and arm. Prose only: "a third round only when round 2 still blocks", the Reviewer reading
+against the current base, a push to the base (no guard on push beyond the 6.x ticket-done stamp;
+the merge into the base is what the mod refuses).
+
+Not covered: the Codex lane (no pane mod; its Builder keeps the in-Builder review; 0 Codex
+sessions since 2026-11-24); a project whose code host is not GitHub (no `gh pr review`, so no
+verdict can be recorded: such a project cannot merge a 7.0.0 lane yet); the quick-builder role
+(unchanged by the owner's choice). The guard sees Bash only.
+
+Static: selftest 313/0 and tests/codex 74 OK. The gates ran under stubbed payloads; a live
+ticket through Builder → PR Reviewer → QA → merge: chưa đo.
+
 # Astragentic 6.1.29
 
 A new role, `dev`, asked for by nizzy, plus two guard gaps found while building it and one

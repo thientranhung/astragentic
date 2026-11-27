@@ -307,6 +307,36 @@ const ROLE_BY_PREFIX: Record<string, string> = { ticket: 'builder', spec: 'shape
 function laneKey(role: string, key: string): string {
   return role === 'qa' ? `qa:${key}` : role === 'pr-reviewer' ? `review:${key}` : key
 }
+// 7.0.0 — WHAT MAY SIT ON TOP OF AN APPROVE without another round: commits that touch only the
+// protocol's own evidence (the defaults check-simplify-markers.sh exempts, plus the project's
+// marker-evidence-paths.txt), and clean merges of the base. Anything else is code no review read.
+const EVIDENCE_DEFAULTS = ['.scratch/gates/*.md', '.scratch/qa/*.md', '.astraler/state/gate-history/*.md', '.astraler/state/qa-verified-clean.md']
+function globRe(glob: string): RegExp {
+  return new RegExp('^' + glob.split('**').map(p => p.split('*').map(s => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('[^/]*')).join('.*') + '$')
+}
+async function onlyEvidenceSince($: any, root: string, from: string, to: string): Promise<boolean> {
+  if (!/^[0-9a-f]{40}$/.test(from)) return false
+  if ((await run($, ['git', '-C', root, 'merge-base', '--is-ancestor', from, to])).code !== 0) return false
+  let globs = [...EVIDENCE_DEFAULTS]
+  try { globs = globs.concat((await $.fs.read(`${root}/.astraler/project/marker-evidence-paths.txt`)).split('\n').map((l: string) => l.trim()).filter((l: string) => l && !l.startsWith('#'))) } catch {}
+  const res = globs.map(globRe)
+  const base = `origin/${await baseBranch($, root)}`
+  const list = await run($, ['git', '-C', root, 'rev-list', '--parents', `${from}..${to}`])
+  if (list.code !== 0) return false
+  for (const line of list.out.split('\n').filter(Boolean)) {
+    const [c, ...parents] = line.split(' ')
+    if (parents.length === 2) {
+      const mt = await run($, ['git', '-C', root, 'merge-tree', '--write-tree', parents[0]!, parents[1]!])
+      const tree = (await run($, ['git', '-C', root, 'rev-parse', `${c}^{tree}`])).out
+      if (mt.code !== 0 || mt.out.split('\n')[0]?.trim() !== tree) return false
+      if ((await run($, ['git', '-C', root, 'merge-base', '--is-ancestor', parents[1]!, base])).code !== 0) return false
+      continue
+    }
+    const files = (await run($, ['git', '-C', root, 'diff-tree', '--no-commit-id', '--name-only', '-r', c!])).out.split('\n').filter(Boolean)
+    if (files.some(f => !res.some(r => r.test(f)))) return false
+  }
+  return true
+}
 
 const board = atom({ plugin: 'astragentic-dispatch', key: 'board' } as const, [] as BoardRow[])
 // The always-on band: branch and worktree of the dispatcher's checkout, plus one line the
@@ -1638,7 +1668,7 @@ export const register: Register = on => {
         // a new brief starts the tdd question over: the stamp of the previous brief's red run goes too (5.0.0)
         // 7.0.0: a Builder briefed from here on is judged at merge by the PR Reviewer's verdict; a new
         // brief starts the review over, so the previous verdict goes with the previous brief
-        if (me.role === 'builder') { patch.qa_required = qaRequired; patch.qa_plan = qaPlan; patch.first_content_commit_at = null; patch.red_run_at = null; patch.review_gate = 'pr'; patch.review_verdict = null; patch.review_sha = null; patch.review_at = null; patch.review_round = null }
+        if (me.role === 'builder') { patch.qa_required = qaRequired; patch.qa_plan = qaPlan; patch.first_content_commit_at = null; patch.red_run_at = null; patch.review_gate = 'pr'; patch.review_verdict = null; patch.review_sha = null; patch.review_at = null; patch.review_round = null; patch.review_round_count = 0; patch.qa_verdict = null; patch.qa_verdict_at = null }
         if (me.role === 'qa') patch.qa_mode = qaMode
       }
       await patchRecord($, root, me.key, patch)
@@ -1790,7 +1820,8 @@ export const register: Register = on => {
     // the board read it after the QA pane is gone (found by the 3.0.0 gate).
     if (root && me.role === 'qa' && me.key.startsWith('qa:')) {
       const own = ((await readRecord($, root)) ?? {})[me.key] ?? {}
-      await patchRecord($, root, me.key.slice(3), { qa_last_turn_end_at: await $.clock.now(), qa_last_mode: own.qa_mode ?? null })
+      const qaVerdict = e.answer.match(/^[ \t>*]*Verdict:[ \t*]*(PASS|CONCERNS|FAIL)\b/im)?.[1] ?? null
+      await patchRecord($, root, me.key.slice(3), { qa_last_turn_end_at: await $.clock.now(), qa_last_mode: own.qa_mode ?? null, ...(qaVerdict ? { qa_verdict: qaVerdict, qa_verdict_at: await $.clock.now() } : {}) })
     }
     const answer = e.answer.length > 1500 ? `…${e.answer.slice(-1500)}` : e.answer
     let flow = ''
@@ -2434,16 +2465,20 @@ export const register: Register = on => {
 
   on('tool.call', { tool: 'Skill' }, async ($, e: any, next) => {
     if (me?.role !== 'builder' || !root) return next(e)
-    if (!/^(codex-arm|codex-claude-arm)$/.test(String(e.skill ?? ''))) return next(e)
+    const skill = String(e.skill ?? '')
+    if (!/^(codex-arm|codex-claude-arm|astra-review|code-review)$/.test(skill)) return next(e)
     const entry = ((await readRecord($, root)) ?? {})[me.key] ?? {}
     const ran = skillsRun(entry)
-    // 7.0.0: under the PR gate the ticket arm and the lenses run in the PR Reviewer's pane
+    // 7.0.0: under the PR gate the review, the lenses and the ticket arm run in the PR Reviewer's
+    // pane; a Builder reviewing its own change spends the time the gate moved out (owner: «Builder:
+    // code + tests only»; review was 25–34% of nizzy Builder active time, BA)
     if (entry.review_gate === 'pr') {
-      await logRefusal($, root, me.key, 'arm-gate', `arm in a PR-gate Builder: ${String(e.skill ?? '')}`)
+      await logRefusal($, root, me.key, 'review-gate', `${skill} in a PR-gate Builder`)
       return { deny: `astragentic-dispatch: this lane is under the PR gate (7.0.0): the review and the ticket arm run in the PR Reviewer's pane, not the Builder's. Push, open the PR (gh pr create), hand back (builder.md § Handing back).` }
     }
+    if (!/arm$/.test(skill)) return next(e)
     if ('code-review' in ran || entry.review_na) return next(e)
-    await logRefusal($, root, me.key, 'arm-gate', `arm requested: ${String(e.skill ?? '')}`)
+    await logRefusal($, root, me.key, 'arm-gate', `arm requested: ${skill}`)
     return {
       deny: `astragentic-dispatch: no record of the built-in code-review (Skill(skill: "code-review"), bare name) in this pane, and the brief declares no "REVIEW: n/a — <why>". The arm reads a tree the bug review has not; run it first, then arm.`,
     }
@@ -2467,6 +2502,17 @@ export const register: Register = on => {
     const sha = body.match(/^[ \t]*Reviewed:[ \t]*([0-9a-f]{40})\b/im)?.[1]
     const round = Number(body.match(/^[ \t]*Round:[ \t]*(\d+)/im)?.[1] ?? 0)
     if (!verdict) return next(e)   // a plain comment on the PR, not a verdict
+    const pr = cmd.match(/\bgh\s+pr\s+review\s+(\d+)\b/)?.[1]
+    const ticket = me.key.startsWith('review:') ? me.key.slice('review:'.length) : null
+    const ticketEntry = ticket ? ((await readRecord($, root)) ?? {})[ticket] ?? {} : {}
+    // the cap the owner set: two rounds, a third when round 2 still blocks; the mod counts the
+    // verdicts it recorded since the Builder's brief, so a round is not a number the pane types
+    const rounds = Number(ticketEntry.review_round_count ?? 0)
+    if (!pr) return { deny: `astragentic-dispatch: name the PR: \`gh pr review <number> --comment --body-file <file>\`. This checkout is detached, and the verdict is checked on that PR after it posts.` }
+    if (rounds >= 3) {
+      await logRefusal($, root, me.key, 'review-rounds', `round ${rounds + 1} on PR ${pr}`)
+      return { deny: `astragentic-dispatch: ${rounds} review rounds are recorded on ${ticket} since its brief; a fourth is not yours. Post nothing; end your turn and tell Thomas, who takes it to the owner (pr-reviewer.md § How you work).` }
+    }
     const head = (await run($, ['git', 'rev-parse', 'HEAD'])).out
     if (!sha || sha !== head) {
       await logRefusal($, root, me.key, 'review-verdict', `Reviewed: ${sha ?? '(none)'} vs HEAD ${head}`)
@@ -2474,10 +2520,14 @@ export const register: Register = on => {
     }
     const ran = await next(e)
     if (ran.deny !== undefined || ran.isError) return ran
+    // Recorded only when the PR shows it: the record must not say approve for a review GitHub
+    // refused (a network error, an author's --approve, a closed PR)
+    const shown = await run($, ['gh', 'pr', 'view', pr, '--json', 'reviews', '--jq', '.reviews[].body'], 30_000)
+    if (shown.code !== 0 || !shown.out.includes(sha) || !new RegExp(`Verdict:[ \\t]*${verdict}`, 'i').test(shown.out)) return ran
     const at = await $.clock.now()
-    const patch = { review_verdict: verdict, review_sha: sha, review_at: at, review_round: round || null }
+    const patch = { review_verdict: verdict, review_sha: sha, review_at: at, review_round: round || null, review_pr: Number(pr), review_round_count: rounds + 1 }
     await patchRecord($, root, me.key, patch)
-    if (me.key.startsWith('review:')) await patchRecord($, root, me.key.slice('review:'.length), patch)
+    if (ticket) await patchRecord($, root, ticket, patch)
     return ran
   })
 
@@ -2828,9 +2878,10 @@ export const register: Register = on => {
           if (t.code === 0 && t.out) { tip = t.out; break }
         }
         if (entry.review_verdict !== 'approve') out.push(`the PR Reviewer's approve (record: ${entry.review_verdict ?? 'no verdict yet'}; dispatch or re-dispatch the Reviewer)`)
-        else if (!tip || entry.review_sha !== tip) out.push(`the PR Reviewer's approve at the branch head (approved ${String(entry.review_sha ?? '').slice(0, 9)}, head ${tip.slice(0, 9) || 'unresolved'}): a change after the approve goes back to the Reviewer, delta only`)
+        else if (!tip || (entry.review_sha !== tip && !(await onlyEvidenceSince($, root, String(entry.review_sha ?? ''), tip)))) out.push(`the PR Reviewer's approve at the branch head (approved ${String(entry.review_sha ?? '').slice(0, 9)}, head ${tip.slice(0, 9) || 'unresolved'}): a change after the approve goes back to the Reviewer, delta only`)
         const qa = typeof entry.qa_required === 'string' ? entry.qa_required : null
-        if (qa && qa !== 'none' && !(Number(entry.qa_last_turn_end_at ?? 0) > Number(entry.review_at ?? 0))) out.push(`a QA ${qa} after the approve (the brief declared it)`)
+        const qaOk = (entry.qa_verdict === 'PASS' || entry.qa_verdict === 'CONCERNS') && Number(entry.qa_verdict_at ?? 0) > Number(entry.review_at ?? 0)
+        if (qa && qa !== 'none' && !qaOk) out.push(`a QA ${qa} after the approve with a PASS or CONCERNS verdict (record: ${entry.qa_verdict ?? 'none'}${Number(entry.qa_verdict_at ?? 0) > Number(entry.review_at ?? 0) ? '' : ', or before the approve'})`)
       }
       // A QUICK TICKET (4.6.0, the tracker's label) owes the built-in code-review and nothing
       // else here.
@@ -2871,7 +2922,9 @@ export const register: Register = on => {
     }
     const refOf = (entry: Entry): string => (typeof entry?.branch === 'string' && entry.branch) ? entry.branch : (head || '')
     for (const [key, entry] of named) {
-      if (entry?.role !== 'builder' || !entry.session_id || Object.keys(skillsRun(entry)).length === 0) continue
+      // a PR-gate lane is judged even with an empty record: the stamp proves the mod briefed it, and
+      // the marker script that backed an empty record is no longer owed
+      if (entry?.role !== 'builder' || !entry.session_id || (entry.review_gate !== 'pr' && Object.keys(skillsRun(entry)).length === 0)) continue
       const gaps = await mergeGaps(entry, refOf(entry))
       if (gaps.length > 0) {
         await logRefusal($, root, key, 'merge-gate', `no record of: ${gaps.join(', ')}`)

@@ -127,7 +127,7 @@ outgrew the label is a relabel to `full` and a fresh brief, never a steer.
 **The author gets ONE written reply before you classify** — no second reply, no re-review. Only what neither of you closes reaches the owner. Record any classification
 a reply changes.
 
-**Count the merges.** The integration review fires on **you** saying a unit of work is closed, so
+**Count the merges.** The integration review fires when **you** say a unit of work closed, so
 **more than 10 merges since the last `arm(integration)` is a STOP.**
 
 **After the Reviewer's approve, before a merge or a release**, dispatch QA's product walk (`dispatch-qa-walk`) on any
@@ -161,7 +161,7 @@ scope: no marker owed, handback says `Arm: off (orchestrator)`.
 | **arm: ticket** | inside the PR Reviewer's round | that PR against the base | **the PR Reviewer** |
 | **arm: integration** | **once**, when a unit of work closes | the merged range on the base branch | you |
 
-**No ticket merges without one**, none batched. **The ticket arm is the PR Reviewer's** (AST-135). You classify what the spec arm returns before you release it.
+**No ticket merges without one**, unbatched. **The ticket arm is the PR Reviewer's**, outcome in its verdict (AST-135). You classify what the spec arm returns before you release it.
 
 **The standard, whoever fires:** it calls the author's OTHER vendor. It runs at most two passes per invocation, and the second is mandatory when the first returned a blocking finding, over the **full artifact**, because it catches the defect the fix introduced. A vendor that is unavailable is recorded as `cross-vendor arm: NOT RUN — <reason>`, and only the owner may accept proceeding without it.
 
