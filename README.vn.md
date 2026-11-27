@@ -106,7 +106,7 @@ nhất theo token.
 
 | Role | Session | Làm gì |
 |---|---|---|
-| **Thomas** | thường trực | Điều phối, giữ frontier, dispatch ticket, chạy gate slice |
+| **Thomas** | thường trực | Điều phối, giữ frontier, dispatch ticket, chạy integration review |
 | **BA** | chủ dự án tự mở, chỉ đọc (`claude --agent ba`) | Bàn vấn đề với chủ dự án, nêu trade-off và các ticket đang chạy bị quyết định đó làm đổi hướng, bàn giao bằng file markdown, chỉ cắt ticket khi chủ dự án đồng ý; không sửa code, không commit, không dispatch |
 | **Quick Builder** | chủ dự án tự mở (`claude --agent quick-builder`), hoặc Thomas mở cho thay đổi của chủ dự án không cần ticket | Làm việc nhỏ theo lời chủ dự án (dữ liệu do tool sinh ra, plug của chính project, sửa nhỏ) trên branch `ops/*` fast-forward vào main; không ticket, không loop; thay đổi thuộc harness upstream và việc cần test hay review trả về chủ dự án |
 | **Dev** | Thomas hoặc chủ dự án mở (`claude --agent dev`) | Nhận một câu hỏi từ Thomas, BA hoặc QA, đào tới nguyên nhân gốc có bằng chứng, trả lời người hỏi và luôn báo Thomas, nộp file kết luận; chỉ viết code để điều tra (bản nháp trên `dev/*` trong worktree riêng), không bao giờ push, merge hay dispatch |
@@ -178,8 +178,8 @@ flowchart LR
     end
     PT --> QA["QA theo bề mặt ticket\nwalk · probe · verify\nđối chiếu docs/qa/plan"]
     QA --> M["merge"]
-    M --> SC{"slice đã đóng?"}
-    SC -->|có| SG["gate slice\narm slice + fan-out đối kháng"]
+    M --> SC{"một đầu việc đã xong?"}
+    SC -->|có| SG["integration review\narm integration + fan-out đối kháng"]
     SC -->|không| Next["ticket kế"]
     QA -->|FAIL| Owner(("owner"))
     SG -->|chặn ở mức thiết kế| Owner
@@ -193,7 +193,7 @@ flowchart LR
 ```
 
 Mọi ticket đều đi qua các review của làn Builder — không có ngoại lệ. Trước PR, merge hay
-release, QA walk sản phẩm đang chạy. Khi một slice đóng, Thomas chạy arm slice và một fan-out
+release, QA walk sản phẩm đang chạy. Khi một đầu việc xong, Thomas chạy arm integration và một fan-out
 đối kháng chỉ-đọc, rồi gộp những gì cả hai tìm ra. Thứ chặn ở mức thiết kế đi lên owner,
 không đi vào thêm một vòng review nữa.
 
@@ -223,7 +223,7 @@ Shaper), `astra-ux` (hành trình và actor được lấy từ owner vào PRD, 
 Criteria), `astra-implement-with-tdd` (brief của Builder, red trước green), `astra-ui` (một lượt
 kiểm trên một bề mặt đã render, đối chiếu `DESIGN.md` và ticket) và `astra-review` (ba trục,
 `code-review` built-in nằm bên trong, một lượt triage). Ba persona chỉ-đọc đứng sau chúng:
-`astragentic-dispatch:astra-ui-lens`, `astra-slice-reviewer`, `astra-test-architect`.
+`astragentic-dispatch:astra-ui-lens`, `astra-integration-reviewer`, `astra-test-architect`.
 
 Chúng được viết từ hai nguồn, giữ dưới `docs/` cùng phần ghi nguồn và không bao giờ ship:
 [`docs/matt-pocock-distilled/`](docs/matt-pocock-distilled/) (skill của Matt Pocock 1.3.1, MIT:
@@ -519,5 +519,5 @@ các ngày không ai cần thì không thuộc về chỗ đó.**
 | **payload** | Thứ một release stage (được phép ghi đè thoải mái) |
 | **scaffold** | Cấu hình của owner, viết một lần, không bao giờ bị ghi đè (`orchestrator.md`) |
 | **frontier** | Tập ticket mà agent đang có thể claim |
-| **gate** | Một chốt kiểm — QA walk sản phẩm đang chạy, hoặc gate slice khi đóng slice |
+| **gate** | Một chốt kiểm — QA walk sản phẩm đang chạy, hoặc integration review khi một đầu việc xong |
 | **arm** | Lượt review chéo hãng (Codex đọc lại việc của Claude) |

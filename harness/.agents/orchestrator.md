@@ -74,11 +74,11 @@ misconfigured row, not a new option. Shipped: `grok` (Grok Build; Model e.g. `gr
 |---|---|---|
 | ticket | no | yes |
 | spec | no | yes |
-| slice | no | yes |
+| integration | no | yes |
 
 **Codex**: the Codex arm at that scope. **Claude lens**: Claude's adversarial lens
 (`astra-adversarial-lens`, Opus, about 109k tokens a run). `no` turns only that lens off:
-`astra-review`'s three lenses at ticket and the slice fan-out always run. Absent column means `yes`.
+the ticket review lenses and the integration fan-out always run. An old `slice` row means `integration`. Absent column means `yes`.
 
 Codex `no` (the default since 6.1.23, owner 2026-11-23) turns that scope's Codex arm off: no Codex
 call, no `arm(<scope>):` receipt to ask for at merge, `Arm: off (orchestrator)` in the handback.

@@ -13,7 +13,7 @@
 # data rather than a second script. `--marker` is repeatable and required.
 # A kind is a list of the body lines a well-formed marker must carry plus a policy (the KINDS
 # table below). Four ship: `arm(ticket)`, `simplify(increment)` (retired pass, kept for old branches), the advisory milestone
-# markers `arm(slice)` and `qa(walk)`.
+# markers `arm(integration)` (was `arm(slice)`) and `qa(walk)`.
 #
 # PROJECT PLUG POINTS. Everything a project would otherwise edit this file for lives in
 # `<repo-root>/.astraler/project/`, which a release never overwrites. The repo root is
@@ -169,8 +169,10 @@ def advisory_on_base(kind, base):
     # merge-base at merge time, and the line went to 114 characters on the real path while the
     # tested path passed `main`.
     base_label = base if len(base) < 12 or not re.fullmatch(r"[0-9a-f]{7,40}", base) else base[:9]
-    last = git("log", base, "-E", "--format=%H",
-               "--grep=^" + re.escape(kind) + ":", "-n", "1").strip()
+    # A renamed kind still counts its old name's rounds: `arm(integration)` was `arm(slice)` until
+    # 7.0.0, and a project's last round under the old name is still its last round.
+    greps = ["--grep=^" + re.escape(k) + ":" for k in [kind] + KIND_ALIASES.get(kind, [])]
+    last = git("log", base, "-E", "--format=%H", *greps, "-n", "1").strip()
     if not last:
         total = git("rev-list", "--count", "--merges", base).strip() or "?"
         print("[%s] no marker found — scanned over %s, which holds %s merge(s) of history. "
@@ -245,6 +247,14 @@ KINDS = {
     # COMPUTED. The counter was answering "the router did not know the number"; the measured
     # problem was "nothing was ever going to tell it". `qa(walk)` has the same shape. Both are
     # ADVISORY: milestone gates do not fire per ticket.
+    # 7.0.0: the slice gate is the INTEGRATION REVIEW. "slice" collided with the Shaper cutting a
+    # spec into vertical-slice tickets (the owner, 2026-11-27); the old kind stays for old commits.
+    "arm(integration)": {
+        "required": ["Scope:", "Vendor:", "Verdict:"],
+        "tokens": {"Verdict:": ("PASS", "BLOCKING", "NON-BLOCKING")},
+        "scope": "advisory",
+        "economy": False,
+    },
     "arm(slice)": {
         "required": ["Scope:", "Vendor:", "Verdict:"],
         "tokens": {"Verdict:": ("PASS", "BLOCKING", "NON-BLOCKING")},
@@ -260,6 +270,8 @@ KINDS = {
         "economy": False,
     },
 }
+
+KIND_ALIASES = {"arm(integration)": ["arm(slice)"], "arm(slice)": ["arm(integration)"]}
 
 # Do not parse a field's interior. `Range:` occurs as both `15 commits, 7 files (a..b)` and
 # `main..f88d2c27 (3 commits, 6 files)`; `Pass:` carries an integer and an optional parenthetical,

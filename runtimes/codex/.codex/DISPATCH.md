@@ -420,7 +420,7 @@ report, and archive only an owned idle/finished thread when cleanup is authorize
 
 ### Coordinator continuation while helpers or workers are pending
 
-Thomas starts direct native helpers only for its own phases (slice review, spec
+Thomas starts direct native helpers only for its own phases (integration review, spec
 classification), never for a Builder's ticket review. When it does, record their
 returned handles, the reviewed artifact/revision, any worker paused for their result,
 and the next action Thomas owns.

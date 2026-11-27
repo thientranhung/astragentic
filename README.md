@@ -103,7 +103,7 @@ token-unique path.
 
 | Role | Session | What it does |
 |---|---|---|
-| **Thomas** | resident | Routes work, manages the frontier, dispatches tickets, fires the slice gate |
+| **Thomas** | resident | Routes work, manages the frontier, dispatches tickets, fires the integration review |
 | **BA** | owner-opened, read-only (`claude --agent ba`) | Discusses a problem with the owner, names trade-offs and the in-flight work a decision invalidates, hands off in a markdown file or a ticket the owner approved; never edits, commits or dispatches |
 | **Quick Builder** | owner-opened (`claude --agent quick-builder`), or opened by Thomas for an owner change that is not a ticket | Does a small task on the owner's word (tool-produced data, the project's own plugs, a small fix) on an `ops/*` branch fast-forwarded to main; no ticket, no loop; upstream harness changes and work that needs tests or review go back to the owner |
 | **Dev** | opened by Thomas or the owner (`claude --agent dev`) | Takes one question from Thomas, the BA or QA to its root cause with evidence, answers the asker and copies Thomas, hands back a findings file; codes only to investigate (a draft on `dev/*` in its own worktree), never pushes, merges or dispatches |
@@ -173,8 +173,8 @@ flowchart LR
     end
     PT --> QA["QA, by the ticket's surface\nwalk · probe · verify\nagainst docs/qa/plan"]
     QA --> M["merge"]
-    M --> SC{"slice closed?"}
-    SC -->|yes| SG["slice gate\nslice arm + adversarial fan-out"]
+    M --> SC{"unit of work closed?"}
+    SC -->|yes| SG["integration review\nintegration arm + adversarial fan-out"]
     SC -->|no| Next["next ticket"]
     QA -->|FAIL| Owner(("owner"))
     SG -->|design blocker| Owner
@@ -188,7 +188,7 @@ flowchart LR
 ```
 
 Every ticket passes the Builder lane reviews — no exceptions. Before a PR, a merge or a
-release, QA walks the running product. When a slice closes, Thomas fires the slice arm and one
+release, QA walks the running product. When a unit of work closes, Thomas fires the integration arm and one
 read-only adversarial fan-out, then folds what both find. Design-level blockers go to the
 owner, not to another review round.
 
@@ -218,7 +218,7 @@ a spec), `astra-to-spec`, `astra-to-tickets` (tracer-bullet tickets; a UI ticket
 Glance, States and Criteria), `astra-implement-with-tdd` (the Builder's brief, red before
 green), `astra-ui` (a pass on one rendered surface against `DESIGN.md` and the ticket) and
 `astra-review` (three axes, the built-in `code-review` inside, one triage). Three read-only
-personas back them: `astragentic-dispatch:astra-ui-lens`, `astra-slice-reviewer`,
+personas back them: `astragentic-dispatch:astra-ui-lens`, `astra-integration-reviewer`,
 `astra-test-architect`.
 
 They were written from two sources, kept under `docs/` with their attributions and never
@@ -519,5 +519,5 @@ there.**
 | **payload** | What a release stages (may overwrite freely) |
 | **scaffold** | Owner's config, written once, never overwritten (`orchestrator.md`) |
 | **frontier** | The set of tickets currently claimable by agents |
-| **gate** | A verification checkpoint — QA's walk of the running product, or the slice gate at slice close |
+| **gate** | A verification checkpoint — QA's walk of the running product, or the integration review when a unit of work closes |
 | **arm** | Cross-vendor review pass (Codex reviews Claude's work) |

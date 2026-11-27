@@ -230,12 +230,12 @@ async function uiStandard($: any, root: string): Promise<UiStandard> {
 }
 
 // THE ARM IS A ROW THE OWNER CAN TURN OFF (4.0.2). `orchestrator.md` § Cross-vendor arm carries
-// one row per scope (ticket, spec, slice); `no` turns that scope's arm off for the project — a
+// one row per scope (ticket, spec, integration; `slice` before 7.0.0); `no` turns that scope's arm off for the project — a
 // machine with no Codex, or a Builder the owner wants faster. The role that owns the scope reads
 // it here, as a system-prompt section (measured 2026-10-09: a prompt.compose section is read on
 // the first turn), its band drops the chip, and the handback says `Arm: off (orchestrator)`.
 // Absent table, absent row, anything but `no`: the arm is on, as it always was.
-const ARM_SCOPE_BY_ROLE: Record<string, string> = { builder: 'ticket', shaper: 'spec', thomas: 'slice' }
+const ARM_SCOPE_BY_ROLE: Record<string, string> = { builder: 'ticket', shaper: 'spec', thomas: 'integration' }
 // Read at most once every few seconds: ui.render asks on every render, the file changes when the
 // owner edits it, and a dispatch picks the change up at the next brief either way.
 const armCache = new Map<string, { at: number; off: Set<string> }>()
@@ -254,9 +254,11 @@ async function armOffRead($: any, root: string): Promise<Set<string>> {
   if (!sect) return off
   // 6.1.23: an optional third column turns the Claude adversarial lens off at that scope
   // (`lens:<scope>`); absent, the lens runs. astra-review's three lenses never read it.
-  for (const m of sect[1].matchAll(/^\|\s*(ticket|spec|slice)\s*\|\s*(\w+)\s*\|(?:\s*(\w+)\s*\|)?/gm)) {
-    if (m[2].toLowerCase() === 'no') off.add(m[1])
-    if ((m[3] ?? '').toLowerCase() === 'no') off.add(`lens:${m[1]}`)
+  // 7.0.0: the slice gate is the integration review; a table that still says `slice` means it.
+  for (const m of sect[1].matchAll(/^\|\s*(ticket|spec|integration|slice)\s*\|\s*(\w+)\s*\|(?:\s*(\w+)\s*\|)?/gm)) {
+    const scope = m[1] === 'slice' ? 'integration' : m[1]
+    if (m[2].toLowerCase() === 'no') off.add(scope)
+    if ((m[3] ?? '').toLowerCase() === 'no') off.add(`lens:${scope}`)
   }
   return off
 }
@@ -1522,12 +1524,12 @@ export const register: Register = on => {
       text = `${text ? text + '\n\n' : ''}CLAUDE LENS: off at ${scope} — .agents/orchestrator.md § Cross-vendor arm, column Claude lens \`no\`. Do not run astra-adversarial-lens at ${scope} scope${scope === 'ticket' ? "; astra-review runs its three lenses only" : ''}, and write \`Claude lens: off (orchestrator)\` in the handback.`
     }
     if (!me && off.size > 0) {
-      // The dispatcher runs the marker check at merge and fires the slice arm: it has to know
+      // The dispatcher runs the marker check at merge and fires the integration arm: it has to know
       // every scope that is off, not only its own, or it STOPs a merge for a receipt never owed.
-      const scopes = ['ticket', 'spec', 'slice'].filter(s => off.has(s))
+      const scopes = ['ticket', 'spec', 'integration'].filter(s => off.has(s))
       if (scopes.length === 0) {
-        if (off.has('lens:slice')) text = `${text ? text + '\n\n' : ''}CLAUDE LENS: off at slice — .agents/orchestrator.md § Cross-vendor arm. At slice close run no astra-adversarial-lens beside the fan-out.`
-      } else text = `${text ? text + '\n\n' : ''}ARM: off at ${scopes.join(', ')} — .agents/orchestrator.md § Cross-vendor arm. ${scopes.map(s => `Do not pass --marker 'arm(${s})' at merge and expect no arm(${s}): receipt; the handback says Arm: off (orchestrator)`).join('. ')}${off.has('slice') ? '. Fire no slice arm; the ten-merge count does not apply' : ''}${off.has('slice') && !off.has('lens:slice') ? '. At slice close still run the fan-out and, beside it, `Agent(subagent_type: "astragentic-dispatch:astra-adversarial-lens", model: "opus")` over the slice; record both on the arm(slice): marker as same-vendor (claude opus), advisory, not an arm' : ''}${off.has('lens:slice') ? '. Claude lens off at slice: the fan-out alone' : ''}${off.has('spec') && !off.has('lens:spec') ? '. A Shaper with the spec arm off still runs the adversarial lens over its spec and reports n returned, m confirmed, k changed' : ''}.`
+        if (off.has('lens:integration')) text = `${text ? text + '\n\n' : ''}CLAUDE LENS: off at integration — .agents/orchestrator.md § Cross-vendor arm. At the integration review run no astra-adversarial-lens beside the fan-out.`
+      } else text = `${text ? text + '\n\n' : ''}ARM: off at ${scopes.join(', ')} — .agents/orchestrator.md § Cross-vendor arm. ${scopes.map(s => `Do not pass --marker 'arm(${s})' at merge and expect no arm(${s}): receipt; the handback says Arm: off (orchestrator)`).join('. ')}${off.has('integration') ? '. Fire no integration arm; the ten-merge count does not apply' : ''}${off.has('integration') && !off.has('lens:integration') ? '. At the integration review still run the fan-out and, beside it, `Agent(subagent_type: "astragentic-dispatch:astra-adversarial-lens", model: "opus")` over the merged range; record both on the arm(integration): marker as same-vendor (claude opus), advisory, not an arm' : ''}${off.has('lens:integration') ? '. Claude lens off at integration: the fan-out alone' : ''}${off.has('spec') && !off.has('lens:spec') ? '. A Shaper with the spec arm off still runs the adversarial lens over its spec and reports n returned, m confirmed, k changed' : ''}.`
     }
     // A QUICK TICKET'S SHAPE REACHES THE PANE AS A SECTION (4.6.0), from the record the gates
     // read, so the Builder and its band agree on what is owed; the dispatcher's copy lists the

@@ -14,8 +14,8 @@ with pending policy/availability and NOT RUN recorded; stricter project policy w
 Never use Codex review or another OpenAI model as evidence that cross-vendor ran.
 
 Who fires it owns the artifact at that scope: the Builder at `ticket` from its own worktree,
-the Shaper at `spec` from a detached checkout at the spec revision, Thomas at `slice` from a
-detached checkout at the slice head. At most two passes per gate; the second is mandatory
+the Shaper at `spec` from a detached checkout at the spec revision, Thomas at `integration` (called `slice` before 7.0.0) from a
+detached checkout at the base head of the merged range. At most two passes per gate; the second is mandatory
 after a blocking finding, over the whole revised artifact. Remaining blockers go to the
 owner; never waive them because two passes were consumed.
 
@@ -24,7 +24,7 @@ owner; never waive them because two passes were consumed.
 Define the log first, in the worktree that carries the artifact, never a disposable one:
 
 ```bash
-SCOPE=ticket          # spec | ticket | slice
+SCOPE=ticket          # spec | ticket | integration
 KEY=<ticket-or-spec-id>
 N=1                   # pass number
 BASE=<base sha or branch>

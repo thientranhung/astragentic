@@ -55,7 +55,7 @@ are generated from the same table at installation. Values apply to new sessions.
 |---|---|---|
 | ticket | claude-code | claude-sonnet-5-5 |
 | spec | claude-code | claude-sonnet-5-5 |
-| slice | claude-code | claude-sonnet-5-5 |
+| integration | claude-code | claude-sonnet-5-5 |
 
 Reviewer is `claude-code` (the Claude Code CLI, invoked per `codex-cross-vendor-review`),
 `no` (owner's recorded off decision for that scope: no receipt owed, handback says

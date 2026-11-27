@@ -29,7 +29,7 @@ frontier, and the in-flight work it says a decision invalidates is your hold-bac
 | Phase | Skill | Produces |
 |---|---|---|
 | UX capture | `astra-ux`, where the owner speaks, before a Shaper on a surface | journeys UJ-n and actors in the PRD |
-| Slice gate | `codex-arm` + `Agent(astragentic-dispatch:astra-slice-reviewer)` | slice-close findings, folded, on an `arm(slice):` marker |
+| Integration review | `codex-arm` + `Agent(astragentic-dispatch:astra-integration-reviewer)` | findings over the merged range, folded, on an `arm(integration):` marker |
 
 Plus three that are not skills: **the frontier query**, **the claim** and **merge**.
 
@@ -122,26 +122,25 @@ outgrew the label is a relabel to `full` and a fresh brief, never a steer.
 
 ## Review
 
-**Per ticket** the Builder lane reviews and you verify by artifact at merge, browser evidence for a UI ticket included; **at slice close** you run the slice gate below. A design-level blocker goes to the owner, in your pane, as a dated decision. Everything else is a work order to the artifact's owner: the paused Shaper for a spec, the Builder for a ticket, a follow-up ticket for a closed slice. Record each classification on the ticket; a wontfix is legitimate.
+**Per ticket** the Builder lane reviews and you verify by artifact at merge, browser evidence for a UI ticket included; **when a unit of work closes** you run the integration review below. A design-level blocker goes to the owner, in your pane, as a dated decision. Everything else is a work order to the artifact's owner: the paused Shaper for a spec, the Builder for a ticket, a follow-up ticket for a closed unit of work. Record each classification on the ticket; a wontfix is legitimate.
 
-**The author gets ONE written reply before you classify** — no second reply, no re-review, no
-re-firing the gate. Only what neither of you closes reaches the owner. Record any classification
+**The author gets ONE written reply before you classify** — no second reply, no re-review. Only what neither of you closes reaches the owner. Record any classification
 a reply changes.
 
-**A gate that fires on a sentence starves in silence — count the merges.** `arm(ticket)` has a script that refuses the merge without it; the slice gate fires on
-**you** saying a slice is closed. **More than 10 merges since the last `arm(slice)` is a STOP.**
+**A gate that fires on a sentence starves in silence — count the merges.** `arm(ticket)` has a script that refuses the merge without it; the integration review fires on
+**you** saying a unit of work is closed. **More than 10 merges since the last `arm(integration)` is a STOP.**
 
 **Before a PR, a merge or a release**, dispatch QA's product walk (`dispatch-qa-walk`) on any
-user-visible surface or public endpoint, and **read the walk report's COVERAGE GAPS**: a declined walk and a clean one look identical without them. State browser
+user-visible surface or public endpoint, and **read the walk report's COVERAGE GAPS** (a declined walk reads clean without them). State browser
 consent and authorized mutations, or QA declines.
 
-## Slice gate
+## Integration review
 
-**At slice close, two reads over the slice on the base branch**: the slice arm, and one read-only adversarial fan-out:
+**When a unit of work closes, two reads over the merged range on the base branch**: the integration arm, and one read-only adversarial fan-out:
 
-`Agent(subagent_type: "astragentic-dispatch:astra-slice-reviewer", isolation: "worktree", prompt: "… read and report only …")`
+`Agent(subagent_type: "astragentic-dispatch:astra-integration-reviewer", isolation: "worktree", prompt: "… read and report only …")`
 
-The fan-out attacks cross-ticket contradictions no per-ticket review saw. Fold both, then record the result and the vendor on the slice's `arm(slice):` marker.
+The fan-out attacks cross-ticket contradictions no per-ticket review saw. Fold both; record result, vendor on an `arm(integration):` marker.
 
 ## The cross-vendor arm
 
@@ -152,7 +151,7 @@ scope: no marker owed, handback says `Arm: off (orchestrator)`.
 |---|---|---|---|
 | **arm: spec** | the Shaper hands back a spec and **stops**, before cutting tickets | the spec | **the Shaper** |
 | **arm: ticket** | inside the Builder's loop, before it hands back | that ticket's diff | **the Builder** |
-| **arm: slice** | **once**, when the slice closes | the whole slice on the base branch | you |
+| **arm: integration** | **once**, when a unit of work closes | the merged range on the base branch | you |
 
 **No ticket merges without one**, and none batch to phase end — a payload that outgrows a
 reviewer is where a hollow test survives. **The ticket arm is the Builder's**, which keeps the
@@ -176,7 +175,7 @@ Yours alone, on a clean final SHA, verified **by artifact rather than handback**
 it** — it matches bodies, and 23 real markers once read as 193 (AST-133). The pre-merge tip is
 `<merge>^1`, never the fork point (`MARKERS.md` § The head check).
 
-**Pass `--marker 'arm(slice)'` and `--marker 'qa(walk)'` too.** Advisory: they print **merges on
+**Pass `--marker 'arm(integration)'` and `--marker 'qa(walk)'` too.** Advisory: they print **merges on
 the base since the last round of that kind** and never block; that figure is the `>10 merges`
 STOP's count (`MARKERS.md`).
 

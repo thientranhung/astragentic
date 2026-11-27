@@ -528,6 +528,26 @@ if [ "$rc" -ne 0 ] && says "$out" "--marker 'arm(ticket)'" && ! says "$out" "STO
 else
   bad "bare checker call" "exit $rc: $out"
 fi
+# 7.0.0 — the slice gate is the integration review: a round under either name is the last round
+# for both, so a project mid-rename never sees its ten-merge count start over.
+RI="$TMP/alias-kind"; mkdir -p "$RI"; ( cd "$RI" && git init -q . && git commit -q --allow-empty -m base \
+  && git commit -q --allow-empty -m 'arm(slice): s1 — PASS
+
+Scope: slice s1
+Vendor: claude
+Verdict: PASS' && git checkout -q -b f && git commit -q --allow-empty -m f && git checkout -q - && git merge -q --no-ff f -m m1 ) >/dev/null 2>&1
+newSeesOld="$( cd "$RI" && bash "$S/check-simplify-markers.sh" HEAD HEAD --marker 'arm(integration)' 2>&1 | head -1 )"
+( cd "$RI" && git commit -q --allow-empty -m 'arm(integration): i1 — PASS
+
+Scope: integration i1
+Vendor: claude
+Verdict: PASS' ) >/dev/null 2>&1
+oldSeesNew="$( cd "$RI" && bash "$S/check-simplify-markers.sh" HEAD HEAD --marker 'arm(slice)' 2>&1 | head -1 )"
+if says "$newSeesOld" '1 merge(s) since it' && says "$oldSeesNew" '0 merge(s) since it'; then
+  ok "arm(integration) counts an old arm(slice) round as its last, and arm(slice) counts a new arm(integration) round (7.0.0 rename)"
+else
+  bad "integration alias" "new→old: $newSeesOld | old→new: $oldSeesNew"
+fi
 # check-simplify-markers — rule 5's fold allowance (4.5.0). A fold of up to 100 non-test lines
 # on top of a simplify marker is GREEN with a NOTE; over it, STOP. Test files are outside the
 # count. Planted 2026-10-26 against 4.4.0: the small fold exited 1 (57/244 downstream sessions
@@ -2867,6 +2887,8 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   // the dispatcher learns every off scope: it runs the marker check at merge
   const composed = await fire('prompt.compose', {}, async () => ({ sections: [] }))
   const armOffDispatcher = (composed?.sections ?? []).some(s => /ARM: off at ticket[\s\S]*arm\(ticket\)/.test(String(s.text)))
+  // 7.0.0 — a table from before the rename (`| slice | no |`) turns the INTEGRATION arm off
+  const armOffIntegration = (composed?.sections ?? []).some(s => /ARM: off at ticket, integration[\s\S]*arm\(integration\)/.test(String(s.text)) && !/arm\(slice\)/.test(String(s.text)))
   // 6.1.13 — the write-back is owed once the work is on origin's base, not at the local merge
   // (nizzy 2026-11-13: 65 notes and 2 briefs refused while merges waited on their gate, the merge
   // undone twice to get a brief out). A merged, unstamped ticket: local only, the prompt carries
@@ -3018,7 +3040,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   const agentPlugin = await agentOf({ subagent_type: 'astragentic:shaper', prompt: 'x', description: 'b' })
   const agentExplore = await agentOf({ subagent_type: 'Explore', prompt: 'x', description: 'b' })
   const agentDev = await agentOf({ subagent_type: 'dev', prompt: 'why does X fail', description: 'b' })
-  console.log(JSON.stringify({ owedWhen, agentBuilder, agentPlugin, agentExplore, agentDev, orcaInHerdr, orcaDocInHerdr, deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, deadTurnBellHeld, deadTurnBellRerung, deadTurnNoDouble, staleBells, staleRow, ownerBells, herdrClaim, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeUi, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiStd, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
+  console.log(JSON.stringify({ owedWhen, agentBuilder, agentPlugin, agentExplore, agentDev, orcaInHerdr, orcaDocInHerdr, deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, deadTurnBellHeld, deadTurnBellRerung, deadTurnNoDouble, staleBells, staleRow, ownerBells, herdrClaim, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeUi, mergeEmpty, mergeTddByBranch, mergeTddNoTest, armOffDispatcher, armOffIntegration, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiStd, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
@@ -3026,7 +3048,7 @@ DRVEOS
     ( cd "$TMP/mod-drive-repo" && git init -q && git -c user.name=t -c user.email=t@t commit -q --allow-empty -m init && git tag v0.0.2 )
     echo 0.0.1 > "$TMP/mod-drive-repo/.astraler/state/applied-version"
     mkdir -p "$TMP/mod-drive-repo/.agents"
-    printf '| workspace-label | `x` |\n| builder-target | `4` |\n\n## Active assignments\n\n| Role | Runtime | Model | Effort | Advisor |\n|---|---|---|---|---|\n| builder | claude | m | medium | opus |\n\n## Cross-vendor arm\n\n| Scope | Enabled |\n|---|---|\n| ticket | no |\n| spec | yes |\n| slice | yes |\n' > "$TMP/mod-drive-repo/.agents/orchestrator.md"
+    printf '| workspace-label | `x` |\n| builder-target | `4` |\n\n## Active assignments\n\n| Role | Runtime | Model | Effort | Advisor |\n|---|---|---|---|---|\n| builder | claude | m | medium | opus |\n\n## Cross-vendor arm\n\n| Scope | Enabled |\n|---|---|\n| ticket | no |\n| spec | yes |\n| slice | no |\n' > "$TMP/mod-drive-repo/.agents/orchestrator.md"
     echo '{"AB-1":{"role":"builder","pane_id":"p1","tab_id":"t1","session_name":"builder-ab-1-32","registered_at":1,"branch":"feat/ab-1","start_sha":"abc"}}' > "$TMP/mod-drive-repo/.astraler/state/dispatch-record.json"
     SELFTEST_SCRIPTS="$S" node "$TMP/mod-drive.cjs" "$1" "$TMP/mod-drive-repo" "$TSC_PKG" "${2:-}" 2>&1
   }
@@ -3054,7 +3076,7 @@ DRVEOS
     bad "mod send/ack keys" "$out"
   fi
   # 4.0.2 — the record refuses the merge. one downstream ticket (2026-10-16) shipped forged Pass: lines past the marker gate.
-  if says "$out" '"mergeGap":"deny:held","mergeFull":"pass:ran","mergeUi":{"mergeUiNeither":"deny:held:ui:slop","mergeUiNoSlop":"deny:held:slop","mergeUiFull":"pass:ran","mergeUiNotOwed":"pass:ran","mergeUiPreStamp":"pass:ran","mergeUiQuick":"pass:ran"},"mergeEmpty":"pass:ran","mergeTddByBranch":"pass:ran","mergeTddNoTest":"deny:held:tdd","armOffDispatcher":true'; then
+  if says "$out" '"mergeGap":"deny:held","mergeFull":"pass:ran","mergeUi":{"mergeUiNeither":"deny:held:ui:slop","mergeUiNoSlop":"deny:held:slop","mergeUiFull":"pass:ran","mergeUiNotOwed":"pass:ran","mergeUiPreStamp":"pass:ran","mergeUiQuick":"pass:ran"},"mergeEmpty":"pass:ran","mergeTddByBranch":"pass:ran","mergeTddNoTest":"deny:held:tdd","armOffDispatcher":true,"armOffIntegration":true'; then
     ok "merge gate: a recorded pane missing astra-review is refused before the merge runs; a full record passes; an empty record is not judged; tdd is judged by a test file on the branch since dispatch, not by the skill call (one downstream ticket, 2026-10-22); the dispatcher's prompt names the off arm scope and its marker"
   else
     bad "mod merge gate" "$out"
@@ -3262,7 +3284,7 @@ s = s.replace(old8, "const isQa = false", 1)
 old6e = "if (name === running) return <Chip"
 assert old6e in s, "running chip not found"
 s = s.replace(old6e, "if (false) return <Chip", 1)
-old7 = "if (m[2].toLowerCase() === 'no') off.add(m[1])"
+old7 = "if (m[2].toLowerCase() === 'no') off.add(scope)"
 assert old7 in s, "arm row parser not found"
 s = s.replace(old7, "", 1)
 old8 = "      if (re.test(e.command)) {"
@@ -3358,11 +3380,11 @@ fi
 # ---------------------------------------------------------------------------------------------
 echo "orchestrator template — Codex arm off by default, Claude reads every scope (6.1.23)"
 if pkg_only "orchestrator template default"; then
-  armRows="$(awk -F'|' '/^## Cross-vendor arm/{t=1;next} t&&/^## /{t=0} t&&$2~/^ *(ticket|spec|slice) *$/{gsub(/ /,"",$2);gsub(/ /,"",$3);printf "%s=%s,",$2,$3}' "$ROOT/harness/.agents/orchestrator.md")"
-  if [ "$armRows" = "ticket=no,spec=no,slice=no," ]; then
-    ok "a new project's orchestrator.md ships with the Codex arm off at ticket, spec and slice; the Claude lenses read each scope"
+  armRows="$(awk -F'|' '/^## Cross-vendor arm/{t=1;next} t&&/^## /{t=0} t&&$2~/^ *(ticket|spec|integration) *$/{gsub(/ /,"",$2);gsub(/ /,"",$3);printf "%s=%s,",$2,$3}' "$ROOT/harness/.agents/orchestrator.md")"
+  if [ "$armRows" = "ticket=no,spec=no,integration=no," ]; then
+    ok "a new project's orchestrator.md ships with the Codex arm off at ticket, spec and integration; the Claude lenses read each scope"
   else
-    bad "orchestrator arm default" "template rows: $armRows (want ticket=no,spec=no,slice=no,)"
+    bad "orchestrator arm default" "template rows: $armRows (want ticket=no,spec=no,integration=no,)"
   fi
 fi
 

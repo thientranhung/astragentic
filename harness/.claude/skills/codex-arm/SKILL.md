@@ -14,13 +14,13 @@ passes **per gate invocation**. Do not restate the cadence in this file; this sk
 |---|---|---|---|
 | `arm: ticket` | **the Builder**, inside its own closed loop | its own worktree, which holds the reviewed commits | `edge-lens.md` |
 | `arm: spec` | **the Shaper**, before it cuts tickets | a detached checkout at the spec commit | `astra-adversarial-lens.md` |
-| `arm: slice` | Thomas | a detached checkout at the slice head | `edge-lens.md` |
+| `arm: integration` | Thomas | a detached checkout at the base head of the merged range | `edge-lens.md` |
 
 Whoever fires it records which vendor actually ran.
 
 **What the arm wins at: internal inconsistency against the project's own standard**, because
 the author reads the ticket and the arm reads the repository. Measured, for why the cadence in
-`thomas.md` is per ticket rather than per phase: a slice-scope payload reached 6,904 added
+`thomas.md` is per ticket rather than per phase: an integration-scope payload reached 6,904 added
 lines across 31 files against 1,238 for one ticket, and three hollow tests survived that skim
 in a single day. Pass 2 earns its cost the same way — on one ticket it found a real 40P01
 deadlock inside the code pass 1's fix had just added.
@@ -28,7 +28,7 @@ deadlock inside the code pass 1's fix had just added.
 **Why a direct call with our own lens (6.1.18, 6.1.19).** Seven merged tickets were replayed at their
 merge trees and 336 findings verified blind (upstream, 2026-11-21). Codex reading with the edge
 lens found 21 of the 34 real high/medium defects, the most of any single cell, at 0.77 precision and
-about 79k tokens, and 32 of 32 direct runs exited 0 with schema-valid JSON. The spec and slice lenses
+about 79k tokens, and 32 of 32 direct runs exited 0 with schema-valid JSON. The spec and integration lenses
 were not measured at those scopes (chưa đo): the Codex quota ran out before they could be. The
 Codex plugin is not used: it allowed no effort setting, no lens of ours, leaked a broker per pass
 (AST-100) and exited 0 on a configuration failure (AST-095). `codex exec review --base` still refuses
@@ -44,7 +44,7 @@ decision.
 ## Stand on the reviewed head
 
 **Ticket**: the Builder's cwd is the worktree holding the reviewed commits, so `HEAD` is the head
-under review. **Spec and slice**: resolve the head yourself and stand in a detached checkout at it.
+under review. **Spec and integration**: resolve the head yourself and stand in a detached checkout at it.
 A run that reads the wrong head reads nothing and comes back clean, a gate that cannot fail
 (measured twice in two days, AST-103):
 
@@ -62,7 +62,7 @@ unstamped one. It never removes the Builder's worktree.
 ## The call
 
 `$OUT` is the arm's log, on the worktree whose branch carries the artifact (the ticket worktree, the
-base checkout at slice, the Shaper's worktree at spec), **never the gate checkout**, which is removed
+base checkout at integration, the Shaper's worktree at spec), **never the gate checkout**, which is removed
 with the log in it. Use `.md` and check `git check-ignore -v "$OUT"`. Header and run go in ONE brace
 group piped to `tee`: four logs were lost to a separate "copy it out first" step. Commit the log
 before the receipt that names it on `Output:`. Run it with the Bash tool's `timeout: 600000`: runs
@@ -73,7 +73,7 @@ OUT="<artifact-worktree>/.scratch/gates/arm-<key>-<scope>-pass<N>.md"; mkdir -p 
 SK="$(git rev-parse --show-toplevel)/.claude/skills"
 LENS="$SK/codex-arm/edge-lens.md"        # spec: $SK/astragentic-dispatch/agents/astra-adversarial-lens.md
 NOTE=""   # spec: "This change is a specification: check each requirement and each claim about existing behaviour against the code it names."
-          # slice: "This change is a whole slice of several tickets: also look for contradictions between them."
+          # integration: "This change is several merged tickets: also look for contradictions between them."
 INTENT="<the owner's goals and must-not-break lines, plain words, no quotes, no dollar signs, no backticks>"
 D="$(mktemp -d)"; git diff "$BASE"...HEAD > "$D/diff.patch"; git log --format=%B "$BASE"..HEAD > "$D/claims.txt"
 [ -s "$D/diff.patch" ] || { echo "STOP: $BASE...HEAD is empty"; exit 1; }
@@ -114,13 +114,13 @@ still says logged in, measured 2026-11-23: the owner runs `codex logout && codex
 `cross-vendor arm: NOT RUN — <reason>`; only the OWNER may accept proceeding without it, on the terms
 `thomas.md` sets. Still read adversarially, as when the arm row is `no`, and record it as same-vendor
 and advisory: at ticket scope `astra-review`'s adversarial lens on Opus; at spec scope the Shaper, and
-at slice scope Thomas beside the fan-out, run `astra-adversarial-lens` on Opus (6.1.22), unless
+at integration scope Thomas beside the fan-out, run `astra-adversarial-lens` on Opus (6.1.22), unless
 that scope's Claude lens column in `orchestrator.md` is `no`. A same-vendor lens never
 completes the arm, so the recorded vendor is always the one that actually ran.
 
 Record the outcome once. **At ticket scope the `arm(ticket):` record IS the receipt**, with
 `Vendor: codex gpt-6.2-astra (direct, <lens>)`; its shape and its `Tests:` field are in
-`dispatch-ticket/MARKERS.md`. At spec and slice scope the merge decision trail carries the date, the
+`dispatch-ticket/MARKERS.md`. At spec and integration scope the merge decision trail carries the date, the
 findings and their dispositions, the vendor that ran, and a `Tests:` line read the same way. **You
 classify which findings are real** — the arm advises. Escalate to the owner on a genuine fork.
 

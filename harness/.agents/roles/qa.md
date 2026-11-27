@@ -51,7 +51,7 @@ The dispatch names the depth.
 place showing the same concept, and the journeys through them. Untouched items on the previous
 verified-clean list are skipped, and **the skips are listed**.
 
-**Full, at a release or a slice close.** Everything a user, client or operator meets. Product-wide
+**Full, at a release or an integration review.** Everything a user, client or operator meets. Product-wide
 coherence is judged here.
 
 **Text first, pixels second.** Answer structural questions from the DOM or accessibility tree and

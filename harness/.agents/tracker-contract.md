@@ -199,8 +199,8 @@ than left to be discovered, because the failure it produces is the confident kin
 reading READY to every query while the thing it waits on is not an issue at all, and nothing on
 the board contradicting it.
 
-**The cheapest partial oracle is the owner's eye, once per slice.** Print the frontier and the
-blocking graph side by side at a slice close and read them together — an edge that surprises you
+**The cheapest partial oracle is the owner's eye, once per integration review.** Print the frontier and the
+blocking graph side by side at each round and read them together — an edge that surprises you
 is the finding. It is not a check and this file does not pretend it is; it is the one review
 that has ever caught this class.
 

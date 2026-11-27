@@ -60,8 +60,8 @@ batch head SHA rather than one per merge, and scope the brief to the union of th
   `Exit:` is which verdict lets the next step go (e.g. `PASS, or CONCERNS with no blocking finding
   → merge`). A run with no goal judges "clean", never "right" (owner 2026-11-22: "mỗi lần walk vậy
   phải có goal chứ").
-- **The depth**: incremental by default before a PR or a merge, full at a release or a slice
-  close. `qa.md` owns what each covers.
+- **The depth**: incremental by default before a PR or a merge, full at a release or an integration
+  review. `qa.md` owns what each covers.
 - **Persona and data state.** Who QA acts as, and what the data looks like. A run on empty data
   and a run on realistic volume find different defects, so a verdict only reads against the state
   that produced it. Name the seed command. A stale seed once produced a 500 that read as a code

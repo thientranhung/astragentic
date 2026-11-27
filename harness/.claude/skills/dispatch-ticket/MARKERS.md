@@ -32,7 +32,7 @@ paths the protocol itself commits above a marker are exempt by default (5.0.9): 
 under `.scratch/gates/`, the QA report under `.scratch/qa/`, the gate-history copy and
 `qa-verified-clean.md` under `.astraler/state/`. A project adds its own globs in
 `.astraler/project/marker-evidence-paths.txt` (a redirected QA report path, a regenerated
-file). `arm(slice)` and `qa(walk)` stack on top of anything and are exempt.
+file). `arm(integration)` and `qa(walk)` stack on top of anything and are exempt.
 
 **At merge, `<base>` is the pre-merge tip and `<head>` is the merge commit** (5.0.9). A merge's
 tree is base plus branch, so with any other base the check counted what landed on the base
@@ -77,15 +77,16 @@ owner's call. Never write `NOT RUN` for "nothing applicable".
 `Reviewed:` is this commit's parent, OR `Unreviewed-delta:` declares the gap. Never neither: a
 fold moves the tree past what any pass read.
 
-## `arm(slice)` and `qa(walk)` — the milestone receipts
+## `arm(integration)` and `qa(walk)` — the milestone receipts
 
-`arm(slice)` is the receipt of the slice gate (the slice arm plus the adversarial fan-out).
+`arm(integration)` is the receipt of the integration review (the integration arm plus the
+adversarial fan-out); before 7.0.0 it was `arm(slice)`, and either name counts as the last round.
 `qa(walk)` is the receipt of QA's run. Each is an empty commit at the reviewed or walked head:
 
 ```
-arm(slice): <slice-key> — <verdict>
+arm(integration): <round-key> — <verdict>
 
-Scope: slice <what>
+Scope: integration <what>
 Vendor: <vendor that ran the arm>
 Verdict: PASS | BLOCKING | NON-BLOCKING (<n> blocking, <m> non-blocking)
 Report: <absolute $GATE_FILE path, or where the arm and fan-out findings were folded>
@@ -99,8 +100,8 @@ construction at every merge. Both are therefore advisory and measured ON THE BAS
 reported is merges on the base since the last marker of that kind.
 
 ```
-[arm(slice)] last 3f9a1c2b0 (2026-08-27) — 5 merge(s) since it; scanned over main (advisory)
-[arm(slice)] no marker found — scanned over main, which holds 42 merge(s) of history.
+[arm(integration)] last 3f9a1c2b0 (2026-08-27) — 5 merge(s) since it; scanned over main (advisory)
+[arm(integration)] no marker found — scanned over main, which holds 42 merge(s) of history.
 ```
 
 That figure rises with every merge and returns to zero when a round runs, so it can cross the

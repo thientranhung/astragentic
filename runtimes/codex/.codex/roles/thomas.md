@@ -118,8 +118,8 @@ validate the actual subject/body and project-required trailers before publicatio
 Never infer merge metadata from the PR title or repair published history implicitly.
 Collect reports before cleanup; inspect dirty worktrees instead of force-removing.
 Reconcile the tracker after integration with `codex-reconcile-tracker`. When you declare a
-slice closed, fire the slice arm yourself per `codex-cross-vendor-review` from a detached
-checkout at the slice head; more than ten integrations since the last one is a stop. Before reporting full close-out or refilling
+unit of work closed, fire the integration arm yourself per `codex-cross-vendor-review` from a detached
+checkout at the base head; more than ten integrations since the last one is a stop. Before reporting full close-out or refilling
 capacity, record DISPATCH.md's close-out disposition for every owned pane, process/dev
 stack, worktree and branch (including QA/station resources): released with readback,
 retained with reason/owner/next checkpoint, or justified not applicable. Retained

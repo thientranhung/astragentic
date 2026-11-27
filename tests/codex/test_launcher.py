@@ -413,6 +413,7 @@ class LauncherTests(unittest.TestCase):
         self.assertNotIn('ticket', rows)
         self.assertNotIn('spec', rows)
         self.assertNotIn('slice', rows)
+        self.assertNotIn('integration', rows)
 
     def test_installed_helpers_must_match_selected_orchestrator(self):
         with tempfile.TemporaryDirectory() as d:
