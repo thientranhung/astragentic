@@ -2330,6 +2330,27 @@ export const register: Register = on => {
     return next(e)
   })
 
+  // INTEGRATION REVIEW BEFORE A DEPLOY (7.0.3). `.astraler/project/deploy-command-pattern`: one
+  // regex per line, `#` comments, the project's own deploy commands (a deploy is the project's: an
+  // ssh into its box, a pull, a compose up). A matching command is refused while the base the box
+  // pulls (the checkout's upstream, else HEAD) carries a merge after the last `arm(integration):`
+  // round on its first-parent line. nizzy, 2026-11-28: a 15-ticket release went merge → staging →
+  // prod with 9 merges since the last round; the ">10 merges is a STOP" count is advisory and no
+  // deploy step read it; 255 merges and 21 rounds in the two weeks before. No plug, no check.
+  on('tool.call', { tool: 'Bash' }, async ($, e, next) => {
+    if (!root) return next(e)
+    const pats = (await overlayFile($, `${root}/.astraler/project/deploy-command-pattern`)).split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'))
+    const hit = pats.find(p => { try { return new RegExp(p, 'm').test(e.command) } catch { return false } })
+    if (!hit) return next(e)
+    const up = await run($, ['git', '-C', root, 'rev-parse', '--verify', '--quiet', '@{upstream}'])
+    const ref = up.code === 0 && up.out ? '@{upstream}' : 'HEAD'
+    const last = (await run($, ['git', '-C', root, 'log', ref, '--first-parent', '-E', '--grep=^arm\\((integration|slice)\\):', '--format=%H', '-n', '1'])).out.split('\n')[0]?.trim() ?? ''
+    const merges = (await run($, ['git', '-C', root, 'log', '--first-parent', '--merges', '--format=%h %s', '-n', '500', last ? `${last}..${ref}` : ref])).out.split('\n').filter(Boolean)
+    if (merges.length === 0) return next(e)
+    const since = last ? `since the last integration round (${last.slice(0, 9)})` : 'and no integration round is recorded on it'
+    return { deny: `astragentic-dispatch: this command matches "${hit}" in .astraler/project/deploy-command-pattern, and ${ref === 'HEAD' ? 'HEAD' : 'the pushed base'} carries ${merges.length} merge(s) ${since}: ${merges.slice(0, 5).join('; ')}${merges.length > 5 ? '; …' : ''}. Run the integration review over ${last ? last.slice(0, 9) : 'the base'}..${ref === 'HEAD' ? 'HEAD' : 'the base'}, fold what blocks, commit its \`arm(integration):\` marker on the base and push it, then deploy. If the owner decides to deploy without the review, commit \`arm(integration): skipped by the owner — <his words>\` instead: it is recorded in git, not checked.` }
+  })
+
   // A BACKGROUNDED RUN IS A WAIT THE PANE WILL BE WOKEN FROM (6.1.24). The engine re-invokes a
   // session when a background shell job ends (task-notification), as it does when an agent ends,
   // but the hold above counted agents only: one downstream project, 2026-11-24, three Builders
@@ -2630,7 +2651,10 @@ export const register: Register = on => {
     // nizzy, 2026-11-10..22, 16 of 41 gate bells with a known launcher rang in another Thomas
     // session (a gate bell at 07:00:51Z went to a Thomas open since the day before; the owner saw
     // the pipeline stall). A label the shell has not expanded yet (`ticket:$t`) claims nothing.
-    const herdrClaim = cmd.match(new RegExp(AT_COMMAND + String.raw`(?:\S*/)?herdr\s+tab\s+create\b[^\n]*?--label[\s=]+['"]?(ticket|spec|qa|review|resident):([^\s'"&;|$\x60]+)(?=['"\s;&|]|$)`))
+    // 7.0.3: herdr's global flags may stand before the subcommand (`herdr --session team tab
+    // create`); the claim read only `herdr tab create`, so 25 of 48 gate tabs on nizzy (11-26..28)
+    // went unclaimed and 28 gate bells rang in a BA, dev or Quick Builder session.
+    const herdrClaim = cmd.match(new RegExp(AT_COMMAND + String.raw`(?:\S*/)?herdr\b[^\n;&|]*?\stab\s+create\b[^\n]*?--label[\s=]+['"]?(ticket|spec|qa|review|resident):([^\s'"&;|$\x60]+)(?=['"\s;&|]|$)`))
     if (herdrClaim) {
       const sock = await $.env.get('CLAUDE_CODE_MESSAGING_SOCKET')
       const role = ROLE_BY_PREFIX[herdrClaim[1]]

@@ -1,3 +1,23 @@
+# Astragentic 7.0.3
+
+Two field fixes from nizzy after 7.0.2, on the owner's word (2026-11-28). Rows 53–54 in
+`docs/audit/2026-11-27-700-field-incidents.md`.
+
+| fix | số đo | nguồn |
+|---|---|---|
+| A QA gate pane's turn end rings in the Thomas that opened it, also when the tab was opened with herdr's global flags first (`herdr --session <name> tab create --label qa:<key>`). The claim read only `herdr tab create`, so such a gate entry had no dispatcher and the first project-root session to poll (a BA, dev or Quick Builder pane) rang it | nizzy 11-26..28: 25 of 48 gate tab creates carried `--session`, all 25 unclaimed; 28 of 227 gate bells appeared in a non-Thomas session (BA 24, dev 3, Quick Builder 1). Planted in `mod send/ack keys`: 7.0.2 fails, 7.0.3 passes | row 53 |
+| A project that lists its deploy commands in `.astraler/project/deploy-command-pattern` (one regex per line, `#` comments) has them refused while the base the box pulls (the checkout's upstream, else HEAD) carries a merge after the last `arm(integration):` round. The refusal names the merges and what to run. An owner who deploys without the review has `arm(integration): skipped by the owner — <his words>` committed instead: recorded in git, not checked | nizzy 2026-11-28: 9 merges between rounds `c3ea4273f` and `0414f1459` went to staging and prod; 255 merges and 21 rounds in the two weeks before; one P0 (two tickets right alone, wrong together) caught 11-27 only because a round ran first. Planted in `mod merge gate`: no plug passes, a merge after the last round is refused and named, a round after it passes; without the hook the section fails | row 54 |
+
+By hand downstream:
+- A project that wants the deploy check writes `.astraler/project/deploy-command-pattern` with the
+  commands that change its boxes (for example the `git pull` on the box, or `docker compose … up`)
+  and tests one pattern against a past deploy command. Without the file nothing changes.
+- nizzy: the "Integration review BEFORE every deploy" paragraph in its Thomas overlay can shrink to
+  a pointer once the plug is in.
+
+Not covered: the Codex lane (the check lives in the Claude mod; 0 Codex sessions downstream since
+11-24). A deploy command the pattern does not match is not checked.
+
 # Astragentic 7.0.2
 
 Two fixes found on the first PR-gate trial (nizzy TRA-1707), both only on a lane under the PR gate.

@@ -2885,6 +2885,8 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   // day-old Thomas, 16 of 41 gate bells since 11-10); an unexpanded label claims nothing
   fs.writeFileSync(path.join(root, '.astraler/state/dispatch-record.json'), '{}'); fs.writeFileSync(selfSock, '')
   await fire('tool.call', { tool: 'Bash', command: 'herdr tab create --workspace w1 --label "qa:AB-30" --cwd /p/.claude/worktrees/gate-AB-30 --no-focus' }, async () => ({}))
+  await fire('tool.call', { tool: 'Bash', command: "herdr '--session' 'team' tab create --workspace w1 --label 'qa:AB-32' --no-focus" }, async () => ({}))
+  await fire('tool.call', { tool: 'Bash', command: 'herdr --session team tab create --workspace w1 --label qa:AB-33 --no-focus' }, async () => ({}))
   await fire('tool.call', { tool: 'Bash', command: 'for t in AB-31; do herdr tab create --workspace w1 --label "ticket:$t" --no-focus; done' }, async () => ({}))
   const recH = JSON.parse(fs.readFileSync(path.join(root, '.astraler/state/dispatch-record.json'), 'utf8'))
   const pend = { at: Date.now(), reason: 'QA pane', text: '[astragentic-dispatch] TURN-END key=qa:AB-30 pane=p30 reason=answer\nFAIL' }
@@ -2895,7 +2897,7 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   selfSock = mySock; bells.length = 0
   await every()
   const gateBellOwner = bells.filter(b => b.includes('qa:AB-30 ended its turn')).length
-  const herdrClaim = [recH['qa:AB-30']?.dispatcher === `uds:${mySock}` && recH['qa:AB-30']?.role === 'qa', !('$t' in recH) && !('AB-31' in recH), gateBellOther, gateBellOwner].join(',')
+  const herdrClaim = [recH['qa:AB-30']?.dispatcher === `uds:${mySock}` && recH['qa:AB-30']?.role === 'qa', !('$t' in recH) && !('AB-31' in recH), gateBellOther, gateBellOwner, ['qa:AB-32', 'qa:AB-33'].every(k => recH[k]?.dispatcher === `uds:${mySock}`)].join(',')
   selfSock = undefined
   // a subagent's turn.start (Claude Code 2.1.299 fires it with agentId) must not hold bells
   bells.length = 0
@@ -3195,7 +3197,28 @@ const band = async () => leaves(await fire('ui.render', { component: 'AbovePromp
   const agentExplore = await agentOf({ subagent_type: 'Explore', prompt: 'x', description: 'b' })
   const agentDev = await agentOf({ subagent_type: 'dev', prompt: 'why does X fail', description: 'b' })
   const agentPr = await agentOf({ subagent_type: 'pr-reviewer', prompt: 'review PR 12', description: 'b' })
-  console.log(JSON.stringify({ owedWhen, agentBuilder, agentPlugin, agentExplore, agentDev, agentPr, orcaInHerdr, orcaDocInHerdr, deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, deadTurnBellHeld, deadTurnBellRerung, deadTurnNoDouble, staleBells, staleRow, ownerBells, herdrClaim, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeUi, mergeEmpty, mergeTddByBranch, mergeTddNoTest, prGate, armOffDispatcher, armOffIntegration, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiStd, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
+  // 7.0.3 — a deploy command (the project's plug) is refused while the base has a merge after the
+  // last arm(integration) round; no plug, or a round after the last merge, lets it run
+  const deployOf = async (command) => { let ran = false; const r = await fire('tool.call', { tool: 'Bash', command }, async () => { ran = true; return {} }); return `${r?.deny ? 'deny' : 'pass'}:${ran ? 'ran' : 'held'}` }
+  const gd = (...a) => require('child_process').spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...a], { cwd: root, encoding: 'utf8' })
+  const deployCmd = "ssh box 'cd /srv/app && git pull --ff-only && docker compose up -d'"
+  const deployNoPlug = await deployOf(deployCmd)
+  const deployPlug = path.join(root, '.astraler/project/deploy-command-pattern')
+  fs.writeFileSync(deployPlug, '# prod box\nssh\\b.*\\bgit pull\\b\n')
+  const here0 = gd('rev-parse', '--abbrev-ref', 'HEAD').stdout.trim()
+  gd('checkout', '-q', '-b', 'deploy-side'); gd('commit', '-q', '--allow-empty', '-m', 'side'); gd('checkout', '-q', here0)
+  gd('merge', '-q', '--no-ff', '-m', 'Merge deploy-side one', 'deploy-side')
+  const deployNoRound = await deployOf(deployCmd)
+  gd('commit', '-q', '--allow-empty', '-m', 'arm(integration): x..y — PASS')
+  const deployAfterRound = await deployOf(deployCmd)
+  const deployOther = await deployOf('ssh box uptime')
+  gd('checkout', '-q', 'deploy-side'); gd('commit', '-q', '--allow-empty', '-m', 'side two'); gd('checkout', '-q', here0)
+  gd('merge', '-q', '--no-ff', '-m', 'Merge deploy-side two', 'deploy-side')
+  const r2d = await fire('tool.call', { tool: 'Bash', command: deployCmd }, async () => ({}))
+  const deployNewMerge = r2d?.deny && /1 merge\(s\) since the last integration round/.test(String(r2d.deny)) && /Merge deploy-side two/.test(String(r2d.deny)) ? 'deny:named' : 'wrong'
+  fs.unlinkSync(deployPlug); gd('branch', '-q', '-D', 'deploy-side')
+  const deployGate = [deployNoPlug, deployNoRound, deployAfterRound, deployOther, deployNewMerge].join(',')
+  console.log(JSON.stringify({ deployGate, owedWhen, agentBuilder, agentPlugin, agentExplore, agentDev, agentPr, orcaInHerdr, orcaDocInHerdr, deadRow, deadBell, launchDoubled, launchPlain, kind, shaper, afterSend, afterAck, afterRetire, stubBells, stubLeft, deadTurnBellHeld, deadTurnBellRerung, deadTurnNoDouble, staleBells, staleRow, ownerBells, herdrClaim, subagentHeld, heldCleared, latestChip, mergeGap, mergeFull, mergeUi, mergeEmpty, mergeTddByBranch, mergeTddNoTest, prGate, armOffDispatcher, armOffIntegration, mergeByShaLiveGapped, mergeByShaLiveFull, briefNoQa, briefUiNoSections, briefUiStd, briefUiSections, briefNoUi, briefUpgrade, briefAdvisor, closeRefusal, roleWritten, briefOverTarget, briefUnderTarget, briefToRegistered, log }))
 })().catch(e => { console.error(e); process.exit(2) })
 DRVEOS
   mod_drive() {  # $1 mod dir → prints {afterSend, afterAck, afterRetire}
@@ -3225,7 +3248,7 @@ DRVEOS
   else
     bad "mod hook log path" "suite log REFUSED lines before=$modlog_before after=$modlog_after after-planted=$modlog_planted; planted mod's default file=$modlog_home; untimestamped lines in the suite log=$(grep -cvE '^[0-9]{4}-[0-9]{2}-[0-9]{2}T' "$HARNESS_HOOK_LOG" 2>/dev/null)"
   fi
-  if says "$out" '"afterSend":"AB-1:sent:"' && says "$out" '"afterAck":"AB-1:registered:no brief yet"' && says "$out" '"afterRetire":""' && says "$out" '"stubBells":0,"stubLeft":0,"deadTurnBellHeld":true,"deadTurnBellRerung":true,"deadTurnNoDouble":true,"staleBells":1,"staleRow":true,"ownerBells":"011","herdrClaim":"true,true,0,1","subagentHeld":false,"heldCleared":true,"latestChip":"0.0.2"'; then
+  if says "$out" '"afterSend":"AB-1:sent:"' && says "$out" '"afterAck":"AB-1:registered:no brief yet"' && says "$out" '"afterRetire":""' && says "$out" '"stubBells":0,"stubLeft":0,"deadTurnBellHeld":true,"deadTurnBellRerung":true,"deadTurnNoDouble":true,"staleBells":1,"staleRow":true,"ownerBells":"011","herdrClaim":"true,true,0,1,true","subagentHeld":false,"heldCleared":true,"latestChip":"0.0.2"'; then
     ok "the ack from the bare name clears the send keyed by \"name [ref]\"; a retired lane's send goes with its entry; a stub entry rings no bell; a hold past the ceiling rings once as held-stale, only in the session that briefed the lane unless that session is gone; a subagent's turn.start holds nothing; a bell held in the dispatcher's turn clears its status line when flushed; a newer tag at the remote reaches the band"
   else
     bad "mod send/ack keys" "$out"
@@ -3237,7 +3260,7 @@ DRVEOS
     bad "mod merge gate" "$out"
   fi
   # 4.1.0 — the four gates no field data had seen fire, each shown firing on its planted defect
-  if says "$out" '"briefNoQa":"refused:' && says "$out" 'no \"QA:' && says "$out" '"briefUiNoSections":"refused:' && says "$out" 'FLOW names astra-ui' && says "$out" '"briefUiNoSpine":"refused:' && says "$out" 'declares no design spine' && says "$out" '"briefUiSpineUncommitted":"refused:' && says "$out" 'not committed on the base' && says "$out" '"briefUiNoSlopPlug":"refused:' && says "$out" 'declares no anti-slop skill' && says "$out" '"briefUiSlopUnresolved":"refused:' && says "$out" 'none resolves to a SKILL.md' && says "$out" '"briefUiSlopNotInFlow":"refused:' && says "$out" 'not the project' && says "$out" '"uiStampWritten":"x-anti-slop"' && says "$out" '"briefUiHomeSymlink":"sent"' && says "$out" '"briefUiSections":"sent"' && says "$out" '"briefNoUi":"sent"' && says "$out" '"briefUpgrade":"refused:' && says "$out" '"briefAdvisor":"refused:' && says "$out" '"closeRefusal":"deny:held"' && says "$out" '"roleWritten":true' && says "$out" '"briefOverTarget":"refused:' && says "$out" '"briefUnderTarget":"sent"' && says "$out" '"briefToRegistered":"sent"'; then
+  if says "$out" '"briefNoQa":"refused:' && says "$out" 'no \"QA:' && says "$out" '"briefUiNoSections":"refused:' && says "$out" 'FLOW names astra-ui' && says "$out" '"briefUiNoSpine":"refused:' && says "$out" 'declares no design spine' && says "$out" '"briefUiSpineUncommitted":"refused:' && says "$out" 'not committed on the base' && says "$out" '"briefUiNoSlopPlug":"refused:' && says "$out" 'declares no anti-slop skill' && says "$out" '"briefUiSlopUnresolved":"refused:' && says "$out" 'none resolves to a SKILL.md' && says "$out" '"briefUiSlopNotInFlow":"refused:' && says "$out" 'not the project' && says "$out" '"uiStampWritten":"x-anti-slop"' && says "$out" '"briefUiHomeSymlink":"sent"' && says "$out" '"briefUiSections":"sent"' && says "$out" '"briefNoUi":"sent"' && says "$out" '"briefUpgrade":"refused:' && says "$out" '"briefAdvisor":"refused:' && says "$out" '"closeRefusal":"deny:held"' && says "$out" '"roleWritten":true' && says "$out" '"briefOverTarget":"refused:' && says "$out" '"briefUnderTarget":"sent"' && says "$out" '"briefToRegistered":"sent"' && says "$out" '"deployGate":"pass:ran,deny:held,pass:ran,pass:ran,deny:named"'; then
     ok "brief refused without a QA line, during a half-applied upgrade, without an Advisor column, and at builder-target; a UI brief refused on a project with no design spine, an uncommitted spine path, no anti-slop plug, an anti-slop name with no SKILL.md, or a FLOW that skips it (5.1.0), sent with all five and the admitted names stamped on the record, sent with the skill reachable only through a ~/.claude/skills symlink; a mid-turn pane's close is refused; a delivered brief writes the role on the record"
   else
     bad "mod merge gate" "$out"
